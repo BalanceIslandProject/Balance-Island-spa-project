@@ -10,11 +10,13 @@ import { headers } from "next/headers";
 const jakarta = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
   subsets: ["latin"],
+  display: "swap",
 });
 
 const newsreader = Newsreader({
   variable: "--font-newsreader",
   subsets: ["latin"],
+  display: "swap",
 });
 
 export async function generateViewport(): Promise<Viewport> {
@@ -104,7 +106,6 @@ export async function generateMetadata(): Promise<Metadata> {
         'max-snippet': -1,
       },
     },
-    manifest: "/manifest.json",
     other: {
       'geo.region': 'ID-BA',
       'geo.placename': 'Bali',

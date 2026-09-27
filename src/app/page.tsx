@@ -2,14 +2,14 @@
 
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, Search, Heart, Cloud, Sparkles, Droplet, User, Flame, Clock, ArrowRight, X, ShoppingBag, Plus, Minus, MessageCircle, ChevronLeft, ChevronRight, ChevronDown, Bitcoin } from 'lucide-react';
+import { Search, Clock, ArrowRight, X, Plus, Minus, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { supabase } from '@/lib/supabase';
 import { useSpa, Campaign, Treatment, sortCampaigns } from '@/context/SpaContext';
 import dynamic from 'next/dynamic';
-import SeoExpandedContent from '@/components/SeoExpandedContent';
 import { createSlug } from '@/utils/slugify';
+
+const SeoExpandedContent = dynamic(() => import('@/components/SeoExpandedContent'));
 
 const ServiceAreas = dynamic(() => import('@/components/ServiceAreas'));
 const FaqSection = dynamic(() => import('@/components/FaqSection'));
@@ -144,6 +144,7 @@ export default function Home() {
         // Apply promo usages
         if (appliedPromo) {
             try {
+                const { supabase } = await import('@/lib/supabase');
                 await supabase.rpc('increment_promo_use', { promo_id: appliedPromo.id });
                 // We don't strictly wait or fail if it fails, as WA message is primary
             } catch (e) {
@@ -253,6 +254,7 @@ export default function Home() {
         setPromoError('');
         setPromoSuccess('');
         try {
+            const { supabase } = await import('@/lib/supabase');
             const { data, error } = await supabase
                 .from('promo_codes')
                 .select('*')
