@@ -13,7 +13,6 @@ import { createSlug } from '@/utils/slugify';
 
 const ServiceAreas = dynamic(() => import('@/components/ServiceAreas'));
 const FaqSection = dynamic(() => import('@/components/FaqSection'));
-const Footer = dynamic(() => import('@/components/Footer'));
 
 // Dummy data for redesign structure
 const CATEGORIES = [

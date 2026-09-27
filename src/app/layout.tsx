@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans, Newsreader } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import TopNav from "@/components/TopNav";
+import Footer from "@/components/Footer";
 import { SpaProvider } from "@/context/SpaContext";
 import { headers } from "next/headers";
 
@@ -213,6 +214,7 @@ export default async function RootLayout({
             <main className="flex-1 w-full max-w-[100vw] overflow-x-hidden">
               {children}
             </main>
+            <Footer />
           </div>
         </SpaProvider>
       </body>
