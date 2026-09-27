@@ -289,11 +289,11 @@ export default function Home() {
 
     return (
         <>
-            <div className={`min-h-screen relative overflow-hidden font-sans text-text ${domain === 'bali' ? 'bg-white' : 'bg-[#FDFBF7]'}`}>
+            <div className="min-h-screen relative overflow-hidden font-sans text-text bg-white">
             
             {/* Top Gradient Background */}
             {domain === 'ubud' && (
-                <div className="absolute top-0 left-0 right-0 h-[600px] md:h-[800px] bg-gradient-to-b from-[#D2F34C] via-[#D2F34C] to-[#FDFBF7] z-0 pointer-events-none"></div>
+                <div className="absolute top-0 left-0 right-0 h-[600px] md:h-[800px] bg-gradient-to-b from-white via-white to-white z-0 pointer-events-none"></div>
             )}
 
             {/* Luxurious Ambient Background */}

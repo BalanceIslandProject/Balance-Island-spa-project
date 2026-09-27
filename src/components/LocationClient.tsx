@@ -182,7 +182,7 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                 <div className="min-h-screen bg-[#FDFBF7] relative overflow-hidden font-sans text-text pb-24 md:pb-12">
             
             {/* Top Gradient Background */}
-            <div className="absolute top-0 left-0 right-0 h-[400px] md:h-[500px] bg-gradient-to-b from-[#D2F34C] to-[#FDFBF7] z-0 pointer-events-none"></div>
+            <div className="absolute top-0 left-0 right-0 h-[400px] md:h-[500px] bg-gradient-to-b from-white to-white z-0 pointer-events-none"></div>
 
             {/* Luxurious Ambient Background */}
             <div className="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[120%] md:w-[800px] h-[600px] bg-secondary/30 blur-[120px] rounded-full z-0 pointer-events-none opacity-60 mix-blend-multiply" />

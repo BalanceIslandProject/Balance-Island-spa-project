@@ -22,7 +22,7 @@ export async function generateViewport(): Promise<Viewport> {
   const isBaliDomain = (host.includes("homespaubud") || host.includes("ubudhomespa")) && !host.includes("elexoir");
 
   return {
-    themeColor: isBaliDomain ? "#FFFFFF" : "#D2F34C",
+    themeColor: "#FFFFFF",
     width: "device-width",
     initialScale: 1,
     maximumScale: 1,

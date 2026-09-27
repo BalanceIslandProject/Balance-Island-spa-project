@@ -1,12 +1,12 @@
 @import "tailwindcss";
 
 @theme {
-  --color-background: #FAFCF5;
+  --color-background: #FFFFFF;
   --color-surface: #FFFFFF;
   --color-primary: #322F37; /* Dark bento boxes and text */
-  --color-secondary: #E5F88A; /* Lime yellow gradient start */
-  --color-accent: #9AF2C4; /* Mint green for cards */
-  --color-highlight: #EBF8B1; /* Lighter yellow */
+  --color-secondary: #F3F4F6; /* Light gray */
+  --color-accent: #E5E7EB; /* Gray for cards */
+  --color-highlight: #F9FAFB; /* Off-white */
   --color-text: #1C221D;
   --color-text-muted: #7A7C75;
   --color-border: #E8EBE3;

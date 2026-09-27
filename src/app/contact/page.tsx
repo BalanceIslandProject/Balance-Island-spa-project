@@ -18,10 +18,10 @@ export default function ContactPage() {
     const email = isBali ? "info@homespaubud.com" : "info@elexoirhomespa.com";
 
     return (
-        <div className="min-h-screen bg-background pb-24">
+        <div className="min-h-screen bg-white pb-24">
             {/* Mobile Header */}
-            <div className="pt-14 pb-4 px-6 bg-surface/90 backdrop-blur-md sticky top-0 z-30 border-b border-border/60">
-                <h1 className="font-serif text-3xl text-primary">Concierge</h1>
+            <div className="pt-28 pb-4 px-6 bg-white sticky top-0 z-30">
+                <h1 className="font-serif text-4xl text-primary">Concierge</h1>
             </div>
 
             <div className="px-6 py-8">
