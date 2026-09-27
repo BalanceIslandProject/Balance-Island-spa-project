@@ -413,8 +413,8 @@ export default function Home() {
                                             setIsCampaignModalOpen(true);
                                         }}
                                         className={`shrink-0 snap-start cursor-pointer block outline-none transition-transform active:scale-[0.99] ${activeCampaigns.length > 1
-                                                ? 'w-[88vw] sm:w-[380px] md:w-[480px]'
-                                                : 'w-full'
+                                            ? 'w-[88vw] sm:w-[380px] md:w-[480px]'
+                                            : 'w-full'
                                             }`}
                                     >
                                         <div className="relative w-full h-[220px] sm:h-[250px] md:h-[280px] rounded-[24px] md:rounded-[28px] overflow-hidden shadow-lg group bg-gradient-to-br from-neutral-900 via-stone-900 to-black border border-black/15">
@@ -480,8 +480,8 @@ export default function Home() {
                                                 }
                                             }}
                                             className={`h-1.5 rounded-full transition-all duration-300 ${currentCampaignIndex === i
-                                                    ? 'w-6 bg-black'
-                                                    : 'w-1.5 bg-black/20 hover:bg-black/40'
+                                                ? 'w-6 bg-black'
+                                                : 'w-1.5 bg-black/20 hover:bg-black/40'
                                                 }`}
                                             aria-label={`Go to slide ${i + 1}`}
                                         />
@@ -551,8 +551,8 @@ export default function Home() {
                                             key={cat.id}
                                             onClick={() => setActiveCategory(cat.id)}
                                             className={`flex items-center justify-center px-6 py-3 rounded-full whitespace-nowrap transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${isActive
-                                                    ? 'bg-primary text-white shadow-[0_8px_20px_rgb(0,0,0,0.12)] scale-[1.02] border border-primary'
-                                                    : 'bg-white/40 backdrop-blur-md text-primary border border-white/60 hover:bg-white/80 hover:scale-[1.02]'
+                                                ? 'bg-primary text-white shadow-[0_8px_20px_rgb(0,0,0,0.12)] scale-[1.02] border border-primary'
+                                                : 'bg-white/40 backdrop-blur-md text-primary border border-white/60 hover:bg-white/80 hover:scale-[1.02]'
                                                 }`}
                                         >
                                             <span className="text-sm font-semibold tracking-wide">{cat.label}</span>
