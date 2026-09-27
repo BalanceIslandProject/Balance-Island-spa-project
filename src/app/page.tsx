@@ -726,14 +726,20 @@ export default function Home() {
             </div>
 
             {/* Campaign Modal */}
-            {isCampaignModalOpen && selectedCampaignModal && (
-                <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center bg-black/60 backdrop-blur-md overflow-x-hidden max-w-[100vw]">
+            <AnimatePresence>
+                {isCampaignModalOpen && selectedCampaignModal && (
                     <motion.div 
-                        initial={{ opacity: 0, y: 100 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 100 }}
-                        className="bg-white w-full h-[90dvh] md:h-auto md:max-h-[85vh] md:max-w-3xl md:rounded-[32px] rounded-t-[32px] shadow-2xl relative overflow-hidden flex flex-col border border-black/10 text-black font-sans"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[100] flex items-end md:items-center justify-center bg-black/60 backdrop-blur-md overflow-x-hidden max-w-[100vw]"
                     >
+                        <motion.div 
+                            initial={{ opacity: 0, y: 100 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 100 }}
+                            className="bg-white w-full h-[90dvh] md:h-auto md:max-h-[85vh] md:max-w-3xl md:rounded-[32px] rounded-t-[32px] shadow-2xl relative overflow-hidden flex flex-col border border-black/10 text-black font-sans"
+                        >
                         {/* Modal Header */}
                         <div className="p-5 md:p-7 border-b border-black/10 bg-white shrink-0">
                             <div className="flex items-center justify-between">
@@ -950,8 +956,9 @@ export default function Home() {
                             </div>
                         </div>
                     </motion.div>
-                </div>
-            )}
+                </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Complete Booking Modal */}
             <AnimatePresence>
