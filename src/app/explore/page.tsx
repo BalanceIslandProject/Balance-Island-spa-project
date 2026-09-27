@@ -66,9 +66,15 @@ function ExploreContent() {
                                 <Link href="/" className="shrink-0 p-2 hover:bg-gray-50 rounded-full transition-colors flex items-center justify-center">
                                     <ArrowLeft className="w-5 h-5 text-gray-800" strokeWidth={2.5} />
                                 </Link>
-                                <div className="flex flex-col ml-4">
-                                    <span className="text-[13px] font-bold text-gray-900 leading-tight">Where to? Search treatments...</span>
-                                    <span className="text-[11px] text-gray-500 font-medium">{locationQuery || 'Ubud'} • Any date • Add guests</span>
+                                <div className="flex flex-col ml-3 flex-1 pr-4 justify-center">
+                                    <input 
+                                        type="text"
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        placeholder="Where to? Search treatments..."
+                                        className="text-[13px] font-bold text-gray-900 leading-tight bg-transparent border-none outline-none focus:ring-0 placeholder:text-gray-900 w-full p-0 m-0"
+                                    />
+                                    <span className="text-[11px] text-gray-500 font-medium mt-0.5">{locationQuery || 'Ubud'} • Any date • Add guests</span>
                                 </div>
                             </div>
                             <button 
