@@ -77,16 +77,18 @@ export default function Footer() {
         </div>
 
         {/* Bottom Bar */}
-        <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-xs text-white/40 font-light domain-ubud-only">
-            &copy; {currentYear} Elexoir Home Spa. All rights reserved.
-          </p>
-          <p className="text-xs text-white/40 font-light domain-bali-only">
-            &copy; {currentYear} Home Spa Ubud. All rights reserved.
-          </p>
-          <div className="flex gap-6">
-            <Link href="/privacy" className="text-xs text-white/40 hover:text-white transition-colors">Privacy Policy</Link>
-            <Link href="/terms" className="text-xs text-white/40 hover:text-white transition-colors">Terms of Service</Link>
+        <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div>
+            <p className="text-sm text-white/60 font-light tracking-wide domain-ubud-only">
+              &copy; {currentYear} Elexoir Home Spa &middot; A brand of PT BALANCE ISLAND INDONESIA
+            </p>
+            <p className="text-sm text-white/60 font-light tracking-wide domain-bali-only">
+              &copy; {currentYear} Home Spa Ubud &middot; A brand of PT BALANCE ISLAND INDONESIA
+            </p>
+            <div className="flex gap-6 mt-4 md:ml-[4.5rem]">
+              <Link href="/privacy" className="text-sm text-white/60 hover:text-white transition-colors">Privacy Policy</Link>
+              <Link href="/terms" className="text-sm text-white/60 hover:text-white transition-colors">Terms of Service</Link>
+            </div>
           </div>
         </div>
       </div>
