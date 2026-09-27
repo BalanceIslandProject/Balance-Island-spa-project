@@ -675,13 +675,13 @@ export default function Home() {
                 </div>
 
                 {/* FAQ Section */}
-                <div className="mb-24 px-6 md:px-0">
+                <div className="mb-12 px-6 md:px-0">
                     <FaqSection />
                 </div>
 
                 {/* The Elexoir Boutique Section */}
                 {products.length > 0 && (
-                <div className="mb-32">
+                <div className="mb-12">
                     <div className="flex items-center justify-between mb-8 px-6 md:px-0">
                         <div>
                             <span className="text-[8px] md:text-[10px] font-bold uppercase tracking-widest text-primary/50 mb-1 block">Take the Spa Home</span>
