@@ -7,11 +7,13 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { supabase } from '@/lib/supabase';
 import { useSpa, Campaign, Treatment, sortCampaigns } from '@/context/SpaContext';
+import dynamic from 'next/dynamic';
 import SeoExpandedContent from '@/components/SeoExpandedContent';
-import ServiceAreas from '@/components/ServiceAreas';
-import FaqSection from '@/components/FaqSection';
-import Footer from '@/components/Footer';
 import { createSlug } from '@/utils/slugify';
+
+const ServiceAreas = dynamic(() => import('@/components/ServiceAreas'));
+const FaqSection = dynamic(() => import('@/components/FaqSection'));
+const Footer = dynamic(() => import('@/components/Footer'));
 
 // Dummy data for redesign structure
 const CATEGORIES = [
@@ -427,7 +429,6 @@ export default function Home() {
                                                 priority={idx === 0}
                                                 loading={idx === 0 ? "eager" : "lazy"}
                                                 decoding="async"
-                                                unoptimized={true}
                                                 sizes="(max-width: 768px) 90vw, 480px"
                                                 className="object-cover opacity-85 group-hover:scale-105 transition-transform duration-700 ease-out"
                                             />
@@ -510,7 +511,6 @@ export default function Home() {
                                                     height={300} 
                                                     loading="lazy"
                                                     decoding="async"
-                                                    unoptimized={true}
                                                     sizes="(max-width: 640px) 65vw, (max-width: 768px) 220px, 280px"
                                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
                                                 />
@@ -701,7 +701,7 @@ export default function Home() {
                                     
                                     {/* Image */}
                                     <div className="aspect-[4/5] relative bg-[#F5F5F7] overflow-hidden rounded-[16px]">
-                                        <Image src={product.image} alt={product.title} width={400} height={500} loading="lazy" decoding="async" unoptimized={true} sizes="(max-width: 768px) 192px, 208px" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                        <Image src={product.image} alt={product.title} width={400} height={500} loading="lazy" decoding="async" sizes="(max-width: 768px) 192px, 208px" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                                     </div>
                                     
                                     {/* Text Info */}
