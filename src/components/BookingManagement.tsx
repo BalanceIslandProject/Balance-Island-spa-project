@@ -86,7 +86,14 @@ export default function BookingManagement({
       const opt = t.options.find(o => o.duration === formDuration) || t.options[0];
       const priceStr = opt.price.replace(/[^0-9]/g, '');
       const price = parseInt(priceStr || '0', 10);
-      rev = price * formPax;
+      
+      const isCouple = formTreatment.toLowerCase().includes('couple');
+      if (isCouple) {
+        // Couple price is already for 2 people
+        rev = price * Math.max(1, Math.ceil(formPax / 2));
+      } else {
+        rev = price * formPax;
+      }
     }
 
     // Find matching therapist fee
@@ -352,8 +359,15 @@ export default function BookingManagement({
                   <div>
                     <label className="text-[10px] font-bold uppercase tracking-widest text-black/50 block mb-2">Select Treatment</label>
                     <select required value={formTreatment} onChange={e => {
-                        setFormTreatment(e.target.value);
+                        const val = e.target.value;
+                        setFormTreatment(val);
                         setFormDuration(''); // Reset duration when treatment changes
+                        
+                        // Smart defaults for couple massage
+                        if (val.toLowerCase().includes('couple')) {
+                          setFormPax(2);
+                          setFormTherapists(2);
+                        }
                     }} className="w-full bg-black/5 border border-black/10 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black appearance-none cursor-pointer">
                       <option value="">-- Choose Treatment --</option>
                       {treatments.map(t => (
