@@ -33,9 +33,9 @@ export default function BookingManagement({
   // Form State
   const [showForm, setShowForm] = useState(false);
   const [isEditing, setIsEditing] = useState<string | null>(null);
-  
   const [formTime, setFormTime] = useState('10:00');
   const [formTreatment, setFormTreatment] = useState('');
+  const [formDuration, setFormDuration] = useState('');
   const [formPax, setFormPax] = useState<number>(1);
   const [formTherapists, setFormTherapists] = useState<number>(1);
   const [formRevenue, setFormRevenue] = useState<number>(0);
@@ -67,15 +67,13 @@ export default function BookingManagement({
 
   // Auto-calculate logic
   useEffect(() => {
-    if (!formTreatment) return;
-    
-    const [title, duration] = formTreatment.split(' | ');
+    if (!formTreatment || !formDuration) return;
     
     // Find matching treatment
-    const t = treatments.find(x => x.title === (title || formTreatment));
+    const t = treatments.find(x => x.title === formTreatment);
     let rev = 0;
     if (t && t.options && t.options.length > 0) {
-      const opt = t.options.find(o => o.duration === duration) || t.options[0];
+      const opt = t.options.find(o => o.duration === formDuration) || t.options[0];
       const priceStr = opt.price.replace(/[^0-9]/g, '');
       const price = parseInt(priceStr || '0', 10);
       rev = price * formPax;
@@ -84,7 +82,7 @@ export default function BookingManagement({
     // Find matching therapist fee
     let fee = 0;
     if (therapistFees.length > 0) {
-      const matchingFee = duration ? therapistFees.find(f => f.duration === duration) : null;
+      const matchingFee = therapistFees.find(f => f.duration === formDuration);
       const feeObj = matchingFee || therapistFees[0];
       const baseFeeStr = feeObj.fee.replace(/[^0-9]/g, '');
       const baseFee = parseInt(baseFeeStr || '0', 10);
@@ -96,7 +94,7 @@ export default function BookingManagement({
       setFormRevenue(rev);
       setFormFee(fee);
     }
-  }, [formTreatment, formPax, formTherapists]);
+  }, [formTreatment, formDuration, formPax, formTherapists]);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,7 +103,7 @@ export default function BookingManagement({
     const payload = {
       booking_date: selectedDate,
       time: formTime,
-      treatment_name: formTreatment.split(' | ')[0],
+      treatment_name: formDuration ? `${formTreatment} (${formDuration})` : formTreatment,
       pax: formPax,
       therapists_count: formTherapists,
       revenue: formRevenue,
@@ -136,6 +134,7 @@ export default function BookingManagement({
   const resetForm = () => {
     setFormTime('10:00');
     setFormTreatment('');
+    setFormDuration('');
     setFormPax(1);
     setFormTherapists(1);
     setFormRevenue(0);
@@ -313,21 +312,34 @@ export default function BookingManagement({
                   </div>
                 </div>
 
-                <div>
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-black/50 block mb-2">Select Treatment</label>
-                  <select required value={formTreatment} onChange={e => setFormTreatment(e.target.value)} className="w-full bg-black/5 border border-black/10 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black appearance-none cursor-pointer">
-                    <option value="">-- Choose Treatment & Duration --</option>
-                    {treatments.map(t => (
-                      <optgroup key={t.id} label={`${t.title} (${t.category})`}>
-                        {t.options && t.options.map(opt => (
-                           <option key={`${t.id}-${opt.duration}`} value={`${t.title} | ${opt.duration}`}>
-                             {opt.duration} - {opt.price}
-                           </option>
-                        ))}
-                      </optgroup>
-                    ))}
-                    <option value="Custom Treatment">Custom Treatment</option>
-                  </select>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-black/50 block mb-2">Select Treatment</label>
+                    <select required value={formTreatment} onChange={e => {
+                        setFormTreatment(e.target.value);
+                        setFormDuration(''); // Reset duration when treatment changes
+                    }} className="w-full bg-black/5 border border-black/10 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black appearance-none cursor-pointer">
+                      <option value="">-- Choose Treatment --</option>
+                      {treatments.map(t => (
+                        <option key={t.id} value={t.title}>{t.title}</option>
+                      ))}
+                      <option value="Custom Treatment">Custom Treatment</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-black/50 block mb-2">Duration</label>
+                    <select required disabled={!formTreatment} value={formDuration} onChange={e => setFormDuration(e.target.value)} className="w-full bg-black/5 border border-black/10 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black appearance-none cursor-pointer disabled:opacity-50">
+                      <option value="">-- Select Duration --</option>
+                      {formTreatment === 'Custom Treatment' ? (
+                        <option value="Custom">Custom Duration</option>
+                      ) : (
+                        treatments.find(t => t.title === formTreatment)?.options?.map(opt => (
+                          <option key={opt.duration} value={opt.duration}>{opt.duration} - {opt.price}</option>
+                        ))
+                      )}
+                    </select>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -407,8 +419,18 @@ export default function BookingManagement({
                       <button 
                         onClick={() => {
                           setFormTime(booking.time);
-                          // Try to match the treatment back, or just use the name if duration was lost
-                          setFormTreatment(booking.treatment_name);
+                          
+                          // Parse out the duration if it was saved like "Title (duration)"
+                          let title = booking.treatment_name;
+                          let dur = '';
+                          const match = title.match(/(.*) \((.*)\)$/);
+                          if (match) {
+                              title = match[1];
+                              dur = match[2];
+                          }
+                          
+                          setFormTreatment(title);
+                          setFormDuration(dur);
                           setFormPax(booking.pax);
                           setFormTherapists(booking.therapists_count);
                           setFormRevenue(booking.revenue);
