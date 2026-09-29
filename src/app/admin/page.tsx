@@ -887,17 +887,23 @@ export default function AdminDashboard() {
 
                 <div className={`mx-auto p-4 md:p-8 ${activeTab === 'list' || activeTab === 'fees' ? 'max-w-6xl' : 'max-w-4xl'}`}>
                     
-                    <div className="md:hidden flex justify-end mb-4">
-                        <select 
-                            value={siteBrandFilter}
-                            onChange={(e) => setSiteBrandFilter(e.target.value)}
-                            className="bg-black border border-black/10 text-white rounded-xl px-4 py-2 text-xs font-bold focus:outline-none shadow-sm"
-                        >
-                            <option value="elexoir">Elexoir</option>
-                            <option value="bali">Home Spa Ubud</option>
-                            <option value="therapick">Therapick</option>
-                            <option value="central">Central Admin</option>
-                        </select>
+                    <div className="md:hidden bg-white border border-black/15 rounded-2xl p-4 shadow-sm mb-6 flex flex-col">
+                        <h2 className="text-[10px] font-bold tracking-widest uppercase text-black/50 mb-2">Select Admin Dashboard</h2>
+                        <div className="relative w-full">
+                            <select 
+                                value={siteBrandFilter}
+                                onChange={(e) => setSiteBrandFilter(e.target.value)}
+                                className="w-full bg-black border border-black/10 text-white rounded-xl px-4 py-3 text-xs font-bold focus:outline-none appearance-none shadow-sm"
+                            >
+                                <option value="elexoir">Elexoir</option>
+                                <option value="bali">Home Spa Ubud</option>
+                                <option value="therapick">Therapick</option>
+                                <option value="central">Central Admin</option>
+                            </select>
+                            <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
+                                <ChevronDown size={14} className="text-white/50" />
+                            </div>
+                        </div>
                     </div>
                     
                     {/* CAMPAIGN CARD SETUP TAB */}
