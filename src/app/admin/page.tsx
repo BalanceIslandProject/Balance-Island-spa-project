@@ -871,37 +871,7 @@ export default function AdminDashboard() {
                     </div>
                 </div>
 
-                {/* Mobile Bottom Navbar */}
-                <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-black/10 flex items-center justify-around pb-4 pt-2 z-50 px-2 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
-                    {[
-                        { id: 'treatment', icon: PlusCircle, label: 'Treats' },
-                        { id: 'store', icon: Store, label: 'Store' },
-                        { id: 'fees', icon: Settings, label: 'Fees' },
-                        { id: 'calculator', icon: Calculator, label: 'Calc' },
-                        { id: 'more', icon: LayoutDashboard, label: 'More' }
-                    ].map(tab => {
-                        const Icon = tab.icon;
-                        const isActive = activeTab === tab.id;
-                        return (
-                            <button
-                                key={tab.id}
-                                onClick={() => {
-                                    if (tab.id === 'more') {
-                                        document.getElementById('mobile-sidebar')?.classList.remove('translate-x-full');
-                                    } else {
-                                        setActiveTab(tab.id as any);
-                                    }
-                                }}
-                                className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${
-                                    isActive ? 'text-black' : 'text-black/40 hover:text-black/70'
-                                }`}
-                            >
-                                <Icon size={20} strokeWidth={isActive ? 2.5 : 2} />
-                                <span className="text-[9px] font-bold tracking-wider">{tab.label}</span>
-                            </button>
-                        )
-                    })}
-                </div>
+
 
                 {/* Mobile Sidebar (Drawer) */}
                 <div id="mobile-sidebar" className="md:hidden fixed inset-0 z-[60] translate-x-full transition-transform duration-300 flex">
@@ -938,7 +908,7 @@ export default function AdminDashboard() {
                     </div>
                 </div>
 
-                <div className={`mx-auto p-4 md:p-8 ${activeTab === 'list' ? 'max-w-6xl' : 'max-w-4xl'}`}>
+                <div className={`mx-auto p-4 md:p-8 ${activeTab === 'list' || activeTab === 'fees' ? 'max-w-6xl' : 'max-w-4xl'}`}>
                     
                     {/* CAMPAIGN CARD SETUP TAB */}
                     {activeTab === 'campaign' && (
@@ -1881,7 +1851,7 @@ export default function AdminDashboard() {
                                                                                     }}
                                                                                     className="p-1 text-black/40 hover:text-black transition-colors"
                                                                                 >
-                                                                                    <Edit3 size={14} />
+                                                                                    {feeObj ? <Edit3 size={14} /> : <span className="px-2 py-0.5 text-[9px] border border-black/20 rounded uppercase font-bold text-black/60 hover:border-black hover:text-black">Add Fee</span>}
                                                                                 </button>
                                                                                 {feeObj && (
                                                                                     <button
@@ -2105,18 +2075,25 @@ export default function AdminDashboard() {
                         { id: 'fees', icon: Settings, label: 'Fees' },
                         { id: 'calculator', icon: Calculator, label: 'Calc' },
                         { id: 'list', icon: LayoutDashboard, label: 'Menu' },
+                        { id: 'more', icon: LayoutDashboard, label: 'More' }
                     ].map((tab) => {
                         const isActive = activeTab === tab.id;
                         const Icon = tab.icon;
                         return (
                             <button
                                 key={tab.id}
-                                onClick={() => setActiveTab(tab.id as any)}
+                                onClick={() => {
+                                    if (tab.id === 'more') {
+                                        document.getElementById('mobile-sidebar')?.classList.remove('translate-x-full');
+                                    } else {
+                                        setActiveTab(tab.id as any);
+                                    }
+                                }}
                                 className={`flex flex-col items-center justify-center flex-1 py-2.5 rounded-xl transition-all duration-300 ${
-                                    isActive ? 'bg-black text-white shadow-md scale-95' : 'text-black/50 hover:bg-black/5 hover:text-black'
+                                    isActive && tab.id !== 'more' ? 'bg-black text-white shadow-md scale-95' : 'text-black/50 hover:bg-black/5 hover:text-black'
                                 }`}
                             >
-                                <Icon size={20} strokeWidth={isActive ? 2.5 : 2} />
+                                <Icon size={20} strokeWidth={isActive && tab.id !== 'more' ? 2.5 : 2} />
                                 <span className="text-[9px] mt-1 font-bold tracking-widest uppercase">{tab.label}</span>
                             </button>
                         );
