@@ -910,7 +910,7 @@ export default function AdminDashboard() {
                     </div>
                 </div>
 
-                <div className="max-w-4xl mx-auto p-4 md:p-8">
+                <div className={`mx-auto p-4 md:p-8 ${activeTab === 'list' ? 'max-w-6xl' : 'max-w-4xl'}`}>
                     
                     {/* CAMPAIGN CARD SETUP TAB */}
                     {activeTab === 'campaign' && (
@@ -1906,10 +1906,10 @@ export default function AdminDashboard() {
 
                     {/* OVERVIEW TAB */}
                     {activeTab === 'list' && (
-                        <div className="space-y-6 bg-white border border-black/15 rounded-2xl p-5 md:p-8 shadow-sm">
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-black/10 pb-4 gap-4">
-                                <h3 className="text-base font-bold uppercase tracking-wider text-black">
-                                    Treatment & Store Catalog Overview
+                        <div className="space-y-6">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 gap-4">
+                                <h3 className="text-lg font-bold uppercase tracking-widest text-black">
+                                    Treatment Catalog
                                 </h3>
                                 <div className="relative w-full sm:w-64">
                                     <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
@@ -1920,30 +1920,41 @@ export default function AdminDashboard() {
                                         placeholder="Search treatments..." 
                                         value={menuSearch}
                                         onChange={(e) => setMenuSearch(e.target.value)}
-                                        className="w-full pl-9 pr-4 py-2 bg-black/5 border border-black/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black/20"
+                                        className="w-full pl-9 pr-4 py-2 bg-white border border-black/15 rounded-xl text-sm focus:outline-none focus:border-black"
                                     />
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {treatments.filter(t => t.title.toLowerCase().includes(menuSearch.toLowerCase()) || t.category.toLowerCase().includes(menuSearch.toLowerCase())).map(t => (
-                                    <div key={t.id} className="bg-white border border-black/15 rounded-2xl p-4 shadow-sm flex flex-col justify-between">
+                                    <div key={t.id} className="bg-white border border-black/15 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
                                         <div>
                                             <div className="flex justify-between items-start mb-2">
-                                                <h4 className="font-bold text-black text-sm">{t.title}</h4>
-                                                <span className="text-[9px] uppercase tracking-widest font-bold bg-black/5 px-2 py-1 rounded-md text-black/60">{t.category}</span>
+                                                <h4 className="font-bold text-black text-base pr-4">{t.title}</h4>
+                                                <span className="text-[9px] uppercase tracking-widest font-bold bg-black/5 px-2 py-1 rounded-md text-black/60 shrink-0">{t.category}</span>
                                             </div>
-                                            <p className="text-xs text-black/60 line-clamp-2 mb-3">{t.desc}</p>
+                                            <p className="text-xs text-black/60 line-clamp-2 mb-4 leading-relaxed">{t.desc}</p>
                                         </div>
-                                        <div className="space-y-3">
-                                            <div className="flex flex-wrap gap-2">
-                                                {t.options.map(o => (
-                                                    <span key={o.duration} className="text-[10px] font-bold bg-black/5 text-black px-2 py-1 rounded-lg">
-                                                        {o.duration}m | IDR {parseInt(o.price.replace(/,/g, '') || '0').toLocaleString('en-US')}
-                                                    </span>
-                                                ))}
+                                        <div className="space-y-4">
+                                            <div className="border border-black/10 rounded-xl overflow-hidden">
+                                                <table className="w-full text-left text-xs">
+                                                    <thead className="bg-black/[0.03]">
+                                                        <tr>
+                                                            <th className="px-3 py-2 font-bold text-black/50 uppercase tracking-widest text-[9px]">Duration</th>
+                                                            <th className="px-3 py-2 font-bold text-black/50 uppercase tracking-widest text-[9px] text-right">Price (IDR)</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody className="divide-y divide-black/5">
+                                                        {t.options.map(o => (
+                                                            <tr key={o.duration} className="bg-white">
+                                                                <td className="px-3 py-2.5 font-bold text-black">{o.duration} mins</td>
+                                                                <td className="px-3 py-2.5 font-bold text-black text-right">{parseInt(o.price.replace(/,/g, '') || '0').toLocaleString('en-US')}</td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
                                             </div>
-                                            <div className="flex gap-2 pt-3 border-t border-black/5">
+                                            <div className="flex gap-2 pt-2">
                                                 <button
                                                     type="button"
                                                     onClick={() => {
