@@ -844,8 +844,26 @@ export default function AdminDashboard() {
             {/* Main Content Area */}
             <main className="flex-1 relative overflow-y-auto bg-white min-h-screen pb-28 md:pb-12">
                 
-                {/* Top Mobile Bar */}
-                <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-black/10 px-4 md:px-8 py-3.5 flex items-center justify-between h-14 md:h-0 overflow-hidden">
+                {/* Sticky Mobile Admin Selector */}
+                <div className="md:hidden sticky top-0 z-40 pt-4 px-4 pb-2 bg-white/95 backdrop-blur-xl border-b border-black/5 mb-2">
+                    <div className="bg-white border border-black/10 rounded-2xl p-2 shadow-sm flex items-center justify-between">
+                        <div className="relative w-36">
+                            <select 
+                                value={siteBrandFilter}
+                                onChange={(e) => setSiteBrandFilter(e.target.value)}
+                                className="w-full bg-black text-white rounded-xl px-3 py-2 text-[10px] font-bold focus:outline-none appearance-none shadow-sm"
+                            >
+                                <option value="elexoir">Elexoir</option>
+                                <option value="bali">Home Spa Ubud</option>
+                                <option value="therapick">Therapick</option>
+                                <option value="central">Central Admin</option>
+                            </select>
+                            <div className="absolute inset-y-0 right-2 flex items-center pointer-events-none">
+                                <ChevronDown size={12} className="text-white/50" />
+                            </div>
+                        </div>
+                        <h2 className="text-[9px] font-bold tracking-widest uppercase text-black/50 text-right pr-2">Select Admin<br/>Dashboard</h2>
+                    </div>
                 </div>
 
 
@@ -886,26 +904,7 @@ export default function AdminDashboard() {
                 </div>
 
                 <div className={`mx-auto p-4 md:p-8 ${activeTab === 'list' || activeTab === 'fees' ? 'max-w-6xl' : 'max-w-4xl'}`}>
-                    
-                    <div className="md:hidden bg-white border border-black/15 rounded-2xl p-4 shadow-sm mb-6 flex flex-col">
-                        <h2 className="text-[10px] font-bold tracking-widest uppercase text-black/50 mb-2">Select Admin Dashboard</h2>
-                        <div className="relative w-full">
-                            <select 
-                                value={siteBrandFilter}
-                                onChange={(e) => setSiteBrandFilter(e.target.value)}
-                                className="w-full bg-black border border-black/10 text-white rounded-xl px-4 py-3 text-xs font-bold focus:outline-none appearance-none shadow-sm"
-                            >
-                                <option value="elexoir">Elexoir</option>
-                                <option value="bali">Home Spa Ubud</option>
-                                <option value="therapick">Therapick</option>
-                                <option value="central">Central Admin</option>
-                            </select>
-                            <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
-                                <ChevronDown size={14} className="text-white/50" />
-                            </div>
-                        </div>
-                    </div>
-                    
+
                     {/* CAMPAIGN CARD SETUP TAB */}
                     {activeTab === 'campaign' && (
                         <div className="space-y-8 animate-in fade-in duration-300">
