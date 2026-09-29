@@ -845,30 +845,7 @@ export default function AdminDashboard() {
             <main className="flex-1 relative overflow-y-auto bg-white min-h-screen pb-28 md:pb-12">
                 
                 {/* Top Mobile Bar */}
-                <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-black/10 px-4 md:px-8 py-3.5 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold tracking-widest uppercase text-black">
-                            {activeTab === 'campaign' && 'Campaign Card Setup'}
-                            {activeTab === 'promo' && 'Promo Codes'}
-                            {activeTab === 'treatment' && 'Treatment Management'}
-                            {activeTab === 'store' && 'Store Catalog'}
-                            {activeTab === 'fees' && 'Therapist Wage Rates'}
-                            {activeTab === 'calculator' && 'Commission Calculator'}
-                            {activeTab === 'list' && 'Menu & Item Overview'}
-                        </span>
-                    </div>
-                    <div className="md:hidden">
-                        <select 
-                            value={siteBrandFilter}
-                            onChange={(e) => setSiteBrandFilter(e.target.value)}
-                            className="bg-black/5 border border-black/10 rounded-md px-2 py-1 text-[10px] font-bold text-black focus:outline-none appearance-none"
-                        >
-                            <option value="elexoir">Elexoir</option>
-                            <option value="bali">Home Spa Ubud</option>
-                            <option value="therapick">Therapick</option>
-                            <option value="central">Central Admin</option>
-                        </select>
-                    </div>
+                <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-black/10 px-4 md:px-8 py-3.5 flex items-center justify-between h-14 md:h-0 overflow-hidden">
                 </div>
 
 
@@ -909,6 +886,19 @@ export default function AdminDashboard() {
                 </div>
 
                 <div className={`mx-auto p-4 md:p-8 ${activeTab === 'list' || activeTab === 'fees' ? 'max-w-6xl' : 'max-w-4xl'}`}>
+                    
+                    <div className="md:hidden flex justify-end mb-4">
+                        <select 
+                            value={siteBrandFilter}
+                            onChange={(e) => setSiteBrandFilter(e.target.value)}
+                            className="bg-black border border-black/10 text-white rounded-xl px-4 py-2 text-xs font-bold focus:outline-none shadow-sm"
+                        >
+                            <option value="elexoir">Elexoir</option>
+                            <option value="bali">Home Spa Ubud</option>
+                            <option value="therapick">Therapick</option>
+                            <option value="central">Central Admin</option>
+                        </select>
+                    </div>
                     
                     {/* CAMPAIGN CARD SETUP TAB */}
                     {activeTab === 'campaign' && (
@@ -1768,19 +1758,6 @@ export default function AdminDashboard() {
                                     <p className="text-xs text-black/60">Set wage payouts per treatment duration.</p>
                                 </div>
                                 <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-                                    <button 
-                                        onClick={() => {
-                                            setEditingTreatmentId(null);
-                                            setTreatmentTitle('');
-                                            setTreatmentDesc('');
-                                            setBenefits(['']);
-                                            setPricingOptions([{ duration: '', price: '' }]);
-                                            setActiveTab('treatment');
-                                        }}
-                                        className="bg-black text-white px-4 py-2 rounded-xl text-[10px] sm:text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 whitespace-nowrap"
-                                    >
-                                        <PlusCircle size={16} /> Create Treatment
-                                    </button>
                                     <div className="relative w-full sm:w-64">
                                         <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
                                             <Search className="h-4 w-4 text-black/40" />
@@ -2053,17 +2030,20 @@ export default function AdminDashboard() {
                                                     </tbody>
                                                 </table>
                                             </div>
-                                            <div className="flex gap-2 pt-2">
+                                            <div className="flex gap-2 pt-2 items-center">
                                                 <button
                                                     type="button"
                                                     onClick={() => handleTogglePin(t)}
-                                                    className={`px-3 text-xs font-bold rounded-xl transition-colors ${
+                                                    className={`p-2 rounded-xl transition-colors shrink-0 ${
                                                         t.is_pinned ? 'bg-black text-white shadow-sm' : 'bg-black/5 text-black hover:bg-black/10'
                                                     }`}
                                                     title={t.is_pinned ? "Unpin from Most Booked" : "Pin to Most Booked"}
                                                 >
                                                     <Pin size={14} className={t.is_pinned ? "fill-white" : ""} />
                                                 </button>
+                                                {t.is_pinned && t.pinned_image && (
+                                                    <img src={t.pinned_image} alt="Pinned" className="w-7 h-7 object-cover rounded-lg shrink-0 border border-black/10" />
+                                                )}
                                                 <button
                                                     type="button"
                                                     onClick={() => {
