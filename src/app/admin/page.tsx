@@ -6,7 +6,7 @@ import {
     Megaphone, PlusCircle, Store, Settings, LayoutDashboard, 
     UploadCloud, CheckCircle, Plus, Trash2, Edit3, Pin, 
     ChevronDown, ChevronUp, Calculator, LogOut, Sparkles,
-    ArrowRight, ArrowUp, ArrowDown, Compass, ShieldCheck, Check, Ticket, Search, Menu, MoreHorizontal
+    ArrowRight, ArrowUp, ArrowDown, Compass, ShieldCheck, Check, Ticket, Search, Menu, MoreHorizontal, Calendar
 } from 'lucide-react';
 import Link from 'next/link';
 import { useSpa, SelectedCampaignTreatment, Treatment, Product, TherapistFee, Campaign, sortCampaigns, DEFAULT_CAMPAIGNS } from '@/context/SpaContext';
@@ -42,7 +42,7 @@ export default function AdminDashboard() {
         therapists, setTherapists
     } = useSpa();
 
-    const [activeTab, setActiveTab] = useState<'campaign' | 'treatment' | 'store' | 'fees' | 'calculator' | 'list' | 'settings' | 'promo'>('campaign');
+    const [activeTab, setActiveTab] = useState<'campaign' | 'treatment' | 'store' | 'fees' | 'calculator' | 'list' | 'settings' | 'promo' | 'bookings'>('campaign');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [success, setSuccess] = useState(false);
     
@@ -802,6 +802,7 @@ export default function AdminDashboard() {
 
                 <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
                     {[
+                        ...(siteBrandFilter === 'central' ? [{ id: 'bookings', icon: Calendar, label: 'Booking Mgmt' }] : []),
                         { id: 'campaign', icon: Megaphone, label: 'Campaign Card' },
                         { id: 'promo', icon: Ticket, label: 'Promo Codes' },
                         { id: 'treatment', icon: PlusCircle, label: 'Treatments' },
@@ -880,10 +881,13 @@ export default function AdminDashboard() {
                         </div>
                         <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
                             {[
-                                { id: 'campaign', icon: Megaphone, label: 'Campaign Card' },
-                                { id: 'promo', icon: Ticket, label: 'Promo Codes' },
-                                { id: 'list', icon: LayoutDashboard, label: 'Menu Overview' },
-                            ].filter(tab => siteBrandFilter !== 'central' || !['campaign', 'promo'].includes(tab.id)).map((tab) => {
+                                ...(siteBrandFilter === 'central' ? [] : [
+                                    { id: 'campaign', icon: Megaphone, label: 'Campaign Card' },
+                                    { id: 'promo', icon: Ticket, label: 'Promo Codes' },
+                                ]),
+                                { id: 'store', icon: Store, label: 'Store Products' },
+                                { id: 'calculator', icon: Calculator, label: 'Commission Calc' },
+                            ].map((tab) => {
                                 const Icon = tab.icon;
                                 return (
                                     <button
@@ -2093,6 +2097,19 @@ export default function AdminDashboard() {
                         </div>
                     )}
 
+                    {/* BOOKINGS TAB (CENTRAL ADMIN ONLY) */}
+                    {activeTab === 'bookings' && siteBrandFilter === 'central' && (
+                        <div className="space-y-6 animate-in fade-in duration-300 flex flex-col items-center justify-center min-h-[50vh] text-center">
+                            <div className="bg-black/5 p-4 rounded-full mb-2">
+                                <Calendar size={48} className="text-black/30" />
+                            </div>
+                            <h2 className="text-2xl font-bold tracking-tight text-black">Booking Management</h2>
+                            <p className="text-sm text-black/60 max-w-md">
+                                Single booking management system for all 3 website domains will be displayed here.
+                            </p>
+                        </div>
+                    )}
+
                 </div>
             </main>
 
@@ -2102,14 +2119,14 @@ export default function AdminDashboard() {
                     {(siteBrandFilter === 'central' ? [
                         { id: 'treatment', icon: PlusCircle, label: 'Treats' },
                         { id: 'fees', icon: Settings, label: 'Fees' },
-                        { id: 'more', icon: MoreHorizontal, label: 'More' },
-                        { id: 'calculator', icon: Calculator, label: 'Calc' },
-                        { id: 'list', icon: LayoutDashboard, label: 'Menu' }
+                        { id: 'bookings', icon: Calendar, label: 'Book' },
+                        { id: 'list', icon: LayoutDashboard, label: 'Menu' },
+                        { id: 'more', icon: MoreHorizontal, label: 'More' }
                     ] : [
                         { id: 'treatment', icon: PlusCircle, label: 'Treats' },
                         { id: 'fees', icon: Settings, label: 'Fees' },
-                        { id: 'more', icon: MoreHorizontal, label: 'More' },
-                        { id: 'list', icon: LayoutDashboard, label: 'Menu' }
+                        { id: 'list', icon: LayoutDashboard, label: 'Menu' },
+                        { id: 'more', icon: MoreHorizontal, label: 'More' }
                     ]).map((tab) => {
                         const isActive = activeTab === tab.id;
                         const Icon = tab.icon;
