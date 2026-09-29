@@ -1716,7 +1716,6 @@ export default function AdminDashboard() {
                                 </button>
                             </div>
                         </form>
-                        </div>
                     )}
 
                     {/* STORE PRODUCTS TAB */}
