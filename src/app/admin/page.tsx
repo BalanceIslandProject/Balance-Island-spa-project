@@ -75,6 +75,37 @@ export default function AdminDashboard() {
         if (activeTab === 'promo') fetchPromos();
     }, [activeTab, siteBrandFilter]);
 
+    // Fetch data whenever siteBrandFilter changes in the admin panel
+    useEffect(() => {
+        let isMounted = true;
+        async function fetchBrandData() {
+            try {
+                const [treatmentsRes, productsRes, campaignsRes, therapistsRes] = await Promise.all([
+                    supabase.from('treatments').select('*').eq('is_published', true).eq('brand', siteBrandFilter).order('created_at', { ascending: false }),
+                    supabase.from('products').select('*').eq('is_published', true).eq('brand', siteBrandFilter).order('created_at', { ascending: false }),
+                    supabase.from('campaigns').select('*').eq('is_published', true).eq('brand', siteBrandFilter).order('created_at', { ascending: false }),
+                    supabase.from('therapists').select('*').eq('is_active', true).eq('brand', siteBrandFilter).order('created_at', { ascending: false })
+                ]);
+                
+                if (isMounted) {
+                    if (treatmentsRes.data) setTreatments(treatmentsRes.data);
+                    if (productsRes.data) setProducts(productsRes.data);
+                    if (therapistsRes.data) setTherapists(therapistsRes.data);
+                    if (campaignsRes.data) {
+                        const sorted = sortCampaigns(campaignsRes.data);
+                        setCampaigns(sorted);
+                        setCampaign(sorted[0] || null);
+                    }
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+        
+        fetchBrandData();
+        return () => { isMounted = false; };
+    }, [siteBrandFilter, setTreatments, setProducts, setCampaigns, setCampaign, setTherapists]);
+
     // Filter by Brand / Property (elexoir, thevisala, etc)
     const [selectedBrand, setSelectedBrand] = useState(siteBrandFilter);
 
@@ -695,10 +726,22 @@ export default function AdminDashboard() {
             
             {/* Desktop Minimalist Black & White Sidebar */}
             <aside className="hidden md:flex flex-col w-64 bg-white border-r border-black/10 z-20 shrink-0">
-                <div className="p-6 border-b border-black/10 flex items-center justify-between">
+                <div className="p-6 border-b border-black/10 flex flex-col gap-4">
                     <div>
                         <span className="text-[10px] uppercase font-bold tracking-[0.25em] text-black/50 block">Management</span>
-                        <h1 className="text-base font-bold tracking-tight text-black">Elexoir Admin</h1>
+                        <h1 className="text-base font-bold tracking-tight text-black">Admin Portal</h1>
+                    </div>
+                    <div>
+                        <label className="text-[10px] font-bold uppercase tracking-widest text-black/50 block mb-1.5">Brand Configured</label>
+                        <select 
+                            value={siteBrandFilter}
+                            onChange={(e) => setSiteBrandFilter(e.target.value)}
+                            className="w-full bg-black/5 border border-black/10 rounded-lg px-3 py-2 text-xs font-bold text-black focus:outline-none focus:border-black appearance-none cursor-pointer"
+                        >
+                            <option value="elexoir">Elexoir Home Spa</option>
+                            <option value="bali">Home Spa Ubud</option>
+                            <option value="therapick">Therapick</option>
+                        </select>
                     </div>
                 </div>
 
@@ -758,6 +801,17 @@ export default function AdminDashboard() {
                             {activeTab === 'calculator' && 'Commission Calculator'}
                             {activeTab === 'list' && 'Menu & Item Overview'}
                         </span>
+                    </div>
+                    <div className="md:hidden">
+                        <select 
+                            value={siteBrandFilter}
+                            onChange={(e) => setSiteBrandFilter(e.target.value)}
+                            className="bg-black/5 border border-black/10 rounded-md px-2 py-1 text-[10px] font-bold text-black focus:outline-none appearance-none"
+                        >
+                            <option value="elexoir">Elexoir</option>
+                            <option value="bali">Home Spa Ubud</option>
+                            <option value="therapick">Therapick</option>
+                        </select>
                     </div>
                 </div>
 

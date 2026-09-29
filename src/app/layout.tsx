@@ -131,12 +131,12 @@ const getSpaData = unstable_cache(
     let therapists: any[] = [];
 
     try {
-      let [treatmentsRes, productsRes, campaignsRes, therapistsRes] = await Promise.all([
-        supabase.from('treatments').select('*').eq('is_published', true).eq('brand', brand).order('created_at', { ascending: false }),
-        supabase.from('products').select('*').eq('is_published', true).eq('brand', brand).order('created_at', { ascending: false }),
-        supabase.from('campaigns').select('*').eq('is_published', true).order('created_at', { ascending: false }),
-        supabase.from('therapists').select('*').eq('is_active', true).eq('brand', brand).order('created_at', { ascending: false })
-      ]);
+        let [treatmentsRes, productsRes, campaignsRes, therapistsRes] = await Promise.all([
+          supabase.from('treatments').select('*').eq('is_published', true).eq('brand', brand).order('created_at', { ascending: false }),
+          supabase.from('products').select('*').eq('is_published', true).eq('brand', brand).order('created_at', { ascending: false }),
+          supabase.from('campaigns').select('*').eq('is_published', true).eq('brand', brand).order('created_at', { ascending: false }),
+          supabase.from('therapists').select('*').eq('is_active', true).eq('brand', brand).order('created_at', { ascending: false })
+        ]);
 
       if (brand !== 'elexoir' && (!treatmentsRes.data || treatmentsRes.data.length === 0)) {
         const fallbackRes = await Promise.all([
@@ -172,7 +172,7 @@ export default async function RootLayout({
   const host = headersList.get("host") || "www.elexoirhomespaubud.com";
   const isTherapick = host.includes("booktherapick") || host.includes("therapick");
   const isBaliDomain = (host.includes("homespaubud") || host.includes("ubudhomespa")) && !host.includes("elexoir");
-  const brand = (isBaliDomain || isTherapick) ? 'bali' : 'elexoir';
+  const brand = isTherapick ? 'therapick' : (isBaliDomain ? 'bali' : 'elexoir');
 
   const name = isTherapick ? "Therapick" : (isBaliDomain ? "Home Spa Ubud" : "Elexoir Home Spa");
   const url = isTherapick ? "https://www.booktherapick.com" : (isBaliDomain ? "https://www.homespaubud.com" : "https://www.elexoirhomespaubud.com");
