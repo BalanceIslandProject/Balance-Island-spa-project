@@ -102,7 +102,7 @@ export default function BookingManagement({
 
     const payload = {
       booking_date: selectedDate,
-      time: formTime,
+      time: "-", // Hardcoded since it was removed from UI but might be required in DB
       treatment_name: formDuration ? `${formTreatment} (${formDuration})` : formTreatment,
       pax: formPax,
       therapists_count: formTherapists,
@@ -187,13 +187,12 @@ export default function BookingManagement({
       
     if (!data || data.length === 0) return alert("No bookings this month to export.");
 
-    const headers = ["Date", "Time", "Treatment", "Pax", "Therapists", "Revenue", "Therapist Fee", "Net Profit"];
+    const headers = ["Date", "Treatment", "Pax", "Therapists", "Revenue", "Therapist Fee", "Net Profit"];
     const csvRows = [headers.join(',')];
 
     data.forEach(b => {
       csvRows.push([
         b.booking_date,
-        b.time,
         `"${b.treatment_name}"`,
         b.pax,
         b.therapists_count,
@@ -305,13 +304,6 @@ export default function BookingManagement({
               <h4 className="font-bold text-lg mb-6">{isEditing ? 'Edit Booking' : 'New Booking'}</h4>
               
               <form onSubmit={handleSave} className="space-y-5">
-                <div className="grid grid-cols-1 gap-4">
-                  <div>
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-black/50 block mb-2">Time</label>
-                    <input type="time" required value={formTime} onChange={e => setFormTime(e.target.value)} className="w-full bg-black/5 border border-black/10 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black" />
-                  </div>
-                </div>
-
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="text-[10px] font-bold uppercase tracking-widest text-black/50 block mb-2">Select Treatment</label>
@@ -394,7 +386,6 @@ export default function BookingManagement({
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 ml-2">
                     <div className="space-y-1 w-full md:w-1/3">
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-lg">{booking.time}</span>
                         <span className="text-[10px] font-bold tracking-wider uppercase bg-black/10 px-2 py-0.5 rounded-full">{booking.pax} Pax</span>
                       </div>
                       <p className="font-medium text-sm truncate max-w-[200px]">{booking.treatment_name}</p>
@@ -418,8 +409,6 @@ export default function BookingManagement({
                     <div className="flex md:flex-col gap-2 justify-end opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
                       <button 
                         onClick={() => {
-                          setFormTime(booking.time);
-                          
                           // Parse out the duration if it was saved like "Title (duration)"
                           let title = booking.treatment_name;
                           let dur = '';
