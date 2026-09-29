@@ -10,7 +10,6 @@ export interface Booking {
   created_at: string;
   booking_date: string; // YYYY-MM-DD
   time: string;
-  customer_name: string;
   treatment_name: string;
   pax: number;
   therapists_count: number;
@@ -36,7 +35,6 @@ export default function BookingManagement({
   const [isEditing, setIsEditing] = useState<string | null>(null);
   
   const [formTime, setFormTime] = useState('10:00');
-  const [formCustomer, setFormCustomer] = useState('');
   const [formTreatment, setFormTreatment] = useState('');
   const [formPax, setFormPax] = useState<number>(1);
   const [formTherapists, setFormTherapists] = useState<number>(1);
@@ -100,12 +98,11 @@ export default function BookingManagement({
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formCustomer || !formTreatment) return alert("Please fill required fields.");
+    if (!formTreatment) return alert("Please fill required fields.");
 
     const payload = {
       booking_date: selectedDate,
       time: formTime,
-      customer_name: formCustomer,
       treatment_name: formTreatment,
       pax: formPax,
       therapists_count: formTherapists,
@@ -136,7 +133,6 @@ export default function BookingManagement({
 
   const resetForm = () => {
     setFormTime('10:00');
-    setFormCustomer('');
     setFormTreatment('');
     setFormPax(1);
     setFormTherapists(1);
@@ -190,14 +186,13 @@ export default function BookingManagement({
       
     if (!data || data.length === 0) return alert("No bookings this month to export.");
 
-    const headers = ["Date", "Time", "Customer", "Treatment", "Pax", "Therapists", "Revenue", "Therapist Fee", "Net Profit"];
+    const headers = ["Date", "Time", "Treatment", "Pax", "Therapists", "Revenue", "Therapist Fee", "Net Profit"];
     const csvRows = [headers.join(',')];
 
     data.forEach(b => {
       csvRows.push([
         b.booking_date,
         b.time,
-        `"${b.customer_name}"`,
         `"${b.treatment_name}"`,
         b.pax,
         b.therapists_count,
@@ -309,14 +304,10 @@ export default function BookingManagement({
               <h4 className="font-bold text-lg mb-6">{isEditing ? 'Edit Booking' : 'New Booking'}</h4>
               
               <form onSubmit={handleSave} className="space-y-5">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4">
                   <div>
                     <label className="text-[10px] font-bold uppercase tracking-widest text-black/50 block mb-2">Time</label>
                     <input type="time" required value={formTime} onChange={e => setFormTime(e.target.value)} className="w-full bg-black/5 border border-black/10 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black" />
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-black/50 block mb-2">Customer Name</label>
-                    <input type="text" required placeholder="John Doe" value={formCustomer} onChange={e => setFormCustomer(e.target.value)} className="w-full bg-black/5 border border-black/10 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black" />
                   </div>
                 </div>
 
@@ -386,8 +377,7 @@ export default function BookingManagement({
                         <span className="font-bold text-lg">{booking.time}</span>
                         <span className="text-[10px] font-bold tracking-wider uppercase bg-black/10 px-2 py-0.5 rounded-full">{booking.pax} Pax</span>
                       </div>
-                      <p className="font-medium text-sm">{booking.customer_name}</p>
-                      <p className="text-xs text-black/50 truncate max-w-[200px]">{booking.treatment_name}</p>
+                      <p className="font-medium text-sm truncate max-w-[200px]">{booking.treatment_name}</p>
                     </div>
                     
                     <div className="flex-1 grid grid-cols-3 gap-2 text-center bg-black/5 rounded-xl p-3">
@@ -409,7 +399,6 @@ export default function BookingManagement({
                       <button 
                         onClick={() => {
                           setFormTime(booking.time);
-                          setFormCustomer(booking.customer_name);
                           setFormTreatment(booking.treatment_name);
                           setFormPax(booking.pax);
                           setFormTherapists(booking.therapists_count);
