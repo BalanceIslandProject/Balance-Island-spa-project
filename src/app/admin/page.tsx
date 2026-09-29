@@ -325,6 +325,7 @@ export default function AdminDashboard() {
     const [feeInputs, setFeeInputs] = useState<{ [key: string]: string }>({});
     const [feeSearch, setFeeSearch] = useState('');
     const [menuSearch, setMenuSearch] = useState('');
+    const [editingFee, setEditingFee] = useState<{id: string, duration: string} | null>(null);
     const [expandedFees, setExpandedFees] = useState<{ [key: string]: boolean }>({});
     
     useEffect(() => {
@@ -664,9 +665,36 @@ export default function AdminDashboard() {
                 }
             }
             alert('Therapist fee saved successfully!');
+            setEditingFee(null);
             triggerRevalidation();
         } catch (e: any) {
             alert('Fee updated locally.');
+            setEditingFee(null);
+        }
+    };
+
+    const handleDeleteFee = async (treatmentId: string, duration: string) => {
+        const pin = prompt('Enter admin PIN to remove fee:');
+        if (pin !== (process.env.NEXT_PUBLIC_DELETE_PIN || '022320')) {
+            alert('Incorrect PIN');
+            return;
+        }
+        
+        try {
+            const existingFee = therapistFees.find(f => f.treatment_id === treatmentId && f.duration === duration);
+            if (existingFee) {
+                await supabase.from('therapist_fees').delete().eq('id', existingFee.id);
+                setTherapistFees(prev => prev.filter(f => f.id !== existingFee.id));
+                setFeeInputs(prev => {
+                    const newInputs = { ...prev };
+                    delete newInputs[`${treatmentId}-${duration}`];
+                    return newInputs;
+                });
+                alert('Therapist fee removed successfully!');
+                triggerRevalidation();
+            }
+        } catch (e: any) {
+            alert('Error removing fee.');
         }
     };
 
@@ -1763,45 +1791,116 @@ export default function AdminDashboard() {
 
                     {/* THERAPIST FEES TAB */}
                     {activeTab === 'fees' && (
-                        <div className="space-y-6 bg-white border border-black/15 rounded-2xl p-5 md:p-8 shadow-sm">
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-black/10 pb-4">
+                        <div className="space-y-6">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 gap-4">
                                 <div>
-                                    <h3 className="text-base font-bold uppercase tracking-wider text-black">Therapist Fee Setup</h3>
+                                    <h3 className="text-lg font-bold uppercase tracking-widest text-black">Therapist Fee Setup</h3>
                                     <p className="text-xs text-black/60">Set wage payouts per treatment duration.</p>
                                 </div>
-                                <input 
-                                    type="text" 
-                                    placeholder="Search treatments..." 
-                                    value={feeSearch} 
-                                    onChange={e => setFeeSearch(e.target.value)}
-                                    className="bg-white border border-black/20 rounded-xl px-3.5 py-2 text-xs text-black placeholder:text-black/40 focus:outline-none focus:border-black w-full sm:w-56"
-                                />
+                                <div className="relative w-full sm:w-64">
+                                    <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                                        <Search className="h-4 w-4 text-black/40" />
+                                    </div>
+                                    <input 
+                                        type="text" 
+                                        placeholder="Search treatments..." 
+                                        value={feeSearch} 
+                                        onChange={e => setFeeSearch(e.target.value)}
+                                        className="w-full pl-9 pr-4 py-2 bg-white border border-black/15 rounded-xl text-sm focus:outline-none focus:border-black"
+                                    />
+                                </div>
                             </div>
 
-                            <div className="space-y-3">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {treatments.filter(t => t.title.toLowerCase().includes(feeSearch.toLowerCase())).map(t => (
-                                    <div key={t.id} className="p-4 rounded-xl border border-black/10 bg-black/[0.02] space-y-3">
-                                        <h4 className="text-xs font-bold text-black">{t.title}</h4>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                                            {t.options.map(opt => (
-                                                <div key={opt.duration} className="flex items-center gap-2">
-                                                    <span className="text-[10px] font-bold text-black/60 w-16">{opt.duration} Mins:</span>
-                                                    <input 
-                                                        type="text"
-                                                        placeholder="e.g. 150,000"
-                                                        value={feeInputs[`${t.id}-${opt.duration}`] || ''}
-                                                        onChange={e => setFeeInputs({ ...feeInputs, [`${t.id}-${opt.duration}`]: e.target.value })}
-                                                        className="flex-1 bg-white border border-black/20 rounded-lg px-2.5 py-1.5 text-xs text-black focus:outline-none focus:border-black"
-                                                    />
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleSaveFee(t.id, opt.duration)}
-                                                        className="px-2.5 py-1.5 rounded-lg bg-black text-white text-[10px] font-bold uppercase hover:bg-black/80"
-                                                    >
-                                                        Save
-                                                    </button>
-                                                </div>
-                                            ))}
+                                    <div key={t.id} className="bg-white border border-black/15 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
+                                        <div>
+                                            <div className="flex justify-between items-start mb-4">
+                                                <h4 className="font-bold text-black text-base pr-4">{t.title}</h4>
+                                                <span className="text-[9px] uppercase tracking-widest font-bold bg-black/5 px-2 py-1 rounded-md text-black/60 shrink-0">{t.category}</span>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-4">
+                                            <div className="border border-black/10 rounded-xl overflow-hidden">
+                                                <table className="w-full text-left text-xs">
+                                                    <thead className="bg-black/[0.03]">
+                                                        <tr>
+                                                            <th className="px-3 py-2 font-bold text-black/50 uppercase tracking-widest text-[9px]">Duration</th>
+                                                            <th className="px-3 py-2 font-bold text-black/50 uppercase tracking-widest text-[9px] text-right">Fee (IDR)</th>
+                                                            <th className="px-3 py-2"></th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody className="divide-y divide-black/5">
+                                                        {t.options.map(opt => {
+                                                            const isEditing = editingFee?.id === t.id && editingFee?.duration === opt.duration;
+                                                            const feeObj = therapistFees.find(f => f.treatment_id === t.id && f.duration === opt.duration);
+                                                            const feeValue = feeObj ? parseInt(feeObj.fee.replace(/,/g, '') || '0').toLocaleString('en-US') : '-';
+                                                            
+                                                            return (
+                                                                <tr key={opt.duration} className="bg-white">
+                                                                    <td className="px-3 py-2.5 font-bold text-black">{opt.duration} mins</td>
+                                                                    <td className="px-3 py-2.5 font-bold text-black text-right">
+                                                                        {isEditing ? (
+                                                                            <input 
+                                                                                type="text"
+                                                                                autoFocus
+                                                                                placeholder="e.g. 150,000"
+                                                                                value={feeInputs[`${t.id}-${opt.duration}`] || ''}
+                                                                                onChange={e => setFeeInputs({ ...feeInputs, [`${t.id}-${opt.duration}`]: e.target.value })}
+                                                                                className="w-24 bg-white border border-black/20 rounded-lg px-2 py-1 text-xs text-right text-black focus:outline-none focus:border-black"
+                                                                            />
+                                                                        ) : (
+                                                                            feeValue
+                                                                        )}
+                                                                    </td>
+                                                                    <td className="px-3 py-2.5 text-right flex items-center justify-end gap-2">
+                                                                        {isEditing ? (
+                                                                            <>
+                                                                                <button
+                                                                                    type="button"
+                                                                                    onClick={() => handleSaveFee(t.id, opt.duration)}
+                                                                                    className="px-2 py-1 rounded-lg bg-black text-white text-[10px] font-bold uppercase hover:bg-black/80"
+                                                                                >
+                                                                                    Save
+                                                                                </button>
+                                                                                <button
+                                                                                    type="button"
+                                                                                    onClick={() => setEditingFee(null)}
+                                                                                    className="text-black/40 hover:text-black font-bold text-[10px] uppercase"
+                                                                                >
+                                                                                    Cancel
+                                                                                </button>
+                                                                            </>
+                                                                        ) : (
+                                                                            <>
+                                                                                <button
+                                                                                    type="button"
+                                                                                    onClick={() => {
+                                                                                        setFeeInputs(prev => ({ ...prev, [`${t.id}-${opt.duration}`]: feeObj ? feeObj.fee : '' }));
+                                                                                        setEditingFee({ id: t.id, duration: opt.duration });
+                                                                                    }}
+                                                                                    className="p-1 text-black/40 hover:text-black transition-colors"
+                                                                                >
+                                                                                    <Edit3 size={14} />
+                                                                                </button>
+                                                                                {feeObj && (
+                                                                                    <button
+                                                                                        type="button"
+                                                                                        onClick={() => handleDeleteFee(t.id, opt.duration)}
+                                                                                        className="p-1 text-red-400 hover:text-red-600 transition-colors"
+                                                                                    >
+                                                                                        <Trash2 size={14} />
+                                                                                    </button>
+                                                                                )}
+                                                                            </>
+                                                                        )}
+                                                                    </td>
+                                                                </tr>
+                                                            );
+                                                        })}
+                                                    </tbody>
+                                                </table>
+                                            </div>
                                         </div>
                                     </div>
                                 ))}
@@ -1973,6 +2072,11 @@ export default function AdminDashboard() {
                                                 <button
                                                     type="button"
                                                     onClick={async () => {
+                                                        const pin = prompt('Enter admin PIN to delete:');
+                                                        if (pin !== (process.env.NEXT_PUBLIC_DELETE_PIN || '022320')) {
+                                                            alert('Incorrect PIN');
+                                                            return;
+                                                        }
                                                         if(confirm('Delete treatment?')) {
                                                             await supabase.from('treatments').delete().eq('id', t.id);
                                                             setTreatments(prev => prev.filter(x => x.id !== t.id));
