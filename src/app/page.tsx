@@ -259,6 +259,7 @@ export default function Home() {
                 .from('promo_codes')
                 .select('*')
                 .eq('code', promoCodeInput.trim().toUpperCase())
+                .eq('brand', siteBrandFilter)
                 .eq('is_active', true)
                 .single();
 

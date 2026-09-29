@@ -402,14 +402,15 @@ export default function AdminDashboard() {
         if (!promoForm.code) return;
         setIsPromoFormLoading(true);
         try {
-            const { error } = await supabase.from('promo_codes').insert({
+            const inserts = ['elexoir', 'bali', 'therapick'].map(b => ({
                 code: promoForm.code.trim().toUpperCase(),
                 discount_type: promoForm.discount_type,
                 discount_value: promoForm.discount_value,
                 max_uses: promoForm.max_uses || 0,
-                brand: siteBrandFilter,
+                brand: b,
                 is_active: true
-            });
+            }));
+            const { error } = await supabase.from('promo_codes').insert(inserts);
             if (error) throw error;
             setSuccess(true);
                 triggerRevalidation();
@@ -484,8 +485,7 @@ export default function AdminDashboard() {
                     finalImageUrl = '';
                 }
 
-                const campaignData: Campaign = {
-                    id: targetId,
+                const baseCampaignData = {
                     title: campaignTitle.trim() || 'Special Spa Campaign',
                     label: campaignLabel.trim() || 'EXCLUSIVE OFFER',
                     description: campaignDesc.trim() || 'Book any eligible treatment below to claim your exclusive perk & special discount.',
@@ -498,6 +498,10 @@ export default function AdminDashboard() {
                         : treatments.map(t => ({ treatmentId: t.id, durations: t.options.map(o => o.duration) })),
                     order: targetOrder,
                     is_published: true,
+                };
+                const campaignData: Campaign = {
+                    ...baseCampaignData,
+                    id: editingCampaignId || targetId,
                     brand: siteBrandFilter
                 } as any;
 
@@ -529,11 +533,17 @@ export default function AdminDashboard() {
                     if (editingCampaignId) {
                         await supabase.from('campaigns').update(campaignData).eq('id', editingCampaignId);
                     } else {
-                        const { data, error } = await supabase.from('campaigns').insert([campaignData]).select();
+                        const brands = ['elexoir', 'bali', 'therapick'];
+                        const inserts = brands.map(b => ({
+                            ...baseCampaignData,
+                            brand: b,
+                            id: b === siteBrandFilter ? targetId : generateUUID()
+                        }));
+                        const { data, error } = await supabase.from('campaigns').insert(inserts).select();
                         if (error) {
                             console.warn("Supabase campaign insert warning:", error);
                         } else if (data && data.length > 0) {
-                            const saved = data[0] as Campaign;
+                            const saved = data.find((c: any) => c.brand === siteBrandFilter) || data[0];
                             if (saved?.id) {
                                 setEditingCampaignId(saved.id);
                             }
@@ -562,9 +572,11 @@ export default function AdminDashboard() {
                     await supabase.from('treatments').update(treatmentData).eq('id', editingTreatmentId);
                     setTreatments(prev => prev.map(t => t.id === editingTreatmentId ? { ...t, ...treatmentData } : t));
                 } else {
-                    const { data } = await supabase.from('treatments').insert([treatmentData]).select();
+                    const inserts = ['elexoir', 'bali', 'therapick'].map(b => ({ ...treatmentData, brand: b }));
+                    const { data } = await supabase.from('treatments').insert(inserts).select();
                     if (data && data.length > 0) {
-                        setTreatments(prev => [...prev, data[0] as Treatment]);
+                        const currentBrandTreatment = data.find((t: any) => t.brand === siteBrandFilter) || data[0];
+                        setTreatments(prev => [...prev, currentBrandTreatment as Treatment]);
                     }
                 }
                 setEditingTreatmentId(null);
@@ -593,9 +605,11 @@ export default function AdminDashboard() {
                     await supabase.from('products').update(productData).eq('id', editingProductId);
                     setProducts(prev => prev.map(p => p.id === editingProductId ? { ...p, ...productData } : p));
                 } else {
-                    const { data } = await supabase.from('products').insert([productData]).select();
+                    const inserts = ['elexoir', 'bali', 'therapick'].map(b => ({ ...productData, brand: b }));
+                    const { data } = await supabase.from('products').insert(inserts).select();
                     if (data && data.length > 0) {
-                        setProducts(prev => [...prev, data[0] as Product]);
+                        const currentBrandProduct = data.find((p: any) => p.brand === siteBrandFilter) || data[0];
+                        setProducts(prev => [...prev, currentBrandProduct as Product]);
                     }
                 }
                 setEditingProductId(null);

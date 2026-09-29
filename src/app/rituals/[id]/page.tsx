@@ -12,7 +12,7 @@ import { createSlug } from '@/utils/slugify';
 export default function RitualsDetails() {
     const params = useParams();
     const id = params?.id as string;
-    const { treatments } = useSpa();
+    const { treatments, siteBrandFilter } = useSpa();
     const treatment = treatments.find(t => t.id === id || createSlug(t.title) === id);
 
     const [selectedOptionIdx, setSelectedOptionIdx] = useState(0);
@@ -157,6 +157,7 @@ export default function RitualsDetails() {
                 .from('promo_codes')
                 .select('*')
                 .eq('code', promoCodeInput.trim().toUpperCase())
+                .eq('brand', siteBrandFilter)
                 .eq('is_active', true)
                 .single();
             
