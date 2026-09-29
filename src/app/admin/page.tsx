@@ -1767,17 +1767,32 @@ export default function AdminDashboard() {
                                     <h3 className="text-lg font-bold uppercase tracking-widest text-black">Therapist Fee Setup</h3>
                                     <p className="text-xs text-black/60">Set wage payouts per treatment duration.</p>
                                 </div>
-                                <div className="relative w-full sm:w-64">
-                                    <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                                        <Search className="h-4 w-4 text-black/40" />
+                                <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                                    <button 
+                                        onClick={() => {
+                                            setEditingTreatmentId(null);
+                                            setTreatmentTitle('');
+                                            setTreatmentDesc('');
+                                            setBenefits(['']);
+                                            setPricingOptions([{ duration: '', price: '' }]);
+                                            setActiveTab('treatment');
+                                        }}
+                                        className="bg-black text-white px-4 py-2 rounded-xl text-[10px] sm:text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 whitespace-nowrap"
+                                    >
+                                        <PlusCircle size={16} /> Create Treatment
+                                    </button>
+                                    <div className="relative w-full sm:w-64">
+                                        <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                                            <Search className="h-4 w-4 text-black/40" />
+                                        </div>
+                                        <input 
+                                            type="text" 
+                                            placeholder="Search treatments..." 
+                                            value={feeSearch} 
+                                            onChange={e => setFeeSearch(e.target.value)}
+                                            className="w-full pl-9 pr-4 py-2 bg-white border border-black/15 rounded-xl text-sm focus:outline-none focus:border-black"
+                                        />
                                     </div>
-                                    <input 
-                                        type="text" 
-                                        placeholder="Search treatments..." 
-                                        value={feeSearch} 
-                                        onChange={e => setFeeSearch(e.target.value)}
-                                        className="w-full pl-9 pr-4 py-2 bg-white border border-black/15 rounded-xl text-sm focus:outline-none focus:border-black"
-                                    />
                                 </div>
                             </div>
 
@@ -1980,17 +1995,32 @@ export default function AdminDashboard() {
                                 <h3 className="text-lg font-bold uppercase tracking-widest text-black">
                                     Treatment Catalog
                                 </h3>
-                                <div className="relative w-full sm:w-64">
-                                    <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                                        <Search className="h-4 w-4 text-black/40" />
+                                <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                                    <button 
+                                        onClick={() => {
+                                            setEditingTreatmentId(null);
+                                            setTreatmentTitle('');
+                                            setTreatmentDesc('');
+                                            setBenefits(['']);
+                                            setPricingOptions([{ duration: '', price: '' }]);
+                                            setActiveTab('treatment');
+                                        }}
+                                        className="bg-black text-white px-4 py-2 rounded-xl text-[10px] sm:text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 whitespace-nowrap"
+                                    >
+                                        <PlusCircle size={16} /> Create Treatment
+                                    </button>
+                                    <div className="relative w-full sm:w-64">
+                                        <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                                            <Search className="h-4 w-4 text-black/40" />
+                                        </div>
+                                        <input 
+                                            type="text" 
+                                            placeholder="Search treatments..." 
+                                            value={menuSearch}
+                                            onChange={(e) => setMenuSearch(e.target.value)}
+                                            className="w-full pl-9 pr-4 py-2 bg-white border border-black/15 rounded-xl text-sm focus:outline-none focus:border-black"
+                                        />
                                     </div>
-                                    <input 
-                                        type="text" 
-                                        placeholder="Search treatments..." 
-                                        value={menuSearch}
-                                        onChange={(e) => setMenuSearch(e.target.value)}
-                                        className="w-full pl-9 pr-4 py-2 bg-white border border-black/15 rounded-xl text-sm focus:outline-none focus:border-black"
-                                    />
                                 </div>
                             </div>
 
@@ -2024,6 +2054,16 @@ export default function AdminDashboard() {
                                                 </table>
                                             </div>
                                             <div className="flex gap-2 pt-2">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleTogglePin(t)}
+                                                    className={`px-3 text-xs font-bold rounded-xl transition-colors ${
+                                                        t.is_pinned ? 'bg-black text-white shadow-sm' : 'bg-black/5 text-black hover:bg-black/10'
+                                                    }`}
+                                                    title={t.is_pinned ? "Unpin from Most Booked" : "Pin to Most Booked"}
+                                                >
+                                                    <Pin size={14} className={t.is_pinned ? "fill-white" : ""} />
+                                                </button>
                                                 <button
                                                     type="button"
                                                     onClick={() => {
