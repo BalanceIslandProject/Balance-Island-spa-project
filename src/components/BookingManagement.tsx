@@ -91,9 +91,15 @@ export default function BookingManagement({
 
     // Find matching therapist fee
     let fee = 0;
-    if (therapistFees.length > 0) {
-      const matchingFee = therapistFees.find(f => f.duration === formDuration);
-      const feeObj = matchingFee || therapistFees[0];
+    if (t && therapistFees.length > 0) {
+      const normalizeDur = (d: string) => d.replace(/[^0-9]/g, '');
+      const normFormDur = normalizeDur(formDuration);
+      
+      const matchingFee = therapistFees.find(f => 
+         f.treatment_id === t.id && normalizeDur(f.duration) === normFormDur
+      );
+      
+      const feeObj = matchingFee || therapistFees.find(f => normalizeDur(f.duration) === normFormDur) || therapistFees[0];
       const baseFeeStr = feeObj.fee.replace(/[^0-9]/g, '');
       const baseFee = parseInt(baseFeeStr || '0', 10);
       fee = baseFee * formTherapists;
