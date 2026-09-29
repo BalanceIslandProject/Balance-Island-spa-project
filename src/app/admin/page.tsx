@@ -1993,14 +1993,13 @@ export default function AdminDashboard() {
                 </div>
             </main>
 
-            {/* Minimalist Mobile Bottom Navigation Bar (White & Black) */}
-            <div className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-white/95 backdrop-blur-xl border-t border-black/10 z-50 px-2 pb-safe">
-                <div className="flex items-center justify-around h-full max-w-md mx-auto">
+            {/* Minimalist Mobile Bottom Navigation Bar (Floating Card) */}
+            <div className="md:hidden fixed bottom-6 left-4 right-4 bg-white/95 backdrop-blur-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-black/10 rounded-2xl z-50">
+                <div className="flex items-center justify-between p-1.5 max-w-sm mx-auto">
                     {[
-                        { id: 'campaign', icon: Megaphone, label: 'Campaign' },
-                        { id: 'treatment', icon: PlusCircle, label: 'Treatments' },
-                        { id: 'store', icon: Store, label: 'Store' },
+                        { id: 'treatment', icon: PlusCircle, label: 'Treats' },
                         { id: 'fees', icon: Settings, label: 'Fees' },
+                        { id: 'calculator', icon: Calculator, label: 'Calc' },
                         { id: 'list', icon: LayoutDashboard, label: 'Menu' },
                     ].map((tab) => {
                         const isActive = activeTab === tab.id;
@@ -2009,12 +2008,12 @@ export default function AdminDashboard() {
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id as any)}
-                                className={`flex flex-col items-center justify-center min-w-[50px] py-1 transition-all ${
-                                    isActive ? 'text-black font-bold' : 'text-black/40 hover:text-black'
+                                className={`flex flex-col items-center justify-center flex-1 py-2.5 rounded-xl transition-all duration-300 ${
+                                    isActive ? 'bg-black text-white shadow-md scale-95' : 'text-black/50 hover:bg-black/5 hover:text-black'
                                 }`}
                             >
-                                <Icon size={18} strokeWidth={isActive ? 2.5 : 1.75} />
-                                <span className="text-[9px] mt-0.5 tracking-tight">{tab.label}</span>
+                                <Icon size={20} strokeWidth={isActive ? 2.5 : 2} />
+                                <span className="text-[9px] mt-1 font-bold tracking-widest uppercase">{tab.label}</span>
                             </button>
                         );
                     })}
