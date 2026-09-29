@@ -1600,61 +1600,7 @@ export default function AdminDashboard() {
                     )}
 
                     {activeTab === 'treatment' && (
-                        <div className="space-y-8">
-                            {/* Existing Treatments Cards */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {treatments.map(t => (
-                                    <div key={t.id} className="bg-white border border-black/15 rounded-2xl p-4 shadow-sm flex flex-col justify-between">
-                                        <div>
-                                            <div className="flex justify-between items-start mb-2">
-                                                <h4 className="font-bold text-black text-sm">{t.title}</h4>
-                                                <span className="text-[9px] uppercase tracking-widest font-bold bg-black/5 px-2 py-1 rounded-md text-black/60">{t.category}</span>
-                                            </div>
-                                            <p className="text-xs text-black/60 line-clamp-2 mb-3">{t.desc}</p>
-                                        </div>
-                                        <div className="space-y-3">
-                                            <div className="flex flex-wrap gap-2">
-                                                {t.options.map(o => (
-                                                    <span key={o.duration} className="text-[10px] font-bold bg-black/5 text-black px-2 py-1 rounded-lg">
-                                                        {o.duration}m | {o.price}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                            <div className="flex gap-2 pt-3 border-t border-black/5">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => {
-                                                        setEditingTreatmentId(t.id);
-                                                        setTreatmentTitle(t.title);
-                                                        setTreatmentCategory(t.category);
-                                                        setTreatmentDesc(t.desc);
-                                                        setBenefits(t.benefits && t.benefits.length ? t.benefits : ['']);
-                                                        setPricingOptions(t.options);
-                                                        setTimeout(() => document.getElementById('treatment-form')?.scrollIntoView({ behavior: 'smooth' }), 50);
-                                                    }}
-                                                    className="flex-1 bg-black/5 text-black text-xs font-bold py-2 rounded-xl hover:bg-black/10 transition-colors"
-                                                >
-                                                    Edit
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={async () => {
-                                                        if(confirm('Delete treatment?')) {
-                                                            await supabase.from('treatments').delete().eq('id', t.id);
-                                                            setTreatments(prev => prev.filter(x => x.id !== t.id));
-                                                        }
-                                                    }}
-                                                    className="px-3 bg-red-500/10 text-red-600 text-xs font-bold rounded-xl hover:bg-red-500/20 transition-colors"
-                                                >
-                                                    <Trash2 size={14} />
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-
-                            <form id="treatment-form" onSubmit={handleSubmit} className="space-y-6 bg-white border border-black/15 rounded-2xl p-5 md:p-8 shadow-sm">
+                        <form id="treatment-form" onSubmit={handleSubmit} className="space-y-6 bg-white border border-black/15 rounded-2xl p-5 md:p-8 shadow-sm">
                             <div className="flex items-center justify-between border-b border-black/10 pb-4">
                                 <h3 className="text-base font-bold uppercase tracking-wider text-black">
                                     {editingTreatmentId ? 'Edit Treatment' : 'Add New Spa Treatment'}
@@ -1980,50 +1926,53 @@ export default function AdminDashboard() {
                                 </div>
                             </div>
 
-                            <div className="space-y-3">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 {treatments.filter(t => t.title.toLowerCase().includes(menuSearch.toLowerCase()) || t.category.toLowerCase().includes(menuSearch.toLowerCase())).map(t => (
-                                    <div key={t.id} className="p-4 rounded-xl border border-black/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                                        <div className="w-full sm:w-auto">
-                                            <h4 className="text-sm font-bold text-black">{t.title}</h4>
-                                            <p className="text-xs text-black/60 line-clamp-1">{t.desc}</p>
-                                            <div className="flex flex-wrap gap-2 mt-2">
+                                    <div key={t.id} className="bg-white border border-black/15 rounded-2xl p-4 shadow-sm flex flex-col justify-between">
+                                        <div>
+                                            <div className="flex justify-between items-start mb-2">
+                                                <h4 className="font-bold text-black text-sm">{t.title}</h4>
+                                                <span className="text-[9px] uppercase tracking-widest font-bold bg-black/5 px-2 py-1 rounded-md text-black/60">{t.category}</span>
+                                            </div>
+                                            <p className="text-xs text-black/60 line-clamp-2 mb-3">{t.desc}</p>
+                                        </div>
+                                        <div className="space-y-3">
+                                            <div className="flex flex-wrap gap-2">
                                                 {t.options.map(o => (
-                                                    <span key={o.duration} className="text-[10px] font-bold px-2 py-0.5 rounded bg-black/5 text-black border border-black/10 whitespace-nowrap">
-                                                        {o.duration}m: Rp {parseInt(o.price.replace(/,/g, '') || '0').toLocaleString('en-US')}
+                                                    <span key={o.duration} className="text-[10px] font-bold bg-black/5 text-black px-2 py-1 rounded-lg">
+                                                        {o.duration}m | IDR {parseInt(o.price.replace(/,/g, '') || '0').toLocaleString('en-US')}
                                                     </span>
                                                 ))}
                                             </div>
-                                        </div>
-
-                                        <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto mt-2 sm:mt-0">
-                                            <button
-                                                type="button"
-                                                onClick={() => handleTogglePin(t)}
-                                                className={`p-2 rounded-lg border text-xs font-bold transition-all ${
-                                                    t.is_pinned 
-                                                    ? 'bg-black text-white border-black' 
-                                                    : 'bg-white text-black/60 border-black/20 hover:border-black'
-                                                }`}
-                                                title={t.is_pinned ? 'Unpin from Top' : 'Pin to Top'}
-                                            >
-                                                <Pin size={14} />
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    setEditingTreatmentId(t.id);
-                                                    setTreatmentTitle(t.title);
-                                                    setTreatmentCategory(t.category);
-                                                    setTreatmentDesc(t.desc);
-                                                    setBenefits(t.benefits && t.benefits.length > 0 ? t.benefits : ['']);
-                                                    setPricingOptions(t.options && t.options.length > 0 ? t.options : [{ duration: '', price: '' }]);
-                                                    setActiveTab('treatment');
-                                                }}
-                                                className="p-2 rounded-lg border border-black/20 text-black hover:bg-black hover:text-white transition-all"
-                                                title="Edit Treatment"
-                                            >
-                                                <Edit3 size={14} />
-                                            </button>
+                                            <div className="flex gap-2 pt-3 border-t border-black/5">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setEditingTreatmentId(t.id);
+                                                        setTreatmentTitle(t.title);
+                                                        setTreatmentCategory(t.category);
+                                                        setTreatmentDesc(t.desc);
+                                                        setBenefits(t.benefits && t.benefits.length > 0 ? t.benefits : ['']);
+                                                        setPricingOptions(t.options && t.options.length > 0 ? t.options : [{ duration: '', price: '' }]);
+                                                        setActiveTab('treatment');
+                                                    }}
+                                                    className="flex-1 bg-black/5 text-black text-xs font-bold py-2 rounded-xl hover:bg-black/10 transition-colors flex items-center justify-center gap-1"
+                                                >
+                                                    <Edit3 size={14} /> Edit
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={async () => {
+                                                        if(confirm('Delete treatment?')) {
+                                                            await supabase.from('treatments').delete().eq('id', t.id);
+                                                            setTreatments(prev => prev.filter(x => x.id !== t.id));
+                                                        }
+                                                    }}
+                                                    className="px-3 bg-red-500/10 text-red-600 text-xs font-bold rounded-xl hover:bg-red-500/20 transition-colors"
+                                                >
+                                                    <Trash2 size={14} />
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 ))}
