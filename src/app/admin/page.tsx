@@ -11,6 +11,7 @@ import {
 import Link from 'next/link';
 import { useSpa, SelectedCampaignTreatment, Treatment, Product, TherapistFee, Campaign, sortCampaigns, DEFAULT_CAMPAIGNS } from '@/context/SpaContext';
 import { supabase } from '@/lib/supabase';
+import BookingManagement from '@/components/BookingManagement';
 
 // Quick Preset Campaigns for Trip & Spa Deals
 const CAMPAIGN_PRESETS = [
@@ -2101,15 +2102,7 @@ export default function AdminDashboard() {
 
                     {/* BOOKINGS TAB (CENTRAL ADMIN ONLY) */}
                     {activeTab === 'bookings' && siteBrandFilter === 'central' && (
-                        <div className="space-y-6 animate-in fade-in duration-300 flex flex-col items-center justify-center min-h-[50vh] text-center">
-                            <div className="bg-black/5 p-4 rounded-full mb-2">
-                                <Calendar size={48} className="text-black/30" />
-                            </div>
-                            <h2 className="text-2xl font-bold tracking-tight text-black">Booking Management</h2>
-                            <p className="text-sm text-black/60 max-w-md">
-                                Single booking management system for all 3 website domains will be displayed here.
-                            </p>
-                        </div>
+                        <BookingManagement treatments={treatments} therapistFees={therapistFees} />
                     )}
 
                 </div>
