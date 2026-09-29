@@ -11,6 +11,7 @@ export default function Footer() {
             <Link href="/" className="inline-block mb-4 outline-none hover:opacity-80 transition-opacity">
               <span className="font-serif italic text-4xl md:text-5xl text-primary tracking-wide domain-ubud-only">Elexoir Home Spa</span>
               <span className="font-serif italic text-4xl md:text-5xl text-primary tracking-wide domain-bali-only">Home Spa Ubud</span>
+              <span className="font-serif italic text-4xl md:text-5xl text-primary tracking-wide domain-therapick-only">Therapick</span>
             </Link>
             <p className="text-[15px] text-text-muted leading-relaxed font-light md:w-[85%]">
               Bali's premier luxury mobile spa. Bringing 5-star professional massages and organic wellness treatments directly to your private villa or hotel.

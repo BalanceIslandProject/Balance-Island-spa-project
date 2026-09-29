@@ -66,6 +66,7 @@ export default function WhyChooseUs() {
           <span className="text-[10px] font-bold uppercase tracking-widest text-primary/80 mb-2 md:mb-3 block">
             <span className="domain-ubud-only">Elexoir Standard</span>
             <span className="domain-bali-only">Our Standard</span>
+            <span className="domain-therapick-only">Therapick Standard</span>
           </span>
           <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl text-primary leading-tight">Why Choose Our Mobile Spa</h2>
         </motion.div>

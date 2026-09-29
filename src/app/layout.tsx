@@ -37,15 +37,18 @@ export async function generateViewport(): Promise<Viewport> {
 export async function generateMetadata(): Promise<Metadata> {
   const headersList = await headers();
   const host = headersList.get("host") || "www.elexoirhomespaubud.com";
+  const isTherapick = host.includes("booktherapick") || host.includes("therapick");
   const isBaliDomain = (host.includes("homespaubud") || host.includes("ubudhomespa")) && !host.includes("elexoir");
 
-  const name = isBaliDomain ? "Ubud Home Spa" : "Elexoir Home Spa Ubud";
-  const url = isBaliDomain ? "https://www.homespaubud.com" : "https://www.elexoirhomespaubud.com";
-  const title = isBaliDomain ? "Ubud Home Spa | Luxury Mobile Spa" : "Elexoir Home Spa Ubud | Premium Mobile Spa & In-Villa Massage";
-  const description = isBaliDomain
-    ? "Looking for the best massage in Bali? We deliver premium, 5-star professional spa treatments directly to your private villa or hotel. Serving Seminyak, Canggu, Kuta, and Nusa Dua. Book now for ultimate relaxation!"
-    : "Experience the top-rated luxury mobile spa in Bali. Professional in-villa massages, couples treatments & holistic rituals delivered directly to your hotel or villa in Ubud. Book your 5-star sanctuary today!";
-  const iconUrl = isBaliDomain ? '/homespa.png' : '/elexoir.png';
+  const name = isTherapick ? "Therapick" : (isBaliDomain ? "Ubud Home Spa" : "Elexoir Home Spa Ubud");
+  const url = isTherapick ? "https://www.booktherapick.com" : (isBaliDomain ? "https://www.homespaubud.com" : "https://www.elexoirhomespaubud.com");
+  const title = isTherapick ? "Therapick | Premium Mobile Spa & Massage in Bali" : (isBaliDomain ? "Ubud Home Spa | Luxury Mobile Spa" : "Elexoir Home Spa Ubud | Premium Mobile Spa & In-Villa Massage");
+  const description = isTherapick
+    ? "Looking for the best massage in Bali? Therapick delivers premium, 5-star professional spa treatments directly to your private villa or hotel. Book now for ultimate relaxation!"
+    : (isBaliDomain
+      ? "Looking for the best massage in Bali? We deliver premium, 5-star professional spa treatments directly to your private villa or hotel. Serving Seminyak, Canggu, Kuta, and Nusa Dua. Book now for ultimate relaxation!"
+      : "Experience the top-rated luxury mobile spa in Bali. Professional in-villa massages, couples treatments & holistic rituals delivered directly to your hotel or villa in Ubud. Book your 5-star sanctuary today!");
+  const iconUrl = isTherapick ? '/elexoir.png' : (isBaliDomain ? '/homespa.png' : '/elexoir.png');
 
   return {
     metadataBase: new URL(url),
@@ -167,11 +170,12 @@ export default async function RootLayout({
 }>) {
   const headersList = await headers();
   const host = headersList.get("host") || "www.elexoirhomespaubud.com";
+  const isTherapick = host.includes("booktherapick") || host.includes("therapick");
   const isBaliDomain = (host.includes("homespaubud") || host.includes("ubudhomespa")) && !host.includes("elexoir");
-  const brand = isBaliDomain ? 'bali' : 'elexoir';
+  const brand = (isBaliDomain || isTherapick) ? 'bali' : 'elexoir';
 
-  const name = isBaliDomain ? "Home Spa Ubud" : "Elexoir Home Spa";
-  const url = isBaliDomain ? "https://www.homespaubud.com" : "https://www.elexoirhomespaubud.com";
+  const name = isTherapick ? "Therapick" : (isBaliDomain ? "Home Spa Ubud" : "Elexoir Home Spa");
+  const url = isTherapick ? "https://www.booktherapick.com" : (isBaliDomain ? "https://www.homespaubud.com" : "https://www.elexoirhomespaubud.com");
 
   // SSR Data Fetching with server-side caching (120s revalidation)
   const initialData = await getSpaData(brand);
@@ -206,7 +210,7 @@ export default async function RootLayout({
       </head>
 
       <body
-        data-domain={isBaliDomain ? "bali" : "ubud"}
+        data-domain={isTherapick ? "therapick" : (isBaliDomain ? "bali" : "ubud")}
         className={`${jakarta.variable} ${newsreader.variable} font-sans bg-transparent text-text min-h-screen selection:bg-primary selection:text-white`}
       >
         <SpaProvider brand={brand} initialData={initialData}>

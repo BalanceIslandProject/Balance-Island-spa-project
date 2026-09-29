@@ -19,7 +19,8 @@
   --font-serif: var(--font-newsreader);
 }
 
-body[data-domain="bali"] {
+body[data-domain="bali"],
+body[data-domain="therapick"] {
   --color-background: #FFFFFF;
   --color-secondary: #F3F4F6; /* Light gray */
   --color-accent: #E5E7EB; /* Gray for cards */
@@ -55,10 +56,17 @@ h1, h2, h3, h4, h5, h6, .font-serif {
 }
 
 /* Domain-specific visibility rules */
-body[data-domain="bali"] .domain-ubud-only {
+body[data-domain="bali"] .domain-ubud-only,
+body[data-domain="bali"] .domain-therapick-only {
   display: none !important;
 }
 
-body[data-domain="ubud"] .domain-bali-only {
+body[data-domain="ubud"] .domain-bali-only,
+body[data-domain="ubud"] .domain-therapick-only {
+  display: none !important;
+}
+
+body[data-domain="therapick"] .domain-ubud-only,
+body[data-domain="therapick"] .domain-bali-only {
   display: none !important;
 }
