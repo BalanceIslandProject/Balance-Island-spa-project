@@ -776,7 +776,7 @@ export default function AdminDashboard() {
     };
 
     return (
-        <div className="min-h-screen bg-white text-black flex flex-col md:flex-row overflow-x-hidden font-sans selection:bg-black selection:text-white">
+        <div className="min-h-screen bg-white text-black flex flex-col md:flex-row font-sans selection:bg-black selection:text-white">
             
             {/* Desktop Minimalist Black & White Sidebar */}
             <aside className="hidden md:flex flex-col w-64 bg-white border-r border-black/10 z-20 shrink-0">
@@ -847,7 +847,8 @@ export default function AdminDashboard() {
                 {/* Sticky Mobile Admin Selector */}
                 <div className="md:hidden sticky top-0 z-40 pt-4 px-4 pb-2 bg-white/95 backdrop-blur-xl border-b border-black/5 mb-2">
                     <div className="bg-white border border-black/10 rounded-2xl p-2 shadow-sm flex items-center justify-between">
-                        <div className="relative w-36">
+                        <h2 className="text-[10px] font-bold tracking-widest uppercase text-black pl-2 truncate">Select Admin Dashboard</h2>
+                        <div className="relative w-36 shrink-0">
                             <select 
                                 value={siteBrandFilter}
                                 onChange={(e) => setSiteBrandFilter(e.target.value)}
@@ -862,7 +863,6 @@ export default function AdminDashboard() {
                                 <ChevronDown size={12} className="text-white/50" />
                             </div>
                         </div>
-                        <h2 className="text-[9px] font-bold tracking-widest uppercase text-black/50 text-right pr-2">Select Admin<br/>Dashboard</h2>
                     </div>
                 </div>
 
@@ -2036,18 +2036,22 @@ export default function AdminDashboard() {
                                                 </table>
                                             </div>
                                             <div className="flex gap-2 pt-2 items-center">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => handleTogglePin(t)}
-                                                    className={`p-2 rounded-xl transition-colors shrink-0 ${
-                                                        t.is_pinned ? 'bg-black text-white shadow-sm' : 'bg-black/5 text-black hover:bg-black/10'
-                                                    }`}
-                                                    title={t.is_pinned ? "Unpin from Most Booked" : "Pin to Most Booked"}
-                                                >
-                                                    <Pin size={14} className={t.is_pinned ? "fill-white" : ""} />
-                                                </button>
-                                                {t.is_pinned && t.pinned_image && (
-                                                    <img src={t.pinned_image} alt="Pinned" className="w-7 h-7 object-cover rounded-lg shrink-0 border border-black/10" />
+                                                {siteBrandFilter !== 'central' && (
+                                                    <>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleTogglePin(t)}
+                                                            className={`p-2 rounded-xl transition-colors shrink-0 ${
+                                                                t.is_pinned ? 'bg-black text-white shadow-sm' : 'bg-black/5 text-black hover:bg-black/10'
+                                                            }`}
+                                                            title={t.is_pinned ? "Unpin from Most Booked" : "Pin to Most Booked"}
+                                                        >
+                                                            <Pin size={14} className={t.is_pinned ? "fill-white" : ""} />
+                                                        </button>
+                                                        {t.is_pinned && t.pinned_image && (
+                                                            <img src={t.pinned_image} alt="Pinned" className="w-7 h-7 object-cover rounded-lg shrink-0 border border-black/10" />
+                                                        )}
+                                                    </>
                                                 )}
                                                 <button
                                                     type="button"
@@ -2101,7 +2105,7 @@ export default function AdminDashboard() {
                         { id: 'calculator', icon: Calculator, label: 'Calc' },
                         { id: 'list', icon: LayoutDashboard, label: 'Menu' },
                         { id: 'more', icon: LayoutDashboard, label: 'More' }
-                    ].map((tab) => {
+                    ].filter(tab => siteBrandFilter !== 'central' || tab.id !== 'more').map((tab) => {
                         const isActive = activeTab === tab.id;
                         const Icon = tab.icon;
                         return (
