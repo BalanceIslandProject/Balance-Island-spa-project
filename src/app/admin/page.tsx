@@ -779,7 +779,7 @@ export default function AdminDashboard() {
         <div className="min-h-screen bg-white text-black flex flex-col md:flex-row font-sans selection:bg-black selection:text-white">
             
             {/* Desktop Minimalist Black & White Sidebar */}
-            <aside className="hidden md:flex flex-col w-64 bg-white border-r border-black/10 z-20 shrink-0 sticky top-0 h-screen">
+            <aside className="hidden md:flex flex-col w-64 bg-white border-r border-black/10 z-20 shrink-0 sticky top-0 h-screen self-start">
                 <div className="p-6 border-b border-black/10 flex flex-col gap-4">
                     <div>
                         <span className="text-[10px] uppercase font-bold tracking-[0.25em] text-black/50 block">Management</span>
