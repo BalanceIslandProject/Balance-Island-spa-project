@@ -1915,8 +1915,10 @@ export default function AdminDashboard() {
                                 const priceNum = opt ? parseInt(opt.price.replace(/,/g, '')) : 0;
                                 const feeStr = feeInputs[`${calc.treatmentId}-${calc.duration}`] || '0';
                                 const feeNum = parseInt(feeStr.replace(/,/g, '')) || 0;
+                                const isCouple = tr?.title?.toLowerCase().includes('couple');
+                                const multiplier = isCouple ? 2 : 1;
                                 const totalRevenue = priceNum * calc.treatmentsCount;
-                                const totalWage = feeNum * calc.treatmentsCount;
+                                const totalWage = feeNum * calc.treatmentsCount * multiplier;
                                 const netMargin = totalRevenue - totalWage;
 
                                 return (
