@@ -779,7 +779,7 @@ export default function AdminDashboard() {
         <div className="min-h-screen bg-white text-black flex flex-col md:flex-row font-sans selection:bg-black selection:text-white">
             
             {/* Desktop Minimalist Black & White Sidebar */}
-            <aside className="hidden md:flex flex-col w-64 bg-white border-r border-black/10 z-20 shrink-0">
+            <aside className="hidden md:flex flex-col w-64 bg-white border-r border-black/10 z-20 shrink-0 sticky top-0 h-screen">
                 <div className="p-6 border-b border-black/10 flex flex-col gap-4">
                     <div>
                         <span className="text-[10px] uppercase font-bold tracking-[0.25em] text-black/50 block">Management</span>
@@ -802,7 +802,7 @@ export default function AdminDashboard() {
 
                 <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
                     {[
-                        ...(siteBrandFilter === 'central' ? [{ id: 'bookings', icon: Calendar, label: 'Booking Mgmt' }] : []),
+                        ...(siteBrandFilter === 'central' ? [{ id: 'bookings', icon: Calendar, label: 'Booking' }] : []),
                         { id: 'campaign', icon: Megaphone, label: 'Campaign Card' },
                         { id: 'promo', icon: Ticket, label: 'Promo Codes' },
                         { id: 'treatment', icon: PlusCircle, label: 'Treatments' },
