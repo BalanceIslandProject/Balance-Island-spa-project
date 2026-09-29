@@ -908,7 +908,10 @@ export default function AdminDashboard() {
                     </div>
                 </div>
 
-                <div className={`mx-auto p-4 md:p-8 ${activeTab === 'list' || activeTab === 'fees' ? 'max-w-6xl' : 'max-w-4xl'}`}>
+                <div className={`mx-auto p-4 md:p-8 ${
+                    activeTab === 'bookings' ? 'max-w-7xl' 
+                    : (activeTab === 'list' || activeTab === 'fees' ? 'max-w-6xl' : 'max-w-4xl')
+                }`}>
 
                     {/* CAMPAIGN CARD SETUP TAB */}
                     {activeTab === 'campaign' && (
