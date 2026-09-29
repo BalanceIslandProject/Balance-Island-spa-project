@@ -54,7 +54,8 @@ export default function AdminDashboard() {
 
     useEffect(() => {
         async function fetchFees() {
-            const { data } = await supabase.from('therapist_fees').select('*').eq('brand', siteBrandFilter).order('created_at', { ascending: false });
+            const queryBrand = siteBrandFilter === 'central' ? 'elexoir' : siteBrandFilter;
+            const { data } = await supabase.from('therapist_fees').select('*').eq('brand', queryBrand).order('created_at', { ascending: false });
             if (data) {
                 setTherapistFees(data);
             }
@@ -69,7 +70,8 @@ export default function AdminDashboard() {
     
     useEffect(() => {
         async function fetchPromos() {
-            const { data } = await supabase.from('promo_codes').select('*').eq('brand', siteBrandFilter).order('created_at', { ascending: false });
+            const queryBrand = siteBrandFilter === 'central' ? 'elexoir' : siteBrandFilter;
+            const { data } = await supabase.from('promo_codes').select('*').eq('brand', queryBrand).order('created_at', { ascending: false });
             if (data) setPromoCodes(data);
         }
         if (activeTab === 'promo') fetchPromos();
@@ -80,11 +82,12 @@ export default function AdminDashboard() {
         let isMounted = true;
         async function fetchBrandData() {
             try {
+                const queryBrand = siteBrandFilter === 'central' ? 'elexoir' : siteBrandFilter;
                 const [treatmentsRes, productsRes, campaignsRes, therapistsRes] = await Promise.all([
-                    supabase.from('treatments').select('*').eq('is_published', true).eq('brand', siteBrandFilter).order('created_at', { ascending: false }),
-                    supabase.from('products').select('*').eq('is_published', true).eq('brand', siteBrandFilter).order('created_at', { ascending: false }),
-                    supabase.from('campaigns').select('*').eq('is_published', true).eq('brand', siteBrandFilter).order('created_at', { ascending: false }),
-                    supabase.from('therapists').select('*').eq('is_active', true).eq('brand', siteBrandFilter).order('created_at', { ascending: false })
+                    supabase.from('treatments').select('*').eq('is_published', true).eq('brand', queryBrand).order('created_at', { ascending: false }),
+                    supabase.from('products').select('*').eq('is_published', true).eq('brand', queryBrand).order('created_at', { ascending: false }),
+                    supabase.from('campaigns').select('*').eq('is_published', true).eq('brand', queryBrand).order('created_at', { ascending: false }),
+                    supabase.from('therapists').select('*').eq('is_active', true).eq('brand', queryBrand).order('created_at', { ascending: false })
                 ]);
                 
                 if (isMounted) {
@@ -106,8 +109,17 @@ export default function AdminDashboard() {
         return () => { isMounted = false; };
     }, [siteBrandFilter, setTreatments, setProducts, setCampaigns, setCampaign, setTherapists]);
 
+    // Force tab switch if central is selected
+    useEffect(() => {
+        if (siteBrandFilter === 'central' && (activeTab === 'campaign' || activeTab === 'promo')) {
+            setActiveTab('treatment');
+        }
+    }, [siteBrandFilter, activeTab]);
+
+    const activeBrand = siteBrandFilter === 'central' ? 'elexoir' : siteBrandFilter;
+
     // Filter by Brand / Property (elexoir, thevisala, etc)
-    const [selectedBrand, setSelectedBrand] = useState(siteBrandFilter);
+    const [selectedBrand, setSelectedBrand] = useState(activeBrand);
 
     // Campaign specific fields
     const [campaignTitle, setCampaignTitle] = useState(campaign?.title || 'Summer Retreat & Spa Package');
@@ -417,7 +429,7 @@ export default function AdminDashboard() {
             setTimeout(() => setSuccess(false), 3000);
             setPromoForm({ code: '', discount_type: 'percentage', discount_value: 0, max_uses: 0 });
             // re-fetch
-            const { data } = await supabase.from('promo_codes').select('*').eq('brand', siteBrandFilter).order('created_at', { ascending: false });
+            const { data } = await supabase.from('promo_codes').select('*').eq('brand', activeBrand).order('created_at', { ascending: false });
             if (data) setPromoCodes(data);
         } catch (err) {
             console.error(err);
@@ -502,7 +514,7 @@ export default function AdminDashboard() {
                 const campaignData: Campaign = {
                     ...baseCampaignData,
                     id: editingCampaignId || targetId,
-                    brand: siteBrandFilter
+                    brand: activeBrand
                 } as any;
 
                 let updatedList: Campaign[];
@@ -537,13 +549,13 @@ export default function AdminDashboard() {
                         const inserts = brands.map(b => ({
                             ...baseCampaignData,
                             brand: b,
-                            id: b === siteBrandFilter ? targetId : generateUUID()
+                            id: b === activeBrand ? targetId : generateUUID()
                         }));
                         const { data, error } = await supabase.from('campaigns').insert(inserts).select();
                         if (error) {
                             console.warn("Supabase campaign insert warning:", error);
                         } else if (data && data.length > 0) {
-                            const saved = data.find((c: any) => c.brand === siteBrandFilter) || data[0];
+                            const saved = data.find((c: any) => c.brand === activeBrand) || data[0];
                             if (saved?.id) {
                                 setEditingCampaignId(saved.id);
                             }
@@ -575,7 +587,7 @@ export default function AdminDashboard() {
                     const inserts = ['elexoir', 'bali', 'therapick'].map(b => ({ ...treatmentData, brand: b }));
                     const { data } = await supabase.from('treatments').insert(inserts).select();
                     if (data && data.length > 0) {
-                        const currentBrandTreatment = data.find((t: any) => t.brand === siteBrandFilter) || data[0];
+                        const currentBrandTreatment = data.find((t: any) => t.brand === activeBrand) || data[0];
                         setTreatments(prev => [...prev, currentBrandTreatment as Treatment]);
                     }
                 }
@@ -608,7 +620,7 @@ export default function AdminDashboard() {
                     const inserts = ['elexoir', 'bali', 'therapick'].map(b => ({ ...productData, brand: b }));
                     const { data } = await supabase.from('products').insert(inserts).select();
                     if (data && data.length > 0) {
-                        const currentBrandProduct = data.find((p: any) => p.brand === siteBrandFilter) || data[0];
+                        const currentBrandProduct = data.find((p: any) => p.brand === activeBrand) || data[0];
                         setProducts(prev => [...prev, currentBrandProduct as Product]);
                     }
                 }
@@ -645,7 +657,7 @@ export default function AdminDashboard() {
                     treatment_id: treatmentId,
                     duration,
                     fee,
-                    brand: siteBrandFilter
+                    brand: activeBrand
                 }]).select();
                 if (data && data.length > 0) {
                     setTherapistFees(prev => [...prev, data[0] as TherapistFee]);
@@ -755,6 +767,7 @@ export default function AdminDashboard() {
                             <option value="elexoir">Elexoir Home Spa</option>
                             <option value="bali">Home Spa Ubud</option>
                             <option value="therapick">Therapick</option>
+                            <option value="central">Central Admin</option>
                         </select>
                     </div>
                 </div>
@@ -768,7 +781,7 @@ export default function AdminDashboard() {
                         { id: 'fees', icon: Settings, label: 'Therapist Fees' },
                         { id: 'calculator', icon: Calculator, label: 'Commission Calc' },
                         { id: 'list', icon: LayoutDashboard, label: 'Menu Overview' },
-                    ].map((tab) => {
+                    ].filter(tab => siteBrandFilter !== 'central' || !['campaign', 'promo'].includes(tab.id)).map((tab) => {
                         const Icon = tab.icon;
                         const isActive = activeTab === tab.id;
                         return (
@@ -825,33 +838,76 @@ export default function AdminDashboard() {
                             <option value="elexoir">Elexoir</option>
                             <option value="bali">Home Spa Ubud</option>
                             <option value="therapick">Therapick</option>
+                            <option value="central">Central Admin</option>
                         </select>
                     </div>
                 </div>
 
-                {/* Mobile Quick Category Selector Pills */}
-                <div className="md:hidden px-4 pt-3 pb-1 border-b border-black/10 overflow-x-auto no-scrollbar flex items-center gap-2">
+                {/* Mobile Bottom Navbar */}
+                <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-black/10 flex items-center justify-around pb-4 pt-2 z-50 px-2 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
                     {[
-                        { id: 'campaign', label: 'Campaign' },
-                        { id: 'promo', label: 'Promo' },
-                        { id: 'treatment', label: 'Treatment' },
-                        { id: 'store', label: 'Store' },
-                        { id: 'fees', label: 'Fees' },
-                        { id: 'calculator', label: 'Calc' },
-                        { id: 'list', label: 'Overview' }
-                    ].map(pill => (
-                        <button
-                            key={pill.id}
-                            onClick={() => setActiveTab(pill.id as any)}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all ${
-                                activeTab === pill.id 
-                                ? 'bg-black text-white shadow-sm' 
-                                : 'bg-black/5 text-black/70 border border-black/10'
-                            }`}
-                        >
-                            {pill.label}
-                        </button>
-                    ))}
+                        { id: 'treatment', icon: PlusCircle, label: 'Treats' },
+                        { id: 'store', icon: Store, label: 'Store' },
+                        { id: 'fees', icon: Settings, label: 'Fees' },
+                        { id: 'calculator', icon: Calculator, label: 'Calc' },
+                        { id: 'more', icon: LayoutDashboard, label: 'More' }
+                    ].map(tab => {
+                        const Icon = tab.icon;
+                        const isActive = activeTab === tab.id;
+                        return (
+                            <button
+                                key={tab.id}
+                                onClick={() => {
+                                    if (tab.id === 'more') {
+                                        document.getElementById('mobile-sidebar')?.classList.remove('translate-x-full');
+                                    } else {
+                                        setActiveTab(tab.id as any);
+                                    }
+                                }}
+                                className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${
+                                    isActive ? 'text-black' : 'text-black/40 hover:text-black/70'
+                                }`}
+                            >
+                                <Icon size={20} strokeWidth={isActive ? 2.5 : 2} />
+                                <span className="text-[9px] font-bold tracking-wider">{tab.label}</span>
+                            </button>
+                        )
+                    })}
+                </div>
+
+                {/* Mobile Sidebar (Drawer) */}
+                <div id="mobile-sidebar" className="md:hidden fixed inset-0 z-[60] translate-x-full transition-transform duration-300 flex">
+                    <div className="flex-1 bg-black/20 backdrop-blur-sm" onClick={() => document.getElementById('mobile-sidebar')?.classList.add('translate-x-full')}></div>
+                    <div className="w-64 bg-white h-full shadow-2xl flex flex-col">
+                        <div className="p-5 border-b border-black/10 flex justify-between items-center bg-black/5">
+                            <span className="text-xs font-bold uppercase tracking-widest text-black">More Options</span>
+                            <button onClick={() => document.getElementById('mobile-sidebar')?.classList.add('translate-x-full')} className="p-2 text-black hover:opacity-50">
+                                <span className="font-bold text-xl leading-none">&times;</span>
+                            </button>
+                        </div>
+                        <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+                            {[
+                                { id: 'campaign', icon: Megaphone, label: 'Campaign Card' },
+                                { id: 'promo', icon: Ticket, label: 'Promo Codes' },
+                                { id: 'list', icon: LayoutDashboard, label: 'Menu Overview' },
+                            ].filter(tab => siteBrandFilter !== 'central' || !['campaign', 'promo'].includes(tab.id)).map((tab) => {
+                                const Icon = tab.icon;
+                                return (
+                                    <button
+                                        key={tab.id}
+                                        onClick={() => {
+                                            setActiveTab(tab.id as any);
+                                            document.getElementById('mobile-sidebar')?.classList.add('translate-x-full');
+                                        }}
+                                        className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-bold transition-all ${activeTab === tab.id ? 'bg-black text-white shadow-md' : 'text-black/70 bg-black/5 hover:bg-black/10'}`}
+                                    >
+                                        <Icon size={18} strokeWidth={activeTab === tab.id ? 2.5 : 2} />
+                                        {tab.label}
+                                    </button>
+                                );
+                            })}
+                        </nav>
+                    </div>
                 </div>
 
                 <div className="max-w-4xl mx-auto p-4 md:p-8">
@@ -1544,7 +1600,61 @@ export default function AdminDashboard() {
                     )}
 
                     {activeTab === 'treatment' && (
-                        <form onSubmit={handleSubmit} className="space-y-6 bg-white border border-black/15 rounded-2xl p-5 md:p-8 shadow-sm">
+                        <div className="space-y-8">
+                            {/* Existing Treatments Cards */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                {treatments.map(t => (
+                                    <div key={t.id} className="bg-white border border-black/15 rounded-2xl p-4 shadow-sm flex flex-col justify-between">
+                                        <div>
+                                            <div className="flex justify-between items-start mb-2">
+                                                <h4 className="font-bold text-black text-sm">{t.title}</h4>
+                                                <span className="text-[9px] uppercase tracking-widest font-bold bg-black/5 px-2 py-1 rounded-md text-black/60">{t.category}</span>
+                                            </div>
+                                            <p className="text-xs text-black/60 line-clamp-2 mb-3">{t.desc}</p>
+                                        </div>
+                                        <div className="space-y-3">
+                                            <div className="flex flex-wrap gap-2">
+                                                {t.options.map(o => (
+                                                    <span key={o.duration} className="text-[10px] font-bold bg-black/5 text-black px-2 py-1 rounded-lg">
+                                                        {o.duration}m | {o.price}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                            <div className="flex gap-2 pt-3 border-t border-black/5">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setEditingTreatmentId(t.id);
+                                                        setTreatmentTitle(t.title);
+                                                        setTreatmentCategory(t.category);
+                                                        setTreatmentDesc(t.desc);
+                                                        setBenefits(t.benefits && t.benefits.length ? t.benefits : ['']);
+                                                        setPricingOptions(t.options);
+                                                        setTimeout(() => document.getElementById('treatment-form')?.scrollIntoView({ behavior: 'smooth' }), 50);
+                                                    }}
+                                                    className="flex-1 bg-black/5 text-black text-xs font-bold py-2 rounded-xl hover:bg-black/10 transition-colors"
+                                                >
+                                                    Edit
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={async () => {
+                                                        if(confirm('Delete treatment?')) {
+                                                            await supabase.from('treatments').delete().eq('id', t.id);
+                                                            setTreatments(prev => prev.filter(x => x.id !== t.id));
+                                                        }
+                                                    }}
+                                                    className="px-3 bg-red-500/10 text-red-600 text-xs font-bold rounded-xl hover:bg-red-500/20 transition-colors"
+                                                >
+                                                    <Trash2 size={14} />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <form id="treatment-form" onSubmit={handleSubmit} className="space-y-6 bg-white border border-black/15 rounded-2xl p-5 md:p-8 shadow-sm">
                             <div className="flex items-center justify-between border-b border-black/10 pb-4">
                                 <h3 className="text-base font-bold uppercase tracking-wider text-black">
                                     {editingTreatmentId ? 'Edit Treatment' : 'Add New Spa Treatment'}
@@ -1660,6 +1770,7 @@ export default function AdminDashboard() {
                                 </button>
                             </div>
                         </form>
+                        </div>
                     )}
 
                     {/* STORE PRODUCTS TAB */}
