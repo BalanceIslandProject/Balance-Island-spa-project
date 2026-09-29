@@ -6,7 +6,7 @@ import {
     Megaphone, PlusCircle, Store, Settings, LayoutDashboard, 
     UploadCloud, CheckCircle, Plus, Trash2, Edit3, Pin, 
     ChevronDown, ChevronUp, Calculator, LogOut, Sparkles,
-    ArrowRight, ArrowUp, ArrowDown, Compass, ShieldCheck, Check, Ticket, Search
+    ArrowRight, ArrowUp, ArrowDown, Compass, ShieldCheck, Check, Ticket, Search, Menu, MoreHorizontal
 } from 'lucide-react';
 import Link from 'next/link';
 import { useSpa, SelectedCampaignTreatment, Treatment, Product, TherapistFee, Campaign, sortCampaigns, DEFAULT_CAMPAIGNS } from '@/context/SpaContext';
@@ -2099,13 +2099,18 @@ export default function AdminDashboard() {
             {/* Minimalist Mobile Bottom Navigation Bar (Floating Card) */}
             <div className="md:hidden fixed bottom-6 left-4 right-4 bg-white/95 backdrop-blur-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-black/10 rounded-2xl z-50">
                 <div className="flex items-center justify-between p-1.5 max-w-sm mx-auto">
-                    {[
+                    {(siteBrandFilter === 'central' ? [
                         { id: 'treatment', icon: PlusCircle, label: 'Treats' },
                         { id: 'fees', icon: Settings, label: 'Fees' },
+                        { id: 'more', icon: MoreHorizontal, label: 'More' },
                         { id: 'calculator', icon: Calculator, label: 'Calc' },
-                        { id: 'list', icon: LayoutDashboard, label: 'Menu' },
-                        { id: 'more', icon: LayoutDashboard, label: 'More' }
-                    ].filter(tab => siteBrandFilter !== 'central' || tab.id !== 'more').map((tab) => {
+                        { id: 'list', icon: LayoutDashboard, label: 'Menu' }
+                    ] : [
+                        { id: 'treatment', icon: PlusCircle, label: 'Treats' },
+                        { id: 'fees', icon: Settings, label: 'Fees' },
+                        { id: 'more', icon: MoreHorizontal, label: 'More' },
+                        { id: 'list', icon: LayoutDashboard, label: 'Menu' }
+                    ]).map((tab) => {
                         const isActive = activeTab === tab.id;
                         const Icon = tab.icon;
                         return (

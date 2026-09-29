@@ -216,7 +216,7 @@ export default async function RootLayout({
         <SpaProvider brand={brand} initialData={initialData}>
           <div className="flex flex-col min-h-screen w-full relative">
             <TopNav />
-            <main className="flex-1 w-full max-w-[100vw] overflow-x-hidden">
+            <main className="flex-1 w-full max-w-[100vw]">
               {children}
             </main>
             <Footer />
