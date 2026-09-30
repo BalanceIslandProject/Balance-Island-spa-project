@@ -317,10 +317,7 @@ export default function Home() {
                                 The Art of <br />
                                 <span className="italic opacity-80">Wellbeing</span>
                             </span>
-                            <span className="domain-therapick-only">
-                                Premium Bali Massage, <br />
-                                <span className="italic opacity-80">At Your Door.</span>
-                            </span>
+
                         </h1>
                     </div>
 
