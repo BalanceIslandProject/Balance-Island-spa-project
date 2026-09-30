@@ -67,3 +67,89 @@ body[data-domain="therapick"] .domain-ubud-only,
 body[data-domain="therapick"] .domain-bali-only {
   display: none !important;
 }
+
+/* --- NEUMORPHISM THEME FOR THERAPICK --- */
+body[data-domain="therapick"] {
+  --color-background: #e0e5ec;
+  --color-text: #2d3748;
+  --color-primary: #1a202c;
+  background-color: #e0e5ec !important;
+  color: #2d3748 !important;
+}
+
+body[data-domain="therapick"] h1,
+body[data-domain="therapick"] h2,
+body[data-domain="therapick"] h3,
+body[data-domain="therapick"] p,
+body[data-domain="therapick"] span {
+  color: #2d3748;
+}
+
+/* Convert all white/light backgrounds to neumorphic shapes */
+body[data-domain="therapick"] .bg-white,
+body[data-domain="therapick"] .bg-gray-50,
+body[data-domain="therapick"] .bg-gray-100,
+body[data-domain="therapick"] .bg-white\/80,
+body[data-domain="therapick"] .bg-white\/90,
+body[data-domain="therapick"] .bg-white\/95 {
+  background-color: #e0e5ec !important;
+  box-shadow: 9px 9px 16px rgb(163, 177, 198, 0.6), -9px -9px 16px rgba(255, 255, 255, 0.5) !important;
+  border: none !important;
+}
+
+/* Force border removal on elements that get the neumorphic shadow */
+body[data-domain="therapick"] .border,
+body[data-domain="therapick"] .border-b,
+body[data-domain="therapick"] .border-t {
+  border-color: transparent !important;
+}
+
+/* Images container in cards */
+body[data-domain="therapick"] .aspect-\[4\/5\] {
+  border-radius: 20px;
+  box-shadow: 9px 9px 16px rgb(163, 177, 198, 0.6), -9px -9px 16px rgba(255, 255, 255, 0.5) !important;
+  padding: 8px; /* Neumorphic frame effect */
+  background: #e0e5ec;
+}
+body[data-domain="therapick"] .aspect-\[4\/5\] img {
+  border-radius: 12px;
+}
+
+/* Inputs and interactive fields use inset shadows */
+body[data-domain="therapick"] input,
+body[data-domain="therapick"] textarea,
+body[data-domain="therapick"] select {
+  background-color: #e0e5ec !important;
+  box-shadow: inset 6px 6px 10px 0 rgba(163, 177, 198, 0.5), inset -6px -6px 10px 0 rgba(255, 255, 255, 0.8) !important;
+  border: none !important;
+  color: #2d3748 !important;
+  border-radius: 12px;
+}
+body[data-domain="therapick"] input:focus,
+body[data-domain="therapick"] textarea:focus,
+body[data-domain="therapick"] select:focus {
+  outline: none !important;
+  box-shadow: inset 8px 8px 12px 0 rgba(163, 177, 198, 0.7), inset -8px -8px 12px 0 rgba(255, 255, 255, 1) !important;
+}
+
+/* Dark elements get dark neumorphism */
+body[data-domain="therapick"] .bg-\[\#1D1D1F\],
+body[data-domain="therapick"] .bg-black {
+  background-color: #2d3748 !important;
+  box-shadow: 5px 5px 10px #1a202c, -5px -5px 10px #4a5568 !important;
+  color: #e0e5ec !important;
+}
+
+/* Override existing shadows */
+body[data-domain="therapick"] .shadow-sm,
+body[data-domain="therapick"] .shadow-md,
+body[data-domain="therapick"] .shadow-lg,
+body[data-domain="therapick"] .shadow-xl {
+  box-shadow: 12px 12px 24px rgb(163, 177, 198, 0.6), -12px -12px 24px rgba(255, 255, 255, 0.5) !important;
+}
+
+/* Active states for clickable elements */
+body[data-domain="therapick"] button:active,
+body[data-domain="therapick"] .cursor-pointer:active {
+  box-shadow: inset 5px 5px 10px rgba(163, 177, 198, 0.6), inset -5px -5px 10px rgba(255, 255, 255, 0.5) !important;
+}
