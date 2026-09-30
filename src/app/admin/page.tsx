@@ -70,6 +70,11 @@ export default function AdminDashboard() {
         fetchFees();
     }, [siteBrandFilter]);
 
+    useEffect(() => {
+        setSiteBrandFilter('central');
+    }, [setSiteBrandFilter]);
+
+
     // Promo Codes State
     const [promoCodes, setPromoCodes] = useState<any[]>([]);
     const [isPromoFormLoading, setIsPromoFormLoading] = useState(false);
@@ -938,189 +943,177 @@ export default function AdminDashboard() {
                     : (activeTab === 'list' || activeTab === 'fees' ? 'max-w-6xl' : 'max-w-4xl')
                 }`}>
 
-                    {/* CAMPAIGN CARD SETUP TAB */}
+                                        {/* CAMPAIGN CARD SETUP TAB */}
                     {activeTab === 'campaign' && (
-                        <div className="space-y-8 animate-in fade-in duration-300">
+                        <div className="space-y-10 animate-in fade-in duration-500">
                             
-                            {/* Multi-Campaign Overview List */}
-                            <div className="bg-white border border-black/15 rounded-2xl p-5 md:p-6 shadow-sm">
-                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-black/10 pb-4 mb-5">
-                                    <div>
-                                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-black text-white text-[10px] font-bold uppercase tracking-widest mb-1">
+                            {/* Header & Campaign List Section */}
+                            <div className="bg-white/80 backdrop-blur-xl border border-black/5 rounded-3xl p-6 md:p-10 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+                                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-8 border-b border-black/5">
+                                    <div className="space-y-2">
+                                        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-bold uppercase tracking-widest">
                                             <Sparkles size={12} /> Homepage Promotions
                                         </div>
-                                        <h2 className="text-xl md:text-2xl font-bold tracking-tight text-black">
-                                            All Campaigns ({campaigns.length})
+                                        <h2 className="text-3xl md:text-4xl font-black tracking-tight text-black">
+                                            Campaign Cards
                                         </h2>
-                                        <p className="text-xs text-black/60 mt-0.5">
-                                            Manage multiple promotional cards displayed on the homepage swipeable carousel.
+                                        <p className="text-sm text-black/50 font-medium">
+                                            Manage your active promotional cards displayed on the homepage carousel.
                                         </p>
                                     </div>
-
                                     <button
                                         type="button"
                                         onClick={handleNewCampaign}
-                                        className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-black text-white text-xs font-bold uppercase tracking-wider hover:bg-black/80 transition-all shadow-sm shrink-0"
+                                        className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-black text-white text-xs font-bold uppercase tracking-wider hover:scale-105 hover:shadow-xl hover:shadow-black/20 transition-all duration-300 shrink-0"
                                     >
-                                        <Plus size={14} /> + New Campaign
+                                        <Plus size={16} /> Create New Campaign
                                     </button>
                                 </div>
 
-                                {campaigns.length === 0 ? (
-                                    <div className="text-center py-8 border border-dashed border-black/20 rounded-xl bg-black/[0.02]">
-                                        <p className="text-xs font-semibold text-black/60">No campaigns created yet.</p>
-                                        <p className="text-[11px] text-black/40 mt-1">Use the form below or pick a 1-click template to publish your first campaign card.</p>
-                                    </div>
-                                ) : (
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-                                        {campaigns.map((camp, idx) => {
-                                            const isCurrentEditing = editingCampaignId === camp.id;
-                                            const isPub = camp.is_published !== false;
-                                            const displayOrder = camp.order ?? (idx + 1);
-                                            return (
-                                                <div 
-                                                    key={camp.id || idx}
-                                                    className={`p-4 rounded-xl border transition-all flex flex-col justify-between gap-3 ${
-                                                        isCurrentEditing 
-                                                        ? 'bg-black/5 border-black shadow-sm ring-1 ring-black' 
-                                                        : 'bg-white border-black/15 hover:border-black/30'
-                                                    }`}
-                                                >
-                                                    <div className="flex gap-3 items-start">
-                                                        <div className="w-16 h-16 rounded-lg overflow-hidden bg-stone-900 border border-black/10 shrink-0 relative flex items-center justify-center">
+                                <div className="mt-8">
+                                    {campaigns.length === 0 ? (
+                                        <div className="flex flex-col items-center justify-center py-16 px-4 text-center bg-black/[0.02] rounded-2xl border border-dashed border-black/10">
+                                            <div className="w-16 h-16 bg-black/5 rounded-full flex items-center justify-center mb-4">
+                                                <Megaphone size={24} className="text-black/40" />
+                                            </div>
+                                            <h3 className="text-lg font-bold text-black mb-2">No campaigns found</h3>
+                                            <p className="text-sm text-black/50 max-w-md">Get started by creating your first promotional card or loading one of our standard templates.</p>
+                                        </div>
+                                    ) : (
+                                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                            {campaigns.map((camp, idx) => {
+                                                const isCurrentEditing = editingCampaignId === camp.id;
+                                                const isPub = camp.is_published !== false;
+                                                const displayOrder = camp.order ?? (idx + 1);
+                                                return (
+                                                    <div 
+                                                        key={camp.id || idx}
+                                                        className={`group relative overflow-hidden rounded-2xl transition-all duration-300 flex flex-col sm:flex-row gap-0 sm:gap-4 ${
+                                                            isCurrentEditing 
+                                                            ? 'bg-black text-white shadow-xl scale-[1.02] ring-1 ring-black' 
+                                                            : 'bg-white border border-black/10 hover:border-black/20 hover:shadow-md'
+                                                        }`}
+                                                    >
+                                                        {/* Image Section */}
+                                                        <div className="w-full sm:w-32 h-32 sm:h-auto shrink-0 relative overflow-hidden">
                                                             {camp.image ? (
                                                                 <img 
                                                                     src={camp.image} 
                                                                     alt={camp.title}
-                                                                    className="w-full h-full object-cover"
+                                                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                                                                 />
                                                             ) : (
-                                                                <div className="w-full h-full bg-gradient-to-br from-neutral-900 via-stone-900 to-black flex items-center justify-center text-white/40">
-                                                                    <Sparkles size={16} />
+                                                                <div className={`w-full h-full flex items-center justify-center ${isCurrentEditing ? 'bg-white/10' : 'bg-black/5'}`}>
+                                                                    <Sparkles size={20} className={isCurrentEditing ? 'text-white/30' : 'text-black/20'} />
                                                                 </div>
                                                             )}
-                                                            <div className="absolute top-1 left-1 bg-black/80 backdrop-blur-sm text-white font-bold text-[9px] px-1.5 py-0.5 rounded shadow">
+                                                            <div className="absolute top-2 left-2 bg-black/80 backdrop-blur-md text-white font-black text-[10px] px-2 py-1 rounded shadow-lg">
                                                                 #{displayOrder}
                                                             </div>
-                                                        </div>
-                                                        <div className="flex-1 min-w-0">
-                                                            <div className="flex items-center gap-1.5 flex-wrap">
-                                                                <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-black text-white">
-                                                                    {camp.label || 'OFFER'}
-                                                                </span>
-                                                                <span className="text-[9px] font-bold text-black/60">
-                                                                    {camp.discountPercentage ?? 20}% OFF
-                                                                </span>
-                                                                {idx === 0 && (
-                                                                    <span className="text-[8px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1 py-0.5 rounded uppercase">
-                                                                        1st Card
-                                                                    </span>
-                                                                )}
-                                                                {!isPub && (
-                                                                    <span className="text-[9px] font-bold text-black/40 border border-black/20 px-1 rounded">
-                                                                        Draft
-                                                                    </span>
-                                                                )}
-                                                            </div>
-                                                            <h4 className="text-xs font-bold text-black mt-1 line-clamp-1">
-                                                                {camp.title}
-                                                            </h4>
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="flex items-center justify-between pt-2.5 border-t border-black/10 text-xs">
-                                                        <div className="flex items-center gap-1.5">
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => loadCampaignToForm(camp)}
-                                                                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1 transition-all ${
-                                                                    isCurrentEditing 
-                                                                    ? 'bg-black text-white' 
-                                                                    : 'bg-black/5 hover:bg-black hover:text-white text-black'
-                                                                }`}
-                                                            >
-                                                                <Edit3 size={11} /> {isCurrentEditing ? 'Editing' : 'Edit'}
-                                                            </button>
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => handleTogglePublishCampaign(camp)}
-                                                                className="px-2 py-1 rounded-lg text-[10px] font-semibold text-black/60 hover:text-black border border-black/15 hover:border-black transition-colors"
-                                                            >
-                                                                {isPub ? 'Published' : 'Hidden'}
-                                                            </button>
-                                                        </div>
-
-                                                        <div className="flex items-center gap-1">
-                                                            {/* Reorder Arrows */}
-                                                            <div className="flex items-center border border-black/15 rounded-lg p-0.5 bg-black/[0.02]">
-                                                                <button
-                                                                    type="button"
-                                                                    disabled={idx === 0}
-                                                                    onClick={() => handleMoveCampaign(idx, 'up')}
-                                                                    className="p-1 rounded text-black hover:bg-black hover:text-white disabled:opacity-20 disabled:hover:bg-transparent disabled:hover:text-black transition-colors"
-                                                                    title="Move Earlier (Higher Order)"
-                                                                >
-                                                                    <ArrowUp size={11} />
-                                                                </button>
-                                                                <button
-                                                                    type="button"
-                                                                    disabled={idx === campaigns.length - 1}
-                                                                    onClick={() => handleMoveCampaign(idx, 'down')}
-                                                                    className="p-1 rounded text-black hover:bg-black hover:text-white disabled:opacity-20 disabled:hover:bg-transparent disabled:hover:text-black transition-colors"
-                                                                    title="Move Later (Lower Order)"
-                                                                >
-                                                                    <ArrowDown size={11} />
-                                                                </button>
-                                                            </div>
-
-                                                            {camp.id && (
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => handleDeleteCampaign(camp.id!)}
-                                                                    className="p-1.5 text-black/40 hover:text-black hover:bg-black/10 rounded-lg transition-colors"
-                                                                    title="Delete campaign"
-                                                                >
-                                                                    <Trash2 size={13} />
-                                                                </button>
+                                                            {!isPub && (
+                                                                <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex items-center justify-center">
+                                                                    <span className="text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1 bg-black/60 rounded-full">Hidden</span>
+                                                                </div>
                                                             )}
                                                         </div>
+
+                                                        {/* Content Section */}
+                                                        <div className="p-4 sm:py-5 flex-1 flex flex-col justify-between">
+                                                            <div>
+                                                                <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                                                                    <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${isCurrentEditing ? 'bg-white text-black' : 'bg-black text-white'}`}>
+                                                                        {camp.label || 'OFFER'}
+                                                                    </span>
+                                                                    <span className={`text-[10px] font-bold ${isCurrentEditing ? 'text-white/80' : 'text-emerald-600'}`}>
+                                                                        {camp.discountPercentage ?? 20}% OFF
+                                                                    </span>
+                                                                </div>
+                                                                <h4 className={`text-sm md:text-base font-bold line-clamp-1 ${isCurrentEditing ? 'text-white' : 'text-black'}`}>
+                                                                    {camp.title}
+                                                                </h4>
+                                                                <p className={`text-xs mt-1 line-clamp-1 ${isCurrentEditing ? 'text-white/60' : 'text-black/50'}`}>
+                                                                    {camp.description}
+                                                                </p>
+                                                            </div>
+
+                                                            <div className="flex items-center justify-between mt-4">
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => loadCampaignToForm(camp)}
+                                                                    className={`px-4 py-1.5 rounded-lg text-[11px] font-bold flex items-center gap-1.5 transition-all ${
+                                                                        isCurrentEditing 
+                                                                        ? 'bg-white/20 hover:bg-white text-white hover:text-black' 
+                                                                        : 'bg-black/5 hover:bg-black text-black hover:text-white'
+                                                                    }`}
+                                                                >
+                                                                    <Edit3 size={12} /> {isCurrentEditing ? 'Currently Editing' : 'Edit Card'}
+                                                                </button>
+
+                                                                <div className="flex items-center gap-1">
+                                                                    <div className={`flex items-center rounded-lg p-0.5 ${isCurrentEditing ? 'bg-white/10' : 'bg-black/5'}`}>
+                                                                        <button
+                                                                            type="button"
+                                                                            disabled={idx === 0}
+                                                                            onClick={() => handleMoveCampaign(idx, 'up')}
+                                                                            className={`p-1.5 rounded transition-colors disabled:opacity-20 ${isCurrentEditing ? 'hover:bg-white/20 text-white' : 'hover:bg-white text-black shadow-sm'}`}
+                                                                        >
+                                                                            <ArrowUp size={12} />
+                                                                        </button>
+                                                                        <button
+                                                                            type="button"
+                                                                            disabled={idx === campaigns.length - 1}
+                                                                            onClick={() => handleMoveCampaign(idx, 'down')}
+                                                                            className={`p-1.5 rounded transition-colors disabled:opacity-20 ${isCurrentEditing ? 'hover:bg-white/20 text-white' : 'hover:bg-white text-black shadow-sm'}`}
+                                                                        >
+                                                                            <ArrowDown size={12} />
+                                                                        </button>
+                                                                    </div>
+                                                                    
+                                                                    <div className="flex items-center ml-2 border-l border-current opacity-20 h-4"></div>
+
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => handleTogglePublishCampaign(camp)}
+                                                                        className={`p-1.5 ml-1 rounded-lg transition-colors ${isCurrentEditing ? 'hover:bg-white/20 text-white' : 'hover:bg-black/10 text-black'}`}
+                                                                        title={isPub ? "Hide Campaign" : "Publish Campaign"}
+                                                                    >
+                                                                        {isPub ? <Megaphone size={14} /> : <ShieldCheck size={14} />}
+                                                                    </button>
+
+                                                                    {camp.id && (
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => handleDeleteCampaign(camp.id!)}
+                                                                            className={`p-1.5 rounded-lg transition-colors ${isCurrentEditing ? 'hover:bg-red-500/20 text-red-200' : 'hover:bg-red-50 text-red-500'}`}
+                                                                            title="Delete campaign"
+                                                                        >
+                                                                            <Trash2 size={14} />
+                                                                        </button>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            );
-                                        })}
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                </div>
 
-                                        {/* Quick Add Another Card button in grid */}
-                                        <button
-                                            type="button"
-                                            onClick={handleNewCampaign}
-                                            className="p-5 rounded-xl border border-dashed border-black/25 bg-black/[0.02] hover:bg-black hover:text-white transition-all flex flex-col items-center justify-center gap-2 group text-center min-h-[140px]"
-                                        >
-                                            <div className="w-10 h-10 rounded-full border border-black/20 flex items-center justify-center group-hover:border-white">
-                                                <Plus size={18} />
-                                            </div>
-                                            <div>
-                                                <h4 className="text-xs font-bold uppercase tracking-wider">Add Another Campaign</h4>
-                                                <p className="text-[11px] text-black/50 group-hover:text-white/70 mt-0.5">Click to configure & publish a new card</p>
-                                            </div>
-                                        </button>
+                                {/* Templates Bar */}
+                                <div className="mt-8 p-5 bg-[#FDFBF7] border border-black/5 rounded-2xl flex flex-col lg:flex-row lg:items-center gap-4 justify-between">
+                                    <div className="flex flex-col gap-1">
+                                        <h3 className="text-xs font-bold uppercase tracking-widest text-black">Need inspiration?</h3>
+                                        <p className="text-xs text-black/50 font-medium">Start quickly with our pre-designed templates.</p>
                                     </div>
-                                )}
-
-                                {/* Quick Presets Bar */}
-                                <div className="mt-6 pt-5 border-t border-black/10">
-                                    <div className="flex items-center justify-between mb-2.5">
-                                        <label className="text-[10px] font-bold uppercase tracking-widest text-black/60">
-                                            Quick 1-Click Templates:
-                                        </label>
+                                    <div className="flex items-center gap-3 overflow-x-auto pb-2 lg:pb-0 hide-scrollbar">
                                         <button
                                             type="button"
                                             onClick={handleRestoreDefaultCampaigns}
-                                            className="text-[10px] font-bold uppercase tracking-wider text-black/60 hover:text-black underline transition-colors"
+                                            className="whitespace-nowrap px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider bg-white border border-black/10 hover:border-black text-black transition-all shadow-sm shrink-0"
                                         >
-                                            Reset / Load 2 Standard Cards
+                                            Load Default Suite
                                         </button>
-                                    </div>
-                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                                         {CAMPAIGN_PRESETS.map((preset, idx) => (
                                             <button
                                                 key={idx}
@@ -1129,377 +1122,228 @@ export default function AdminDashboard() {
                                                     applyCampaignPreset(preset);
                                                     scrollToCampaignForm();
                                                 }}
-                                                className="text-left p-3 rounded-xl border border-black/15 bg-black/[0.02] hover:bg-black hover:text-white transition-all group flex flex-col justify-between"
+                                                className="whitespace-nowrap px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider bg-black text-white hover:bg-black/80 transition-all shadow-sm shrink-0"
                                             >
-                                                <span className="text-[9px] font-bold tracking-wider uppercase opacity-60 group-hover:opacity-80">
-                                                    {preset.label}
-                                                </span>
-                                                <h4 className="text-xs font-bold mt-1 text-black group-hover:text-white line-clamp-1">
-                                                    {preset.title}
-                                                </h4>
-                                                <span className="text-[10px] font-semibold mt-1 opacity-70 group-hover:opacity-90">
-                                                    ({preset.discountPercentage}% Off)
-                                                </span>
+                                                Use "{preset.title}"
                                             </button>
                                         ))}
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Live Interactive Card Preview */}
-                            <div className="space-y-2">
-                                <div className="flex items-center justify-between">
-                                    <label className="text-xs font-bold uppercase tracking-widest text-black flex items-center gap-1.5">
-                                        Live Card Preview {editingCampaignId ? '(Editing Card)' : '(New Card)'}
-                                    </label>
-                                    <span className="text-[10px] font-medium text-black/50">Compact Homepage Sizing</span>
-                                </div>
-
-                                <div className="relative w-full max-w-lg mx-auto h-[210px] md:h-[250px] rounded-2xl overflow-hidden shadow-lg border border-black/20 bg-gradient-to-br from-neutral-900 via-stone-900 to-black group">
-                                    {campaignImage && (
-                                        <img 
-                                            src={campaignImage} 
-                                            alt={campaignTitle}
-                                            className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-700"
-                                        />
-                                    )}
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/45 to-black/20"></div>
+                            <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
+                                {/* Form Section */}
+                                <form id="campaign-form" onSubmit={handleSubmit} className="xl:col-span-7 bg-white border border-black/5 rounded-3xl p-6 md:p-10 shadow-[0_8px_30px_rgb(0,0,0,0.04)] scroll-mt-8 relative overflow-hidden">
                                     
-                                    <div className="absolute inset-0 p-4 md:p-6 flex flex-col justify-between z-10 text-white">
-                                        <div className="flex items-center justify-start">
-                                            <span className="inline-flex items-center px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-[8px] md:text-[9px] font-bold tracking-[0.2em] uppercase border border-white/30 text-white shadow-sm">
-                                                {campaignLabel || 'SPECIAL PROMO'}
-                                            </span>
-                                        </div>
+                                    {/* Decorative background element */}
+                                    <div className="absolute top-0 right-0 w-64 h-64 bg-black/[0.02] rounded-full blur-3xl pointer-events-none translate-x-1/2 -translate-y-1/2"></div>
 
-                                        <div className="flex items-end justify-between gap-3">
-                                            <div className="min-w-0">
-                                                <h3 className="font-serif text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-white drop-shadow-md line-clamp-1">
-                                                    {campaignTitle || 'Summer Retreat'}
-                                                </h3>
-                                                {campaignDesc && (
-                                                    <p className="text-white/85 text-[11px] sm:text-xs line-clamp-2 font-light mt-1 drop-shadow-sm leading-snug">
-                                                        {campaignDesc}
-                                                    </p>
-                                                )}
-                                            </div>
-
-                                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-white/20 backdrop-blur-xl border border-white/30 text-white flex items-center justify-center shrink-0 shadow-[0_8px_32px_rgb(0,0,0,0.15)] group-hover:bg-white/30 group-hover:scale-105 transition-all">
-                                                <ArrowRight size={18} strokeWidth={2.5} />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Campaign Setup Form */}
-                            <form id="campaign-form" onSubmit={handleSubmit} className="space-y-6 bg-white border border-black/15 rounded-2xl p-5 md:p-8 shadow-sm scroll-mt-6">
-                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-black/10 pb-4">
-                                    <div>
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded ${
-                                                editingCampaignId 
-                                                ? 'bg-black text-white' 
-                                                : 'bg-emerald-600 text-white'
-                                            }`}>
-                                                {editingCampaignId ? 'Edit Mode' : '+ New Card Mode'}
-                                            </span>
-                                            <span className="text-xs font-bold text-black/60">
-                                                Position #{campaignOrder || (editingCampaignId ? 1 : campaigns.length + 1)}
-                                            </span>
-                                        </div>
-                                        <h3 className="text-sm md:text-base font-bold uppercase tracking-wider text-black">
-                                            {editingCampaignId ? `Editing: ${campaignTitle || 'Existing Campaign'}` : 'Create Brand New Campaign Card'}
-                                        </h3>
-                                        <p className="text-[11px] text-black/60 mt-0.5">
-                                            {editingCampaignId 
-                                                ? 'Changes will update this existing card. Click "+ New Card Instead" to create another one.'
-                                                : 'Fill out this form and click "Save & Publish" to add a new card to your homepage carousel.'}
-                                        </p>
-                                    </div>
-                                    {editingCampaignId && (
-                                        <button
-                                            type="button"
-                                            onClick={handleNewCampaign}
-                                            className="px-3.5 py-2 rounded-xl bg-black text-white text-xs font-bold hover:bg-black/80 transition-all shrink-0 flex items-center gap-1.5 shadow-sm"
-                                        >
-                                            <Plus size={13} /> + Create New Card Instead
-                                        </button>
-                                    )}
-                                </div>
-
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="space-y-1.5">
-                                        <label className="text-xs font-bold uppercase tracking-wider text-black/70">Campaign Title</label>
-                                        <input 
-                                            type="text" 
-                                            required 
-                                            placeholder="e.g. Bali Day Trip & Spa Combo" 
-                                            value={campaignTitle} 
-                                            onChange={e => setCampaignTitle(e.target.value)}
-                                            className="w-full bg-white border border-black/20 rounded-xl px-4 py-3 text-sm text-black placeholder:text-black/40 focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
-                                        />
-                                    </div>
-
-                                    <div className="space-y-1.5">
-                                        <label className="text-xs font-bold uppercase tracking-wider text-black/70">Badge / Label</label>
-                                        <input 
-                                            type="text" 
-                                            required 
-                                            placeholder="e.g. Exclusive Trip Deal" 
-                                            value={campaignLabel} 
-                                            onChange={e => setCampaignLabel(e.target.value)}
-                                            className="w-full bg-white border border-black/20 rounded-xl px-4 py-3 text-sm text-black placeholder:text-black/40 focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all"
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Spa Treatment Discount Section */}
-                                <div className="p-4 rounded-2xl bg-black/[0.02] border border-black/10 space-y-3">
-                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                    <div className="relative z-10 mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
                                         <div>
-                                            <label className="text-xs font-bold uppercase tracking-wider text-black block">
-                                                Spa Treatment Price Discount (%)
-                                            </label>
-                                            <p className="text-[11px] text-black/60 font-light">
-                                                Set to <b>0%</b> if this campaign uses standard rates without discounts.
-                                            </p>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <input 
-                                                type="number" 
-                                                required 
-                                                min="0" 
-                                                max="100" 
-                                                placeholder="0" 
-                                                value={discountPercentage} 
-                                                onChange={e => setDiscountPercentage(Math.max(0, Math.min(100, Number(e.target.value))))}
-                                                className="w-24 bg-white border border-black/20 rounded-xl px-3 py-2 text-sm text-black font-bold text-center focus:outline-none focus:border-black"
-                                            />
-                                            <span className="text-xs font-bold text-black/60">%</span>
-                                        </div>
-                                    </div>
-
-                                    {/* Quick chips */}
-                                    <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                                        <span className="text-[10px] font-bold text-black/40 uppercase tracking-wider mr-1">Presets:</span>
-                                        {[
-                                            { label: '0% Standard Rate', val: 0 },
-                                            { label: '10% OFF', val: 10 },
-                                            { label: '15% OFF', val: 15 },
-                                            { label: '20% OFF', val: 20 },
-                                            { label: '25% OFF', val: 25 },
-                                            { label: '30% OFF', val: 30 }
-                                        ].map(preset => (
-                                            <button
-                                                key={preset.val}
-                                                type="button"
-                                                onClick={() => setDiscountPercentage(preset.val)}
-                                                className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all ${
-                                                    discountPercentage === preset.val
-                                                        ? 'bg-black text-white shadow-sm'
-                                                        : 'bg-white border border-black/15 text-black hover:border-black'
-                                                }`}
-                                            >
-                                                {preset.label}
-                                            </button>
-                                        ))}
-                                    </div>
-
-                                    {/* Dynamic preview indicator */}
-                                    <div className={`p-3 rounded-xl text-xs flex items-start gap-2.5 ${
-                                        discountPercentage === 0 
-                                            ? 'bg-emerald-50 text-emerald-900 border border-emerald-200' 
-                                            : 'bg-black/5 text-black border border-black/10'
-                                    }`}>
-                                        <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${discountPercentage === 0 ? 'bg-emerald-600' : 'bg-black'}`} />
-                                        <div>
-                                            <div className="font-bold">
-                                                {discountPercentage === 0 ? 'Standard Spa Rate Mode (0% Spa Discount)' : `${discountPercentage}% Slashed Spa Price Mode`}
+                                            <div className="flex items-center gap-2 mb-2">
+                                                <span className={`text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full ${
+                                                    editingCampaignId ? 'bg-black text-white' : 'bg-emerald-100 text-emerald-800'
+                                                }`}>
+                                                    {editingCampaignId ? 'Edit Mode Active' : 'Creation Mode Active'}
+                                                </span>
+                                                <span className="text-xs font-bold text-black/40">
+                                                    Slot #{campaignOrder || (editingCampaignId ? 1 : campaigns.length + 1)}
+                                                </span>
                                             </div>
-                                            <div className="text-[11px] opacity-80 mt-0.5">
-                                                {discountPercentage === 0 
-                                                    ? 'Spa treatments will display their standard price (e.g. IDR 900,000) with a "Standard Rate" badge and no strikethrough.'
-                                                    : `Treatments will automatically display strikethrough original prices and -${discountPercentage}% reduced prices (e.g. IDR 900,000 → IDR ${(Math.round(900000 * (1 - discountPercentage / 100))).toLocaleString('en-US')}).`
-                                                }
-                                            </div>
+                                            <h3 className="text-2xl font-bold tracking-tight text-black">
+                                                {editingCampaignId ? 'Update Campaign Details' : 'Design New Campaign'}
+                                            </h3>
                                         </div>
-                                    </div>
-                                </div>
-
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="space-y-1.5">
-                                        <label className="text-xs font-bold uppercase tracking-wider text-black/70 flex items-center justify-between">
-                                            <span>Display Order (1, 2, 3...)</span>
-                                            <span className="text-[10px] text-black/40 font-normal">#1 = First Card</span>
-                                        </label>
-                                        <input 
-                                            type="number" 
-                                            required 
-                                            min="1" 
-                                            max="99" 
-                                            placeholder="1" 
-                                            value={campaignOrder} 
-                                            onChange={e => setCampaignOrder(Number(e.target.value))}
-                                            className="w-full bg-white border border-black/20 rounded-xl px-4 py-3 text-sm text-black placeholder:text-black/40 focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all font-bold"
-                                        />
-                                    </div>
-
-                                    <div className="space-y-1.5">
-                                        <label className="text-xs font-bold uppercase tracking-wider text-black/70">Campaign Validity</label>
-                                        <input 
-                                            type="text" 
-                                            placeholder="e.g. 1_month or Valid this season" 
-                                            value={campaignDuration} 
-                                            onChange={e => setCampaignDuration(e.target.value)}
-                                            className="w-full bg-white border border-black/20 rounded-xl px-4 py-3 text-sm text-black placeholder:text-black/40 focus:outline-none focus:border-black transition-all"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="space-y-1.5">
-                                    <label className="text-xs font-bold uppercase tracking-wider text-black/70">Short Description</label>
-                                    <textarea 
-                                        rows={2} 
-                                        placeholder="Describe what guests unlock with this promo..." 
-                                        value={campaignDesc} 
-                                        onChange={e => setCampaignDesc(e.target.value)}
-                                        className="w-full bg-white border border-black/20 rounded-xl px-4 py-3 text-sm text-black placeholder:text-black/40 focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all resize-none"
-                                    />
-                                </div>
-
-                                <div className="space-y-1.5">
-                                    <label className="text-xs font-bold uppercase tracking-wider text-black/70">Background Image URL</label>
-                                    <div className="flex flex-col sm:flex-row gap-3">
-                                        <input 
-                                            type="text" 
-                                            placeholder="Paste URL or upload..." 
-                                            value={campaignImage} 
-                                            onChange={e => setCampaignImage(e.target.value)}
-                                            className="flex-1 bg-white border border-black/20 rounded-xl px-4 py-3 text-sm text-black placeholder:text-black/40 focus:outline-none focus:border-black transition-all"
-                                        />
-                                        <label className="w-full sm:w-auto px-4 py-3 rounded-xl border border-black/20 bg-black/5 hover:bg-black hover:text-white cursor-pointer transition-colors text-xs font-bold flex items-center justify-center gap-1.5 shrink-0">
-                                            <UploadCloud size={16} /> Upload Image
-                                            <input 
-                                                type="file" 
-                                                accept="image/*" 
-                                                className="hidden" 
-                                                onChange={handleCampaignImageUpload} 
-                                            />
-                                        </label>
-                                    </div>
-                                </div>
-
-                                {/* Eligible Treatments Selection */}
-                                <div className="space-y-3 pt-4 border-t border-black/10">
-                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                                        <div>
-                                            <label className="text-xs font-bold uppercase tracking-wider text-black block">
-                                                Select Eligible Treatments to Claim Discount
-                                            </label>
-                                            <span className="text-[11px] text-black/60">
-                                                Guests must select one of these treatment durations to activate the voucher.
-                                            </span>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <button
-                                                type="button"
-                                                onClick={selectAllTreatments}
-                                                className="px-2.5 py-1 rounded-md text-[10px] font-bold border border-black/20 hover:bg-black hover:text-white transition-colors"
-                                            >
-                                                Select All
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={clearAllCampaignTreatments}
-                                                className="px-2.5 py-1 rounded-md text-[10px] font-bold border border-black/20 text-black/60 hover:bg-black/10 transition-colors"
-                                            >
-                                                Clear
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 gap-2.5 max-h-96 overflow-y-auto pr-1">
-                                        {treatments.map((t) => {
-                                            const selectedT = campaignTreatments.find(ct => ct.treatmentId === t.id);
-                                            const isSelectedAny = !!selectedT;
-                                            return (
-                                                <div 
-                                                    key={t.id} 
-                                                    className={`p-3.5 rounded-xl border transition-all ${
-                                                        isSelectedAny 
-                                                        ? 'bg-black/5 border-black/40' 
-                                                        : 'bg-white border-black/10'
-                                                    }`}
-                                                >
-                                                    <div className="flex items-center justify-between mb-2">
-                                                        <div>
-                                                            <h4 className="text-xs font-bold text-black">{t.title}</h4>
-                                                            <p className="text-[9px] uppercase font-bold tracking-widest text-black/50">{t.category}</p>
-                                                        </div>
-                                                        {isSelectedAny && (
-                                                            <span className="text-[9px] font-black uppercase tracking-widest bg-black text-white px-2 py-0.5 rounded">
-                                                                Active
-                                                            </span>
-                                                        )}
-                                                    </div>
-
-                                                    <div className="flex flex-wrap gap-2">
-                                                        {t.options.map((opt) => {
-                                                            const isDurationSelected = selectedT?.durations.includes(opt.duration);
-                                                            const priceNum = parseInt(String(opt.price).replace(/[^0-9]/g, '') || '0', 10);
-                                                            return (
-                                                                <button
-                                                                    type="button"
-                                                                    key={opt.duration}
-                                                                    onClick={() => toggleCampaignTreatmentDuration(t.id, opt.duration)}
-                                                                    className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all flex items-center gap-1.5 ${
-                                                                        isDurationSelected 
-                                                                        ? 'bg-black border-black text-white shadow-sm' 
-                                                                        : 'bg-white border-black/20 text-black/70 hover:border-black'
-                                                                    }`}
-                                                                >
-                                                                    {isDurationSelected && <Check size={12} strokeWidth={3} />}
-                                                                    {opt.duration.toUpperCase().includes('MIN') ? opt.duration : `${opt.duration} MINS`} - IDR {priceNum.toLocaleString('en-US')}
-                                                                </button>
-                                                            );
-                                                        })}
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-
-                                {/* Save Button */}
-                                <div className="pt-4 border-t border-black/10 flex items-center justify-between">
-                                    {success && (
-                                        <span className="flex items-center gap-1.5 text-xs font-bold text-black uppercase tracking-wider">
-                                            <CheckCircle size={16} /> Campaign Card Saved & Published!
-                                        </span>
-                                    )}
-                                    <div className="ml-auto flex items-center gap-3">
                                         {editingCampaignId && (
                                             <button
                                                 type="button"
                                                 onClick={handleNewCampaign}
-                                                className="px-4 py-3 rounded-xl text-xs font-bold border border-black/20 text-black/70 hover:bg-black/5 transition-colors"
+                                                className="px-4 py-2 rounded-xl bg-black/5 text-black hover:bg-black hover:text-white text-[11px] font-bold uppercase tracking-wider transition-all shrink-0"
                                             >
-                                                Cancel Edit
+                                                Discard Edits
                                             </button>
                                         )}
-                                        <button
-                                            type="submit"
-                                            disabled={isSubmitting}
-                                            className="bg-black text-white px-8 py-3.5 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-black/80 transition-all flex items-center gap-2 shadow-sm disabled:opacity-50"
-                                        >
-                                            {isSubmitting ? 'Publishing...' : editingCampaignId ? 'Update & Publish Campaign' : 'Save & Publish New Campaign'}
-                                        </button>
                                     </div>
+
+                                    <div className="relative z-10 space-y-6">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div className="space-y-2">
+                                                <label className="text-[11px] font-bold uppercase tracking-widest text-black/60 ml-1">Campaign Headline</label>
+                                                <input 
+                                                    type="text" required placeholder="e.g. Summer Retreat & Spa" 
+                                                    value={campaignTitle} onChange={e => setCampaignTitle(e.target.value)}
+                                                    className="w-full bg-[#FDFBF7] border-0 ring-1 ring-black/10 rounded-2xl px-5 py-3.5 text-sm font-medium text-black placeholder:text-black/30 focus:outline-none focus:ring-2 focus:ring-black transition-all shadow-inner"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-[11px] font-bold uppercase tracking-widest text-black/60 ml-1">Badge Text</label>
+                                                <input 
+                                                    type="text" required placeholder="e.g. Limited 10% OFF" 
+                                                    value={campaignLabel} onChange={e => setCampaignLabel(e.target.value)}
+                                                    className="w-full bg-[#FDFBF7] border-0 ring-1 ring-black/10 rounded-2xl px-5 py-3.5 text-sm font-medium text-black placeholder:text-black/30 focus:outline-none focus:ring-2 focus:ring-black transition-all shadow-inner"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <label className="text-[11px] font-bold uppercase tracking-widest text-black/60 ml-1">Short Description</label>
+                                            <textarea 
+                                                rows={2} placeholder="Describe the benefits of this promotion..." 
+                                                value={campaignDesc} onChange={e => setCampaignDesc(e.target.value)}
+                                                className="w-full bg-[#FDFBF7] border-0 ring-1 ring-black/10 rounded-2xl px-5 py-3.5 text-sm font-medium text-black placeholder:text-black/30 focus:outline-none focus:ring-2 focus:ring-black transition-all shadow-inner resize-none"
+                                            />
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            <div className="space-y-2">
+                                                <label className="text-[11px] font-bold uppercase tracking-widest text-black/60 ml-1">Background Image</label>
+                                                <div className="flex bg-[#FDFBF7] border-0 ring-1 ring-black/10 rounded-2xl overflow-hidden focus-within:ring-2 focus-within:ring-black transition-all shadow-inner">
+                                                    <input 
+                                                        type="text" placeholder="Paste URL..." 
+                                                        value={campaignImage} onChange={e => setCampaignImage(e.target.value)}
+                                                        className="flex-1 bg-transparent px-5 py-3.5 text-sm font-medium text-black placeholder:text-black/30 focus:outline-none"
+                                                    />
+                                                    <label className="px-4 border-l border-black/10 bg-black/5 hover:bg-black/10 cursor-pointer transition-colors flex items-center justify-center">
+                                                        <UploadCloud size={18} className="text-black/60" />
+                                                        <input type="file" accept="image/*" className="hidden" onChange={handleCampaignImageUpload} />
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            
+                                            <div className="space-y-2">
+                                                <label className="text-[11px] font-bold uppercase tracking-widest text-black/60 ml-1">Discount %</label>
+                                                <div className="flex bg-[#FDFBF7] border-0 ring-1 ring-black/10 rounded-2xl overflow-hidden focus-within:ring-2 focus-within:ring-black transition-all shadow-inner">
+                                                    <input 
+                                                        type="number" required min="0" max="100" placeholder="0" 
+                                                        value={discountPercentage} onChange={e => setDiscountPercentage(Math.max(0, Math.min(100, Number(e.target.value))))}
+                                                        className="flex-1 bg-transparent px-5 py-3.5 text-sm font-bold text-black focus:outline-none text-center"
+                                                    />
+                                                    <div className="px-5 bg-black/5 flex items-center justify-center border-l border-black/10 font-bold text-black/50">% OFF</div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Eligible Treatments Selection */}
+                                        <div className="bg-[#FDFBF7] ring-1 ring-black/5 rounded-3xl p-5 md:p-6 mt-8">
+                                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
+                                                <div>
+                                                    <h4 className="text-sm font-bold text-black">Eligible Treatments</h4>
+                                                    <p className="text-[10px] text-black/50 mt-1 uppercase tracking-widest font-bold">Select the services included in this offer</p>
+                                                </div>
+                                                <div className="flex gap-2">
+                                                    <button type="button" onClick={selectAllTreatments} className="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-black text-white hover:bg-black/80 transition-colors">Select All</button>
+                                                    <button type="button" onClick={clearAllCampaignTreatments} className="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-black/10 text-black hover:bg-black/20 transition-colors">Clear</button>
+                                                </div>
+                                            </div>
+
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                                                {treatments.map((t) => {
+                                                    const selectedT = campaignTreatments.find(ct => ct.treatmentId === t.id);
+                                                    const isSelectedAny = !!selectedT;
+                                                    return (
+                                                        <div key={t.id} className={`p-4 rounded-2xl transition-all border ${isSelectedAny ? 'bg-white shadow-md border-black/10' : 'bg-white/50 border-black/5 hover:border-black/10'}`}>
+                                                            <div className="flex justify-between items-start mb-3">
+                                                                <h5 className={`text-xs font-bold line-clamp-1 ${isSelectedAny ? 'text-black' : 'text-black/60'}`}>{t.title}</h5>
+                                                                {isSelectedAny && <CheckCircle size={14} className="text-emerald-500 shrink-0" />}
+                                                            </div>
+                                                            <div className="flex flex-wrap gap-1.5">
+                                                                {t.options.map((opt) => {
+                                                                    const isSelected = selectedT?.durations.includes(opt.duration);
+                                                                    return (
+                                                                        <button
+                                                                            type="button"
+                                                                            key={opt.duration}
+                                                                            onClick={() => toggleCampaignTreatmentDuration(t.id, opt.duration)}
+                                                                            className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all ${
+                                                                                isSelected ? 'bg-black text-white' : 'bg-black/5 text-black/60 hover:bg-black/10 hover:text-black'
+                                                                            }`}
+                                                                        >
+                                                                            {opt.duration}m
+                                                                        </button>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+
+                                        <div className="pt-6 border-t border-black/5 mt-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                            {success ? (
+                                                <div className="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 rounded-xl">
+                                                    <CheckCircle size={16} />
+                                                    <span className="text-[11px] font-bold uppercase tracking-wider">Saved Successfully</span>
+                                                </div>
+                                            ) : <div/>}
+                                            
+                                            <button
+                                                type="submit"
+                                                disabled={isSubmitting}
+                                                className="w-full sm:w-auto bg-black text-white px-8 py-4 rounded-2xl text-[11px] font-bold uppercase tracking-widest hover:scale-105 transition-all shadow-[0_8px_20px_rgb(0,0,0,0.15)] disabled:opacity-50 disabled:hover:scale-100 flex items-center justify-center gap-2"
+                                            >
+                                                {isSubmitting ? <span className="animate-pulse">Processing...</span> : editingCampaignId ? 'Update Campaign' : 'Publish Campaign'}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+
+                                {/* Live Preview Section (Sticky) */}
+                                <div className="xl:col-span-5 sticky top-6 space-y-4">
+                                    <div className="flex items-center justify-between px-2">
+                                        <h3 className="text-[10px] font-bold uppercase tracking-widest text-black/50">Live Component Preview</h3>
+                                    </div>
+                                    <div className="relative w-full aspect-[4/3] rounded-[2rem] overflow-hidden shadow-[0_20px_50px_rgb(0,0,0,0.15)] border border-black/10 bg-stone-900 group">
+                                        {campaignImage ? (
+                                            <img 
+                                                src={campaignImage} 
+                                                alt={campaignTitle}
+                                                className="absolute inset-0 w-full h-full object-cover opacity-90 transition-transform duration-1000 group-hover:scale-105"
+                                            />
+                                        ) : (
+                                            <div className="absolute inset-0 flex items-center justify-center text-white/20">
+                                                <Sparkles size={48} strokeWidth={1} />
+                                            </div>
+                                        )}
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent"></div>
+                                        
+                                        <div className="absolute inset-0 p-6 md:p-8 flex flex-col justify-between z-10 text-white">
+                                            <div className="flex items-center justify-start">
+                                                <span className="inline-flex items-center px-4 py-1.5 rounded-full bg-white/20 backdrop-blur-md text-[9px] font-bold tracking-[0.2em] uppercase text-white shadow-sm ring-1 ring-white/30">
+                                                    {campaignLabel || 'SPECIAL PROMO'}
+                                                </span>
+                                            </div>
+
+                                            <div className="flex flex-col">
+                                                <h3 className="font-serif text-3xl md:text-4xl font-bold tracking-tight text-white drop-shadow-lg line-clamp-2 leading-tight">
+                                                    {campaignTitle || 'Campaign Title'}
+                                                </h3>
+                                                {campaignDesc && (
+                                                    <p className="text-white/80 text-sm md:text-base line-clamp-2 font-light mt-3 drop-shadow-sm leading-relaxed">
+                                                        {campaignDesc}
+                                                    </p>
+                                                )}
+                                                
+                                                <div className="mt-6 flex items-center justify-between">
+                                                    <div className="flex items-center gap-2">
+                                                        {discountPercentage > 0 && (
+                                                            <div className="bg-emerald-500/20 text-emerald-300 backdrop-blur-sm px-3 py-1 rounded-lg border border-emerald-500/30 text-[10px] font-bold uppercase tracking-wider">
+                                                                {discountPercentage}% Savings
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-xl ring-1 ring-white/30 flex items-center justify-center shadow-xl group-hover:bg-white group-hover:text-black transition-all duration-300">
+                                                        <ArrowRight size={20} strokeWidth={2} />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <p className="text-[10px] text-black/40 text-center font-medium px-4">
+                                        This is exactly how your campaign card will render on the homepage carousel.
+                                    </p>
                                 </div>
-                            </form>
+                            </div>
                         </div>
                     )}
 
