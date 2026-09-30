@@ -84,21 +84,40 @@ export default function AdminDashboard() {
         async function fetchBrandData() {
             try {
                 const queryBrand = siteBrandFilter === 'central' ? 'elexoir' : siteBrandFilter;
-                const [treatmentsRes, productsRes, campaignsRes, therapistsRes] = await Promise.all([
+                let [treatmentsRes, productsRes, campaignsRes, therapistsRes] = await Promise.all([
                     supabase.from('treatments').select('*').eq('is_published', true).eq('brand', queryBrand).order('created_at', { ascending: false }),
                     supabase.from('products').select('*').eq('is_published', true).eq('brand', queryBrand).order('created_at', { ascending: false }),
                     supabase.from('campaigns').select('*').eq('is_published', true).eq('brand', queryBrand).order('created_at', { ascending: false }),
                     supabase.from('therapists').select('*').eq('is_active', true).eq('brand', queryBrand).order('created_at', { ascending: false })
                 ]);
                 
+                if (queryBrand !== 'elexoir' && (!treatmentsRes.data || treatmentsRes.data.length === 0)) {
+                    const fallbackRes = await Promise.all([
+                        supabase.from('treatments').select('*').eq('is_published', true).eq('brand', 'elexoir').order('created_at', { ascending: false }),
+                        supabase.from('products').select('*').eq('is_published', true).eq('brand', 'elexoir').order('created_at', { ascending: false }),
+                        supabase.from('therapists').select('*').eq('is_active', true).eq('brand', 'elexoir').order('created_at', { ascending: false })
+                    ]);
+                    treatmentsRes = fallbackRes[0];
+                    productsRes = fallbackRes[1];
+                    therapistsRes = fallbackRes[2];
+                }
+
                 if (isMounted) {
                     if (treatmentsRes.data) setTreatments(treatmentsRes.data);
                     if (productsRes.data) setProducts(productsRes.data);
                     if (therapistsRes.data) setTherapists(therapistsRes.data);
-                    if (campaignsRes.data) {
+                    if (campaignsRes.data && campaignsRes.data.length > 0) {
                         const sorted = sortCampaigns(campaignsRes.data);
                         setCampaigns(sorted);
-                        setCampaign(sorted[0] || null);
+                        setCampaign(sorted[0]);
+                    } else if (queryBrand !== 'elexoir') {
+                        // Fallback campaigns if empty
+                        const { data: fallbackCamp } = await supabase.from('campaigns').select('*').eq('is_published', true).eq('brand', 'elexoir').order('created_at', { ascending: false });
+                        if (fallbackCamp && fallbackCamp.length > 0) {
+                            const sorted = sortCampaigns(fallbackCamp);
+                            setCampaigns(sorted);
+                            setCampaign(sorted[0]);
+                        }
                     }
                 }
             } catch (e) {
