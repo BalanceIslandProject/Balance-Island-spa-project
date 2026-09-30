@@ -56,7 +56,13 @@ export default function AdminDashboard() {
     useEffect(() => {
         async function fetchFees() {
             const queryBrand = siteBrandFilter === 'central' ? 'elexoir' : siteBrandFilter;
-            const { data } = await supabase.from('therapist_fees').select('*').eq('brand', queryBrand).order('created_at', { ascending: false });
+            let { data } = await supabase.from('therapist_fees').select('*').eq('brand', queryBrand).order('created_at', { ascending: false });
+            
+            if (queryBrand !== 'elexoir' && (!data || data.length === 0)) {
+                const fallback = await supabase.from('therapist_fees').select('*').eq('brand', 'elexoir').order('created_at', { ascending: false });
+                data = fallback.data;
+            }
+
             if (data) {
                 setTherapistFees(data);
             }
