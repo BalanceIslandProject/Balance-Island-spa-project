@@ -33,13 +33,9 @@ export default function BookingManagement({
   // Form State
   const [showForm, setShowForm] = useState(false);
   const [isEditing, setIsEditing] = useState<string | null>(null);
-  const [formTime, setFormTime] = useState('10:00');
-  const [formTreatment, setFormTreatment] = useState('');
-  const [formDuration, setFormDuration] = useState('');
-  const [formPax, setFormPax] = useState<number>(1);
-  const [formTherapists, setFormTherapists] = useState<number>(1);
-  const [formRevenue, setFormRevenue] = useState<number>(0);
-  const [formFee, setFormFee] = useState<number>(0);
+  type FormItem = { id: string; treatment: string; duration: string; pax: number; therapists: number; revenue: number; fee: number; };
+  const createDefaultItem = (): FormItem => ({ id: Math.random().toString(36).substring(2, 9), treatment: '', duration: '', pax: 1, therapists: 1, revenue: 0, fee: 0 });
+  const [formItems, setFormItems] = useState<FormItem[]>([createDefaultItem()]);
 
   // Fetch bookings for the ENTIRE month
   useEffect(() => {
@@ -75,73 +71,79 @@ export default function BookingManagement({
     return monthBookings.filter(b => b.booking_date === selectedDate);
   }, [monthBookings, selectedDate]);
 
-  // Auto-calculate logic
-  useEffect(() => {
-    if (!formTreatment || !formDuration) return;
+  const updateFormItem = (index: number, field: string, value: any) => {
+    const newItems = [...formItems];
+    newItems[index] = { ...newItems[index], [field]: value };
     
-    // Find matching treatment
-    const t = treatments.find(x => x.title === formTreatment);
-    let rev = 0;
-    if (t && t.options && t.options.length > 0) {
-      const opt = t.options.find(o => o.duration === formDuration) || t.options[0];
-      const priceStr = opt.price.replace(/[^0-9]/g, '');
-      const price = parseInt(priceStr || '0', 10);
-      
-      const isCouple = formTreatment.toLowerCase().includes('couple');
-      if (isCouple) {
-        // Couple price is already for 2 people
-        rev = price * Math.max(1, Math.ceil(formPax / 2));
-      } else {
-        rev = price * formPax;
+    if (field === 'treatment') {
+      newItems[index].duration = '';
+      if (typeof value === 'string' && value.toLowerCase().includes('couple')) {
+        newItems[index].pax = 2;
+        newItems[index].therapists = 2;
       }
     }
 
-    // Find matching therapist fee
-    let fee = 0;
-    if (t && therapistFees.length > 0) {
-      const normalizeDur = (d: string) => d.replace(/[^0-9]/g, '');
-      const normFormDur = normalizeDur(formDuration);
-      
-      const matchingFee = therapistFees.find(f => 
-         f.treatment_id === t.id && normalizeDur(f.duration) === normFormDur
-      );
-      
-      const feeObj = matchingFee || therapistFees.find(f => normalizeDur(f.duration) === normFormDur) || therapistFees[0];
-      const baseFeeStr = feeObj.fee.replace(/[^0-9]/g, '');
-      const baseFee = parseInt(baseFeeStr || '0', 10);
-      fee = baseFee * formTherapists;
-    }
+    if (['treatment', 'duration', 'pax', 'therapists'].includes(field) && !isEditing) {
+      const item = newItems[index];
+      if (item.treatment && item.duration) {
+        const t = treatments.find(x => x.title === item.treatment);
+        if (t && t.options && t.options.length > 0) {
+          const opt = t.options.find(o => o.duration === item.duration) || t.options[0];
+          const priceStr = opt.price.replace(/[^0-9]/g, '');
+          const price = parseInt(priceStr || '0', 10);
+          
+          const isCouple = item.treatment.toLowerCase().includes('couple');
+          item.revenue = isCouple ? (price * Math.max(1, Math.ceil(item.pax / 2))) : (price * item.pax);
+        }
 
-    // Only auto-update if not editing existing
-    if (!isEditing) {
-      setFormRevenue(rev);
-      setFormFee(fee);
+        if (t && therapistFees.length > 0) {
+          const normalizeDur = (d: string) => d.replace(/[^0-9]/g, '');
+          const normFormDur = normalizeDur(item.duration);
+          
+          const matchingFee = therapistFees.find(f => 
+             f.treatment_id === t.id && normalizeDur(f.duration) === normFormDur
+          );
+          
+          const feeObj = matchingFee || therapistFees.find(f => normalizeDur(f.duration) === normFormDur) || therapistFees[0];
+          const baseFeeStr = feeObj.fee.replace(/[^0-9]/g, '');
+          const baseFee = parseInt(baseFeeStr || '0', 10);
+          item.fee = baseFee * item.therapists;
+        }
+      }
     }
-  }, [formTreatment, formDuration, formPax, formTherapists]);
+    setFormItems(newItems);
+  };
+
+  const addFormItem = () => setFormItems([...formItems, createDefaultItem()]);
+  const removeFormItem = (index: number) => {
+    if (formItems.length > 1) {
+      setFormItems(formItems.filter((_, i) => i !== index));
+    }
+  };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formTreatment) return alert("Please fill required fields.");
+    if (formItems.some(i => !i.treatment)) return alert("Please fill required fields for all treatments.");
 
-    const payload = {
+    const payloads = formItems.map(item => ({
       booking_date: selectedDate,
-      time: "-", // Hardcoded since it was removed from UI but might be required in DB
-      treatment_name: formDuration ? `${formTreatment} (${formDuration})` : formTreatment,
-      pax: formPax,
-      therapists_count: formTherapists,
-      revenue: formRevenue,
-      therapist_fee_total: formFee,
-      net_profit: formRevenue - formFee
-    };
+      time: "-", 
+      treatment_name: item.duration ? `${item.treatment} (${item.duration})` : item.treatment,
+      pax: item.pax,
+      therapists_count: item.therapists,
+      revenue: item.revenue,
+      therapist_fee_total: item.fee,
+      net_profit: item.revenue - item.fee
+    }));
 
     if (isEditing) {
-      const { error } = await supabase.from('bookings').update(payload).eq('id', isEditing);
+      const { error } = await supabase.from('bookings').update(payloads[0]).eq('id', isEditing);
       if (error) {
          if (error.code === '42P01') alert("Database table 'bookings' does not exist yet. Please run the SQL migration.");
          else alert("Error updating: " + error.message);
       }
     } else {
-      const { error } = await supabase.from('bookings').insert([payload]);
+      const { error } = await supabase.from('bookings').insert(payloads);
       if (error) {
          if (error.code === '42P01') alert("Database table 'bookings' does not exist yet. Please run the SQL migration.");
          else alert("Error saving: " + error.message);
@@ -155,13 +157,7 @@ export default function BookingManagement({
   };
 
   const resetForm = () => {
-    setFormTime('10:00');
-    setFormTreatment('');
-    setFormDuration('');
-    setFormPax(1);
-    setFormTherapists(1);
-    setFormRevenue(0);
-    setFormFee(0);
+    setFormItems([createDefaultItem()]);
   };
 
   const handleDelete = async (id: string) => {
@@ -354,74 +350,89 @@ export default function BookingManagement({
               </button>
               <h4 className="font-bold text-lg mb-6">{isEditing ? 'Edit Booking' : 'New Booking'}</h4>
               
-              <form onSubmit={handleSave} className="space-y-5">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-black/50 block mb-2">Select Treatment</label>
-                    <select required value={formTreatment} onChange={e => {
-                        const val = e.target.value;
-                        setFormTreatment(val);
-                        setFormDuration(''); // Reset duration when treatment changes
-                        
-                        // Smart defaults for couple massage
-                        if (val.toLowerCase().includes('couple')) {
-                          setFormPax(2);
-                          setFormTherapists(2);
-                        }
-                    }} className="w-full bg-black/5 border border-black/10 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black appearance-none cursor-pointer">
-                      <option value="">-- Choose Treatment --</option>
-                      {treatments.map(t => (
-                        <option key={t.id} value={t.title}>{t.title}</option>
-                      ))}
-                      <option value="Custom Treatment">Custom Treatment</option>
-                    </select>
-                  </div>
-                  
-                  <div>
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-black/50 block mb-2">Duration</label>
-                    <select required disabled={!formTreatment} value={formDuration} onChange={e => setFormDuration(e.target.value)} className="w-full bg-black/5 border border-black/10 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black appearance-none cursor-pointer disabled:opacity-50">
-                      <option value="">-- Select Duration --</option>
-                      {formTreatment === 'Custom Treatment' ? (
-                        <option value="Custom">Custom Duration</option>
-                      ) : (
-                        treatments.find(t => t.title === formTreatment)?.options?.map(opt => (
-                          <option key={opt.duration} value={opt.duration}>{opt.duration} - {opt.price}</option>
-                        ))
+              <form onSubmit={handleSave} className="space-y-6">
+                <div className="space-y-4">
+                  {formItems.map((item, index) => (
+                    <div key={item.id} className="relative bg-black/[0.02] border border-black/5 p-4 rounded-xl space-y-4">
+                      {formItems.length > 1 && !isEditing && (
+                        <button type="button" onClick={() => removeFormItem(index)} className="absolute -top-2 -right-2 bg-red-100 text-red-600 p-1.5 rounded-full hover:bg-red-200 transition-colors shadow-sm">
+                          <Trash2 size={14} />
+                        </button>
                       )}
-                    </select>
-                  </div>
-                </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-[10px] font-bold uppercase tracking-widest text-black/50 block mb-2">Select Treatment {index + 1}</label>
+                          <select required value={item.treatment} onChange={e => updateFormItem(index, 'treatment', e.target.value)} className="w-full bg-white border border-black/10 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black appearance-none cursor-pointer">
+                            <option value="">-- Choose Treatment --</option>
+                            {treatments.map(t => (
+                              <option key={t.id} value={t.title}>{t.title}</option>
+                            ))}
+                            <option value="Custom Treatment">Custom Treatment</option>
+                          </select>
+                        </div>
+                        
+                        <div>
+                          <label className="text-[10px] font-bold uppercase tracking-widest text-black/50 block mb-2">Duration</label>
+                          <select required disabled={!item.treatment} value={item.duration} onChange={e => updateFormItem(index, 'duration', e.target.value)} className="w-full bg-white border border-black/10 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black appearance-none cursor-pointer disabled:opacity-50">
+                            <option value="">-- Select Duration --</option>
+                            {item.treatment === 'Custom Treatment' ? (
+                              <option value="Custom">Custom Duration</option>
+                            ) : (
+                              treatments.find(t => t.title === item.treatment)?.options?.map(opt => (
+                                <option key={opt.duration} value={opt.duration}>{opt.duration} - {opt.price}</option>
+                              ))
+                            )}
+                          </select>
+                        </div>
+                      </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-black/50 block mb-2">Number of Pax</label>
-                    <input type="number" min="1" required value={formPax} onChange={e => setFormPax(parseInt(e.target.value) || 1)} className="w-full bg-black/5 border border-black/10 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black" />
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-black/50 block mb-2">Number of Therapists</label>
-                    <input type="number" min="1" required value={formTherapists} onChange={e => setFormTherapists(parseInt(e.target.value) || 1)} className="w-full bg-black/5 border border-black/10 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black" />
-                  </div>
-                </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-[10px] font-bold uppercase tracking-widest text-black/50 block mb-2">Number of Pax</label>
+                          <input type="number" min="1" required value={item.pax} onChange={e => updateFormItem(index, 'pax', parseInt(e.target.value) || 1)} className="w-full bg-white border border-black/10 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black" />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-bold uppercase tracking-widest text-black/50 block mb-2">Number of Therapists</label>
+                          <input type="number" min="1" required value={item.therapists} onChange={e => updateFormItem(index, 'therapists', parseInt(e.target.value) || 1)} className="w-full bg-white border border-black/10 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black" />
+                        </div>
+                      </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-black/10">
-                  <div>
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-black/50 block mb-2">Revenue (IDR)</label>
-                    <input type="number" required value={formRevenue} onChange={e => setFormRevenue(parseInt(e.target.value) || 0)} className="w-full bg-black/5 border border-black/10 rounded-xl px-4 py-3 text-sm font-bold text-black focus:outline-none focus:border-black" />
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-black/50 block mb-2">Therapist Fee (IDR)</label>
-                    <input type="number" required value={formFee} onChange={e => setFormFee(parseInt(e.target.value) || 0)} className="w-full bg-black/5 border border-black/10 rounded-xl px-4 py-3 text-sm font-bold text-orange-600 focus:outline-none focus:border-black" />
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-black/50 block mb-2">Net Profit (IDR)</label>
-                    <div className="w-full bg-green-50 border border-green-200 text-green-700 rounded-xl px-4 py-3 text-sm font-bold">
-                      {formatCurrency(formRevenue - formFee)}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-black/5">
+                        <div>
+                          <label className="text-[10px] font-bold uppercase tracking-widest text-black/50 block mb-2">Revenue (IDR)</label>
+                          <input type="number" required value={item.revenue} onChange={e => updateFormItem(index, 'revenue', parseInt(e.target.value) || 0)} className="w-full bg-white border border-black/10 rounded-xl px-4 py-3 text-sm font-bold text-black focus:outline-none focus:border-black" />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-bold uppercase tracking-widest text-black/50 block mb-2">Therapist Fee (IDR)</label>
+                          <input type="number" required value={item.fee} onChange={e => updateFormItem(index, 'fee', parseInt(e.target.value) || 0)} className="w-full bg-white border border-black/10 rounded-xl px-4 py-3 text-sm font-bold text-orange-600 focus:outline-none focus:border-black" />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-bold uppercase tracking-widest text-black/50 block mb-2">Net Profit (IDR)</label>
+                          <div className="w-full bg-green-50 border border-green-200 text-green-700 rounded-xl px-4 py-3 text-sm font-bold">
+                            {formatCurrency(item.revenue - item.fee)}
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                  </div>
+                  ))}
                 </div>
 
-                <div className="pt-2 flex justify-end">
-                  <button type="submit" className="flex items-center gap-2 bg-black text-white px-6 py-3 rounded-xl text-sm font-bold hover:bg-black/80 transition-colors">
+                {!isEditing && (
+                  <button type="button" onClick={addFormItem} className="w-full py-3 border-2 border-dashed border-black/20 text-black/60 rounded-xl text-sm font-bold hover:border-black/40 hover:text-black hover:bg-black/5 transition-all flex items-center justify-center gap-2">
+                    <Plus size={16} /> Add Another Treatment
+                  </button>
+                )}
+
+                <div className="pt-4 border-t border-black/10 flex flex-col md:flex-row justify-between items-center gap-4">
+                  {formItems.length > 1 && (
+                    <div className="text-sm">
+                      <span className="font-bold text-black/50">Total Profit: </span>
+                      <span className="font-bold text-green-700 text-lg">{formatCurrency(formItems.reduce((acc, item) => acc + (item.revenue - item.fee), 0))}</span>
+                    </div>
+                  )}
+                  <div className="flex-1"></div>
+                  <button type="submit" className="flex items-center gap-2 bg-black text-white px-8 py-3 rounded-xl text-sm font-bold hover:bg-black/80 transition-colors">
                     <Save size={16} /> Save Booking
                   </button>
                 </div>
@@ -487,12 +498,15 @@ export default function BookingManagement({
                                 editDur = editMatch[2];
                             }
                             
-                            setFormTreatment(editTitle);
-                            setFormDuration(editDur);
-                            setFormPax(booking.pax);
-                            setFormTherapists(booking.therapists_count);
-                            setFormRevenue(booking.revenue);
-                            setFormFee(booking.therapist_fee_total);
+                            setFormItems([{
+                              id: Math.random().toString(36).substring(2, 9),
+                              treatment: editTitle,
+                              duration: editDur,
+                              pax: booking.pax,
+                              therapists: booking.therapists_count,
+                              revenue: booking.revenue,
+                              fee: booking.therapist_fee_total
+                            }]);
                             setIsEditing(booking.id);
                             setShowForm(true);
                             window.scrollTo({ top: 0, behavior: 'smooth' });
