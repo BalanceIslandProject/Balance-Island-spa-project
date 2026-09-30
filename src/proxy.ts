@@ -11,11 +11,11 @@ export function proxy(request: NextRequest) {
             return NextResponse.next();
         }
 
-        // const authCookie = request.cookies.get('admin_auth');
-        // if (!authCookie || authCookie.value !== 'authenticated') {
-        //     const loginUrl = new URL('/admin/login', request.url);
-        //     return NextResponse.redirect(loginUrl);
-        // }
+        const authCookie = request.cookies.get('admin_auth');
+        if (!authCookie || authCookie.value !== 'authenticated') {
+            const loginUrl = new URL('/admin/login', request.url);
+            return NextResponse.redirect(loginUrl);
+        }
     }
 
     return NextResponse.next();
