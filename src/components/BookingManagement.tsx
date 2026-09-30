@@ -18,6 +18,13 @@ export interface Booking {
   net_profit: number;
 }
 
+const toLocalDateString = (date: Date) => {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+};
+
 export default function BookingManagement({ 
   treatments, 
   therapistFees 
@@ -26,7 +33,7 @@ export default function BookingManagement({
   therapistFees: TherapistFee[] 
 }) {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [selectedDate, setSelectedDate] = useState<string>(toLocalDateString(new Date()));
   const [monthBookings, setMonthBookings] = useState<Booking[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -47,8 +54,8 @@ export default function BookingManagement({
     try {
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth();
-      const startOfMonth = new Date(year, month, 1).toISOString().split('T')[0];
-      const endOfMonth = new Date(year, month + 1, 0).toISOString().split('T')[0];
+      const startOfMonth = toLocalDateString(new Date(year, month, 1));
+      const endOfMonth = toLocalDateString(new Date(year, month + 1, 0));
 
       const { data, error } = await supabase
         .from('bookings')
@@ -83,7 +90,7 @@ export default function BookingManagement({
       }
     }
 
-    if (['treatment', 'duration', 'pax', 'therapists'].includes(field) && !isEditing) {
+    if (['treatment', 'duration', 'pax', 'therapists'].includes(field)) {
       const item = newItems[index];
       if (item.treatment && item.duration) {
         const t = treatments.find(x => x.title === item.treatment);
@@ -187,7 +194,7 @@ export default function BookingManagement({
   const selectDate = (day: number) => {
     const d = new Date(year, month, day);
     // YYYY-MM-DD
-    const isoString = new Date(d.getTime() - (d.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+    const isoString = toLocalDateString(new Date(year, month, day));
     setSelectedDate(isoString);
     setShowForm(false);
   };
@@ -258,9 +265,9 @@ export default function BookingManagement({
               {Array.from({ length: daysInMonth }).map((_, i) => {
                 const day = i + 1;
                 const d = new Date(year, month, day);
-                const isoString = new Date(d.getTime() - (d.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+                const isoString = toLocalDateString(d);
                 const isSelected = isoString === selectedDate;
-                const isToday = isoString === new Date().toISOString().split('T')[0];
+                const isToday = isoString === toLocalDateString(new Date());
                 
                 const bookingsForThisDay = monthBookings.filter(b => b.booking_date === isoString);
                 const paxCount = bookingsForThisDay.reduce((sum, b) => sum + b.pax, 0);
