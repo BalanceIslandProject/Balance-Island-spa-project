@@ -7,6 +7,8 @@ import { Treatment, TherapistFee } from '@/context/SpaContext';
 
 export interface Booking {
   id: string;
+  reference_number?: string;
+  brand?: string;
   created_at: string;
   booking_date: string; // YYYY-MM-DD
   time: string;
@@ -623,6 +625,25 @@ export default function BookingManagement({
                             )}
                         </div>
                         <div className="flex gap-2">
+                            {booking.reference_number && (
+                                <button 
+                                onClick={() => {
+                                    let domain = window.location.origin;
+                                    if (booking.brand === 'bali') {
+                                        domain = 'https://www.homespaubud.com';
+                                    } else if (booking.brand === 'therapick') {
+                                        domain = 'https://www.booktherapick.com';
+                                    } else if (booking.brand === 'elexoir') {
+                                        domain = 'https://www.elexoirhomespaubud.com';
+                                    }
+                                    window.open(`${domain}/invoice/${booking.reference_number}`, '_blank');
+                                }}
+                                className="p-2 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors text-blue-600"
+                                title="View Invoice"
+                                >
+                                <FileText size={16} />
+                                </button>
+                            )}
                             <button 
                             onClick={() => {
                                 // Parse out the duration if it was saved like "Title (duration)"
