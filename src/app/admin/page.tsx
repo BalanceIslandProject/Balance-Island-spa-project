@@ -6,7 +6,7 @@ import {
     Megaphone, PlusCircle, Store, Settings, LayoutDashboard, 
     UploadCloud, CheckCircle, Plus, Trash2, Edit3, Pin, 
     ChevronDown, ChevronUp, Calculator, LogOut, Sparkles,
-    ArrowRight, ArrowUp, ArrowDown, Compass, ShieldCheck, Check, Ticket, Search, Menu, MoreHorizontal, Calendar
+    ArrowRight, ArrowUp, ArrowDown, Compass, ShieldCheck, Check, Ticket, Search, Menu, MoreHorizontal, Calendar, FileText
 } from 'lucide-react';
 import Link from 'next/link';
 import { useSpa, SelectedCampaignTreatment, Treatment, Product, TherapistFee, Campaign, sortCampaigns, DEFAULT_CAMPAIGNS } from '@/context/SpaContext';
@@ -833,7 +833,7 @@ export default function AdminDashboard() {
 
                 <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
                     {[
-                        ...(siteBrandFilter === 'central' ? [{ id: 'bookings', icon: Calendar, label: 'Booking' }] : []),
+                        ...(siteBrandFilter === 'central' ? [{ id: 'bookings', icon: Calendar, label: 'Booking' }, { id: 'invoice', icon: Ticket, label: 'Invoices' }] : []),
                         { id: 'campaign', icon: Megaphone, label: 'Campaign Card' },
                         { id: 'promo', icon: Ticket, label: 'Promo Codes' },
                         { id: 'treatment', icon: PlusCircle, label: 'Treatments' },
@@ -912,7 +912,7 @@ export default function AdminDashboard() {
                         </div>
                         <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
                             {[
-                                ...(siteBrandFilter === 'central' ? [] : [
+                                ...(siteBrandFilter === 'central' ? [{ id: 'invoice', icon: Ticket, label: 'Invoices' }] : [
                                     { id: 'campaign', icon: Megaphone, label: 'Campaign Card' },
                                     { id: 'promo', icon: Ticket, label: 'Promo Codes' },
                                 ]),
@@ -1874,6 +1874,36 @@ export default function AdminDashboard() {
                         <BookingManagement treatments={treatments} therapistFees={therapistFees} />
                     )}
 
+                    {/* INVOICE TAB (CENTRAL ADMIN ONLY) */}
+                    {activeTab === 'invoice' && siteBrandFilter === 'central' && (
+                        <div className="w-full max-w-xl mx-auto mt-10 animate-in fade-in duration-300">
+                            <div className="bg-white border border-black/10 p-8 rounded-2xl shadow-sm text-center">
+                                <FileText size={48} className="mx-auto text-black/20 mb-4" />
+                                <h2 className="text-xl font-bold tracking-tight text-black mb-2">Invoice Lookup</h2>
+                                <p className="text-xs text-black/50 mb-6 font-medium">
+                                    Enter the Booking ID below to generate and view the invoice link. This link can be shared directly with the user.
+                                </p>
+                                <div className="flex flex-col sm:flex-row gap-3">
+                                    <input 
+                                        id="invoiceIdInput" 
+                                        type="text" 
+                                        placeholder="e.g. jf93kd2" 
+                                        className="flex-1 border border-black/20 focus:border-black p-3 rounded-xl outline-none text-sm font-bold text-center sm:text-left transition-colors" 
+                                    />
+                                    <button 
+                                        onClick={() => {
+                                            const val = (document.getElementById('invoiceIdInput') as HTMLInputElement).value;
+                                            if(val.trim()) window.open('/invoice/' + val.trim(), '_blank');
+                                        }} 
+                                        className="bg-black text-white px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-black/80 transition-colors"
+                                    >
+                                        View Invoice
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                 </div>
             </main>
 
@@ -1881,7 +1911,7 @@ export default function AdminDashboard() {
             <div className="md:hidden fixed bottom-6 left-4 right-4 bg-white/95 backdrop-blur-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-black/10 rounded-2xl z-50">
                 <div className="flex items-center justify-between p-1.5 max-w-sm mx-auto">
                     {(siteBrandFilter === 'central' ? [
-                        { id: 'treatment', icon: PlusCircle, label: 'Treats' },
+                        { id: 'invoice', icon: FileText, label: 'Invoice' },
                         { id: 'fees', icon: Settings, label: 'Fees' },
                         { id: 'bookings', icon: Calendar, label: 'Book' },
                         { id: 'list', icon: LayoutDashboard, label: 'Menu' },

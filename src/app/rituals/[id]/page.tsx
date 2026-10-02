@@ -12,7 +12,7 @@ import { createSlug } from '@/utils/slugify';
 
 export default function RitualsDetails() {
     const { saveDraft, confirmBooking } = useCart();
-    const bookingIdRef = React.useRef<string>('INV-' + Math.floor(100 + Math.random() * 900).toString() + String.fromCharCode(65 + Math.floor(Math.random() * 26), 65 + Math.floor(Math.random() * 26), 65 + Math.floor(Math.random() * 26)));
+    const bookingIdRef = React.useRef<string>('BKG-' + Math.random().toString(36).substring(2, 8).toUpperCase());
 
     const params = useParams();
     const id = params?.id as string;
@@ -150,7 +150,7 @@ export default function RitualsDetails() {
             const invoiceUrl = window.location.origin + '/invoice/' + bookingIdRef.current;
     
     
-            const finalMessage = baseMessage + '\n\n🧾 *View Your Invoice:* ' + invoiceUrl;
+            const finalMessage = baseMessage + '\n\n*Booking ID:* ' + bookingIdRef.current;
             
             saveDraft({
                 id: bookingIdRef.current,

@@ -236,14 +236,20 @@ export default function TopNav() {
                                             
                                             {booking.status === 'confirmed' ? (
                                                 <Link 
-                                                    href={`/invoice/${booking.id}`}
+                                                    href="/store"
                                                     onClick={() => setIsCartOpen(false)}
                                                     className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-primary hover:text-primary/70 transition-colors"
                                                 >
-                                                    <FileText size={12} /> View Invoice
+                                                    <Store size={12} /> Book Again
                                                 </Link>
                                             ) : (
-                                                <span className="text-[10px] text-text-muted italic">Incomplete</span>
+                                                <Link 
+                                                    href="/checkout"
+                                                    onClick={() => setIsCartOpen(false)}
+                                                    className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-primary hover:text-primary/70 transition-colors"
+                                                >
+                                                    Continue Booking
+                                                </Link>
                                             )}
                                         </div>
                                     </div>
