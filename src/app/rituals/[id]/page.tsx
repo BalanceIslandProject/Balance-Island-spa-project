@@ -526,20 +526,7 @@ export default function RitualsDetails() {
                                     <div className="space-y-3 mb-4">
                                         {cartItems.map(item => (
                                             <div key={item.id} className="bg-white border border-border/80 rounded-2xl p-4 sm:p-5 shadow-sm relative">
-                                                <button
-        type="button"
-        onClick={() => {
-            const newCart = cartItems.filter(i => i.id !== item.id);
-            setCartItems(newCart);
-            if (newCart.length === 0) {
-                setIsModalOpen(false);
-                setIsReviewingBooking(false);
-            }
-        }}
-        className="absolute top-4 right-4 text-text-muted hover:text-red-500 transition-colors p-1.5 bg-gray-50 hover:bg-red-50 rounded-lg"
-    >
-        <Trash2 className="w-3.5 h-3.5" />
-    </button>
+                                                
                                                 <div className="flex items-start justify-between mb-4 pr-6">
                                                     <div>
                                                         <h3 className="font-bold text-sm text-primary leading-tight">{item.title}</h3>
@@ -570,6 +557,22 @@ export default function RitualsDetails() {
                                                 <div className="flex items-center justify-between pt-3 border-t border-border/50">
                                                     <span className="text-[10px] font-bold uppercase tracking-widest text-primary/80">Guests</span>
                                                     <div className="flex items-center gap-3">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    const newCart = cartItems.filter(i => i.id !== item.id);
+                                                                    setCartItems(newCart);
+                                                                    if (newCart.length === 0) {
+                                                                        setIsModalOpen(false);
+                                                                        setIsReviewingBooking(false);
+                                                                    }
+                                                                }}
+                                                                className="w-8 h-8 rounded-full bg-white border border-border flex items-center justify-center text-text-muted hover:text-red-500 hover:border-red-200 transition-colors shadow-sm"
+                                                                title="Remove treatment"
+                                                            >
+                                                                <Trash2 className="w-4 h-4" />
+                                                            </button>
+                                                            <div className="w-px h-5 bg-border mx-1"></div>
                                                         <button 
                                                             type="button"
                                                             onClick={() => setCartItems(cartItems.map(i => {
