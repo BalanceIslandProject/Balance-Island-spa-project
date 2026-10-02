@@ -27,7 +27,7 @@ const CATEGORIES = [
 
 export default function Home() {
     const { saveDraft, confirmBooking } = useCart();
-    const bookingIdRef = React.useRef<string>('BKG-' + Math.random().toString(36).substring(2, 8).toUpperCase());
+    const bookingIdRef = React.useRef<string>(Math.random().toString(36).substring(2, 8).toUpperCase());
 
     const { treatments, campaign, campaigns, products, isLoaded, siteBrandFilter } = useSpa();
 
@@ -250,7 +250,7 @@ export default function Home() {
             const invoiceUrl = window.location.origin + '/invoice/' + bookingIdRef.current;
     
     
-            const finalMessage = baseMessage + '\n\n*Booking ID:* ' + bookingIdRef.current;
+            const finalMessage = baseMessage + '\n\n*BOOKING ID :* ' + bookingIdRef.current;
             
             saveDraft({
                 id: bookingIdRef.current,

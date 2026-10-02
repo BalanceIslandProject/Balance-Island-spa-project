@@ -24,7 +24,7 @@ const CATEGORIES = [
 
 export default function LocationClient({ locationName, locationSlug }: { locationName: string, locationSlug: string }) {
     const { saveDraft, confirmBooking } = useCart();
-    const bookingIdRef = React.useRef<string>('BKG-' + Math.random().toString(36).substring(2, 8).toUpperCase());
+    const bookingIdRef = React.useRef<string>(Math.random().toString(36).substring(2, 8).toUpperCase());
 
     const { treatments, campaign, products, isLoaded } = useSpa();
 
@@ -178,7 +178,7 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
             const invoiceUrl = window.location.origin + '/invoice/' + bookingIdRef.current;
     
     
-            const finalMessage = baseMessage + '\n\n*Booking ID:* ' + bookingIdRef.current;
+            const finalMessage = baseMessage + '\n\n*BOOKING ID :* ' + bookingIdRef.current;
             
             saveDraft({
                 id: bookingIdRef.current,
