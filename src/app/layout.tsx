@@ -41,15 +41,22 @@ export async function generateMetadata(): Promise<Metadata> {
   const isTherapick = host.includes("booktherapick") || host.includes("therapick");
   const isBaliDomain = (host.includes("homespaubud") || host.includes("ubudhomespa")) && !host.includes("elexoir");
 
-  const name = isTherapick ? "Therapick" : (isBaliDomain ? "Ubud Home Spa" : "Elexoir Home Spa Ubud");
+  const name = isTherapick ? "Therapick" : (isBaliDomain ? "Home Spa Ubud" : "Elexoir Home Spa Ubud");
   const url = isTherapick ? "https://www.booktherapick.com" : (isBaliDomain ? "https://www.homespaubud.com" : "https://www.elexoirhomespaubud.com");
-  const title = isTherapick ? "Therapick | Premium Mobile Spa & Massage in Bali" : (isBaliDomain ? "Ubud Home Spa | Luxury Mobile Spa" : "Elexoir Home Spa Ubud | Premium Mobile Spa & In-Villa Massage");
+  
+  const title = isTherapick 
+    ? "Therapick | Island Relaxation, Delivered | Best Mobile Spa & Massage in Bali" 
+    : (isBaliDomain 
+      ? "Home Spa Ubud | Luxury Mobile Spa & In-Villa Massage in Bali" 
+      : "Elexoir Home Spa | Premium Mobile Spa & Massage in Ubud, Bali");
+      
   const description = isTherapick
-    ? "Looking for the best massage in Bali? Therapick delivers premium, 5-star professional spa treatments directly to your private villa or hotel. Book now for ultimate relaxation!"
+    ? "Experience the ultimate relaxation with Therapick, Bali's premier 5-star mobile spa. We deliver professional, top-rated in-villa massages and wellness treatments directly to your door in Ubud, Canggu, Seminyak, Uluwatu, and across Bali. Book your expert therapist on-demand today!"
     : (isBaliDomain
-      ? "Looking for the best massage in Bali? We deliver premium, 5-star professional spa treatments directly to your private villa or hotel. Serving Seminyak, Canggu, Kuta, and Nusa Dua. Book now for ultimate relaxation!"
-      : "Experience the top-rated luxury mobile spa in Bali. Professional in-villa massages, couples treatments & holistic rituals delivered directly to your hotel or villa in Ubud. Book your 5-star sanctuary today!");
-  const iconUrl = isTherapick ? '/elexoir.png' : (isBaliDomain ? '/homespa.png' : '/elexoir.png');
+      ? "Looking for the best massage in Bali? Home Spa Ubud delivers premium, 5-star professional spa treatments directly to your private villa or hotel. Serving Ubud, Canggu, Seminyak, Kuta, and Nusa Dua. Book now for ultimate relaxation!"
+      : "Experience the top-rated luxury mobile spa in Bali. Professional in-villa massages, couples treatments & holistic rituals delivered directly to your hotel or villa in Ubud, Canggu, and Seminyak. Book your 5-star sanctuary with Elexoir today!");
+      
+  const iconUrl = isTherapick ? '/therapick-logo.png' : (isBaliDomain ? '/homespa.png' : '/elexoir.png');
 
   return {
     metadataBase: new URL(url),
@@ -90,11 +97,20 @@ export async function generateMetadata(): Promise<Metadata> {
       siteName: name,
       locale: 'en_US',
       type: 'website',
+      images: [
+        {
+          url: iconUrl,
+          width: 800,
+          height: 800,
+          alt: `${name} Logo`,
+        },
+      ],
     },
     twitter: {
       card: 'summary_large_image',
       title: title,
       description: description,
+      images: [iconUrl],
     },
     alternates: {
       canonical: '/',
