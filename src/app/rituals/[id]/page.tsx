@@ -729,8 +729,14 @@ export default function RitualsDetails() {
                                                     </div>
                                                     <div>
                                                         <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-text-muted mb-1"><MapPin className="w-3 h-3"/> Location</span>
-                                                        <span className="text-sm text-primary font-medium line-clamp-1">{formData.location} {formData.room ? `(${formData.room})` : ''}</span>
+                                                        <span className="text-sm text-primary font-medium line-clamp-1">{formData.location}</span>
                                                     </div>
+                                                    {formData.room && (
+                                                        <div className="col-span-2 pt-1 mt-1">
+                                                            <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-text-muted mb-1"><DoorOpen className="w-3 h-3"/> Room Number</span>
+                                                            <span className="text-sm text-primary font-medium">{formData.room}</span>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
                                             
