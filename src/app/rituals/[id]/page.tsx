@@ -12,7 +12,7 @@ import { createSlug } from '@/utils/slugify';
 
 export default function RitualsDetails() {
     const { saveDraft, confirmBooking } = useCart();
-    const bookingIdRef = React.useRef<string>('INV-' + Math.random().toString(36).substring(2, 8).toUpperCase());
+    const bookingIdRef = React.useRef<string>('INV-' + Math.floor(100 + Math.random() * 900).toString() + String.fromCharCode(65 + Math.floor(Math.random() * 26), 65 + Math.floor(Math.random() * 26), 65 + Math.floor(Math.random() * 26)));
 
     const params = useParams();
     const id = params?.id as string;

@@ -88,8 +88,7 @@ function InvoicePage() {
 
                     <div className="mb-8">
                         <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted mb-4 text-center">Service Provider</p>
-                        <h2 className="text-center font-serif text-lg text-primary mb-1 font-medium tracking-wide">PT BALANCE ISLAND INDONESIA</h2>
-                        <p className="text-center text-xs text-text-muted">Elexoir Home Spa Ubud</p>
+                        <h2 className="text-center font-serif text-lg text-primary font-medium tracking-wide">PT BALANCE ISLAND INDONESIA</h2>
                     </div>
 
                     {/* Guest Details */}

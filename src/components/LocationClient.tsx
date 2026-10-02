@@ -24,7 +24,7 @@ const CATEGORIES = [
 
 export default function LocationClient({ locationName, locationSlug }: { locationName: string, locationSlug: string }) {
     const { saveDraft, confirmBooking } = useCart();
-    const bookingIdRef = React.useRef<string>('INV-' + Math.random().toString(36).substring(2, 8).toUpperCase());
+    const bookingIdRef = React.useRef<string>('INV-' + Math.floor(100 + Math.random() * 900).toString() + String.fromCharCode(65 + Math.floor(Math.random() * 26), 65 + Math.floor(Math.random() * 26), 65 + Math.floor(Math.random() * 26)));
 
     const { treatments, campaign, products, isLoaded } = useSpa();
 
