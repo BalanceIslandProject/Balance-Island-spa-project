@@ -17,7 +17,7 @@ export default function Footer() {
         <div className="flex flex-col items-start max-w-2xl">
           
           <div className="mb-8">
-            <h2 className="text-xl md:text-2xl font-serif text-primary tracking-wide mb-6 uppercase">
+            <h2 className="text-xl md:text-2xl font-serif text-primary tracking-wide mb-6">
               A brand of PT BALANCE ISLAND INDONESIA
             </h2>
             <p className="text-[15px] text-text-muted leading-relaxed font-light md:w-[85%] mb-8">
@@ -28,17 +28,17 @@ export default function Footer() {
               <span className="text-xs font-bold uppercase tracking-widest text-text-muted">Find us on</span>
               
               <a href="https://share.google/7evzKgW2VdC2C9QWY" target="_blank" rel="noopener noreferrer" className="domain-ubud-only inline-flex items-center gap-2 hover:opacity-80 transition-opacity">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/Google_Maps_icon_%282020%29.svg/512px-Google_Maps_icon_%282020%29.svg.png" alt="Google Maps" className="w-6 h-6" />
+                <img src="https://www.gstatic.com/images/branding/product/2x/maps_48dp.png" alt="Google Maps" className="w-5 h-5 object-contain" />
                 <span className="text-sm font-bold text-primary underline decoration-primary/30 underline-offset-4">Elexoir Home Spa</span>
               </a>
               
               <a href="https://share.google/mA7g8NkNuB37g8WHs" target="_blank" rel="noopener noreferrer" className="domain-bali-only inline-flex items-center gap-2 hover:opacity-80 transition-opacity">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/Google_Maps_icon_%282020%29.svg/512px-Google_Maps_icon_%282020%29.svg.png" alt="Google Maps" className="w-6 h-6" />
+                <img src="https://www.gstatic.com/images/branding/product/2x/maps_48dp.png" alt="Google Maps" className="w-5 h-5 object-contain" />
                 <span className="text-sm font-bold text-primary underline decoration-primary/30 underline-offset-4">Home Spa Ubud</span>
               </a>
               
               <a href="https://share.google/LRhEtZHpMLBAg9ySs" target="_blank" rel="noopener noreferrer" className="domain-therapick-only inline-flex items-center gap-2 hover:opacity-80 transition-opacity">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/Google_Maps_icon_%282020%29.svg/512px-Google_Maps_icon_%282020%29.svg.png" alt="Google Maps" className="w-6 h-6" />
+                <img src="https://www.gstatic.com/images/branding/product/2x/maps_48dp.png" alt="Google Maps" className="w-5 h-5 object-contain" />
                 <span className="text-sm font-bold text-primary underline decoration-primary/30 underline-offset-4">Therapick</span>
               </a>
             </div>
