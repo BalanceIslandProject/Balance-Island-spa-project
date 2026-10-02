@@ -6,7 +6,7 @@ export type CartItem = {
     id: string;
     treatmentId: string;
     title: string;
-    duration: number;
+    duration: number | string;
     price: number;
     guests: number;
     isCampaign?: boolean;
