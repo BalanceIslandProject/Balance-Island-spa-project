@@ -1899,10 +1899,12 @@ export default function AdminDashboard() {
                                                 
                                                 try {
                                                     const { data, error } = await supabase.from('bookings').select('brand').eq('reference_number', id).single();
-                                                    if (data && data.brand === 'balanceisland') {
-                                                        domain = 'https://balanceislandspa.com';
+                                                    if (data && data.brand === 'bali') {
+                                                        domain = 'https://www.homespaubud.com';
+                                                    } else if (data && data.brand === 'therapick') {
+                                                        domain = 'https://www.booktherapick.com';
                                                     } else if (data && data.brand === 'elexoir') {
-                                                        domain = 'https://elexoirhomespaubud.com';
+                                                        domain = 'https://www.elexoirhomespaubud.com';
                                                     }
                                                 } catch (e) {
                                                     console.error("Failed to detect domain", e);
