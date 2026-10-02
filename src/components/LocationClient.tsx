@@ -4,6 +4,7 @@ import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, Search, Heart, Cloud, Sparkles, Droplet, User, Flame, Clock, ArrowRight, X, ShoppingBag, Plus, Minus, MessageCircle, ChevronLeft, Bitcoin, CheckCircle2, Copy, Calendar, MapPin, Tag, DoorOpen, Trash2 } from 'lucide-react';
 import Link from 'next/link';
+import { useCart } from '@/context/CartContext';
 import { useSpa } from '@/context/SpaContext';
 import SeoExpandedContent from '@/components/SeoExpandedContent';
 import WhyChooseUs from '@/components/WhyChooseUs';
@@ -22,6 +23,9 @@ const CATEGORIES = [
 
 
 export default function LocationClient({ locationName, locationSlug }: { locationName: string, locationSlug: string }) {
+    const { saveDraft, confirmBooking } = useCart();
+    const bookingIdRef = React.useRef<string>(typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(7));
+
     const { treatments, campaign, products, isLoaded } = useSpa();
 
     const [activeCategory, setActiveCategory] = useState('all');
@@ -573,7 +577,19 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                             className="bg-white rounded-none md:rounded-[32px] p-6 md:p-8 w-full h-[100dvh] md:h-auto md:max-h-[90vh] md:max-w-md shadow-2xl relative overflow-y-auto overflow-x-hidden no-scrollbar"
                         >
                             <button 
-                                onClick={() => setIsBookingModalOpen(false)}
+                                onClick={() => {
+                                    if (cartItems.length > 0) {
+                                        saveDraft({
+                                            id: bookingIdRef.current,
+                                            date: new Date().toISOString(),
+                                            status: 'draft',
+                                            items: cartItems,
+                                            customerDetails: formData,
+                                            totalPrice: cartItems.reduce((sum, item) => sum + (item.price * item.guests), 0)
+                                        });
+                                    }
+                                    setIsBookingModalOpen(false);
+                                }}
                                 className="absolute top-6 right-6 w-8 h-8 rounded-full bg-surface flex items-center justify-center text-text-muted hover:bg-border transition-colors z-10"
                             >
                                 <X className="w-4 h-4" />
