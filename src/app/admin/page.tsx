@@ -495,7 +495,7 @@ export default function AdminDashboard() {
 
                 if (campaignImageFile) {
                     const ext = campaignImageFile.name.split('.').pop() || 'png';
-                    const path = `campaigns/${targetId}/image.${ext}`;
+                    const path = `campaigns/${targetId}/image-${Date.now()}.${ext}`;
                     
                     console.log(`Uploading campaign image to ${path}`, {
                         mimeType: campaignImageFile.type,
@@ -522,6 +522,8 @@ export default function AdminDashboard() {
                         .getPublicUrl(path);
                         
                     finalImageUrl = publicUrlData.publicUrl;
+                    setCampaignImage(finalImageUrl); // Update input field to remove blob URL
+                    setCampaignImageFile(null); // Clear the file selection
                 }
 
                 // Prevent base64 from being saved in image_url fallback
