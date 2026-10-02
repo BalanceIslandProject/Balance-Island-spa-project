@@ -48,6 +48,7 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
     const [isSelectingMore, setIsSelectingMore] = useState(false);
     const [expandedTreatmentId, setExpandedTreatmentId] = useState<string | null>(null);
     const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+    const [isReviewingBooking, setIsReviewingBooking] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
     
     // Initialize date and time
@@ -659,9 +660,17 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                     </div>
                                 </div>
                             ) : (
-                                <div className="animate-in fade-in slide-in-from-left-4 duration-300">
-                                    <h2 className="font-serif text-2xl text-primary mb-1 pr-8">Complete Booking</h2>
-                                    <p className="text-xs text-text-muted mb-6">Your request will be sent securely via WhatsApp.</p>
+                                <div className="animate-in fade-in slide-in-from-left-4 duration-300 relative">
+                                    {isReviewingBooking && (
+                                        <button 
+                                            onClick={() => setIsReviewingBooking(false)}
+                                            className="absolute -top-1 right-2 text-text-muted hover:text-primary transition-colors flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest bg-gray-100 px-2 py-1 rounded-lg z-10"
+                                        >
+                                            <ArrowRight className="w-2.5 h-2.5 rotate-180" /> Back
+                                        </button>
+                                    )}
+                                    <h2 className="font-serif text-2xl text-primary mb-1 pr-8">{isReviewingBooking ? 'Review Booking' : 'Complete Booking'}</h2>
+                                    <p className="text-xs text-text-muted mb-6">{isReviewingBooking ? 'Please verify your details below.' : 'Your request will be sent securely via WhatsApp.'}</p>
 
                                     {/* Cart Items List */}
                                     <div className="space-y-3 mb-4">
@@ -736,6 +745,7 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                         + ADD ANOTHER TREATMENT
                                     </button>
 
+                                    {!isReviewingBooking ? (
                                     <form className="space-y-5 pb-8 md:pb-0">
                                         <div className="space-y-1.5 w-full">
                                             <label className="text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1">Guest Name</label>
@@ -792,6 +802,44 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                             <div className="flex flex-col gap-3">
                                                 <button 
                                                     type="button"
+                                                    onClick={() => {
+                                                        if (!formData.name || !formData.date || !formData.time || !formData.location) {
+                                                            alert('Please fill in all required fields (Name, Date, Time, Location).');
+                                                            return;
+                                                        }
+                                                        setIsReviewingBooking(true);
+                                                    }}
+                                                    className="w-full bg-primary text-white px-6 py-4 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-primary/90 hover:scale-[1.02] transition-all duration-300 shadow-[0_8px_24px_rgb(0,0,0,0.15)] uppercase tracking-widest"
+                                                >
+                                                    REVIEW BOOKING
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                    ) : (
+                                    <div className="space-y-5 pb-8 sm:pb-0 animate-in fade-in slide-in-from-right-4 duration-300">
+                                        <div className="bg-gray-50 border border-border/80 rounded-xl p-5 space-y-4">
+                                            <h3 className="text-[10px] font-bold uppercase tracking-widest text-primary/80 border-b border-border/50 pb-2 mb-2">Guest Details</h3>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <span className="block text-[9px] font-bold uppercase tracking-widest text-text-muted">Name</span>
+                                                    <span className="text-sm text-primary font-medium">{formData.name}</span>
+                                                </div>
+                                                <div>
+                                                    <span className="block text-[9px] font-bold uppercase tracking-widest text-text-muted">Date & Time</span>
+                                                    <span className="text-sm text-primary font-medium">{formData.date} at {formData.time}</span>
+                                                </div>
+                                                <div className="col-span-2">
+                                                    <span className="block text-[9px] font-bold uppercase tracking-widest text-text-muted">Location</span>
+                                                    <span className="text-sm text-primary font-medium">{formData.location} {formData.room ? `(Room: ${formData.room})` : ''}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="mt-8 pt-6 border-t border-border/50">
+                                            <div className="flex flex-col gap-3">
+                                                <button
+                                                    type="button"
                                                     onClick={(e) => handleCampaignBooking(e)}
                                                     disabled={isProcessing}
                                                     className="w-full bg-primary text-white px-6 py-4 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-primary/90 hover:scale-[1.02] transition-all duration-300 shadow-[0_8px_24px_rgb(0,0,0,0.15)] uppercase tracking-widest disabled:opacity-70"
@@ -800,7 +848,8 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                                 </button>
                                             </div>
                                         </div>
-                                    </form>
+                                    </div>
+                                    )}
                                 </div>
                             )}
                         </motion.div>
