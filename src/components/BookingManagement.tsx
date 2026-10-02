@@ -608,18 +608,32 @@ export default function BookingManagement({
                   <div key={booking.id} className={`bg-white border ${booking.status?.toLowerCase() === 'cancelled' ? 'border-red-200' : 'border-black/10'} rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow relative group overflow-hidden`}>
                     <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${booking.status?.toLowerCase() === 'cancelled' ? 'bg-red-500' : (booking.status?.toLowerCase() === 'pending' ? 'bg-orange-400' : 'bg-emerald-500')}`}></div>
                     <div className={`flex flex-col md:flex-row md:items-center justify-between gap-4 ml-2 ${booking.status?.toLowerCase() === 'cancelled' ? 'opacity-50' : ''}`}>
-                      <div className="space-y-1 w-full md:w-1/3">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-[10px] font-bold tracking-wider uppercase bg-black/10 px-2 py-0.5 rounded-full">{booking.pax} Pax</span>
-                          <span className={`text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full ${
+                      <div className="space-y-2 w-full md:w-1/3">
+                        <div className="flex flex-wrap items-center gap-2 mb-1">
+                          <span className="text-[10px] font-bold tracking-wider uppercase bg-black/10 px-2 py-0.5 rounded-full whitespace-nowrap">{booking.pax} Pax</span>
+                          <span className={`text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full whitespace-nowrap ${
                               booking.status?.toLowerCase() === 'cancelled' ? 'bg-red-100 text-red-700' :
                               (booking.status?.toLowerCase() === 'pending' ? 'bg-orange-100 text-orange-700' : 'bg-emerald-100 text-emerald-700')
                           }`}>
                               {booking.status || 'Confirmed'}
                           </span>
                         </div>
-                        <p className="font-bold text-sm truncate max-w-[200px]">{title}</p>
-                        {dur && <p className="text-[10px] text-black/50 font-bold uppercase tracking-wider mt-1">Duration: {dur}</p>}
+                        
+                        {booking.items && booking.items.length > 0 ? (
+                            <div className="flex flex-col gap-2">
+                                {booking.items.map((it: any, idx: number) => (
+                                    <div key={idx}>
+                                        <p className="font-bold text-sm leading-snug">{it.title} {it.guests > 1 ? `(x${it.guests})` : ''}</p>
+                                        <p className="text-[10px] text-black/50 font-bold uppercase tracking-wider mt-0.5">Duration: {it.duration}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div>
+                                <p className="font-bold text-sm leading-snug">{title}</p>
+                                {dur && <p className="text-[10px] text-black/50 font-bold uppercase tracking-wider mt-0.5">Duration: {dur}</p>}
+                            </div>
+                        )}
                       </div>
                       
                       <div className="flex-1 grid grid-cols-3 gap-2 text-center bg-black/5 rounded-xl p-3">
