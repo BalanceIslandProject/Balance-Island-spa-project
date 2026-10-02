@@ -61,8 +61,7 @@ export default function BookingManagement({
         .from('bookings')
         .select('booking_date, revenue, net_profit')
         .gte('booking_date', startOfYear)
-        .lte('booking_date', endOfYear)
-        .is('reference_number', null);
+        .lte('booking_date', endOfYear);
 
       if (data) {
         const stats = Array.from({ length: 12 }, (_, i) => ({
@@ -103,7 +102,6 @@ export default function BookingManagement({
         .select('*')
         .gte('booking_date', startOfMonth)
         .lte('booking_date', endOfMonth)
-        .is('reference_number', null)
         .order('created_at', { ascending: true });
       
       if (error && error.code !== '42P01') {
