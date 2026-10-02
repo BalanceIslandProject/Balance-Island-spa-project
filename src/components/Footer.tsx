@@ -29,7 +29,7 @@ export default function Footer() {
         <div className="flex flex-col items-start max-w-2xl">
           
           <div className="mb-8">
-            <h2 className="text-xl md:text-2xl font-serif text-primary tracking-wide mb-6">
+            <h2 className="text-sm sm:text-base md:text-lg font-serif text-primary tracking-wide mb-6 whitespace-nowrap">
               A brand of PT BALANCE ISLAND INDONESIA
             </h2>
             <p className="text-[15px] text-text-muted leading-relaxed font-light md:w-[85%] mb-8">
