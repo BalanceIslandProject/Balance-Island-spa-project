@@ -19,6 +19,7 @@ export interface Booking {
   therapist_fee_total: number;
   net_profit: number;
   status?: string;
+  items?: any[];
 }
 
 const toLocalDateString = (date: Date) => {
@@ -215,7 +216,40 @@ export default function BookingManagement({
 
   const handleStatusChange = async (id: string, newStatus: string) => {
     if (!confirm(`Are you sure you want to mark this booking as ${newStatus}?`)) return;
-    await supabase.from('bookings').update({ status: newStatus }).eq('id', id);
+
+    let updates: any = { status: newStatus };
+
+    if (newStatus === 'Confirmed' || newStatus === 'CONFIRMED') {
+      const booking = monthBookings.find(b => b.id === id);
+      if (booking && booking.items && Array.isArray(booking.items) && booking.items.length > 0) {
+        let totalFee = 0;
+        booking.items.forEach((item: any) => {
+            const normDur = item.duration ? item.duration.replace(/[^0-9]/g, '') : '';
+            const t = treatments.find(tr => tr.title.toLowerCase() === item.title.toLowerCase());
+            
+            let feeObj;
+            if (t && normDur) {
+                feeObj = therapistFees.find(f => f.treatment_id === t.id && f.duration.replace(/[^0-9]/g, '') === normDur);
+            }
+            if (!feeObj && normDur) {
+                feeObj = therapistFees.find(f => f.duration.replace(/[^0-9]/g, '') === normDur);
+            }
+            if (!feeObj && therapistFees.length > 0) {
+                feeObj = therapistFees[0];
+            }
+            
+            if (feeObj) {
+                const baseFee = parseInt(feeObj.fee.replace(/[^0-9]/g, '') || '0', 10);
+                totalFee += baseFee * (item.guests || 1);
+            }
+        });
+        
+        updates.therapist_fee_total = totalFee;
+        updates.net_profit = booking.revenue - totalFee;
+      }
+    }
+
+    await supabase.from('bookings').update(updates).eq('id', id);
     fetchMonthBookings();
   };
 
