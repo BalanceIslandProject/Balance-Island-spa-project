@@ -807,7 +807,7 @@ export default function AdminDashboard() {
     };
 
     return (
-        <div className="min-h-screen bg-white text-black flex flex-col md:flex-row font-sans selection:bg-black selection:text-white">
+        <div className="min-h-screen bg-[#F8F9FA] text-black flex flex-col md:flex-row font-sans selection:bg-black selection:text-white">
             
             {/* Desktop Minimalist Black & White Sidebar */}
             <aside className="hidden md:flex flex-col w-64 bg-white border-r border-black/10 z-20 shrink-0 sticky top-0 h-screen self-start">
@@ -874,7 +874,7 @@ export default function AdminDashboard() {
             </aside>
 
             {/* Main Content Area */}
-            <main className="flex-1 relative overflow-y-auto bg-white min-h-screen pb-28 md:pb-12">
+            <main className="flex-1 relative overflow-y-auto bg-transparent min-h-screen pb-28 md:pb-12">
                 
                 {/* Sticky Mobile Admin Selector */}
                 <div className="md:hidden sticky top-0 z-40 pt-4 px-4 pb-2 bg-white/95 backdrop-blur-xl border-b border-black/5 mb-2">
