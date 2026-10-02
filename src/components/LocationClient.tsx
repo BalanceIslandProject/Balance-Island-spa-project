@@ -166,15 +166,17 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
             
             
             
-            const invoiceDataObj = {
+            
+            const minInvoice = {
                 id: bookingIdRef.current,
                 date: new Date().toISOString(),
                 status: 'confirmed',
-                items: cartItems,
-                customerDetails: formData,
+                items: cartItems.map(i => ({ title: i.title, duration: i.duration, guests: i.guests, price: i.price })),
+                customerDetails: { name: formData.name, date: formData.date, time: formData.time, location: formData.location, room: formData.room || '' },
                 totalPrice: typeof totalPrice !== 'undefined' ? totalPrice : cartItems.reduce((sum, item) => sum + (item.price * item.guests), 0)
             };
-            const invoiceUrl = window.location.origin + '/invoice/' + bookingIdRef.current + '?data=' + encodeURIComponent(btoa(JSON.stringify(invoiceDataObj)));
+            const invoiceUrl = window.location.origin + '/invoice/' + bookingIdRef.current + '?d=' + encodeURIComponent(btoa(JSON.stringify(minInvoice)));
+    
     
             const finalMessage = baseMessage + '\n\n🧾 *View Your Invoice:* ' + invoiceUrl;
             

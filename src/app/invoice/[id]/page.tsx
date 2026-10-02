@@ -17,12 +17,13 @@ function InvoicePage() {
 
     useEffect(() => {
         if (params?.id) {
-            // First check URL for encoded data (for shareable links)
-            const dataParam = searchParams.get('data');
+            const dataParam = searchParams.get('d');
             if (dataParam) {
                 try {
+                    // d param is base64 encoded compressed JSON
                     const decoded = JSON.parse(atob(decodeURIComponent(dataParam)));
                     setBooking(decoded);
+                    setIsLoading(false);
                     return;
                 } catch (e) {
                     console.error('Failed to decode invoice data', e);
@@ -40,21 +41,22 @@ function InvoicePage() {
     }, [params, history, searchParams]);
 
     if (isLoading) {
-        return (
-            <div className="min-h-[100dvh] flex flex-col items-center justify-center p-6 bg-secondary/30">
-                <Loader2 className="w-8 h-8 text-primary animate-spin mb-4" />
-                <p className="text-text-muted text-sm tracking-widest uppercase font-bold">Loading Invoice...</p>
-            </div>
-        );
+        return <div className="min-h-[100dvh] bg-[#FDFBF7]" />; // Invisible fast loading
     }
 
     if (!booking) {
         return (
-            <div className="min-h-[100dvh] flex flex-col items-center justify-center p-6 bg-secondary/30">
-                <p className="text-text-muted mb-4">Invoice not found or expired.</p>
-                <button onClick={() => router.push('/')} className="text-primary underline font-bold uppercase tracking-widest text-xs">
-                    Return Home
-                </button>
+            <div className="min-h-[100dvh] flex flex-col items-center justify-center p-6 bg-[#FDFBF7]">
+                <div className="bg-white p-8 rounded-3xl max-w-sm w-full text-center shadow-soft border border-border">
+                    <h2 className="font-serif text-xl text-primary mb-3">Invoice Unavailable</h2>
+                    <p className="text-text-muted text-sm mb-6">
+                        This invoice is stored securely on the device where it was created. 
+                        If you are viewing this inside an app like WhatsApp, please tap the menu (•••) and select <strong>"Open in Safari / Chrome"</strong>.
+                    </p>
+                    <button onClick={() => router.push('/')} className="w-full py-3 bg-primary text-white rounded-xl font-bold uppercase tracking-widest text-[10px]">
+                        Return Home
+                    </button>
+                </div>
             </div>
         );
     }
@@ -177,12 +179,7 @@ function InvoicePage() {
 
 export default function InvoicePageWrapper() {
     return (
-        <Suspense fallback={
-            <div className="min-h-[100dvh] flex flex-col items-center justify-center p-6 bg-secondary/30">
-                <Loader2 className="w-8 h-8 text-primary animate-spin mb-4" />
-                <p className="text-text-muted text-sm tracking-widest uppercase font-bold">Loading Invoice...</p>
-            </div>
-        }>
+        <Suspense fallback={<div className="min-h-[100dvh] bg-[#FDFBF7]" />}>
             <InvoicePage />
         </Suspense>
     );
