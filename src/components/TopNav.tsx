@@ -52,8 +52,8 @@ export default function TopNav() {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    // Hide TopNav on admin, store, and explore routes
-    if (pathname?.startsWith('/admin') || pathname?.startsWith('/store') || pathname?.startsWith('/explore')) {
+    // Hide TopNav on admin, store, explore, and invoice routes
+    if (pathname?.startsWith('/admin') || pathname?.startsWith('/store') || pathname?.startsWith('/explore') || pathname?.startsWith('/invoice')) {
         return null;
     }
 

@@ -147,14 +147,14 @@ function InvoicePage() {
                     <div className="mb-8 bg-[#F8F9FA] rounded-2xl p-5 border border-border/40">
                         <h3 className="text-[10px] font-bold uppercase tracking-widest text-text-muted mb-4 border-b border-border/50 pb-2">Guest Details</h3>
                         <div className="grid grid-cols-3 gap-3 sm:gap-5 items-center">
-                            <div className="flex flex-col gap-5">
-                                <div>
+                            <div className="flex flex-col gap-5 overflow-hidden">
+                                <div className="w-full">
                                     <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-text-muted mb-1"><User className="w-3 h-3"/> Name</span>
-                                    <span className="text-sm text-primary font-medium">{booking.customerDetails.name}</span>
+                                    <span className="text-sm text-primary font-medium block truncate" title={booking.customerDetails.name}>{booking.customerDetails.name}</span>
                                 </div>
                                 <div>
                                     <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-text-muted mb-1"><Calendar className="w-3 h-3"/> Date</span>
-                                    <span className="text-sm text-primary font-medium">{booking.customerDetails.date}</span>
+                                    <span className="text-sm text-primary font-medium whitespace-nowrap">{booking.customerDetails.date}</span>
                                 </div>
                             </div>
                             
