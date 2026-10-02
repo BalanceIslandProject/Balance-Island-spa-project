@@ -136,7 +136,20 @@ export default function RitualsDetails() {
 
             const baseMessage = `*NEW SPA BOOKING*\n${websiteSource}\n\n*TREATMENTS:*\n${treatmentsList}\n\n*TOTAL PRICE:* IDR ${formattedTotalPrice}${promoDetailsText}\n\n*CLIENT DETAILS:*\n- Name: ${formData.name}\n- Date: ${formData.date}\n- Time: ${formData.time}\n- Location/Villa: ${formData.location}\n- Room Number: ${formData.room || 'N/A'}\n\nHello! I would like to confirm this booking.`;
             
-            const waUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent(baseMessage)}`;
+            
+            const invoiceUrl = window.location.origin + '/invoice/' + bookingIdRef.current;
+            const finalMessage = baseMessage + '\n\n🧾 *View Your Invoice:* ' + invoiceUrl;
+            
+            saveDraft({
+                id: bookingIdRef.current,
+                date: new Date().toISOString(),
+                status: 'confirmed',
+                items: cartItems,
+                customerDetails: formData,
+                totalPrice: typeof totalPrice !== 'undefined' ? totalPrice : cartItems.reduce((sum, item) => sum + (item.price * item.guests), 0)
+            });
+    
+            const waUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent(finalMessage)}`;
             if (newWindow) {
                 newWindow.location.href = waUrl;
             } else {
