@@ -147,7 +147,7 @@ export default function RitualsDetails() {
                 customerDetails: { name: formData.name, date: formData.date, time: formData.time, location: formData.location, room: formData.room || '' },
                 totalPrice: typeof totalPrice !== 'undefined' ? totalPrice : cartItems.reduce((sum, item) => sum + (item.price * item.guests), 0)
             };
-            const invoiceUrl = window.location.origin + '/invoice/' + bookingIdRef.current + '?d=' + encodeURIComponent(btoa(JSON.stringify(minInvoice)));
+            const invoiceUrl = window.location.origin + '/invoice/' + bookingIdRef.current;
     
     
             const finalMessage = baseMessage + '\n\n🧾 *View Your Invoice:* ' + invoiceUrl;

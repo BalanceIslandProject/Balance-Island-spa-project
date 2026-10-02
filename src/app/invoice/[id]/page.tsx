@@ -63,6 +63,10 @@ function InvoicePage() {
 
     return (
         <div className="min-h-[100dvh] bg-secondary/30 pt-20 pb-24 px-4 sm:px-6">
+                <style dangerouslySetInnerHTML={{__html: `
+                    footer, .floating-nav, #floating-nav, .mobile-nav { display: none !important; }
+                `}} />
+
             <div className="max-w-lg mx-auto bg-white rounded-3xl shadow-soft-lg overflow-hidden border border-border/80 relative">
                 
                 {/* Header Pattern */}
@@ -78,14 +82,14 @@ function InvoicePage() {
                         <p className="text-text-muted text-sm max-w-[250px] mb-4">Your booking has been received and confirmed.</p>
                         
                         <div className="bg-black/5 text-primary text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-lg">
-                            INV-{booking.id.toUpperCase().substring(0, 8)}
+                            {booking.id.toUpperCase().substring(0, 10)}
                         </div>
                     </div>
 
                     <div className="mb-8">
                         <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted mb-4 text-center">Service Provider</p>
                         <h2 className="text-center font-serif text-lg text-primary mb-1 font-medium tracking-wide">PT BALANCE ISLAND INDONESIA</h2>
-                        <p className="text-center text-xs text-text-muted">{'Luxury Spa Services'}</p>
+                        <p className="text-center text-xs text-text-muted">Elexoir Home Spa Ubud</p>
                     </div>
 
                     {/* Guest Details */}
