@@ -16,22 +16,35 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-8 lg:px-12 relative z-10">
         <div className="flex flex-col items-start max-w-2xl">
           
-          <div className="mb-12">
-            <Link href="/" className="inline-block mb-4 outline-none hover:opacity-80 transition-opacity">
-              <span className="font-serif italic text-4xl md:text-5xl text-primary tracking-wide domain-ubud-only">Elexoir Home Spa</span>
-              <span className="font-serif italic text-4xl md:text-5xl text-primary tracking-wide domain-bali-only">Home Spa Ubud</span>
-              <img src="/therapick-logo.png" alt="Therapick" className="w-56 md:w-72 -ml-8 -mt-12 -mb-10 object-contain domain-therapick-only" />
-            </Link>
-            <p className="text-[15px] text-text-muted leading-relaxed font-light md:w-[85%]">
+          <div className="mb-8">
+            <h2 className="text-xl md:text-2xl font-serif text-primary tracking-wide mb-6 uppercase">
+              A brand of PT BALANCE ISLAND INDONESIA
+            </h2>
+            <p className="text-[15px] text-text-muted leading-relaxed font-light md:w-[85%] mb-8">
               Bali's premier luxury mobile spa. Bringing 5-star professional massages and organic wellness treatments directly to your private villa or hotel.
             </p>
+
+            <div className="flex flex-col gap-3">
+              <span className="text-xs font-bold uppercase tracking-widest text-text-muted">Find us on</span>
+              
+              <a href="https://share.google/7evzKgW2VdC2C9QWY" target="_blank" rel="noopener noreferrer" className="domain-ubud-only inline-flex items-center gap-2 hover:opacity-80 transition-opacity">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/Google_Maps_icon_%282020%29.svg/512px-Google_Maps_icon_%282020%29.svg.png" alt="Google Maps" className="w-6 h-6" />
+                <span className="text-sm font-bold text-primary underline decoration-primary/30 underline-offset-4">Elexoir Home Spa</span>
+              </a>
+              
+              <a href="https://share.google/mA7g8NkNuB37g8WHs" target="_blank" rel="noopener noreferrer" className="domain-bali-only inline-flex items-center gap-2 hover:opacity-80 transition-opacity">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/Google_Maps_icon_%282020%29.svg/512px-Google_Maps_icon_%282020%29.svg.png" alt="Google Maps" className="w-6 h-6" />
+                <span className="text-sm font-bold text-primary underline decoration-primary/30 underline-offset-4">Home Spa Ubud</span>
+              </a>
+              
+              <a href="https://share.google/LRhEtZHpMLBAg9ySs" target="_blank" rel="noopener noreferrer" className="domain-therapick-only inline-flex items-center gap-2 hover:opacity-80 transition-opacity">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/Google_Maps_icon_%282020%29.svg/512px-Google_Maps_icon_%282020%29.svg.png" alt="Google Maps" className="w-6 h-6" />
+                <span className="text-sm font-bold text-primary underline decoration-primary/30 underline-offset-4">Therapick</span>
+              </a>
+            </div>
           </div>
 
-          <div className="flex flex-col gap-4 w-full">
-            <p className="text-sm md:text-[15px] text-primary font-medium tracking-wide">
-              A brand of PT BALANCE ISLAND INDONESIA
-            </p>
-            
+          <div className="flex flex-col gap-4 w-full border-t border-border/40 pt-8 mt-4">
             <div className="flex gap-8">
               <Link href="/privacy" className="text-sm md:text-[15px] text-text-muted hover:text-primary transition-colors duration-300">Privacy Policy</Link>
               <Link href="/terms" className="text-sm md:text-[15px] text-text-muted hover:text-primary transition-colors duration-300">Terms of Service</Link>
