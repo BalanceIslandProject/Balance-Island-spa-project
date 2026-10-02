@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, Share, MapPin, Clock, Calendar, Sparkles, Plus, Minus, X, MessageCircle, Heart, Bitcoin, ArrowRight, User } from 'lucide-react';
+import { ChevronLeft, Share, MapPin, Clock, Calendar, Sparkles, Plus, Minus, X, MessageCircle, Heart, Bitcoin, ArrowRight, User, Tag } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useSpa } from '@/context/SpaContext';
@@ -258,7 +258,7 @@ export default function RitualsDetails() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
                     
                     {/* Selectable Durations */}
-                    <div className="bg-highlight/40 border border-highlight rounded-[32px] p-6 flex flex-col justify-between">
+                    <div className="bg-white/40 border border-highlight rounded-[32px] p-6 flex flex-col justify-between">
                         <div className="flex items-start justify-between mb-6">
                             <span className="text-sm font-bold uppercase tracking-widest text-primary/80">Select Duration</span>
                             <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-primary shadow-sm">
@@ -397,7 +397,7 @@ export default function RitualsDetails() {
                                             <div className="flex items-center gap-1.5 text-[10px] font-bold text-text-muted mb-3 uppercase tracking-widest">
                                                 <Clock className="w-3.5 h-3.5" /> {item.options && item.options[0] ? item.options[0].duration : '60'} MINS
                                             </div>
-                                            <div className="flex items-center justify-between bg-gray-50/80 backdrop-blur-sm rounded-full p-1 pl-4 border border-gray-100">
+                                            <div className="flex items-center justify-between bg-white/80 backdrop-blur-sm rounded-full p-1 pl-4 border border-gray-100">
                                                 <span className="font-semibold text-gray-900 text-[14px]">IDR {item.options && item.options[0] ? parseInt(item.options[0].price.replace(/,/g, '') || '0').toLocaleString('en-US') : '0'}</span>
                                                 <button className="w-10 h-10 rounded-full bg-[#1D1D1F] text-white flex items-center justify-center hover:bg-black transition-colors shrink-0 shadow-sm">
                                                     <Plus size={20} strokeWidth={2.5} />
@@ -427,7 +427,7 @@ export default function RitualsDetails() {
                             initial={{ opacity: 0, scale: 0.9, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                            className="bg-[#F8F9FA] w-full max-w-full sm:max-w-lg h-[100dvh] sm:h-auto sm:max-h-[90vh] sm:my-auto sm:rounded-[28px] rounded-none p-5 sm:p-7 md:p-8 shadow-2xl relative flex flex-col box-border overflow-y-auto overflow-x-hidden no-scrollbar"
+                            className="bg-white w-full max-w-full sm:max-w-lg h-[100dvh] sm:h-auto sm:max-h-[90vh] sm:my-auto sm:rounded-[28px] rounded-none p-5 sm:p-7 md:p-8 shadow-2xl relative flex flex-col box-border overflow-y-auto overflow-x-hidden no-scrollbar"
                         >
                             <button 
                                 onClick={() => setIsModalOpen(false)}
@@ -519,7 +519,7 @@ export default function RitualsDetails() {
                             ) : (
                                 <div className="animate-in fade-in slide-in-from-left-4 duration-300 relative">
                                     
-                                    <h2 className="font-serif text-2xl text-primary mb-1 pr-8">{isReviewingBooking ? 'REVIEW BOOKING' : 'Complete Booking'}</h2>
+                                    <h2 className="font-serif text-2xl text-primary mb-1 pr-8">{isReviewingBooking ? 'REVIEW BOOKING' : 'COMPLETE BOOKING'}</h2>
                                     <p className="text-xs text-text-muted mb-6">{isReviewingBooking ? 'Please verify your details below.' : 'Your request will be sent securely via WhatsApp.'}</p>
 
                                     {/* Cart Items List */}
@@ -598,7 +598,7 @@ export default function RitualsDetails() {
                                     <button 
                                         type="button"
                                         onClick={() => setIsSelectingMore(true)}
-                                        className="w-full bg-white text-primary border border-border/80 px-6 py-3.5 rounded-xl text-xs font-bold shadow-sm hover:bg-gray-50 transition-colors mb-6 tracking-widest uppercase"
+                                        className="w-full bg-white text-primary border border-border/80 px-6 py-3.5 rounded-xl text-xs font-bold shadow-sm hover:bg-white transition-colors mb-6 tracking-widest uppercase"
                                     >
                                         + ADD ANOTHER TREATMENT
                                     </button>
@@ -606,7 +606,7 @@ export default function RitualsDetails() {
                                     {!isReviewingBooking ? (
                             <form className="space-y-5 pb-8 md:pb-0">
                                 <div className="space-y-1.5 w-full">
-                                    <label className="text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1">Guest Name</label>
+                                    <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1"><User className="w-3.5 h-3.5"/> Guest Name</label>
                                     <input 
                                         type="text" required placeholder="John Doe"
                                         value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})}
@@ -615,7 +615,7 @@ export default function RitualsDetails() {
                                 </div>
                                 <div className="flex flex-row gap-4 w-full">
                                     <div className="space-y-1.5 flex-1 min-w-0">
-                                        <label className="text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1">Date</label>
+                                        <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1"><Calendar className="w-3.5 h-3.5"/> Date</label>
                                         <input 
                                             type="date" required 
                                             value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})}
@@ -623,7 +623,7 @@ export default function RitualsDetails() {
                                         />
                                     </div>
                                     <div className="space-y-1.5 flex-1 min-w-0">
-                                        <label className="text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1">Time</label>
+                                        <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1"><Clock className="w-3.5 h-3.5"/> Time</label>
                                         <input 
                                             type="time" required 
                                             value={formData.time} onChange={e => setFormData({...formData, time: e.target.value})}
@@ -632,7 +632,7 @@ export default function RitualsDetails() {
                                     </div>
                                 </div>
                                 <div className="space-y-1.5">
-                                    <label className="text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1">Villa / Hotel Name</label>
+                                    <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1"><MapPin className="w-3.5 h-3.5"/> Villa / Hotel Name</label>
                                     <input 
                                         type="text" required placeholder="e.g. Four Seasons Sayan"
                                         value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})}
@@ -640,7 +640,7 @@ export default function RitualsDetails() {
                                     />
                                 </div>
                                 <div className="space-y-1.5">
-                                    <label className="text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1">Room Number (Optional)</label>
+                                    <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1"><MapPin className="w-3.5 h-3.5"/> Room Number (Optional)</label>
                                     <input 
                                         type="text" placeholder="e.g. Villa 12"
                                         value={formData.room} onChange={e => setFormData({...formData, room: e.target.value})}
@@ -649,7 +649,7 @@ export default function RitualsDetails() {
                                 </div>
 
                                 <div className="space-y-1.5 pt-2 w-full">
-                                    <label className="text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1">Promo Code</label>
+                                    <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1"><Tag className="w-3.5 h-3.5"/> Promo Code</label>
                                     <div className="flex gap-2 w-full">
                                         <input 
                                             type="text" placeholder="Enter code"
@@ -703,7 +703,7 @@ export default function RitualsDetails() {
                             </form>
                                     ) : (
                                     <div className="space-y-5 pb-8 sm:pb-0 animate-in fade-in slide-in-from-right-4 duration-300">
-                                        <div className="bg-gray-50 border border-border/80 rounded-xl p-5 space-y-4">
+                                        <div className="bg-white border border-border/80 rounded-xl p-5 space-y-4">
                                             <h3 className="text-[10px] font-bold uppercase tracking-widest text-primary/80 border-b border-border/50 pb-2 mb-2">Guest Details</h3>
                                             <div className="grid grid-cols-2 gap-5">
                                                     <div>
@@ -796,7 +796,7 @@ export default function RitualsDetails() {
                                                     <div className="border border-border/80 rounded-2xl overflow-hidden">
                                                         <table className="w-full text-left border-collapse">
                                                             <thead>
-                                                                <tr className="bg-gray-50 border-b border-border/80">
+                                                                <tr className="bg-white border-b border-border/80">
                                                                     <th className="py-3 px-4 text-[9px] font-bold uppercase tracking-widest text-primary/70">Treatment</th>
                                                                     <th className="py-3 px-4 text-[9px] font-bold uppercase tracking-widest text-primary/70 w-1/3">Duration</th>
                                                                 </tr>
@@ -820,7 +820,7 @@ export default function RitualsDetails() {
                                                                     }
 
                                                                     return (
-                                                                        <tr key={i} className="hover:bg-gray-50/50 transition-colors">
+                                                                        <tr key={i} className="hover:bg-white/50 transition-colors">
                                                                             <td className="py-3 px-4 text-xs font-medium text-primary">{treatmentName}</td>
                                                                             <td className="py-3 px-4 text-xs text-text-muted flex items-center gap-1.5">
                                                                                 {durationStr !== '-' && <Clock className="w-3 h-3 opacity-50" />}
