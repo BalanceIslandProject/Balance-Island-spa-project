@@ -7,7 +7,7 @@ export default function PhilosophyPage() {
     const [showStory, setShowStory] = useState(false);
 
     return (
-        <div className="min-h-screen bg-[#FDFBF7] pt-32 pb-24 font-sans px-6">
+        <div className="min-h-screen bg-white pt-32 pb-24 font-sans px-6">
             <div className="max-w-6xl mx-auto flex flex-col md:flex-row gap-12 md:gap-24 items-center">
                 <div className="flex-1">
                     <span className="text-xs font-bold uppercase tracking-widest text-primary/50 mb-4 block">Our Philosophy</span>

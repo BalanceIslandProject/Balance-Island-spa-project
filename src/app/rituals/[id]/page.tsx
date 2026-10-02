@@ -524,7 +524,7 @@ export default function RitualsDetails() {
                                                             initial={{ height: 0, opacity: 0 }}
                                                             animate={{ height: 'auto', opacity: 1 }}
                                                             exit={{ height: 0, opacity: 0 }}
-                                                            className="border-t border-border/50 bg-[#FDFBF7]"
+                                                            className="border-t border-border/50 bg-white"
                                                         >
                                                             <div className="p-4 space-y-4">
                                                                 <p className="text-xs text-text-muted leading-relaxed">{t.desc}</p>

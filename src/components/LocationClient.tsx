@@ -220,7 +220,7 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
     return (
         <>
             {isLoaded && (
-                <div className="min-h-screen bg-[#FDFBF7] relative overflow-hidden font-sans text-text pb-24 md:pb-12">
+                <div className="min-h-screen bg-white relative overflow-hidden font-sans text-text pb-24 md:pb-12">
             
             {/* Top Gradient Background */}
             <div className="absolute top-0 left-0 right-0 h-[400px] md:h-[500px] bg-gradient-to-b from-white to-white z-0 pointer-events-none"></div>
@@ -512,7 +512,7 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                         initial={{ opacity: 0, y: 100 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 100 }}
-                        className="bg-[#FDFBF7] w-full h-[90dvh] md:h-auto md:max-h-[85vh] md:max-w-3xl md:rounded-[40px] rounded-t-[40px] shadow-2xl relative overflow-hidden flex flex-col"
+                        className="bg-white w-full h-[90dvh] md:h-auto md:max-h-[85vh] md:max-w-3xl md:rounded-[40px] rounded-t-[40px] shadow-2xl relative overflow-hidden flex flex-col"
                     >
                         {/* Modal Header */}
                         <div className="p-6 md:p-8 flex items-center justify-between border-b border-border/50 bg-white shrink-0">
@@ -531,7 +531,7 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                         </div>
                         
                         {/* Modal Content (Campaign Treatments) */}
-                        <div className="p-6 md:p-8 overflow-y-auto bg-[#FDFBF7]">
+                        <div className="p-6 md:p-8 overflow-y-auto bg-white">
                             <p className="text-sm text-text-muted mb-6">{campaign?.description}</p>
                             
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -667,7 +667,7 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                                             initial={{ height: 0, opacity: 0 }}
                                                             animate={{ height: 'auto', opacity: 1 }}
                                                             exit={{ height: 0, opacity: 0 }}
-                                                            className="border-t border-border/50 bg-[#FDFBF7]"
+                                                            className="border-t border-border/50 bg-white"
                                                         >
                                                             <div className="p-4 space-y-4">
                                                                 <p className="text-xs text-text-muted leading-relaxed">{t.desc}</p>
