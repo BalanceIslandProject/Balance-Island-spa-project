@@ -692,9 +692,38 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                                             </div>
                                                         )}
                                                         <h3 className="font-bold text-sm text-primary leading-tight">{item.title}</h3>
-                                                        <p className="text-xs text-text-muted flex items-center gap-1 mt-1">
+                                                        <p className="text-xs text-text-muted flex items-center gap-1 mt-1 mb-2">
                                                             <Clock className="w-3 h-3" /> {item.duration} Mins
                                                         </p>
+                                                        {isReviewingBooking && (() => {
+                                                            const itemTreatment = treatments.find(t => t.id === item.treatmentId || t.title === item.title);
+                                                            if (!itemTreatment) return null;
+                                                            
+                                                            let whatsIncluded = '';
+                                                            let desc = itemTreatment.desc;
+                                                            if (desc) {
+                                                                const parts = desc.split(/What's Included\s*:?\s*/i);
+                                                                if (parts.length > 1) {
+                                                                    desc = parts[0].trim();
+                                                                    whatsIncluded = parts[1].trim();
+                                                                }
+                                                            }
+                                                            return (
+                                                                <div className="mt-2 mb-3">
+                                                                    {desc && <p className="text-[11px] text-text-muted leading-relaxed font-light">{desc}</p>}
+                                                                    {whatsIncluded && (
+                                                                        <div className="bg-primary/5 rounded-lg p-3 mt-3">
+                                                                            <span className="block text-[9px] font-bold uppercase tracking-widest text-primary mb-1.5">What's Included</span>
+                                                                            <ul className="text-[11px] text-primary/80 space-y-1 font-medium list-disc pl-3.5">
+                                                                                {whatsIncluded.split('\n').filter(Boolean).map((line, i) => (
+                                                                                    <li key={i}>{line.replace(/^-\s*/, '')}</li>
+                                                                                ))}
+                                                                            </ul>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            );
+                                                        })()}
                                                     </div>
                                                     <span className="font-serif text-primary font-medium text-right flex flex-col shrink-0">
                                                         IDR {item.price.toLocaleString('en-US')}
@@ -826,8 +855,12 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                                     <span className="text-sm text-primary font-medium">{formData.name}</span>
                                                 </div>
                                                 <div>
-                                                    <span className="block text-[9px] font-bold uppercase tracking-widest text-text-muted">Date & Time</span>
-                                                    <span className="text-sm text-primary font-medium">{formData.date} at {formData.time}</span>
+                                                    <span className="block text-[9px] font-bold uppercase tracking-widest text-text-muted">Date</span>
+                                                    <span className="text-sm text-primary font-medium">{formData.date}</span>
+                                                </div>
+                                                <div>
+                                                    <span className="block text-[9px] font-bold uppercase tracking-widest text-text-muted">Time</span>
+                                                    <span className="text-sm text-primary font-medium">{formData.time}</span>
                                                 </div>
                                                 <div className="col-span-2">
                                                     <span className="block text-[9px] font-bold uppercase tracking-widest text-text-muted">Location</span>
