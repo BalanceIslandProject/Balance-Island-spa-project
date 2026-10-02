@@ -367,7 +367,7 @@ export default function Home() {
                     {/* Slogan */}
                     <div className="md:hidden mt-4 mb-6">
                         <h1 className="font-serif text-3xl text-primary font-medium tracking-tight">
-                            <span className="domain-bali-only">
+                            <span className="domain-therapick-only">
                                 Island Relaxation, <br />
                                 <span className="italic opacity-80">Delivered.</span>
                             </span>
