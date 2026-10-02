@@ -2,7 +2,7 @@
 
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Clock, ArrowRight, X, Plus, Minus, ChevronLeft, ChevronRight, ChevronDown, User, Calendar, MapPin, Tag, DoorOpen } from 'lucide-react';
+import { Search, Clock, ArrowRight, X, Plus, Minus, ChevronLeft, ChevronRight, ChevronDown, User, Calendar, MapPin, Tag, DoorOpen, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useSpa, Campaign, Treatment, sortCampaigns } from '@/context/SpaContext';
@@ -1069,14 +1069,20 @@ export default function Home() {
                                         <div className="space-y-3 mb-5">
                                             {cartItems.map(item => (
                                                 <div key={item.id} className="bg-white border border-border/80 rounded-2xl p-4 sm:p-5 shadow-sm relative">
-                                                    {cartItems.length > 1 && (
-                                                        <button
-                                                            onClick={() => setCartItems(cartItems.filter(i => i.id !== item.id))}
-                                                            className="absolute top-3 right-3 text-text-muted hover:text-red-500 transition-colors p-1"
-                                                        >
-                                                            <X className="w-3.5 h-3.5" />
-                                                        </button>
-                                                    )}
+                                                    <button
+        type="button"
+        onClick={() => {
+            const newCart = cartItems.filter(i => i.id !== item.id);
+            setCartItems(newCart);
+            if (newCart.length === 0) {
+                setIsBookingModalOpen(false);
+                setIsReviewingBooking(false);
+            }
+        }}
+        className="absolute top-4 right-4 text-text-muted hover:text-red-500 transition-colors p-1.5 bg-gray-50 hover:bg-red-50 rounded-lg"
+    >
+        <Trash2 className="w-3.5 h-3.5" />
+    </button>
                                                     <div className="flex items-start justify-between mb-4 pr-6">
                                                         <div>
                                                             {item.isCampaign && (

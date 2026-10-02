@@ -2,7 +2,7 @@
 
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, Search, Heart, Cloud, Sparkles, Droplet, User, Flame, Clock, ArrowRight, X, ShoppingBag, Plus, Minus, MessageCircle, ChevronLeft, Bitcoin, CheckCircle2, Copy, Calendar, MapPin, Tag, DoorOpen } from 'lucide-react';
+import { Bell, Search, Heart, Cloud, Sparkles, Droplet, User, Flame, Clock, ArrowRight, X, ShoppingBag, Plus, Minus, MessageCircle, ChevronLeft, Bitcoin, CheckCircle2, Copy, Calendar, MapPin, Tag, DoorOpen, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useSpa } from '@/context/SpaContext';
 import SeoExpandedContent from '@/components/SeoExpandedContent';
@@ -670,14 +670,20 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                     <div className="space-y-3 mb-4">
                                         {cartItems.map(item => (
                                             <div key={item.id} className="bg-white border border-border/80 rounded-2xl p-4 shadow-sm relative">
-                                                {cartItems.length > 1 && (
-                                                    <button 
-                                                        onClick={() => setCartItems(cartItems.filter(i => i.id !== item.id))}
-                                                        className="absolute top-3 right-3 text-text-muted hover:text-red-500 transition-colors p-1"
-                                                    >
-                                                        <X className="w-3.5 h-3.5" />
-                                                    </button>
-                                                )}
+                                                <button
+        type="button"
+        onClick={() => {
+            const newCart = cartItems.filter(i => i.id !== item.id);
+            setCartItems(newCart);
+            if (newCart.length === 0) {
+                setIsBookingModalOpen(false);
+                setIsReviewingBooking(false);
+            }
+        }}
+        className="absolute top-4 right-4 text-text-muted hover:text-red-500 transition-colors p-1.5 bg-gray-50 hover:bg-red-50 rounded-lg"
+    >
+        <Trash2 className="w-3.5 h-3.5" />
+    </button>
                                                 <div className="flex items-start justify-between mb-4 pr-6">
                                                     <div>
                                                         {item.isCampaign && (
