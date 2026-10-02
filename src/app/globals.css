@@ -67,3 +67,12 @@ body[data-domain="therapick"] .domain-ubud-only,
 body[data-domain="therapick"] .domain-bali-only {
   display: none !important;
 }
+
+/* Remove autofill yellow background in Webkit browsers */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus, 
+input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px white inset !important;
+    -webkit-text-fill-color: var(--color-primary, #322F37) !important;
+}

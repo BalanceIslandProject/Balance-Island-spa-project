@@ -2,7 +2,7 @@
 
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, Search, Heart, Cloud, Sparkles, Droplet, User, Flame, Clock, ArrowRight, X, ShoppingBag, Plus, Minus, MessageCircle, ChevronLeft, Bitcoin, CheckCircle2, Copy, Calendar, MapPin, Tag } from 'lucide-react';
+import { Bell, Search, Heart, Cloud, Sparkles, Droplet, User, Flame, Clock, ArrowRight, X, ShoppingBag, Plus, Minus, MessageCircle, ChevronLeft, Bitcoin, CheckCircle2, Copy, Calendar, MapPin, Tag, DoorOpen } from 'lucide-react';
 import Link from 'next/link';
 import { useSpa } from '@/context/SpaContext';
 import SeoExpandedContent from '@/components/SeoExpandedContent';
@@ -789,7 +789,7 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                             />
                                         </div>
                                         <div className="space-y-1.5 w-full">
-                                            <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1"><MapPin className="w-3.5 h-3.5"/> Room Number (Optional)</label>
+                                            <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1"><DoorOpen className="w-3.5 h-3.5"/> Room Number (Optional)</label>
                                             <input 
                                                 type="text" placeholder="e.g. Villa 12"
                                                 value={formData.room} onChange={e => setFormData({...formData, room: e.target.value})}

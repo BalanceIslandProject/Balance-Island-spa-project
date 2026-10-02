@@ -2,7 +2,7 @@
 
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Clock, ArrowRight, X, Plus, Minus, ChevronLeft, ChevronRight, ChevronDown, User, Calendar, MapPin, Tag } from 'lucide-react';
+import { Search, Clock, ArrowRight, X, Plus, Minus, ChevronLeft, ChevronRight, ChevronDown, User, Calendar, MapPin, Tag, DoorOpen } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useSpa, Campaign, Treatment, sortCampaigns } from '@/context/SpaContext';
@@ -1195,7 +1195,7 @@ export default function Home() {
                                                 />
                                             </div>
                                             <div className="space-y-1.5 w-full">
-                                                <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1"><MapPin className="w-3.5 h-3.5"/> Room Number (Optional)</label>
+                                                <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1"><DoorOpen className="w-3.5 h-3.5"/> Room Number (Optional)</label>
                                                 <input
                                                     type="text" placeholder="e.g. Villa 12"
                                                     value={formData.room} onChange={e => setFormData({ ...formData, room: e.target.value })}
