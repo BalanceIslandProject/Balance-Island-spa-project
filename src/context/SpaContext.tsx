@@ -16,6 +16,7 @@ export type Treatment = {
     options: TreatmentOption[];
     benefits?: string[];
     bgPattern: string;
+    brand?: string;
     is_published?: boolean;
     is_pinned?: boolean;
     pinned_image?: string;

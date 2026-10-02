@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, Share, MapPin, Clock, Calendar, Sparkles, Plus, Minus, X, MessageCircle, Heart, Bitcoin, ArrowRight, User, Tag, DoorOpen, Trash2 } from 'lucide-react';
 import Link from 'next/link';
+import { saveBookingToSupabase } from '@/lib/bookingUtils';
 import { useCart } from '@/context/CartContext';
 import { useParams } from 'next/navigation';
 import { useSpa } from '@/context/SpaContext';
@@ -160,6 +161,15 @@ export default function RitualsDetails() {
                 customerDetails: formData,
                 totalPrice: typeof totalPrice !== 'undefined' ? totalPrice : cartItems.reduce((sum, item) => sum + (item.price * item.guests), 0)
             });
+
+            // Save to Supabase
+            saveBookingToSupabase(
+                bookingIdRef.current,
+                formData,
+                cartItems,
+                typeof totalPrice !== 'undefined' ? totalPrice : cartItems.reduce((sum, item) => sum + (item.price * item.guests), 0),
+                treatment?.brand || 'elexoir'
+            );
     
             const waUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent(finalMessage)}`;
             if (newWindow) {

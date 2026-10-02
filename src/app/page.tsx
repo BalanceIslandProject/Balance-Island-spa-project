@@ -11,6 +11,7 @@ import dynamic from 'next/dynamic';
 import { createSlug } from '@/utils/slugify';
 
 const SeoExpandedContent = dynamic(() => import('@/components/SeoExpandedContent'));
+import { saveBookingToSupabase } from '@/lib/bookingUtils';
 
 const ServiceAreas = dynamic(() => import('@/components/ServiceAreas'));
 const FaqSection = dynamic(() => import('@/components/FaqSection'));
@@ -277,6 +278,15 @@ export default function Home() {
                 customerDetails: formData,
                 totalPrice: typeof totalPrice !== 'undefined' ? totalPrice : cartItems.reduce((sum, item) => sum + (item.price * item.guests), 0)
             });
+
+            // Save to Supabase
+            saveBookingToSupabase(
+                bookingIdRef.current,
+                formData,
+                cartItems,
+                typeof totalPrice !== 'undefined' ? totalPrice : cartItems.reduce((sum, item) => sum + (item.price * item.guests), 0),
+                siteBrandFilter
+            );
     
             const waUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent(finalMessage)}`;
             if (newWindow) {

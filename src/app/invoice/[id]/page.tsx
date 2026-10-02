@@ -6,6 +6,7 @@ import { useCart, BookingHistory } from '@/context/CartContext';
 import { CheckCircle2, ChevronLeft, User, Calendar, Clock, MapPin, DoorOpen, Download, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { Suspense } from 'react';
+import { supabase } from '@/lib/supabase';
 
 function InvoicePage() {
     const params = useParams();
@@ -16,11 +17,47 @@ function InvoicePage() {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        if (params?.id) {
+        const fetchInvoice = async () => {
+            if (!params?.id) {
+                setIsLoading(false);
+                return;
+            }
+
+            // 1. Try to fetch from Supabase first using reference_number
+            try {
+                const { data, error } = await supabase
+                    .from('bookings')
+                    .select('*')
+                    .eq('reference_number', params.id)
+                    .single();
+
+                if (data && !error) {
+                    // Map the Supabase row back to BookingHistory format
+                    setBooking({
+                        id: data.reference_number,
+                        date: data.created_at || new Date().toISOString(),
+                        status: data.status?.toLowerCase() || 'confirmed',
+                        items: Array.isArray(data.items) ? data.items : [],
+                        totalPrice: data.total_price || data.revenue || 0,
+                        customerDetails: {
+                            name: data.guest_name || '',
+                            date: data.booking_date || '',
+                            time: data.booking_time || '',
+                            location: data.location || '',
+                            room: data.room_number || ''
+                        }
+                    });
+                    setIsLoading(false);
+                    return;
+                }
+            } catch (err) {
+                console.error("Error fetching from supabase", err);
+            }
+
+            // 2. Fallback to 'd' URL parameter
             const dataParam = searchParams.get('d');
             if (dataParam) {
                 try {
-                    // d param is base64 encoded compressed JSON
                     const decoded = JSON.parse(atob(decodeURIComponent(dataParam)));
                     setBooking(decoded);
                     setIsLoading(false);
@@ -29,15 +66,16 @@ function InvoicePage() {
                     console.error('Failed to decode invoice data', e);
                 }
             }
-            // Fallback to local history
+            
+            // 3. Fallback to local history
             const found = history.find(h => h.id === params.id);
             if (found) {
                 setBooking(found);
             }
             setIsLoading(false);
-        } else {
-            setIsLoading(false);
-        }
+        };
+
+        fetchInvoice();
     }, [params, history, searchParams]);
 
     if (isLoading) {

@@ -1891,10 +1891,24 @@ export default function AdminDashboard() {
                                         className="w-full border border-black/20 focus:border-black p-3 rounded-xl outline-none text-sm font-bold text-center transition-colors uppercase" 
                                     />
                                     <button 
-                                        onClick={() => {
+                                        onClick={async () => {
                                             const val = (document.getElementById('invoiceIdInput') as HTMLInputElement).value;
                                             if(val.trim()) {
-                                                const url = window.location.origin + '/invoice/' + val.trim().toUpperCase();
+                                                const id = val.trim().toUpperCase();
+                                                let domain = window.location.origin;
+                                                
+                                                try {
+                                                    const { data, error } = await supabase.from('bookings').select('brand').eq('reference_number', id).single();
+                                                    if (data && data.brand === 'balanceisland') {
+                                                        domain = 'https://balanceislandspa.com';
+                                                    } else if (data && data.brand === 'elexoir') {
+                                                        domain = 'https://elexoirhomespaubud.com';
+                                                    }
+                                                } catch (e) {
+                                                    console.error("Failed to detect domain", e);
+                                                }
+
+                                                const url = domain + '/invoice/' + id;
                                                 const res = document.getElementById('generatedInvoiceUrl');
                                                 if(res) {
                                                     res.innerText = url;
