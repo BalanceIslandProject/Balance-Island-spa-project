@@ -191,7 +191,7 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
             });
 
             // Save to Supabase
-            saveBookingToSupabase(
+            await saveBookingToSupabase(
                 bookingIdRef.current,
                 formData,
                 cartItems,

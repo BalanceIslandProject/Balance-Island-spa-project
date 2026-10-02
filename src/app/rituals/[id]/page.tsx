@@ -163,7 +163,7 @@ export default function RitualsDetails() {
             });
 
             // Save to Supabase
-            saveBookingToSupabase(
+            await saveBookingToSupabase(
                 bookingIdRef.current,
                 formData,
                 cartItems,

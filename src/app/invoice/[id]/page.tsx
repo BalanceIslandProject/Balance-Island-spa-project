@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useCart, BookingHistory } from '@/context/CartContext';
-import { CheckCircle2, ChevronLeft, User, Calendar, Clock, MapPin, DoorOpen, Download, Loader2 } from 'lucide-react';
+import { CheckCircle2, ChevronLeft, User, Calendar, Clock, MapPin, DoorOpen, Download, Loader2, XCircle } from 'lucide-react';
 import Link from 'next/link';
 import { Suspense } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -113,11 +113,25 @@ function InvoicePage() {
                 <div className="p-6 sm:p-8">
                     {/* Header */}
                     <div className="flex flex-col items-center justify-center text-center mb-8 pb-8 border-b border-border/50 border-dashed">
-                        <div className="w-12 h-12 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mb-4">
-                            <CheckCircle2 size={24} />
-                        </div>
-                        <h1 className="font-serif text-2xl text-primary font-medium tracking-wide mb-1">BOOKING CONFIRMED</h1>
-                        <p className="text-text-muted text-sm max-w-[250px] mb-4">Your booking has been received and confirmed.</p>
+                        {booking.status?.toLowerCase() === 'cancelled' ? (
+                            <div className="w-12 h-12 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-4">
+                                <XCircle size={24} />
+                            </div>
+                        ) : booking.status?.toLowerCase() === 'pending' ? (
+                            <div className="w-12 h-12 bg-orange-50 text-orange-500 rounded-full flex items-center justify-center mb-4">
+                                <Clock size={24} />
+                            </div>
+                        ) : (
+                            <div className="w-12 h-12 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mb-4">
+                                <CheckCircle2 size={24} />
+                            </div>
+                        )}
+                        <h1 className="font-serif text-2xl text-primary font-medium tracking-wide mb-1 uppercase">BOOKING {booking.status || 'CONFIRMED'}</h1>
+                        <p className="text-text-muted text-sm max-w-[250px] mb-4">
+                            {booking.status?.toLowerCase() === 'cancelled' ? 'Your booking has been cancelled.' :
+                             booking.status?.toLowerCase() === 'pending' ? 'Your booking is pending confirmation.' :
+                             'Your booking has been received and confirmed.'}
+                        </p>
                         
                         <div className="bg-black/5 text-primary text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-lg">
                             {booking.id.toUpperCase().substring(0, 10)}

@@ -30,7 +30,7 @@ export const saveBookingToSupabase = async (
             therapists_count: maxPax, // default mapping for admin view
             therapist_fee_total: 0,
             net_profit: totalPrice, // until fee is added
-            status: 'Confirmed',
+            status: 'Pending',
             items: JSON.parse(itemsJson),
             brand: siteBrandFilter
         };

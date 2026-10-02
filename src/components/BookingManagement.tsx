@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Calendar, Plus, Download, Trash2, Edit3, Save, X, ChevronLeft, ChevronRight, Calculator, FileText } from 'lucide-react';
+import { Calendar, Plus, Download, Trash2, Edit3, Save, X, ChevronLeft, ChevronRight, Calculator, FileText, CheckCircle2, XCircle } from 'lucide-react';
 import { Treatment, TherapistFee } from '@/context/SpaContext';
 
 export interface Booking {
@@ -16,6 +16,7 @@ export interface Booking {
   revenue: number;
   therapist_fee_total: number;
   net_profit: number;
+  status?: string;
 }
 
 const toLocalDateString = (date: Date) => {
@@ -207,6 +208,12 @@ export default function BookingManagement({
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this booking?")) return;
     await supabase.from('bookings').delete().eq('id', id);
+    fetchMonthBookings();
+  };
+
+  const handleStatusChange = async (id: string, newStatus: string) => {
+    if (!confirm(`Are you sure you want to mark this booking as ${newStatus}?`)) return;
+    await supabase.from('bookings').update({ status: newStatus }).eq('id', id);
     fetchMonthBookings();
   };
 
@@ -562,12 +569,18 @@ export default function BookingManagement({
                 }
 
                 return (
-                  <div key={booking.id} className="bg-white border border-black/10 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow relative group overflow-hidden">
-                    <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-black"></div>
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 ml-2">
+                  <div key={booking.id} className={`bg-white border ${booking.status?.toLowerCase() === 'cancelled' ? 'border-red-200' : 'border-black/10'} rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow relative group overflow-hidden`}>
+                    <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${booking.status?.toLowerCase() === 'cancelled' ? 'bg-red-500' : (booking.status?.toLowerCase() === 'pending' ? 'bg-orange-400' : 'bg-emerald-500')}`}></div>
+                    <div className={`flex flex-col md:flex-row md:items-center justify-between gap-4 ml-2 ${booking.status?.toLowerCase() === 'cancelled' ? 'opacity-50' : ''}`}>
                       <div className="space-y-1 w-full md:w-1/3">
                         <div className="flex items-center gap-2 mb-1">
                           <span className="text-[10px] font-bold tracking-wider uppercase bg-black/10 px-2 py-0.5 rounded-full">{booking.pax} Pax</span>
+                          <span className={`text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full ${
+                              booking.status?.toLowerCase() === 'cancelled' ? 'bg-red-100 text-red-700' :
+                              (booking.status?.toLowerCase() === 'pending' ? 'bg-orange-100 text-orange-700' : 'bg-emerald-100 text-emerald-700')
+                          }`}>
+                              {booking.status || 'Confirmed'}
+                          </span>
                         </div>
                         <p className="font-bold text-sm truncate max-w-[200px]">{title}</p>
                         {dur && <p className="text-[10px] text-black/50 font-bold uppercase tracking-wider mt-1">Duration: {dur}</p>}
@@ -588,41 +601,63 @@ export default function BookingManagement({
                         </div>
                       </div>
                       
-                      <div className="flex md:flex-col gap-2 justify-end opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button 
-                          onClick={() => {
-                            // Parse out the duration if it was saved like "Title (duration)"
-                            let editTitle = booking.treatment_name;
-                            let editDur = '';
-                            const editMatch = editTitle.match(/(.*) \((.*)\)$/);
-                            if (editMatch) {
-                                editTitle = editMatch[1];
-                                editDur = editMatch[2];
-                            }
-                            
-                            setFormItems([{
-                              id: Math.random().toString(36).substring(2, 9),
-                              treatment: editTitle,
-                              duration: editDur,
-                              pax: booking.pax,
-                              therapists: booking.therapists_count,
-                              revenue: booking.revenue,
-                              fee: booking.therapist_fee_total
-                            }]);
-                            setIsEditing(booking.id);
-                            setShowForm(true);
-                            window.scrollTo({ top: 0, behavior: 'smooth' });
-                          }}
-                          className="p-2 bg-black/5 hover:bg-black/10 rounded-lg transition-colors text-black"
-                        >
-                          <Edit3 size={16} />
-                        </button>
-                        <button 
-                          onClick={() => handleDelete(booking.id)}
-                          className="p-2 bg-red-50 hover:bg-red-100 rounded-lg transition-colors text-red-600"
-                        >
-                          <Trash2 size={16} />
-                        </button>
+                      <div className="flex flex-wrap md:flex-col gap-2 justify-end opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex gap-2">
+                            {booking.status?.toLowerCase() !== 'confirmed' && (
+                                <button 
+                                onClick={() => handleStatusChange(booking.id, 'Confirmed')}
+                                className="p-2 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors text-emerald-600"
+                                title="Mark as Confirmed"
+                                >
+                                <CheckCircle2 size={16} />
+                                </button>
+                            )}
+                            {booking.status?.toLowerCase() !== 'cancelled' && (
+                                <button 
+                                onClick={() => handleStatusChange(booking.id, 'Cancelled')}
+                                className="p-2 bg-orange-50 hover:bg-orange-100 rounded-lg transition-colors text-orange-600"
+                                title="Mark as Cancelled"
+                                >
+                                <XCircle size={16} />
+                                </button>
+                            )}
+                        </div>
+                        <div className="flex gap-2">
+                            <button 
+                            onClick={() => {
+                                // Parse out the duration if it was saved like "Title (duration)"
+                                let editTitle = booking.treatment_name;
+                                let editDur = '';
+                                const editMatch = editTitle.match(/(.*) \((.*)\)$/);
+                                if (editMatch) {
+                                    editTitle = editMatch[1];
+                                    editDur = editMatch[2];
+                                }
+                                
+                                setFormItems([{
+                                id: Math.random().toString(36).substring(2, 9),
+                                treatment: editTitle,
+                                duration: editDur,
+                                pax: booking.pax,
+                                therapists: booking.therapists_count,
+                                revenue: booking.revenue,
+                                fee: booking.therapist_fee_total
+                                }]);
+                                setIsEditing(booking.id);
+                                setShowForm(true);
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                            }}
+                            className="p-2 bg-black/5 hover:bg-black/10 rounded-lg transition-colors text-black"
+                            >
+                            <Edit3 size={16} />
+                            </button>
+                            <button 
+                            onClick={() => handleDelete(booking.id)}
+                            className="p-2 bg-red-50 hover:bg-red-100 rounded-lg transition-colors text-red-600"
+                            >
+                            <Trash2 size={16} />
+                            </button>
+                        </div>
                       </div>
                     </div>
                   </div>

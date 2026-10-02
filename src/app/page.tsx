@@ -280,7 +280,7 @@ export default function Home() {
             });
 
             // Save to Supabase
-            saveBookingToSupabase(
+            await saveBookingToSupabase(
                 bookingIdRef.current,
                 formData,
                 cartItems,
