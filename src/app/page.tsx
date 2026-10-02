@@ -1290,29 +1290,35 @@ export default function Home() {
                                         <div className="space-y-5 pb-8 sm:pb-0 animate-in fade-in slide-in-from-right-4 duration-300">
                                             <div className="bg-white border border-border/80 rounded-xl p-5 space-y-4">
                                                 <h3 className="text-[10px] font-bold uppercase tracking-widest text-primary/80 border-b border-border/50 pb-2 mb-2">Guest Details</h3>
-                                                <div className="grid grid-cols-2 gap-5">
-                                                    <div>
-                                                        <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-text-muted mb-1"><User className="w-3 h-3"/> Name</span>
-                                                        <span className="text-sm text-primary font-medium">{formData.name}</span>
-                                                    </div>
-                                                    <div>
-                                                        <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-text-muted mb-1"><Calendar className="w-3 h-3"/> Date</span>
-                                                        <span className="text-sm text-primary font-medium">{formData.date}</span>
-                                                    </div>
-                                                    <div>
-                                                        <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-text-muted mb-1"><Clock className="w-3 h-3"/> Time</span>
-                                                        <span className="text-sm text-primary font-medium">{formData.time}</span>
-                                                    </div>
-                                                    <div>
-                                                        <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-text-muted mb-1"><MapPin className="w-3 h-3"/> Location</span>
-                                                        <span className="text-sm text-primary font-medium line-clamp-1">{formData.location}</span>
-                                                    </div>
-                                                    {formData.room && (
-                                                        <div className="col-span-2 pt-1 mt-1">
-                                                            <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-text-muted mb-1"><DoorOpen className="w-3 h-3"/> Room Number</span>
-                                                            <span className="text-sm text-primary font-medium">{formData.room}</span>
+                                                <div className="grid grid-cols-3 gap-3 sm:gap-5 items-center">
+                                                    <div className="flex flex-col gap-5">
+                                                        <div>
+                                                            <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-text-muted mb-1"><User className="w-3 h-3"/> Name</span>
+                                                            <span className="text-sm text-primary font-medium">{formData.name}</span>
                                                         </div>
-                                                    )}
+                                                        <div>
+                                                            <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-text-muted mb-1"><Calendar className="w-3 h-3"/> Date</span>
+                                                            <span className="text-sm text-primary font-medium">{formData.date}</span>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div className="flex flex-col items-center justify-center text-center border-x border-border/50 px-2 h-full py-2">
+                                                        <span className="flex items-center justify-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-text-muted mb-2"><Clock className="w-3 h-3"/> Time</span>
+                                                        <span className="text-xl sm:text-2xl text-primary font-serif font-medium">{formData.time}</span>
+                                                    </div>
+
+                                                    <div className="flex flex-col gap-5">
+                                                        <div>
+                                                            <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-text-muted mb-1"><MapPin className="w-3 h-3"/> Location</span>
+                                                            <span className="text-sm text-primary font-medium line-clamp-2 leading-tight">{formData.location}</span>
+                                                        </div>
+                                                        {formData.room && (
+                                                            <div>
+                                                                <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-text-muted mb-1"><DoorOpen className="w-3 h-3"/> Room</span>
+                                                                <span className="text-sm text-primary font-medium line-clamp-1">{formData.room}</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
                                             
