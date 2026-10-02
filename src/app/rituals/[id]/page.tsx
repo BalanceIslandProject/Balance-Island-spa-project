@@ -12,7 +12,7 @@ import { createSlug } from '@/utils/slugify';
 
 export default function RitualsDetails() {
     const { saveDraft, confirmBooking } = useCart();
-    const bookingIdRef = React.useRef<string>(typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(7));
+    const bookingIdRef = React.useRef<string>('INV-' + Math.random().toString(36).substring(2, 8).toUpperCase());
 
     const params = useParams();
     const id = params?.id as string;
@@ -137,7 +137,17 @@ export default function RitualsDetails() {
             const baseMessage = `*NEW SPA BOOKING*\n${websiteSource}\n\n*TREATMENTS:*\n${treatmentsList}\n\n*TOTAL PRICE:* IDR ${formattedTotalPrice}${promoDetailsText}\n\n*CLIENT DETAILS:*\n- Name: ${formData.name}\n- Date: ${formData.date}\n- Time: ${formData.time}\n- Location/Villa: ${formData.location}\n- Room Number: ${formData.room || 'N/A'}\n\nHello! I would like to confirm this booking.`;
             
             
-            const invoiceUrl = window.location.origin + '/invoice/' + bookingIdRef.current;
+            
+            const invoiceDataObj = {
+                id: bookingIdRef.current,
+                date: new Date().toISOString(),
+                status: 'confirmed',
+                items: cartItems,
+                customerDetails: formData,
+                totalPrice: typeof totalPrice !== 'undefined' ? totalPrice : cartItems.reduce((sum, item) => sum + (item.price * item.guests), 0)
+            };
+            const invoiceUrl = window.location.origin + '/invoice/' + bookingIdRef.current + '?data=' + encodeURIComponent(btoa(JSON.stringify(invoiceDataObj)));
+    
             const finalMessage = baseMessage + '\n\n🧾 *View Your Invoice:* ' + invoiceUrl;
             
             saveDraft({

@@ -24,7 +24,7 @@ const CATEGORIES = [
 
 export default function LocationClient({ locationName, locationSlug }: { locationName: string, locationSlug: string }) {
     const { saveDraft, confirmBooking } = useCart();
-    const bookingIdRef = React.useRef<string>(typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(7));
+    const bookingIdRef = React.useRef<string>('INV-' + Math.random().toString(36).substring(2, 8).toUpperCase());
 
     const { treatments, campaign, products, isLoaded } = useSpa();
 
@@ -165,7 +165,17 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
             const baseMessage = `*NEW SPA BOOKING*\n${websiteSource}\n\n*TREATMENTS:*\n${treatmentsList}\n\n*TOTAL PRICE:* IDR ${totalPrice.toLocaleString('en-US')}\n\n*CLIENT DETAILS:*\n• Name: ${formData.name}\n• Date: ${formData.date}\n• Time: ${formData.time}\n• Location/Villa: ${formData.location}\n• Room Number: ${formData.room || 'N/A'}${campaignDetailsText}\n\nHello! I would like to confirm this booking.`;
             
             
-            const invoiceUrl = window.location.origin + '/invoice/' + bookingIdRef.current;
+            
+            const invoiceDataObj = {
+                id: bookingIdRef.current,
+                date: new Date().toISOString(),
+                status: 'confirmed',
+                items: cartItems,
+                customerDetails: formData,
+                totalPrice: typeof totalPrice !== 'undefined' ? totalPrice : cartItems.reduce((sum, item) => sum + (item.price * item.guests), 0)
+            };
+            const invoiceUrl = window.location.origin + '/invoice/' + bookingIdRef.current + '?data=' + encodeURIComponent(btoa(JSON.stringify(invoiceDataObj)));
+    
             const finalMessage = baseMessage + '\n\n🧾 *View Your Invoice:* ' + invoiceUrl;
             
             saveDraft({

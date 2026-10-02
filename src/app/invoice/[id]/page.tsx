@@ -1,25 +1,52 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useCart, BookingHistory } from '@/context/CartContext';
-import { CheckCircle2, ChevronLeft, User, Calendar, Clock, MapPin, DoorOpen, Download } from 'lucide-react';
+import { CheckCircle2, ChevronLeft, User, Calendar, Clock, MapPin, DoorOpen, Download, Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import { Suspense } from 'react';
 
-export default function InvoicePage() {
+function InvoicePage() {
     const params = useParams();
+    const searchParams = useSearchParams();
     const router = useRouter();
     const { history } = useCart();
     const [booking, setBooking] = useState<BookingHistory | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         if (params?.id) {
+            // First check URL for encoded data (for shareable links)
+            const dataParam = searchParams.get('data');
+            if (dataParam) {
+                try {
+                    const decoded = JSON.parse(atob(decodeURIComponent(dataParam)));
+                    setBooking(decoded);
+                    return;
+                } catch (e) {
+                    console.error('Failed to decode invoice data', e);
+                }
+            }
+            // Fallback to local history
             const found = history.find(h => h.id === params.id);
             if (found) {
                 setBooking(found);
             }
+            setIsLoading(false);
+        } else {
+            setIsLoading(false);
         }
-    }, [params, history]);
+    }, [params, history, searchParams]);
+
+    if (isLoading) {
+        return (
+            <div className="min-h-[100dvh] flex flex-col items-center justify-center p-6 bg-secondary/30">
+                <Loader2 className="w-8 h-8 text-primary animate-spin mb-4" />
+                <p className="text-text-muted text-sm tracking-widest uppercase font-bold">Loading Invoice...</p>
+            </div>
+        );
+    }
 
     if (!booking) {
         return (
@@ -106,7 +133,11 @@ export default function InvoicePage() {
                                     </div>
                                     <div className="text-right shrink-0">
                                         <p className="text-sm font-serif font-medium text-primary leading-tight">
-                                            IDR {(item.price * item.guests).toLocaleString('en-US')}
+                                            IDR {(() => {
+                                            const isCouple = ['couple', 'honeymoon'].some(k => item.title.toLowerCase().includes(k));
+                                            const multiplier = isCouple ? (item.guests / 2) : item.guests;
+                                            return (item.price * multiplier).toLocaleString('en-US');
+                                        })()}
                                         </p>
                                     </div>
                                 </div>
@@ -141,5 +172,18 @@ export default function InvoicePage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function InvoicePageWrapper() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-[100dvh] flex flex-col items-center justify-center p-6 bg-secondary/30">
+                <Loader2 className="w-8 h-8 text-primary animate-spin mb-4" />
+                <p className="text-text-muted text-sm tracking-widest uppercase font-bold">Loading Invoice...</p>
+            </div>
+        }>
+            <InvoicePage />
+        </Suspense>
     );
 }
