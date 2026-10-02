@@ -744,11 +744,6 @@ export default function Home() {
                                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-md bg-black text-white text-[9px] font-bold tracking-widest uppercase">
                                                 {selectedCampaignModal.label || 'EXCLUSIVE OFFER'}
                                             </span>
-                                            {Number(selectedCampaignModal.discountPercentage) > 0 ? (
-                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-md bg-black/5 text-black text-[9px] font-bold uppercase tracking-wider border border-black/10">
-                                                    -{selectedCampaignModal.discountPercentage}% OFF SPA
-                                                </span>
-                                            ) : null}
                                         </div>
                                         <button
                                             onClick={() => {
@@ -1086,11 +1081,6 @@ export default function Home() {
                                                                     <span className="bg-black text-white px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider shadow-sm">
                                                                         {item.campaignTitle}
                                                                     </span>
-                                                                    {item.discountPercentage && Number(item.discountPercentage) > 0 ? (
-                                                                        <span className="bg-emerald-50 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider">
-                                                                            {item.discountPercentage}% OFF SPA
-                                                                        </span>
-                                                                    ) : null}
                                                                     {item.tripOffer ? (
                                                                         <span className="bg-stone-100 text-stone-700 border border-stone-200/80 px-2.5 py-0.5 rounded-full text-[9px] font-medium tracking-wide">
                                                                             {item.tripOffer}

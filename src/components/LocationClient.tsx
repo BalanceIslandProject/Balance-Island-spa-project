@@ -680,7 +680,6 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                                         {item.isCampaign && (
                                                             <div className="bg-primary text-white px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-widest inline-flex items-center gap-1 whitespace-nowrap mb-1.5 shadow-sm">
                                                                 <span>{item.campaignTitle}</span>
-                                                                <span className="opacity-90">(-{item.discountPercentage}%)</span>
                                                             </div>
                                                         )}
                                                         <h3 className="font-bold text-sm text-primary leading-tight">{item.title}</h3>
