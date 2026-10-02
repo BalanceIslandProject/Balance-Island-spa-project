@@ -1879,26 +1879,53 @@ export default function AdminDashboard() {
                         <div className="w-full max-w-xl mx-auto mt-10 animate-in fade-in duration-300">
                             <div className="bg-white border border-black/10 p-8 rounded-2xl shadow-sm text-center">
                                 <FileText size={48} className="mx-auto text-black/20 mb-4" />
-                                <h2 className="text-xl font-bold tracking-tight text-black mb-2">Invoice Lookup</h2>
+                                <h2 className="text-xl font-bold tracking-tight text-black mb-2">Create Invoice Link</h2>
                                 <p className="text-xs text-black/50 mb-6 font-medium">
-                                    Enter the Booking ID below to generate and view the invoice link. This link can be shared directly with the user.
+                                    Enter the BOOKING ID below to generate a unique invoice link. Once generated, you can copy the link and share it directly with the customer.
                                 </p>
-                                <div className="flex flex-col sm:flex-row gap-3">
+                                <div className="flex flex-col gap-3">
                                     <input 
                                         id="invoiceIdInput" 
                                         type="text" 
-                                        placeholder="e.g. jf93kd2" 
-                                        className="flex-1 border border-black/20 focus:border-black p-3 rounded-xl outline-none text-sm font-bold text-center sm:text-left transition-colors" 
+                                        placeholder="e.g. 9X4FA2" 
+                                        className="w-full border border-black/20 focus:border-black p-3 rounded-xl outline-none text-sm font-bold text-center transition-colors uppercase" 
                                     />
                                     <button 
                                         onClick={() => {
                                             const val = (document.getElementById('invoiceIdInput') as HTMLInputElement).value;
-                                            if(val.trim()) window.open('/invoice/' + val.trim(), '_blank');
+                                            if(val.trim()) {
+                                                const url = window.location.origin + '/invoice/' + val.trim().toUpperCase();
+                                                const res = document.getElementById('generatedInvoiceUrl');
+                                                if(res) {
+                                                    res.innerText = url;
+                                                    res.parentElement?.classList.remove('hidden');
+                                                }
+                                            }
                                         }} 
-                                        className="bg-black text-white px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-black/80 transition-colors"
+                                        className="w-full bg-black text-white px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-black/80 transition-colors"
                                     >
-                                        View Invoice
+                                        Generate Invoice Link
                                     </button>
+                                    
+                                    <div className="hidden mt-4 p-4 bg-black/5 rounded-xl border border-black/10 text-left">
+                                        <p className="text-[10px] font-bold text-black/50 uppercase tracking-wider mb-2">Generated Link</p>
+                                        <p id="generatedInvoiceUrl" className="text-sm font-medium text-black break-all mb-4 bg-white p-3 rounded-lg border border-black/10"></p>
+                                        <button 
+                                            onClick={(e) => {
+                                                const text = document.getElementById('generatedInvoiceUrl')?.innerText;
+                                                if(text) {
+                                                    navigator.clipboard.writeText(text);
+                                                    const btn = e.currentTarget;
+                                                    const oldText = btn.innerText;
+                                                    btn.innerText = 'Copied!';
+                                                    setTimeout(() => btn.innerText = oldText, 2000);
+                                                }
+                                            }}
+                                            className="w-full bg-white border border-black/20 text-black px-4 py-3 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-black/5 transition-colors"
+                                        >
+                                            Copy Link
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>

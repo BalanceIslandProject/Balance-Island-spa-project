@@ -236,15 +236,15 @@ export default function TopNav() {
                                             
                                             {booking.status === 'confirmed' ? (
                                                 <Link 
-                                                    href="/store"
+                                                    href={`/?restoreBooking=${booking.id}`}
                                                     onClick={() => setIsCartOpen(false)}
                                                     className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-primary hover:text-primary/70 transition-colors"
                                                 >
-                                                    <Store size={12} /> Book Again
+                                                    Book Again
                                                 </Link>
                                             ) : (
                                                 <Link 
-                                                    href="/checkout"
+                                                    href={`/?restoreBooking=${booking.id}`}
                                                     onClick={() => setIsCartOpen(false)}
                                                     className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-primary hover:text-primary/70 transition-colors"
                                                 >

@@ -618,13 +618,6 @@ export default function BookingManagement({
                           <Edit3 size={16} />
                         </button>
                         <button 
-                          onClick={() => window.open(`/invoice/${booking.id}`, '_blank')}
-                          className="p-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg transition-colors flex items-center justify-center"
-                          title="View Invoice"
-                        >
-                          <FileText size={16} />
-                        </button>
-                        <button 
                           onClick={() => handleDelete(booking.id)}
                           className="p-2 bg-red-50 hover:bg-red-100 rounded-lg transition-colors text-red-600"
                         >

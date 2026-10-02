@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Clock, ArrowRight, X, Plus, Minus, ChevronLeft, ChevronRight, ChevronDown, User, Calendar, MapPin, Tag, DoorOpen, Trash2 } from 'lucide-react';
 import Link from 'next/link';
@@ -26,7 +26,7 @@ const CATEGORIES = [
 
 
 export default function Home() {
-    const { saveDraft, confirmBooking } = useCart();
+    const { saveDraft, confirmBooking, history } = useCart();
     const bookingIdRef = React.useRef<string>(Math.random().toString(36).substring(2, 8).toUpperCase());
 
     const { treatments, campaign, campaigns, products, isLoaded, siteBrandFilter } = useSpa();
@@ -111,6 +111,23 @@ export default function Home() {
     };
 
     const [formData, setFormData] = useState({ name: '', location: '', room: '', ...getInitialDateTime() });
+
+    // Restore booking from query param
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const searchParams = new URLSearchParams(window.location.search);
+            const restoreId = searchParams.get('restoreBooking');
+            if (restoreId && history.length > 0) {
+                const booking = history.find(h => h.id === restoreId);
+                if (booking) {
+                    setCartItems(booking.items);
+                    setIsBookingModalOpen(true);
+                    // Clean up URL
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
+            }
+        }
+    }, [history]);
 
     const filteredAndSortedTreatments = React.useMemo(() => {
         let result = treatments.filter(t => {
