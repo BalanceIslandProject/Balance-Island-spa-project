@@ -8,6 +8,7 @@ import { Treatment, TherapistFee } from '@/context/SpaContext';
 export interface Booking {
   id: string;
   reference_number?: string;
+  guest_name?: string;
   brand?: string;
   created_at: string;
   booking_date: string; // YYYY-MM-DD
@@ -282,22 +283,58 @@ export default function BookingManagement({
   const downloadCSV = async () => {
     if (monthBookings.length === 0) return alert("No bookings this month to export.");
 
-    const headers = ["Date", "Treatment", "Pax", "Therapists", "Revenue", "Therapist Fee", "Net Profit"];
-    const csvRows = [headers.join(',')];
+    const headers = [
+      "Booking Reference", 
+      "Date", 
+      "Customer Name", 
+      "Treatment Details", 
+      "Status", 
+      "Pax", 
+      "Therapists Used", 
+      "Gross Revenue (IDR)", 
+      "Therapist Fee (IDR)", 
+      "Net Profit (IDR)"
+    ];
+    
+    const csvRows = [
+      `"FINANCIAL REPORT - EXLEXOIR SPA"`,
+      `"Period: ${currentDate.toLocaleString('default', { month: 'long', year: 'numeric' })}"`,
+      `""`,
+      headers.join(',')
+    ];
+
+    let totalRev = 0;
+    let totalFee = 0;
+    let totalProfit = 0;
 
     monthBookings.forEach(b => {
+      let treatmentDetails = b.treatment_name || '';
+      if (b.items && b.items.length > 0) {
+         treatmentDetails = b.items.map((i:any) => `${i.title} (${i.duration})`).join(' + ');
+      }
+      
       csvRows.push([
-        b.booking_date,
-        `"${b.treatment_name}"`,
-        b.pax,
-        b.therapists_count,
-        b.revenue,
-        b.therapist_fee_total,
-        b.net_profit
+        `"${b.reference_number || `MANUAL-${b.id.substring(0,6).toUpperCase()}`}"`,
+        `"${b.booking_date}"`,
+        `"${b.guest_name || 'Walk-in / Manual'}"`,
+        `"${treatmentDetails}"`,
+        `"${b.status || 'Confirmed'}"`,
+        b.pax || 1,
+        b.therapists_count || 1,
+        b.revenue || 0,
+        b.therapist_fee_total || 0,
+        b.net_profit || 0
       ].join(','));
+      
+      totalRev += Number(b.revenue) || 0;
+      totalFee += Number(b.therapist_fee_total) || 0;
+      totalProfit += Number(b.net_profit) || 0;
     });
 
-    const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
+    csvRows.push(`,,,,,,,,,`);
+    csvRows.push(`"GRAND TOTAL",,,,,,,${totalRev},${totalFee},${totalProfit}`);
+
+    const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -323,64 +360,6 @@ export default function BookingManagement({
           <Download size={16} /> Export CSV
         </button>
       </div>
-
-            {/* Yearly Financial Performance Chart */}
-      {yearlyStats.length > 0 && (
-        <div className="bg-white border border-gray-200 rounded-2xl p-6 md:p-8 shadow-sm">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
-            <div>
-              <h3 className="text-lg font-bold text-gray-900 tracking-tight">Financial Performance (YTD)</h3>
-              <p className="text-xs font-medium text-gray-500 mt-1 uppercase tracking-wider">Gross Revenue & Net Profit by Month</p>
-            </div>
-            <div className="flex items-center gap-4 text-xs font-bold text-gray-600">
-              <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-sm bg-gray-200"></div> Revenue</div>
-              <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-sm bg-black"></div> Net Profit</div>
-            </div>
-          </div>
-          
-          <div className="h-48 md:h-64 flex items-end justify-between gap-1 sm:gap-2">
-            {(() => {
-              const maxRev = Math.max(...yearlyStats.map(s => s.revenue), 1000000); // minimum scale
-              return yearlyStats.map((stat, idx) => {
-                const revHeight = Math.max((stat.revenue / maxRev) * 100, 2); // min height 2%
-                const profHeight = Math.max((stat.profit / maxRev) * 100, 1);
-                const hasData = stat.revenue > 0;
-                
-                return (
-                  <div key={idx} className="flex-1 flex flex-col items-center justify-end h-full group relative">
-                    {/* Tooltip */}
-                    {hasData && (
-                      <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-black text-white text-[10px] font-bold py-1.5 px-2.5 rounded shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 whitespace-nowrap">
-                        <div className="text-white/70 mb-0.5">{stat.month}</div>
-                        <div>Rev: {new Intl.NumberFormat('id-ID', { maximumFractionDigits: 0 }).format(stat.revenue)}</div>
-                        <div className="text-green-400">Net: {new Intl.NumberFormat('id-ID', { maximumFractionDigits: 0 }).format(stat.profit)}</div>
-                      </div>
-                    )}
-                    
-                    {/* Bars */}
-                    <div className="w-full max-w-[40px] relative flex items-end justify-center h-full rounded-t-lg transition-all cursor-pointer">
-                      {/* Revenue Bar */}
-                      <div 
-                        className={`absolute bottom-0 w-full rounded-t-md transition-all duration-700 ${hasData ? 'bg-gray-200 group-hover:bg-gray-300' : 'bg-gray-50'}`} 
-                        style={{ height: `${hasData ? revHeight : 0}%` }}
-                      ></div>
-                      {/* Profit Bar */}
-                      <div 
-                        className={`absolute bottom-0 w-full rounded-t-sm transition-all duration-700 z-10 ${hasData ? 'bg-black shadow-lg shadow-black/20' : 'bg-transparent'}`} 
-                        style={{ height: `${hasData ? profHeight : 0}%`, width: '60%' }}
-                      ></div>
-                    </div>
-                    
-                    <span className={`text-[10px] sm:text-xs font-bold uppercase mt-3 tracking-wider ${hasData ? 'text-gray-900' : 'text-gray-300'}`}>
-                      {stat.month}
-                    </span>
-                  </div>
-                );
-              });
-            })()}
-          </div>
-        </div>
-      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left Col: Calendar */}
@@ -736,6 +715,64 @@ export default function BookingManagement({
           )}
         </div>
       </div>
+
+      {/* Yearly Financial Performance Chart */}
+      {yearlyStats.length > 0 && (
+        <div className="bg-white border border-gray-200 rounded-2xl p-6 md:p-8 shadow-sm mt-8">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+            <div>
+              <h3 className="text-lg font-bold text-gray-900 tracking-tight">Financial Performance (YTD)</h3>
+              <p className="text-xs font-medium text-gray-500 mt-1 uppercase tracking-wider">Gross Revenue & Net Profit by Month</p>
+            </div>
+            <div className="flex items-center gap-4 text-xs font-bold text-gray-600">
+              <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-sm bg-gray-200"></div> Revenue</div>
+              <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-sm bg-black"></div> Net Profit</div>
+            </div>
+          </div>
+          
+          <div className="h-48 md:h-64 flex items-end justify-between gap-1 sm:gap-2">
+            {(() => {
+              const maxRev = Math.max(...yearlyStats.map(s => s.revenue), 1000000); // minimum scale
+              return yearlyStats.map((stat, idx) => {
+                const revHeight = Math.max((stat.revenue / maxRev) * 100, 2); // min height 2%
+                const profHeight = Math.max((stat.profit / maxRev) * 100, 1);
+                const hasData = stat.revenue > 0;
+                
+                return (
+                  <div key={idx} className="flex-1 flex flex-col items-center justify-end h-full group relative">
+                    {/* Tooltip */}
+                    {hasData && (
+                      <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-black text-white text-[10px] font-bold py-1.5 px-2.5 rounded shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 whitespace-nowrap">
+                        <div className="text-white/70 mb-0.5">{stat.month}</div>
+                        <div>Rev: {new Intl.NumberFormat('id-ID', { maximumFractionDigits: 0 }).format(stat.revenue)}</div>
+                        <div className="text-green-400">Net: {new Intl.NumberFormat('id-ID', { maximumFractionDigits: 0 }).format(stat.profit)}</div>
+                      </div>
+                    )}
+                    
+                    {/* Bars */}
+                    <div className="w-full max-w-[40px] relative flex items-end justify-center h-full rounded-t-lg transition-all cursor-pointer">
+                      {/* Revenue Bar */}
+                      <div 
+                        className={`absolute bottom-0 w-full rounded-t-md transition-all duration-700 ${hasData ? 'bg-gray-200 group-hover:bg-gray-300' : 'bg-gray-50'}`} 
+                        style={{ height: `${hasData ? revHeight : 0}%` }}
+                      ></div>
+                      {/* Profit Bar */}
+                      <div 
+                        className={`absolute bottom-0 w-full rounded-t-sm transition-all duration-700 z-10 ${hasData ? 'bg-black shadow-lg shadow-black/20' : 'bg-transparent'}`} 
+                        style={{ height: `${hasData ? profHeight : 0}%`, width: '60%' }}
+                      ></div>
+                    </div>
+                    
+                    <span className={`text-[10px] sm:text-xs font-bold uppercase mt-3 tracking-wider ${hasData ? 'text-gray-900' : 'text-gray-300'}`}>
+                      {stat.month}
+                    </span>
+                  </div>
+                );
+              });
+            })()}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
