@@ -2,7 +2,7 @@
 
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, Search, Heart, Cloud, Sparkles, Droplet, User, Flame, Clock, ArrowRight, X, ShoppingBag, Plus, Minus, MessageCircle, ChevronLeft, Bitcoin, CheckCircle2, Copy } from 'lucide-react';
+import { Bell, Search, Heart, Cloud, Sparkles, Droplet, User, Flame, Clock, ArrowRight, X, ShoppingBag, Plus, Minus, MessageCircle, ChevronLeft, Bitcoin, CheckCircle2, Copy, Calendar, MapPin } from 'lucide-react';
 import Link from 'next/link';
 import { useSpa } from '@/context/SpaContext';
 import SeoExpandedContent from '@/components/SeoExpandedContent';
@@ -49,6 +49,7 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
     const [expandedTreatmentId, setExpandedTreatmentId] = useState<string | null>(null);
     const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
     const [isReviewingBooking, setIsReviewingBooking] = useState(false);
+    const [detailsModalTreatment, setDetailsModalTreatment] = useState<any>(null);
     const [isProcessing, setIsProcessing] = useState(false);
     
     // Initialize date and time
@@ -661,15 +662,8 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                 </div>
                             ) : (
                                 <div className="animate-in fade-in slide-in-from-left-4 duration-300 relative">
-                                    {isReviewingBooking && (
-                                        <button 
-                                            onClick={() => setIsReviewingBooking(false)}
-                                            className="absolute -top-1 right-2 text-text-muted hover:text-primary transition-colors flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest bg-gray-100 px-2 py-1 rounded-lg z-10"
-                                        >
-                                            <ArrowRight className="w-2.5 h-2.5 rotate-180" /> Back
-                                        </button>
-                                    )}
-                                    <h2 className="font-serif text-2xl text-primary mb-1 pr-8">{isReviewingBooking ? 'Review Booking' : 'Complete Booking'}</h2>
+                                    
+                                    <h2 className="font-serif text-2xl text-primary mb-1 pr-8">{isReviewingBooking ? 'REVIEW BOOKING' : 'Complete Booking'}</h2>
                                     <p className="text-xs text-text-muted mb-6">{isReviewingBooking ? 'Please verify your details below.' : 'Your request will be sent securely via WhatsApp.'}</p>
 
                                     {/* Cart Items List */}
@@ -697,31 +691,15 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                                         </p>
                                                         {isReviewingBooking && (() => {
                                                             const itemTreatment = treatments.find(t => t.id === item.treatmentId || t.title === item.title);
-                                                            if (!itemTreatment) return null;
-                                                            
-                                                            let whatsIncluded = '';
-                                                            let desc = itemTreatment.desc;
-                                                            if (desc) {
-                                                                const parts = desc.split(/What's Included\s*:?\s*/i);
-                                                                if (parts.length > 1) {
-                                                                    desc = parts[0].trim();
-                                                                    whatsIncluded = parts[1].trim();
-                                                                }
-                                                            }
+                                                            if (!itemTreatment || !itemTreatment.desc) return null;
                                                             return (
-                                                                <div className="mt-2 mb-3">
-                                                                    {desc && <p className="text-[11px] text-text-muted leading-relaxed font-light">{desc}</p>}
-                                                                    {whatsIncluded && (
-                                                                        <div className="bg-primary/5 rounded-lg p-3 mt-3">
-                                                                            <span className="block text-[9px] font-bold uppercase tracking-widest text-primary mb-1.5">What's Included</span>
-                                                                            <ul className="text-[11px] text-primary/80 space-y-1 font-medium list-disc pl-3.5">
-                                                                                {whatsIncluded.split('\n').filter(Boolean).map((line, i) => (
-                                                                                    <li key={i}>{line.replace(/^-\s*/, '')}</li>
-                                                                                ))}
-                                                                            </ul>
-                                                                        </div>
-                                                                    )}
-                                                                </div>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => setDetailsModalTreatment(itemTreatment)}
+                                                                    className="mt-2 mb-3 text-[10px] font-bold uppercase tracking-widest text-primary underline underline-offset-4 decoration-primary/30 hover:decoration-primary transition-all flex items-center gap-1"
+                                                                >
+                                                                    See Details <ArrowRight className="w-3 h-3" />
+                                                                </button>
                                                             );
                                                         })()}
                                                     </div>
@@ -849,27 +827,27 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                     <div className="space-y-5 pb-8 sm:pb-0 animate-in fade-in slide-in-from-right-4 duration-300">
                                         <div className="bg-gray-50 border border-border/80 rounded-xl p-5 space-y-4">
                                             <h3 className="text-[10px] font-bold uppercase tracking-widest text-primary/80 border-b border-border/50 pb-2 mb-2">Guest Details</h3>
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div>
-                                                    <span className="block text-[9px] font-bold uppercase tracking-widest text-text-muted">Name</span>
-                                                    <span className="text-sm text-primary font-medium">{formData.name}</span>
-                                                </div>
-                                                <div>
-                                                    <span className="block text-[9px] font-bold uppercase tracking-widest text-text-muted">Date</span>
-                                                    <span className="text-sm text-primary font-medium">{formData.date}</span>
-                                                </div>
-                                                <div>
-                                                    <span className="block text-[9px] font-bold uppercase tracking-widest text-text-muted">Time</span>
-                                                    <span className="text-sm text-primary font-medium">{formData.time}</span>
-                                                </div>
-                                                <div className="col-span-2">
-                                                    <span className="block text-[9px] font-bold uppercase tracking-widest text-text-muted">Location</span>
-                                                    <span className="text-sm text-primary font-medium">{formData.location} {formData.room ? `(Room: ${formData.room})` : ''}</span>
+                                            <div className="grid grid-cols-2 gap-5">
+                                                    <div>
+                                                        <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-text-muted mb-1"><User className="w-3 h-3"/> Name</span>
+                                                        <span className="text-sm text-primary font-medium">{formData.name}</span>
+                                                    </div>
+                                                    <div>
+                                                        <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-text-muted mb-1"><Calendar className="w-3 h-3"/> Date</span>
+                                                        <span className="text-sm text-primary font-medium">{formData.date}</span>
+                                                    </div>
+                                                    <div>
+                                                        <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-text-muted mb-1"><Clock className="w-3 h-3"/> Time</span>
+                                                        <span className="text-sm text-primary font-medium">{formData.time}</span>
+                                                    </div>
+                                                    <div>
+                                                        <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-text-muted mb-1"><MapPin className="w-3 h-3"/> Location</span>
+                                                        <span className="text-sm text-primary font-medium line-clamp-1">{formData.location} {formData.room ? `(${formData.room})` : ''}</span>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                        
-                                        <div className="mt-8 pt-6 border-t border-border/50">
+                                            
+                                            <div className="mt-8 pt-6 border-t border-border/50">
                                             <div className="flex flex-col gap-3">
                                                 <button
                                                     type="button"
@@ -889,6 +867,104 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            {/* Treatment Details Modal */}
+            <AnimatePresence>
+                {detailsModalTreatment && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 sm:p-6"
+                    >
+                        <motion.div
+                            initial={{ y: '100%', opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            exit={{ y: '100%', opacity: 0 }}
+                            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                            className="bg-white w-full max-w-2xl max-h-[90vh] rounded-[2rem] overflow-hidden flex flex-col shadow-2xl"
+                        >
+                            <div className="p-6 border-b border-border/50 flex items-center justify-between sticky top-0 bg-white/95 backdrop-blur z-10">
+                                <h3 className="font-serif text-2xl text-primary">{detailsModalTreatment.title}</h3>
+                                <button
+                                    onClick={() => setDetailsModalTreatment(null)}
+                                    className="p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors"
+                                >
+                                    <X className="w-5 h-5 text-primary" />
+                                </button>
+                            </div>
+                            <div className="p-6 overflow-y-auto no-scrollbar">
+                                {(() => {
+                                    let whatsIncluded = '';
+                                    let desc = detailsModalTreatment.desc;
+                                    if (desc) {
+                                        const parts = desc.split(/What's Included\s*:?\s*/i);
+                                        if (parts.length > 1) {
+                                            desc = parts[0].trim();
+                                            whatsIncluded = parts[1].trim();
+                                        }
+                                    }
+                                    return (
+                                        <div className="space-y-8">
+                                            {desc && (
+                                                <div className="space-y-3">
+                                                    <h4 className="text-[10px] font-bold uppercase tracking-widest text-primary/80">Description</h4>
+                                                    <p className="text-sm text-text-muted leading-relaxed">{desc}</p>
+                                                </div>
+                                            )}
+                                            {whatsIncluded && (
+                                                <div className="space-y-4">
+                                                    <h4 className="text-[10px] font-bold uppercase tracking-widest text-primary/80">What's Included</h4>
+                                                    <div className="border border-border/80 rounded-2xl overflow-hidden">
+                                                        <table className="w-full text-left border-collapse">
+                                                            <thead>
+                                                                <tr className="bg-gray-50 border-b border-border/80">
+                                                                    <th className="py-3 px-4 text-[9px] font-bold uppercase tracking-widest text-primary/70">Treatment</th>
+                                                                    <th className="py-3 px-4 text-[9px] font-bold uppercase tracking-widest text-primary/70 w-1/3">Duration</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody className="divide-y divide-border/50">
+                                                                {whatsIncluded.split('\n').filter(Boolean).map((line, i) => {
+                                                                    const cleanLine = line.replace(/^-\s*/, '').trim();
+                                                                    const durationMatch = cleanLine.match(/^(\d+\s*-\s*[Mm]inutes?)\s+(.*)/i) || cleanLine.match(/^(.*)\s+\((\d+\s*[Mm]inutes?)\)$/i);
+                                                                    
+                                                                    let treatmentName = cleanLine;
+                                                                    let durationStr = '-';
+                                                                    
+                                                                    if (durationMatch) {
+                                                                        if (cleanLine.match(/^(\d+\s*-\s*[Mm]inutes?)\s+(.*)/i)) {
+                                                                            durationStr = durationMatch[1].replace('-', '').trim();
+                                                                            treatmentName = durationMatch[2].trim();
+                                                                        } else {
+                                                                            treatmentName = durationMatch[1].trim();
+                                                                            durationStr = durationMatch[2].trim();
+                                                                        }
+                                                                    }
+
+                                                                    return (
+                                                                        <tr key={i} className="hover:bg-gray-50/50 transition-colors">
+                                                                            <td className="py-3 px-4 text-xs font-medium text-primary">{treatmentName}</td>
+                                                                            <td className="py-3 px-4 text-xs text-text-muted flex items-center gap-1.5">
+                                                                                {durationStr !== '-' && <Clock className="w-3 h-3 opacity-50" />}
+                                                                                {durationStr}
+                                                                            </td>
+                                                                        </tr>
+                                                                    );
+                                                                })}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })()}
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
 
             <div className="max-w-7xl mx-auto px-6 relative z-10">
                 <SeoExpandedContent />
