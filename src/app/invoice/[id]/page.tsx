@@ -42,7 +42,7 @@ function InvoicePage() {
                         customerDetails: {
                             name: data.guest_name || '',
                             date: data.booking_date || '',
-                            time: data.booking_time || '',
+                            time: data.time || data.booking_time || '',
                             location: data.location || '',
                             room: data.room_number || ''
                         }

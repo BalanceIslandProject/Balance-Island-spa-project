@@ -20,7 +20,7 @@ export const saveBookingToSupabase = async (
             reference_number: bookingId,
             guest_name: formData.name,
             booking_date: formData.date,
-            booking_time: formData.time,
+            time: formData.time,
             location: formData.location,
             room_number: formData.room || '',
             total_price: totalPrice,
