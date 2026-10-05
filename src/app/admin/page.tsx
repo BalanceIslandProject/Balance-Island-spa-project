@@ -1169,56 +1169,44 @@ export default function AdminDashboard() {
                                                 {/* Mini Preview */}
                                                 <div>
                                                     <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5">Card Preview</label>
-                                                    <div className="w-full bg-white border border-gray-200 rounded-2xl p-4 shadow-sm relative overflow-hidden flex flex-col justify-between" style={{ minHeight: '160px' }}>
-                                                        {/* Top row */}
-                                                        <div className="flex items-start justify-between relative z-10 mb-4">
-                                                            <div className="flex items-center gap-2">
-                                                                <div>
-                                                                    <div className="text-[9px] text-gray-500 font-medium">Spa Offer</div>
-                                                                    <div className="text-xs font-bold text-gray-900">{campaignLabel || 'PROMO'}</div>
+                                                    <div className="relative w-full rounded-[24px] overflow-hidden bg-[#FAFAFA] border border-gray-200 group transition-colors duration-300">
+                                                        <div className="flex flex-col p-6 relative z-10 min-h-[180px]">
+                                                            {/* Top row: Badge and Icon */}
+                                                            <div className="flex items-start justify-between mb-6">
+                                                                <div className="inline-flex items-center px-3 py-1.5 rounded-full bg-white border border-gray-200 text-[10px] font-bold text-gray-800 tracking-wide uppercase shadow-sm">
+                                                                    {campaignLabel || `${discountPercentage}% OFF`}
+                                                                </div>
+                                                                <div className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-400 shadow-sm">
+                                                                    <ArrowRight size={14} />
                                                                 </div>
                                                             </div>
-                                                            <div className="text-right">
-                                                                <div className="text-[9px] text-gray-500 font-medium">Discount</div>
-                                                                <div className="text-xs font-bold text-primary">{discountPercentage}% OFF</div>
-                                                            </div>
-                                                        </div>
 
-                                                        {/* Flight Path (Middle) */}
-                                                        <div className="flex items-center justify-between relative z-10 mb-4 px-2">
-                                                            <div className="text-2xl font-black text-gray-900 tracking-tighter w-1/3 truncate text-left">
-                                                                SPA
-                                                            </div>
-                                                            <div className="flex-1 flex items-center justify-center relative px-2">
-                                                                <div className="h-px bg-gray-300 w-full border-dashed border-t border-gray-400"></div>
-                                                            </div>
-                                                            <div className="text-2xl font-black text-gray-900 tracking-tighter w-1/3 truncate text-right">
-                                                                {campaignTitle?.substring(0, 3).toUpperCase() || 'OFR'}
-                                                            </div>
-                                                        </div>
-
-                                                        {/* Details (Bottom) */}
-                                                        <div className="flex items-end justify-between relative z-10 border-t border-dashed border-gray-200 pt-3">
-                                                            <div className="flex gap-2">
-                                                                {campaignStartDate && (
-                                                                    <div className="bg-gray-100 rounded-full px-2 py-1 flex items-center gap-1 text-[9px] text-gray-700 font-medium">
-                                                                        {new Date(campaignStartDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                                                                    </div>
-                                                                )}
-                                                                {campaignEndDate && (
-                                                                    <div className="bg-gray-100 rounded-full px-2 py-1 flex items-center gap-1 text-[9px] text-gray-700 font-medium">
-                                                                        until {new Date(campaignEndDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                                                                    </div>
+                                                            {/* Main Content */}
+                                                            <div className="mb-4">
+                                                                <h3 className="text-2xl font-bold text-gray-900 leading-tight tracking-tight mb-2">
+                                                                    {campaignTitle || 'Campaign Title'}
+                                                                </h3>
+                                                                {campaignDesc && (
+                                                                    <p className="text-gray-500 text-xs line-clamp-2 leading-relaxed">
+                                                                        {campaignDesc}
+                                                                    </p>
                                                                 )}
                                                             </div>
-                                                            <div className="text-xs font-bold text-gray-900 line-clamp-1 max-w-[40%] text-right">
-                                                                {campaignTitle}
+
+                                                            {/* Footer (Dates / Duration) */}
+                                                            <div className="mt-auto pt-4 border-t border-gray-200 flex flex-wrap items-center gap-2">
+                                                                {(campaignStartDate || campaignEndDate) && (
+                                                                    <div className="text-[10px] text-gray-600 font-medium bg-white px-2 py-1 rounded border border-gray-200">
+                                                                        {campaignStartDate ? new Date(campaignStartDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''}
+                                                                        {campaignStartDate && campaignEndDate ? ' - ' : ''}
+                                                                        {campaignEndDate ? new Date(campaignEndDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''}
+                                                                    </div>
+                                                                )}
+                                                                <div className="text-[10px] text-gray-600 font-medium bg-white px-2 py-1 rounded border border-gray-200">
+                                                                    {campaignDuration.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) || '1 Month'}
+                                                                </div>
                                                             </div>
                                                         </div>
-                                                        
-                                                        {/* Cutouts */}
-                                                        <div className="absolute top-1/2 -left-3 -translate-y-1/2 w-6 h-6 bg-gray-50 rounded-full border border-gray-200 border-r-0"></div>
-                                                        <div className="absolute top-1/2 -right-3 -translate-y-1/2 w-6 h-6 bg-gray-50 rounded-full border border-gray-200 border-l-0"></div>
                                                     </div>
                                                 </div>
 

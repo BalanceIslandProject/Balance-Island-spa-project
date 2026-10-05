@@ -248,67 +248,45 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                        className="relative w-full rounded-[32px] overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.06)] hover:shadow-[0_16px_40px_rgb(0,0,0,0.1)] transition-shadow duration-500 mb-8 cursor-pointer bg-white border border-gray-100"
+                        className="relative w-full rounded-[24px] overflow-hidden bg-[#FAFAFA] border border-gray-200 group transition-colors duration-300 hover:bg-gray-50 mb-8 cursor-pointer"
                     >
-                        <div className="flex flex-col p-6 md:p-10 relative z-10">
-                            {/* Top row */}
-                            <div className="flex items-center justify-between mb-6">
-                                <div className="flex items-center gap-3">
-                                    <div>
-                                        <div className="text-xs text-gray-500 font-medium tracking-wide">Exclusive Spa Offer</div>
-                                        <div className="text-base md:text-lg font-bold text-gray-900">{campaign.title}</div>
-                                    </div>
+                        <div className="flex flex-col p-6 md:p-8 relative z-10">
+                            {/* Top row: Badge and Icon */}
+                            <div className="flex items-start justify-between mb-8">
+                                <div className="inline-flex items-center px-3 py-1.5 rounded-full bg-white border border-gray-200 text-xs font-bold text-gray-800 tracking-wide uppercase shadow-sm">
+                                    {campaign.label || `${campaign.discountPercentage}% OFF`}
                                 </div>
-                                <div className="text-right">
-                                    <div className="text-xs text-gray-500 font-medium tracking-wide">Discount</div>
-                                    <div className="text-base md:text-lg font-bold text-primary">{campaign.discountPercentage}% OFF</div>
+                                <div className="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-400 group-hover:bg-primary group-hover:text-white group-hover:border-primary transition-all duration-300 shadow-sm">
+                                    <ArrowRight size={18} />
                                 </div>
                             </div>
 
-                            {/* Flight Path / Main Text */}
-                            <div className="flex items-center justify-between py-6 relative">
-                                <div className="text-5xl md:text-7xl font-black text-gray-900 tracking-tighter w-[30%]">
-                                    SPA
-                                </div>
-                                <div className="flex-1 flex items-center justify-center relative px-4">
-                                    <div className="h-[2px] bg-gray-200 w-full border-dashed border-t-2 border-gray-300"></div>
-                                </div>
-                                <div className="text-5xl md:text-7xl font-black text-gray-900 tracking-tighter w-[30%] text-right truncate">
-                                    {campaign.title.split(' ').map(w => w[0]).join('').substring(0, 3).toUpperCase() || 'OFR'}
-                                </div>
-                            </div>
-                            
-                            <div className="flex items-center justify-between text-sm text-gray-500 font-medium px-1">
-                                <div className="w-[30%]">At your villa</div>
-                                <div className="w-[30%] text-right truncate">{campaign.label}</div>
+                            {/* Main Content */}
+                            <div className="mb-6">
+                                <h3 className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight tracking-tight mb-3">
+                                    {campaign.title}
+                                </h3>
+                                {campaign.description && (
+                                    <p className="text-gray-500 text-sm md:text-base line-clamp-2 leading-relaxed">
+                                        {campaign.description}
+                                    </p>
+                                )}
                             </div>
 
-                            <div className="mt-8 pt-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
-                                <div className="flex flex-wrap gap-3">
-                                    {(campaign.startDate || campaign.endDate) && (
-                                    <div className="bg-gray-50 rounded-full px-4 py-2 flex items-center gap-2 text-sm text-gray-700 font-semibold border border-gray-100">
+                            {/* Footer (Dates / Duration) */}
+                            <div className="pt-5 border-t border-gray-200 flex flex-wrap items-center gap-3">
+                                {(campaign.startDate || campaign.endDate) && (
+                                    <div className="text-[11px] md:text-xs text-gray-600 font-medium bg-white px-3 py-1.5 rounded-md border border-gray-200">
                                         {campaign.startDate ? new Date(campaign.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''}
                                         {campaign.startDate && campaign.endDate ? ' - ' : ''}
-                                        {campaign.endDate ? new Date(campaign.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
+                                        {campaign.endDate ? new Date(campaign.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''}
                                     </div>
-                                    )}
-                                    <div className="bg-gray-50 rounded-full px-4 py-2 flex items-center gap-2 text-sm text-gray-700 font-semibold border border-gray-100">
-                                        {campaign.duration.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                                    </div>
-                                </div>
-                                <div className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                                    <span className="text-primary cursor-pointer hover:underline">Tap to view details</span>
-                                    <ArrowRight size={18} className="text-primary" />
+                                )}
+                                <div className="text-[11px] md:text-xs text-gray-600 font-medium bg-white px-3 py-1.5 rounded-md border border-gray-200">
+                                    {campaign.duration.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
                                 </div>
                             </div>
                         </div>
-
-                        {/* Cutouts to look like a ticket */}
-                        <div className="absolute top-1/2 -translate-y-1/2 -left-6 w-12 h-12 bg-white rounded-full border border-gray-200 border-r-0 shadow-inner z-20" style={{ boxShadow: 'inset -4px 0 6px -4px rgba(0,0,0,0.1)' }}></div>
-                        <div className="absolute top-1/2 -translate-y-1/2 -right-6 w-12 h-12 bg-white rounded-full border border-gray-200 border-l-0 shadow-inner z-20" style={{ boxShadow: 'inset 4px 0 6px -4px rgba(0,0,0,0.1)' }}></div>
-                        
-                        {/* Dashed line across the ticket */}
-                        <div className="absolute top-1/2 -translate-y-1/2 left-6 right-6 h-px border-t-2 border-dashed border-gray-200 z-0"></div>
                     </motion.div>
                 </div>
                 )}

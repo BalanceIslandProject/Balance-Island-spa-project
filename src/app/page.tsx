@@ -476,60 +476,44 @@ export default function Home() {
                                             : 'w-full'
                                             }`}
                                     >
-                                        <div className="relative w-full h-[220px] sm:h-[250px] md:h-[280px] rounded-[24px] md:rounded-[28px] overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.06)] hover:shadow-[0_16px_40px_rgb(0,0,0,0.1)] group bg-white border border-gray-100 transition-all duration-500">
-                                            <div className="flex flex-col h-full p-5 md:p-7 relative z-10">
-                                                {/* Top row */}
-                                                <div className="flex items-center justify-between mb-4 md:mb-6">
-                                                    <div>
-                                                        <div className="text-[10px] md:text-xs text-gray-500 font-medium tracking-wide">Spa Offer</div>
-                                                        <div className="text-sm md:text-base font-bold text-gray-900">{camp.title}</div>
+                                        <div className="relative w-full rounded-[24px] overflow-hidden bg-[#FAFAFA] border border-gray-200 group transition-colors duration-300 hover:bg-gray-50">
+                                            <div className="flex flex-col h-full p-6 md:p-8 relative z-10">
+                                                {/* Top row: Badge and Icon */}
+                                                <div className="flex items-start justify-between mb-8">
+                                                    <div className="inline-flex items-center px-3 py-1.5 rounded-full bg-white border border-gray-200 text-xs font-bold text-gray-800 tracking-wide uppercase shadow-sm">
+                                                        {camp.label || `${camp.discountPercentage}% OFF`}
                                                     </div>
-                                                    <div className="text-right">
-                                                        <div className="text-[10px] md:text-xs text-gray-500 font-medium tracking-wide">Discount</div>
-                                                        <div className="text-sm md:text-base font-bold text-primary">{camp.discountPercentage}% OFF</div>
+                                                    <div className="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-400 group-hover:bg-primary group-hover:text-white group-hover:border-primary transition-all duration-300 shadow-sm">
+                                                        <ArrowRight size={18} />
                                                     </div>
                                                 </div>
 
-                                                {/* Flight Path / Main Text */}
-                                                <div className="flex items-center justify-between py-4 md:py-6 relative flex-grow">
-                                                    <div className="text-4xl sm:text-5xl md:text-6xl font-black text-gray-900 tracking-tighter w-[30%]">
-                                                        SPA
-                                                    </div>
-                                                    <div className="flex-1 flex items-center justify-center relative px-2 md:px-4">
-                                                        <div className="h-[2px] bg-gray-200 w-full border-dashed border-t-2 border-gray-300"></div>
-                                                    </div>
-                                                    <div className="text-4xl sm:text-5xl md:text-6xl font-black text-gray-900 tracking-tighter w-[30%] text-right truncate">
-                                                        {camp.title.split(' ').map((w: string) => w[0]).join('').substring(0, 3).toUpperCase() || 'OFR'}
-                                                    </div>
-                                                </div>
-                                                
-                                                <div className="flex items-center justify-between text-xs md:text-sm text-gray-500 font-medium px-1 mb-4 md:mb-6">
-                                                    <div className="w-[30%]">At your villa</div>
-                                                    <div className="w-[30%] text-right truncate">{camp.label}</div>
+                                                {/* Main Content */}
+                                                <div className="mb-6 flex-grow flex flex-col justify-center">
+                                                    <h3 className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight tracking-tight mb-3">
+                                                        {camp.title}
+                                                    </h3>
+                                                    {camp.description && (
+                                                        <p className="text-gray-500 text-sm md:text-base line-clamp-2 leading-relaxed">
+                                                            {camp.description}
+                                                        </p>
+                                                    )}
                                                 </div>
 
-                                                <div className="mt-auto border-t border-dashed border-gray-200 pt-4 md:pt-6 flex flex-wrap items-end justify-between gap-3">
-                                                    <div className="flex flex-wrap gap-2 md:gap-3">
-                                                        {(camp.startDate || camp.endDate) && (
-                                                        <div className="bg-gray-50 rounded-full px-3 py-1.5 md:px-4 md:py-2 flex items-center gap-2 text-xs md:text-sm text-gray-700 font-semibold border border-gray-100">
+                                                {/* Footer (Dates / Duration) */}
+                                                <div className="pt-5 border-t border-gray-200 flex flex-wrap items-center gap-3">
+                                                    {(camp.startDate || camp.endDate) && (
+                                                        <div className="text-[11px] md:text-xs text-gray-600 font-medium bg-white px-3 py-1.5 rounded-md border border-gray-200">
                                                             {camp.startDate ? new Date(camp.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''}
                                                             {camp.startDate && camp.endDate ? ' - ' : ''}
-                                                            {camp.endDate ? new Date(camp.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
+                                                            {camp.endDate ? new Date(camp.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''}
                                                         </div>
-                                                        )}
-                                                        <div className="bg-gray-50 rounded-full px-3 py-1.5 md:px-4 md:py-2 flex items-center gap-2 text-xs md:text-sm text-gray-700 font-semibold border border-gray-100">
-                                                            {camp.duration.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
-                                                        </div>
+                                                    )}
+                                                    <div className="text-[11px] md:text-xs text-gray-600 font-medium bg-white px-3 py-1.5 rounded-md border border-gray-200">
+                                                        {camp.duration.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
                                                     </div>
                                                 </div>
                                             </div>
-
-                                            {/* Cutouts to look like a ticket */}
-                                            <div className="absolute top-1/2 -translate-y-1/2 -left-4 md:-left-6 w-8 h-8 md:w-12 md:h-12 bg-[#F5F5F7] sm:bg-white rounded-full border border-gray-200 border-r-0 shadow-inner z-20" style={{ boxShadow: 'inset -4px 0 6px -4px rgba(0,0,0,0.1)' }}></div>
-                                            <div className="absolute top-1/2 -translate-y-1/2 -right-4 md:-right-6 w-8 h-8 md:w-12 md:h-12 bg-[#F5F5F7] sm:bg-white rounded-full border border-gray-200 border-l-0 shadow-inner z-20" style={{ boxShadow: 'inset 4px 0 6px -4px rgba(0,0,0,0.1)' }}></div>
-                                            
-                                            {/* Dashed line across the ticket */}
-                                            <div className="absolute top-1/2 -translate-y-1/2 left-4 md:left-6 right-4 md:right-6 h-px border-t-2 border-dashed border-gray-200 z-0"></div>
                                         </div>
                                     </div>
                                 ))}
