@@ -12,7 +12,7 @@ const GoogleReviewsLogo = () => (
       <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
       <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
     </svg>
-    <span className="text-[#3c4043] font-bold text-lg tracking-tight font-sans">Reviews</span>
+    <span className="text-[#3c4043] font-bold text-[15px] sm:text-base md:text-lg tracking-tight font-sans">Reviews</span>
   </div>
 );
 
@@ -36,8 +36,8 @@ export default function Footer() {
               Bali's premier luxury mobile spa. Bringing 5-star professional massages and organic wellness treatments directly to your private villa or hotel.
             </p>
 
-            <div className="flex flex-wrap items-start gap-12 md:gap-20">
-              <div className="flex flex-col gap-3">
+            <div className="flex flex-row items-start gap-6 sm:gap-12 md:gap-20">
+              <div className="flex flex-col gap-3 shrink-0">
                 <span className="text-xs font-bold uppercase tracking-widest text-text-muted">Find us on</span>
                 
                 <a href="https://share.google/7evzKgW2VdC2C9QWY" target="_blank" rel="noopener noreferrer" className="domain-ubud-only inline-flex hover:opacity-80 transition-opacity">
@@ -53,15 +53,15 @@ export default function Footer() {
                 </a>
               </div>
 
-              <div className="flex flex-col gap-3">
-                <span className="text-xs font-bold uppercase tracking-widest text-text-muted">Book a Tour</span>
+              <div className="flex flex-col gap-3 min-w-0">
+                <span className="text-xs font-bold uppercase tracking-widest text-text-muted truncate">Book a Tour</span>
                 <a 
                   href="https://www.balanceisland.com" 
                   target="_blank" 
                   rel="noopener noreferrer" 
                   className="group flex items-center gap-2.5 hover:opacity-80 transition-opacity"
                 >
-                  <span className="text-[#3c4043] font-bold text-lg tracking-tight font-sans">balanceisland.com</span>
+                  <span className="text-[#3c4043] font-bold text-[15px] sm:text-base md:text-lg tracking-tight font-sans truncate">balanceisland.com</span>
                   <div className="w-[22px] h-[22px] rounded-full bg-black text-white flex items-center justify-center transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 shadow-sm">
                     <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M7 17L17 7M17 7v6M17 7h-6" />
