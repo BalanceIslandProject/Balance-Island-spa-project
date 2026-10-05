@@ -1170,15 +1170,21 @@ export default function AdminDashboard() {
                                                 <div>
                                                     <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5">Card Preview</label>
                                                     <div className="relative w-full rounded-[24px] overflow-hidden bg-[#FAFAFA] border border-gray-200 group transition-colors duration-300">
-                                                        {/* Top Badges Hugging Corners */}
-                                                        <div className="absolute top-0 left-0 bg-black text-[10px] font-bold text-white tracking-wide uppercase px-3 py-1.5 rounded-br-[24px] shadow-sm z-20">
-                                                            {campaignLabel || `${discountPercentage}% OFF`}
-                                                        </div>
-                                                        <div className="absolute top-0 right-0 bg-black w-8 h-8 flex items-center justify-center text-white rounded-bl-[24px] shadow-sm z-20">
-                                                            <ArrowRight size={14} />
+                                                        {/* Top Black Section (Header) */}
+                                                        <div className="absolute top-0 left-0 right-0 h-[56px] bg-black z-10 flex items-center justify-between px-6 border-b-2 border-dashed border-gray-200">
+                                                            <div className="inline-flex items-center text-[10px] font-bold text-white tracking-wide uppercase">
+                                                                {campaignLabel || `${discountPercentage}% OFF`}
+                                                            </div>
+                                                            <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white border border-white/20">
+                                                                <ArrowRight size={14} />
+                                                            </div>
                                                         </div>
 
-                                                        <div className="flex flex-col relative z-10 min-h-[180px] p-6 pt-[48px] pb-[72px]">
+                                                        {/* Top Cutouts */}
+                                                        <div className="absolute top-[44px] -left-3 w-6 h-6 bg-white rounded-full border border-gray-200 border-r-0 shadow-inner z-20"></div>
+                                                        <div className="absolute top-[44px] -right-3 w-6 h-6 bg-white rounded-full border border-gray-200 border-l-0 shadow-inner z-20"></div>
+
+                                                        <div className="flex flex-col relative z-10 min-h-[180px] p-6 pt-[72px] pb-[72px]">
                                                             {/* Main Content */}
                                                             <div className="mb-4 flex-grow flex flex-col justify-center items-center text-center">
                                                                 <h3 className="text-2xl font-bold text-gray-900 leading-tight tracking-tight mb-2">

@@ -477,15 +477,21 @@ export default function Home() {
                                             }`}
                                     >
                                         <div className="relative w-full rounded-[24px] overflow-hidden bg-[#FAFAFA] border border-gray-200 group transition-colors duration-300 hover:bg-gray-50">
-                                            {/* Top Badges Hugging Corners */}
-                                            <div className="absolute top-0 left-0 bg-black text-[10px] md:text-xs font-bold text-white tracking-wide uppercase px-4 py-2 md:px-5 md:py-2.5 rounded-br-[24px] shadow-sm z-20">
-                                                {camp.label || `${camp.discountPercentage}% OFF`}
-                                            </div>
-                                            <div className="absolute top-0 right-0 bg-black w-10 h-10 md:w-12 md:h-12 flex items-center justify-center text-white rounded-bl-[24px] shadow-sm transition-colors hover:bg-gray-800 z-20">
-                                                <ArrowRight size={18} />
+                                            {/* Top Black Section (Header) */}
+                                            <div className="absolute top-0 left-0 right-0 h-[72px] md:h-[80px] bg-black z-10 flex items-center justify-between px-6 md:px-8 border-b-2 border-dashed border-gray-200">
+                                                <div className="inline-flex items-center text-xs md:text-sm font-bold text-white tracking-wide uppercase">
+                                                    {camp.label || `${camp.discountPercentage}% OFF`}
+                                                </div>
+                                                <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/10 flex items-center justify-center text-white transition-transform group-hover:scale-105 border border-white/20">
+                                                    <ArrowRight size={16} className="md:w-[18px] md:h-[18px]" />
+                                                </div>
                                             </div>
 
-                                            <div className="flex flex-col h-full p-6 md:p-8 relative z-10 pt-[60px] md:pt-[70px] pb-[100px] md:pb-[120px]">
+                                            {/* Top Cutouts */}
+                                            <div className="absolute top-[56px] -left-4 md:-left-6 w-8 h-8 md:w-12 md:h-12 bg-white rounded-full border border-gray-200 border-r-0 shadow-inner z-20" style={{ boxShadow: 'inset -4px 0 6px -4px rgba(0,0,0,0.1)' }}></div>
+                                            <div className="absolute top-[56px] -right-4 md:-right-6 w-8 h-8 md:w-12 md:h-12 bg-white rounded-full border border-gray-200 border-l-0 shadow-inner z-20" style={{ boxShadow: 'inset 4px 0 6px -4px rgba(0,0,0,0.1)' }}></div>
+
+                                            <div className="flex flex-col h-full p-6 md:p-8 relative z-10 pt-[100px] md:pt-[120px] pb-[100px] md:pb-[120px]">
                                                 {/* Main Content */}
                                                 <div className="mb-6 flex-grow flex flex-col justify-center items-center text-center">
                                                     <h3 className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight tracking-tight mb-3">
