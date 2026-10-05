@@ -60,6 +60,8 @@ export type Campaign = {
     image_url?: string;
     duration: string; // e.g., "1_month"
     discountPercentage: number;
+    startDate?: string;
+    endDate?: string;
     selectedTreatments: SelectedCampaignTreatment[];
     tripOffer?: string;
     tripImage?: string;

@@ -158,6 +158,8 @@ export default function AdminDashboard() {
     const [campaignDesc, setCampaignDesc] = useState(campaign?.description || 'Relax deeply with customized flower baths, traditional Balinese massage, and organic botanical body wraps in the comfort of your villa.');
     const [campaignDuration, setCampaignDuration] = useState(campaign?.duration || '1_month');
     const [discountPercentage, setDiscountPercentage] = useState<number>(campaign?.discountPercentage ?? 0);
+    const [campaignStartDate, setCampaignStartDate] = useState(campaign?.startDate || '');
+    const [campaignEndDate, setCampaignEndDate] = useState(campaign?.endDate || '');
     const [campaignOrder, setCampaignOrder] = useState<number>(campaign?.order || 1);
     const [campaignTreatments, setCampaignTreatments] = useState<SelectedCampaignTreatment[]>(campaign?.selectedTreatments || []);
     const [campaignImage, setCampaignImage] = useState<string>(campaign?.image_url || campaign?.image || '');
@@ -207,6 +209,8 @@ export default function AdminDashboard() {
         setCampaignDesc(c.description || '');
         setCampaignDuration(c.duration || '1_month');
         setDiscountPercentage(c.discountPercentage ?? 0);
+        setCampaignStartDate(c.startDate || '');
+        setCampaignEndDate(c.endDate || '');
         setCampaignTreatments(c.selectedTreatments && c.selectedTreatments.length > 0 ? c.selectedTreatments : treatments.map(t => ({ treatmentId: t.id, durations: t.options.map(o => o.duration) })));
         setCampaignImage(c.image_url || c.image || '');
         setCampaignImageFile(null);
@@ -221,6 +225,8 @@ export default function AdminDashboard() {
         setCampaignDesc('Relax deeply with customized treatments in the comfort of your villa.');
         setCampaignDuration('1_month');
         setDiscountPercentage(0);
+        setCampaignStartDate('');
+        setCampaignEndDate('');
         selectAllTreatments();
         setCampaignImage('');
         setCampaignImageFile(null);
@@ -325,6 +331,8 @@ export default function AdminDashboard() {
         setCampaignLabel(preset.label);
         setCampaignDesc(preset.description);
         setDiscountPercentage(preset.discountPercentage);
+        setCampaignStartDate('');
+        setCampaignEndDate('');
         setCampaignImage(preset.image);
         setCampaignImageFile(null);
         setCampaignDuration(preset.duration);
@@ -539,6 +547,8 @@ export default function AdminDashboard() {
                     image: null, // Always write null to the base64 column
                     duration: campaignDuration || '1_month',
                     discountPercentage: Number(discountPercentage) || 0,
+                    startDate: campaignStartDate || undefined,
+                    endDate: campaignEndDate || undefined,
                     selectedTreatments: campaignTreatments.length > 0 
                         ? campaignTreatments 
                         : treatments.map(t => ({ treatmentId: t.id, durations: t.options.map(o => o.duration) })),
@@ -1136,18 +1146,20 @@ export default function AdminDashboard() {
                                                         />
                                                     </div>
                                                     <div className="flex-1">
-                                                        <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5">Image URL</label>
-                                                        <div className="flex relative">
-                                                            <input 
-                                                                type="text" placeholder="https://..." 
-                                                                value={campaignImage} onChange={e => setCampaignImage(e.target.value)}
-                                                                className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-black focus:border-black transition-colors pr-8"
-                                                            />
-                                                            <label className="absolute right-2 top-2 cursor-pointer text-gray-400 hover:text-black">
-                                                                <UploadCloud size={16} />
-                                                                <input type="file" accept="image/*" className="hidden" onChange={handleCampaignImageUpload} />
-                                                            </label>
-                                                        </div>
+                                                        <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5">Start Date</label>
+                                                        <input 
+                                                            type="date"
+                                                            value={campaignStartDate} onChange={e => setCampaignStartDate(e.target.value)}
+                                                            className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-black focus:border-black transition-colors"
+                                                        />
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5">End Date</label>
+                                                        <input 
+                                                            type="date"
+                                                            value={campaignEndDate} onChange={e => setCampaignEndDate(e.target.value)}
+                                                            className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-black focus:border-black transition-colors"
+                                                        />
                                                     </div>
                                                 </div>
                                             </div>
@@ -1157,21 +1169,62 @@ export default function AdminDashboard() {
                                                 {/* Mini Preview */}
                                                 <div>
                                                     <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5">Card Preview</label>
-                                                    <div className="relative w-full aspect-[2/1] rounded-xl overflow-hidden border border-gray-200 bg-gray-900">
-                                                        {campaignImage ? (
-                                                            <img src={campaignImage} alt="Preview" className="absolute inset-0 w-full h-full object-cover opacity-70" />
-                                                        ) : (
-                                                            <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
-                                                                <span className="text-gray-400 text-xs">No image</span>
+                                                    <div className="w-full bg-white border border-gray-200 rounded-2xl p-4 shadow-sm relative overflow-hidden flex flex-col justify-between" style={{ minHeight: '160px' }}>
+                                                        {/* Top row */}
+                                                        <div className="flex items-start justify-between relative z-10 mb-4">
+                                                            <div className="flex items-center gap-2">
+                                                                <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-white shrink-0">
+                                                                    <Sparkles size={12} />
+                                                                </div>
+                                                                <div>
+                                                                    <div className="text-[9px] text-gray-500 font-medium">Spa Offer</div>
+                                                                    <div className="text-xs font-bold text-gray-900">{campaignLabel || 'PROMO'}</div>
+                                                                </div>
                                                             </div>
-                                                        )}
-                                                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end p-4">
-                                                            <span className="inline-block px-2 py-0.5 rounded-full bg-white/20 backdrop-blur-sm text-[8px] font-bold tracking-wider uppercase text-white mb-1.5 w-fit">
-                                                                {campaignLabel || 'PROMO'}
-                                                            </span>
-                                                            <h3 className="text-lg font-bold text-white leading-tight">{campaignTitle || 'Title'}</h3>
-                                                            {campaignDesc && <p className="text-[10px] text-white/80 mt-1 line-clamp-1">{campaignDesc}</p>}
+                                                            <div className="text-right">
+                                                                <div className="text-[9px] text-gray-500 font-medium">Discount</div>
+                                                                <div className="text-xs font-bold text-primary">{discountPercentage}% OFF</div>
+                                                            </div>
                                                         </div>
+
+                                                        {/* Flight Path (Middle) */}
+                                                        <div className="flex items-center justify-between relative z-10 mb-4 px-2">
+                                                            <div className="text-2xl font-black text-gray-900 tracking-tighter w-1/3 truncate text-left">
+                                                                SPA
+                                                            </div>
+                                                            <div className="flex-1 flex items-center justify-center relative px-2">
+                                                                <div className="h-px bg-gray-300 w-full border-dashed border-t border-gray-400"></div>
+                                                                <div className="w-6 h-6 bg-gray-900 rounded-full flex items-center justify-center text-white absolute">
+                                                                    <Heart size={10} className="fill-current" />
+                                                                </div>
+                                                            </div>
+                                                            <div className="text-2xl font-black text-gray-900 tracking-tighter w-1/3 truncate text-right">
+                                                                {campaignTitle?.substring(0, 3).toUpperCase() || 'OFR'}
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Details (Bottom) */}
+                                                        <div className="flex items-end justify-between relative z-10 border-t border-dashed border-gray-200 pt-3">
+                                                            <div className="flex gap-2">
+                                                                {campaignStartDate && (
+                                                                    <div className="bg-gray-100 rounded-full px-2 py-1 flex items-center gap-1 text-[9px] text-gray-700 font-medium">
+                                                                        <Calendar size={10} /> {new Date(campaignStartDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                                                    </div>
+                                                                )}
+                                                                {campaignEndDate && (
+                                                                    <div className="bg-gray-100 rounded-full px-2 py-1 flex items-center gap-1 text-[9px] text-gray-700 font-medium">
+                                                                        <Clock size={10} /> until {new Date(campaignEndDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                            <div className="text-xs font-bold text-gray-900 line-clamp-1 max-w-[40%] text-right">
+                                                                {campaignTitle}
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        {/* Cutouts */}
+                                                        <div className="absolute top-1/2 -left-3 -translate-y-1/2 w-6 h-6 bg-gray-50 rounded-full border border-gray-200 border-r-0"></div>
+                                                        <div className="absolute top-1/2 -right-3 -translate-y-1/2 w-6 h-6 bg-gray-50 rounded-full border border-gray-200 border-l-0"></div>
                                                     </div>
                                                 </div>
 

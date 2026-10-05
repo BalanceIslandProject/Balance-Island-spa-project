@@ -241,57 +241,81 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
 
 
 
-                {/* Cinematic Campaign Card (Below Search) */}
+                {/* Ticket Style Campaign Card (Below Search) */}
                 {campaign && (
                 <div onClick={() => setIsCampaignModalOpen(true)} className="block outline-none">
                     <motion.div 
-                        initial={{ opacity: 0, scale: 0.98 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-                        className="relative w-full h-[240px] md:h-[420px] rounded-[32px] md:rounded-[40px] overflow-hidden shadow-[0_20px_40px_rgb(0,0,0,0.12)] mb-8 group cursor-pointer bg-primary"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                        className="relative w-full rounded-[32px] overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.06)] hover:shadow-[0_16px_40px_rgb(0,0,0,0.1)] transition-shadow duration-500 mb-8 cursor-pointer bg-white border border-gray-100"
                     >
-                        {/* Background Image */}
-                        <img 
-                            src={campaign.image || "https://images.pexels.com/photos/3757952/pexels-photo-3757952.jpeg?auto=compress&cs=tinysrgb&w=1200&h=800&fit=crop&crop=center"} 
-                            alt={campaign.title} 
-                            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)]"
-                        />
-                        
-                        {/* Cinematic Vignette & Gradients (Apple-like depth) */}
-                        <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors duration-1000"></div>
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
-                        
-                        {/* Content Overlay */}
-                        <div className="absolute inset-0 p-6 md:p-12 flex flex-col justify-between z-10">
-                            
-                            {/* Top Label */}
-                            <div className="flex justify-start">
-                                <motion.span 
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.2, duration: 0.6 }}
-                                    className="inline-flex items-center px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-[8px] md:text-[9px] font-bold tracking-[0.2em] uppercase border border-white/30 text-white shadow-sm"
-                                >
-                                    {campaign.label}
-                                </motion.span>
+                        <div className="flex flex-col p-6 md:p-10 relative z-10">
+                            {/* Top row */}
+                            <div className="flex items-center justify-between mb-6">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white">
+                                        <Sparkles size={20} />
+                                    </div>
+                                    <div>
+                                        <div className="text-xs text-gray-500 font-medium tracking-wide">Exclusive Spa Offer</div>
+                                        <div className="text-base md:text-lg font-bold text-gray-900">{campaign.title}</div>
+                                    </div>
+                                </div>
+                                <div className="text-right">
+                                    <div className="text-xs text-gray-500 font-medium tracking-wide">Discount</div>
+                                    <div className="text-base md:text-lg font-bold text-primary">{campaign.discountPercentage}% OFF</div>
+                                </div>
                             </div>
 
-                            <div className="flex items-end justify-between">
-                                <div className="flex flex-col text-white pr-4">
-                                    <h2 className="font-serif text-4xl md:text-6xl font-medium leading-tight tracking-tight mb-2 opacity-95 drop-shadow-lg max-w-[220px] md:max-w-[500px]">
-                                        {campaign.title}
-                                    </h2>
-                                    <p className="text-white/80 text-[13px] md:text-base hidden md:block max-w-md leading-relaxed font-light drop-shadow-md">
-                                        {campaign.description}
-                                    </p>
+                            {/* Flight Path / Main Text */}
+                            <div className="flex items-center justify-between py-6 relative">
+                                <div className="text-5xl md:text-7xl font-black text-gray-900 tracking-tighter w-[30%]">
+                                    SPA
                                 </div>
+                                <div className="flex-1 flex items-center justify-center relative px-4">
+                                    <div className="h-[2px] bg-gray-200 w-full border-dashed border-t-2 border-gray-300"></div>
+                                    <div className="w-12 h-12 bg-gray-900 rounded-full flex items-center justify-center text-white absolute transform -translate-y-1/2 top-1/2 shadow-md">
+                                        <Heart size={20} className="fill-current" />
+                                    </div>
+                                </div>
+                                <div className="text-5xl md:text-7xl font-black text-gray-900 tracking-tighter w-[30%] text-right truncate">
+                                    {campaign.title.split(' ').map(w => w[0]).join('').substring(0, 3).toUpperCase() || 'OFR'}
+                                </div>
+                            </div>
+                            
+                            <div className="flex items-center justify-between text-sm text-gray-500 font-medium px-1">
+                                <div className="w-[30%]">At your villa</div>
+                                <div className="w-[30%] text-right truncate">{campaign.label}</div>
+                            </div>
 
-                                {/* Minimal Apple-style Frosted Button */}
-                                <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-white/20 backdrop-blur-xl border border-white/30 text-white flex items-center justify-center shrink-0 shadow-[0_8px_32px_rgb(0,0,0,0.15)] group-hover:bg-white/30 group-hover:scale-105 group-active:scale-95 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]">
-                                    <ArrowRight size={20} strokeWidth={2.5} />
+                            <div className="mt-8 pt-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+                                <div className="flex flex-wrap gap-3">
+                                    {(campaign.startDate || campaign.endDate) && (
+                                    <div className="bg-gray-50 rounded-full px-4 py-2 flex items-center gap-2 text-sm text-gray-700 font-semibold border border-gray-100">
+                                        <Calendar size={16} /> 
+                                        {campaign.startDate ? new Date(campaign.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''}
+                                        {campaign.startDate && campaign.endDate ? ' - ' : ''}
+                                        {campaign.endDate ? new Date(campaign.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
+                                    </div>
+                                    )}
+                                    <div className="bg-gray-50 rounded-full px-4 py-2 flex items-center gap-2 text-sm text-gray-700 font-semibold border border-gray-100">
+                                        <Clock size={16} /> {campaign.duration.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                    </div>
+                                </div>
+                                <div className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                                    <span className="text-primary cursor-pointer hover:underline">Tap to view details</span>
+                                    <ArrowRight size={18} className="text-primary" />
                                 </div>
                             </div>
                         </div>
+
+                        {/* Cutouts to look like a ticket */}
+                        <div className="absolute top-[65%] -left-6 w-12 h-12 bg-white rounded-full border border-gray-200 border-r-0 shadow-inner z-20" style={{ boxShadow: 'inset -4px 0 6px -4px rgba(0,0,0,0.1)' }}></div>
+                        <div className="absolute top-[65%] -right-6 w-12 h-12 bg-white rounded-full border border-gray-200 border-l-0 shadow-inner z-20" style={{ boxShadow: 'inset 4px 0 6px -4px rgba(0,0,0,0.1)' }}></div>
+                        
+                        {/* Dashed line across the ticket */}
+                        <div className="absolute top-[65%] left-6 right-6 h-px border-t-2 border-dashed border-gray-200 mt-6 z-0"></div>
                     </motion.div>
                 </div>
                 )}
