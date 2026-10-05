@@ -54,17 +54,17 @@ export default function Footer() {
               </div>
 
               <div className="flex flex-col gap-3">
-                <span className="text-xs font-bold uppercase tracking-widest text-text-muted">Island Tours</span>
+                <span className="text-xs font-bold uppercase tracking-widest text-text-muted">Book a Tour</span>
                 <a 
                   href="https://www.balanceisland.com" 
                   target="_blank" 
                   rel="noopener noreferrer" 
-                  className="group flex items-center gap-3 px-5 py-2.5 bg-white border border-gray-200 hover:border-black rounded-full shadow-sm hover:shadow-md transition-all w-fit mt-0.5"
+                  className="group flex items-center gap-2.5 hover:opacity-80 transition-opacity"
                 >
-                  <span className="text-[14px] font-bold text-primary tracking-wide">Book a Tour</span>
-                  <div className="w-5 h-5 rounded-full bg-black text-white flex items-center justify-center transition-transform group-hover:translate-x-0.5">
+                  <span className="text-[#3c4043] font-bold text-lg tracking-tight font-sans">balanceisland.com</span>
+                  <div className="w-[22px] h-[22px] rounded-full bg-black text-white flex items-center justify-center transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 shadow-sm">
                     <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M7 17L17 7M17 7v6M17 7h-6" />
                     </svg>
                   </div>
                 </a>
