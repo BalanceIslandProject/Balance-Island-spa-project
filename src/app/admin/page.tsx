@@ -1169,36 +1169,39 @@ export default function AdminDashboard() {
                                                 {/* Mini Preview */}
                                                 <div>
                                                     <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5">Card Preview</label>
-                                                    <div className="relative w-full flex flex-row rounded-[24px] overflow-hidden shadow-sm group transition-colors duration-300 border border-gray-200 bg-black min-h-[160px]">
-                                                        {/* Left Section (Black) */}
-                                                        <div className="flex-1 bg-black text-white p-4 flex flex-col justify-between relative z-10">
+                                                    <div className="relative w-full flex flex-row rounded-[24px] overflow-hidden shadow-sm group transition-colors duration-300 border border-gray-200 bg-[#FAFAFA] min-h-[160px]">
+                                                        {/* Left Section (Blue) */}
+                                                        <div className="flex-1 bg-[#3b82f6] text-white p-4 flex flex-col justify-between relative z-10">
                                                             <div>
-                                                                <div className="inline-flex items-center text-[10px] font-bold tracking-wide uppercase mb-2 text-white">
+                                                                <div className="inline-flex items-center text-[10px] font-bold tracking-wide uppercase mb-2 text-white/90">
                                                                     {campaignLabel || `${discountPercentage}% OFF`}
                                                                 </div>
                                                                 <h3 className="text-xl font-bold leading-tight mb-1">
                                                                     {campaignTitle || 'Campaign Title'}
                                                                 </h3>
                                                                 {campaignDesc && (
-                                                                    <p className="text-white/70 text-[10px] line-clamp-2 leading-relaxed">
+                                                                    <p className="text-white/80 text-[10px] line-clamp-2 leading-relaxed">
                                                                         {campaignDesc}
                                                                     </p>
                                                                 )}
                                                             </div>
                                                             <div className="mt-3 flex items-center">
-                                                                <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-white border border-white/20 transition-transform group-hover:scale-105">
+                                                                <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center text-white transition-transform group-hover:scale-105">
                                                                     <ArrowRight size={12} />
                                                                 </div>
                                                             </div>
                                                         </div>
                                                         
                                                         {/* Divider with Cutouts */}
-                                                        <div className="relative w-0 flex flex-col justify-between items-center z-20 border-l-2 border-dashed border-white/20">
+                                                        <div className="relative w-0 flex flex-col justify-between items-center z-20">
                                                             {/* Top Cutout */}
-                                                            <div className="absolute top-0 -translate-x-1/2 -translate-y-1/2 w-6 h-6 bg-[#FAFAFA] rounded-full shadow-inner"></div>
+                                                            <div className="absolute top-0 -translate-x-1/2 -translate-y-1/2 w-6 h-6 bg-[#FAFAFA] rounded-full border border-gray-200 shadow-inner"></div>
                                                             
+                                                            {/* Vertical Dashed Line */}
+                                                            <div className="absolute top-0 bottom-0 -translate-x-1/2 border-l-[3px] border-dotted border-gray-300/70 z-[-1]"></div>
+
                                                             {/* Bottom Cutout */}
-                                                            <div className="absolute bottom-0 -translate-x-1/2 translate-y-1/2 w-6 h-6 bg-[#FAFAFA] rounded-full shadow-inner"></div>
+                                                            <div className="absolute bottom-0 -translate-x-1/2 translate-y-1/2 w-6 h-6 bg-[#FAFAFA] rounded-full border border-gray-200 shadow-inner"></div>
                                                         </div>
 
                                                         {/* Right Section (White) */}

@@ -476,36 +476,39 @@ export default function Home() {
                                             : 'w-full'
                                             }`}
                                     >
-                                        <div className="relative w-full flex flex-row rounded-[24px] overflow-hidden shadow-sm group transition-colors duration-300 border border-gray-200 bg-black min-h-[180px] md:min-h-[200px]">
-                                            {/* Left Section (Black) */}
-                                            <div className="flex-1 bg-black text-white p-5 md:p-6 flex flex-col justify-between relative z-10">
+                                        <div className="relative w-full flex flex-row rounded-[24px] overflow-hidden shadow-sm group transition-colors duration-300 border border-gray-200 bg-[#FAFAFA] min-h-[180px] md:min-h-[200px]">
+                                            {/* Left Section (Blue) */}
+                                            <div className="flex-1 bg-[#3b82f6] text-white p-5 md:p-6 flex flex-col justify-between relative z-10">
                                                 <div>
-                                                    <div className="inline-flex items-center text-[10px] md:text-xs font-bold tracking-wide uppercase mb-3 text-white">
+                                                    <div className="inline-flex items-center text-[10px] md:text-xs font-bold tracking-wide uppercase mb-3 text-white/90">
                                                         {camp.label || `${camp.discountPercentage}% OFF`}
                                                     </div>
                                                     <h3 className="text-xl md:text-2xl font-bold leading-tight mb-2">
                                                         {camp.title}
                                                     </h3>
                                                     {camp.description && (
-                                                        <p className="text-white/70 text-xs md:text-sm line-clamp-2 leading-relaxed max-w-[95%]">
+                                                        <p className="text-white/80 text-xs md:text-sm line-clamp-2 leading-relaxed max-w-[95%]">
                                                             {camp.description}
                                                         </p>
                                                     )}
                                                 </div>
                                                 <div className="mt-4 flex items-center">
-                                                    <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white border border-white/20 transition-transform group-hover:scale-105">
+                                                    <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white transition-transform group-hover:scale-105">
                                                         <ArrowRight size={14} />
                                                     </div>
                                                 </div>
                                             </div>
                                             
                                             {/* Divider with Cutouts */}
-                                            <div className="relative w-0 flex flex-col justify-between items-center z-20 border-l-2 border-dashed border-white/20">
+                                            <div className="relative w-0 flex flex-col justify-between items-center z-20">
                                                 {/* Top Cutout */}
-                                                <div className="absolute top-0 -translate-x-1/2 -translate-y-1/2 w-6 h-6 md:w-8 md:h-8 bg-white rounded-full shadow-inner"></div>
+                                                <div className="absolute top-0 -translate-x-1/2 -translate-y-1/2 w-6 h-6 md:w-8 md:h-8 bg-[#FAFAFA] rounded-full border border-gray-200 shadow-inner"></div>
                                                 
+                                                {/* Vertical Dashed Line */}
+                                                <div className="absolute top-0 bottom-0 -translate-x-1/2 border-l-[3px] border-dotted border-gray-300/70 z-[-1]"></div>
+
                                                 {/* Bottom Cutout */}
-                                                <div className="absolute bottom-0 -translate-x-1/2 translate-y-1/2 w-6 h-6 md:w-8 md:h-8 bg-white rounded-full shadow-inner"></div>
+                                                <div className="absolute bottom-0 -translate-x-1/2 translate-y-1/2 w-6 h-6 md:w-8 md:h-8 bg-[#FAFAFA] rounded-full border border-gray-200 shadow-inner"></div>
                                             </div>
 
                                             {/* Right Section (White) */}
