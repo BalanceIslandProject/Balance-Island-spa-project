@@ -250,39 +250,41 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                         className="relative w-full rounded-[24px] overflow-hidden bg-[#FAFAFA] border border-gray-200 group transition-colors duration-300 hover:bg-gray-50 mb-8 cursor-pointer"
                     >
-                        <div className="flex flex-col p-6 md:p-8 relative z-10">
+                        <div className="flex flex-col h-full p-6 md:p-8 relative z-10 pb-[100px] md:pb-[120px]">
                             {/* Top row: Badge and Icon */}
                             <div className="flex items-start justify-between mb-8">
-                                <div className="inline-flex items-center px-3 py-1.5 rounded-full bg-white border border-gray-200 text-xs font-bold text-gray-800 tracking-wide uppercase shadow-sm">
+                                <div className="inline-flex items-center px-4 py-2 rounded-full bg-black text-xs font-bold text-white tracking-wide uppercase shadow-sm">
                                     {campaign.label || `${campaign.discountPercentage}% OFF`}
                                 </div>
-                                <div className="w-10 h-10 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-400 group-hover:bg-primary group-hover:text-white group-hover:border-primary transition-all duration-300 shadow-sm">
+                                <div className="w-10 h-10 rounded-full bg-black flex items-center justify-center text-white shadow-sm transition-transform group-hover:scale-105">
                                     <ArrowRight size={18} />
                                 </div>
                             </div>
 
                             {/* Main Content */}
-                            <div className="mb-6">
+                            <div className="mb-6 flex-grow flex flex-col justify-center items-center text-center">
                                 <h3 className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight tracking-tight mb-3">
                                     {campaign.title}
                                 </h3>
                                 {campaign.description && (
-                                    <p className="text-gray-500 text-sm md:text-base line-clamp-2 leading-relaxed">
+                                    <p className="text-gray-500 text-sm md:text-base line-clamp-2 leading-relaxed max-w-[90%] mx-auto">
                                         {campaign.description}
                                     </p>
                                 )}
                             </div>
+                        </div>
 
-                            {/* Footer (Dates) */}
-                            <div className="pt-5 flex flex-wrap items-center gap-3">
+                        {/* Bottom Black Section */}
+                        <div className="absolute bottom-0 left-0 right-0 h-[88px] md:h-[100px] bg-black rounded-b-[24px] z-10 flex items-center px-6 md:px-8 border-t-2 border-dashed border-gray-200">
+                            <div className="flex flex-wrap items-center gap-3 w-full">
                                 {(campaign.startDate || campaign.endDate) ? (
-                                    <div className="text-[11px] md:text-xs text-gray-600 font-medium bg-white px-3 py-1.5 rounded-md border border-gray-200">
+                                    <div className="text-[11px] md:text-xs text-white font-medium bg-white/10 px-4 py-2 rounded-full border border-white/20 backdrop-blur-sm">
                                         {campaign.startDate ? new Date(campaign.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
                                         {campaign.startDate && campaign.endDate ? ' - ' : ''}
                                         {campaign.endDate ? new Date(campaign.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
                                     </div>
                                 ) : (
-                                    <div className="text-[11px] md:text-xs text-gray-600 font-medium bg-white px-3 py-1.5 rounded-md border border-gray-200">
+                                    <div className="text-[11px] md:text-xs text-white font-medium bg-white/10 px-4 py-2 rounded-full border border-white/20 backdrop-blur-sm">
                                         {campaign.duration.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
                                     </div>
                                 )}
@@ -292,9 +294,6 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                         {/* Cutouts to look like a ticket */}
                         <div className="absolute bottom-[72px] md:bottom-[76px] -left-4 md:-left-6 w-8 h-8 md:w-12 md:h-12 bg-white rounded-full border border-gray-200 border-r-0 shadow-inner z-20" style={{ boxShadow: 'inset -4px 0 6px -4px rgba(0,0,0,0.1)' }}></div>
                         <div className="absolute bottom-[72px] md:bottom-[76px] -right-4 md:-right-6 w-8 h-8 md:w-12 md:h-12 bg-white rounded-full border border-gray-200 border-l-0 shadow-inner z-20" style={{ boxShadow: 'inset 4px 0 6px -4px rgba(0,0,0,0.1)' }}></div>
-                        
-                        {/* Dashed line across the ticket */}
-                        <div className="absolute bottom-[88px] md:bottom-[100px] left-4 md:left-6 right-4 md:right-6 h-px border-t-2 border-dashed border-gray-200 z-0"></div>
                     </motion.div>
                 </div>
                 )}

@@ -1170,39 +1170,41 @@ export default function AdminDashboard() {
                                                 <div>
                                                     <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5">Card Preview</label>
                                                     <div className="relative w-full rounded-[24px] overflow-hidden bg-[#FAFAFA] border border-gray-200 group transition-colors duration-300">
-                                                        <div className="flex flex-col p-6 relative z-10 min-h-[180px]">
+                                                        <div className="flex flex-col relative z-10 min-h-[180px] p-6 pb-[72px]">
                                                             {/* Top row: Badge and Icon */}
                                                             <div className="flex items-start justify-between mb-6">
-                                                                <div className="inline-flex items-center px-3 py-1.5 rounded-full bg-white border border-gray-200 text-[10px] font-bold text-gray-800 tracking-wide uppercase shadow-sm">
+                                                                <div className="inline-flex items-center px-4 py-2 rounded-full bg-black text-[10px] font-bold text-white tracking-wide uppercase shadow-sm">
                                                                     {campaignLabel || `${discountPercentage}% OFF`}
                                                                 </div>
-                                                                <div className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-400 shadow-sm">
+                                                                <div className="w-8 h-8 rounded-full bg-black flex items-center justify-center text-white shadow-sm">
                                                                     <ArrowRight size={14} />
                                                                 </div>
                                                             </div>
 
                                                             {/* Main Content */}
-                                                            <div className="mb-4">
+                                                            <div className="mb-4 flex-grow flex flex-col justify-center items-center text-center">
                                                                 <h3 className="text-2xl font-bold text-gray-900 leading-tight tracking-tight mb-2">
                                                                     {campaignTitle || 'Campaign Title'}
                                                                 </h3>
                                                                 {campaignDesc && (
-                                                                    <p className="text-gray-500 text-xs line-clamp-2 leading-relaxed">
+                                                                    <p className="text-gray-500 text-xs line-clamp-2 leading-relaxed max-w-[90%] mx-auto">
                                                                         {campaignDesc}
                                                                     </p>
                                                                 )}
                                                             </div>
+                                                        </div>
 
-                                                            {/* Footer (Dates) */}
-                                                            <div className="mt-auto pt-4 flex flex-wrap items-center gap-2">
+                                                        {/* Bottom Black Section */}
+                                                        <div className="absolute bottom-0 left-0 right-0 h-[60px] bg-black rounded-b-[24px] z-10 flex items-center px-6 border-t-2 border-dashed border-gray-200">
+                                                            <div className="flex flex-wrap items-center gap-2 w-full">
                                                                 {(campaignStartDate || campaignEndDate) ? (
-                                                                    <div className="text-[10px] text-gray-600 font-medium bg-white px-2 py-1 rounded border border-gray-200">
+                                                                    <div className="text-[10px] text-white font-medium bg-white/10 px-3 py-1.5 rounded-full border border-white/20">
                                                                         {campaignStartDate ? new Date(campaignStartDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
                                                                         {campaignStartDate && campaignEndDate ? ' - ' : ''}
                                                                         {campaignEndDate ? new Date(campaignEndDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
                                                                     </div>
                                                                 ) : (
-                                                                    <div className="text-[10px] text-gray-600 font-medium bg-white px-2 py-1 rounded border border-gray-200">
+                                                                    <div className="text-[10px] text-white font-medium bg-white/10 px-3 py-1.5 rounded-full border border-white/20">
                                                                         {campaignDuration.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) || '1 Month'}
                                                                     </div>
                                                                 )}
@@ -1210,11 +1212,8 @@ export default function AdminDashboard() {
                                                         </div>
 
                                                         {/* Cutouts */}
-                                                        <div className="absolute bottom-[44px] -left-3 w-6 h-6 bg-white rounded-full border border-gray-200 border-r-0 shadow-inner z-20"></div>
-                                                        <div className="absolute bottom-[44px] -right-3 w-6 h-6 bg-white rounded-full border border-gray-200 border-l-0 shadow-inner z-20"></div>
-                                                        
-                                                        {/* Dashed line */}
-                                                        <div className="absolute bottom-[56px] left-3 right-3 h-px border-t border-dashed border-gray-200 z-0"></div>
+                                                        <div className="absolute bottom-[48px] -left-3 w-6 h-6 bg-white rounded-full border border-gray-200 border-r-0 shadow-inner z-20"></div>
+                                                        <div className="absolute bottom-[48px] -right-3 w-6 h-6 bg-white rounded-full border border-gray-200 border-l-0 shadow-inner z-20"></div>
                                                     </div>
                                                 </div>
 
