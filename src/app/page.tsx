@@ -476,55 +476,72 @@ export default function Home() {
                                             : 'w-full'
                                             }`}
                                     >
-                                        <div className="relative w-full rounded-[24px] overflow-hidden bg-[#FAFAFA] border border-gray-200 group transition-colors duration-300 hover:bg-gray-50">
-                                            {/* Top Black Section (Header) */}
-                                            <div className="absolute top-0 left-0 right-0 h-[72px] md:h-[80px] bg-black z-10 flex items-center justify-between px-6 md:px-8 border-b-2 border-dashed border-gray-200">
-                                                <div className="inline-flex items-center text-xs md:text-sm font-bold text-white tracking-wide uppercase">
-                                                    {camp.label || `${camp.discountPercentage}% OFF`}
-                                                </div>
-                                                <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/10 flex items-center justify-center text-white transition-transform group-hover:scale-105 border border-white/20">
-                                                    <ArrowRight size={16} className="md:w-[18px] md:h-[18px]" />
-                                                </div>
-                                            </div>
-
-                                            {/* Top Cutouts */}
-                                            <div className="absolute top-[56px] -left-4 md:-left-6 w-8 h-8 md:w-12 md:h-12 bg-white rounded-full border border-gray-200 border-r-0 shadow-inner z-20" style={{ boxShadow: 'inset -4px 0 6px -4px rgba(0,0,0,0.1)' }}></div>
-                                            <div className="absolute top-[56px] -right-4 md:-right-6 w-8 h-8 md:w-12 md:h-12 bg-white rounded-full border border-gray-200 border-l-0 shadow-inner z-20" style={{ boxShadow: 'inset 4px 0 6px -4px rgba(0,0,0,0.1)' }}></div>
-
-                                            <div className="flex flex-col h-full p-6 md:p-8 relative z-10 pt-[100px] md:pt-[120px] pb-[100px] md:pb-[120px]">
-                                                {/* Main Content */}
-                                                <div className="mb-6 flex-grow flex flex-col justify-center items-center text-center">
-                                                    <h3 className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight tracking-tight mb-3">
+                                        <div className="relative w-full flex flex-row rounded-[24px] overflow-hidden shadow-sm group transition-colors duration-300 border border-gray-200 bg-black min-h-[180px] md:min-h-[200px]">
+                                            {/* Left Section (Black) */}
+                                            <div className="flex-1 bg-black text-white p-5 md:p-6 flex flex-col justify-between relative z-10">
+                                                <div>
+                                                    <div className="inline-flex items-center text-[10px] md:text-xs font-bold tracking-wide uppercase mb-3 text-white">
+                                                        {camp.label || `${camp.discountPercentage}% OFF`}
+                                                    </div>
+                                                    <h3 className="text-xl md:text-2xl font-bold leading-tight mb-2">
                                                         {camp.title}
                                                     </h3>
                                                     {camp.description && (
-                                                        <p className="text-gray-500 text-sm md:text-base line-clamp-2 leading-relaxed max-w-[90%] mx-auto">
+                                                        <p className="text-white/70 text-xs md:text-sm line-clamp-2 leading-relaxed max-w-[95%]">
                                                             {camp.description}
                                                         </p>
                                                     )}
                                                 </div>
-                                            </div>
-
-                                            {/* Bottom Black Section */}
-                                            <div className="absolute bottom-0 left-0 right-0 h-[88px] md:h-[100px] bg-black z-10 flex items-center px-6 md:px-8 border-t-2 border-dashed border-gray-200">
-                                                <div className="flex flex-wrap items-center gap-3 w-full">
-                                                    {(camp.startDate || camp.endDate) ? (
-                                                        <div className="text-[11px] md:text-xs text-white font-medium bg-white/10 px-4 py-2 rounded-full border border-white/20 backdrop-blur-sm">
-                                                            Valid until {camp.startDate ? new Date(camp.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
-                                                            {camp.startDate && camp.endDate ? ' - ' : ''}
-                                                            {camp.endDate ? new Date(camp.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
-                                                        </div>
-                                                    ) : (
-                                                        <div className="text-[11px] md:text-xs text-white font-medium bg-white/10 px-4 py-2 rounded-full border border-white/20 backdrop-blur-sm">
-                                                            {camp.duration.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
-                                                        </div>
-                                                    )}
+                                                <div className="mt-4 flex items-center">
+                                                    <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white border border-white/20 transition-transform group-hover:scale-105">
+                                                        <ArrowRight size={14} />
+                                                    </div>
                                                 </div>
                                             </div>
+                                            
+                                            {/* Divider with Cutouts */}
+                                            <div className="relative w-0 flex flex-col justify-between items-center z-20 border-l-2 border-dashed border-white/20">
+                                                {/* Top Cutout */}
+                                                <div className="absolute top-0 -translate-x-1/2 -translate-y-1/2 w-6 h-6 md:w-8 md:h-8 bg-white rounded-full shadow-inner"></div>
+                                                
+                                                {/* Bottom Cutout */}
+                                                <div className="absolute bottom-0 -translate-x-1/2 translate-y-1/2 w-6 h-6 md:w-8 md:h-8 bg-white rounded-full shadow-inner"></div>
+                                            </div>
 
-                                            {/* Cutouts to look like a ticket */}
-                                            <div className="absolute bottom-[72px] md:bottom-[76px] -left-4 md:-left-6 w-8 h-8 md:w-12 md:h-12 bg-white rounded-full border border-gray-200 border-r-0 shadow-inner z-20" style={{ boxShadow: 'inset -4px 0 6px -4px rgba(0,0,0,0.1)' }}></div>
-                                            <div className="absolute bottom-[72px] md:bottom-[76px] -right-4 md:-right-6 w-8 h-8 md:w-12 md:h-12 bg-white rounded-full border border-gray-200 border-l-0 shadow-inner z-20" style={{ boxShadow: 'inset 4px 0 6px -4px rgba(0,0,0,0.1)' }}></div>
+                                            {/* Right Section (White) */}
+                                            <div className="w-[90px] md:w-[120px] bg-white flex flex-col items-center justify-center py-4 px-2 shrink-0 text-center relative z-10">
+                                                <div className="flex flex-col items-center justify-center gap-3">
+                                                    {/* Start Date */}
+                                                    <div className="flex flex-col items-center">
+                                                        <div className="text-[8px] md:text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Start</div>
+                                                        {camp.startDate ? (
+                                                            <>
+                                                                <div className="text-[10px] md:text-xs font-bold text-gray-800 uppercase leading-none">{new Date(camp.startDate).toLocaleDateString('en-US', { month: 'short' })}</div>
+                                                                <div className="text-xl md:text-2xl font-black text-black leading-none my-0.5">{new Date(camp.startDate).getDate()}</div>
+                                                                <div className="text-[9px] md:text-[10px] font-bold text-gray-500 uppercase leading-none">{new Date(camp.startDate).getFullYear()}</div>
+                                                            </>
+                                                        ) : (
+                                                            <div className="text-xs md:text-sm font-bold text-black uppercase">NOW</div>
+                                                        )}
+                                                    </div>
+                                                    
+                                                    <div className="w-6 h-px bg-gray-200"></div>
+
+                                                    {/* End Date */}
+                                                    <div className="flex flex-col items-center">
+                                                        <div className="text-[8px] md:text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">End</div>
+                                                        {camp.endDate ? (
+                                                            <>
+                                                                <div className="text-[10px] md:text-xs font-bold text-gray-800 uppercase leading-none">{new Date(camp.endDate).toLocaleDateString('en-US', { month: 'short' })}</div>
+                                                                <div className="text-xl md:text-2xl font-black text-black leading-none my-0.5">{new Date(camp.endDate).getDate()}</div>
+                                                                <div className="text-[9px] md:text-[10px] font-bold text-gray-500 uppercase leading-none">{new Date(camp.endDate).getFullYear()}</div>
+                                                            </>
+                                                        ) : (
+                                                            <div className="text-[10px] md:text-xs font-bold text-black uppercase">{camp.duration.replace('_', ' ')}</div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 ))}

@@ -1169,55 +1169,72 @@ export default function AdminDashboard() {
                                                 {/* Mini Preview */}
                                                 <div>
                                                     <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5">Card Preview</label>
-                                                    <div className="relative w-full rounded-[24px] overflow-hidden bg-[#FAFAFA] border border-gray-200 group transition-colors duration-300">
-                                                        {/* Top Black Section (Header) */}
-                                                        <div className="absolute top-0 left-0 right-0 h-[56px] bg-black z-10 flex items-center justify-between px-6 border-b-2 border-dashed border-gray-200">
-                                                            <div className="inline-flex items-center text-[10px] font-bold text-white tracking-wide uppercase">
-                                                                {campaignLabel || `${discountPercentage}% OFF`}
-                                                            </div>
-                                                            <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white border border-white/20">
-                                                                <ArrowRight size={14} />
-                                                            </div>
-                                                        </div>
-
-                                                        {/* Top Cutouts */}
-                                                        <div className="absolute top-[44px] -left-3 w-6 h-6 bg-white rounded-full border border-gray-200 border-r-0 shadow-inner z-20"></div>
-                                                        <div className="absolute top-[44px] -right-3 w-6 h-6 bg-white rounded-full border border-gray-200 border-l-0 shadow-inner z-20"></div>
-
-                                                        <div className="flex flex-col relative z-10 min-h-[180px] p-6 pt-[72px] pb-[72px]">
-                                                            {/* Main Content */}
-                                                            <div className="mb-4 flex-grow flex flex-col justify-center items-center text-center">
-                                                                <h3 className="text-2xl font-bold text-gray-900 leading-tight tracking-tight mb-2">
+                                                    <div className="relative w-full flex flex-row rounded-[24px] overflow-hidden shadow-sm group transition-colors duration-300 border border-gray-200 bg-black min-h-[160px]">
+                                                        {/* Left Section (Black) */}
+                                                        <div className="flex-1 bg-black text-white p-4 flex flex-col justify-between relative z-10">
+                                                            <div>
+                                                                <div className="inline-flex items-center text-[10px] font-bold tracking-wide uppercase mb-2 text-white">
+                                                                    {campaignLabel || `${discountPercentage}% OFF`}
+                                                                </div>
+                                                                <h3 className="text-xl font-bold leading-tight mb-1">
                                                                     {campaignTitle || 'Campaign Title'}
                                                                 </h3>
                                                                 {campaignDesc && (
-                                                                    <p className="text-gray-500 text-xs line-clamp-2 leading-relaxed max-w-[90%] mx-auto">
+                                                                    <p className="text-white/70 text-[10px] line-clamp-2 leading-relaxed">
                                                                         {campaignDesc}
                                                                     </p>
                                                                 )}
                                                             </div>
-                                                        </div>
-
-                                                        {/* Bottom Black Section */}
-                                                        <div className="absolute bottom-0 left-0 right-0 h-[60px] bg-black z-10 flex items-center px-6 border-t-2 border-dashed border-gray-200">
-                                                            <div className="flex flex-wrap items-center gap-2 w-full">
-                                                                {(campaignStartDate || campaignEndDate) ? (
-                                                                    <div className="text-[10px] text-white font-medium bg-white/10 px-3 py-1.5 rounded-full border border-white/20">
-                                                                        Valid until {campaignStartDate ? new Date(campaignStartDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
-                                                                        {campaignStartDate && campaignEndDate ? ' - ' : ''}
-                                                                        {campaignEndDate ? new Date(campaignEndDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
-                                                                    </div>
-                                                                ) : (
-                                                                    <div className="text-[10px] text-white font-medium bg-white/10 px-3 py-1.5 rounded-full border border-white/20">
-                                                                        {campaignDuration.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) || '1 Month'}
-                                                                    </div>
-                                                                )}
+                                                            <div className="mt-3 flex items-center">
+                                                                <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-white border border-white/20 transition-transform group-hover:scale-105">
+                                                                    <ArrowRight size={12} />
+                                                                </div>
                                                             </div>
                                                         </div>
+                                                        
+                                                        {/* Divider with Cutouts */}
+                                                        <div className="relative w-0 flex flex-col justify-between items-center z-20 border-l-2 border-dashed border-white/20">
+                                                            {/* Top Cutout */}
+                                                            <div className="absolute top-0 -translate-x-1/2 -translate-y-1/2 w-6 h-6 bg-[#FAFAFA] rounded-full shadow-inner"></div>
+                                                            
+                                                            {/* Bottom Cutout */}
+                                                            <div className="absolute bottom-0 -translate-x-1/2 translate-y-1/2 w-6 h-6 bg-[#FAFAFA] rounded-full shadow-inner"></div>
+                                                        </div>
 
-                                                        {/* Cutouts */}
-                                                        <div className="absolute bottom-[48px] -left-3 w-6 h-6 bg-white rounded-full border border-gray-200 border-r-0 shadow-inner z-20"></div>
-                                                        <div className="absolute bottom-[48px] -right-3 w-6 h-6 bg-white rounded-full border border-gray-200 border-l-0 shadow-inner z-20"></div>
+                                                        {/* Right Section (White) */}
+                                                        <div className="w-[80px] bg-white flex flex-col items-center justify-center py-3 px-2 shrink-0 text-center relative z-10">
+                                                            <div className="flex flex-col items-center justify-center gap-2">
+                                                                {/* Start Date */}
+                                                                <div className="flex flex-col items-center">
+                                                                    <div className="text-[7px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Start</div>
+                                                                    {campaignStartDate ? (
+                                                                        <>
+                                                                            <div className="text-[9px] font-bold text-gray-800 uppercase leading-none">{new Date(campaignStartDate).toLocaleDateString('en-US', { month: 'short' })}</div>
+                                                                            <div className="text-lg font-black text-black leading-none my-0.5">{new Date(campaignStartDate).getDate()}</div>
+                                                                            <div className="text-[8px] font-bold text-gray-500 uppercase leading-none">{new Date(campaignStartDate).getFullYear()}</div>
+                                                                        </>
+                                                                    ) : (
+                                                                        <div className="text-[10px] font-bold text-black uppercase">NOW</div>
+                                                                    )}
+                                                                </div>
+                                                                
+                                                                <div className="w-4 h-px bg-gray-200"></div>
+
+                                                                {/* End Date */}
+                                                                <div className="flex flex-col items-center">
+                                                                    <div className="text-[7px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">End</div>
+                                                                    {campaignEndDate ? (
+                                                                        <>
+                                                                            <div className="text-[9px] font-bold text-gray-800 uppercase leading-none">{new Date(campaignEndDate).toLocaleDateString('en-US', { month: 'short' })}</div>
+                                                                            <div className="text-lg font-black text-black leading-none my-0.5">{new Date(campaignEndDate).getDate()}</div>
+                                                                            <div className="text-[8px] font-bold text-gray-500 uppercase leading-none">{new Date(campaignEndDate).getFullYear()}</div>
+                                                                        </>
+                                                                    ) : (
+                                                                        <div className="text-[9px] font-bold text-black uppercase">{campaignDuration.replace('_', ' ')}</div>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
 
