@@ -36,20 +36,39 @@ export default function Footer() {
               Bali's premier luxury mobile spa. Bringing 5-star professional massages and organic wellness treatments directly to your private villa or hotel.
             </p>
 
-            <div className="flex flex-col gap-3">
-              <span className="text-xs font-bold uppercase tracking-widest text-text-muted">Find us on</span>
-              
-              <a href="https://share.google/7evzKgW2VdC2C9QWY" target="_blank" rel="noopener noreferrer" className="domain-ubud-only inline-flex hover:opacity-80 transition-opacity">
-                <GoogleReviewsLogo />
-              </a>
-              
-              <a href="https://share.google/mA7g8NkNuB37g8WHs" target="_blank" rel="noopener noreferrer" className="domain-bali-only inline-flex hover:opacity-80 transition-opacity">
-                <GoogleReviewsLogo />
-              </a>
-              
-              <a href="https://share.google/LRhEtZHpMLBAg9ySs" target="_blank" rel="noopener noreferrer" className="domain-therapick-only inline-flex hover:opacity-80 transition-opacity">
-                <GoogleReviewsLogo />
-              </a>
+            <div className="flex flex-wrap items-start gap-12 md:gap-20">
+              <div className="flex flex-col gap-3">
+                <span className="text-xs font-bold uppercase tracking-widest text-text-muted">Find us on</span>
+                
+                <a href="https://share.google/7evzKgW2VdC2C9QWY" target="_blank" rel="noopener noreferrer" className="domain-ubud-only inline-flex hover:opacity-80 transition-opacity">
+                  <GoogleReviewsLogo />
+                </a>
+                
+                <a href="https://share.google/mA7g8NkNuB37g8WHs" target="_blank" rel="noopener noreferrer" className="domain-bali-only inline-flex hover:opacity-80 transition-opacity">
+                  <GoogleReviewsLogo />
+                </a>
+                
+                <a href="https://share.google/LRhEtZHpMLBAg9ySs" target="_blank" rel="noopener noreferrer" className="domain-therapick-only inline-flex hover:opacity-80 transition-opacity">
+                  <GoogleReviewsLogo />
+                </a>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                <span className="text-xs font-bold uppercase tracking-widest text-text-muted">Island Tours</span>
+                <a 
+                  href="https://www.balanceisland.com" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="group flex items-center gap-3 px-5 py-2.5 bg-white border border-gray-200 hover:border-black rounded-full shadow-sm hover:shadow-md transition-all w-fit mt-0.5"
+                >
+                  <span className="text-[14px] font-bold text-primary tracking-wide">Book a Tour</span>
+                  <div className="w-5 h-5 rounded-full bg-black text-white flex items-center justify-center transition-transform group-hover:translate-x-0.5">
+                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                    </svg>
+                  </div>
+                </a>
+              </div>
             </div>
           </div>
 
