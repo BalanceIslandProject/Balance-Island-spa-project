@@ -476,47 +476,60 @@ export default function Home() {
                                             : 'w-full'
                                             }`}
                                     >
-                                        <div className="relative w-full h-[220px] sm:h-[250px] md:h-[280px] rounded-[24px] md:rounded-[28px] overflow-hidden shadow-lg group bg-gradient-to-br from-neutral-900 via-stone-900 to-black border border-black/15">
-                                            {/* Background Image */}
-                                            {(camp.image_url || camp.image) && (
-                                                <Image
-                                                    src={(camp.image_url || camp.image) as string}
-                                                    alt={camp.title}
-                                                    fill
-                                                    priority={idx === 0}
-                                                    loading={idx === 0 ? "eager" : "lazy"}
-                                                    decoding="async"
-                                                    sizes="(max-width: 768px) 90vw, 480px"
-                                                    className="object-cover opacity-85 group-hover:scale-105 transition-transform duration-700 ease-out"
-                                                />
-                                            )}
-
-                                            {/* Cinematic Contrast Overlay */}
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/45 to-black/20"></div>
-
-                                            {/* Card Content */}
-                                            <div className="absolute inset-0 p-5 md:p-7 flex flex-col justify-between z-10 text-white">
-                                                {/* Top Badge */}
-                                                <div className="flex items-center justify-start">
-                                                    <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-md text-[8px] md:text-[9px] font-bold tracking-[0.25em] uppercase border border-white/30 text-white shadow-sm">
-                                                        {camp.label || 'SPECIAL PROMO'}
-                                                    </span>
+                                        <div className="relative w-full h-[220px] sm:h-[250px] md:h-[280px] rounded-[24px] md:rounded-[28px] overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.06)] hover:shadow-[0_16px_40px_rgb(0,0,0,0.1)] group bg-white border border-gray-100 transition-all duration-500">
+                                            <div className="flex flex-col h-full p-5 md:p-7 relative z-10">
+                                                {/* Top row */}
+                                                <div className="flex items-center justify-between mb-4 md:mb-6">
+                                                    <div>
+                                                        <div className="text-[10px] md:text-xs text-gray-500 font-medium tracking-wide">Spa Offer</div>
+                                                        <div className="text-sm md:text-base font-bold text-gray-900">{camp.title}</div>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <div className="text-[10px] md:text-xs text-gray-500 font-medium tracking-wide">Discount</div>
+                                                        <div className="text-sm md:text-base font-bold text-primary">{camp.discountPercentage}% OFF</div>
+                                                    </div>
                                                 </div>
 
-                                                {/* Bottom Text & Icon */}
-                                                <div className="flex items-end justify-between gap-4 w-full">
-                                                    <div className="min-w-0 pr-2">
-                                                        <h3 className="font-sans text-4xl md:text-5xl font-medium leading-[1.1] text-white drop-shadow-md tracking-tight">
-                                                            {camp.title}
-                                                        </h3>
+                                                {/* Flight Path / Main Text */}
+                                                <div className="flex items-center justify-between py-4 md:py-6 relative flex-grow">
+                                                    <div className="text-4xl sm:text-5xl md:text-6xl font-black text-gray-900 tracking-tighter w-[30%]">
+                                                        SPA
                                                     </div>
+                                                    <div className="flex-1 flex items-center justify-center relative px-2 md:px-4">
+                                                        <div className="h-[2px] bg-gray-200 w-full border-dashed border-t-2 border-gray-300"></div>
+                                                    </div>
+                                                    <div className="text-4xl sm:text-5xl md:text-6xl font-black text-gray-900 tracking-tighter w-[30%] text-right truncate">
+                                                        {camp.title.split(' ').map((w: string) => w[0]).join('').substring(0, 3).toUpperCase() || 'OFR'}
+                                                    </div>
+                                                </div>
+                                                
+                                                <div className="flex items-center justify-between text-xs md:text-sm text-gray-500 font-medium px-1 mb-4 md:mb-6">
+                                                    <div className="w-[30%]">At your villa</div>
+                                                    <div className="w-[30%] text-right truncate">{camp.label}</div>
+                                                </div>
 
-                                                    {/* Arrow Button */}
-                                                    <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-black/60 backdrop-blur-xl border border-white/30 text-white flex items-center justify-center shrink-0 shadow-[0_8px_32px_rgb(0,0,0,0.15)] group-hover:bg-black/80 group-hover:scale-105 group-active:scale-95 transition-all duration-500">
-                                                        <ArrowRight size={24} strokeWidth={2} />
+                                                <div className="mt-auto border-t border-dashed border-gray-200 pt-4 md:pt-6 flex flex-wrap items-end justify-between gap-3">
+                                                    <div className="flex flex-wrap gap-2 md:gap-3">
+                                                        {(camp.startDate || camp.endDate) && (
+                                                        <div className="bg-gray-50 rounded-full px-3 py-1.5 md:px-4 md:py-2 flex items-center gap-2 text-xs md:text-sm text-gray-700 font-semibold border border-gray-100">
+                                                            {camp.startDate ? new Date(camp.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''}
+                                                            {camp.startDate && camp.endDate ? ' - ' : ''}
+                                                            {camp.endDate ? new Date(camp.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
+                                                        </div>
+                                                        )}
+                                                        <div className="bg-gray-50 rounded-full px-3 py-1.5 md:px-4 md:py-2 flex items-center gap-2 text-xs md:text-sm text-gray-700 font-semibold border border-gray-100">
+                                                            {camp.duration.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
+
+                                            {/* Cutouts to look like a ticket */}
+                                            <div className="absolute top-1/2 -translate-y-1/2 -left-4 md:-left-6 w-8 h-8 md:w-12 md:h-12 bg-[#F5F5F7] sm:bg-white rounded-full border border-gray-200 border-r-0 shadow-inner z-20" style={{ boxShadow: 'inset -4px 0 6px -4px rgba(0,0,0,0.1)' }}></div>
+                                            <div className="absolute top-1/2 -translate-y-1/2 -right-4 md:-right-6 w-8 h-8 md:w-12 md:h-12 bg-[#F5F5F7] sm:bg-white rounded-full border border-gray-200 border-l-0 shadow-inner z-20" style={{ boxShadow: 'inset 4px 0 6px -4px rgba(0,0,0,0.1)' }}></div>
+                                            
+                                            {/* Dashed line across the ticket */}
+                                            <div className="absolute top-1/2 -translate-y-1/2 left-4 md:left-6 right-4 md:right-6 h-px border-t-2 border-dashed border-gray-200 z-0"></div>
                                         </div>
                                     </div>
                                 ))}
