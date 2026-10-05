@@ -1170,17 +1170,15 @@ export default function AdminDashboard() {
                                                 <div>
                                                     <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5">Card Preview</label>
                                                     <div className="relative w-full rounded-[24px] overflow-hidden bg-[#FAFAFA] border border-gray-200 group transition-colors duration-300">
-                                                        <div className="flex flex-col relative z-10 min-h-[180px] p-6 pb-[72px]">
-                                                            {/* Top row: Badge and Icon */}
-                                                            <div className="flex items-start justify-between mb-6">
-                                                                <div className="inline-flex items-center px-4 py-2 rounded-full bg-black text-[10px] font-bold text-white tracking-wide uppercase shadow-sm">
-                                                                    {campaignLabel || `${discountPercentage}% OFF`}
-                                                                </div>
-                                                                <div className="w-8 h-8 rounded-full bg-black flex items-center justify-center text-white shadow-sm">
-                                                                    <ArrowRight size={14} />
-                                                                </div>
-                                                            </div>
+                                                        {/* Top Badges Hugging Corners */}
+                                                        <div className="absolute top-0 left-0 bg-black text-[10px] font-bold text-white tracking-wide uppercase px-3 py-1.5 rounded-br-[24px] shadow-sm z-20">
+                                                            {campaignLabel || `${discountPercentage}% OFF`}
+                                                        </div>
+                                                        <div className="absolute top-0 right-0 bg-black w-8 h-8 flex items-center justify-center text-white rounded-bl-[24px] shadow-sm z-20">
+                                                            <ArrowRight size={14} />
+                                                        </div>
 
+                                                        <div className="flex flex-col relative z-10 min-h-[180px] p-6 pt-[48px] pb-[72px]">
                                                             {/* Main Content */}
                                                             <div className="mb-4 flex-grow flex flex-col justify-center items-center text-center">
                                                                 <h3 className="text-2xl font-bold text-gray-900 leading-tight tracking-tight mb-2">
@@ -1195,11 +1193,11 @@ export default function AdminDashboard() {
                                                         </div>
 
                                                         {/* Bottom Black Section */}
-                                                        <div className="absolute bottom-0 left-0 right-0 h-[60px] bg-black rounded-b-[24px] z-10 flex items-center px-6 border-t-2 border-dashed border-gray-200">
+                                                        <div className="absolute bottom-0 left-0 right-0 h-[60px] bg-black z-10 flex items-center px-6 border-t-2 border-dashed border-gray-200">
                                                             <div className="flex flex-wrap items-center gap-2 w-full">
                                                                 {(campaignStartDate || campaignEndDate) ? (
                                                                     <div className="text-[10px] text-white font-medium bg-white/10 px-3 py-1.5 rounded-full border border-white/20">
-                                                                        {campaignStartDate ? new Date(campaignStartDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
+                                                                        Valid until {campaignStartDate ? new Date(campaignStartDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
                                                                         {campaignStartDate && campaignEndDate ? ' - ' : ''}
                                                                         {campaignEndDate ? new Date(campaignEndDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
                                                                     </div>
