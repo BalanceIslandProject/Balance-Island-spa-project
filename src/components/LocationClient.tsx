@@ -254,9 +254,6 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                             {/* Top row */}
                             <div className="flex items-center justify-between mb-6">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white">
-                                        <Sparkles size={20} />
-                                    </div>
                                     <div>
                                         <div className="text-xs text-gray-500 font-medium tracking-wide">Exclusive Spa Offer</div>
                                         <div className="text-base md:text-lg font-bold text-gray-900">{campaign.title}</div>
@@ -275,9 +272,6 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                 </div>
                                 <div className="flex-1 flex items-center justify-center relative px-4">
                                     <div className="h-[2px] bg-gray-200 w-full border-dashed border-t-2 border-gray-300"></div>
-                                    <div className="w-12 h-12 bg-gray-900 rounded-full flex items-center justify-center text-white absolute transform -translate-y-1/2 top-1/2 shadow-md">
-                                        <Heart size={20} className="fill-current" />
-                                    </div>
                                 </div>
                                 <div className="text-5xl md:text-7xl font-black text-gray-900 tracking-tighter w-[30%] text-right truncate">
                                     {campaign.title.split(' ').map(w => w[0]).join('').substring(0, 3).toUpperCase() || 'OFR'}
@@ -293,14 +287,13 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                 <div className="flex flex-wrap gap-3">
                                     {(campaign.startDate || campaign.endDate) && (
                                     <div className="bg-gray-50 rounded-full px-4 py-2 flex items-center gap-2 text-sm text-gray-700 font-semibold border border-gray-100">
-                                        <Calendar size={16} /> 
                                         {campaign.startDate ? new Date(campaign.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''}
                                         {campaign.startDate && campaign.endDate ? ' - ' : ''}
                                         {campaign.endDate ? new Date(campaign.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
                                     </div>
                                     )}
                                     <div className="bg-gray-50 rounded-full px-4 py-2 flex items-center gap-2 text-sm text-gray-700 font-semibold border border-gray-100">
-                                        <Clock size={16} /> {campaign.duration.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                        {campaign.duration.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
                                     </div>
                                 </div>
                                 <div className="text-lg font-bold text-gray-900 flex items-center gap-2">
@@ -311,11 +304,11 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                         </div>
 
                         {/* Cutouts to look like a ticket */}
-                        <div className="absolute top-[65%] -left-6 w-12 h-12 bg-white rounded-full border border-gray-200 border-r-0 shadow-inner z-20" style={{ boxShadow: 'inset -4px 0 6px -4px rgba(0,0,0,0.1)' }}></div>
-                        <div className="absolute top-[65%] -right-6 w-12 h-12 bg-white rounded-full border border-gray-200 border-l-0 shadow-inner z-20" style={{ boxShadow: 'inset 4px 0 6px -4px rgba(0,0,0,0.1)' }}></div>
+                        <div className="absolute top-1/2 -translate-y-1/2 -left-6 w-12 h-12 bg-white rounded-full border border-gray-200 border-r-0 shadow-inner z-20" style={{ boxShadow: 'inset -4px 0 6px -4px rgba(0,0,0,0.1)' }}></div>
+                        <div className="absolute top-1/2 -translate-y-1/2 -right-6 w-12 h-12 bg-white rounded-full border border-gray-200 border-l-0 shadow-inner z-20" style={{ boxShadow: 'inset 4px 0 6px -4px rgba(0,0,0,0.1)' }}></div>
                         
                         {/* Dashed line across the ticket */}
-                        <div className="absolute top-[65%] left-6 right-6 h-px border-t-2 border-dashed border-gray-200 mt-6 z-0"></div>
+                        <div className="absolute top-1/2 -translate-y-1/2 left-6 right-6 h-px border-t-2 border-dashed border-gray-200 z-0"></div>
                     </motion.div>
                 </div>
                 )}

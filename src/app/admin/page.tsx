@@ -1173,9 +1173,6 @@ export default function AdminDashboard() {
                                                         {/* Top row */}
                                                         <div className="flex items-start justify-between relative z-10 mb-4">
                                                             <div className="flex items-center gap-2">
-                                                                <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-white shrink-0">
-                                                                    <Sparkles size={12} />
-                                                                </div>
                                                                 <div>
                                                                     <div className="text-[9px] text-gray-500 font-medium">Spa Offer</div>
                                                                     <div className="text-xs font-bold text-gray-900">{campaignLabel || 'PROMO'}</div>
@@ -1194,9 +1191,6 @@ export default function AdminDashboard() {
                                                             </div>
                                                             <div className="flex-1 flex items-center justify-center relative px-2">
                                                                 <div className="h-px bg-gray-300 w-full border-dashed border-t border-gray-400"></div>
-                                                                <div className="w-6 h-6 bg-gray-900 rounded-full flex items-center justify-center text-white absolute">
-                                                                    <Heart size={10} className="fill-current" />
-                                                                </div>
                                                             </div>
                                                             <div className="text-2xl font-black text-gray-900 tracking-tighter w-1/3 truncate text-right">
                                                                 {campaignTitle?.substring(0, 3).toUpperCase() || 'OFR'}
@@ -1208,12 +1202,12 @@ export default function AdminDashboard() {
                                                             <div className="flex gap-2">
                                                                 {campaignStartDate && (
                                                                     <div className="bg-gray-100 rounded-full px-2 py-1 flex items-center gap-1 text-[9px] text-gray-700 font-medium">
-                                                                        <Calendar size={10} /> {new Date(campaignStartDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                                                        {new Date(campaignStartDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                                                                     </div>
                                                                 )}
                                                                 {campaignEndDate && (
                                                                     <div className="bg-gray-100 rounded-full px-2 py-1 flex items-center gap-1 text-[9px] text-gray-700 font-medium">
-                                                                        <Clock size={10} /> until {new Date(campaignEndDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                                                        until {new Date(campaignEndDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                                                                     </div>
                                                                 )}
                                                             </div>
