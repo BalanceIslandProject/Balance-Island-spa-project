@@ -273,20 +273,28 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                 )}
                             </div>
 
-                            {/* Footer (Dates / Duration) */}
-                            <div className="pt-5 border-t border-gray-200 flex flex-wrap items-center gap-3">
-                                {(campaign.startDate || campaign.endDate) && (
+                            {/* Footer (Dates) */}
+                            <div className="pt-5 flex flex-wrap items-center gap-3">
+                                {(campaign.startDate || campaign.endDate) ? (
                                     <div className="text-[11px] md:text-xs text-gray-600 font-medium bg-white px-3 py-1.5 rounded-md border border-gray-200">
-                                        {campaign.startDate ? new Date(campaign.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''}
+                                        {campaign.startDate ? new Date(campaign.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
                                         {campaign.startDate && campaign.endDate ? ' - ' : ''}
-                                        {campaign.endDate ? new Date(campaign.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''}
+                                        {campaign.endDate ? new Date(campaign.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
+                                    </div>
+                                ) : (
+                                    <div className="text-[11px] md:text-xs text-gray-600 font-medium bg-white px-3 py-1.5 rounded-md border border-gray-200">
+                                        {campaign.duration.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
                                     </div>
                                 )}
-                                <div className="text-[11px] md:text-xs text-gray-600 font-medium bg-white px-3 py-1.5 rounded-md border border-gray-200">
-                                    {campaign.duration.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                                </div>
                             </div>
                         </div>
+
+                        {/* Cutouts to look like a ticket */}
+                        <div className="absolute bottom-[72px] md:bottom-[76px] -left-4 md:-left-6 w-8 h-8 md:w-12 md:h-12 bg-white rounded-full border border-gray-200 border-r-0 shadow-inner z-20" style={{ boxShadow: 'inset -4px 0 6px -4px rgba(0,0,0,0.1)' }}></div>
+                        <div className="absolute bottom-[72px] md:bottom-[76px] -right-4 md:-right-6 w-8 h-8 md:w-12 md:h-12 bg-white rounded-full border border-gray-200 border-l-0 shadow-inner z-20" style={{ boxShadow: 'inset 4px 0 6px -4px rgba(0,0,0,0.1)' }}></div>
+                        
+                        {/* Dashed line across the ticket */}
+                        <div className="absolute bottom-[88px] md:bottom-[100px] left-4 md:left-6 right-4 md:right-6 h-px border-t-2 border-dashed border-gray-200 z-0"></div>
                     </motion.div>
                 </div>
                 )}

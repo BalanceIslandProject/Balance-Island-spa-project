@@ -18,6 +18,8 @@ ALTER TABLE public.campaigns ADD COLUMN IF NOT EXISTS image TEXT;
 ALTER TABLE public.campaigns ADD COLUMN IF NOT EXISTS image_url TEXT;
 ALTER TABLE public.campaigns ADD COLUMN IF NOT EXISTS duration TEXT DEFAULT '1_month';
 ALTER TABLE public.campaigns ADD COLUMN IF NOT EXISTS "discountPercentage" NUMERIC DEFAULT 20;
+ALTER TABLE public.campaigns ADD COLUMN IF NOT EXISTS "startDate" TEXT;
+ALTER TABLE public.campaigns ADD COLUMN IF NOT EXISTS "endDate" TEXT;
 ALTER TABLE public.campaigns ADD COLUMN IF NOT EXISTS "selectedTreatments" JSONB DEFAULT '[]'::jsonb;
 ALTER TABLE public.campaigns ADD COLUMN IF NOT EXISTS "tripOffer" TEXT;
 ALTER TABLE public.campaigns ADD COLUMN IF NOT EXISTS "tripImage" TEXT;

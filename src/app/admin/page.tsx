@@ -1193,20 +1193,28 @@ export default function AdminDashboard() {
                                                                 )}
                                                             </div>
 
-                                                            {/* Footer (Dates / Duration) */}
-                                                            <div className="mt-auto pt-4 border-t border-gray-200 flex flex-wrap items-center gap-2">
-                                                                {(campaignStartDate || campaignEndDate) && (
+                                                            {/* Footer (Dates) */}
+                                                            <div className="mt-auto pt-4 flex flex-wrap items-center gap-2">
+                                                                {(campaignStartDate || campaignEndDate) ? (
                                                                     <div className="text-[10px] text-gray-600 font-medium bg-white px-2 py-1 rounded border border-gray-200">
-                                                                        {campaignStartDate ? new Date(campaignStartDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''}
+                                                                        {campaignStartDate ? new Date(campaignStartDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
                                                                         {campaignStartDate && campaignEndDate ? ' - ' : ''}
-                                                                        {campaignEndDate ? new Date(campaignEndDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''}
+                                                                        {campaignEndDate ? new Date(campaignEndDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''}
+                                                                    </div>
+                                                                ) : (
+                                                                    <div className="text-[10px] text-gray-600 font-medium bg-white px-2 py-1 rounded border border-gray-200">
+                                                                        {campaignDuration.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) || '1 Month'}
                                                                     </div>
                                                                 )}
-                                                                <div className="text-[10px] text-gray-600 font-medium bg-white px-2 py-1 rounded border border-gray-200">
-                                                                    {campaignDuration.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) || '1 Month'}
-                                                                </div>
                                                             </div>
                                                         </div>
+
+                                                        {/* Cutouts */}
+                                                        <div className="absolute bottom-[44px] -left-3 w-6 h-6 bg-white rounded-full border border-gray-200 border-r-0 shadow-inner z-20"></div>
+                                                        <div className="absolute bottom-[44px] -right-3 w-6 h-6 bg-white rounded-full border border-gray-200 border-l-0 shadow-inner z-20"></div>
+                                                        
+                                                        {/* Dashed line */}
+                                                        <div className="absolute bottom-[56px] left-3 right-3 h-px border-t border-dashed border-gray-200 z-0"></div>
                                                     </div>
                                                 </div>
 
