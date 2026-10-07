@@ -10,11 +10,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const locationName = slug.split('-').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 
     return {
-        title: `Available Massage Therapists in ${locationName} | Therapick Bali`,
-        description: `Looking for the best massage in ${locationName}? Therapick allows you to choose and book available premium professional massage therapists directly to your villa or hotel in ${locationName}, Bali.`,
+        title: `Best Mobile Spa & Massage in ${locationName} | Therapick Bali`,
+        description: `Looking for the best massage in ${locationName}? Therapick allows you to book premium professional massage therapists directly to your villa or hotel in ${locationName}, Bali.`,
         openGraph: {
-            title: `Choose Available Therapists in ${locationName} | Therapick Bali`,
-            description: `Find and book available professional massage therapists in ${locationName}, Bali on-demand.`,
+            title: `Luxury Mobile Spa in ${locationName} | Therapick Bali`,
+            description: `Find and book professional massage therapists in ${locationName}, Bali on-demand.`,
             url: `https://therapickbali.vercel.app/locations/${slug}`,
         },
         alternates: {
