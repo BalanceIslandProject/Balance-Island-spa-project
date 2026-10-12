@@ -141,12 +141,12 @@ export default function AdminDashboard() {
         return () => { isMounted = false; };
     }, [siteBrandFilter, setTreatments, setProducts, setCampaigns, setCampaign, setTherapists]);
 
-    // Force tab switch if central is selected, or if non-therapick brand is selected while on affiliates
+    // Force tab switch if central is selected, or if brand is not therapick while on affiliates
     useEffect(() => {
         if (siteBrandFilter === 'central' && (activeTab === 'campaign' || activeTab === 'promo')) {
             setActiveTab('treatment');
         }
-        if ((siteBrandFilter === 'elexoir' || siteBrandFilter === 'bali') && (activeTab as string) === 'affiliates') {
+        if (siteBrandFilter !== 'therapick' && (activeTab as string) === 'affiliates') {
             setActiveTab('treatment');
         }
     }, [siteBrandFilter, activeTab]);
@@ -850,7 +850,7 @@ export default function AdminDashboard() {
                 <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
                     {[
                         ...(siteBrandFilter === 'central' ? [{ id: 'bookings', icon: Calendar, label: 'Booking' }, { id: 'invoice', icon: Ticket, label: 'Invoices' }] : []),
-                        ...(siteBrandFilter === 'therapick' || siteBrandFilter === 'central' ? [{ id: 'affiliates', icon: Share2, label: 'Affiliates' }] : []),
+                        ...(siteBrandFilter === 'therapick' ? [{ id: 'affiliates', icon: Share2, label: 'Affiliates' }] : []),
                         { id: 'campaign', icon: Megaphone, label: 'Campaign Card' },
                         { id: 'promo', icon: Ticket, label: 'Promo Codes' },
                         { id: 'treatment', icon: PlusCircle, label: 'Treatments' },
@@ -933,7 +933,7 @@ export default function AdminDashboard() {
                                     { id: 'campaign', icon: Megaphone, label: 'Campaign Card' },
                                     { id: 'promo', icon: Ticket, label: 'Promo Codes' },
                                 ]),
-                                ...(siteBrandFilter === 'therapick' || siteBrandFilter === 'central' ? [{ id: 'affiliates', icon: Share2, label: 'Affiliates' }] : []),
+                                ...(siteBrandFilter === 'therapick' ? [{ id: 'affiliates', icon: Share2, label: 'Affiliates' }] : []),
                                 { id: 'store', icon: Store, label: 'Store Products' },
                                 { id: 'calculator', icon: Calculator, label: 'Commission Calc' },
                             ].map((tab) => {
@@ -2021,8 +2021,8 @@ export default function AdminDashboard() {
                         </div>
                     )}
 
-                    {/* AFFILIATE MANAGEMENT TAB (Strictly Therapick / Central Admin) */}
-                    {(activeTab as string) === 'affiliates' && (siteBrandFilter === 'therapick' || siteBrandFilter === 'central') && (
+                    {/* AFFILIATE MANAGEMENT TAB (Strictly Therapick Admin Only) */}
+                    {(activeTab as string) === 'affiliates' && siteBrandFilter === 'therapick' && (
                         <div className="w-full animate-in fade-in duration-300">
                             <AffiliateManagement />
                         </div>

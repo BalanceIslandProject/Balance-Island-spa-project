@@ -101,6 +101,13 @@ export default function TopNav() {
                             </Link>
                         );
                     })}
+                    {/* Strictly shown ONLY on BookTherapick domain */}
+                    <Link
+                        href="/partners"
+                        className="domain-therapick-only text-[11px] md:text-[13px] font-semibold tracking-wider transition-colors whitespace-nowrap text-amber-900 hover:text-amber-700"
+                    >
+                        PARTNERS
+                    </Link>
                 </nav>
                 <button 
                     onClick={() => setIsCartOpen(true)}
@@ -163,6 +170,14 @@ export default function TopNav() {
                                     </Link>
                                 );
                             })}
+                            {/* Strictly shown ONLY on BookTherapick domain */}
+                            <Link 
+                                href="/partners"
+                                onClick={() => setIsOpen(false)}
+                                className="domain-therapick-only px-4 py-3 rounded-xl text-xs font-bold tracking-wider transition-colors text-amber-800 hover:bg-amber-50"
+                            >
+                                PARTNER PORTAL
+                            </Link>
                         </motion.div>
                     )}
                 </AnimatePresence>
