@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { recordBookingAffiliation } from '@/lib/affiliateAttribution';
 
 export const saveBookingToSupabase = async (
     bookingId: string, 
@@ -38,6 +39,11 @@ export const saveBookingToSupabase = async (
         const { error } = await supabase.from('bookings').insert([payload]);
         if (error) {
             console.error('Failed to save booking to Supabase:', error);
+        } else {
+            // Strictly check and record affiliate commission if on BookTherapick
+            if (siteBrandFilter === 'therapick') {
+                await recordBookingAffiliation(bookingId, formData, cartItems, totalPrice, siteBrandFilter);
+            }
         }
     } catch (err) {
         console.error('Exception saving booking:', err);

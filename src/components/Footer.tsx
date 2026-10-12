@@ -19,7 +19,7 @@ const GoogleReviewsLogo = () => (
 export default function Footer() {
   const pathname = usePathname();
 
-  if (pathname?.startsWith('/admin')) {
+  if (pathname?.startsWith('/admin') || pathname?.startsWith('/partners')) {
     return null;
   }
 
@@ -73,9 +73,11 @@ export default function Footer() {
           </div>
 
           <div className="flex flex-col gap-4 w-full border-t border-border/40 pt-8 mt-4">
-            <div className="flex gap-8">
+            <div className="flex flex-wrap gap-8 items-center">
               <Link href="/privacy" className="text-sm md:text-[15px] text-text-muted hover:text-primary transition-colors duration-300">Privacy Policy</Link>
               <Link href="/terms" className="text-sm md:text-[15px] text-text-muted hover:text-primary transition-colors duration-300">Terms of Service</Link>
+              {/* Strictly shown ONLY on BookTherapick domain via CSS isolation rule */}
+              <Link href="/partners" className="domain-therapick-only text-sm md:text-[15px] text-text-muted hover:text-primary transition-colors duration-300">Partner Program</Link>
             </div>
           </div>
           

@@ -7,6 +7,8 @@ import Footer from "@/components/Footer";
 import { SpaProvider } from "@/context/SpaContext";
 import { CartProvider } from "@/context/CartContext";
 import { headers } from "next/headers";
+import { Suspense } from "react";
+import AffiliateTracker from "@/components/AffiliateTracker";
 
 const jakarta = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
@@ -232,6 +234,11 @@ export default async function RootLayout({
       >
         <SpaProvider brand={brand} initialData={initialData}>
           <CartProvider>
+            {isTherapick && (
+              <Suspense fallback={null}>
+                <AffiliateTracker brand={brand} />
+              </Suspense>
+            )}
             <div className="flex flex-col min-h-screen w-full relative">
               <TopNav />
               <main className="flex-1 w-full max-w-[100vw]">
