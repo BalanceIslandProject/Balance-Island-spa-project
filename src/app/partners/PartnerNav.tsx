@@ -42,9 +42,9 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
           <div className="flex items-center gap-3">
             <Link href={session ? '/partners/dashboard' : '/partners'} className="flex items-center gap-2.5 group">
               <img
-                src="/therapick-logo.png"
+                src="/therapick-logo-2.png"
                 alt="BookTherapick"
-                className="h-7 sm:h-8 w-auto max-w-[130px] sm:max-w-[150px] object-contain"
+                className="h-7 sm:h-8 w-auto max-w-[130px] sm:max-w-[160px] object-contain"
               />
               <span className="text-[10px] uppercase tracking-wider font-bold text-black/60 bg-black/[0.04] border border-black/10 px-2 py-0.5 rounded-full">
                 Partners

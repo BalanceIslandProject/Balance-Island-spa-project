@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { ExternalLink } from 'lucide-react';
 
 export default function PartnerCommissionsPage() {
   const [commissions, setCommissions] = useState<any[]>([]);
@@ -101,8 +102,16 @@ export default function PartnerCommissionsPage() {
                         year: 'numeric',
                       })}
                     </td>
-                    <td className="py-3 px-4 font-mono font-semibold text-black">
-                      #{item.booking_id}
+                    <td className="py-3 px-4">
+                      <Link
+                        href={`/invoice/${item.booking_id}`}
+                        target="_blank"
+                        className="inline-flex items-center gap-1 font-mono font-bold text-black hover:text-black/70 hover:underline group"
+                        title="View treatment & invoice details"
+                      >
+                        <span>#{item.booking_id}</span>
+                        <ExternalLink size={11} className="opacity-50 group-hover:opacity-100 transition-opacity" />
+                      </Link>
                     </td>
                     <td className="py-3 px-4 text-black/60">
                       {formatIDR(item.booking_amount_gross)}

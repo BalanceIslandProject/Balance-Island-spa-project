@@ -121,9 +121,9 @@ export default function PartnerRegisterPage() {
         <div className="bg-white border border-black/10 rounded-3xl p-6 sm:p-8 shadow-[0_4px_25px_rgb(0,0,0,0.04)] text-center space-y-6">
           <div className="flex justify-center items-center">
             <img
-              src="/therapick-logo.png"
+              src="/therapick-logo-2.png"
               alt="BookTherapick"
-              className="h-8 w-auto max-w-[150px] object-contain"
+              className="h-8 w-auto max-w-[160px] object-contain"
             />
           </div>
 
@@ -183,9 +183,9 @@ export default function PartnerRegisterPage() {
         <div className="space-y-3 pb-2 border-b border-black/5">
           <div className="flex justify-center items-center">
             <img
-              src="/therapick-logo.png"
+              src="/therapick-logo-2.png"
               alt="BookTherapick"
-              className="h-8 w-auto max-w-[150px] object-contain"
+              className="h-8 w-auto max-w-[160px] object-contain"
             />
           </div>
           <div className="space-y-1 text-center">

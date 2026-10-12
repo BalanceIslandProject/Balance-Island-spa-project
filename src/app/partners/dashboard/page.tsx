@@ -11,7 +11,9 @@ import {
   Wallet,
   ArrowUpRight,
   TrendingUp,
-  Share2
+  Share2,
+  ExternalLink,
+  AlertCircle
 } from 'lucide-react';
 
 interface PartnerStats {
@@ -78,6 +80,10 @@ export default function PartnerDashboardPage() {
   const referralLink = `https://www.booktherapick.com/?ref=${partnerCode}`;
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(referralLink)}`;
 
+  const MIN_WITHDRAWAL_IDR = 250000;
+  const approvedBalance = stats?.approvedCommission || 0;
+  const isBelowMinimum = approvedBalance < MIN_WITHDRAWAL_IDR;
+
   const handleCopyLink = () => {
     if (!referralLink) return;
     navigator.clipboard.writeText(referralLink);
@@ -86,8 +92,13 @@ export default function PartnerDashboardPage() {
   };
 
   const handleWithdrawWhatsApp = () => {
+    if (isBelowMinimum) {
+      alert(`Minimum withdrawal amount is IDR 250,000. Your current approved commission balance is ${formatIDR(approvedBalance)}.`);
+      return;
+    }
+
     const partnerName = [profile?.first_name, profile?.last_name].filter(Boolean).join(' ') || 'Partner';
-    const approvedAmt = formatIDR(stats?.approvedCommission || 0);
+    const approvedAmt = formatIDR(approvedBalance);
 
     const message = `*BOOKTHERAPICK • PARTNER WITHDRAWAL REQUEST*
 ──────────────────────
@@ -137,10 +148,16 @@ Please verify and process the payout to my registered payment method. Thank you!
             <h1 className="font-serif text-2xl sm:text-3xl font-bold text-black tracking-tight pt-1">
               Welcome, {profile?.first_name || 'Partner'}
             </h1>
-            <p className="text-xs text-black/60">
-              {profile?.business_name ? `${profile.business_name} • ` : ''}
-              Partner Code: <span className="font-mono font-bold text-black">{partnerCode}</span> • Rate: <span className="font-bold text-black">{profile?.commission_rate_pct || 15}%</span>
-            </p>
+            <div className="space-y-1 pt-1">
+              {profile?.business_name && (
+                <div className="text-xs font-bold uppercase tracking-wider text-black">
+                  {profile.business_name.toUpperCase()}
+                </div>
+              )}
+              <div className="text-xs font-mono font-bold uppercase tracking-wider text-black/60">
+                PARTNER CODE: <span className="text-black">{partnerCode.toUpperCase()}</span>
+              </div>
+            </div>
           </div>
 
           <div className="flex items-center gap-2.5 shrink-0">
@@ -180,25 +197,41 @@ Please verify and process the payout to my registered payment method. Thank you!
                 <span>Approved Commission</span>
               </div>
               <div className="text-3xl sm:text-4xl font-serif font-bold text-black pt-1">
-                {formatIDR(stats?.approvedCommission || 0)}
+                {formatIDR(approvedBalance)}
               </div>
               <p className="text-xs text-black/50 pt-0.5">
                 Pending verification: <span className="font-semibold text-black/70">{formatIDR(stats?.pendingCommission || 0)}</span>
               </p>
             </div>
 
-            <div className="hidden sm:flex items-center gap-1 bg-emerald-50 text-emerald-800 text-[11px] font-bold px-2.5 py-1 rounded-full border border-emerald-200">
-              Ready for Payout
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-bold uppercase tracking-wider bg-black/[0.04] text-black/70 px-2.5 py-1 rounded-full border border-black/10">
+                Min. WD: IDR 250,000
+              </span>
+              {!isBelowMinimum ? (
+                <div className="hidden sm:flex items-center gap-1 bg-emerald-50 text-emerald-800 text-[11px] font-bold px-2.5 py-1 rounded-full border border-emerald-200">
+                  Ready for Payout
+                </div>
+              ) : (
+                <div className="hidden sm:flex items-center gap-1 bg-black/[0.03] text-black/50 text-[11px] font-semibold px-2.5 py-1 rounded-full border border-black/10">
+                  Below Min.
+                </div>
+              )}
             </div>
           </div>
 
           <div className="pt-2 border-t border-black/10 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
             <p className="text-xs text-black/60">
-              Payouts processed directly to your registered bank / account details.
+              Minimum withdrawal is <span className="font-bold text-black">IDR 250,000</span>. Payouts processed to registered bank details.
             </p>
             <button
               onClick={handleWithdrawWhatsApp}
-              className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-black hover:bg-black/85 text-white font-bold text-xs uppercase tracking-wider transition-all active:scale-95 shadow-sm shrink-0"
+              className={`inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-all active:scale-95 shadow-sm shrink-0 ${
+                isBelowMinimum
+                  ? 'bg-black/15 text-black/50 cursor-pointer hover:bg-black/20'
+                  : 'bg-black hover:bg-black/85 text-white'
+              }`}
+              title={isBelowMinimum ? 'Minimum withdrawal is IDR 250,000' : 'Request payout via WhatsApp'}
             >
               <MessageCircle size={16} />
               <span>Withdraw via WhatsApp</span>
@@ -297,8 +330,16 @@ Please verify and process the payout to my registered payment method. Thank you!
                         year: 'numeric',
                       })}
                     </td>
-                    <td className="py-3 px-4 font-mono font-semibold text-black">
-                      #{comm.booking_id}
+                    <td className="py-3 px-4">
+                      <Link
+                        href={`/invoice/${comm.booking_id}`}
+                        target="_blank"
+                        className="inline-flex items-center gap-1 font-mono font-bold text-black hover:text-black/70 hover:underline group"
+                        title="View treatment & invoice details"
+                      >
+                        <span>#{comm.booking_id}</span>
+                        <ExternalLink size={11} className="opacity-50 group-hover:opacity-100 transition-opacity" />
+                      </Link>
                     </td>
                     <td className="py-3 px-4 text-black">
                       {formatIDR(comm.eligible_treatment_amount)}
