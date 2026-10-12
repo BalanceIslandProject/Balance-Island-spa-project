@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Sparkles, ArrowRight, ShieldCheck, AlertCircle, CheckCircle2 } from 'lucide-react';
 
 export default function PartnerRegisterPage() {
   const router = useRouter();
@@ -60,7 +59,6 @@ export default function PartnerRegisterPage() {
     setLoading(true);
 
     try {
-      // Assemble payout details
       let payout_details: any = {};
       if (formData.payout_method === 'bank_transfer') {
         payout_details = {
@@ -80,9 +78,7 @@ export default function PartnerRegisterPage() {
 
       const res = await fetch('/api/affiliates/auth/register', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           first_name: formData.first_name,
           last_name: formData.last_name,
@@ -118,125 +114,119 @@ export default function PartnerRegisterPage() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto py-4 sm:py-8">
-      <div className="bg-white rounded-3xl border border-[#E8E2D9] p-6 sm:p-10 shadow-sm space-y-8">
+    <div className="max-w-xl mx-auto py-6">
+      <div className="bg-white border border-black/10 rounded-2xl p-6 sm:p-10 space-y-6">
         
         {/* Header */}
-        <div className="space-y-2 text-center">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 text-amber-900 text-xs font-semibold">
-            <Sparkles className="w-3.5 h-3.5" /> BookTherapick Partner Program
-          </div>
-          <h1 className="font-serif text-2xl sm:text-3xl font-bold text-[#1A1A1A]">
-            Apply for Partner Access
+        <div className="space-y-1">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-black/50">Partner Application</span>
+          <h1 className="font-serif text-2xl font-bold text-black">
+            Join the Partner Program
           </h1>
-          <p className="text-sm text-[#6B645C]">
-            Start earning 15% commission on referred BookTherapick spa bookings across Bali.
+          <p className="text-xs text-black/60">
+            Earn 15% commission on referred BookTherapick treatments in Bali.
           </p>
         </div>
 
         {errorMsg && (
-          <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm flex items-start gap-2.5">
-            <AlertCircle className="w-5 h-5 shrink-0 text-red-600 mt-0.5" />
-            <span>{errorMsg}</span>
+          <div className="p-3 rounded-lg border border-red-200 bg-red-50 text-red-700 text-xs">
+            {errorMsg}
           </div>
         )}
 
         {successMsg && (
-          <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm flex items-start gap-2.5">
-            <CheckCircle2 className="w-5 h-5 shrink-0 text-emerald-600 mt-0.5" />
-            <span>{successMsg}</span>
+          <div className="p-3 rounded-lg border border-black/10 bg-black/[0.03] text-black text-xs font-medium">
+            {successMsg}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           
-          {/* Section 1: Partner Info */}
-          <div className="space-y-4">
-            <h2 className="text-xs font-bold uppercase tracking-wider text-[#736B63] border-b border-[#F0EBE1] pb-2">
-              1. Personal & Business Details
+          {/* Section 1 */}
+          <div className="space-y-3">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-black border-b border-black/10 pb-1.5">
+              1. Contact Details
             </h2>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-[#1A1A1A] mb-1.5">First Name *</label>
+                <label className="block text-xs font-semibold text-black mb-1">First Name *</label>
                 <input
                   type="text"
                   name="first_name"
                   required
                   value={formData.first_name}
                   onChange={handleChange}
-                  placeholder="e.g. Wayan"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D9D1C7] text-sm text-[#1A1A1A] focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600"
+                  placeholder="First name"
+                  className="w-full px-3 py-2 rounded-lg border border-black/20 text-xs text-black focus:outline-none focus:border-black"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#1A1A1A] mb-1.5">Last Name</label>
+                <label className="block text-xs font-semibold text-black mb-1">Last Name</label>
                 <input
                   type="text"
                   name="last_name"
                   value={formData.last_name}
                   onChange={handleChange}
-                  placeholder="e.g. Sutarjana"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D9D1C7] text-sm text-[#1A1A1A] focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600"
+                  placeholder="Last name"
+                  className="w-full px-3 py-2 rounded-lg border border-black/20 text-xs text-black focus:outline-none focus:border-black"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#1A1A1A] mb-1.5">Villa, Hotel, or Business Name</label>
+              <label className="block text-xs font-semibold text-black mb-1">Villa, Hotel, or Business Name</label>
               <input
                 type="text"
                 name="business_name"
                 value={formData.business_name}
                 onChange={handleChange}
-                placeholder="e.g. Villa Mandala Ubud / Bali Tour Guide"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-[#D9D1C7] text-sm text-[#1A1A1A] focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600"
+                placeholder="e.g. Villa Mandala Ubud"
+                className="w-full px-3 py-2 rounded-lg border border-black/20 text-xs text-black focus:outline-none focus:border-black"
               />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-[#1A1A1A] mb-1.5">Partner Type *</label>
+                <label className="block text-xs font-semibold text-black mb-1">Partner Type</label>
                 <select
                   name="partner_type"
                   value={formData.partner_type}
                   onChange={handleChange}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D9D1C7] text-sm text-[#1A1A1A] bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600"
+                  className="w-full px-3 py-2 rounded-lg border border-black/20 text-xs text-black bg-white focus:outline-none focus:border-black"
                 >
-                  <option value="hotel_villa">Villa, Hotel or Resort Host</option>
-                  <option value="tour_driver">Tour Driver / Private Chauffeur</option>
+                  <option value="hotel_villa">Villa or Hotel Host</option>
+                  <option value="tour_driver">Tour Driver / Guide</option>
                   <option value="content_creator">Content Creator / Influencer</option>
-                  <option value="wellness_influencer">Yoga / Wellness Practitioner</option>
-                  <option value="local_business">Local Travel Agency / Business</option>
+                  <option value="wellness_influencer">Yoga / Wellness</option>
+                  <option value="local_business">Local Agency / Business</option>
                   <option value="other">Other</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#1A1A1A] mb-1.5">
-                  Preferred Referral Code (Optional)
-                </label>
+                <label className="block text-xs font-semibold text-black mb-1">Custom Referral Code (Optional)</label>
                 <input
                   type="text"
                   name="custom_code"
                   value={formData.custom_code}
                   onChange={handleChange}
                   placeholder="e.g. MANDALA15"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D9D1C7] text-sm uppercase text-[#1A1A1A] focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600"
+                  className="w-full px-3 py-2 rounded-lg border border-black/20 text-xs uppercase text-black focus:outline-none focus:border-black"
                 />
               </div>
             </div>
           </div>
 
-          {/* Section 2: Contact Information */}
-          <div className="space-y-4">
-            <h2 className="text-xs font-bold uppercase tracking-wider text-[#736B63] border-b border-[#F0EBE1] pb-2">
-              2. Contact & Credentials
+          {/* Section 2 */}
+          <div className="space-y-3">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-black border-b border-black/10 pb-1.5">
+              2. Credentials & WhatsApp
             </h2>
 
             <div>
-              <label className="block text-xs font-semibold text-[#1A1A1A] mb-1.5">Email Address *</label>
+              <label className="block text-xs font-semibold text-black mb-1">Email Address *</label>
               <input
                 type="email"
                 name="email"
@@ -244,39 +234,39 @@ export default function PartnerRegisterPage() {
                 value={formData.email}
                 onChange={handleChange}
                 placeholder="you@example.com"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-[#D9D1C7] text-sm text-[#1A1A1A] focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600"
+                className="w-full px-3 py-2 rounded-lg border border-black/20 text-xs text-black focus:outline-none focus:border-black"
               />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-[#1A1A1A] mb-1.5">Phone Number</label>
-                <input
-                  type="tel"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  placeholder="+62 812 3456 7890"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D9D1C7] text-sm text-[#1A1A1A] focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-[#1A1A1A] mb-1.5">WhatsApp Number</label>
+                <label className="block text-xs font-semibold text-black mb-1">WhatsApp Number</label>
                 <input
                   type="tel"
                   name="whatsapp"
                   value={formData.whatsapp}
                   onChange={handleChange}
                   placeholder="+62 812 3456 7890"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D9D1C7] text-sm text-[#1A1A1A] focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600"
+                  className="w-full px-3 py-2 rounded-lg border border-black/20 text-xs text-black focus:outline-none focus:border-black"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-black mb-1">Phone Number</label>
+                <input
+                  type="tel"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  placeholder="+62 812 3456 7890"
+                  className="w-full px-3 py-2 rounded-lg border border-black/20 text-xs text-black focus:outline-none focus:border-black"
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-[#1A1A1A] mb-1.5">Portal Password *</label>
+                <label className="block text-xs font-semibold text-black mb-1">Password *</label>
                 <input
                   type="password"
                   name="password"
@@ -284,12 +274,12 @@ export default function PartnerRegisterPage() {
                   value={formData.password}
                   onChange={handleChange}
                   placeholder="Min. 6 characters"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D9D1C7] text-sm text-[#1A1A1A] focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600"
+                  className="w-full px-3 py-2 rounded-lg border border-black/20 text-xs text-black focus:outline-none focus:border-black"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#1A1A1A] mb-1.5">Confirm Password *</label>
+                <label className="block text-xs font-semibold text-black mb-1">Confirm Password *</label>
                 <input
                   type="password"
                   name="confirm_password"
@@ -297,25 +287,25 @@ export default function PartnerRegisterPage() {
                   value={formData.confirm_password}
                   onChange={handleChange}
                   placeholder="Repeat password"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#D9D1C7] text-sm text-[#1A1A1A] focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600"
+                  className="w-full px-3 py-2 rounded-lg border border-black/20 text-xs text-black focus:outline-none focus:border-black"
                 />
               </div>
             </div>
           </div>
 
-          {/* Section 3: Payout Details */}
-          <div className="space-y-4">
-            <h2 className="text-xs font-bold uppercase tracking-wider text-[#736B63] border-b border-[#F0EBE1] pb-2">
-              3. Payout Method (Can be updated anytime)
+          {/* Section 3 */}
+          <div className="space-y-3">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-black border-b border-black/10 pb-1.5">
+              3. Payout Method
             </h2>
 
             <div>
-              <label className="block text-xs font-semibold text-[#1A1A1A] mb-1.5">Payout Method</label>
+              <label className="block text-xs font-semibold text-black mb-1">Payout Method</label>
               <select
                 name="payout_method"
                 value={formData.payout_method}
                 onChange={handleChange}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-[#D9D1C7] text-sm text-[#1A1A1A] bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600"
+                className="w-full px-3 py-2 rounded-lg border border-black/20 text-xs text-black bg-white focus:outline-none focus:border-black"
               >
                 <option value="bank_transfer">Indonesian Bank Transfer (IDR)</option>
                 <option value="wise">Wise Account</option>
@@ -324,111 +314,102 @@ export default function PartnerRegisterPage() {
             </div>
 
             {formData.payout_method === 'bank_transfer' && (
-              <div className="space-y-3 p-4 rounded-xl bg-[#FAF7F2] border border-[#EBE4DA]">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-2 p-3 rounded-lg border border-black/10 bg-black/[0.02]">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <div>
-                    <label className="block text-xs font-medium text-[#4A443D] mb-1">Bank Name</label>
+                    <label className="block text-[11px] font-semibold text-black mb-1">Bank Name</label>
                     <input
                       type="text"
                       name="bank_name"
                       value={formData.bank_name}
                       onChange={handleChange}
-                      placeholder="BCA, Mandiri, BRI, BNI..."
-                      className="w-full px-3 py-2 rounded-lg border border-[#D9D1C7] text-sm bg-white"
+                      placeholder="BCA, Mandiri, BRI..."
+                      className="w-full px-2.5 py-1.5 rounded border border-black/20 text-xs bg-white"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-[#4A443D] mb-1">Account Number</label>
+                    <label className="block text-[11px] font-semibold text-black mb-1">Account Number</label>
                     <input
                       type="text"
                       name="account_number"
                       value={formData.account_number}
                       onChange={handleChange}
                       placeholder="e.g. 1234567890"
-                      className="w-full px-3 py-2 rounded-lg border border-[#D9D1C7] text-sm bg-white"
+                      className="w-full px-2.5 py-1.5 rounded border border-black/20 text-xs bg-white"
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-[#4A443D] mb-1">Account Holder Full Name</label>
+                  <label className="block text-[11px] font-semibold text-black mb-1">Account Holder Full Name</label>
                   <input
                     type="text"
                     name="account_holder"
                     value={formData.account_holder}
                     onChange={handleChange}
                     placeholder="As registered in the bank"
-                    className="w-full px-3 py-2 rounded-lg border border-[#D9D1C7] text-sm bg-white"
+                    className="w-full px-2.5 py-1.5 rounded border border-black/20 text-xs bg-white"
                   />
                 </div>
               </div>
             )}
 
             {formData.payout_method === 'wise' && (
-              <div className="p-4 rounded-xl bg-[#FAF7F2] border border-[#EBE4DA]">
-                <label className="block text-xs font-medium text-[#4A443D] mb-1">Wise Email or Account Details</label>
+              <div className="p-3 rounded-lg border border-black/10 bg-black/[0.02]">
+                <label className="block text-[11px] font-semibold text-black mb-1">Wise Email</label>
                 <input
                   type="email"
                   name="wise_email"
                   value={formData.wise_email}
                   onChange={handleChange}
                   placeholder="wise-account@example.com"
-                  className="w-full px-3 py-2 rounded-lg border border-[#D9D1C7] text-sm bg-white"
+                  className="w-full px-2.5 py-1.5 rounded border border-black/20 text-xs bg-white"
                 />
               </div>
             )}
 
             {formData.payout_method === 'paypal' && (
-              <div className="p-4 rounded-xl bg-[#FAF7F2] border border-[#EBE4DA]">
-                <label className="block text-xs font-medium text-[#4A443D] mb-1">PayPal Email</label>
+              <div className="p-3 rounded-lg border border-black/10 bg-black/[0.02]">
+                <label className="block text-[11px] font-semibold text-black mb-1">PayPal Email</label>
                 <input
                   type="email"
                   name="paypal_email"
                   value={formData.paypal_email}
                   onChange={handleChange}
                   placeholder="paypal@example.com"
-                  className="w-full px-3 py-2 rounded-lg border border-[#D9D1C7] text-sm bg-white"
+                  className="w-full px-2.5 py-1.5 rounded border border-black/20 text-xs bg-white"
                 />
               </div>
             )}
           </div>
 
-          {/* Terms checkbox */}
-          <div className="pt-2">
-            <label className="flex items-start gap-3 cursor-pointer">
+          <div className="pt-1">
+            <label className="flex items-start gap-2.5 cursor-pointer">
               <input
                 type="checkbox"
                 checked={agreeTerms}
                 onChange={(e) => setAgreeTerms(e.target.checked)}
-                className="w-4 h-4 rounded text-amber-700 mt-0.5 border-[#D9D1C7]"
+                className="w-4 h-4 rounded mt-0.5"
               />
-              <span className="text-xs text-[#6B645C] leading-normal">
-                I agree to the <Link href="/terms" className="underline text-[#1A1A1A]">Partner Terms of Service</Link> and understand commissions (15%) are eligible on completed treatments.
+              <span className="text-xs text-black/70 leading-tight">
+                I agree to the <Link href="/terms" className="underline text-black font-semibold">Partner Terms</Link> and understand commissions (15%) are eligible on completed treatments.
               </span>
             </label>
           </div>
 
-          {/* Submit */}
           <div>
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3.5 px-6 rounded-xl bg-[#1A1A1A] hover:bg-[#333] text-white font-semibold text-sm shadow-md transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+              className="w-full py-3 rounded-lg bg-black hover:bg-black/80 text-white font-bold text-xs uppercase tracking-wider transition-colors disabled:opacity-50"
             >
-              {loading ? (
-                <span>Submitting Application...</span>
-              ) : (
-                <>
-                  <span>Submit Partner Registration</span>
-                  <ArrowRight className="w-4 h-4" />
-                </>
-              )}
+              {loading ? 'Submitting Application...' : 'Submit Partner Application'}
             </button>
           </div>
 
-          <div className="text-center pt-2">
-            <span className="text-xs text-[#736B63]">
-              Already have a partner account?{' '}
-              <Link href="/partners/login" className="font-semibold text-[#1A1A1A] hover:underline">
+          <div className="text-center pt-1">
+            <span className="text-xs text-black/60">
+              Already registered?{' '}
+              <Link href="/partners/login" className="font-semibold text-black hover:underline">
                 Log in here
               </Link>
             </span>

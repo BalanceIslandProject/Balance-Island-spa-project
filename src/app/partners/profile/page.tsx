@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { User, ArrowLeft, CheckCircle2, AlertCircle, Save } from 'lucide-react';
 
 export default function PartnerProfilePage() {
   const [loading, setLoading] = useState(true);
@@ -101,7 +100,7 @@ export default function PartnerProfilePage() {
       if (!res.ok || !data.success) {
         setStatusMsg({ type: 'error', text: data.message || 'Failed to save changes.' });
       } else {
-        setStatusMsg({ type: 'success', text: 'Profile and payout details updated successfully!' });
+        setStatusMsg({ type: 'success', text: 'Profile updated successfully.' });
         setPartner(data.partner);
       }
     } catch (err: any) {
@@ -112,144 +111,139 @@ export default function PartnerProfilePage() {
   };
 
   if (loading) {
-    return <div className="p-12 text-center text-xs text-[#736B63]">Loading profile details...</div>;
+    return <div className="p-8 text-center text-xs text-black/50">Loading profile...</div>;
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div className="max-w-xl mx-auto space-y-6 py-2">
       <div className="space-y-1">
-        <Link href="/partners/dashboard" className="text-xs text-[#736B63] hover:text-[#1A1A1A] flex items-center gap-1">
-          <ArrowLeft className="w-3.5 h-3.5" /> Back to Dashboard
+        <Link href="/partners/dashboard" className="text-xs text-black/50 hover:text-black">
+          &larr; Back to Dashboard
         </Link>
-        <h1 className="font-serif text-2xl sm:text-3xl font-bold text-[#1A1A1A]">
-          Partner Profile & Settings
+        <h1 className="font-serif text-2xl font-bold text-black">
+          Partner Profile
         </h1>
-        <p className="text-xs sm:text-sm text-[#6B645C]">
-          Manage your personal details, contact information, and payout methods
+        <p className="text-xs text-black/60">
+          Manage contact info and payout method
         </p>
       </div>
 
       {statusMsg && (
         <div
-          className={`p-4 rounded-2xl flex items-center gap-2.5 text-xs sm:text-sm ${
+          className={`p-3 rounded-lg border text-xs ${
             statusMsg.type === 'success'
-              ? 'bg-emerald-50 border border-emerald-200 text-emerald-800'
-              : 'bg-red-50 border border-red-200 text-red-700'
+              ? 'border-black/20 bg-black/[0.02] text-black'
+              : 'border-red-200 bg-red-50 text-red-700'
           }`}
         >
-          {statusMsg.type === 'success' ? (
-            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-          ) : (
-            <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
-          )}
-          <span>{statusMsg.text}</span>
+          {statusMsg.text}
         </div>
       )}
 
-      {/* Account Info Read-Only Card */}
-      <div className="bg-white p-6 rounded-3xl border border-[#E8E2D9] shadow-sm space-y-4">
-        <h2 className="text-xs font-bold uppercase tracking-wider text-[#736B63]">
-          Account Overview
+      {/* Account Info Card */}
+      <div className="border border-black/10 rounded-2xl p-5 bg-white space-y-2">
+        <h2 className="text-xs font-bold uppercase tracking-wider text-black/50">
+          Account Details
         </h2>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
           <div>
-            <span className="text-[#8C847B] block">Partner Code</span>
-            <span className="font-mono font-bold text-amber-900 text-sm">{partner?.partner_code}</span>
+            <span className="text-black/50 block">Code</span>
+            <span className="font-mono font-bold text-black">{partner?.partner_code}</span>
           </div>
           <div>
-            <span className="text-[#8C847B] block">Status</span>
-            <span className="font-semibold capitalize text-[#1A1A1A]">{partner?.status}</span>
+            <span className="text-black/50 block">Status</span>
+            <span className="font-semibold capitalize text-black">{partner?.status}</span>
           </div>
           <div>
-            <span className="text-[#8C847B] block">Commission Rate</span>
-            <span className="font-semibold text-emerald-700">{partner?.commission_rate_pct}%</span>
+            <span className="text-black/50 block">Rate</span>
+            <span className="font-bold text-black">{partner?.commission_rate_pct}%</span>
           </div>
           <div>
-            <span className="text-[#8C847B] block">Account Email</span>
-            <span className="font-medium text-[#1A1A1A] truncate block">{partner?.email}</span>
+            <span className="text-black/50 block">Email</span>
+            <span className="font-medium text-black truncate block">{partner?.email}</span>
           </div>
         </div>
       </div>
 
       {/* Edit Form */}
-      <form onSubmit={handleSave} className="bg-white p-6 sm:p-8 rounded-3xl border border-[#E8E2D9] shadow-sm space-y-6">
+      <form onSubmit={handleSave} className="border border-black/10 rounded-2xl p-6 bg-white space-y-5">
         
-        <div className="space-y-4">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-[#736B63] border-b border-[#F0EBE1] pb-2">
-            Contact Details
+        <div className="space-y-3">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-black border-b border-black/10 pb-1.5">
+            Contact
           </h2>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-[#1A1A1A] mb-1.5">First Name</label>
+              <label className="block text-xs font-semibold text-black mb-1">First Name</label>
               <input
                 type="text"
                 name="first_name"
                 value={formData.first_name}
                 onChange={handleChange}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-[#D9D1C7] text-sm text-[#1A1A1A]"
+                className="w-full px-3 py-2 rounded-lg border border-black/20 text-xs text-black focus:outline-none focus:border-black"
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-[#1A1A1A] mb-1.5">Last Name</label>
+              <label className="block text-xs font-semibold text-black mb-1">Last Name</label>
               <input
                 type="text"
                 name="last_name"
                 value={formData.last_name}
                 onChange={handleChange}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-[#D9D1C7] text-sm text-[#1A1A1A]"
+                className="w-full px-3 py-2 rounded-lg border border-black/20 text-xs text-black focus:outline-none focus:border-black"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-[#1A1A1A] mb-1.5">Business or Villa Name</label>
+            <label className="block text-xs font-semibold text-black mb-1">Business / Villa Name</label>
             <input
               type="text"
               name="business_name"
               value={formData.business_name}
               onChange={handleChange}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-[#D9D1C7] text-sm text-[#1A1A1A]"
+              className="w-full px-3 py-2 rounded-lg border border-black/20 text-xs text-black focus:outline-none focus:border-black"
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-[#1A1A1A] mb-1.5">Phone</label>
+              <label className="block text-xs font-semibold text-black mb-1">Phone</label>
               <input
                 type="text"
                 name="phone"
                 value={formData.phone}
                 onChange={handleChange}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-[#D9D1C7] text-sm text-[#1A1A1A]"
+                className="w-full px-3 py-2 rounded-lg border border-black/20 text-xs text-black focus:outline-none focus:border-black"
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-[#1A1A1A] mb-1.5">WhatsApp</label>
+              <label className="block text-xs font-semibold text-black mb-1">WhatsApp</label>
               <input
                 type="text"
                 name="whatsapp"
                 value={formData.whatsapp}
                 onChange={handleChange}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-[#D9D1C7] text-sm text-[#1A1A1A]"
+                className="w-full px-3 py-2 rounded-lg border border-black/20 text-xs text-black focus:outline-none focus:border-black"
               />
             </div>
           </div>
         </div>
 
         {/* Payout Details */}
-        <div className="space-y-4">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-[#736B63] border-b border-[#F0EBE1] pb-2">
+        <div className="space-y-3">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-black border-b border-black/10 pb-1.5">
             Payout Method
           </h2>
 
           <div>
-            <label className="block text-xs font-semibold text-[#1A1A1A] mb-1.5">Selected Method</label>
+            <label className="block text-xs font-semibold text-black mb-1">Method</label>
             <select
               name="payout_method"
               value={formData.payout_method}
               onChange={handleChange}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-[#D9D1C7] text-sm text-[#1A1A1A] bg-white"
+              className="w-full px-3 py-2 rounded-lg border border-black/20 text-xs text-black bg-white focus:outline-none focus:border-black"
             >
               <option value="bank_transfer">Indonesian Bank Transfer (IDR)</option>
               <option value="wise">Wise Account</option>
@@ -258,64 +252,64 @@ export default function PartnerProfilePage() {
           </div>
 
           {formData.payout_method === 'bank_transfer' && (
-            <div className="space-y-3 p-4 rounded-xl bg-[#FAF7F2] border border-[#EBE4DA]">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-2 p-3 rounded-lg border border-black/10 bg-black/[0.02]">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-xs font-medium text-[#4A443D] mb-1">Bank Name</label>
+                  <label className="block text-[11px] font-semibold text-black mb-1">Bank Name</label>
                   <input
                     type="text"
                     name="bank_name"
                     value={formData.bank_name}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 rounded-lg border border-[#D9D1C7] text-sm bg-white"
+                    className="w-full px-2.5 py-1.5 rounded border border-black/20 text-xs bg-white"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-[#4A443D] mb-1">Account Number</label>
+                  <label className="block text-[11px] font-semibold text-black mb-1">Account Number</label>
                   <input
                     type="text"
                     name="account_number"
                     value={formData.account_number}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 rounded-lg border border-[#D9D1C7] text-sm bg-white"
+                    className="w-full px-2.5 py-1.5 rounded border border-black/20 text-xs bg-white"
                   />
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-medium text-[#4A443D] mb-1">Account Holder Name</label>
+                <label className="block text-[11px] font-semibold text-black mb-1">Account Holder Name</label>
                 <input
                   type="text"
                   name="account_holder"
                   value={formData.account_holder}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 rounded-lg border border-[#D9D1C7] text-sm bg-white"
+                  className="w-full px-2.5 py-1.5 rounded border border-black/20 text-xs bg-white"
                 />
               </div>
             </div>
           )}
 
           {formData.payout_method === 'wise' && (
-            <div className="p-4 rounded-xl bg-[#FAF7F2] border border-[#EBE4DA]">
-              <label className="block text-xs font-medium text-[#4A443D] mb-1">Wise Email</label>
+            <div className="p-3 rounded-lg border border-black/10 bg-black/[0.02]">
+              <label className="block text-[11px] font-semibold text-black mb-1">Wise Email</label>
               <input
                 type="email"
                 name="wise_email"
                 value={formData.wise_email}
                 onChange={handleChange}
-                className="w-full px-3 py-2 rounded-lg border border-[#D9D1C7] text-sm bg-white"
+                className="w-full px-2.5 py-1.5 rounded border border-black/20 text-xs bg-white"
               />
             </div>
           )}
 
           {formData.payout_method === 'paypal' && (
-            <div className="p-4 rounded-xl bg-[#FAF7F2] border border-[#EBE4DA]">
-              <label className="block text-xs font-medium text-[#4A443D] mb-1">PayPal Email</label>
+            <div className="p-3 rounded-lg border border-black/10 bg-black/[0.02]">
+              <label className="block text-[11px] font-semibold text-black mb-1">PayPal Email</label>
               <input
                 type="email"
                 name="paypal_email"
                 value={formData.paypal_email}
                 onChange={handleChange}
-                className="w-full px-3 py-2 rounded-lg border border-[#D9D1C7] text-sm bg-white"
+                className="w-full px-2.5 py-1.5 rounded border border-black/20 text-xs bg-white"
               />
             </div>
           )}
@@ -325,10 +319,9 @@ export default function PartnerProfilePage() {
           <button
             type="submit"
             disabled={saving}
-            className="w-full py-3.5 rounded-xl bg-[#1A1A1A] hover:bg-[#333] text-white font-semibold text-sm shadow-md transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+            className="w-full py-2.5 rounded-lg bg-black hover:bg-black/80 text-white font-bold text-xs uppercase tracking-wider transition-colors disabled:opacity-50"
           >
-            <Save className="w-4 h-4" />
-            <span>{saving ? 'Saving Changes...' : 'Save Profile Changes'}</span>
+            {saving ? 'Saving...' : 'Save Changes'}
           </button>
         </div>
 

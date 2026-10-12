@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Sparkles, ArrowRight, AlertCircle, Lock, Mail } from 'lucide-react';
 
 export default function PartnerLoginPage() {
   const router = useRouter();
@@ -42,81 +41,65 @@ export default function PartnerLoginPage() {
   };
 
   return (
-    <div className="max-w-md mx-auto py-8 sm:py-16">
-      <div className="bg-white rounded-3xl border border-[#E8E2D9] p-8 sm:p-10 shadow-sm space-y-6">
+    <div className="max-w-sm mx-auto py-12">
+      <div className="bg-white border border-black/10 rounded-2xl p-6 sm:p-8 space-y-6">
         
-        <div className="text-center space-y-2">
-          <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-amber-50 text-amber-900 text-xs font-semibold">
-            <Sparkles className="w-3.5 h-3.5" /> BookTherapick Partner Portal
-          </div>
-          <h1 className="font-serif text-2xl sm:text-3xl font-bold text-[#1A1A1A]">
-            Partner Login
+        <div className="space-y-1">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-black/50">Partner Access</span>
+          <h1 className="font-serif text-2xl font-bold text-black">
+            Log In
           </h1>
-          <p className="text-xs sm:text-sm text-[#6B645C]">
-            Sign in to access your referral stats, link, and commission earnings.
+          <p className="text-xs text-black/60">
+            Access your referral links, QR code, and earnings.
           </p>
         </div>
 
         {errorMsg && (
-          <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs sm:text-sm flex items-start gap-2">
-            <AlertCircle className="w-4 h-4 shrink-0 text-red-600 mt-0.5" />
-            <span>{errorMsg}</span>
+          <div className="p-3 rounded-lg border border-red-200 bg-red-50 text-red-700 text-xs">
+            {errorMsg}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-[#1A1A1A] mb-1.5">Email Address</label>
-            <div className="relative">
-              <Mail className="w-4 h-4 text-[#8C847B] absolute left-3.5 top-1/2 -translate-y-1/2" />
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-[#D9D1C7] text-sm text-[#1A1A1A] focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600"
-              />
-            </div>
+            <label className="block text-xs font-semibold text-black mb-1">Email</label>
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              className="w-full px-3 py-2 rounded-lg border border-black/20 text-xs text-black focus:outline-none focus:border-black"
+            />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-[#1A1A1A] mb-1.5">Password</label>
-            <div className="relative">
-              <Lock className="w-4 h-4 text-[#8C847B] absolute left-3.5 top-1/2 -translate-y-1/2" />
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
-                className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-[#D9D1C7] text-sm text-[#1A1A1A] focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600"
-              />
-            </div>
+            <label className="block text-xs font-semibold text-black mb-1">Password</label>
+            <input
+              type="password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Your password"
+              className="w-full px-3 py-2 rounded-lg border border-black/20 text-xs text-black focus:outline-none focus:border-black"
+            />
           </div>
 
           <div className="pt-2">
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 px-6 rounded-xl bg-[#1A1A1A] hover:bg-[#333] text-white font-semibold text-sm shadow-md transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+              className="w-full py-2.5 rounded-lg bg-black hover:bg-black/80 text-white font-bold text-xs uppercase tracking-wider transition-colors disabled:opacity-50"
             >
-              {loading ? (
-                <span>Logging in...</span>
-              ) : (
-                <>
-                  <span>Sign In to Dashboard</span>
-                  <ArrowRight className="w-4 h-4" />
-                </>
-              )}
+              {loading ? 'Signing in...' : 'Sign In'}
             </button>
           </div>
         </form>
 
-        <div className="text-center pt-2 border-t border-[#F0EBE1]">
-          <p className="text-xs text-[#736B63]">
-            Don't have a partner account yet?{' '}
-            <Link href="/partners/register" className="font-semibold text-amber-900 hover:underline">
+        <div className="text-center pt-2 border-t border-black/10">
+          <p className="text-xs text-black/60">
+            Don't have an account?{' '}
+            <Link href="/partners/register" className="font-semibold text-black hover:underline">
               Apply here
             </Link>
           </p>

@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Users, Clock, ArrowLeft } from 'lucide-react';
 
 export default function PartnerReferralsPage() {
   const [referrals, setReferrals] = useState<any[]>([]);
@@ -26,65 +25,55 @@ export default function PartnerReferralsPage() {
   }, []);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <Link href="/partners/dashboard" className="text-xs text-[#736B63] hover:text-[#1A1A1A] flex items-center gap-1">
-              <ArrowLeft className="w-3.5 h-3.5" /> Back to Dashboard
-            </Link>
-          </div>
-          <h1 className="font-serif text-2xl sm:text-3xl font-bold text-[#1A1A1A]">
-            Referred Bookings
-          </h1>
-          <p className="text-xs sm:text-sm text-[#6B645C]">
-            All guest appointments originated via your affiliate link or QR code
-          </p>
-        </div>
+    <div className="space-y-6 py-2">
+      <div className="space-y-1">
+        <Link href="/partners/dashboard" className="text-xs text-black/50 hover:text-black">
+          &larr; Back to Dashboard
+        </Link>
+        <h1 className="font-serif text-2xl font-bold text-black">
+          Referred Bookings
+        </h1>
+        <p className="text-xs text-black/60">
+          Guest appointments originated through your link or QR code
+        </p>
       </div>
 
-      <div className="bg-white rounded-3xl border border-[#E8E2D9] shadow-sm overflow-hidden">
+      <div className="border border-black/10 rounded-2xl bg-white overflow-hidden">
         {loading ? (
-          <div className="p-12 text-center text-xs text-[#736B63]">Loading referral records...</div>
+          <div className="p-8 text-center text-xs text-black/50">Loading referrals...</div>
         ) : referrals.length === 0 ? (
-          <div className="p-12 text-center space-y-2">
-            <Users className="w-8 h-8 text-[#A89E94] mx-auto" />
-            <p className="text-sm font-semibold text-[#1A1A1A]">No referred bookings yet</p>
-            <p className="text-xs text-[#6B645C]">
-              When visitors book treatments after scanning your code or visiting your link, they will appear here.
-            </p>
+          <div className="p-8 text-center text-xs text-black/50">
+            No referred bookings recorded yet.
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs sm:text-sm">
-              <thead className="bg-[#FAF7F2] border-b border-[#E8E2D9] text-[#736B63] font-semibold">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-black/[0.02] border-b border-black/10 text-black/60 font-semibold">
                 <tr>
-                  <th className="py-3.5 px-6">Date</th>
-                  <th className="py-3.5 px-6">Booking Reference</th>
-                  <th className="py-3.5 px-6">Customer Name</th>
-                  <th className="py-3.5 px-6">First Visit</th>
-                  <th className="py-3.5 px-6">Attributed Code</th>
+                  <th className="py-3 px-4">Date</th>
+                  <th className="py-3 px-4">Booking Ref</th>
+                  <th className="py-3 px-4">Customer</th>
+                  <th className="py-3 px-4">First Visited</th>
+                  <th className="py-3 px-4">Partner Code</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#F0EBE1]">
+              <tbody className="divide-y divide-black/5">
                 {referrals.map((item) => (
-                  <tr key={item.id} className="hover:bg-[#FAF7F2]/60 transition-colors">
-                    <td className="py-3.5 px-6 text-[#6B645C]">
+                  <tr key={item.id} className="hover:bg-black/[0.01]">
+                    <td className="py-3 px-4 text-black/60">
                       {new Date(item.created_at).toLocaleDateString('en-GB', {
                         day: 'numeric',
                         month: 'short',
                         year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
                       })}
                     </td>
-                    <td className="py-3.5 px-6 font-mono font-semibold text-[#1A1A1A]">
+                    <td className="py-3 px-4 font-mono font-semibold text-black">
                       #{item.booking_id}
                     </td>
-                    <td className="py-3.5 px-6 text-[#1A1A1A]">
-                      {item.customer_name || 'Guest Customer'}
+                    <td className="py-3 px-4 text-black">
+                      {item.customer_name || 'Guest'}
                     </td>
-                    <td className="py-3.5 px-6 text-[#6B645C]">
+                    <td className="py-3 px-4 text-black/60">
                       {item.first_touch_at
                         ? new Date(item.first_touch_at).toLocaleDateString('en-GB', {
                             day: 'numeric',
@@ -92,7 +81,7 @@ export default function PartnerReferralsPage() {
                           })
                         : '-'}
                     </td>
-                    <td className="py-3.5 px-6 font-mono font-medium text-amber-900">
+                    <td className="py-3 px-4 font-mono font-medium text-black">
                       {item.partner_code}
                     </td>
                   </tr>

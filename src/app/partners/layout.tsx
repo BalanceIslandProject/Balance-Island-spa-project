@@ -7,7 +7,7 @@ import PartnerNav from './PartnerNav';
 
 export const metadata = {
   title: 'Partner Program | BookTherapick Bali',
-  description: 'Join the BookTherapick Affiliate & Referral Program. Earn 15% commission on every completed mobile spa booking.',
+  description: 'Join the BookTherapick Partner Program. Earn 15% commission on every completed mobile spa booking.',
 };
 
 export default async function PartnersLayout({
@@ -27,19 +27,19 @@ export default async function PartnersLayout({
   const session = await getPartnerSession();
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] text-[#1A1A1A] flex flex-col selection:bg-amber-800 selection:text-white">
+    <div className="min-h-screen bg-white text-black flex flex-col font-sans selection:bg-black selection:text-white">
       <PartnerNav session={session} />
-      <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+      <main className="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         {children}
       </main>
-      <footer className="border-t border-[#E8E2D9] bg-white py-8 text-center text-xs sm:text-sm text-[#736B63]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div>
-            <span className="font-semibold text-[#1A1A1A]">BookTherapick Partner Program</span> &bull; Exclusively for Bali Hospitality & Creators
+      <footer className="border-t border-black/10 bg-white py-8 text-xs text-black/60">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="text-center sm:text-left">
+            <span className="font-semibold text-black">BookTherapick Partner Program</span> &bull; Bali On-Demand Mobile Spa
           </div>
           <div className="flex items-center gap-6">
-            <a href="https://www.booktherapick.com" className="hover:text-amber-900 transition-colors">Return to BookTherapick</a>
-            <a href="mailto:partners@booktherapick.com" className="hover:text-amber-900 transition-colors">Partner Support</a>
+            <a href="https://www.booktherapick.com" className="hover:text-black transition-colors">Return to BookTherapick</a>
+            <a href="mailto:partners@booktherapick.com" className="hover:text-black transition-colors">Support</a>
           </div>
         </div>
       </footer>
