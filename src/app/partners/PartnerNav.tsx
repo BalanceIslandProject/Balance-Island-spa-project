@@ -40,11 +40,13 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
           
           {/* Logo & Brand */}
           <div className="flex items-center gap-3">
-            <Link href={session ? '/partners/dashboard' : '/partners'} className="flex items-center gap-2">
-              <span className="font-serif text-lg font-bold tracking-tight text-black">
-                BookTherapick
-              </span>
-              <span className="text-[11px] uppercase tracking-wider font-semibold text-black/50 border border-black/10 px-2 py-0.5 rounded">
+            <Link href={session ? '/partners/dashboard' : '/partners'} className="flex items-center gap-2.5 group">
+              <img
+                src="/therapick-logo.png"
+                alt="BookTherapick"
+                className="h-7 sm:h-8 w-auto max-w-[130px] sm:max-w-[150px] object-contain"
+              />
+              <span className="text-[10px] uppercase tracking-wider font-bold text-black/60 bg-black/[0.04] border border-black/10 px-2 py-0.5 rounded-full">
                 Partners
               </span>
             </Link>

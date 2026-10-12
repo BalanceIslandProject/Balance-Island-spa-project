@@ -2,6 +2,17 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { 
+  QrCode, 
+  Copy, 
+  Check, 
+  MessageCircle, 
+  CalendarCheck, 
+  Wallet,
+  ArrowUpRight,
+  TrendingUp,
+  Share2
+} from 'lucide-react';
 
 interface PartnerStats {
   totalClicks: number;
@@ -74,6 +85,24 @@ export default function PartnerDashboardPage() {
     setTimeout(() => setCopiedLink(false), 2000);
   };
 
+  const handleWithdrawWhatsApp = () => {
+    const partnerName = [profile?.first_name, profile?.last_name].filter(Boolean).join(' ') || 'Partner';
+    const approvedAmt = formatIDR(stats?.approvedCommission || 0);
+
+    const message = `*BOOKTHERAPICK • PARTNER WITHDRAWAL REQUEST*
+──────────────────────
+Hello BookTherapick Admin, I would like to request a withdrawal for my approved affiliate commission:
+
+👤 *Partner Name:* ${partnerName}
+🏷️ *Partner Code:* ${partnerCode || '-'}
+💰 *Approved Commission:* ${approvedAmt}
+
+Please verify and process the payout to my registered payment method. Thank you!`;
+
+    const waUrl = `https://wa.me/6285174119423?text=${encodeURIComponent(message)}`;
+    window.open(waUrl, '_blank');
+  };
+
   const formatIDR = (val: number) => {
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
@@ -84,112 +113,142 @@ export default function PartnerDashboardPage() {
 
   if (loading) {
     return (
-      <div className="py-20 text-center text-xs text-black/60">
-        Loading dashboard...
+      <div className="py-20 text-center text-xs text-black/60 font-medium">
+        Loading partner portal...
       </div>
     );
   }
 
   return (
-    <div className="space-y-8 py-2">
+    <div className="space-y-6 sm:space-y-8 py-1 max-w-5xl mx-auto">
       
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-black/10">
-        <div className="space-y-1">
-          <h1 className="font-serif text-2xl sm:text-3xl font-bold text-black">
-            Welcome, {profile?.first_name || 'Partner'}
-          </h1>
-          <p className="text-xs text-black/60">
-            {profile?.business_name ? `${profile.business_name} &bull; ` : ''}
-            Partner Code: <span className="font-mono font-bold text-black">{partnerCode}</span> &bull; Rate: <span className="font-bold text-black">{profile?.commission_rate_pct || 15}%</span>
-          </p>
-        </div>
+      {/* App Header Banner */}
+      <div className="bg-white border border-black/10 rounded-3xl p-5 sm:p-7 shadow-[0_2px_10px_rgb(0,0,0,0.02)] space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-black/50 bg-black/[0.04] px-2.5 py-0.5 rounded-full border border-black/5">
+                Partner Portal
+              </span>
+              <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                Active Partner
+              </span>
+            </div>
+            <h1 className="font-serif text-2xl sm:text-3xl font-bold text-black tracking-tight pt-1">
+              Welcome, {profile?.first_name || 'Partner'}
+            </h1>
+            <p className="text-xs text-black/60">
+              {profile?.business_name ? `${profile.business_name} • ` : ''}
+              Partner Code: <span className="font-mono font-bold text-black">{partnerCode}</span> • Rate: <span className="font-bold text-black">{profile?.commission_rate_pct || 15}%</span>
+            </p>
+          </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setShowQrModal(true)}
-            className="px-4 py-2 rounded-lg border border-black/20 text-xs font-semibold text-black hover:bg-black/5 transition-colors"
-          >
-            Show QR Code
-          </button>
-          <button
-            onClick={handleCopyLink}
-            className="px-4 py-2 rounded-lg bg-black text-white text-xs font-semibold hover:bg-black/80 transition-colors"
-          >
-            {copiedLink ? 'Copied Link' : 'Copy Referral Link'}
-          </button>
+          <div className="flex items-center gap-2.5 shrink-0">
+            <button
+              onClick={() => setShowQrModal(true)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-black/20 text-xs font-bold text-black hover:bg-black/5 active:scale-95 transition-all"
+            >
+              <QrCode size={15} />
+              <span>QR Code</span>
+            </button>
+            <button
+              onClick={handleCopyLink}
+              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-black text-white text-xs font-bold hover:bg-black/85 active:scale-95 transition-all shadow-sm"
+            >
+              {copiedLink ? <Check size={15} /> : <Share2 size={15} />}
+              <span>{copiedLink ? 'Copied' : 'Share Link'}</span>
+            </button>
+          </div>
         </div>
       </div>
 
       {profile?.status === 'pending' && (
-        <div className="p-4 border border-black/20 rounded-xl bg-black/[0.02] text-xs text-black/80">
+        <div className="p-4 border border-black/20 rounded-2xl bg-black/[0.02] text-xs text-black/80">
           <span className="font-bold">Application Pending Review:</span> You can already share your referral link and QR code. All bookings made through your link will be tracked and credited to your account upon review.
         </div>
       )}
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* App Stats & Actions Grid: Approved Commission & Bookings */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         
-        <div className="p-5 border border-black/10 rounded-2xl bg-white space-y-1">
-          <span className="text-[11px] uppercase tracking-wider font-semibold text-black/50 block">
-            Clicks
-          </span>
-          <div className="text-2xl font-serif font-bold text-black">
-            {stats?.totalClicks || 0}
+        {/* Approved Commission & Withdraw Card (Span 2) */}
+        <div className="md:col-span-2 p-6 rounded-3xl bg-white border border-black/10 shadow-[0_2px_10px_rgb(0,0,0,0.02)] flex flex-col justify-between gap-6">
+          <div className="flex items-start justify-between">
+            <div className="space-y-1">
+              <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider font-bold text-black/50">
+                <Wallet size={14} className="text-black" />
+                <span>Approved Commission</span>
+              </div>
+              <div className="text-3xl sm:text-4xl font-serif font-bold text-black pt-1">
+                {formatIDR(stats?.approvedCommission || 0)}
+              </div>
+              <p className="text-xs text-black/50 pt-0.5">
+                Pending verification: <span className="font-semibold text-black/70">{formatIDR(stats?.pendingCommission || 0)}</span>
+              </p>
+            </div>
+
+            <div className="hidden sm:flex items-center gap-1 bg-emerald-50 text-emerald-800 text-[11px] font-bold px-2.5 py-1 rounded-full border border-emerald-200">
+              Ready for Payout
+            </div>
           </div>
-          <span className="text-[11px] text-black/50 block">Visitor clicks</span>
+
+          <div className="pt-2 border-t border-black/10 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+            <p className="text-xs text-black/60">
+              Payouts processed directly to your registered bank / account details.
+            </p>
+            <button
+              onClick={handleWithdrawWhatsApp}
+              className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-black hover:bg-black/85 text-white font-bold text-xs uppercase tracking-wider transition-all active:scale-95 shadow-sm shrink-0"
+            >
+              <MessageCircle size={16} />
+              <span>Withdraw via WhatsApp</span>
+              <ArrowUpRight size={14} />
+            </button>
+          </div>
         </div>
 
-        <div className="p-5 border border-black/10 rounded-2xl bg-white space-y-1">
-          <span className="text-[11px] uppercase tracking-wider font-semibold text-black/50 block">
-            Bookings
-          </span>
-          <div className="text-2xl font-serif font-bold text-black">
-            {stats?.totalBookings || 0}
+        {/* Bookings Card */}
+        <div className="p-6 rounded-3xl bg-white border border-black/10 shadow-[0_2px_10px_rgb(0,0,0,0.02)] flex flex-col justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider font-bold text-black/50">
+              <CalendarCheck size={14} className="text-black" />
+              <span>Bookings Referred</span>
+            </div>
+            <div className="text-3xl sm:text-4xl font-serif font-bold text-black pt-1">
+              {stats?.totalBookings || 0}
+            </div>
+            <p className="text-xs text-black/50 pt-0.5">
+              Completed guest appointments
+            </p>
           </div>
-          <span className="text-[11px] text-black/50 block">
-            Conv. rate: {stats?.conversionRate || 0}%
-          </span>
-        </div>
 
-        <div className="p-5 border border-black/10 rounded-2xl bg-white space-y-1">
-          <span className="text-[11px] uppercase tracking-wider font-semibold text-black/50 block">
-            Approved Commission
-          </span>
-          <div className="text-2xl font-serif font-bold text-black">
-            {formatIDR(stats?.approvedCommission || 0)}
+          <div className="pt-3 border-t border-black/10">
+            <Link
+              href="/partners/referrals"
+              className="inline-flex items-center justify-between w-full text-xs font-bold text-black hover:opacity-75 transition-opacity"
+            >
+              <span>View Referrals</span>
+              <ArrowUpRight size={14} />
+            </Link>
           </div>
-          <span className="text-[11px] text-black/50 block">
-            Pending: {formatIDR(stats?.pendingCommission || 0)}
-          </span>
-        </div>
-
-        <div className="p-5 border border-black/10 rounded-2xl bg-white space-y-1">
-          <span className="text-[11px] uppercase tracking-wider font-semibold text-black/50 block">
-            Paid to Date
-          </span>
-          <div className="text-2xl font-serif font-bold text-black">
-            {formatIDR(stats?.paidCommission || 0)}
-          </div>
-          <span className="text-[11px] text-black/50 block">Total settled</span>
         </div>
 
       </div>
 
       {/* Referral Link Box */}
-      <div className="p-6 border border-black/10 rounded-2xl bg-white space-y-3">
+      <div className="p-6 border border-black/10 rounded-3xl bg-white shadow-[0_2px_10px_rgb(0,0,0,0.02)] space-y-3">
         <div>
           <h2 className="font-serif text-base font-bold text-black">Your Referral Link</h2>
           <p className="text-xs text-black/60">Share this link with guests or followers. 30-day tracking window applies.</p>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-          <div className="flex-1 bg-black/[0.03] border border-black/10 rounded-lg px-3 py-2 text-xs font-mono text-black select-all truncate">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+          <div className="flex-1 bg-black/[0.03] border border-black/10 rounded-xl px-3.5 py-2.5 text-xs font-mono text-black select-all truncate">
             {referralLink}
           </div>
           <button
             onClick={handleCopyLink}
-            className="px-4 py-2 rounded-lg bg-black text-white text-xs font-semibold hover:bg-black/80 transition-colors"
+            className="px-5 py-2.5 rounded-xl bg-black text-white text-xs font-bold hover:bg-black/85 active:scale-95 transition-all shadow-sm"
           >
             {copiedLink ? 'Copied' : 'Copy'}
           </button>
@@ -197,7 +256,7 @@ export default function PartnerDashboardPage() {
       </div>
 
       {/* Recent Commissions */}
-      <div className="border border-black/10 rounded-2xl bg-white overflow-hidden space-y-0">
+      <div className="border border-black/10 rounded-3xl bg-white shadow-[0_2px_10px_rgb(0,0,0,0.02)] overflow-hidden space-y-0">
         <div className="p-4 sm:p-5 border-b border-black/10 flex items-center justify-between">
           <div>
             <h2 className="font-serif text-base font-bold text-black">Recent Commissions</h2>

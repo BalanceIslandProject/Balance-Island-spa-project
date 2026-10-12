@@ -35,9 +35,9 @@ export default function PartnerProgramOverviewPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-6 pt-4 text-xs text-black/60 font-medium">
-          <div>&bull; Free to join</div>
-          <div>&bull; 30-day referral window</div>
-          <div>&bull; Verified payouts in IDR</div>
+          <div>• Free to join</div>
+          <div>• 30-day referral window</div>
+          <div>• Verified payouts in IDR</div>
         </div>
       </section>
 

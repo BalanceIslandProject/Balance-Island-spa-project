@@ -45,6 +45,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (partner.status === 'pending') {
+      return NextResponse.json(
+        { 
+          success: false, 
+          message: 'Your partner account is pending admin approval. You will be able to log in once an administrator approves your account.' 
+        },
+        { status: 403 }
+      );
+    }
+
     if (partner.status === 'suspended') {
       return NextResponse.json(
         { success: false, message: 'Your partner account has been suspended. Please contact support.' },

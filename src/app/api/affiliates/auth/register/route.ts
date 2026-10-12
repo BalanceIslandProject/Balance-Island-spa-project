@@ -89,7 +89,8 @@ export async function POST(req: NextRequest) {
       .maybeSingle();
 
     const commissionRate = settings?.default_commission_rate_pct ? Number(settings.default_commission_rate_pct) : 15.00;
-    const initialStatus = settings?.auto_approve_partners ? 'active' : 'pending';
+    // Newly registered partners require admin approval before they can log in
+    const initialStatus = 'pending';
 
     const passwordHash = hashPassword(password);
 
@@ -123,36 +124,19 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Auto-login session token
-    const token = createSessionToken({
-      id: newPartner.id,
-      partner_code: newPartner.partner_code,
-      email: newPartner.email,
-      first_name: newPartner.first_name,
-      business_name: newPartner.business_name,
-      status: newPartner.status,
-      created_at: Date.now(),
-    });
-
-    const response = NextResponse.json({
+    // Do NOT auto-login. The partner must wait for admin approval.
+    return NextResponse.json({
       success: true,
-      partner: newPartner,
-      message:
-        initialStatus === 'active'
-          ? 'Registration successful! Welcome to the BookTherapick Partner Program.'
-          : 'Registration submitted successfully! Your account is pending review by our team.',
+      pendingApproval: true,
+      partner: {
+        id: newPartner.id,
+        partner_code: newPartner.partner_code,
+        first_name: newPartner.first_name,
+        email: newPartner.email,
+        status: newPartner.status,
+      },
+      message: 'Your registration has been submitted and is pending admin approval. You will be able to log in once your application is reviewed and approved by an administrator.',
     });
-
-    // Set cookie
-    response.cookies.set('partner_session', token, {
-      path: '/',
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 14 * 24 * 60 * 60, // 14 days
-    });
-
-    return response;
   } catch (err: any) {
     console.error('Registration error:', err);
     return NextResponse.json({ success: false, message: err.message }, { status: 500 });
