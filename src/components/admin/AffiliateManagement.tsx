@@ -47,6 +47,9 @@ export default function AffiliateManagement() {
     notes: '',
   });
 
+  // Partner Details Modal State
+  const [selectedPartnerDetails, setSelectedPartnerDetails] = useState<any | null>(null);
+
   // Commission rate edit state
   const [editingRateId, setEditingRateId] = useState<string | null>(null);
   const [newRateValue, setNewRateValue] = useState<number>(15);
@@ -385,7 +388,13 @@ export default function AffiliateManagement() {
                             {p.status}
                           </span>
                         </td>
-                        <td className="py-3 px-4 text-right space-x-1">
+                        <td className="py-3 px-4 text-right space-x-1 whitespace-nowrap">
+                          <button
+                            onClick={() => setSelectedPartnerDetails(p)}
+                            className="px-2.5 py-1 bg-black/5 hover:bg-black/10 text-black font-semibold rounded-lg text-[11px] transition-colors"
+                          >
+                            Details
+                          </button>
                           {p.status === 'pending' && (
                             <button
                               onClick={() => handlePartnerStatus(p.id, 'active')}
@@ -397,7 +406,7 @@ export default function AffiliateManagement() {
                           {p.status === 'active' && (
                             <button
                               onClick={() => handlePartnerStatus(p.id, 'suspended')}
-                              className="px-2 py-1 bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-lg text-[11px]"
+                              className="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-lg text-[11px]"
                             >
                               Suspend
                             </button>
@@ -405,7 +414,7 @@ export default function AffiliateManagement() {
                           {p.status === 'suspended' && (
                             <button
                               onClick={() => handlePartnerStatus(p.id, 'active')}
-                              className="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-[11px]"
+                              className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-[11px]"
                             >
                               Reactivate
                             </button>
@@ -788,6 +797,163 @@ export default function AffiliateManagement() {
               </button>
             </div>
           </form>
+        </div>
+      )}
+
+      {/* PARTNER DETAILS MODAL */}
+      {selectedPartnerDetails && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-xl w-full p-6 space-y-6 border border-black/10 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-start justify-between border-b border-black/10 pb-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-bold text-black text-base">Partner Profile Details</h3>
+                  <span className="font-mono font-bold text-amber-900 bg-amber-50 px-2 py-0.5 rounded text-xs border border-amber-200">
+                    {selectedPartnerDetails.partner_code}
+                  </span>
+                </div>
+                <p className="text-xs text-black/60 mt-0.5">
+                  Registered on {new Date(selectedPartnerDetails.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedPartnerDetails(null)}
+                className="text-black/40 hover:text-black font-bold text-lg p-1"
+              >
+                &times;
+              </button>
+            </div>
+
+            {/* Information Grid */}
+            <div className="space-y-4 text-xs">
+              <div>
+                <h4 className="font-bold uppercase tracking-wider text-black/50 text-[10px] mb-2">
+                  Personal & Business Information
+                </h4>
+                <div className="grid grid-cols-2 gap-3 bg-black/[0.02] p-3.5 rounded-xl border border-black/5">
+                  <div>
+                    <span className="text-black/50 block text-[11px]">Full Name</span>
+                    <span className="font-semibold text-black">{selectedPartnerDetails.first_name} {selectedPartnerDetails.last_name || ''}</span>
+                  </div>
+                  <div>
+                    <span className="text-black/50 block text-[11px]">Business / Villa</span>
+                    <span className="font-semibold text-black">{selectedPartnerDetails.business_name || '-'}</span>
+                  </div>
+                  <div>
+                    <span className="text-black/50 block text-[11px]">Category</span>
+                    <span className="font-semibold capitalize text-black">{selectedPartnerDetails.partner_type?.replace('_', ' ') || '-'}</span>
+                  </div>
+                  <div>
+                    <span className="text-black/50 block text-[11px]">Status</span>
+                    <span className="font-semibold capitalize text-black">{selectedPartnerDetails.status}</span>
+                  </div>
+                  <div>
+                    <span className="text-black/50 block text-[11px]">Commission Rate</span>
+                    <span className="font-bold text-black">{selectedPartnerDetails.commission_rate_pct}%</span>
+                  </div>
+                  <div>
+                    <span className="text-black/50 block text-[11px]">Referral Link</span>
+                    <span className="font-mono text-[10px] text-black break-all">
+                      https://www.booktherapick.com/?ref={selectedPartnerDetails.partner_code}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h4 className="font-bold uppercase tracking-wider text-black/50 text-[10px] mb-2">
+                  Contact Information
+                </h4>
+                <div className="grid grid-cols-2 gap-3 bg-black/[0.02] p-3.5 rounded-xl border border-black/5">
+                  <div>
+                    <span className="text-black/50 block text-[11px]">Email</span>
+                    <a href={`mailto:${selectedPartnerDetails.email}`} className="font-semibold text-black hover:underline">{selectedPartnerDetails.email}</a>
+                  </div>
+                  <div>
+                    <span className="text-black/50 block text-[11px]">WhatsApp</span>
+                    {selectedPartnerDetails.whatsapp ? (
+                      <a href={`https://wa.me/${selectedPartnerDetails.whatsapp.replace(/[^0-9]/g, '')}`} target="_blank" rel="noreferrer" className="font-semibold text-emerald-700 hover:underline">
+                        {selectedPartnerDetails.whatsapp}
+                      </a>
+                    ) : (
+                      <span className="text-black/50">-</span>
+                    )}
+                  </div>
+                  <div>
+                    <span className="text-black/50 block text-[11px]">Phone</span>
+                    <span className="font-semibold text-black">{selectedPartnerDetails.phone || '-'}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h4 className="font-bold uppercase tracking-wider text-black/50 text-[10px] mb-2">
+                  Payout Method & Banking Details
+                </h4>
+                <div className="bg-black/[0.02] p-3.5 rounded-xl border border-black/5 space-y-2">
+                  <div>
+                    <span className="text-black/50 block text-[11px]">Payout Method</span>
+                    <span className="font-bold capitalize text-black">
+                      {selectedPartnerDetails.payout_method?.replace('_', ' ') || 'Bank Transfer'}
+                    </span>
+                  </div>
+
+                  {selectedPartnerDetails.payout_method === 'bank_transfer' && selectedPartnerDetails.payout_details && (
+                    <div className="grid grid-cols-3 gap-2 pt-1 border-t border-black/10">
+                      <div>
+                        <span className="text-black/50 block text-[11px]">Bank Name</span>
+                        <span className="font-semibold text-black">{selectedPartnerDetails.payout_details.bank_name || '-'}</span>
+                      </div>
+                      <div>
+                        <span className="text-black/50 block text-[11px]">Account Number</span>
+                        <span className="font-mono font-semibold text-black">{selectedPartnerDetails.payout_details.account_number || '-'}</span>
+                      </div>
+                      <div>
+                        <span className="text-black/50 block text-[11px]">Account Holder</span>
+                        <span className="font-semibold text-black">{selectedPartnerDetails.payout_details.account_holder || '-'}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedPartnerDetails.payout_method === 'wise' && selectedPartnerDetails.payout_details && (
+                    <div className="pt-1 border-t border-black/10">
+                      <span className="text-black/50 block text-[11px]">Wise Account / Email</span>
+                      <span className="font-mono font-semibold text-black">{selectedPartnerDetails.payout_details.wise_email || selectedPartnerDetails.email}</span>
+                    </div>
+                  )}
+
+                  {selectedPartnerDetails.payout_method === 'paypal' && selectedPartnerDetails.payout_details && (
+                    <div className="pt-1 border-t border-black/10">
+                      <span className="text-black/50 block text-[11px]">PayPal Email</span>
+                      <span className="font-mono font-semibold text-black">{selectedPartnerDetails.payout_details.paypal_email || selectedPartnerDetails.email}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {selectedPartnerDetails.notes && (
+                <div>
+                  <h4 className="font-bold uppercase tracking-wider text-black/50 text-[10px] mb-1">
+                    Internal Notes
+                  </h4>
+                  <p className="bg-black/[0.02] p-3 rounded-xl border border-black/5 text-black">
+                    {selectedPartnerDetails.notes}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end pt-2 border-t border-black/10">
+              <button
+                type="button"
+                onClick={() => setSelectedPartnerDetails(null)}
+                className="px-5 py-2 bg-black text-white text-xs font-semibold rounded-xl hover:bg-black/80"
+              >
+                Close
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

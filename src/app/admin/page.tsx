@@ -44,7 +44,7 @@ export default function AdminDashboard() {
         therapists, setTherapists
     } = useSpa();
 
-    const [activeTab, setActiveTab] = useState<'campaign' | 'treatment' | 'store' | 'fees' | 'calculator' | 'list' | 'settings' | 'promo' | 'bookings' | 'invoice'>('campaign');
+    const [activeTab, setActiveTab] = useState<'campaign' | 'treatment' | 'store' | 'fees' | 'calculator' | 'list' | 'settings' | 'promo' | 'bookings' | 'invoice' | 'affiliates'>('campaign');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [success, setSuccess] = useState(false);
     
@@ -957,7 +957,8 @@ export default function AdminDashboard() {
                 </div>
 
                 <div className={`mx-auto p-4 md:p-8 ${
-                    (activeTab === 'bookings' || activeTab === 'campaign') ? 'max-w-7xl' 
+                    activeTab === 'affiliates' ? 'w-full max-w-none'
+                    : (activeTab === 'bookings' || activeTab === 'campaign') ? 'max-w-7xl' 
                     : (activeTab === 'list' || activeTab === 'fees' ? 'max-w-6xl' : 'max-w-4xl')
                 }`}>
 
