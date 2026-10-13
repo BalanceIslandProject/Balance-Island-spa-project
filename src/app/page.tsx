@@ -364,9 +364,14 @@ export default function Home() {
 
                 <div className="relative z-10 max-w-7xl mx-auto px-6 pt-24 md:pt-36">
 
-                    {/* Slogan */}
-                    <div className="md:hidden mt-4 mb-6">
-                        <h1 className="font-serif text-3xl text-primary font-medium tracking-tight">
+                    {/* Slogan & Hero H1 Heading */}
+                    <div className="mt-4 mb-6 md:mb-10 max-w-3xl">
+                        <span className="text-[10px] sm:text-[11px] md:text-xs font-bold uppercase tracking-widest text-primary/70 mb-2 block">
+                            <span className="domain-therapick-only">5-Star Luxury Home Spa Delivery</span>
+                            <span className="domain-ubud-only">Sanctuary For The Soul &bull; Ubud</span>
+                            <span className="domain-bali-only">Bali Mobile Wellness & Spa</span>
+                        </span>
+                        <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl text-primary font-medium tracking-tight mb-2">
                             <span className="domain-therapick-only">
                                 Island Relaxation, <br />
                                 <span className="italic opacity-80">Delivered.</span>
@@ -375,8 +380,22 @@ export default function Home() {
                                 The Art of <br />
                                 <span className="italic opacity-80">Wellbeing</span>
                             </span>
-
+                            <span className="domain-bali-only">
+                                Home Spa <br />
+                                <span className="italic opacity-80">Ubud & Bali</span>
+                            </span>
                         </h1>
+                        <p className="text-xs sm:text-sm md:text-base text-text-muted leading-relaxed font-light hidden sm:block">
+                            <span className="domain-therapick-only">
+                                Bringing 5-star professional massage therapists and organic spa rituals directly to your private villa or hotel in Ubud, Canggu, Seminyak, Uluwatu, and across Bali.
+                            </span>
+                            <span className="domain-ubud-only">
+                                Luxury in-villa massages and holistic wellness treatments delivered directly to your door in Ubud and surrounding areas.
+                            </span>
+                            <span className="domain-bali-only">
+                                5-star mobile spa services delivered directly to your private villa or hotel in Ubud and across Bali.
+                            </span>
+                        </p>
                     </div>
 
                     {/* Search Bar (Mobile Only - Above Campaign) */}

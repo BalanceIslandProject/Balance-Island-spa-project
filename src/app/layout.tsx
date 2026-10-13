@@ -47,13 +47,13 @@ export async function generateMetadata(): Promise<Metadata> {
   const url = isTherapick ? "https://www.booktherapick.com" : (isBaliDomain ? "https://www.homespaubud.com" : "https://www.elexoirhomespaubud.com");
   
   const title = isTherapick 
-    ? "Therapick | Island Relaxation, Delivered | Best Mobile Spa & Massage in Bali" 
+    ? "Therapick | Island Relaxation, Delivered" 
     : (isBaliDomain 
       ? "Home Spa Ubud | Luxury Mobile Spa & In-Villa Massage in Bali" 
       : "Elexoir Home Spa | Premium Mobile Spa & Massage in Ubud, Bali");
       
   const description = isTherapick
-    ? "Experience the ultimate relaxation with Therapick, Bali's premier 5-star mobile spa. We deliver professional, top-rated in-villa massages and wellness treatments directly to your door in Ubud, Canggu, Seminyak, Uluwatu, and across Bali. Book your expert therapist on-demand today!"
+    ? "Experience 5-star luxury home spa and in-villa massage delivered directly to your villa or hotel in Ubud, Canggu, Seminyak, Uluwatu, and across Bali with Therapick. Book certified therapists on-demand."
     : (isBaliDomain
       ? "Looking for the best massage in Bali? Home Spa Ubud delivers premium, 5-star professional spa treatments directly to your private villa or hotel. Serving Ubud, Canggu, Seminyak, Kuta, and Nusa Dua. Book now for ultimate relaxation!"
       : "Experience the top-rated luxury mobile spa in Bali. Professional in-villa massages, couples treatments & holistic rituals delivered directly to your hotel or villa in Ubud, Canggu, and Seminyak. Book your 5-star sanctuary with Elexoir today!");
@@ -68,10 +68,27 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     description: description,
     keywords: [
-      name, "Choose Massage Therapist Bali", "Book Available Therapist Bali",
-      "On-Demand Massage Bali", "Mobile Spa Bali", "In Villa Massage Bali",
-      "Bali Therapist Booking", "Professional Massage Bali", "Ubud Massage Therapist",
-      "Canggu Massage Therapist", "Seminyak Massage Therapist", "Massage near me Bali"
+      name,
+      "Home Spa Ubud",
+      "Mobile Spa Ubud",
+      "In Villa Massage Ubud",
+      "Massage Ubud Villa",
+      "Ubud Home Spa",
+      "Home Spa Bali",
+      "Mobile Spa Bali",
+      "In Villa Massage Bali",
+      "Best Massage in Ubud",
+      "Couples Massage Ubud",
+      "Mobile Spa Canggu",
+      "In Villa Massage Seminyak",
+      "Mobile Spa Uluwatu",
+      "Choose Massage Therapist Bali",
+      "Book Available Therapist Bali",
+      "On-Demand Massage Bali",
+      "Bali Therapist Booking",
+      "Professional Massage Bali",
+      "Massage near me Bali",
+      "Luxury Spa Delivery Bali"
     ],
     authors: [{ name: name }],
     creator: name,
@@ -130,9 +147,9 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     other: {
       'geo.region': 'ID-BA',
-      'geo.placename': 'Bali',
-      'geo.position': '-8.4095;115.1889',
-      'ICBM': '-8.4095, 115.1889',
+      'geo.placename': 'Ubud, Bali, Indonesia',
+      'geo.position': '-8.5069;115.2625',
+      'ICBM': '-8.5069, 115.2625',
     }
   };
 }
@@ -195,6 +212,12 @@ export default async function RootLayout({
 
   const name = isTherapick ? "Therapick" : (isBaliDomain ? "Home Spa Ubud" : "Elexoir Home Spa");
   const url = isTherapick ? "https://www.booktherapick.com" : (isBaliDomain ? "https://www.homespaubud.com" : "https://www.elexoirhomespaubud.com");
+  const description = isTherapick
+    ? "Experience 5-star luxury home spa and in-villa massage delivered directly to your villa or hotel in Ubud, Canggu, Seminyak, Uluwatu, and across Bali with Therapick. Book certified therapists on-demand."
+    : (isBaliDomain
+      ? "Looking for the best massage in Bali? Home Spa Ubud delivers premium, 5-star professional spa treatments directly to your private villa or hotel. Serving Ubud, Canggu, Seminyak, Kuta, and Nusa Dua."
+      : "Experience the top-rated luxury mobile spa in Bali. Professional in-villa massages, couples treatments & holistic rituals delivered directly to your hotel or villa in Ubud, Canggu, and Seminyak.");
+  const iconUrl = isTherapick ? '/therapick-logo.png' : (isBaliDomain ? '/homespa.png' : '/elexoir.png');
 
   // SSR Data Fetching with server-side caching (120s revalidation)
   const initialData = await getSpaData(brand);
@@ -220,9 +243,100 @@ export default async function RootLayout({
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
               "@context": "https://schema.org",
-              "@type": "WebSite",
-              "name": name,
-              "url": url,
+              "@graph": [
+                {
+                  "@type": "WebSite",
+                  "@id": `${url}/#website`,
+                  "url": url,
+                  "name": name,
+                  "description": description,
+                  "inLanguage": "en-US"
+                },
+                {
+                  "@type": ["DaySpa", "HealthAndBeautyBusiness", "LocalBusiness"],
+                  "@id": `${url}/#spa`,
+                  "name": name,
+                  "url": url,
+                  "logo": `${url}${iconUrl}`,
+                  "image": `${url}${iconUrl}`,
+                  "description": description,
+                  "telephone": "+6282266554600",
+                  "priceRange": "$$",
+                  "currenciesAccepted": "IDR, USD, AUD, EUR",
+                  "paymentAccepted": "Cash, Credit Card, Bank Transfer, QRIS",
+                  "address": {
+                    "@type": "PostalAddress",
+                    "streetAddress": "Jl. Raya Ubud",
+                    "addressLocality": "Ubud",
+                    "addressRegion": "Bali",
+                    "postalCode": "80571",
+                    "addressCountry": "ID"
+                  },
+                  "geo": {
+                    "@type": "GeoCoordinates",
+                    "latitude": -8.5069,
+                    "longitude": 115.2625
+                  },
+                  "openingHoursSpecification": [
+                    {
+                      "@type": "OpeningHoursSpecification",
+                      "dayOfWeek": [
+                        "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"
+                      ],
+                      "opens": "08:00",
+                      "closes": "23:00"
+                    }
+                  ],
+                  "areaServed": [
+                    { "@type": "City", "name": "Ubud" },
+                    { "@type": "City", "name": "Canggu" },
+                    { "@type": "City", "name": "Seminyak" },
+                    { "@type": "City", "name": "Uluwatu" },
+                    { "@type": "City", "name": "Sanur" },
+                    { "@type": "City", "name": "Nusa Dua" },
+                    { "@type": "City", "name": "Jimbaran" },
+                    { "@type": "City", "name": "Kuta" },
+                    { "@type": "AdministrativeArea", "name": "Bali" }
+                  ],
+                  "hasOfferCatalog": {
+                    "@type": "OfferCatalog",
+                    "name": "Mobile Spa & In-Villa Massage Treatments",
+                    "itemListElement": [
+                      {
+                        "@type": "Offer",
+                        "itemOffered": {
+                          "@type": "Service",
+                          "name": "Traditional Balinese Massage",
+                          "description": "5-star authentic Balinese in-villa massage delivered directly to your villa in Ubud and across Bali."
+                        }
+                      },
+                      {
+                        "@type": "Offer",
+                        "itemOffered": {
+                          "@type": "Service",
+                          "name": "Deep Tissue Recovery Massage",
+                          "description": "Firm therapeutic pressure targeting tension and fatigue delivered by certified mobile therapists."
+                        }
+                      },
+                      {
+                        "@type": "Offer",
+                        "itemOffered": {
+                          "@type": "Service",
+                          "name": "Couples Massage Sanctuary Ritual",
+                          "description": "Bespoke side-by-side in-villa couples massage experience with premium organic oils."
+                        }
+                      }
+                    ]
+                  },
+                  "aggregateRating": {
+                    "@type": "AggregateRating",
+                    "ratingValue": "5.0",
+                    "reviewCount": "194",
+                    "bestRating": "5",
+                    "worstRating": "1"
+                  }
+                }
+              ]
             })
           }}
         />

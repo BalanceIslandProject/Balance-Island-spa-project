@@ -17,11 +17,17 @@ export default function PhilosophyPage() {
                     <h3 className="font-serif text-4xl md:text-5xl text-primary font-medium mb-6 leading-tight domain-bali-only">
                         Bespoke Tranquility at <span className="italic">Your Doorstep</span>
                     </h3>
+                    <h3 className="font-serif text-4xl md:text-5xl text-primary font-medium mb-6 leading-tight domain-therapick-only">
+                        Island Relaxation, <span className="italic">Delivered to You</span>
+                    </h3>
                     <p className="text-text-muted leading-relaxed mb-8 font-light domain-ubud-only">
                         Born from the ancient healing traditions of Bali, Elexoir Home Spa was created with a singular vision: to bring unparalleled luxury and profound relaxation directly to your sanctuary. We believe that true wellness requires an environment where you feel completely at ease—your own home or villa.
                     </p>
                     <p className="text-text-muted leading-relaxed mb-8 font-light domain-bali-only">
                         Born from the ancient healing traditions of Bali, Home Spa Ubud was created with a singular vision: to bring unparalleled luxury and profound relaxation directly to your sanctuary. We believe that true wellness requires an environment where you feel completely at ease—your own home or villa.
+                    </p>
+                    <p className="text-text-muted leading-relaxed mb-8 font-light domain-therapick-only">
+                        Born from the sacred wellness traditions of Bali, Therapick was created to deliver 5-star spa sanctuary directly to your private villa or hotel. We believe the highest form of relaxation happens in your own serene space—with on-demand professional certified therapists and 100% pure organic oils.
                     </p>
                     <AnimatePresence>
                         {showStory && (
@@ -42,6 +48,11 @@ export default function PhilosophyPage() {
                                 <div className="domain-bali-only">
                                     <p className="text-text-muted leading-relaxed font-light mb-6">
                                         Elevate your wellness journey with Home Spa Ubud, Bali's premier mobile spa and in-villa massage service. Whether you are staying in the lush jungles of Ubud, the vibrant coasts of Canggu and Seminyak, or the breathtaking cliffs of Uluwatu, our certified professional therapists bring the ultimate 5-star spa experience directly to your doorstep.
+                                    </p>
+                                </div>
+                                <div className="domain-therapick-only">
+                                    <p className="text-text-muted leading-relaxed font-light mb-6">
+                                        Elevate your wellness journey with Therapick, Bali's premier mobile spa and in-villa massage service. Whether you are staying in the lush jungles of Ubud, the vibrant coasts of Canggu and Seminyak, or the breathtaking cliffs of Uluwatu, our certified professional therapists bring the ultimate 5-star spa experience directly to your doorstep.
                                     </p>
                                 </div>
                                 <p className="text-text-muted leading-relaxed font-light mb-6">

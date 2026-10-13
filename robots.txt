@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://elexoirbali.com/sitemap.xml
+Sitemap: https://www.booktherapick.com/sitemap.xml

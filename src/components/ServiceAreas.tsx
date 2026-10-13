@@ -28,6 +28,9 @@ export default function ServiceAreas({ hideHeader = false }: { hideHeader?: bool
             <p className="text-xs sm:text-sm text-text-muted leading-relaxed font-light domain-bali-only">
               We provide luxury mobile massage and wellness services directly to private villas, estates, and hotels across Bali's most prestigious locations.
             </p>
+            <p className="text-xs sm:text-sm text-text-muted leading-relaxed font-light domain-therapick-only">
+              Therapick delivers 5-star luxury mobile spa and in-villa massage services directly to private villas, estates, and hotels across Ubud, Canggu, Seminyak, Uluwatu, and all of Bali.
+            </p>
           </div>
         </div>
       )}
@@ -35,7 +38,7 @@ export default function ServiceAreas({ hideHeader = false }: { hideHeader?: bool
       {/* Responsive Grid Cards (Visible on both Mobile & Desktop) */}
       <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 -mx-6 px-6 md:mx-0 md:px-0">
         {areas.map((area, idx) => (
-          <Link href={`/explore?location=${encodeURIComponent(area.name)}`} key={idx} className="group block outline-none">
+          <Link href={`/locations/${area.slug}`} key={idx} className="group block outline-none">
             <div className="bg-white/80 backdrop-blur-sm border border-border/50 rounded-[16px] md:rounded-3xl p-4 md:p-8 transition-all duration-300 hover:shadow-[0_12px_30px_rgb(0,0,0,0.06)] hover:border-primary/30 hover:-translate-y-1 h-full flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between mb-2 md:mb-4">
@@ -47,7 +50,7 @@ export default function ServiceAreas({ hideHeader = false }: { hideHeader?: bool
                 <p className="text-xs md:text-sm text-text-muted leading-relaxed font-light line-clamp-3 md:line-clamp-none mb-4 md:mb-6">{area.desc}</p>
               </div>
               <div className="mt-auto pt-3 md:pt-4 border-t border-border/40 flex items-center justify-between text-[11px] md:text-xs font-bold text-primary/70 uppercase tracking-wider group-hover:text-primary transition-colors">
-                <span>View Treatments</span>
+                <span>Explore {area.name}</span>
                 <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
               </div>
             </div>
