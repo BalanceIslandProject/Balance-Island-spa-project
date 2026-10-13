@@ -97,40 +97,7 @@ export default function Footer() {
               </Link>
             </div>
 
-            {/* Service Locations Grid for Google Crawling & Local SEO */}
-            <div className="w-full pt-4 pb-2">
-              <span className="text-[11px] font-bold uppercase tracking-widest text-text-muted mb-3 block">
-                Mobile Spa & In-Villa Massage Delivery Areas
-              </span>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-2.5">
-                <Link href="/locations/ubud" className="text-xs sm:text-[13px] text-text-muted hover:text-primary transition-colors">
-                  Home Spa Ubud
-                </Link>
-                <Link href="/locations/canggu" className="text-xs sm:text-[13px] text-text-muted hover:text-primary transition-colors">
-                  Mobile Spa Canggu
-                </Link>
-                <Link href="/locations/seminyak" className="text-xs sm:text-[13px] text-text-muted hover:text-primary transition-colors">
-                  In-Villa Spa Seminyak
-                </Link>
-                <Link href="/locations/uluwatu" className="text-xs sm:text-[13px] text-text-muted hover:text-primary transition-colors">
-                  Home Spa Uluwatu
-                </Link>
-                <Link href="/locations/sanur" className="text-xs sm:text-[13px] text-text-muted hover:text-primary transition-colors">
-                  Mobile Spa Sanur
-                </Link>
-                <Link href="/locations/nusa-dua" className="text-xs sm:text-[13px] text-text-muted hover:text-primary transition-colors">
-                  Luxury Spa Nusa Dua
-                </Link>
-                <Link href="/locations/jimbaran" className="text-xs sm:text-[13px] text-text-muted hover:text-primary transition-colors">
-                  Home Spa Jimbaran
-                </Link>
-                <Link href="/locations/kuta" className="text-xs sm:text-[13px] text-text-muted hover:text-primary transition-colors">
-                  Massage Delivery Kuta
-                </Link>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap gap-8 items-center pt-2">
+            <div className="flex flex-wrap gap-8 items-center">
               <Link href="/privacy" className="text-sm md:text-[15px] text-text-muted hover:text-primary transition-colors duration-300">Privacy Policy</Link>
               <Link href="/terms" className="text-sm md:text-[15px] text-text-muted hover:text-primary transition-colors duration-300">Terms of Service</Link>
               {/* Strictly shown ONLY on BookTherapick domain via CSS isolation rule */}

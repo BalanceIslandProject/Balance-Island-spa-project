@@ -50,7 +50,7 @@ export default function ServiceAreas({ hideHeader = false }: { hideHeader?: bool
                 <p className="text-xs md:text-sm text-text-muted leading-relaxed font-light line-clamp-3 md:line-clamp-none mb-4 md:mb-6">{area.desc}</p>
               </div>
               <div className="mt-auto pt-3 md:pt-4 border-t border-border/40 flex items-center justify-between text-[11px] md:text-xs font-bold text-primary/70 uppercase tracking-wider group-hover:text-primary transition-colors">
-                <span>Explore {area.name}</span>
+                <span>View Treatments</span>
                 <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
               </div>
             </div>

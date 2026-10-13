@@ -231,17 +231,12 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
 
             <div className="relative z-10 max-w-7xl mx-auto px-6 pt-24 md:pt-36">
                 
-                {/* Slogan & Hero Heading */}
-                <div className="mt-4 mb-6 md:mb-10 px-2 max-w-3xl">
-                    <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-widest text-primary/70 mb-2 block">
-                        5-Star Mobile Spa & In-Villa Massage Delivery
-                    </span>
-                    <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl text-primary font-medium tracking-tight mb-3">
-                        Home Spa in <span className="italic opacity-80">{locationName}</span>
+                {/* Slogan */}
+                <div className="md:hidden mt-4 mb-6 px-2">
+                    <h1 className="font-serif text-3xl text-primary font-medium tracking-tight">
+                        Home Spa in <br/>
+                        <span className="italic opacity-80">{locationName}</span>
                     </h1>
-                    <p className="text-xs sm:text-sm md:text-base text-text-muted leading-relaxed font-light">
-                        Experience 5-star private villa massages and wellness rituals delivered directly to your doorstep in {locationName}, Bali. Professional certified therapists on-demand with premium organic oils.
-                    </p>
                 </div>
 
 
