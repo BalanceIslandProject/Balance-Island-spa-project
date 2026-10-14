@@ -29,7 +29,7 @@ export default async function PartnersLayout({
   return (
     <div className="min-h-screen bg-white text-black flex flex-col font-sans selection:bg-black selection:text-white">
       <PartnerNav session={session} />
-      <main className="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+      <main className="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-10 pb-28 sm:pb-12">
         {children}
       </main>
       <footer className="border-t border-black/10 bg-white py-6 text-xs text-black/60">
