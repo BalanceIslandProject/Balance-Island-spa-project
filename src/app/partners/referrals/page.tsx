@@ -37,12 +37,9 @@ export default function PartnerReferralsPage() {
             <ArrowLeft size={13} />
             <span>Dashboard</span>
           </Link>
-          <h1 className="text-xl sm:text-2xl font-bold text-neutral-950 tracking-tight">
+          <h1 className="text-lg sm:text-xl font-bold text-neutral-950 tracking-tight">
             Referred Bookings
           </h1>
-          <p className="text-xs text-neutral-500">
-            Appointments originating from your custom partner link or QR code on <span className="font-mono text-neutral-700">www.booktherapick.com</span>
-          </p>
         </div>
 
         <div className="inline-flex items-center gap-2 bg-neutral-100 px-3 py-1.5 rounded-lg border border-neutral-200/70 self-start sm:self-auto text-xs font-mono font-bold text-neutral-900">

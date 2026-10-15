@@ -131,12 +131,9 @@ export default function PartnerProfilePage() {
           <ArrowLeft size={13} />
           <span>Dashboard</span>
         </Link>
-        <h1 className="text-xl sm:text-2xl font-bold text-neutral-950 tracking-tight">
-          Partner Profile & Settings
+        <h1 className="text-lg sm:text-xl font-bold text-neutral-950 tracking-tight">
+          Partner Profile
         </h1>
-        <p className="text-xs text-neutral-500">
-          Manage your contact credentials and preferred payout disbursement details
-        </p>
       </div>
 
       {statusMsg && (

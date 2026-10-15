@@ -56,7 +56,7 @@ export default function FloatingBookingCalendar({
   isOpen: controlledIsOpen,
   onClose: controlledOnClose,
   onOpen: controlledOnOpen,
-  showFloatingButton = true,
+  showFloatingButton = false,
   inline = false,
 }: FloatingBookingCalendarProps) {
   const [internalIsOpen, setInternalIsOpen] = useState(false);
@@ -350,25 +350,19 @@ export default function FloatingBookingCalendar({
         </div>
 
         {/* Selected Date Header & Status Pills */}
-        <div className="space-y-2.5">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div>
-              <h3 className="text-xs sm:text-sm font-bold text-neutral-900 flex items-center gap-2">
-                <span>
-                  {selectedDate 
-                    ? `Appointments on ${new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`
-                    : `All Appointments in ${MONTH_NAMES[currentMonth]} ${currentYear}`}
-                </span>
-                <span className="text-[11px] bg-neutral-100 text-neutral-700 px-2 py-0.5 rounded-md font-mono font-bold">
-                  {displayedBookings.length}
-                </span>
-              </h3>
-              <p className="text-[11px] text-neutral-500">
+        <div className="space-y-2">
+          <div className="flex items-center justify-between gap-2">
+            <h3 className="text-xs sm:text-sm font-bold text-neutral-900 flex items-center gap-2">
+              <span>
                 {selectedDate 
-                  ? 'Showing attributed guest appointments on this specific date'
-                  : 'Appointments scheduled or attributed during this month'}
-              </p>
-            </div>
+                  ? new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+                  : `${MONTH_NAMES[currentMonth]} ${currentYear}`}
+              </span>
+              <span className="text-[10px] bg-neutral-100 text-neutral-700 px-1.5 py-0.5 rounded-md font-mono font-bold">
+                {displayedBookings.length}
+              </span>
+            </h3>
+
 
             {/* Filter buttons */}
             <div className="flex items-center gap-1 bg-neutral-100 p-0.5 rounded-lg self-start sm:self-auto border border-neutral-200/60 text-[11px]">
@@ -519,13 +513,13 @@ export default function FloatingBookingCalendar({
       </div>
 
       {/* Footer Summary Bar */}
-      <div className="p-3 sm:p-4 border-t border-neutral-200/80 bg-neutral-50/50 flex items-center justify-between text-xs">
-        <div className="text-neutral-500 font-medium">
-          Domain: <span className="font-mono text-neutral-800">www.booktherapick.com</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-[11px] text-neutral-500 font-medium">Displayed Total:</span>
-          <span className="font-bold text-neutral-950 text-sm font-mono tabular-nums">
+      <div className="p-3 border-t border-neutral-200/80 bg-neutral-50/50 flex items-center justify-between text-xs">
+        <span className="text-neutral-500 font-medium">
+          {displayedBookings.length} {displayedBookings.length === 1 ? 'appointment' : 'appointments'}
+        </span>
+        <div className="flex items-center gap-1.5 font-mono tabular-nums">
+          <span className="text-[11px] text-neutral-500">Total:</span>
+          <span className="font-bold text-neutral-950 text-sm">
             {formatIDR(
               displayedBookings.reduce((sum, b) => sum + (b.commission_amount || 0), 0)
             )}

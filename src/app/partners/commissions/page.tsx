@@ -52,12 +52,9 @@ export default function PartnerCommissionsPage() {
             <ArrowLeft size={13} />
             <span>Dashboard</span>
           </Link>
-          <h1 className="text-xl sm:text-2xl font-bold text-neutral-950 tracking-tight">
+          <h1 className="text-lg sm:text-xl font-bold text-neutral-950 tracking-tight">
             Commission Ledger
           </h1>
-          <p className="text-xs text-neutral-500">
-            Financial breakdown of treatment revenue and partner earnings for <span className="font-mono text-neutral-700">www.booktherapick.com</span>
-          </p>
         </div>
 
         {/* Status Filter Buttons */}

@@ -45,12 +45,9 @@ export default function PartnerPayoutsPage() {
             <ArrowLeft size={13} />
             <span>Dashboard</span>
           </Link>
-          <h1 className="text-xl sm:text-2xl font-bold text-neutral-950 tracking-tight">
+          <h1 className="text-lg sm:text-xl font-bold text-neutral-950 tracking-tight">
             Payout History
           </h1>
-          <p className="text-xs text-neutral-500">
-            Transfers and commission disbursements for your BookTherapick partner account
-          </p>
         </div>
 
         <div className="inline-flex items-center gap-1.5 bg-neutral-100 text-neutral-800 border border-neutral-200 px-3 py-1.5 rounded-lg text-xs font-semibold self-start sm:self-auto">
