@@ -16,7 +16,9 @@ import {
   ExternalLink,
   Wallet,
   Check,
-  Copy
+  Copy,
+  MessageCircle,
+  Share2
 } from 'lucide-react';
 
 export default function PartnerNav({ session }: { session: PartnerSessionData | null }) {
@@ -25,6 +27,7 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -55,6 +58,16 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
     setTimeout(() => setCopiedCode(false), 2000);
   };
 
+  const handleCopyLink = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!session?.partner_code) return;
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://www.booktherapick.com';
+    const link = `${origin}/?ref=${session.partner_code}`;
+    navigator.clipboard.writeText(link);
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 2000);
+  };
+
   const authNavItems = [
     { href: '/partners/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/partners/referrals', label: 'Referrals', icon: Users },
@@ -65,121 +78,226 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
 
   return (
     <>
-      {/* Top Header Navigation Bar */}
-      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-neutral-200/80 transition-all">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-14 sm:h-16">
-            
-            {/* Brand Logo & Partner Badge */}
-            <div className="flex items-center gap-3">
-              <Link 
-                href={session ? '/partners/dashboard' : '/partners'} 
-                className="flex items-center gap-2 group transition-opacity hover:opacity-90"
-              >
-                <img
-                  src="/therapick-logo-2.png"
-                  alt="Therapick"
-                  className="h-6 sm:h-7 w-auto max-w-[140px] sm:max-w-[170px] object-contain mix-blend-multiply"
-                />
-                <span className="text-[10px] uppercase tracking-wider font-bold text-neutral-900 bg-neutral-100 border border-neutral-200 px-2 py-0.5 rounded-md">
-                  Partner
-                </span>
-              </Link>
+      {/* ========================================================
+          1. DESKTOP PERMANENT SIDEBAR (hidden on mobile, md:flex)
+          Matches the clean, full-screen Admin Portal design
+         ======================================================== */}
+      <aside className="hidden md:flex flex-col w-64 lg:w-72 bg-white border-r border-neutral-200/80 sticky top-0 h-screen shrink-0 z-30 self-start">
+        
+        {/* Brand & Partner Identification */}
+        <div className="p-5 border-b border-neutral-100 flex flex-col gap-3.5">
+          <Link 
+            href={session ? '/partners/dashboard' : '/partners'} 
+            className="flex items-center gap-2.5 group transition-opacity hover:opacity-90"
+          >
+            <img
+              src="/therapick-logo-2.png"
+              alt="Therapick"
+              className="h-7 w-auto max-w-[150px] object-contain"
+            />
+            <span className="text-[10px] uppercase tracking-wider font-bold text-neutral-900 bg-neutral-100 border border-neutral-200 px-2 py-0.5 rounded-md">
+              Partner
+            </span>
+          </Link>
+
+          {/* Partner User Card */}
+          {session ? (
+            <div className="bg-neutral-50/80 border border-neutral-200/70 rounded-2xl p-3 flex items-center justify-between gap-2.5">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-8 h-8 rounded-full bg-neutral-950 text-white text-xs font-bold flex items-center justify-center uppercase shrink-0 ring-2 ring-neutral-200/60">
+                  {session.first_name?.[0] || 'P'}
+                </div>
+                <div className="min-w-0">
+                  <span className="text-xs font-bold text-neutral-900 block truncate">
+                    {session.first_name}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleCopyCode}
+                    className="inline-flex items-center gap-1 text-[11px] text-neutral-500 font-mono font-bold hover:text-neutral-950 transition-colors"
+                    title="Click to copy partner code"
+                  >
+                    <span>#{session.partner_code}</span>
+                    {copiedCode ? <Check size={11} className="text-emerald-600" /> : <Copy size={11} />}
+                  </button>
+                </div>
+              </div>
+              <span className="shrink-0 text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md">
+                Active
+              </span>
             </div>
+          ) : (
+            <div className="text-[11px] text-neutral-500 leading-snug">
+              Official Partner Portal for Bali Villa Hosts, Guides & Creators.
+            </div>
+          )}
+        </div>
 
-            {/* Desktop Navigation Links */}
-            {session ? (
-              <nav className="hidden md:flex items-center gap-1">
-                {authNavItems.map((item) => {
-                  const isActive = pathname === item.href;
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold tracking-tight transition-all ${
-                        isActive
-                          ? 'bg-neutral-950 text-white shadow-xs'
-                          : 'text-neutral-600 hover:text-neutral-950 hover:bg-neutral-100/80'
-                      }`}
-                    >
-                      {item.label}
-                    </Link>
-                  );
-                })}
+        {/* Navigation Links Area */}
+        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+          {session ? (
+            <>
+              <div className="px-3 pt-2 pb-1 text-[10px] font-bold uppercase tracking-widest text-neutral-400">
+                Workspace
+              </div>
+              
+              {authNavItems.map((item) => {
+                const isActive = pathname === item.href;
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold tracking-tight transition-all ${
+                      isActive
+                        ? 'bg-neutral-950 text-white shadow-xs'
+                        : 'text-neutral-600 hover:text-neutral-950 hover:bg-neutral-100/80'
+                    }`}
+                  >
+                    <Icon size={16} strokeWidth={isActive ? 2.3 : 1.8} className={isActive ? 'text-white' : 'text-neutral-500'} />
+                    <span>{item.label}</span>
+                  </Link>
+                );
+              })}
 
-                <button
-                  type="button"
-                  onClick={handleOpenCalendar}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-neutral-900 bg-neutral-100 hover:bg-neutral-200/70 border border-neutral-200/80 transition-all ml-1.5 active:scale-95"
-                  title="Open interactive booking calendar"
-                >
-                  <CalendarDays size={13.5} className="text-neutral-700" />
-                  <span>Calendar</span>
-                </button>
-              </nav>
-            ) : (
-              <nav className="hidden md:flex items-center gap-6">
-                <Link
-                  href="/partners"
-                  className={`text-xs font-semibold tracking-wide transition-colors ${
-                    pathname === '/partners' ? 'text-neutral-950 font-bold' : 'text-neutral-600 hover:text-neutral-950'
-                  }`}
-                >
-                  Overview
-                </Link>
-                <Link
-                  href="/partners/login"
-                  className="text-xs font-semibold tracking-wide text-neutral-700 hover:text-neutral-950 transition-colors"
-                >
-                  Log In
-                </Link>
-                <Link
-                  href="/partners/register"
-                  className="text-xs font-semibold tracking-wide text-white bg-neutral-950 hover:bg-neutral-800 px-4 py-2 rounded-lg transition-all shadow-xs"
-                >
-                  Become a Partner
-                </Link>
-              </nav>
-            )}
+              {/* Interactive Calendar Trigger in Sidebar */}
+              <button
+                type="button"
+                onClick={handleOpenCalendar}
+                className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold text-neutral-700 hover:text-neutral-950 hover:bg-neutral-100/80 transition-all text-left group"
+              >
+                <div className="flex items-center gap-3">
+                  <CalendarDays size={16} strokeWidth={1.8} className="text-neutral-500 group-hover:text-neutral-900" />
+                  <span>Calendar View</span>
+                </div>
+                <span className="w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-emerald-100" />
+              </button>
 
-            {/* Right Side Partner Identity / Profile Bar */}
-            {session ? (
-              <div className="hidden md:flex items-center gap-3">
-                <div className="flex items-center gap-2.5 pl-3 border-l border-neutral-200">
-                  <div className="w-7 h-7 rounded-full bg-neutral-950 text-white text-[11px] font-bold flex items-center justify-center uppercase ring-2 ring-neutral-100">
-                    {session.first_name?.[0] || 'P'}
-                  </div>
-                  <div className="text-left text-xs leading-tight">
-                    <span className="font-semibold text-neutral-900 block truncate max-w-[120px]">
-                      {session.first_name}
-                    </span>
+              {/* Quick Link Card in Sidebar */}
+              {session.partner_code && (
+                <div className="mt-4 pt-4 border-t border-neutral-100 px-1">
+                  <div className="p-3 rounded-2xl bg-neutral-50 border border-neutral-200/70 space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 flex items-center gap-1">
+                        <Share2 size={11} />
+                        Referral Link
+                      </span>
+                      <span className="text-[10px] text-emerald-600 font-semibold">30d Cookie</span>
+                    </div>
                     <button
                       type="button"
-                      onClick={handleCopyCode}
-                      className="inline-flex items-center gap-1 text-[10px] text-neutral-500 font-mono font-semibold hover:text-neutral-900 transition-colors"
-                      title="Click to copy partner code"
+                      onClick={handleCopyLink}
+                      className="w-full text-left py-1.5 px-2.5 rounded-xl bg-white border border-neutral-200 text-neutral-900 text-[11px] font-mono truncate flex items-center justify-between gap-1 hover:border-neutral-900 transition-colors shadow-2xs"
+                      title="Click to copy full referral link"
                     >
-                      <span>#{session.partner_code}</span>
-                      {copiedCode ? <Check size={10} className="text-emerald-600" /> : <Copy size={10} />}
+                      <span className="truncate">?ref={session.partner_code}</span>
+                      {copiedLink ? <Check size={12} className="text-emerald-600 shrink-0" /> : <Copy size={12} className="text-neutral-400 shrink-0" />}
                     </button>
                   </div>
                 </div>
-
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  disabled={loggingOut}
-                  title="Sign out of partner portal"
-                  className="p-1.5 text-neutral-400 hover:text-neutral-900 hover:bg-neutral-100 rounded-lg transition-colors ml-1"
-                  aria-label="Log out"
-                >
-                  <LogOut size={15} />
-                </button>
+              )}
+            </>
+          ) : (
+            <>
+              <div className="px-3 pt-2 pb-1 text-[10px] font-bold uppercase tracking-widest text-neutral-400">
+                Menu
               </div>
-            ) : null}
+              <Link
+                href="/partners"
+                className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+                  pathname === '/partners'
+                    ? 'bg-neutral-950 text-white shadow-xs'
+                    : 'text-neutral-600 hover:text-neutral-950 hover:bg-neutral-100'
+                }`}
+              >
+                <LayoutDashboard size={16} />
+                <span>Program Overview</span>
+              </Link>
+              <Link
+                href="/partners/login"
+                className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+                  pathname === '/partners/login'
+                    ? 'bg-neutral-950 text-white shadow-xs'
+                    : 'text-neutral-600 hover:text-neutral-950 hover:bg-neutral-100'
+                }`}
+              >
+                <User size={16} />
+                <span>Partner Log In</span>
+              </Link>
+              <Link
+                href="/partners/register"
+                className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+                  pathname === '/partners/register'
+                    ? 'bg-neutral-950 text-white shadow-xs'
+                    : 'text-neutral-600 hover:text-neutral-950 hover:bg-neutral-100'
+                }`}
+              >
+                <Users size={16} />
+                <span>Become a Partner</span>
+              </Link>
+            </>
+          )}
+        </nav>
+
+        {/* Sidebar Footer */}
+        <div className="p-4 border-t border-neutral-100 space-y-1.5">
+          <a
+            href="https://www.booktherapick.com"
+            target="_blank"
+            rel="noreferrer"
+            className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-neutral-600 hover:text-neutral-950 hover:bg-neutral-50 transition-colors"
+          >
+            <span>Visit Live Site</span>
+            <ExternalLink size={13} />
+          </a>
+          <a
+            href="https://wa.me/6285174119423"
+            target="_blank"
+            rel="noreferrer"
+            className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-neutral-600 hover:text-neutral-950 hover:bg-neutral-50 transition-colors"
+          >
+            <span>WhatsApp Support</span>
+            <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full">Help</span>
+          </a>
+
+          {session && (
+            <button
+              type="button"
+              onClick={handleLogout}
+              disabled={loggingOut}
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-red-600 hover:bg-red-50 transition-colors text-left pt-2 border-t border-neutral-100 cursor-pointer"
+            >
+              <LogOut size={14} />
+              <span>{loggingOut ? 'Signing out...' : 'Sign Out'}</span>
+            </button>
+          )}
+        </div>
+      </aside>
+
+      {/* ========================================================
+          2. MOBILE STICKY HEADER (hidden on desktop, md:hidden)
+         ======================================================== */}
+      <header className="md:hidden sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-neutral-200/80 transition-all">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+          <div className="flex items-center justify-between h-14">
+            
+            {/* Mobile Brand Logo */}
+            <Link 
+              href={session ? '/partners/dashboard' : '/partners'} 
+              className="flex items-center gap-2"
+            >
+              <img
+                src="/therapick-logo-2.png"
+                alt="Therapick"
+                className="h-6 w-auto max-w-[130px] object-contain"
+              />
+              <span className="text-[10px] uppercase tracking-wider font-bold text-neutral-900 bg-neutral-100 border border-neutral-200 px-2 py-0.5 rounded-md">
+                Partner
+              </span>
+            </Link>
 
             {/* Mobile Header Right (Code Badge + Hamburger Menu) */}
-            <div className="flex md:hidden items-center gap-2">
+            <div className="flex items-center gap-2">
               {session && (
                 <button
                   type="button"
@@ -195,7 +313,7 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
               <button
                 type="button"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="p-1.5 text-neutral-800 hover:bg-neutral-100 rounded-lg transition-colors"
+                className="p-1.5 text-neutral-800 hover:bg-neutral-100 rounded-lg transition-colors cursor-pointer"
                 aria-label="Toggle menu"
               >
                 {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
@@ -308,7 +426,7 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
                   onClick={() => setMobileMenuOpen(false)}
                   className="block text-xs font-semibold text-center text-white bg-neutral-950 py-2.5 rounded-lg hover:bg-neutral-800 shadow-xs"
                 >
-                  Join BookTherapick
+                  Join Therapick Partner Network
                 </Link>
               </div>
             )}
@@ -316,7 +434,9 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
         )}
       </header>
 
-      {/* Modern Mobile App Native Bottom Navigation Bar */}
+      {/* ========================================================
+          3. MOBILE APP NATIVE BOTTOM NAVIGATION BAR (md:hidden)
+         ======================================================== */}
       {session && (
         <nav 
           aria-label="Mobile bottom navigation"

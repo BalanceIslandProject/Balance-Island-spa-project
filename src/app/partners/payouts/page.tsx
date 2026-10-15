@@ -34,7 +34,7 @@ export default function PartnerPayoutsPage() {
   };
 
   return (
-    <div className="space-y-4 sm:space-y-6 max-w-5xl mx-auto">
+    <div className="space-y-4 sm:space-y-6 w-full">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white border border-neutral-200/80 rounded-2xl p-4 sm:p-6 shadow-2xs">
         <div className="space-y-1">

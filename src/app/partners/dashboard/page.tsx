@@ -165,7 +165,7 @@ Please verify and process the payout to my registered details. Thank you!`;
   }
 
   return (
-    <div className="space-y-3 sm:space-y-4 max-w-4xl mx-auto">
+    <div className="space-y-4 sm:space-y-6 w-full">
       
       {/* 1. Simple Welcome Header (Clean, no redundant badges/titles) */}
       <div className="bg-white border border-neutral-200/80 rounded-2xl p-4 sm:p-5 shadow-2xs">

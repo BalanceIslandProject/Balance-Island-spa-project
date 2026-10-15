@@ -41,7 +41,7 @@ export default function PartnerCommissionsPage() {
   const totalFilteredCommission = filtered.reduce((sum, c) => sum + Number(c.commission_amount || 0), 0);
 
   return (
-    <div className="space-y-4 sm:space-y-6 max-w-5xl mx-auto">
+    <div className="space-y-4 sm:space-y-6 w-full">
       {/* Header & Filter Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white border border-neutral-200/80 rounded-2xl p-4 sm:p-6 shadow-2xs">
         <div className="space-y-1">

@@ -121,7 +121,7 @@ export default function PartnerProfilePage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-4 sm:space-y-6">
+    <div className="w-full max-w-4xl space-y-4 sm:space-y-6">
       {/* Header */}
       <div className="bg-white border border-neutral-200/80 rounded-2xl p-4 sm:p-6 shadow-2xs space-y-1">
         <Link 
