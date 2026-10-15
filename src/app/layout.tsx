@@ -20,6 +20,7 @@ const newsreader = Newsreader({
   variable: "--font-newsreader",
   subsets: ["latin"],
   display: "swap",
+  style: ["normal", "italic"],
 });
 
 export async function generateViewport(): Promise<Viewport> {
