@@ -333,7 +333,7 @@ Please verify and process the payout to my registered details. Thank you!`;
       <div className="p-3.5 sm:p-4 border border-neutral-200/80 rounded-2xl bg-white shadow-2xs space-y-2">
         <div className="flex items-center justify-between text-xs">
           <span className="font-semibold text-neutral-800">Your Referral Link</span>
-          <span className="text-[11px] text-neutral-500">15% commission</span>
+          <span className="text-[11px] text-neutral-500">Active Attribution</span>
         </div>
 
         <div className="flex items-center gap-2">

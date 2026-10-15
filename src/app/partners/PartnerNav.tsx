@@ -16,8 +16,7 @@ import {
   ExternalLink,
   Wallet,
   Check,
-  Copy,
-  Sparkles
+  Copy
 } from 'lucide-react';
 
 export default function PartnerNav({ session }: { session: PartnerSessionData | null }) {

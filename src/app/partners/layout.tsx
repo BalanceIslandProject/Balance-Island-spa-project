@@ -7,7 +7,7 @@ import PartnerNav from './PartnerNav';
 
 export const metadata = {
   title: 'Partner Program | BookTherapick Bali',
-  description: 'Join the BookTherapick Partner Program. Earn 15% commission on every completed mobile spa booking.',
+  description: 'Join the BookTherapick Partner Program. Earn commission on every completed mobile spa booking.',
 };
 
 export default async function PartnersLayout({

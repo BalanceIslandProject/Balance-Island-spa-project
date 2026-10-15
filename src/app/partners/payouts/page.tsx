@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Wallet, CheckCircle2, Clock, Sparkles } from 'lucide-react';
+import { ArrowLeft, Wallet, CheckCircle2, Clock } from 'lucide-react';
 
 export default function PartnerPayoutsPage() {
   const [payouts, setPayouts] = useState<any[]>([]);
@@ -51,7 +51,6 @@ export default function PartnerPayoutsPage() {
         </div>
 
         <div className="inline-flex items-center gap-1.5 bg-neutral-100 text-neutral-800 border border-neutral-200 px-3 py-1.5 rounded-lg text-xs font-semibold self-start sm:self-auto">
-          <Sparkles size={13} className="text-neutral-600" />
           <span>No Minimum Withdrawal</span>
         </div>
       </div>

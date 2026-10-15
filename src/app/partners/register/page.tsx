@@ -196,7 +196,7 @@ export default function PartnerRegisterPage() {
               Join the BookTherapick Partner Network
             </h1>
             <p className="text-xs text-neutral-500">
-              Earn 15% commission on referred mobile spa bookings across Bali
+              Earn commissions on referred mobile spa bookings across Bali
             </p>
           </div>
         </div>
@@ -488,7 +488,7 @@ export default function PartnerRegisterPage() {
                 className="w-4 h-4 rounded mt-0.5 accent-neutral-950"
               />
               <span className="text-xs text-neutral-600 leading-tight">
-                I agree to the <Link href="/terms" className="underline text-neutral-950 font-semibold">Partner Terms</Link> and understand commissions (15%) are eligible on completed & verified treatments.
+                I agree to the <Link href="/terms" className="underline text-neutral-950 font-semibold">Partner Terms</Link> and understand commissions are eligible on completed & verified treatments.
               </span>
             </label>
           </div>

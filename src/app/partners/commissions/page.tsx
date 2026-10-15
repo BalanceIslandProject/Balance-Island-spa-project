@@ -77,7 +77,7 @@ export default function PartnerCommissionsPage() {
       </div>
 
       {/* Summary Metrics Row */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 gap-3">
         <div className="p-4 rounded-xl bg-white border border-neutral-200/80 shadow-2xs space-y-1">
           <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500">Filtered Records</span>
           <div className="text-xl sm:text-2xl font-bold text-neutral-950 font-mono tabular-nums">{filtered.length}</div>
@@ -85,10 +85,6 @@ export default function PartnerCommissionsPage() {
         <div className="p-4 rounded-xl bg-white border border-neutral-200/80 shadow-2xs space-y-1">
           <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500">Filtered Earnings</span>
           <div className="text-xl sm:text-2xl font-bold text-emerald-700 font-mono tabular-nums">{formatIDR(totalFilteredCommission)}</div>
-        </div>
-        <div className="col-span-2 sm:col-span-1 p-4 rounded-xl bg-white border border-neutral-200/80 shadow-2xs space-y-1">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500">Commission Rate</span>
-          <div className="text-xl sm:text-2xl font-bold text-neutral-950 font-mono">15%</div>
         </div>
       </div>
 

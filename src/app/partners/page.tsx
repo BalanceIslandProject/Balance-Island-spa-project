@@ -1,29 +1,30 @@
 import React from 'react';
 import Link from 'next/link';
-import { Sparkles, ArrowRight, ShieldCheck, QrCode, Wallet, Users, CheckCircle2 } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 
 export default function PartnerProgramOverviewPage() {
   return (
-    <div className="space-y-12 sm:space-y-16 py-2 sm:py-6">
+    <div className="space-y-10 sm:space-y-14 py-2 sm:py-6 max-w-4xl mx-auto">
       
       {/* Hero Section */}
-      <section className="bg-white border border-neutral-200/80 rounded-3xl p-6 sm:p-12 shadow-2xs space-y-6 text-center sm:text-left">
-        <div className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-neutral-600 bg-neutral-100 px-3 py-1 rounded-full border border-neutral-200/60">
-          <Sparkles size={12} className="text-neutral-700" />
-          <span>BookTherapick Partner Program</span>
+      <section className="bg-white border border-neutral-200/80 rounded-3xl p-5 sm:p-10 shadow-2xs space-y-6">
+        <div className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-neutral-600 bg-neutral-100 px-3 py-1 rounded-full border border-neutral-200/70">
+          <span className="w-1.5 h-1.5 rounded-full bg-neutral-900" />
+          <span>Partner Program • Bali</span>
         </div>
 
-        <div className="space-y-3 max-w-3xl">
-          <h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-neutral-950 leading-[1.15]">
-            Partner with Bali’s Premier Mobile Spa & Earn 15% Commission
+        <div className="space-y-3">
+          <h1 className="text-2xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-neutral-950 leading-[1.15]">
+            Partner with Bali’s Premier In-Villa Mobile Spa
           </h1>
 
-          <p className="text-sm sm:text-base text-neutral-600 leading-relaxed max-w-2xl">
-            Provide your villa guests, hotel clients, and travelers with top-rated mobile spa rituals delivered directly across Bali. Earn recurring commissions on every completed treatment.
+          <p className="text-xs sm:text-sm text-neutral-600 leading-relaxed max-w-2xl">
+            Provide your villa guests, hotel clients, and travelers with top-rated mobile wellness rituals delivered directly to their accommodations across Bali. Track bookings in real time with transparent attribution and automated payouts.
           </p>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 pt-1">
           <Link
             href="/partners/register"
             className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-neutral-950 text-white text-xs font-semibold tracking-wide hover:bg-neutral-800 transition-all shadow-xs active:scale-98"
@@ -39,116 +40,119 @@ export default function PartnerProgramOverviewPage() {
           </Link>
         </div>
 
-        <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 sm:gap-6 pt-2 text-xs text-neutral-500 font-medium">
-          <span className="flex items-center gap-1.5">
-            <CheckCircle2 size={13} className="text-emerald-600" />
-            <span>Free to join</span>
-          </span>
-          <span className="flex items-center gap-1.5">
-            <CheckCircle2 size={13} className="text-emerald-600" />
-            <span>30-day cookie window</span>
-          </span>
-          <span className="flex items-center gap-1.5">
-            <CheckCircle2 size={13} className="text-emerald-600" />
-            <span>Direct verified IDR payouts</span>
-          </span>
+        {/* Professional Value Matrix (Replaces generic AI checkmark pills) */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-4 border-t border-neutral-100">
+          <div className="p-3.5 rounded-xl bg-neutral-50 border border-neutral-200/60 space-y-1">
+            <span className="text-[11px] font-bold text-neutral-900 uppercase tracking-wide block">
+              Zero Overhead
+            </span>
+            <p className="text-[11px] text-neutral-500 leading-relaxed">
+              We provide certified therapists, luxury organic products, and mobile treatment beds.
+            </p>
+          </div>
+
+          <div className="p-3.5 rounded-xl bg-neutral-50 border border-neutral-200/60 space-y-1">
+            <span className="text-[11px] font-bold text-neutral-900 uppercase tracking-wide block">
+              30-Day Attribution
+            </span>
+            <p className="text-[11px] text-neutral-500 leading-relaxed">
+              Custom QR tent cards and smart referral links automatically attribute guest bookings.
+            </p>
+          </div>
+
+          <div className="p-3.5 rounded-xl bg-neutral-50 border border-neutral-200/60 space-y-1">
+            <span className="text-[11px] font-bold text-neutral-900 uppercase tracking-wide block">
+              Direct Disbursements
+            </span>
+            <p className="text-[11px] text-neutral-500 leading-relaxed">
+              Transparent commission payouts via Indonesian Bank Transfer, Wise, or PayPal.
+            </p>
+          </div>
         </div>
       </section>
 
-      {/* Program Details: How It Works */}
-      <section className="space-y-6">
-        <div className="space-y-1">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500">
-            Simple 3-Step Process
+      {/* Program Details: 3 Simple Steps */}
+      <section className="space-y-4 sm:space-y-5">
+        <div className="space-y-0.5">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">
+            How It Works
           </span>
-          <h2 className="text-xl sm:text-2xl font-bold text-neutral-950 tracking-tight">
-            How the Partner Program Works
+          <h2 className="text-lg sm:text-2xl font-bold text-neutral-950 tracking-tight">
+            Seamless Guest Experience & Attribution
           </h2>
-          <p className="text-xs text-neutral-500">
-            Seamless attribution with instant QR codes and direct WhatsApp support
-          </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="p-6 border border-neutral-200/80 rounded-2xl bg-white shadow-2xs space-y-3">
-            <div className="w-8 h-8 rounded-lg bg-neutral-100 border border-neutral-200 flex items-center justify-center text-xs font-mono font-bold text-neutral-900">
-              01
-            </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="p-5 border border-neutral-200/80 rounded-2xl bg-white shadow-2xs space-y-2">
+            <span className="text-xs font-mono font-bold text-neutral-400">01</span>
             <h3 className="text-sm font-bold text-neutral-950">Join & Receive Code</h3>
             <p className="text-xs text-neutral-500 leading-relaxed">
-              Complete the quick registration form with your villa or contact details and choose your preferred payout method.
+              Complete the quick application form with your villa or contact details and choose your preferred payout method.
             </p>
           </div>
 
-          <div className="p-6 border border-neutral-200/80 rounded-2xl bg-white shadow-2xs space-y-3">
-            <div className="w-8 h-8 rounded-lg bg-neutral-100 border border-neutral-200 flex items-center justify-center text-xs font-mono font-bold text-neutral-900">
-              02
-            </div>
+          <div className="p-5 border border-neutral-200/80 rounded-2xl bg-white shadow-2xs space-y-2">
+            <span className="text-xs font-mono font-bold text-neutral-400">02</span>
             <h3 className="text-sm font-bold text-neutral-950">Display QR or Share Link</h3>
             <p className="text-xs text-neutral-500 leading-relaxed">
-              Place your custom QR card on villa welcome tables or vehicle headrests, or share your tracked referral link online.
+              Place your custom QR code on villa welcome tables or vehicle headrests, or share your tracked referral link online.
             </p>
           </div>
 
-          <div className="p-6 border border-neutral-200/80 rounded-2xl bg-white shadow-2xs space-y-3">
-            <div className="w-8 h-8 rounded-lg bg-neutral-100 border border-neutral-200 flex items-center justify-center text-xs font-mono font-bold text-neutral-900">
-              03
-            </div>
-            <h3 className="text-sm font-bold text-neutral-950">Earn 15% on Treatments</h3>
+          <div className="p-5 border border-neutral-200/80 rounded-2xl bg-white shadow-2xs space-y-2">
+            <span className="text-xs font-mono font-bold text-neutral-400">03</span>
+            <h3 className="text-sm font-bold text-neutral-950">Earn on Completed Treatments</h3>
             <p className="text-xs text-neutral-500 leading-relaxed">
-              Once guest appointments are completed and verified, commissions are ready for immediate WhatsApp withdrawal without minimum limits.
+              Once guest appointments are completed and verified, commissions are ready for immediate withdrawal without minimum thresholds.
             </p>
           </div>
         </div>
       </section>
 
-      {/* Target Audience */}
-      <section className="space-y-6">
-        <div className="space-y-1">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500">
-            Hospitality Network
+      {/* Hospitality Network Audience */}
+      <section className="space-y-4 sm:space-y-5">
+        <div className="space-y-0.5">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">
+            Who Can Partner
           </span>
-          <h2 className="text-xl sm:text-2xl font-bold text-neutral-950 tracking-tight">
-            Designed for Bali Travel & Villa Hosts
+          <h2 className="text-lg sm:text-2xl font-bold text-neutral-950 tracking-tight">
+            Built for Bali Travel & Villa Hosts
           </h2>
-          <p className="text-xs text-neutral-500">
-            Built to enhance guest satisfaction while generating consistent passive revenue
-          </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="p-6 border border-neutral-200/80 rounded-2xl bg-white shadow-2xs space-y-2.5">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="p-5 border border-neutral-200/80 rounded-2xl bg-white shadow-2xs space-y-1.5">
             <h3 className="text-sm font-bold text-neutral-950">Villas & Boutique Hotels</h3>
             <p className="text-xs text-neutral-500 leading-relaxed">
-              Offer 5-star mobile massage without employing in-house spa staff. Guests scan your bedside or welcome tent card to book directly.
+              Offer on-demand mobile massage without the overhead of in-house staff. Guests scan your bedside or welcome tent card to reserve.
             </p>
           </div>
 
-          <div className="p-6 border border-neutral-200/80 rounded-2xl bg-white shadow-2xs space-y-2.5">
+          <div className="p-5 border border-neutral-200/80 rounded-2xl bg-white shadow-2xs space-y-1.5">
             <h3 className="text-sm font-bold text-neutral-950">Drivers & Tour Guides</h3>
             <p className="text-xs text-neutral-500 leading-relaxed">
-              Recommend Bali's trusted in-villa massage to travelers after long day trips with your custom QR sticker or card.
+              Recommend Bali's trusted in-villa massage to travelers after long day trips with your custom QR card in the car.
             </p>
           </div>
 
-          <div className="p-6 border border-neutral-200/80 rounded-2xl bg-white shadow-2xs space-y-2.5">
+          <div className="p-5 border border-neutral-200/80 rounded-2xl bg-white shadow-2xs space-y-1.5">
             <h3 className="text-sm font-bold text-neutral-950">Content Creators & Guides</h3>
             <p className="text-xs text-neutral-500 leading-relaxed">
-              Feature BookTherapick in your Bali itinerary guides, links in bio, or travel blogs with automatic 30-day tracking.
+              Feature BookTherapick in your Bali itinerary guides, links in bio, or travel recommendations with automatic 30-day tracking.
             </p>
           </div>
         </div>
       </section>
 
       {/* Call to Action Banner */}
-      <section className="border border-neutral-200/80 p-8 sm:p-12 rounded-3xl text-center space-y-4 bg-white shadow-2xs">
-        <h2 className="text-2xl sm:text-3xl font-bold text-neutral-950 tracking-tight">
+      <section className="border border-neutral-200/80 p-6 sm:p-10 rounded-3xl text-center space-y-3 bg-white shadow-2xs">
+        <h2 className="text-xl sm:text-2xl font-bold text-neutral-950 tracking-tight">
           Ready to Start Partnering?
         </h2>
         <p className="text-xs sm:text-sm text-neutral-500 max-w-md mx-auto leading-relaxed">
           Create your partner account today to access your custom referral link, printable QR code, and real-time booking tracker.
         </p>
-        <div className="pt-2">
+        <div className="pt-1">
           <Link
             href="/partners/register"
             className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-neutral-950 text-white text-xs font-semibold tracking-wide hover:bg-neutral-800 transition-all shadow-xs active:scale-98"
