@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Eye, EyeOff, Lock, Mail, ArrowRight } from 'lucide-react';
+import { Eye, EyeOff, ArrowRight, AlertCircle, Lock } from 'lucide-react';
 
 export default function PartnerLoginPage() {
   const router = useRouter();
@@ -43,54 +43,53 @@ export default function PartnerLoginPage() {
   };
 
   return (
-    <div className="max-w-md mx-auto py-8 sm:py-12 px-2">
-      <div className="bg-white border border-black/10 rounded-3xl p-6 sm:p-8 shadow-[0_4px_25px_rgb(0,0,0,0.04)] space-y-6">
+    <div className="max-w-md mx-auto py-6 sm:py-12 px-2">
+      <div className="bg-white border border-neutral-200/80 rounded-2xl p-6 sm:p-8 shadow-2xs space-y-5">
         
         {/* Brand Logo & Header */}
-        <div className="text-center space-y-3 pb-2 border-b border-black/5">
-          <div className="flex justify-center items-center gap-2">
+        <div className="text-center space-y-2.5 pb-2 border-b border-neutral-100">
+          <div className="flex justify-center items-center">
             <img
               src="/therapick-logo-2.png"
               alt="BookTherapick"
-              className="h-8 w-auto max-w-[160px] object-contain"
+              className="h-7 w-auto max-w-[150px] object-contain"
             />
           </div>
-          <div className="space-y-1">
-            <h1 className="font-serif text-2xl font-bold text-black tracking-tight">
+          <div className="space-y-0.5">
+            <h1 className="text-xl font-bold text-neutral-950 tracking-tight">
               Partner Portal Login
             </h1>
-            <p className="text-xs text-black/60">
-              Access your referral link, bookings, and commissions
+            <p className="text-xs text-neutral-500">
+              Access your referral link, bookings, and commission payouts
             </p>
           </div>
         </div>
 
         {errorMsg && (
-          <div className="p-3.5 rounded-2xl border border-red-200 bg-red-50/80 text-red-700 text-xs leading-relaxed font-medium">
-            {errorMsg}
+          <div className="p-3.5 rounded-xl border border-red-200 bg-red-50/80 text-red-700 text-xs leading-relaxed font-medium flex items-start gap-2 shadow-2xs">
+            <AlertCircle size={15} className="shrink-0 mt-0.5" />
+            <span>{errorMsg}</span>
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-black mb-1.5">
+            <label className="block text-xs font-semibold text-neutral-800 mb-1">
               Email Address
             </label>
-            <div className="relative">
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="name@example.com"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-black/20 text-xs text-black bg-white focus:outline-none focus:border-black transition-colors"
-              />
-            </div>
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="name@example.com"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 text-xs text-neutral-900 bg-white focus:outline-none focus:ring-1 focus:ring-neutral-950 focus:border-neutral-950 transition-colors"
+            />
           </div>
 
           <div>
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="block text-xs font-semibold text-black">
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-xs font-semibold text-neutral-800">
                 Password
               </label>
             </div>
@@ -101,15 +100,15 @@ export default function PartnerLoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter your password"
-                className="w-full px-3.5 py-2.5 pr-10 rounded-xl border border-black/20 text-xs text-black bg-white focus:outline-none focus:border-black transition-colors"
+                className="w-full px-3.5 py-2.5 pr-10 rounded-xl border border-neutral-200 text-xs text-neutral-900 bg-white focus:outline-none focus:ring-1 focus:ring-neutral-950 focus:border-neutral-950 transition-colors"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-black/40 hover:text-black transition-colors p-1"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-900 transition-colors p-1"
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
-                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
               </button>
             </div>
           </div>
@@ -118,18 +117,18 @@ export default function PartnerLoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 rounded-xl bg-black hover:bg-black/85 text-white font-bold text-xs uppercase tracking-wider transition-all active:scale-98 disabled:opacity-50 flex items-center justify-center gap-2 shadow-sm"
+              className="w-full py-2.5 rounded-xl bg-neutral-950 hover:bg-neutral-800 text-white font-semibold text-xs tracking-wide transition-all active:scale-98 disabled:opacity-50 flex items-center justify-center gap-2 shadow-xs"
             >
               <span>{loading ? 'Signing In...' : 'Sign In'}</span>
-              <ArrowRight size={14} />
+              <ArrowRight size={13} />
             </button>
           </div>
         </form>
 
-        <div className="text-center pt-2 border-t border-black/10">
-          <p className="text-xs text-black/60">
+        <div className="text-center pt-2 border-t border-neutral-100">
+          <p className="text-xs text-neutral-500">
             Don't have a partner account?{' '}
-            <Link href="/partners/register" className="font-bold text-black hover:underline">
+            <Link href="/partners/register" className="font-semibold text-neutral-900 hover:underline">
               Apply to Join
             </Link>
           </p>

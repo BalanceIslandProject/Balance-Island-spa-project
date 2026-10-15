@@ -27,22 +27,46 @@ export default async function PartnersLayout({
   const session = await getPartnerSession();
 
   return (
-    <div className="min-h-screen bg-white text-black flex flex-col font-sans selection:bg-black selection:text-white">
+    <div className="min-h-screen bg-[#FAFAFA] text-neutral-900 flex flex-col font-sans selection:bg-neutral-900 selection:text-white antialiased">
       <PartnerNav session={session} />
-      <main className="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-10 pb-28 sm:pb-12">
+      <main className="flex-1 w-full max-w-6xl mx-auto px-3.5 sm:px-6 lg:px-8 py-4 sm:py-8 pb-28 md:pb-12">
         {children}
       </main>
-      <footer className="border-t border-black/10 bg-white py-6 text-xs text-black/60">
+      <footer className="border-t border-neutral-200/80 bg-white py-6 text-xs text-neutral-500">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="text-center sm:text-left text-black/70 font-medium">
-            &copy; {new Date().getFullYear()} BookTherapick Partner Program
+          <div className="flex items-center gap-2 text-center sm:text-left text-neutral-600 font-medium">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+            <span>&copy; {new Date().getFullYear()} BookTherapick Partner Portal</span>
           </div>
-          <div className="flex items-center gap-6">
-            <a href="https://www.booktherapick.com" className="hover:text-black transition-colors">BookTherapick</a>
-            <a href="mailto:partners@booktherapick.com" className="hover:text-black transition-colors">Support</a>
+          <div className="flex items-center gap-5 font-medium">
+            <a 
+              href="https://www.booktherapick.com" 
+              target="_blank" 
+              rel="noreferrer" 
+              className="hover:text-neutral-900 transition-colors"
+            >
+              BookTherapick.com
+            </a>
+            <span className="text-neutral-300">•</span>
+            <a 
+              href="mailto:partners@booktherapick.com" 
+              className="hover:text-neutral-900 transition-colors"
+            >
+              Partner Support
+            </a>
+            <span className="text-neutral-300">•</span>
+            <a 
+              href="https://wa.me/6285174119423" 
+              target="_blank" 
+              rel="noreferrer" 
+              className="hover:text-neutral-900 transition-colors"
+            >
+              WhatsApp Desk
+            </a>
           </div>
         </div>
       </footer>
     </div>
   );
 }
+

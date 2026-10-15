@@ -12,11 +12,10 @@ import {
   ExternalLink, 
   Copy, 
   Check, 
-  Sparkles,
-  DollarSign,
-  User,
-  MapPin,
-  CalendarDays
+  User, 
+  MapPin, 
+  CalendarDays,
+  Receipt
 } from 'lucide-react';
 
 export interface CalendarBooking {
@@ -122,7 +121,6 @@ export default function FloatingBookingCalendar({
     const map: Record<string, CalendarBooking[]> = {};
     for (const b of bookings) {
       if (!b.date) continue;
-      // Extract YYYY-MM-DD
       const dateKey = b.date.includes('T') ? b.date.split('T')[0] : b.date;
       if (!map[dateKey]) {
         map[dateKey] = [];
@@ -183,73 +181,77 @@ export default function FloatingBookingCalendar({
 
   // Calendar Content Layout
   const renderCalendarContent = () => (
-    <div className="flex flex-col h-full bg-white text-black font-sans">
+    <div className="flex flex-col h-full bg-white text-neutral-900 font-sans">
       
       {/* Month & Navigation Header */}
-      <div className="p-4 sm:p-5 border-b border-black/10 flex items-center justify-between gap-2 bg-black/[0.01]">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl bg-black text-white flex items-center justify-center font-bold text-xs shadow-sm">
-            <CalendarDays size={16} />
+      <div className="p-4 sm:p-5 border-b border-neutral-200/80 flex items-center justify-between gap-2 bg-neutral-50/50">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-neutral-950 text-white flex items-center justify-center font-bold text-xs shadow-xs">
+            <CalendarDays size={15} />
           </div>
           <div>
-            <h2 className="font-serif text-lg font-bold text-black leading-tight">
+            <h2 className="text-sm sm:text-base font-bold text-neutral-950 leading-tight">
               {MONTH_NAMES[currentMonth]} {currentYear}
             </h2>
-            <div className="flex items-center gap-2 text-[11px] text-black/60 font-medium">
-              <span>{monthStats.count} {monthStats.count === 1 ? 'booking' : 'bookings'} this month</span>
+            <div className="flex items-center gap-2 text-[11px] text-neutral-500 font-medium">
+              <span>{monthStats.count} {monthStats.count === 1 ? 'appointment' : 'appointments'}</span>
               <span>•</span>
-              <span className="font-bold text-emerald-800">{formatIDR(monthStats.totalCommission)}</span>
+              <span className="font-semibold text-emerald-700 tabular-nums font-mono">{formatIDR(monthStats.totalCommission)}</span>
             </div>
           </div>
         </div>
 
         <div className="flex items-center gap-1.5">
           <button
+            type="button"
             onClick={goToToday}
-            className="px-2.5 py-1 text-[11px] font-bold rounded-lg border border-black/15 text-black hover:bg-black/5 active:scale-95 transition-all"
+            className="px-2.5 py-1 text-[11px] font-semibold rounded-md border border-neutral-200 text-neutral-700 hover:text-neutral-950 hover:bg-neutral-100 active:scale-95 transition-all"
             title="Jump to current date"
           >
             Today
           </button>
-          <div className="flex items-center border border-black/15 rounded-lg overflow-hidden bg-white">
+          <div className="flex items-center border border-neutral-200 rounded-md overflow-hidden bg-white shadow-2xs">
             <button
+              type="button"
               onClick={goToPrevMonth}
-              className="p-1.5 hover:bg-black/5 text-black transition-colors"
+              className="p-1.5 hover:bg-neutral-100 text-neutral-700 hover:text-neutral-950 transition-colors"
               aria-label="Previous month"
             >
-              <ChevronLeft size={16} />
+              <ChevronLeft size={15} />
             </button>
             <button
+              type="button"
               onClick={goToNextMonth}
-              className="p-1.5 hover:bg-black/5 text-black transition-colors border-l border-black/10"
+              className="p-1.5 hover:bg-neutral-100 text-neutral-700 hover:text-neutral-950 transition-colors border-l border-neutral-200"
               aria-label="Next month"
             >
-              <ChevronRight size={16} />
+              <ChevronRight size={15} />
             </button>
           </div>
           {!inline && (
             <button
+              type="button"
               onClick={handleClose}
-              className="p-1.5 rounded-lg hover:bg-black/10 text-black/60 hover:text-black transition-colors ml-1"
+              className="p-1.5 rounded-md hover:bg-neutral-100 text-neutral-400 hover:text-neutral-900 transition-colors ml-1"
               aria-label="Close calendar"
             >
-              <X size={18} />
+              <X size={17} />
             </button>
           )}
         </div>
       </div>
 
       {/* Calendar Grid & Bookings split view */}
-      <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-5">
+      <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
         
         {/* Month Calendar Grid */}
-        <div className="bg-white rounded-2xl border border-black/10 p-3 sm:p-4 shadow-sm">
+        <div className="bg-white rounded-xl border border-neutral-200/80 p-3 sm:p-4 shadow-2xs">
           {/* Day of Week Headers */}
-          <div className="grid grid-cols-7 gap-1 text-center mb-2">
+          <div className="grid grid-cols-7 gap-1 text-center mb-1.5">
             {DAYS_OF_WEEK.map((d, i) => (
               <div 
                 key={d} 
-                className={`text-[11px] font-bold tracking-wider py-1 ${i === 0 ? 'text-red-600/70' : 'text-black/50'}`}
+                className={`text-[11px] font-bold tracking-wider py-1 ${i === 0 ? 'text-red-500' : 'text-neutral-400'}`}
               >
                 {d}
               </div>
@@ -260,7 +262,7 @@ export default function FloatingBookingCalendar({
           <div className="grid grid-cols-7 gap-1 text-center">
             {/* Blank leading days */}
             {Array.from({ length: firstDayIndex }).map((_, i) => (
-              <div key={`empty-${i}`} className="h-10 sm:h-12 rounded-xl" />
+              <div key={`empty-${i}`} className="h-9 sm:h-11 rounded-lg" />
             ))}
 
             {/* Month days */}
@@ -280,21 +282,22 @@ export default function FloatingBookingCalendar({
 
               return (
                 <button
+                  type="button"
                   key={dateString}
                   onClick={() => {
                     if (selectedDate === dateString) {
-                      setSelectedDate(null); // toggle off
+                      setSelectedDate(null);
                     } else {
                       setSelectedDate(dateString);
                     }
                   }}
-                  className={`h-11 sm:h-12 rounded-xl flex flex-col items-center justify-between p-1 transition-all relative group ${
+                  className={`h-10 sm:h-11 rounded-lg flex flex-col items-center justify-between p-1 transition-all relative ${
                     isSelected
-                      ? 'bg-black text-white shadow-md scale-[1.03] z-10'
+                      ? 'bg-neutral-950 text-white shadow-sm scale-[1.02] z-10'
                       : hasBookings
-                      ? 'bg-emerald-50/70 border border-emerald-200/80 hover:bg-emerald-100/70 text-black'
-                      : 'hover:bg-black/5 text-black/80'
-                  } ${isToday && !isSelected ? 'ring-2 ring-black/80 font-bold' : ''}`}
+                      ? 'bg-emerald-50/60 border border-emerald-200 hover:bg-emerald-100/70 text-neutral-900'
+                      : 'hover:bg-neutral-100 text-neutral-700'
+                  } ${isToday && !isSelected ? 'ring-1.5 ring-neutral-950 font-bold' : ''}`}
                 >
                   <span className={`text-xs ${isSelected ? 'font-bold text-white' : hasBookings ? 'font-bold text-emerald-950' : 'font-medium'}`}>
                     {dayNum}
@@ -304,13 +307,13 @@ export default function FloatingBookingCalendar({
                   {hasBookings && (
                     <div className="flex items-center gap-1 mt-auto pb-0.5">
                       {hasApproved && (
-                        <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-emerald-400' : 'bg-emerald-600'}`} />
+                        <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-emerald-300' : 'bg-emerald-600'}`} />
                       )}
                       {hasPending && (
                         <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-amber-300' : 'bg-amber-500'}`} />
                       )}
                       {dayBookings.length > 1 && (
-                        <span className={`text-[9px] font-bold ${isSelected ? 'text-white/80' : 'text-emerald-800'}`}>
+                        <span className={`text-[9px] font-bold ${isSelected ? 'text-white/90' : 'text-emerald-800'}`}>
                           {dayBookings.length}
                         </span>
                       )}
@@ -321,45 +324,46 @@ export default function FloatingBookingCalendar({
             })}
           </div>
 
-          {/* Quick Filter / Reset bar */}
-          <div className="flex items-center justify-between pt-3 mt-3 border-t border-black/10 text-xs">
-            <div className="flex items-center gap-3 text-[11px] text-black/60">
-              <span className="flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full bg-emerald-600" />
+          {/* Quick Filter / Legend Bar */}
+          <div className="flex items-center justify-between pt-2.5 mt-2.5 border-t border-neutral-100 text-xs">
+            <div className="flex items-center gap-3 text-[11px] text-neutral-500 font-medium">
+              <span className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
                 <span>Approved</span>
               </span>
-              <span className="flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full bg-amber-500" />
+              <span className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
                 <span>Pending</span>
               </span>
             </div>
 
             {selectedDate && (
               <button
+                type="button"
                 onClick={() => setSelectedDate(null)}
-                className="text-[11px] font-bold text-black hover:underline"
+                className="text-[11px] font-semibold text-neutral-900 hover:underline"
               >
-                Clear Day (Show All {MONTH_NAMES[currentMonth]})
+                Clear Day Filter
               </button>
             )}
           </div>
         </div>
 
         {/* Selected Date Header & Status Pills */}
-        <div className="space-y-3">
+        <div className="space-y-2.5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
-              <h3 className="font-serif text-base font-bold text-black flex items-center gap-2">
+              <h3 className="text-xs sm:text-sm font-bold text-neutral-900 flex items-center gap-2">
                 <span>
                   {selectedDate 
-                    ? `Bookings on ${new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`
-                    : `All Bookings in ${MONTH_NAMES[currentMonth]} ${currentYear}`}
+                    ? `Appointments on ${new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`
+                    : `All Appointments in ${MONTH_NAMES[currentMonth]} ${currentYear}`}
                 </span>
-                <span className="text-xs bg-black/5 text-black px-2 py-0.5 rounded-full font-mono font-bold">
+                <span className="text-[11px] bg-neutral-100 text-neutral-700 px-2 py-0.5 rounded-md font-mono font-bold">
                   {displayedBookings.length}
                 </span>
               </h3>
-              <p className="text-xs text-black/60">
+              <p className="text-[11px] text-neutral-500">
                 {selectedDate 
                   ? 'Showing attributed guest appointments on this specific date'
                   : 'Appointments scheduled or attributed during this month'}
@@ -367,15 +371,16 @@ export default function FloatingBookingCalendar({
             </div>
 
             {/* Filter buttons */}
-            <div className="flex items-center gap-1 bg-black/[0.04] p-1 rounded-xl self-start sm:self-auto border border-black/5 text-[11px]">
+            <div className="flex items-center gap-1 bg-neutral-100 p-0.5 rounded-lg self-start sm:self-auto border border-neutral-200/60 text-[11px]">
               {(['all', 'approved', 'pending'] as const).map((s) => (
                 <button
+                  type="button"
                   key={s}
                   onClick={() => setStatusFilter(s)}
-                  className={`px-2.5 py-1 rounded-lg capitalize font-bold transition-all ${
+                  className={`px-2.5 py-1 rounded-md capitalize font-semibold transition-all ${
                     statusFilter === s
-                      ? 'bg-black text-white shadow-xs'
-                      : 'text-black/60 hover:text-black'
+                      ? 'bg-neutral-950 text-white shadow-2xs'
+                      : 'text-neutral-600 hover:text-neutral-950'
                   }`}
                 >
                   {s}
@@ -386,19 +391,19 @@ export default function FloatingBookingCalendar({
 
           {/* Booking Cards List */}
           {displayedBookings.length === 0 ? (
-            <div className="p-8 text-center rounded-2xl border border-dashed border-black/20 bg-black/[0.01] space-y-2">
-              <CalendarIcon size={24} className="mx-auto text-black/30" />
-              <p className="text-xs font-semibold text-black/70">
+            <div className="p-6 text-center rounded-xl border border-dashed border-neutral-200 bg-neutral-50/50 space-y-1.5">
+              <CalendarIcon size={20} className="mx-auto text-neutral-400" />
+              <p className="text-xs font-semibold text-neutral-800">
                 {selectedDate 
-                  ? 'No referred bookings recorded for this day.' 
-                  : `No referred bookings found for ${MONTH_NAMES[currentMonth]} ${currentYear}.`}
+                  ? 'No referred appointments recorded for this day.' 
+                  : `No referred appointments found for ${MONTH_NAMES[currentMonth]} ${currentYear}.`}
               </p>
-              <p className="text-[11px] text-black/50 max-w-sm mx-auto">
+              <p className="text-[11px] text-neutral-500 max-w-sm mx-auto">
                 Share your partner referral link or QR code with villa guests and clients to track upcoming bookings!
               </p>
             </div>
           ) : (
-            <div className="space-y-2.5">
+            <div className="space-y-2">
               {displayedBookings.map((b) => {
                 const isApproved = b.commission_status === 'approved';
                 const isPaid = b.commission_status === 'paid';
@@ -407,17 +412,18 @@ export default function FloatingBookingCalendar({
                 return (
                   <div
                     key={b.id || b.booking_id}
-                    className="p-3.5 sm:p-4 rounded-2xl border border-black/10 bg-white hover:border-black/20 shadow-[0_2px_8px_rgb(0,0,0,0.02)] transition-all space-y-2.5"
+                    className="p-3.5 rounded-xl border border-neutral-200/80 bg-white hover:border-neutral-300 shadow-2xs transition-all space-y-2"
                   >
                     {/* Top Row: Ref & Status Pill */}
                     <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs font-bold text-black bg-black/[0.04] px-2 py-0.5 rounded-md border border-black/5">
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-mono text-xs font-bold text-neutral-900 bg-neutral-100 px-2 py-0.5 rounded border border-neutral-200/70">
                           #{b.booking_id}
                         </span>
                         <button
+                          type="button"
                           onClick={() => handleCopy(b.booking_id)}
-                          className="text-black/40 hover:text-black transition-colors"
+                          className="text-neutral-400 hover:text-neutral-800 transition-colors p-0.5"
                           title="Copy booking reference"
                         >
                           {copiedId === b.booking_id ? <Check size={12} className="text-emerald-600" /> : <Copy size={12} />}
@@ -426,19 +432,19 @@ export default function FloatingBookingCalendar({
 
                       <div className="flex items-center gap-1.5">
                         {isApproved && (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
                             <CheckCircle2 size={11} />
                             Approved
                           </span>
                         )}
                         {isPending && (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
                             <Clock size={11} />
                             Pending Verification
                           </span>
                         )}
                         {isPaid && (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-indigo-800 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-200">
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-neutral-700 bg-neutral-100 px-2 py-0.5 rounded-md border border-neutral-200">
                             Paid Out
                           </span>
                         )}
@@ -446,28 +452,28 @@ export default function FloatingBookingCalendar({
                     </div>
 
                     {/* Middle Row: Guest, Treatment & Time */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-xs">
                       <div className="space-y-0.5">
-                        <div className="font-semibold text-black truncate flex items-center gap-1.5">
-                          <User size={13} className="text-black/40 shrink-0" />
+                        <div className="font-semibold text-neutral-900 truncate flex items-center gap-1.5">
+                          <User size={13} className="text-neutral-400 shrink-0" />
                           <span>{b.guest_name || 'Guest Booking'}</span>
                         </div>
-                        <div className="text-[11px] text-black/60 truncate pl-4">
+                        <div className="text-[11px] text-neutral-500 truncate pl-4">
                           {b.treatment_name || 'Mobile Spa Treatment'}
                         </div>
                       </div>
 
                       <div className="sm:text-right space-y-0.5">
-                        <div className="text-[11px] font-medium text-black/70 flex items-center sm:justify-end gap-1">
-                          <Clock size={12} className="text-black/40" />
+                        <div className="text-[11px] font-medium text-neutral-600 flex items-center sm:justify-end gap-1">
+                          <Clock size={12} className="text-neutral-400" />
                           <span>
                             {new Date(b.date + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
                             {b.time ? ` • ${b.time}` : ''}
                           </span>
                         </div>
                         {b.location && (
-                          <div className="text-[11px] text-black/50 truncate flex items-center sm:justify-end gap-1">
-                            <MapPin size={11} className="text-black/30" />
+                          <div className="text-[11px] text-neutral-400 truncate flex items-center sm:justify-end gap-1">
+                            <MapPin size={11} className="text-neutral-300" />
                             <span>{b.location}</span>
                           </div>
                         )}
@@ -475,29 +481,29 @@ export default function FloatingBookingCalendar({
                     </div>
 
                     {/* Bottom Row: Financial breakdown & Link to Invoice */}
-                    <div className="pt-2 border-t border-black/5 flex items-center justify-between text-xs">
+                    <div className="pt-2 border-t border-neutral-100 flex items-center justify-between text-xs">
                       <div>
-                        <span className="text-[10px] text-black/50 uppercase font-semibold">Treatment: </span>
-                        <span className="text-black font-medium">{formatIDR(b.treatment_amount || b.gross_amount)}</span>
+                        <span className="text-[10px] text-neutral-400 uppercase font-semibold">Treatment: </span>
+                        <span className="text-neutral-900 font-medium font-mono tabular-nums">{formatIDR(b.treatment_amount || b.gross_amount)}</span>
                       </div>
 
                       <div className="flex items-center gap-3">
                         <div className="text-right">
-                          <span className="text-[10px] text-emerald-800 uppercase font-bold tracking-wider">Earned: </span>
-                          <span className="text-xs font-bold text-emerald-800">
+                          <span className="text-[10px] text-emerald-700 uppercase font-bold tracking-wider">Earned: </span>
+                          <span className="text-xs font-bold text-emerald-700 font-mono tabular-nums">
                             +{formatIDR(b.commission_amount)}
                           </span>
-                          <span className="text-[10px] text-black/50 ml-1">({b.commission_rate_pct}%)</span>
+                          <span className="text-[10px] text-neutral-400 ml-1">({b.commission_rate_pct}%)</span>
                         </div>
 
                         <Link
                           href={`/invoice/${b.booking_id}`}
                           target="_blank"
-                          className="inline-flex items-center gap-1 text-[11px] font-bold text-black hover:text-black/70 hover:underline shrink-0"
+                          className="inline-flex items-center gap-1 text-[11px] font-semibold text-neutral-700 hover:text-neutral-950 hover:underline shrink-0"
                           title="View verified booking invoice"
                         >
                           <span>Invoice</span>
-                          <ExternalLink size={11} />
+                          <ExternalLink size={10} />
                         </Link>
                       </div>
                     </div>
@@ -513,13 +519,13 @@ export default function FloatingBookingCalendar({
       </div>
 
       {/* Footer Summary Bar */}
-      <div className="p-3 sm:p-4 border-t border-black/10 bg-black/[0.02] flex items-center justify-between text-xs">
-        <div className="text-black/60">
-          Domain: <span className="font-mono font-bold text-black">www.booktherapick.com</span>
+      <div className="p-3 sm:p-4 border-t border-neutral-200/80 bg-neutral-50/50 flex items-center justify-between text-xs">
+        <div className="text-neutral-500 font-medium">
+          Domain: <span className="font-mono text-neutral-800">www.booktherapick.com</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-[11px] text-black/60">Total Commission:</span>
-          <span className="font-bold text-black text-sm">
+          <span className="text-[11px] text-neutral-500 font-medium">Displayed Total:</span>
+          <span className="font-bold text-neutral-950 text-sm font-mono tabular-nums">
             {formatIDR(
               displayedBookings.reduce((sum, b) => sum + (b.commission_amount || 0), 0)
             )}
@@ -533,7 +539,7 @@ export default function FloatingBookingCalendar({
   // If used inline inside a dashboard section
   if (inline) {
     return (
-      <div className="bg-white border border-black/10 rounded-3xl overflow-hidden shadow-[0_2px_10px_rgb(0,0,0,0.02)]">
+      <div className="bg-white border border-neutral-200/80 rounded-2xl overflow-hidden shadow-2xs">
         {renderCalendarContent()}
       </div>
     );
@@ -545,35 +551,36 @@ export default function FloatingBookingCalendar({
       {/* Floating Action Trigger Button (FAB) */}
       {showFloatingButton && (
         <button
+          type="button"
           onClick={handleOpen}
           aria-label="Open Bookings Calendar"
-          className="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-40 bg-black text-white hover:bg-neutral-800 active:scale-95 shadow-[0_8px_30px_rgb(0,0,0,0.25)] border border-white/20 px-4 py-3 rounded-full flex items-center gap-2.5 transition-all group backdrop-blur-md"
+          className="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-40 bg-neutral-950 text-white hover:bg-neutral-800 active:scale-95 shadow-md border border-neutral-800 px-3.5 py-2.5 rounded-full flex items-center gap-2 transition-all group backdrop-blur-md"
         >
           <div className="relative">
-            <CalendarIcon size={17} className="text-white group-hover:scale-110 transition-transform" />
+            <CalendarIcon size={15} className="text-white" />
             {monthStats.count > 0 && (
-              <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-black animate-pulse" />
+              <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-emerald-400 ring-1 ring-neutral-950" />
             )}
           </div>
-          <span className="text-xs font-bold tracking-wide">Calendar</span>
+          <span className="text-xs font-semibold tracking-wide">Calendar</span>
           {bookings.length > 0 && (
-            <span className="bg-white/20 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+            <span className="bg-neutral-800 text-neutral-200 text-[10px] font-mono font-bold px-1.5 py-0.2 rounded-full">
               {bookings.length}
             </span>
           )}
         </button>
       )}
 
-      {/* Floating Calendar Overlay Modal (App Bottom-Sheet on mobile, centered card on desktop) */}
+      {/* Floating Calendar Overlay Modal (App Bottom-Sheet on mobile, centered modal on desktop) */}
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/40 backdrop-blur-xs animate-in fade-in duration-150">
           {/* Backdrop dismiss */}
           <div className="fixed inset-0" onClick={handleClose} />
 
           {/* Calendar Container */}
-          <div className="relative z-10 w-full sm:max-w-2xl bg-white rounded-t-[32px] sm:rounded-3xl shadow-2xl border border-black/10 max-h-[90vh] sm:max-h-[85vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-250">
+          <div className="relative z-10 w-full sm:max-w-2xl bg-white rounded-t-3xl sm:rounded-2xl shadow-xl border border-neutral-200/80 max-h-[90vh] sm:max-h-[85vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200">
             {/* Mobile swipe / pull indicator */}
-            <div className="w-12 h-1.5 bg-black/20 rounded-full mx-auto my-2.5 sm:hidden" />
+            <div className="w-10 h-1 bg-neutral-300 rounded-full mx-auto my-2.5 sm:hidden shrink-0" />
             {renderCalendarContent()}
           </div>
         </div>
