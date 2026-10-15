@@ -36,66 +36,24 @@ export default function Footer() {
               Bali's premier luxury mobile spa. Bringing 5-star professional massages and organic wellness treatments directly to your private villa or hotel.
             </p>
 
-            <div className="flex flex-row items-start gap-6 sm:gap-12 md:gap-20">
-              <div className="flex flex-col gap-3 shrink-0">
-                <span className="text-xs font-bold uppercase tracking-widest text-text-muted">Find us on</span>
-                
-                <a href="https://share.google/7evzKgW2VdC2C9QWY" target="_blank" rel="noopener noreferrer" className="domain-ubud-only inline-flex hover:opacity-80 transition-opacity">
-                  <GoogleReviewsLogo />
-                </a>
-                
-                <a href="https://share.google/mA7g8NkNuB37g8WHs" target="_blank" rel="noopener noreferrer" className="domain-bali-only inline-flex hover:opacity-80 transition-opacity">
-                  <GoogleReviewsLogo />
-                </a>
-                
-                <a href="https://share.google/LRhEtZHpMLBAg9ySs" target="_blank" rel="noopener noreferrer" className="domain-therapick-only inline-flex hover:opacity-80 transition-opacity">
-                  <GoogleReviewsLogo />
-                </a>
-              </div>
-
-              <div className="flex flex-col gap-3 min-w-0">
-                <span className="text-xs font-bold uppercase tracking-widest text-text-muted truncate">Book a Tour</span>
-                <a 
-                  href="https://www.balanceisland.com" 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="group flex items-center gap-2.5 hover:opacity-80 transition-opacity"
-                >
-                  <span className="text-[#3c4043] font-bold text-[15px] sm:text-base md:text-lg tracking-tight font-sans truncate">balanceisland.com</span>
-                  <div className="w-[22px] h-[22px] rounded-full bg-black text-white flex items-center justify-center transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 shadow-sm">
-                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M7 17L17 7M17 7v6M17 7h-6" />
-                    </svg>
-                  </div>
-                </a>
-              </div>
+            <div className="flex flex-col gap-3">
+              <span className="text-xs font-bold uppercase tracking-widest text-text-muted">Find us on</span>
+              
+              <a href="https://share.google/7evzKgW2VdC2C9QWY" target="_blank" rel="noopener noreferrer" className="domain-ubud-only inline-flex hover:opacity-80 transition-opacity">
+                <GoogleReviewsLogo />
+              </a>
+              
+              <a href="https://share.google/mA7g8NkNuB37g8WHs" target="_blank" rel="noopener noreferrer" className="domain-bali-only inline-flex hover:opacity-80 transition-opacity">
+                <GoogleReviewsLogo />
+              </a>
+              
+              <a href="https://share.google/LRhEtZHpMLBAg9ySs" target="_blank" rel="noopener noreferrer" className="domain-therapick-only inline-flex hover:opacity-80 transition-opacity">
+                <GoogleReviewsLogo />
+              </a>
             </div>
           </div>
 
           <div className="flex flex-col gap-4 w-full border-t border-border/40 pt-8 mt-4">
-            {/* Prominent Partner Callout strictly visible on BookTherapick */}
-            <div className="domain-therapick-only w-full bg-[#FAF7F2] border border-[#E8E2D9] rounded-2xl p-4 sm:p-5 mb-2 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <span className="text-[11px] font-bold uppercase tracking-wider text-amber-900 bg-amber-100/60 px-2 py-0.5 rounded-full inline-block mb-1">
-                  Hospitality & Drivers & Creators
-                </span>
-                <h4 className="font-serif text-base sm:text-lg font-bold text-primary">
-                  Partner with BookTherapick &bull; Earn 15% Commission
-                </h4>
-                <p className="text-xs sm:text-sm text-text-muted mt-0.5">
-                  Offer 5-star mobile spa to your villa guests or followers. Get custom QR codes and verified IDR payouts.
-                </p>
-              </div>
-              <Link
-                href="/partners"
-                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-white text-xs sm:text-sm font-semibold hover:bg-black/80 transition-all shrink-0 shadow-sm"
-              >
-                <span>Partner Portal</span>
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                </svg>
-              </Link>
-            </div>
 
             <div className="flex flex-wrap gap-8 items-center">
               <Link href="/privacy" className="text-sm md:text-[15px] text-text-muted hover:text-primary transition-colors duration-300">Privacy Policy</Link>

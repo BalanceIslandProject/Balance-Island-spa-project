@@ -17,12 +17,12 @@ export default function PartnerProgramOverviewPage() {
 
         <div className="space-y-3 sm:space-y-4">
           <h1 className="font-serif text-3xl sm:text-5xl lg:text-6xl text-neutral-950 font-normal sm:font-medium tracking-tight leading-[1.18]">
-            <span className="inline-flex flex-wrap items-center gap-x-2.5 sm:gap-x-3.5 gap-y-1">
+            <span className="inline-flex flex-wrap items-center gap-x-3 sm:gap-x-4 gap-y-1.5">
               <span>Partner with</span>
               <img
                 src="/therapick-logo-2.png"
                 alt="Therapick"
-                className="h-7 sm:h-11 lg:h-13 w-auto object-contain mix-blend-multiply align-middle"
+                className="h-[30px] sm:h-[48px] lg:h-[58px] w-auto object-contain align-middle"
               />
             </span>
             <span className="block text-xl sm:text-3xl lg:text-4xl text-neutral-600 font-light italic mt-1.5 sm:mt-2.5">
