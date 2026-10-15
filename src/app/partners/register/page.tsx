@@ -3,7 +3,21 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Eye, EyeOff, CheckCircle2, Clock, ArrowRight, ShieldCheck, AlertCircle, Building2, User, CreditCard } from 'lucide-react';
+import { 
+  Eye, 
+  EyeOff, 
+  Clock, 
+  ArrowRight, 
+  ShieldCheck, 
+  AlertCircle, 
+  Building2, 
+  User, 
+  CreditCard,
+  MessageCircle,
+  Globe,
+  Landmark,
+  Check
+} from 'lucide-react';
 
 export default function PartnerRegisterPage() {
   const router = useRouter();
@@ -13,7 +27,6 @@ export default function PartnerRegisterPage() {
     last_name: '',
     business_name: '',
     email: '',
-    phone: '',
     whatsapp: '',
     partner_type: 'hotel_villa',
     custom_code: '',
@@ -40,12 +53,21 @@ export default function PartnerRegisterPage() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleSelectPayout = (method: string) => {
+    setFormData((prev) => ({ ...prev, payout_method: method }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
 
     if (!agreeTerms) {
       setErrorMsg('Please agree to the Partner Terms & Conditions.');
+      return;
+    }
+
+    if (!formData.whatsapp.trim()) {
+      setErrorMsg('Please enter your WhatsApp number with country code.');
       return;
     }
 
@@ -87,8 +109,8 @@ export default function PartnerRegisterPage() {
           last_name: formData.last_name,
           business_name: formData.business_name,
           email: formData.email,
-          phone: formData.phone,
-          whatsapp: formData.whatsapp || formData.phone,
+          phone: formData.whatsapp, // Synchronize whatsapp to phone for backend database compatibility
+          whatsapp: formData.whatsapp,
           partner_type: formData.partner_type,
           custom_code: formData.custom_code,
           password: formData.password,
@@ -117,70 +139,8 @@ export default function PartnerRegisterPage() {
 
   if (isSubmitted) {
     return (
-      <div className="max-w-md mx-auto py-8 sm:py-12 px-2">
-        <div className="bg-white border border-neutral-200/80 rounded-2xl p-6 sm:p-8 shadow-2xs text-center space-y-5">
-          <div className="flex justify-center items-center">
-            <img
-              src="/therapick-logo-2.png"
-              alt="BookTherapick"
-              className="h-7 w-auto max-w-[150px] object-contain"
-            />
-          </div>
-
-          <div className="w-12 h-12 bg-neutral-100 rounded-full flex items-center justify-center mx-auto text-neutral-800">
-            <Clock size={24} />
-          </div>
-
-          <div className="space-y-1.5">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 bg-neutral-100 px-2.5 py-0.5 rounded border border-neutral-200">
-              Pending Admin Review
-            </span>
-            <h2 className="text-xl font-bold text-neutral-950 tracking-tight">
-              Application Submitted
-            </h2>
-            <p className="text-xs text-neutral-500 leading-relaxed max-w-sm mx-auto">
-              Thank you for applying to the BookTherapick Partner Program! Your account has been registered and is currently awaiting administrator verification.
-            </p>
-          </div>
-
-          {submittedPartnerCode && (
-            <div className="bg-neutral-50 border border-neutral-200 rounded-xl p-3.5 text-xs">
-              <span className="text-neutral-500 block text-[10px] uppercase font-semibold mb-0.5">Assigned Partner Code</span>
-              <span className="font-mono font-bold text-neutral-950 text-sm tracking-wider">#{submittedPartnerCode}</span>
-            </div>
-          )}
-
-          <div className="p-3.5 rounded-xl bg-neutral-50 border border-neutral-200/70 text-xs text-neutral-600 text-left space-y-1">
-            <p className="font-semibold text-neutral-900">What happens next?</p>
-            <p className="text-neutral-500 leading-relaxed">Our operations team verifies all partner accounts. Once approved, you can log in with your email and password to access your dashboard, referral links, and payouts.</p>
-          </div>
-
-          <div className="pt-2 flex flex-col gap-2">
-            <Link
-              href="/partners/login"
-              className="w-full py-2.5 rounded-xl bg-neutral-950 hover:bg-neutral-800 text-white font-semibold text-xs tracking-wide transition-all flex items-center justify-center gap-2 shadow-xs"
-            >
-              <span>Go to Partner Login</span>
-              <ArrowRight size={13} />
-            </Link>
-            <a
-              href="https://www.booktherapick.com"
-              className="w-full py-2.5 rounded-xl border border-neutral-200 text-neutral-800 hover:bg-neutral-50 font-semibold text-xs transition-colors shadow-2xs text-center"
-            >
-              Return to BookTherapick
-            </a>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="max-w-xl mx-auto py-4 sm:py-6">
-      <div className="bg-white border border-neutral-200/80 rounded-2xl p-5 sm:p-8 shadow-2xs space-y-6">
-        
-        {/* Header */}
-        <div className="space-y-2.5 pb-2 border-b border-neutral-100 text-center">
+      <div className="max-w-md mx-auto py-8 sm:py-14 px-2">
+        <div className="bg-white border border-neutral-200/80 rounded-3xl p-6 sm:p-9 shadow-2xs text-center space-y-6">
           <div className="flex justify-center items-center">
             <img
               src="/therapick-logo-2.png"
@@ -188,14 +148,82 @@ export default function PartnerRegisterPage() {
               className="h-7 w-auto max-w-[150px] object-contain mix-blend-multiply"
             />
           </div>
-          <div className="space-y-0.5">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 bg-neutral-100 px-2 py-0.5 rounded border border-neutral-200/60">
+
+          <div className="w-14 h-14 bg-neutral-100 rounded-full flex items-center justify-center mx-auto text-neutral-800">
+            <Clock size={26} />
+          </div>
+
+          <div className="space-y-2">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 bg-neutral-100 px-3 py-1 rounded-full border border-neutral-200">
+              Pending Admin Review
+            </span>
+            <h2 className="font-serif text-2xl font-medium text-neutral-950 tracking-tight pt-1">
+              Application Submitted
+            </h2>
+            <p className="text-xs text-neutral-500 leading-relaxed max-w-sm mx-auto">
+              Thank you for applying to the Therapick Partner Program. Your account has been registered and is currently under review by our operations team.
+            </p>
+          </div>
+
+          {submittedPartnerCode && (
+            <div className="bg-neutral-50 border border-neutral-200/80 rounded-2xl p-4 text-xs">
+              <span className="text-neutral-500 block text-[10px] uppercase font-bold tracking-wider mb-1">
+                Assigned Partner Code
+              </span>
+              <span className="font-mono font-bold text-neutral-950 text-base tracking-wider">
+                #{submittedPartnerCode}
+              </span>
+            </div>
+          )}
+
+          <div className="p-4 rounded-2xl bg-neutral-50 border border-neutral-200/70 text-xs text-neutral-600 text-left space-y-1.5">
+            <p className="font-bold text-neutral-900">What happens next?</p>
+            <p className="text-neutral-500 leading-relaxed text-[11px]">
+              We verify all partner applications within 24 hours. Once activated, you can log in with your email and password to access your custom QR code, booking tracking, and payouts.
+            </p>
+          </div>
+
+          <div className="pt-2 flex flex-col gap-2.5">
+            <Link
+              href="/partners/login"
+              className="w-full py-3 rounded-xl bg-neutral-950 hover:bg-neutral-800 text-white font-semibold text-xs tracking-wide transition-all flex items-center justify-center gap-2 shadow-xs"
+            >
+              <span>Go to Partner Login</span>
+              <ArrowRight size={13} />
+            </Link>
+            <Link
+              href="/partners"
+              className="w-full py-3 rounded-xl border border-neutral-200 text-neutral-800 hover:bg-neutral-50 font-semibold text-xs transition-colors shadow-2xs text-center"
+            >
+              Return to Partner Overview
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-xl mx-auto py-4 sm:py-8 px-1 sm:px-2">
+      <div className="bg-white border border-neutral-200/80 rounded-3xl p-5 sm:p-9 shadow-2xs space-y-7">
+        
+        {/* Header */}
+        <div className="space-y-3 pb-3 border-b border-neutral-100 text-center">
+          <div className="flex justify-center items-center">
+            <img
+              src="/therapick-logo-2.png"
+              alt="Therapick"
+              className="h-8 w-auto max-w-[160px] object-contain mix-blend-multiply"
+            />
+          </div>
+          <div className="space-y-1">
+            <span className="inline-block text-[10px] font-bold uppercase tracking-widest text-neutral-500 bg-neutral-100 px-3 py-0.5 rounded-full border border-neutral-200/60">
               Partner Application
             </span>
             <h1 className="font-serif text-2xl sm:text-3xl font-medium text-neutral-950 tracking-tight pt-1">
               Join the Therapick Partner Network
             </h1>
-            <p className="text-xs text-neutral-500">
+            <p className="text-xs text-neutral-500 max-w-sm mx-auto font-light">
               Earn commissions on referred mobile spa bookings across Bali
             </p>
           </div>
@@ -210,12 +238,12 @@ export default function PartnerRegisterPage() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           
-          {/* Section 1: Contact */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-2 border-b border-neutral-100 pb-1.5">
+          {/* Section 1: Partner Profile */}
+          <div className="space-y-3.5">
+            <div className="flex items-center gap-2 border-b border-neutral-100 pb-2">
               <User size={14} className="text-neutral-700" />
               <h2 className="text-xs font-bold uppercase tracking-wider text-neutral-900">
-                1. Contact & Business Profile
+                1. Partner & Business Profile
               </h2>
             </div>
 
@@ -229,7 +257,7 @@ export default function PartnerRegisterPage() {
                   value={formData.first_name}
                   onChange={handleChange}
                   placeholder="First name"
-                  className="w-full px-3 py-2 rounded-xl border border-neutral-200 text-xs text-neutral-900 bg-white focus:outline-none focus:ring-1 focus:ring-neutral-950 focus:border-neutral-950 transition-colors"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 text-xs text-neutral-900 bg-white focus:outline-none focus:ring-2 focus:ring-neutral-900/10 focus:border-neutral-900 transition-all placeholder:text-neutral-400"
                 />
               </div>
 
@@ -241,20 +269,22 @@ export default function PartnerRegisterPage() {
                   value={formData.last_name}
                   onChange={handleChange}
                   placeholder="Last name"
-                  className="w-full px-3 py-2 rounded-xl border border-neutral-200 text-xs text-neutral-900 bg-white focus:outline-none focus:ring-1 focus:ring-neutral-950 focus:border-neutral-950 transition-colors"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 text-xs text-neutral-900 bg-white focus:outline-none focus:ring-2 focus:ring-neutral-900/10 focus:border-neutral-900 transition-all placeholder:text-neutral-400"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-neutral-800 mb-1">Villa, Hotel, or Business Name</label>
+              <label className="block text-xs font-semibold text-neutral-800 mb-1">
+                Villa, Hotel, or Business Name
+              </label>
               <input
                 type="text"
                 name="business_name"
                 value={formData.business_name}
                 onChange={handleChange}
                 placeholder="e.g. Villa Mandala Ubud"
-                className="w-full px-3 py-2 rounded-xl border border-neutral-200 text-xs text-neutral-900 bg-white focus:outline-none focus:ring-1 focus:ring-neutral-950 focus:border-neutral-950 transition-colors"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 text-xs text-neutral-900 bg-white focus:outline-none focus:ring-2 focus:ring-neutral-900/10 focus:border-neutral-900 transition-all placeholder:text-neutral-400"
               />
             </div>
 
@@ -265,7 +295,7 @@ export default function PartnerRegisterPage() {
                   name="partner_type"
                   value={formData.partner_type}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 rounded-xl border border-neutral-200 text-xs text-neutral-900 bg-white focus:outline-none focus:ring-1 focus:ring-neutral-950 focus:border-neutral-950 transition-colors"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 text-xs text-neutral-900 bg-white focus:outline-none focus:ring-2 focus:ring-neutral-900/10 focus:border-neutral-900 transition-all cursor-pointer"
                 >
                   <option value="hotel_villa">Villa or Hotel Host</option>
                   <option value="tour_driver">Tour Driver / Guide</option>
@@ -277,25 +307,25 @@ export default function PartnerRegisterPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-neutral-800 mb-1">Custom Code (Optional)</label>
+                <label className="block text-xs font-semibold text-neutral-800 mb-1">Custom Promo Code (Optional)</label>
                 <input
                   type="text"
                   name="custom_code"
                   value={formData.custom_code}
                   onChange={handleChange}
-                  placeholder="e.g. MANDALA15"
-                  className="w-full px-3 py-2 rounded-xl border border-neutral-200 text-xs uppercase font-mono text-neutral-900 bg-white focus:outline-none focus:ring-1 focus:ring-neutral-950 focus:border-neutral-950 transition-colors"
+                  placeholder="e.g. MANDALA"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 text-xs uppercase font-mono text-neutral-900 bg-white focus:outline-none focus:ring-2 focus:ring-neutral-900/10 focus:border-neutral-900 transition-all placeholder:text-neutral-400 placeholder:normal-case"
                 />
               </div>
             </div>
           </div>
 
-          {/* Section 2: Credentials & WhatsApp */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-2 border-b border-neutral-100 pb-1.5">
+          {/* Section 2: Account & WhatsApp */}
+          <div className="space-y-3.5">
+            <div className="flex items-center gap-2 border-b border-neutral-100 pb-2">
               <ShieldCheck size={14} className="text-neutral-700" />
               <h2 className="text-xs font-bold uppercase tracking-wider text-neutral-900">
-                2. Login Credentials & WhatsApp
+                2. Account & WhatsApp Contact
               </h2>
             </div>
 
@@ -305,40 +335,45 @@ export default function PartnerRegisterPage() {
                 type="email"
                 name="email"
                 required
+                inputMode="email"
                 value={formData.email}
                 onChange={handleChange}
                 placeholder="you@example.com"
-                className="w-full px-3 py-2 rounded-xl border border-neutral-200 text-xs text-neutral-900 bg-white focus:outline-none focus:ring-1 focus:ring-neutral-950 focus:border-neutral-950 transition-colors"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 text-xs text-neutral-900 bg-white focus:outline-none focus:ring-2 focus:ring-neutral-900/10 focus:border-neutral-900 transition-all placeholder:text-neutral-400"
               />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-semibold text-neutral-800 mb-1">WhatsApp Number</label>
+            {/* WhatsApp ONLY (Phone Number Removed) */}
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-xs font-semibold text-neutral-800 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
+                  <span>WhatsApp Number *</span>
+                </label>
+                <span className="text-[10px] text-neutral-400 font-medium">With country code</span>
+              </div>
+              <div className="relative">
+                <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-emerald-600 pointer-events-none">
+                  <MessageCircle size={15} />
+                </div>
                 <input
                   type="tel"
                   name="whatsapp"
+                  required
+                  inputMode="tel"
                   value={formData.whatsapp}
                   onChange={handleChange}
-                  placeholder="+62 812..."
-                  className="w-full px-3 py-2 rounded-xl border border-neutral-200 text-xs text-neutral-900 bg-white focus:outline-none focus:ring-1 focus:ring-neutral-950 focus:border-neutral-950 transition-colors"
+                  placeholder="+62 812 3456 7890"
+                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-neutral-200 text-xs font-medium text-neutral-900 bg-white focus:outline-none focus:ring-2 focus:ring-neutral-900/10 focus:border-neutral-900 transition-all placeholder:text-neutral-400"
                 />
               </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-neutral-800 mb-1">Phone Number</label>
-                <input
-                  type="tel"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  placeholder="+62 812..."
-                  className="w-full px-3 py-2 rounded-xl border border-neutral-200 text-xs text-neutral-900 bg-white focus:outline-none focus:ring-1 focus:ring-neutral-950 focus:border-neutral-950 transition-colors"
-                />
-              </div>
+              <p className="text-[11px] text-neutral-500 mt-1.5 leading-relaxed">
+                Include country code (e.g. +62 for Indonesia). Used exclusively for booking attribution alerts & partner support.
+              </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* Passwords */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
               <div>
                 <label className="block text-xs font-semibold text-neutral-800 mb-1">Password *</label>
                 <div className="relative">
@@ -349,7 +384,7 @@ export default function PartnerRegisterPage() {
                     value={formData.password}
                     onChange={handleChange}
                     placeholder="Min. 6 characters"
-                    className="w-full px-3 py-2 pr-9 rounded-xl border border-neutral-200 text-xs text-neutral-900 bg-white focus:outline-none focus:ring-1 focus:ring-neutral-950 focus:border-neutral-950 transition-colors"
+                    className="w-full px-3.5 py-2.5 pr-9 rounded-xl border border-neutral-200 text-xs text-neutral-900 bg-white focus:outline-none focus:ring-2 focus:ring-neutral-900/10 focus:border-neutral-900 transition-all placeholder:text-neutral-400"
                   />
                   <button
                     type="button"
@@ -372,7 +407,7 @@ export default function PartnerRegisterPage() {
                     value={formData.confirm_password}
                     onChange={handleChange}
                     placeholder="Repeat password"
-                    className="w-full px-3 py-2 pr-9 rounded-xl border border-neutral-200 text-xs text-neutral-900 bg-white focus:outline-none focus:ring-1 focus:ring-neutral-950 focus:border-neutral-950 transition-colors"
+                    className="w-full px-3.5 py-2.5 pr-9 rounded-xl border border-neutral-200 text-xs text-neutral-900 bg-white focus:outline-none focus:ring-2 focus:ring-neutral-900/10 focus:border-neutral-900 transition-all placeholder:text-neutral-400"
                   />
                   <button
                     type="button"
@@ -387,119 +422,169 @@ export default function PartnerRegisterPage() {
             </div>
           </div>
 
-          {/* Section 3: Payout Details */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-2 border-b border-neutral-100 pb-1.5">
+          {/* Section 3: Payout Method (Interactive Visual Selector) */}
+          <div className="space-y-3.5">
+            <div className="flex items-center gap-2 border-b border-neutral-100 pb-2">
               <CreditCard size={14} className="text-neutral-700" />
               <h2 className="text-xs font-bold uppercase tracking-wider text-neutral-900">
                 3. Payout Method
               </h2>
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-neutral-800 mb-1">Preferred Payout Method</label>
-              <select
-                name="payout_method"
-                value={formData.payout_method}
-                onChange={handleChange}
-                className="w-full px-3 py-2 rounded-xl border border-neutral-200 text-xs text-neutral-900 bg-white focus:outline-none focus:ring-1 focus:ring-neutral-950 focus:border-neutral-950 transition-colors"
+            {/* Method Segmented Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={() => handleSelectPayout('bank_transfer')}
+                className={`flex flex-col items-start p-3 rounded-xl border text-left transition-all ${
+                  formData.payout_method === 'bank_transfer'
+                    ? 'border-neutral-950 bg-neutral-950 text-white shadow-xs'
+                    : 'border-neutral-200 hover:border-neutral-300 bg-white text-neutral-900'
+                }`}
               >
-                <option value="bank_transfer">Indonesian Bank Transfer (IDR)</option>
-                <option value="wise">Wise Account (International)</option>
-                <option value="paypal">PayPal</option>
-              </select>
+                <div className="flex items-center justify-between w-full mb-1">
+                  <Landmark size={16} className={formData.payout_method === 'bank_transfer' ? 'text-white' : 'text-neutral-600'} />
+                  {formData.payout_method === 'bank_transfer' && <Check size={14} className="text-emerald-400" />}
+                </div>
+                <span className="text-xs font-bold block">Indonesian Bank</span>
+                <span className={`text-[10px] ${formData.payout_method === 'bank_transfer' ? 'text-neutral-300' : 'text-neutral-500'}`}>
+                  BCA, Mandiri, BRI (IDR)
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleSelectPayout('wise')}
+                className={`flex flex-col items-start p-3 rounded-xl border text-left transition-all ${
+                  formData.payout_method === 'wise'
+                    ? 'border-neutral-950 bg-neutral-950 text-white shadow-xs'
+                    : 'border-neutral-200 hover:border-neutral-300 bg-white text-neutral-900'
+                }`}
+              >
+                <div className="flex items-center justify-between w-full mb-1">
+                  <Globe size={16} className={formData.payout_method === 'wise' ? 'text-white' : 'text-neutral-600'} />
+                  {formData.payout_method === 'wise' && <Check size={14} className="text-emerald-400" />}
+                </div>
+                <span className="text-xs font-bold block">Wise</span>
+                <span className={`text-[10px] ${formData.payout_method === 'wise' ? 'text-neutral-300' : 'text-neutral-500'}`}>
+                  International Multi-Currency
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleSelectPayout('paypal')}
+                className={`flex flex-col items-start p-3 rounded-xl border text-left transition-all ${
+                  formData.payout_method === 'paypal'
+                    ? 'border-neutral-950 bg-neutral-950 text-white shadow-xs'
+                    : 'border-neutral-200 hover:border-neutral-300 bg-white text-neutral-900'
+                }`}
+              >
+                <div className="flex items-center justify-between w-full mb-1">
+                  <CreditCard size={16} className={formData.payout_method === 'paypal' ? 'text-white' : 'text-neutral-600'} />
+                  {formData.payout_method === 'paypal' && <Check size={14} className="text-emerald-400" />}
+                </div>
+                <span className="text-xs font-bold block">PayPal</span>
+                <span className={`text-[10px] ${formData.payout_method === 'paypal' ? 'text-neutral-300' : 'text-neutral-500'}`}>
+                  Global Email Payout
+                </span>
+              </button>
             </div>
 
+            {/* Dynamic Payout Inputs */}
             {formData.payout_method === 'bank_transfer' && (
-              <div className="space-y-2.5 p-3.5 rounded-xl border border-neutral-200/80 bg-neutral-50/60">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div className="space-y-3 p-4 rounded-2xl border border-neutral-200/80 bg-neutral-50/70">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[11px] font-semibold text-neutral-700 mb-1">Bank Name</label>
+                    <label className="block text-[11px] font-semibold text-neutral-800 mb-1">Bank Name</label>
                     <input
                       type="text"
                       name="bank_name"
                       value={formData.bank_name}
                       onChange={handleChange}
-                      placeholder="BCA, Mandiri, BRI..."
-                      className="w-full px-3 py-2 rounded-lg border border-neutral-200 text-xs bg-white text-neutral-900 focus:outline-none focus:border-neutral-950"
+                      placeholder="e.g. BCA, Mandiri, BRI"
+                      className="w-full px-3 py-2 rounded-xl border border-neutral-200 text-xs bg-white text-neutral-900 focus:outline-none focus:ring-1 focus:ring-neutral-950 focus:border-neutral-950"
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] font-semibold text-neutral-700 mb-1">Account Number</label>
+                    <label className="block text-[11px] font-semibold text-neutral-800 mb-1">Account Number</label>
                     <input
                       type="text"
                       name="account_number"
                       value={formData.account_number}
                       onChange={handleChange}
                       placeholder="e.g. 1234567890"
-                      className="w-full px-3 py-2 rounded-lg border border-neutral-200 text-xs bg-white text-neutral-900 font-mono focus:outline-none focus:border-neutral-950"
+                      className="w-full px-3 py-2 rounded-xl border border-neutral-200 text-xs bg-white text-neutral-900 font-mono focus:outline-none focus:ring-1 focus:ring-neutral-950 focus:border-neutral-950"
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-[11px] font-semibold text-neutral-700 mb-1">Account Holder Full Name</label>
+                  <label className="block text-[11px] font-semibold text-neutral-800 mb-1">Account Holder Full Name</label>
                   <input
                     type="text"
                     name="account_holder"
                     value={formData.account_holder}
                     onChange={handleChange}
-                    placeholder="As registered in your bank account"
-                    className="w-full px-3 py-2 rounded-lg border border-neutral-200 text-xs bg-white text-neutral-900 focus:outline-none focus:border-neutral-950"
+                    placeholder="As registered in your bank passbook"
+                    className="w-full px-3 py-2 rounded-xl border border-neutral-200 text-xs bg-white text-neutral-900 focus:outline-none focus:ring-1 focus:ring-neutral-950 focus:border-neutral-950"
                   />
                 </div>
               </div>
             )}
 
             {formData.payout_method === 'wise' && (
-              <div className="p-3.5 rounded-xl border border-neutral-200/80 bg-neutral-50/60">
-                <label className="block text-[11px] font-semibold text-neutral-700 mb-1">Wise Registered Email</label>
+              <div className="p-4 rounded-2xl border border-neutral-200/80 bg-neutral-50/70">
+                <label className="block text-[11px] font-semibold text-neutral-800 mb-1">Wise Registered Email</label>
                 <input
                   type="email"
                   name="wise_email"
                   value={formData.wise_email}
                   onChange={handleChange}
                   placeholder="wise-account@example.com"
-                  className="w-full px-3 py-2 rounded-lg border border-neutral-200 text-xs bg-white text-neutral-900 focus:outline-none focus:border-neutral-950"
+                  className="w-full px-3 py-2 rounded-xl border border-neutral-200 text-xs bg-white text-neutral-900 focus:outline-none focus:ring-1 focus:ring-neutral-950 focus:border-neutral-950"
                 />
               </div>
             )}
 
             {formData.payout_method === 'paypal' && (
-              <div className="p-3.5 rounded-xl border border-neutral-200/80 bg-neutral-50/60">
-                <label className="block text-[11px] font-semibold text-neutral-700 mb-1">PayPal Email</label>
+              <div className="p-4 rounded-2xl border border-neutral-200/80 bg-neutral-50/70">
+                <label className="block text-[11px] font-semibold text-neutral-800 mb-1">PayPal Email</label>
                 <input
                   type="email"
                   name="paypal_email"
                   value={formData.paypal_email}
                   onChange={handleChange}
                   placeholder="paypal@example.com"
-                  className="w-full px-3 py-2 rounded-lg border border-neutral-200 text-xs bg-white text-neutral-900 focus:outline-none focus:border-neutral-950"
+                  className="w-full px-3 py-2 rounded-xl border border-neutral-200 text-xs bg-white text-neutral-900 focus:outline-none focus:ring-1 focus:ring-neutral-950 focus:border-neutral-950"
                 />
               </div>
             )}
           </div>
 
+          {/* Terms Agreement */}
           <div className="pt-1">
             <label className="flex items-start gap-2.5 cursor-pointer">
               <input
                 type="checkbox"
                 checked={agreeTerms}
                 onChange={(e) => setAgreeTerms(e.target.checked)}
-                className="w-4 h-4 rounded mt-0.5 accent-neutral-950"
+                className="w-4 h-4 rounded mt-0.5 accent-neutral-950 cursor-pointer"
               />
-              <span className="text-xs text-neutral-600 leading-tight">
-                I agree to the <Link href="/terms" className="underline text-neutral-950 font-semibold">Partner Terms</Link> and understand commissions are eligible on completed & verified treatments.
+              <span className="text-xs text-neutral-600 leading-relaxed">
+                I agree to the <Link href="/terms" className="underline text-neutral-950 font-semibold">Partner Terms</Link> and understand commissions are automatically attributed on completed & verified wellness rituals.
               </span>
             </label>
           </div>
 
+          {/* Submit Button */}
           <div>
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 rounded-xl bg-neutral-950 hover:bg-neutral-800 text-white font-semibold text-xs tracking-wide transition-all active:scale-98 disabled:opacity-50 shadow-xs"
+              className="w-full py-3.5 rounded-xl bg-neutral-950 hover:bg-neutral-800 text-white font-semibold text-xs tracking-wide transition-all active:scale-98 disabled:opacity-50 shadow-xs flex items-center justify-center gap-2 cursor-pointer"
             >
-              {loading ? 'Submitting Application...' : 'Submit Partner Application'}
+              <span>{loading ? 'Submitting Application...' : 'Submit Partner Application'}</span>
+              {!loading && <ArrowRight size={13} />}
             </button>
           </div>
 

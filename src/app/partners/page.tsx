@@ -9,31 +9,29 @@ export default function PartnerProgramOverviewPage() {
       {/* Hero Section */}
       <section className="bg-white border border-neutral-200/80 rounded-3xl p-5 sm:p-10 shadow-2xs space-y-6">
         
-        {/* Brand & Program Badge */}
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="inline-flex items-center gap-2.5 bg-neutral-100/80 border border-neutral-200/80 px-3.5 py-1.5 rounded-full shadow-2xs">
-            <img
-              src="/therapick-logo-2.png"
-              alt="Therapick"
-              className="h-4 sm:h-4.5 w-auto object-contain mix-blend-multiply"
-            />
-            <span className="w-1 h-1 rounded-full bg-neutral-400" />
-            <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-700">
-              Partner Program • Bali
-            </span>
-          </div>
+        {/* Program Badge */}
+        <div className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-neutral-600 bg-neutral-100 px-3 py-1 rounded-full border border-neutral-200/70">
+          <span className="w-1.5 h-1.5 rounded-full bg-neutral-900" />
+          <span>Partner Program • Bali</span>
         </div>
 
-        <div className="space-y-3.5 sm:space-y-4">
-          <h1 className="font-serif text-3xl sm:text-5xl lg:text-6xl text-neutral-950 font-normal sm:font-medium tracking-tight leading-[1.12]">
-            Partner with Therapick
-            <span className="block text-2xl sm:text-4xl lg:text-5xl text-neutral-600 font-light italic mt-1.5 sm:mt-2.5">
-              Bali’s Premier In-Villa Mobile Spa
+        <div className="space-y-3 sm:space-y-4">
+          <h1 className="font-serif text-3xl sm:text-5xl lg:text-6xl text-neutral-950 font-normal sm:font-medium tracking-tight leading-[1.18]">
+            <span className="inline-flex flex-wrap items-center gap-x-2.5 sm:gap-x-3.5 gap-y-1">
+              <span>Partner with</span>
+              <img
+                src="/therapick-logo-2.png"
+                alt="Therapick"
+                className="h-7 sm:h-11 lg:h-13 w-auto object-contain mix-blend-multiply align-middle"
+              />
+            </span>
+            <span className="block text-xl sm:text-3xl lg:text-4xl text-neutral-600 font-light italic mt-1.5 sm:mt-2.5">
+              Island Relaxation, Delivered.
             </span>
           </h1>
 
           <p className="text-xs sm:text-sm text-neutral-600 leading-relaxed max-w-2xl">
-            Provide your villa guests, hotel clients, and travelers with Therapick’s top-rated mobile wellness rituals delivered directly to their accommodations across Bali. Track bookings in real time with transparent attribution and automated payouts.
+            Provide your villa guests, hotel clients, and travelers with top-rated mobile wellness rituals delivered directly to their accommodations across Bali. Track bookings in real time with transparent attribution and automated payouts.
           </p>
         </div>
 
