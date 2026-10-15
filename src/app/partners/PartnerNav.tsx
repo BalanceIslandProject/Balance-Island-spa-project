@@ -78,8 +78,8 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
               >
                 <img
                   src="/therapick-logo-2.png"
-                  alt="BookTherapick"
-                  className="h-6 sm:h-7 w-auto max-w-[135px] sm:max-w-[160px] object-contain"
+                  alt="Therapick"
+                  className="h-6 sm:h-7 w-auto max-w-[140px] sm:max-w-[170px] object-contain mix-blend-multiply"
                 />
                 <span className="text-[10px] uppercase tracking-wider font-bold text-neutral-900 bg-neutral-100 border border-neutral-200 px-2 py-0.5 rounded-md">
                   Partner

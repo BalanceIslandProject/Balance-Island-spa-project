@@ -184,16 +184,16 @@ export default function PartnerRegisterPage() {
           <div className="flex justify-center items-center">
             <img
               src="/therapick-logo-2.png"
-              alt="BookTherapick"
-              className="h-7 w-auto max-w-[150px] object-contain"
+              alt="Therapick"
+              className="h-7 w-auto max-w-[150px] object-contain mix-blend-multiply"
             />
           </div>
           <div className="space-y-0.5">
             <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 bg-neutral-100 px-2 py-0.5 rounded border border-neutral-200/60">
               Partner Application
             </span>
-            <h1 className="text-xl sm:text-2xl font-bold text-neutral-950 tracking-tight pt-1">
-              Join the BookTherapick Partner Network
+            <h1 className="font-serif text-2xl sm:text-3xl font-medium text-neutral-950 tracking-tight pt-1">
+              Join the Therapick Partner Network
             </h1>
             <p className="text-xs text-neutral-500">
               Earn commissions on referred mobile spa bookings across Bali

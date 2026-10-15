@@ -8,18 +8,32 @@ export default function PartnerProgramOverviewPage() {
       
       {/* Hero Section */}
       <section className="bg-white border border-neutral-200/80 rounded-3xl p-5 sm:p-10 shadow-2xs space-y-6">
-        <div className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-neutral-600 bg-neutral-100 px-3 py-1 rounded-full border border-neutral-200/70">
-          <span className="w-1.5 h-1.5 rounded-full bg-neutral-900" />
-          <span>Partner Program • Bali</span>
+        
+        {/* Brand & Program Badge */}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="inline-flex items-center gap-2.5 bg-neutral-100/80 border border-neutral-200/80 px-3.5 py-1.5 rounded-full shadow-2xs">
+            <img
+              src="/therapick-logo-2.png"
+              alt="Therapick"
+              className="h-4 sm:h-4.5 w-auto object-contain mix-blend-multiply"
+            />
+            <span className="w-1 h-1 rounded-full bg-neutral-400" />
+            <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-700">
+              Partner Program • Bali
+            </span>
+          </div>
         </div>
 
-        <div className="space-y-3">
-          <h1 className="text-2xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-neutral-950 leading-[1.15]">
-            Partner with Bali’s Premier In-Villa Mobile Spa
+        <div className="space-y-3.5 sm:space-y-4">
+          <h1 className="font-serif text-3xl sm:text-5xl lg:text-6xl text-neutral-950 font-normal sm:font-medium tracking-tight leading-[1.12]">
+            Partner with Therapick
+            <span className="block text-2xl sm:text-4xl lg:text-5xl text-neutral-600 font-light italic mt-1.5 sm:mt-2.5">
+              Bali’s Premier In-Villa Mobile Spa
+            </span>
           </h1>
 
           <p className="text-xs sm:text-sm text-neutral-600 leading-relaxed max-w-2xl">
-            Provide your villa guests, hotel clients, and travelers with top-rated mobile wellness rituals delivered directly to their accommodations across Bali. Track bookings in real time with transparent attribution and automated payouts.
+            Provide your villa guests, hotel clients, and travelers with Therapick’s top-rated mobile wellness rituals delivered directly to their accommodations across Bali. Track bookings in real time with transparent attribution and automated payouts.
           </p>
         </div>
 
@@ -73,11 +87,11 @@ export default function PartnerProgramOverviewPage() {
 
       {/* Program Details: 3 Simple Steps */}
       <section className="space-y-4 sm:space-y-5">
-        <div className="space-y-0.5">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">
+        <div className="space-y-1">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-500">
             How It Works
           </span>
-          <h2 className="text-lg sm:text-2xl font-bold text-neutral-950 tracking-tight">
+          <h2 className="font-serif text-2xl sm:text-3xl font-medium text-neutral-950 tracking-tight">
             Seamless Guest Experience & Attribution
           </h2>
         </div>
@@ -111,11 +125,11 @@ export default function PartnerProgramOverviewPage() {
 
       {/* Hospitality Network Audience */}
       <section className="space-y-4 sm:space-y-5">
-        <div className="space-y-0.5">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">
+        <div className="space-y-1">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-500">
             Who Can Partner
           </span>
-          <h2 className="text-lg sm:text-2xl font-bold text-neutral-950 tracking-tight">
+          <h2 className="font-serif text-2xl sm:text-3xl font-medium text-neutral-950 tracking-tight">
             Built for Bali Travel & Villa Hosts
           </h2>
         </div>
@@ -138,21 +152,28 @@ export default function PartnerProgramOverviewPage() {
           <div className="p-5 border border-neutral-200/80 rounded-2xl bg-white shadow-2xs space-y-1.5">
             <h3 className="text-sm font-bold text-neutral-950">Content Creators & Guides</h3>
             <p className="text-xs text-neutral-500 leading-relaxed">
-              Feature BookTherapick in your Bali itinerary guides, links in bio, or travel recommendations with automatic 30-day tracking.
+              Feature Therapick in your Bali itinerary guides, links in bio, or travel recommendations with automatic 30-day tracking.
             </p>
           </div>
         </div>
       </section>
 
       {/* Call to Action Banner */}
-      <section className="border border-neutral-200/80 p-6 sm:p-10 rounded-3xl text-center space-y-3 bg-white shadow-2xs">
-        <h2 className="text-xl sm:text-2xl font-bold text-neutral-950 tracking-tight">
-          Ready to Start Partnering?
+      <section className="border border-neutral-200/80 p-6 sm:p-10 rounded-3xl text-center space-y-3.5 bg-white shadow-2xs">
+        <div className="flex justify-center mb-1">
+          <img
+            src="/therapick-logo-2.png"
+            alt="Therapick"
+            className="h-6 sm:h-7 w-auto object-contain mix-blend-multiply opacity-80"
+          />
+        </div>
+        <h2 className="font-serif text-2xl sm:text-3xl font-medium text-neutral-950 tracking-tight">
+          Ready to Partner with Therapick?
         </h2>
         <p className="text-xs sm:text-sm text-neutral-500 max-w-md mx-auto leading-relaxed">
           Create your partner account today to access your custom referral link, printable QR code, and real-time booking tracker.
         </p>
-        <div className="pt-1">
+        <div className="pt-1.5">
           <Link
             href="/partners/register"
             className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-neutral-950 text-white text-xs font-semibold tracking-wide hover:bg-neutral-800 transition-all shadow-xs active:scale-98"

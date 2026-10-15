@@ -51,12 +51,12 @@ export default function PartnerLoginPage() {
           <div className="flex justify-center items-center">
             <img
               src="/therapick-logo-2.png"
-              alt="BookTherapick"
-              className="h-7 w-auto max-w-[150px] object-contain"
+              alt="Therapick"
+              className="h-7 w-auto max-w-[150px] object-contain mix-blend-multiply"
             />
           </div>
           <div className="space-y-0.5">
-            <h1 className="text-xl font-bold text-neutral-950 tracking-tight">
+            <h1 className="font-serif text-2xl font-medium text-neutral-950 tracking-tight">
               Partner Portal Login
             </h1>
             <p className="text-xs text-neutral-500">
