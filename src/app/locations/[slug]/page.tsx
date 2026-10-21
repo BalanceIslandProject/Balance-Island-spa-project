@@ -25,25 +25,79 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         ? 'https://www.booktherapick.com' 
         : (isBaliDomain ? 'https://www.homespaubud.com' : 'https://www.elexoirhomespaubud.com');
 
-    const title = `Home Spa & In-Villa Massage in ${locationName} | ${brandName}`;
-    const description = `Looking for 5-star home spa and in-villa massage in ${locationName}, Bali? ${brandName} delivers professional certified massage therapists directly to your private villa or hotel. Book traditional Balinese, deep tissue, and couples massage.`;
-    const pageUrl = `${baseUrl}/locations/${slug}`;
-    const iconUrl = isTherapick ? '/therapick-logo.png' : (isBaliDomain ? '/homespa.png' : '/elexoir.png');
+    // Geo coordinates database for Bali regions
+    const geoCoordinatesMap: Record<string, { lat: number; lng: number }> = {
+        'ubud': { lat: -8.5069, lng: 115.2625 },
+        'canggu': { lat: -8.6478, lng: 115.1385 },
+        'seminyak': { lat: -8.6896, lng: 115.1686 },
+        'uluwatu': { lat: -8.8149, lng: 115.0884 },
+        'sanur': { lat: -8.7058, lng: 115.2625 },
+        'nusa-dua': { lat: -8.7963, lng: 115.2191 },
+        'jimbaran': { lat: -8.7725, lng: 115.1767 },
+        'kuta': { lat: -8.7210, lng: 115.1698 },
+    };
+
+    const coords = geoCoordinatesMap[slug] || { lat: -8.4095, lng: 115.1889 };
+
+    // For Elexoir and Home Spa Ubud, SEO is strictly restricted to Ubud
+    const isUbud = slug === 'ubud';
+    const isNonTherapickNonUbud = !isTherapick && !isUbud;
+
+    const pageUrl = isNonTherapickNonUbud ? `${baseUrl}/locations/ubud` : `${baseUrl}/locations/${slug}`;
+    const iconUrl = isTherapick ? '/therapick-logo-2.png' : (isBaliDomain ? '/homespa.png' : '/elexoir.png');
+
+    const title = isTherapick
+        ? `Best In-Villa Massage & Mobile Spa in ${locationName}, Bali | Therapick`
+        : (isUbud 
+            ? `${brandName} | Top-Rated Luxury Mobile Spa & In-Villa Massage in Ubud, Bali`
+            : `Home Spa & In-Villa Massage in ${locationName} | ${brandName}`);
+
+    const description = isTherapick
+        ? `Book top-rated in-villa massage and mobile spa delivery in ${locationName}, Bali with Therapick. 5-star certified therapists arrive at your private villa or hotel in 45-60 mins. Traditional Balinese, deep tissue, and couples massage.`
+        : (isUbud
+            ? `Experience 5-star luxury mobile spa and in-villa massage delivered directly to your villa, resort, or private residence anywhere in Ubud, Bali. Certified local therapists serving Ubud Center, Sayan, Penestanan, Kedewatan, and Tegallalang.`
+            : `Looking for 5-star home spa and in-villa massage in ${locationName}, Bali? ${brandName} delivers professional certified massage therapists directly to your private villa.`);
+
+    const keywords = isTherapick
+        ? [
+            `Massage ${locationName}`,
+            `In Villa Massage ${locationName}`,
+            `Mobile Spa ${locationName}`,
+            `Home Spa ${locationName}`,
+            `Best Massage in ${locationName}`,
+            `Spa ${locationName} Bali`,
+            `Couples Massage ${locationName}`,
+            `Deep Tissue Massage ${locationName}`,
+            `Traditional Balinese Massage ${locationName}`,
+            `Massage Delivery ${locationName}`,
+            `Hotel Massage ${locationName}`,
+            `Therapist ${locationName} Bali`,
+            `Therapick ${locationName}`,
+            `Villa Massage ${locationName} Bali`
+        ]
+        : [
+            `Home Spa Ubud`,
+            `Mobile Spa Ubud`,
+            `In Villa Massage Ubud`,
+            `Massage Ubud Villa`,
+            `Best Massage in Ubud`,
+            `Ubud Home Spa`,
+            `Couples Massage Ubud`,
+            `Balinese Massage Ubud`,
+            `Sayan Massage`,
+            `Penestanan Spa`,
+            `Kedewatan Mobile Massage`,
+            `Tegallalang Villa Massage`,
+            `${brandName} Ubud`
+        ];
 
     return {
         title: title,
         description: description,
-        keywords: [
-            `Home Spa ${locationName}`,
-            `Mobile Spa ${locationName}`,
-            `In Villa Massage ${locationName}`,
-            `Massage ${locationName} Bali`,
-            `Best Massage in ${locationName}`,
-            `Couples Massage ${locationName}`,
-            `Spa Delivery ${locationName}`,
-            `${brandName} ${locationName}`,
-            `Massage Therapist ${locationName}`
-        ],
+        keywords: keywords,
+        robots: isNonTherapickNonUbud 
+            ? { index: false, follow: true } 
+            : { index: true, follow: true, googleBot: { index: true, follow: true, 'max-image-preview': 'large' } },
         openGraph: {
             title: title,
             description: description,
@@ -66,8 +120,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         other: {
             'geo.region': 'ID-BA',
             'geo.placename': `${locationName}, Bali, Indonesia`,
-            'geo.position': slug === 'ubud' ? '-8.5069;115.2625' : '-8.4095;115.1889',
-            'ICBM': slug === 'ubud' ? '-8.5069, 115.2625' : '-8.4095, 115.1889',
+            'geo.position': `${coords.lat};${coords.lng}`,
+            'ICBM': `${coords.lat}, ${coords.lng}`,
+            'place:location:latitude': `${coords.lat}`,
+            'place:location:longitude': `${coords.lng}`,
         }
     };
 }
@@ -103,24 +159,67 @@ export default async function LocationPage({ params }: Props) {
     const baseUrl = isTherapick 
         ? 'https://www.booktherapick.com' 
         : (isBaliDomain ? 'https://www.homespaubud.com' : 'https://www.elexoirhomespaubud.com');
+    const iconUrl = isTherapick ? '/therapick-logo-2.png' : (isBaliDomain ? '/homespa.png' : '/elexoir.png');
+
+    const geoCoordinatesMap: Record<string, { lat: number; lng: number }> = {
+        'ubud': { lat: -8.5069, lng: 115.2625 },
+        'canggu': { lat: -8.6478, lng: 115.1385 },
+        'seminyak': { lat: -8.6896, lng: 115.1686 },
+        'uluwatu': { lat: -8.8149, lng: 115.0884 },
+        'sanur': { lat: -8.7058, lng: 115.2625 },
+        'nusa-dua': { lat: -8.7963, lng: 115.2191 },
+        'jimbaran': { lat: -8.7725, lng: 115.1767 },
+        'kuta': { lat: -8.7210, lng: 115.1698 },
+    };
+
+    const coords = geoCoordinatesMap[slug] || { lat: -8.4095, lng: 115.1889 };
 
     const schemaData = {
         "@context": "https://schema.org",
-        "@type": "DaySpa",
+        "@type": ["DaySpa", "HealthAndBeautyBusiness", "LocalBusiness"],
         "name": `${brandName} - ${locationName}`,
         "url": `${baseUrl}/locations/${slug}`,
-        "description": `5-star luxury mobile spa and in-villa massage delivery in ${locationName}, Bali.`,
+        "logo": `${baseUrl}${iconUrl}`,
+        "image": `${baseUrl}${iconUrl}`,
+        "description": `5-star luxury mobile spa and in-villa massage delivery in ${locationName}, Bali. Certified therapists arrive at your private villa or hotel with fresh linens, portable setup, and organic oils.`,
         "telephone": "+6282266554600",
         "priceRange": "$$",
+        "currenciesAccepted": "IDR, USD, AUD, EUR, GBP, SGD",
+        "paymentAccepted": "Cash, Credit Card, Visa, Mastercard, Bank Transfer, QRIS, Wise",
         "areaServed": {
             "@type": "Place",
-            "name": `${locationName}, Bali`
+            "name": `${locationName}, Bali`,
+            "geo": {
+                "@type": "GeoCoordinates",
+                "latitude": coords.lat,
+                "longitude": coords.lng
+            }
         },
         "address": {
             "@type": "PostalAddress",
             "addressLocality": locationName,
             "addressRegion": "Bali",
             "addressCountry": "ID"
+        },
+        "geo": {
+            "@type": "GeoCoordinates",
+            "latitude": coords.lat,
+            "longitude": coords.lng
+        },
+        "openingHoursSpecification": [
+            {
+                "@type": "OpeningHoursSpecification",
+                "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+                "opens": "08:00",
+                "closes": "23:30"
+            }
+        ],
+        "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "5.0",
+            "reviewCount": "194",
+            "bestRating": "5",
+            "worstRating": "1"
         }
     };
 

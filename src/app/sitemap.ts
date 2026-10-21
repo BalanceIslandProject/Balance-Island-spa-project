@@ -23,6 +23,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Core pages
   const coreRoutes = [
     { path: '', priority: 1.0, freq: 'daily' as const },
+    { path: '/explore', priority: 0.9, freq: 'daily' as const },
     { path: '/store', priority: 0.8, freq: 'weekly' as const },
     { path: '/contact', priority: 0.8, freq: 'monthly' as const },
     { path: '/philosophy', priority: 0.7, freq: 'monthly' as const },
@@ -37,21 +38,27 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: item.priority,
   }));
 
-  // Location landing pages - crucial for Local and Geo SEO
-  const locations = [
-    'ubud',
-    'canggu',
-    'seminyak',
-    'uluwatu',
-    'sanur',
-    'nusa-dua',
-    'jimbaran',
-    'kuta',
-  ].map((location) => ({
+  // Location landing pages - STRICT DOMAIN ISOLATION
+  // For Therapick: Comprehensive Bali coverage (Ubud, Canggu, Seminyak, Uluwatu, Sanur, Nusa Dua, Jimbaran, Kuta)
+  // For Elexoir & Home Spa: Strictly Ubud only
+  const targetLocations = isTherapick
+    ? [
+        'ubud',
+        'canggu',
+        'seminyak',
+        'uluwatu',
+        'sanur',
+        'nusa-dua',
+        'jimbaran',
+        'kuta',
+      ]
+    : ['ubud'];
+
+  const locations = targetLocations.map((location) => ({
     url: `${baseUrl}/locations/${location}`,
     lastModified: now,
     changeFrequency: 'weekly' as const,
-    priority: 0.95,
+    priority: location === 'ubud' ? 1.0 : 0.95,
   }));
 
   return [...coreRoutes, ...locations];
