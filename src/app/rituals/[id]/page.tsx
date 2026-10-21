@@ -294,7 +294,7 @@ export default function RitualsDetails() {
                 </div>
 
                 {/* Smart Pricing & Duration Bento Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
+                <div data-reveal className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10 scroll-reveal">
                     
                     {/* Selectable Durations */}
                     <div className="bg-white/40 border border-highlight rounded-[32px] p-6 flex flex-col justify-between">
@@ -358,7 +358,7 @@ export default function RitualsDetails() {
                 </div>
 
                 {/* Description & SEO Content */}
-                <div className="mb-14 bg-white/50 backdrop-blur-xl border border-white/60 p-6 md:p-8 rounded-[32px] shadow-[0_8px_30px_rgb(0,0,0,0.02)]">
+                <section data-reveal className="mb-14 bg-white/50 backdrop-blur-xl border border-white/60 p-6 md:p-8 rounded-[32px] shadow-[0_8px_30px_rgb(0,0,0,0.02)] scroll-reveal">
                     <h2 className="text-sm font-bold tracking-widest text-primary mb-4 uppercase">About this Treatment</h2>
                     <p className="text-sm md:text-base text-text-muted leading-relaxed font-light mb-8 whitespace-pre-wrap">
                         {treatment.desc.replace(/What's Included\s*:?\s*/gi, "WHAT'S_INCLUDED_SPLIT").split("WHAT'S_INCLUDED_SPLIT").map((part, i) => (
@@ -403,17 +403,17 @@ export default function RitualsDetails() {
                             </p>
                         </div>
                     </div>
-                </div>
+                </section>
 
                 {/* Related (Dynamic from Supabase) */}
                 {relatedTreatments.length > 0 && (
-                <div>
+                <section data-reveal className="scroll-reveal">
                     <div className="flex items-center justify-between mb-6">
                         <h3 className="text-xs font-bold uppercase tracking-widest text-primary">Related Treatments</h3>
                         <Link href="/" className="text-xs font-bold text-text-muted hover:text-primary transition-colors">VIEW ALL</Link>
                     </div>
                     
-                    <div className="flex overflow-x-auto pb-6 -mx-6 px-6 md:mx-0 md:px-0 gap-4 no-scrollbar">
+                    <div className="flex overflow-x-auto pb-6 -mx-6 px-6 md:mx-0 md:px-0 gap-4 no-scrollbar scroll-reveal-stagger">
                         {relatedTreatments.map((item, idx) => (
                             <Link href={`/rituals/${createSlug(item.title)}`} key={idx} className="w-72 shrink-0 block group outline-none">
                                 <div className={`rounded-[32px] bg-gradient-to-br ${item.bgPattern || 'from-secondary/80 to-highlight/40'} border border-border/40 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.08)] transition-all duration-700 flex flex-col h-full relative overflow-hidden group-hover:-translate-y-2 p-6`}>
@@ -448,7 +448,7 @@ export default function RitualsDetails() {
                             </Link>
                         ))}
                     </div>
-                </div>
+                </section>
                 )}
 
             </div>

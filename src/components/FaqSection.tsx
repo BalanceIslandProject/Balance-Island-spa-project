@@ -87,14 +87,14 @@ export default function FaqSection() {
   ];
 
   return (
-    <section className="mb-12 md:mb-24">
+    <section className="mb-12 md:mb-24 scroll-reveal">
       <div className="w-full mx-auto">
         <div className="text-center mb-8 md:mb-12">
           <span className="text-[10px] font-bold uppercase tracking-widest text-primary/80 mb-3 block">FAQ</span>
           <h2 className="font-serif text-3xl md:text-4xl text-primary leading-tight">Frequently Asked Questions</h2>
         </div>
 
-        <div className="space-y-3 md:space-y-4">
+        <div className="space-y-3 md:space-y-4 scroll-reveal-stagger">
           {faqs.slice(0, showAll ? faqs.length : 5).map((faq, idx) => (
             <div 
               key={idx} 

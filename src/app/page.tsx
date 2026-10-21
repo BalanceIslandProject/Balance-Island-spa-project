@@ -431,7 +431,7 @@ export default function Home() {
 
                     {/* Cinematic Multi-Campaign Carousel */}
                     {activeCampaigns.length > 0 && (
-                        <div className="mb-8 w-full relative">
+                        <section data-reveal className="mb-8 w-full relative scroll-reveal">
                             {/* Section Title matching 'Most Booked' styling */}
                             <div className="flex items-center justify-between mb-3">
                                 <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wider">Special Offers</h3>
@@ -575,14 +575,14 @@ export default function Home() {
                                     ))}
                                 </div>
                             )}
-                        </div>
+                        </section>
                     )}
 
                     {/* Pinned / Most Booked Treatments */}
                     {showPinnedTreatments && (
-                        <div className="mb-8 w-full relative z-20">
+                        <section data-reveal className="mb-8 w-full relative z-20 scroll-reveal">
                             <h3 className="text-xs font-semibold text-text-muted mb-3 uppercase tracking-wider">Most Booked</h3>
-                            <div className="flex overflow-x-auto gap-4 no-scrollbar -mx-6 px-6 md:mx-0 md:px-0 pb-4 snap-x snap-mandatory">
+                            <div className="flex overflow-x-auto gap-4 no-scrollbar -mx-6 px-6 md:mx-0 md:px-0 pb-4 snap-x snap-mandatory scroll-reveal-stagger">
                                 {treatments.filter(t => t.is_pinned).map(treatment => (
                                     <Link href={`/rituals/${createSlug(treatment.title)}`} key={treatment.id} className="w-[65vw] sm:w-[220px] md:w-[280px] shrink-0 snap-center md:snap-align-none outline-none">
                                         <div className="bg-white border border-[#E5E7EB] rounded-[24px] p-2 flex flex-col h-full hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-300 relative group">
@@ -618,11 +618,11 @@ export default function Home() {
                                     </Link>
                                 ))}
                             </div>
-                        </div>
+                        </section>
                     )}
 
                     {/* Search & Categories Row */}
-                    <div className="mb-6 flex flex-col md:flex-row md:items-end justify-start gap-6 md:gap-4 relative z-20">
+                    <div data-reveal className="mb-6 flex flex-col md:flex-row md:items-end justify-start gap-6 md:gap-4 relative z-20 scroll-reveal">
                         <div className="max-w-full overflow-hidden w-full">
                             <div className="flex items-center justify-between mb-4 w-full md:pr-0">
                                 <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wider">Popular Category</h3>
@@ -702,7 +702,7 @@ export default function Home() {
                     </div>
 
                     {/* Popular Treatments Scroll */}
-                    <div className="mb-24 relative group">
+                    <section data-reveal className="mb-24 relative group scroll-reveal">
                         {/* Navigation Buttons (Desktop only) */}
                         <button
                             onClick={scrollLeft}
@@ -717,7 +717,7 @@ export default function Home() {
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
                         </button>
 
-                        <div ref={scrollContainerRef} className="flex overflow-x-auto pb-10 -mx-6 px-6 md:mx-0 md:px-0 gap-6 no-scrollbar scroll-smooth">
+                        <div ref={scrollContainerRef} className="flex overflow-x-auto pb-10 -mx-6 px-6 md:mx-0 md:px-0 gap-6 no-scrollbar scroll-smooth scroll-reveal-stagger">
                             {filteredAndSortedTreatments.map((item, idx) => (
                                 <Link href={`/rituals/${createSlug(item.title)}`} key={item.id} className="w-72 md:w-80 shrink-0 block group outline-none">
                                     <div className={`rounded-[32px] md:rounded-[40px] bg-gradient-to-br ${item.bgPattern} border border-border/40 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.08)] transition-all duration-700 flex flex-col h-full relative overflow-hidden group-hover:-translate-y-2 p-6 md:p-8`}>
@@ -751,21 +751,21 @@ export default function Home() {
                                 </Link>
                             ))}
                         </div>
-                    </div>
+                    </section>
 
                     {/* Service Areas Section */}
-                    <div className="mb-24 mt-8 px-6 md:px-0">
+                    <div data-reveal className="mb-24 mt-8 px-6 md:px-0 scroll-reveal">
                         <ServiceAreas />
                     </div>
 
                     {/* FAQ Section */}
-                    <div className="mb-12 px-6 md:px-0">
+                    <div data-reveal className="mb-12 px-6 md:px-0 scroll-reveal">
                         <FaqSection />
                     </div>
 
                     {/* The Elexoir Boutique Section */}
                     {products.length > 0 && (
-                        <div className="mb-12">
+                        <section data-reveal className="mb-12 scroll-reveal">
                             <div className="flex items-center justify-between mb-8 px-6 md:px-0">
                                 <div>
                                     <span className="text-[8px] md:text-[10px] font-bold uppercase tracking-widest text-primary/50 mb-1 block">Take the Spa Home</span>
@@ -777,7 +777,7 @@ export default function Home() {
                             </div>
 
                             {/* Swipeable Products */}
-                            <div className="flex overflow-x-auto pb-10 -mx-6 px-6 md:mx-0 md:px-0 gap-6 no-scrollbar">
+                            <div className="flex overflow-x-auto pb-10 -mx-6 px-6 md:mx-0 md:px-0 gap-6 no-scrollbar scroll-reveal-stagger">
                                 {products.map((product) => (
                                     <Link href="/store" key={product.id} className="w-48 md:w-52 shrink-0 block outline-none">
                                         <div className="bg-white border border-[#E5E7EB] rounded-[24px] flex flex-col h-full hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-300 relative group p-2">
@@ -804,7 +804,7 @@ export default function Home() {
                                     </Link>
                                 ))}
                             </div>
-                        </div>
+                        </section>
                     )}
                 </div>
 

@@ -399,7 +399,7 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                 </div>
 
                 {/* Popular Treatments Scroll */}
-                <div className="mb-24 relative group">
+                <section data-reveal className="mb-24 relative group scroll-reveal">
                     {/* Navigation Buttons (Desktop only) */}
                     <button 
                         onClick={scrollLeft}
@@ -423,7 +423,7 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                             </div>
                         </div>
                     ) : (
-                    <div ref={scrollContainerRef} className="flex overflow-x-auto pb-10 -mx-6 px-6 md:mx-0 md:px-0 gap-6 no-scrollbar scroll-smooth">
+                    <div ref={scrollContainerRef} className="flex overflow-x-auto pb-10 -mx-6 px-6 md:mx-0 md:px-0 gap-6 no-scrollbar scroll-smooth scroll-reveal-stagger">
                         {filteredAndSortedTreatments.map((item, idx) => (
                             <Link href={`/rituals/${createSlug(item.title)}`} key={item.id} className="w-72 md:w-80 shrink-0 block group outline-none">
                                 <div className={`rounded-[32px] md:rounded-[40px] bg-gradient-to-br ${item.bgPattern} border border-border/40 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.08)] transition-all duration-700 flex flex-col h-full relative overflow-hidden group-hover:-translate-y-2 p-6 md:p-8`}>
@@ -458,11 +458,11 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                         ))}
                     </div>
                     )}
-                </div>
+                </section>
 
                 {/* The Elexoir Boutique Section */}
                 {products.length > 0 && (
-                <div className="mb-32">
+                <section data-reveal className="mb-32 scroll-reveal">
                     <div className="flex items-center justify-between mb-8 px-6 md:px-0">
                         <div>
                             <span className="text-[8px] md:text-[10px] font-bold uppercase tracking-widest text-primary/50 mb-1 block">Take the Spa Home</span>
@@ -474,7 +474,7 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                     </div>
                     
                     {/* Swipeable Products */}
-                    <div className="flex overflow-x-auto pb-10 -mx-6 px-6 md:mx-0 md:px-0 gap-6 no-scrollbar">
+                    <div className="flex overflow-x-auto pb-10 -mx-6 px-6 md:mx-0 md:px-0 gap-6 no-scrollbar scroll-reveal-stagger">
                         {products.map((product) => (
                             <Link href="/store" key={product.id} className="w-48 md:w-52 shrink-0 block outline-none">
                                 <div className="bg-white border border-[#E5E7EB] rounded-[24px] flex flex-col h-full hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-300 relative group p-2">
@@ -501,12 +501,12 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                             </Link>
                         ))}
                     </div>
-                </div>
+                </section>
                 )}
 
                 {/* About Us */}
-                <div className="mb-24 flex flex-col md:flex-row gap-12 md:gap-24 items-center">
-                    <div className="flex-1">
+                <section data-reveal className="mb-24 flex flex-col md:flex-row gap-12 md:gap-24 items-center scroll-reveal">
+                    <div className="flex-1 scroll-reveal-left">
                         <span className="text-xs font-bold uppercase tracking-widest text-primary/50 mb-4 block">Our Philosophy</span>
                         <h3 className="font-serif text-4xl md:text-5xl text-primary font-medium mb-6 leading-tight">
                             Sanctuary for the Soul
@@ -518,7 +518,7 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                             Discover Our Story <ArrowRight size={16} />
                         </button>
                     </div>
-                    <div className="flex-1 w-full relative">
+                    <div className="flex-1 w-full relative scroll-reveal-right">
                         <div className="aspect-[4/3] rounded-[40px] overflow-hidden bg-gradient-to-br from-highlight/60 to-surface border border-white shadow-soft relative flex items-center justify-center p-8 text-center">
                              <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.8),transparent_100%)] pointer-events-none"></div>
                              <div className="relative z-10">
@@ -527,7 +527,7 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                              </div>
                         </div>
                     </div>
-                </div>
+                </section>
                 
             </div>
 

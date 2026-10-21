@@ -76,3 +76,139 @@ input:-webkit-autofill:active {
     -webkit-box-shadow: 0 0 0 30px white inset !important;
     -webkit-text-fill-color: var(--color-primary, #322F37) !important;
 }
+
+/* ==========================================================================
+   Smooth Scrolling & Scroll-Driven Reveal Animations (All Domains)
+   ========================================================================== */
+
+html {
+  scroll-behavior: smooth !important;
+  scroll-padding-top: 5.5rem;
+}
+
+/* Base scroll reveal entrance */
+.scroll-reveal {
+  opacity: 0;
+  transform: translate3d(0, 32px, 0);
+  transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+.scroll-reveal.is-revealed {
+  opacity: 1 !important;
+  transform: translate3d(0, 0, 0) !important;
+}
+
+/* Soft scale entrance variation */
+.scroll-reveal-scale {
+  opacity: 0;
+  transform: translate3d(0, 24px, 0) scale(0.97);
+  transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+.scroll-reveal-scale.is-revealed {
+  opacity: 1 !important;
+  transform: translate3d(0, 0, 0) scale(1) !important;
+}
+
+/* Lateral entrances for 2-column sections */
+.scroll-reveal-left {
+  opacity: 0;
+  transform: translate3d(-32px, 0, 0);
+  transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+.scroll-reveal-left.is-revealed {
+  opacity: 1 !important;
+  transform: translate3d(0, 0, 0) !important;
+}
+
+.scroll-reveal-right {
+  opacity: 0;
+  transform: translate3d(32px, 0, 0);
+  transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+.scroll-reveal-right.is-revealed {
+  opacity: 1 !important;
+  transform: translate3d(0, 0, 0) !important;
+}
+
+/* Staggered child reveals for grids & cards */
+.scroll-reveal-stagger > * {
+  opacity: 0;
+  transform: translate3d(0, 24px, 0);
+  transition: opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+.scroll-reveal-stagger.is-revealed > *:nth-child(1) {
+  opacity: 1 !important;
+  transform: translate3d(0, 0, 0) !important;
+  transition-delay: 0.04s;
+}
+.scroll-reveal-stagger.is-revealed > *:nth-child(2) {
+  opacity: 1 !important;
+  transform: translate3d(0, 0, 0) !important;
+  transition-delay: 0.10s;
+}
+.scroll-reveal-stagger.is-revealed > *:nth-child(3) {
+  opacity: 1 !important;
+  transform: translate3d(0, 0, 0) !important;
+  transition-delay: 0.16s;
+}
+.scroll-reveal-stagger.is-revealed > *:nth-child(4) {
+  opacity: 1 !important;
+  transform: translate3d(0, 0, 0) !important;
+  transition-delay: 0.22s;
+}
+.scroll-reveal-stagger.is-revealed > *:nth-child(5) {
+  opacity: 1 !important;
+  transform: translate3d(0, 0, 0) !important;
+  transition-delay: 0.28s;
+}
+.scroll-reveal-stagger.is-revealed > *:nth-child(6) {
+  opacity: 1 !important;
+  transform: translate3d(0, 0, 0) !important;
+  transition-delay: 0.34s;
+}
+.scroll-reveal-stagger.is-revealed > *:nth-child(7) {
+  opacity: 1 !important;
+  transform: translate3d(0, 0, 0) !important;
+  transition-delay: 0.40s;
+}
+.scroll-reveal-stagger.is-revealed > *:nth-child(8) {
+  opacity: 1 !important;
+  transform: translate3d(0, 0, 0) !important;
+  transition-delay: 0.46s;
+}
+.scroll-reveal-stagger.is-revealed > *:nth-child(n+9) {
+  opacity: 1 !important;
+  transform: translate3d(0, 0, 0) !important;
+  transition-delay: 0.52s;
+}
+
+/* Accessibility: reduce motion */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto !important;
+  }
+  .scroll-reveal,
+  .scroll-reveal-scale,
+  .scroll-reveal-left,
+  .scroll-reveal-right,
+  .scroll-reveal-stagger > * {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
+

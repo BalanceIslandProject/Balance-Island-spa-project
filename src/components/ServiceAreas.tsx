@@ -16,7 +16,7 @@ export default function ServiceAreas({ hideHeader = false }: { hideHeader?: bool
   ];
 
   return (
-    <section className="relative">
+    <section className="relative scroll-reveal">
       {!hideHeader && (
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 md:mb-10">
           <div className="max-w-2xl">
@@ -35,8 +35,8 @@ export default function ServiceAreas({ hideHeader = false }: { hideHeader?: bool
         </div>
       )}
 
-      {/* Responsive Grid Cards (Visible on both Mobile & Desktop) */}
-      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 -mx-6 px-6 md:mx-0 md:px-0">
+      {/* Responsive Grid Cards with Staggered Scroll Animation */}
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 -mx-6 px-6 md:mx-0 md:px-0 scroll-reveal-stagger">
         {areas.map((area, idx) => (
           <Link href={`/explore?location=${encodeURIComponent(area.name)}`} key={idx} className="group block outline-none">
             <div className="bg-white/80 backdrop-blur-sm border border-border/50 rounded-[16px] md:rounded-3xl p-4 md:p-8 transition-all duration-300 hover:shadow-[0_12px_30px_rgb(0,0,0,0.06)] hover:border-primary/30 hover:-translate-y-1 h-full flex flex-col justify-between">

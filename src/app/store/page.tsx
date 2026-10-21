@@ -135,12 +135,12 @@ export default function StorePage() {
                 </div>
 
                 {/* Headline */}
-                <h1 className="text-3xl md:text-4xl lg:text-5xl font-medium text-[#2B2B2B] tracking-tight leading-[1.2] mb-6 max-w-[280px] md:max-w-md">
+                <h1 className="text-3xl md:text-4xl lg:text-5xl font-medium text-[#2B2B2B] tracking-tight leading-[1.2] mb-6 max-w-[280px] md:max-w-md scroll-reveal">
                     Elexoir Signature Collection
                 </h1>
 
                 {/* Categories */}
-                <div className="flex items-center gap-3 overflow-x-auto pb-4 scrollbar-hide w-full mb-6">
+                <div className="flex items-center gap-3 overflow-x-auto pb-4 scrollbar-hide w-full mb-6 scroll-reveal">
                     {categories.map(cat => (
                         <button
                             key={cat}
@@ -157,7 +157,7 @@ export default function StorePage() {
 
                 {/* Product Grid */}
                 {filteredProducts.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-24 text-center col-span-full relative overflow-hidden rounded-[40px] bg-[#F5F5F7]">
+                    <div className="flex flex-col items-center justify-center py-24 text-center col-span-full relative overflow-hidden rounded-[40px] bg-[#F5F5F7] scroll-reveal">
                         <div className="absolute inset-0 bg-gradient-to-br from-white/40 to-white/0 pointer-events-none"></div>
                         <div className="relative z-10 flex flex-col items-center">
                             <h3 className="text-2xl md:text-3xl font-medium text-[#1D1D1F] tracking-tight mb-2">No Products Found</h3>
@@ -165,7 +165,7 @@ export default function StorePage() {
                         </div>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-5">
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-5 scroll-reveal-stagger">
                         {filteredProducts.map((product, i) => (
                             <div
                                 key={product.id}

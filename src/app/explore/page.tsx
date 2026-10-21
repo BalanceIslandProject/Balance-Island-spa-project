@@ -142,11 +142,11 @@ function ExploreContent() {
                 
                 {/* Pinned / Most Booked Treatments (Small Cards) */}
                 {showPinnedTreatments && (
-                    <div className="mb-10 w-full relative z-20">
+                    <section data-reveal className="mb-10 w-full relative z-20 scroll-reveal">
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="text-lg font-bold text-gray-900 tracking-tight">Most Booked</h3>
                         </div>
-                        <div className="flex overflow-x-auto gap-4 no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 pb-4 snap-x snap-mandatory">
+                        <div className="flex overflow-x-auto gap-4 no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 pb-4 snap-x snap-mandatory scroll-reveal-stagger">
                             {treatments.filter(t => t.is_pinned).map(treatment => (
                                 <Link href={`/rituals/${createSlug(treatment.title)}`} key={treatment.id} className="w-[180px] sm:w-[220px] shrink-0 snap-center md:snap-align-none outline-none">
                                     <div className="flex flex-col gap-2 group cursor-pointer">
@@ -176,16 +176,16 @@ function ExploreContent() {
                                 </Link>
                             ))}
                         </div>
-                    </div>
+                    </section>
                 )}
 
                 {/* Popular Treatments (2-Column Grid) */}
-                <div className="mb-24 relative group">
+                <section data-reveal className="mb-24 relative group scroll-reveal">
                     <div className="flex items-center justify-between mb-4">
                         <h3 className="text-lg font-bold text-gray-900 tracking-tight">Popular Category</h3>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-x-4 gap-y-8">
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-8 scroll-reveal-stagger">
                         {filteredAndSortedTreatments.map((item) => (
                             <Link href={`/rituals/${createSlug(item.title)}`} key={item.id} className="w-full block group outline-none">
                                 <div className="rounded-2xl bg-white border border-gray-100 flex flex-col h-full relative overflow-hidden p-4 aspect-[4/5] shadow-[0_2px_12px_rgb(0,0,0,0.04)] hover:shadow-md transition-all cursor-pointer group-hover:-translate-y-1 duration-300">
@@ -212,7 +212,7 @@ function ExploreContent() {
                             </Link>
                         ))}
                     </div>
-                </div>
+                </section>
 
             </div>
         </main>

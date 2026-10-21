@@ -7,9 +7,9 @@ export default function PhilosophyPage() {
     const [showStory, setShowStory] = useState(false);
 
     return (
-        <div className="min-h-screen bg-white pt-32 pb-24 font-sans px-6">
+        <section className="min-h-screen bg-white pt-32 pb-24 font-sans px-6 scroll-reveal">
             <div className="max-w-6xl mx-auto flex flex-col md:flex-row gap-12 md:gap-24 items-center">
-                <div className="flex-1">
+                <div className="flex-1 scroll-reveal-left">
                     <span className="text-xs font-bold uppercase tracking-widest text-primary/50 mb-4 block">Our Philosophy</span>
                     <h3 className="font-serif text-4xl md:text-5xl text-primary font-medium mb-6 leading-tight domain-ubud-only">
                         Sanctuary for the Soul
@@ -71,7 +71,7 @@ export default function PhilosophyPage() {
                         </button>
                     )}
                 </div>
-                <div className="flex-1 w-full relative">
+                <div className="flex-1 w-full relative scroll-reveal-right">
                     <div className="aspect-[4/3] rounded-[40px] overflow-hidden bg-gradient-to-br from-highlight/60 to-surface border border-white shadow-soft relative flex items-center justify-center p-8 text-center">
                         <div>
                             <h4 className="font-serif text-2xl text-primary mb-2">Our Promise</h4>
@@ -82,6 +82,6 @@ export default function PhilosophyPage() {
                     <div className="absolute -bottom-6 -left-6 w-24 h-24 bg-secondary/30 rounded-full blur-2xl"></div>
                 </div>
             </div>
-        </div>
+        </section>
     );
 }

@@ -18,7 +18,7 @@ export default function ContactPage() {
     const email = isBali ? "info@homespaubud.com" : "info@elexoirhomespa.com";
 
     return (
-        <div className="min-h-screen bg-white pb-24">
+        <section className="min-h-screen bg-white pb-24 scroll-reveal">
             {/* Mobile Header */}
             <div className="pt-28 pb-4 px-6 bg-white sticky top-0 z-30">
                 <h1 className="font-serif text-4xl text-primary">Concierge</h1>
@@ -35,7 +35,7 @@ export default function ContactPage() {
                     </p>
                 </motion.div>
 
-                <div className="space-y-4 mb-10">
+                <div className="space-y-4 mb-10 scroll-reveal-stagger">
                     <a href={`https://wa.me/${WHATSAPP_NUMBER}`} className="flex items-center gap-4 bg-surface p-5 rounded-2xl border border-border/80 active:scale-95 transition-transform">
                         <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center shrink-0">
                             <Phone size={18} className="text-white" />
@@ -83,6 +83,6 @@ export default function ContactPage() {
                     </a>
                 </motion.div>
             </div>
-        </div>
+        </section>
     );
 }

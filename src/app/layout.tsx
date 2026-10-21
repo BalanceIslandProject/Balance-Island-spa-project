@@ -9,6 +9,7 @@ import { CartProvider } from "@/context/CartContext";
 import { headers } from "next/headers";
 import { Suspense } from "react";
 import AffiliateTracker from "@/components/AffiliateTracker";
+import ScrollRevealProvider from "@/components/ScrollRevealProvider";
 
 const jakarta = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
@@ -349,6 +350,7 @@ export default async function RootLayout({
       >
         <SpaProvider brand={brand} initialData={initialData}>
           <CartProvider>
+            <ScrollRevealProvider />
             {isTherapick && (
               <Suspense fallback={null}>
                 <AffiliateTracker brand={brand} />
