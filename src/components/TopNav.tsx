@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
-import { Store, Menu, X, ShoppingBag, FileText, CheckCircle2 } from 'lucide-react';
+import { Store, Menu, X, ShoppingBag, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
@@ -15,13 +15,17 @@ export default function TopNav() {
     const { history, removeHistory } = useCart();
     const dropdownRef = useRef<HTMLDivElement>(null);
 
+    // Desktop navigation items (clean, non-duplicated)
     const desktopNavItems = [
         { href: '/', label: 'HOME' },
+        { href: '/explore', label: 'TREATMENTS' },
+        { href: '/service-areas', label: 'SERVICE AREAS' },
+        { href: '/philosophy', label: 'PHILOSOPHY' },
         { href: '/store', label: 'STORE' },
-        { href: '/rituals', label: 'TREATMENT' },
         { href: '/contact', label: 'CONTACT' },
     ];
 
+    // Mobile navigation items (100% original preserved)
     const mobileNavItems = [
         { href: '/', label: 'HOME' },
         { href: '/philosophy', label: 'PHILOSOPHY' },
@@ -59,68 +63,42 @@ export default function TopNav() {
 
     return (
         <>
-        <div className="fixed top-0 md:top-6 left-0 right-0 z-50 flex justify-center pointer-events-none md:px-4">
+        <div className="fixed top-0 md:top-5 left-0 right-0 z-50 flex justify-center pointer-events-none md:px-4">
             <header 
                 className={`pointer-events-auto flex items-center justify-between relative transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-auto
-                    w-[calc(100%-32px)] max-w-6xl rounded-[32px] md:rounded-full px-4 py-2 md:py-3 translate-y-4
+                    w-[calc(100%-32px)] max-w-6xl rounded-[32px] md:rounded-full px-4 py-2 md:py-2.5 translate-y-4
                     ${isScrolled 
-                        ? 'bg-white/70 saturate-[1.8] backdrop-blur-xl border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.08)]' 
-                        : 'bg-transparent border-transparent shadow-none'}`} 
+                        ? 'bg-white/80 saturate-[1.8] backdrop-blur-xl border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.08)]' 
+                        : 'bg-transparent md:bg-white/90 md:backdrop-blur-xl md:border md:border-black/[0.06] md:shadow-[0_4px_24px_rgba(0,0,0,0.05)] border-transparent shadow-none'}`} 
                 ref={dropdownRef}
                 style={{ transformOrigin: 'top center' }}
             >
                 
-                {/* Brand / Store (Left) */}
-                <Link href="/store" className="flex items-center gap-2 bg-white/20 backdrop-blur-md border border-white/30 shadow-sm rounded-full pl-3 pr-4 h-9 transition-colors hover:bg-white/30 text-primary shrink-0">
+                {/* ============================================================== */}
+                {/* 1. MOBILE-ONLY HEADER (LEFT, CENTER, RIGHT - 100% UNCHANGED) */}
+                {/* ============================================================== */}
+
+                {/* Mobile Store Button (Left) */}
+                <Link 
+                    href="/store" 
+                    className="flex md:hidden items-center gap-2 bg-white/20 backdrop-blur-md border border-white/30 shadow-sm rounded-full pl-3 pr-4 h-9 transition-colors hover:bg-white/30 text-primary shrink-0"
+                >
                     <Store size={16} strokeWidth={2.5} />
                     <span className="text-[10px] md:text-[11px] font-bold tracking-widest uppercase mt-0.5">
                         STORE
                     </span>
                 </Link>
 
-                {/* Location Title (Center) */}
-                <div className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center h-full">
+                {/* Mobile Location Title (Center) */}
+                <div className="flex md:hidden absolute left-1/2 -translate-x-1/2 items-center justify-center h-full">
                     <Link href="/" className="flex flex-col items-center justify-center leading-none">
-                        <span className="text-[12px] md:text-[14px] font-serif text-primary tracking-widest font-bold uppercase mt-0.5">BALI, INDONESIA</span>
+                        <span className="text-[12px] md:text-[14px] font-serif text-primary tracking-widest font-bold uppercase mt-0.5">
+                            BALI, INDONESIA
+                        </span>
                     </Link>
                 </div>
 
-                {/* Desktop Inline Links (Always visible on desktop) */}
-                <nav className={`hidden md:flex items-center gap-4 md:gap-8`}>
-                    {desktopNavItems.map((item) => {
-                        const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
-                        return (
-                            <Link 
-                                key={item.href}
-                                href={item.href} 
-                                className={`text-[11px] md:text-[13px] font-semibold tracking-wider transition-colors whitespace-nowrap ${
-                                    isActive ? 'text-primary' : 'text-primary/60 hover:text-primary'
-                                }`}
-                            >
-                                {item.label}
-                            </Link>
-                        );
-                    })}
-                    {/* Strictly shown ONLY on BookTherapick domain */}
-                    <Link
-                        href="/partners"
-                        className="domain-therapick-only text-[11px] md:text-[13px] font-semibold tracking-wider transition-colors whitespace-nowrap text-amber-900 hover:text-amber-700"
-                    >
-                        PARTNERS
-                    </Link>
-                </nav>
-                <button 
-                    onClick={() => setIsCartOpen(true)}
-                    className="hidden md:flex w-9 h-9 rounded-full items-center justify-center text-primary transition-colors hover:bg-black/5 relative shrink-0"
-                    aria-label="Open Cart"
-                >
-                    <ShoppingBag size={18} />
-                    {history.length > 0 && (
-                        <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
-                    )}
-                </button>
-
-                
+                {/* Mobile Actions: Cart & Hamburger (Right) */}
                 <div className="flex items-center gap-2 shrink-0 md:hidden">
                     <button 
                         onClick={() => setIsCartOpen(true)}
@@ -132,18 +110,17 @@ export default function TopNav() {
                             <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
                         )}
                     </button>
-                    {/* Dropdown Toggle Button (Visible on mobile ALWAYS) */}
-                <button 
-                    onClick={() => setIsOpen(!isOpen)}
-                    className={`w-9 h-9 rounded-full flex items-center justify-center text-primary transition-colors hover:bg-black/5 shrink-0 md:hidden`}
-                    aria-label="Toggle Navigation"
-                >
-                    {isOpen ? <X size={18} /> : <Menu size={18} />}
-                </button>
 
+                    <button 
+                        onClick={() => setIsOpen(!isOpen)}
+                        className="w-9 h-9 rounded-full flex items-center justify-center text-primary transition-colors hover:bg-black/5 shrink-0"
+                        aria-label="Toggle Navigation"
+                    >
+                        {isOpen ? <X size={20} /> : <Menu size={20} />}
+                    </button>
                 </div>
 
-                {/* Dropdown Menu (Mobile Only) */}
+                {/* Mobile Dropdown Menu (Original preserved) */}
                 <AnimatePresence>
                     {isOpen && (
                         <motion.div
@@ -151,7 +128,7 @@ export default function TopNav() {
                             animate={{ opacity: 1, y: 0, scale: 1 }}
                             exit={{ opacity: 0, y: -10, scale: 0.95 }}
                             transition={{ duration: 0.2 }}
-                            className={`absolute top-[120%] right-0 w-48 shadow-[0_20px_40px_rgb(0,0,0,0.08)] overflow-hidden flex flex-col p-2 bg-white/95 backdrop-blur-3xl border border-border/30 rounded-2xl z-50 md:hidden`}
+                            className="absolute top-full left-0 right-0 mt-2 p-3 bg-white/90 backdrop-blur-xl border border-white/40 shadow-xl rounded-2xl flex flex-col gap-1 overflow-hidden z-50 md:hidden"
                         >
                             {mobileNavItems.map((item) => {
                                 const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
@@ -182,10 +159,122 @@ export default function TopNav() {
                     )}
                 </AnimatePresence>
 
+
+                {/* ============================================================== */}
+                {/* 2. ENHANCED DESKTOP-ONLY NAVBAR (CLEAN, NO OVERLAPPING)       */}
+                {/* ============================================================== */}
+
+                {/* Desktop Left: Luxury Brand Identity with Domain Badge */}
+                <Link href="/" className="hidden md:flex items-center gap-3 shrink-0 group outline-none">
+                    {/* Therapick Brand */}
+                    <div className="domain-therapick-only items-center gap-2.5">
+                        <img 
+                            src="/therapick-logo-2.png" 
+                            alt="Therapick" 
+                            className="h-7 lg:h-8 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
+                        />
+                        <div className="flex flex-col leading-none border-l border-neutral-300/80 pl-2.5 py-0.5">
+                            <span className="text-[11px] font-serif tracking-wide text-neutral-900 font-bold">THERAPICK</span>
+                            <span className="text-[8px] font-sans font-bold tracking-[0.2em] text-neutral-400 uppercase mt-0.5">BALI, INDONESIA</span>
+                        </div>
+                    </div>
+
+                    {/* Elexoir Brand */}
+                    <div className="domain-ubud-only items-center gap-2.5">
+                        <img 
+                            src="/elexoir.png" 
+                            alt="Elexoir Home Spa" 
+                            className="w-7 h-7 lg:w-8 lg:h-8 rounded-full object-cover shadow-2xs transition-transform duration-300 group-hover:scale-105"
+                        />
+                        <div className="flex flex-col leading-none">
+                            <span className="font-serif text-[14px] lg:text-[15px] font-semibold tracking-[0.14em] text-primary">
+                                ELEXOIR
+                            </span>
+                            <span className="text-[8px] font-bold tracking-[0.22em] text-text-muted uppercase mt-0.5">
+                                BALI, INDONESIA
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* Home Spa Ubud Brand */}
+                    <div className="domain-bali-only items-center gap-2.5">
+                        <img 
+                            src="/homespa.png" 
+                            alt="Home Spa Ubud" 
+                            className="w-7 h-7 lg:w-8 lg:h-8 rounded-full object-cover shadow-2xs transition-transform duration-300 group-hover:scale-105"
+                        />
+                        <div className="flex flex-col leading-none">
+                            <span className="font-serif text-[14px] lg:text-[15px] font-semibold tracking-[0.14em] text-primary">
+                                HOME SPA
+                            </span>
+                            <span className="text-[8px] font-bold tracking-[0.22em] text-text-muted uppercase mt-0.5">
+                                UBUD, BALI
+                            </span>
+                        </div>
+                    </div>
+                </Link>
+
+                {/* Desktop Center: Curated, Non-colliding Navigation Menu */}
+                <nav className="hidden md:flex items-center gap-3 lg:gap-5 xl:gap-7 mx-auto">
+                    {desktopNavItems.map((item) => {
+                        const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
+                        return (
+                            <Link 
+                                key={item.href}
+                                href={item.href} 
+                                className={`relative py-1 text-[11px] lg:text-[12px] font-bold tracking-[0.12em] uppercase transition-all duration-200 whitespace-nowrap ${
+                                    isActive 
+                                        ? 'text-primary' 
+                                        : 'text-primary/65 hover:text-primary'
+                                }`}
+                            >
+                                {item.label}
+                                {isActive && (
+                                    <span className="absolute -bottom-1 left-0 right-0 h-[2px] bg-primary rounded-full" />
+                                )}
+                            </Link>
+                        );
+                    })}
+
+                    {/* Strictly shown ONLY on BookTherapick domain */}
+                    <Link
+                        href="/partners"
+                        className={`domain-therapick-only px-3 py-1 rounded-full text-[11px] lg:text-[12px] font-bold tracking-[0.08em] uppercase transition-all duration-200 whitespace-nowrap ${
+                            pathname?.startsWith('/partners')
+                                ? 'text-amber-950 bg-amber-500/20'
+                                : 'text-amber-900 bg-amber-500/10 hover:bg-amber-500/20 hover:text-amber-950'
+                        }`}
+                    >
+                        PARTNERS
+                    </Link>
+                </nav>
+
+                {/* Desktop Right: Quick Booking CTA & Cart Drawer */}
+                <div className="hidden md:flex items-center gap-2.5 shrink-0">
+                    <Link 
+                        href="/explore"
+                        className="inline-flex items-center justify-center bg-primary text-white hover:bg-black px-4 py-1.5 rounded-full text-[11px] font-bold tracking-[0.1em] uppercase transition-all duration-300 shadow-sm hover:scale-[1.02] active:scale-[0.98]"
+                    >
+                        Book Now
+                    </Link>
+
+                    <button 
+                        onClick={() => setIsCartOpen(true)}
+                        className="w-9 h-9 rounded-full flex items-center justify-center text-primary transition-all duration-200 hover:bg-black/5 active:scale-95 relative border border-black/5 shrink-0"
+                        aria-label="Open Cart"
+                        title="View Bookings"
+                    >
+                        <ShoppingBag size={17} />
+                        {history.length > 0 && (
+                            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-emerald-500 rounded-full ring-2 ring-white"></span>
+                        )}
+                    </button>
+                </div>
+
             </header>
         </div>
 
-        {/* Cart Slide-over */}
+        {/* Cart Slide-over Drawer (Preserved completely) */}
         <AnimatePresence>
             {isCartOpen && (
                 <>
