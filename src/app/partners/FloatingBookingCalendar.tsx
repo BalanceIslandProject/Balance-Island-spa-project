@@ -400,7 +400,7 @@ export default function FloatingBookingCalendar({
                           <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-emerald-300' : 'bg-emerald-600'}`} />
                         )}
                         {hasPending && (
-                          <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-amber-300' : 'bg-amber-500'}`} />
+                          <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-rose-300' : 'bg-rose-500'}`} />
                         )}
                         {dayBookings.length > 1 && (
                           <span className={`text-[8px] font-bold ${isSelected ? 'text-white/90' : 'text-emerald-800'}`}>
@@ -422,7 +422,7 @@ export default function FloatingBookingCalendar({
                   <span>Approved</span>
                 </span>
                 <span className="flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
                   <span>Pending</span>
                 </span>
               </div>
@@ -490,7 +490,7 @@ export default function FloatingBookingCalendar({
                       <span className={`w-1.5 h-1.5 rounded-full ${d.isSelected ? 'bg-emerald-300' : 'bg-emerald-600'}`} />
                     )}
                     {d.hasPending && (
-                      <span className={`w-1.5 h-1.5 rounded-full ${d.isSelected ? 'bg-amber-300' : 'bg-amber-500'}`} />
+                      <span className={`w-1.5 h-1.5 rounded-full ${d.isSelected ? 'bg-rose-300' : 'bg-rose-500'}`} />
                     )}
                     {!d.hasBookings && <span className="w-1.5 h-1.5" />}
                   </div>
@@ -604,7 +604,7 @@ export default function FloatingBookingCalendar({
                         </span>
                       )}
                       {isPending && (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded-md border border-rose-200">
                           <Clock size={11} />
                           Pending Verification
                         </span>
