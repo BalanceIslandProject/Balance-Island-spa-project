@@ -182,11 +182,10 @@ Please verify and process the payout to my registered details. Thank you!`;
   };
 
   const formatIDR = (val: number) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
+    const formatted = new Intl.NumberFormat('id-ID', {
       maximumFractionDigits: 0,
     }).format(val || 0);
+    return `IDR ${formatted}`;
   };
 
   const safeFormatDate = (rawDate: string | undefined | null, options?: Intl.DateTimeFormatOptions) => {
@@ -478,7 +477,7 @@ Please verify and process the payout to my registered details. Thank you!`;
 
                   <div className="text-left sm:text-right shrink-0">
                     <span className={`text-xs font-bold font-mono tabular-nums block ${isCancelled ? 'line-through text-neutral-400' : 'text-emerald-700'}`}>
-                      {isCancelled ? 'Rp 0' : `+${formatIDR(b.commission_amount)}`}
+                      {isCancelled ? 'IDR 0' : `+${formatIDR(b.commission_amount)}`}
                     </span>
                     <span className="text-[10px] text-neutral-400">
                       {safeFormatDate(b.date, { day: 'numeric', month: 'short' })}

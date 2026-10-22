@@ -59,11 +59,10 @@ export default function PartnerCommissionsPage() {
   }, []);
 
   const formatIDR = (val: number) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
+    const formatted = new Intl.NumberFormat('id-ID', {
       maximumFractionDigits: 0,
     }).format(val || 0);
+    return `IDR ${formatted}`;
   };
 
   const filtered = filterStatus === 'all' 
@@ -212,7 +211,7 @@ export default function PartnerCommissionsPage() {
                       <div className="text-right">
                         <span className="text-[10px] text-emerald-700 uppercase font-bold block">Commission ({item.commission_rate_pct}%)</span>
                         <span className={`text-xs font-bold font-mono tabular-nums ${isCancelled ? 'line-through text-neutral-400' : 'text-emerald-700'}`}>
-                          {isCancelled ? 'Rp 0' : `+${formatIDR(item.commission_amount)}`}
+                          {isCancelled ? 'IDR 0' : `+${formatIDR(item.commission_amount)}`}
                         </span>
                       </div>
                     </div>
@@ -329,7 +328,7 @@ export default function PartnerCommissionsPage() {
                         </td>
                         <td className="py-3 px-4 font-bold font-mono tabular-nums">
                           <span className={isCancelled ? 'line-through text-neutral-400' : 'text-emerald-700'}>
-                            {isCancelled ? 'Rp 0' : `+${formatIDR(item.commission_amount)}`}
+                            {isCancelled ? 'IDR 0' : `+${formatIDR(item.commission_amount)}`}
                           </span>
                         </td>
                         <td className="py-3 px-4">

@@ -111,11 +111,10 @@ export default function FloatingBookingCalendar({
   const [viewMode, setViewMode] = useState<'month' | 'week'>('month');
 
   const formatIDR = (val: number) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
+    const formatted = new Intl.NumberFormat('id-ID', {
       maximumFractionDigits: 0,
     }).format(val || 0);
+    return `IDR ${formatted}`;
   };
 
   // Month navigation
@@ -329,13 +328,13 @@ export default function FloatingBookingCalendar({
           </div>
         </div>
 
-        {/* Row 2: Total Bookings rounded card on LEFT, Total Amount on the RIGHT */}
+        {/* Row 2: TOTAL BOOKINGS rounded card on LEFT, Total Amount on the RIGHT */}
         <div className="flex items-center justify-between gap-2 pt-0.5">
-          {/* Rounded card for total bookings */}
+          {/* Rounded card for total bookings in capital words */}
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-neutral-100 border border-neutral-200/80 shadow-2xs">
             <span className="w-1.5 h-1.5 rounded-full bg-neutral-900" />
-            <span className="text-xs font-bold text-neutral-900">
-              {monthStats.count} {monthStats.count === 1 ? 'booking' : 'bookings'}
+            <span className="text-[11px] font-extrabold uppercase tracking-wider text-neutral-900">
+              TOTAL BOOKINGS: {monthStats.count} {monthStats.count === 1 ? 'BOOKING' : 'BOOKINGS'}
             </span>
           </div>
 
@@ -439,6 +438,7 @@ export default function FloatingBookingCalendar({
                         setSelectedDate(null);
                       } else {
                         setSelectedDate(dateString);
+                        setViewMode('week');
                       }
                     }}
                     className={`h-9 sm:h-10 rounded-xl flex flex-col items-center justify-between p-1 transition-all relative ${
@@ -546,27 +546,15 @@ export default function FloatingBookingCalendar({
         style={{ WebkitOverflowScrolling: 'touch' }}
       >
         
-        {/* Selected Date Header & Status Pills */}
-        <div className="flex items-center justify-between gap-2 pb-1">
-          <div className="flex items-center gap-2">
-            <h3 className="text-xs sm:text-sm font-bold text-neutral-950 truncate">
-              {selectedDate 
-                ? safeFormatDate(selectedDate, { day: 'numeric', month: 'short', year: 'numeric' })
-                : `${MONTH_NAMES[currentMonth]} ${currentYear}`}
-            </h3>
-            <span className="text-[10px] bg-neutral-200/70 text-neutral-800 px-2 py-0.5 rounded-md font-mono font-bold">
-              {displayedBookings.length}
-            </span>
-          </div>
-
-          {/* Filter buttons */}
-          <div className="flex items-center gap-1 bg-neutral-100 p-0.5 rounded-xl border border-neutral-200/60 text-xs overflow-x-auto">
+        {/* Professional Apple-Style Filter Tabs Bar */}
+        <div className="pb-1">
+          <div className="flex items-center gap-1 bg-neutral-100/90 p-1 rounded-xl border border-neutral-200/70 text-xs w-full">
             {(['all', 'approved', 'pending', 'cancelled'] as const).map((s) => (
               <button
                 type="button"
                 key={s}
                 onClick={() => setStatusFilter(s)}
-                className={`px-2.5 py-1 rounded-lg capitalize font-semibold transition-all cursor-pointer whitespace-nowrap ${
+                className={`flex-1 py-1.5 px-2 rounded-lg capitalize font-bold text-xs transition-all cursor-pointer text-center ${
                   statusFilter === s
                     ? 'bg-neutral-950 text-white shadow-2xs'
                     : 'text-neutral-600 hover:text-neutral-950'
@@ -724,7 +712,7 @@ export default function FloatingBookingCalendar({
                       <div className="text-right">
                         {isCancelled ? (
                           <span className="text-xs font-semibold text-rose-600 font-mono">
-                            Cancelled (Rp0)
+                            Cancelled (IDR 0)
                           </span>
                         ) : (
                           <>
