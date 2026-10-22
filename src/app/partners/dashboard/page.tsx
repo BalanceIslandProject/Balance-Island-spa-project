@@ -1,11 +1,21 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { 
   QrCode, 
   Copy, 
   Check, 
-  AlertCircle
+  AlertCircle,
+  Share2,
+  MessageCircle,
+  ChevronRight,
+  Clock,
+  CheckCircle2,
+  Wallet,
+  Sparkles,
+  ExternalLink,
+  User
 } from 'lucide-react';
 import FloatingBookingCalendar, { CalendarBooking } from '../FloatingBookingCalendar';
 
@@ -100,6 +110,30 @@ export default function PartnerDashboardPage() {
     setTimeout(() => setCopiedLink(false), 2000);
   };
 
+  // Direct native device share (iOS / Android share sheet)
+  const handleNativeShare = async () => {
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      try {
+        await navigator.share({
+          title: 'BookTherapick Bali Mobile Spa',
+          text: `Book luxury mobile spa treatments directly to your Bali villa or hotel:`,
+          url: referralLink,
+        });
+      } catch {
+        handleCopyLink();
+      }
+    } else {
+      handleCopyLink();
+    }
+  };
+
+  // 1-Tap WhatsApp recommendation message to villa guests
+  const handleShareToGuestWhatsApp = () => {
+    const text = `Hello! For our villa guests, here is our recommended mobile spa service in Bali with BookTherapick. Professional certified therapists arrive directly at our villa with premium oils and equipment:\n\n${referralLink}`;
+    const waUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
+    window.open(waUrl, '_blank');
+  };
+
   const handleWithdrawWhatsApp = () => {
     if (!hasApprovedBalance) {
       alert('You currently have no approved commission balance ready for withdrawal.');
@@ -125,6 +159,13 @@ Please verify and process the payout to my registered details. Thank you!`;
     window.open(waUrl, '_blank');
   };
 
+  const handleConciergeWhatsApp = () => {
+    const partnerName = [profile?.first_name, profile?.last_name].filter(Boolean).join(' ') || 'Partner';
+    const text = `Hello BookTherapick Partner Concierge! I am partner ${partnerName} (#${partnerCode}). I have a question regarding custom villa packages or guest bookings:`;
+    const waUrl = `https://wa.me/6285174119423?text=${encodeURIComponent(text)}`;
+    window.open(waUrl, '_blank');
+  };
+
   const formatIDR = (val: number) => {
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
@@ -144,8 +185,10 @@ Please verify and process the payout to my registered details. Thank you!`;
     );
   }
 
+  const recentReferrals = calendarBookings.slice(0, 3);
+
   return (
-    <div className="space-y-4 sm:space-y-6 w-full">
+    <div className="space-y-3.5 sm:space-y-5 w-full max-w-4xl mx-auto pb-4">
       
       {/* Application Status Banner (only if pending) */}
       {profile?.status === 'pending' && (
@@ -157,8 +200,40 @@ Please verify and process the payout to my registered details. Thank you!`;
         </div>
       )}
 
-      {/* 1. Approved Balance Card (Top of Screen) */}
-      <div className="p-4 sm:p-5 rounded-2xl bg-white border border-neutral-200/80 shadow-2xs space-y-3">
+      {/* 1. Partner Status Pill (Compact Native Mobile Bar) */}
+      <div className="bg-white border border-neutral-200/80 rounded-2xl p-3 sm:p-3.5 shadow-2xs flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="w-8 h-8 rounded-full bg-neutral-950 text-white font-bold text-xs flex items-center justify-center shrink-0 ring-2 ring-neutral-100">
+            {profile?.first_name?.[0] || 'P'}
+          </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs font-bold text-neutral-950 truncate">
+                {profile?.first_name || 'Partner'} {profile?.last_name || ''}
+              </span>
+              <span className="inline-flex items-center gap-1 text-[9px] font-bold text-emerald-800 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200 shrink-0">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                Active
+              </span>
+            </div>
+            <p className="text-[11px] text-neutral-500 truncate">
+              {profile?.business_name || 'Verified Villa Partner'}
+            </p>
+          </div>
+        </div>
+
+        <div className="text-right shrink-0">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 block">
+            Rate
+          </span>
+          <span className="text-xs font-bold text-neutral-950 font-mono">
+            {profile?.commission_rate_pct || 15}% Per Booking
+          </span>
+        </div>
+      </div>
+
+      {/* 2. Approved Balance Card (Top Primary Hero) */}
+      <div className="p-4 sm:p-5 rounded-2xl bg-white border border-neutral-200/80 shadow-2xs space-y-3.5">
         <div className="flex items-start justify-between">
           <div>
             <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500">
@@ -175,17 +250,18 @@ Please verify and process the payout to my registered details. Thank you!`;
           </div>
 
           {hasApprovedBalance && (
-            <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+            <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200">
               Ready
             </span>
           )}
         </div>
 
+        {/* Clean Withdraw Button (No whatsapp text, no icons) */}
         <button
           type="button"
           onClick={handleWithdrawWhatsApp}
           disabled={!hasApprovedBalance}
-          className={`w-full py-2.5 px-3 rounded-xl font-semibold text-xs tracking-wide transition-all active:scale-98 flex items-center justify-center ${
+          className={`w-full py-3 px-4 rounded-xl font-bold text-xs tracking-wide transition-all active:scale-98 flex items-center justify-center ${
             hasApprovedBalance
               ? 'bg-neutral-950 hover:bg-neutral-800 text-white cursor-pointer shadow-xs'
               : 'bg-neutral-100 text-neutral-400 cursor-not-allowed border border-neutral-200/60'
@@ -195,14 +271,98 @@ Please verify and process the payout to my registered details. Thank you!`;
         </button>
       </div>
 
-      {/* 2. Referral Link (Compact 1-line copy bar) */}
-      <div className="p-3.5 sm:p-4 border border-neutral-200/80 rounded-2xl bg-white shadow-2xs space-y-2">
-        <div className="flex items-center justify-between text-xs">
-          <span className="font-semibold text-neutral-800">Your Referral Link</span>
-          <span className="text-[11px] text-neutral-500">Active Attribution</span>
+      {/* 3. Performance Glance (3-Card Mobile Metric Strip) */}
+      <div className="grid grid-cols-3 gap-2 sm:gap-3">
+        {/* Card 1: Paid Out */}
+        <div className="bg-white border border-neutral-200/80 rounded-2xl p-3 shadow-2xs space-y-1">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 block truncate">
+            Paid Out
+          </span>
+          <div className="text-xs sm:text-sm font-bold text-neutral-950 font-mono tabular-nums truncate">
+            {formatIDR(stats?.paidCommission || 0)}
+          </div>
+          <span className="text-[10px] text-emerald-700 font-medium block truncate">
+            Transferred
+          </span>
         </div>
 
-        <div className="flex items-center gap-2">
+        {/* Card 2: Pending */}
+        <div className="bg-white border border-neutral-200/80 rounded-2xl p-3 shadow-2xs space-y-1">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 block truncate">
+            Pending
+          </span>
+          <div className="text-xs sm:text-sm font-bold text-neutral-950 font-mono tabular-nums truncate">
+            {formatIDR(stats?.pendingCommission || 0)}
+          </div>
+          <span className="text-[10px] text-amber-700 font-medium block truncate">
+            Verification
+          </span>
+        </div>
+
+        {/* Card 3: Reach & Clicks */}
+        <div className="bg-white border border-neutral-200/80 rounded-2xl p-3 shadow-2xs space-y-1">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 block truncate">
+            Guest Clicks
+          </span>
+          <div className="text-xs sm:text-sm font-bold text-neutral-950 font-mono tabular-nums truncate">
+            {stats?.totalClicks || 0}
+          </div>
+          <span className="text-[10px] text-neutral-500 font-medium block truncate">
+            {stats?.conversionRate || '0.0'}% Conv
+          </span>
+        </div>
+      </div>
+
+      {/* 4. Guest Promotion & Share Hub (Real Mobile App Action Tools) */}
+      <div className="bg-white border border-neutral-200/80 rounded-2xl p-4 sm:p-5 shadow-2xs space-y-3">
+        <div className="flex items-center justify-between text-xs">
+          <div>
+            <h3 className="font-bold text-neutral-950 text-sm">Promote to Guests</h3>
+            <p className="text-[11px] text-neutral-500">Recommend Bali home spa service & track bookings</p>
+          </div>
+          <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 shrink-0">
+            Active Attribution
+          </span>
+        </div>
+
+        {/* Action Button Row */}
+        <div className="grid grid-cols-3 gap-2">
+          {/* WhatsApp Villa Message */}
+          <button
+            type="button"
+            onClick={handleShareToGuestWhatsApp}
+            className="flex flex-col items-center justify-center p-2.5 rounded-xl border border-neutral-200 hover:border-neutral-300 hover:bg-neutral-50 active:scale-95 transition-all text-center group"
+          >
+            <MessageCircle size={18} className="text-emerald-600 mb-1 group-hover:scale-110 transition-transform" />
+            <span className="text-[11px] font-bold text-neutral-900">WhatsApp</span>
+            <span className="text-[9px] text-neutral-500">Villa Guest Text</span>
+          </button>
+
+          {/* Native OS Share Sheet */}
+          <button
+            type="button"
+            onClick={handleNativeShare}
+            className="flex flex-col items-center justify-center p-2.5 rounded-xl border border-neutral-200 hover:border-neutral-300 hover:bg-neutral-50 active:scale-95 transition-all text-center group"
+          >
+            <Share2 size={18} className="text-neutral-900 mb-1 group-hover:scale-110 transition-transform" />
+            <span className="text-[11px] font-bold text-neutral-900">Share</span>
+            <span className="text-[9px] text-neutral-500">AirDrop / Links</span>
+          </button>
+
+          {/* QR Code Modal Trigger */}
+          <button
+            type="button"
+            onClick={() => setShowQrModal(true)}
+            className="flex flex-col items-center justify-center p-2.5 rounded-xl border border-neutral-200 hover:border-neutral-300 hover:bg-neutral-50 active:scale-95 transition-all text-center group"
+          >
+            <QrCode size={18} className="text-neutral-900 mb-1 group-hover:scale-110 transition-transform" />
+            <span className="text-[11px] font-bold text-neutral-900">QR Code</span>
+            <span className="text-[9px] text-neutral-500">Scan to Book</span>
+          </button>
+        </div>
+
+        {/* 1-Line Copy Bar */}
+        <div className="flex items-center gap-2 pt-1">
           <div className="flex-1 bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2 text-xs font-mono text-neutral-900 select-all truncate">
             {referralLink}
           </div>
@@ -214,19 +374,91 @@ Please verify and process the payout to my registered details. Thank you!`;
             {copiedLink ? <Check size={13} /> : <Copy size={13} />}
             <span>{copiedLink ? 'Copied' : 'Copy'}</span>
           </button>
-          <button
-            type="button"
-            onClick={() => setShowQrModal(true)}
-            className="px-3 py-2 rounded-xl border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-800 text-xs font-semibold active:scale-95 transition-all shadow-2xs flex items-center gap-1.5 shrink-0"
-            title="Show QR Code"
-          >
-            <QrCode size={13} />
-            <span>QR</span>
-          </button>
         </div>
       </div>
 
-      {/* Full Calendar Modal (opened via Calendar tab / buttons) */}
+      {/* 5. Recent Activity Stream (Live App Feed) */}
+      <div className="bg-white border border-neutral-200/80 rounded-2xl p-4 sm:p-5 shadow-2xs space-y-3">
+        <div className="flex items-center justify-between text-xs">
+          <div className="flex items-center gap-2">
+            <h3 className="font-bold text-neutral-950 text-sm">Recent Referrals</h3>
+            <span className="text-[10px] font-mono font-bold bg-neutral-100 text-neutral-700 px-1.5 py-0.2 rounded">
+              {recentReferrals.length}
+            </span>
+          </div>
+          <Link
+            href="/partners/referrals"
+            className="text-xs font-semibold text-neutral-800 hover:text-neutral-950 hover:underline flex items-center gap-0.5"
+          >
+            <span>All Referrals</span>
+            <ChevronRight size={13} />
+          </Link>
+        </div>
+
+        {recentReferrals.length === 0 ? (
+          <div className="py-6 px-4 text-center rounded-xl border border-dashed border-neutral-200 bg-neutral-50/50 space-y-1">
+            <p className="text-xs font-semibold text-neutral-800">No referred bookings yet</p>
+            <p className="text-[11px] text-neutral-500">
+              Share your QR code or WhatsApp message with villa guests to receive your first commission.
+            </p>
+          </div>
+        ) : (
+          <div className="divide-y divide-neutral-100">
+            {recentReferrals.map((b) => (
+              <div key={b.id || b.booking_id} className="py-2.5 first:pt-0 last:pb-0 flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-mono text-xs font-bold text-neutral-900">
+                      #{b.booking_id}
+                    </span>
+                    <span className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.2 rounded ${
+                      b.commission_status === 'approved' 
+                        ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                        : 'bg-amber-50 text-amber-800 border border-amber-200'
+                    }`}>
+                      {b.commission_status}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-neutral-500 truncate mt-0.5">
+                    {b.guest_name} • {b.treatment_name || 'Spa Treatment'}
+                  </p>
+                </div>
+
+                <div className="text-right shrink-0">
+                  <span className="text-xs font-bold text-emerald-700 font-mono tabular-nums block">
+                    +{formatIDR(b.commission_amount)}
+                  </span>
+                  <span className="text-[10px] text-neutral-400">
+                    {new Date(b.date + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* 6. Partner Concierge Helper */}
+      <div className="p-3.5 rounded-2xl bg-gradient-to-r from-neutral-900 to-neutral-950 text-white shadow-xs flex items-center justify-between gap-3">
+        <div className="space-y-0.5 min-w-0">
+          <div className="flex items-center gap-1.5">
+            <Sparkles size={13} className="text-amber-400 shrink-0" />
+            <span className="text-xs font-bold tracking-tight">Therapick Partner Concierge</span>
+          </div>
+          <p className="text-[11px] text-neutral-300 truncate">
+            Need printed villa QR stands or custom treatments? Chat with our team.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={handleConciergeWhatsApp}
+          className="px-3 py-1.5 rounded-xl bg-white text-neutral-950 text-xs font-bold hover:bg-neutral-100 active:scale-95 transition-all shrink-0"
+        >
+          Chat
+        </button>
+      </div>
+
+      {/* Full-Screen Native App Calendar Modal */}
       <FloatingBookingCalendar
         bookings={calendarBookings}
         isOpen={calendarOpen}

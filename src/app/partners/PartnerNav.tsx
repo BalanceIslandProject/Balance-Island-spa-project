@@ -296,20 +296,8 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
               </span>
             </Link>
 
-            {/* Mobile Header Right (Code Badge + Hamburger Menu) */}
+            {/* Mobile Header Right (Hamburger Menu Only) */}
             <div className="flex items-center gap-2">
-              {session && (
-                <button
-                  type="button"
-                  onClick={handleCopyCode}
-                  className="flex items-center gap-1.5 bg-neutral-100 hover:bg-neutral-200/80 border border-neutral-200 px-2.5 py-1 rounded-md text-[11px] font-mono font-bold text-neutral-900 active:scale-95 transition-all"
-                  title="Tap to copy partner code"
-                >
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                  <span>#{session.partner_code}</span>
-                  {copiedCode ? <Check size={11} className="text-emerald-600" /> : <Copy size={11} className="text-neutral-400" />}
-                </button>
-              )}
               <button
                 type="button"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
