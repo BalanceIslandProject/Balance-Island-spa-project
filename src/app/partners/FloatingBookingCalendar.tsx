@@ -26,12 +26,15 @@ export interface CalendarBooking {
   guest_name: string;
   location?: string;
   treatment_name?: string;
-  booking_status?: string;
+  booking_status?: 'Pending' | 'Confirmed' | 'Ongoing' | 'Completed' | 'Cancelled' | string;
+  payment_status?: 'paid' | 'unpaid' | string;
+  payment_verified?: boolean;
+  service_completed?: boolean;
   gross_amount: number;
   treatment_amount: number;
   commission_rate_pct: number;
   commission_amount: number;
-  commission_status: 'pending' | 'approved' | 'paid' | 'declined' | string;
+  commission_status: 'pending' | 'approved' | 'paid' | 'declined' | 'cancelled' | string;
 }
 
 interface FloatingBookingCalendarProps {
@@ -101,7 +104,7 @@ export default function FloatingBookingCalendar({
   const [currentYear, setCurrentYear] = useState(() => today.getFullYear());
   const [currentMonth, setCurrentMonth] = useState(() => today.getMonth());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [statusFilter, setStatusFilter] = useState<'all' | 'approved' | 'pending' | 'paid'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'approved' | 'pending' | 'cancelled'>('all');
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   // Apple-style View Mode Control: 'month' | 'week'
@@ -163,7 +166,7 @@ export default function FloatingBookingCalendar({
     return bookings.filter((b) => b.date && b.date.startsWith(monthPrefix));
   }, [bookings, monthPrefix]);
 
-  // Month financial totals
+  // Month financial totals (strictly excludes cancelled bookings)
   const monthStats = useMemo(() => {
     let count = 0;
     let totalCommission = 0;
@@ -171,6 +174,8 @@ export default function FloatingBookingCalendar({
     let pendingCommission = 0;
 
     for (const b of currentMonthBookings) {
+      const isCancelled = b.commission_status === 'cancelled' || b.booking_status === 'Cancelled';
+      if (isCancelled) continue;
       count++;
       totalCommission += b.commission_amount;
       if (b.commission_status === 'approved') approvedCommission += b.commission_amount;
@@ -250,7 +255,11 @@ export default function FloatingBookingCalendar({
     }
 
     if (statusFilter !== 'all') {
-      list = list.filter((b) => b.commission_status === statusFilter);
+      if (statusFilter === 'cancelled') {
+        list = list.filter((b) => b.commission_status === 'cancelled' || b.booking_status === 'Cancelled');
+      } else {
+        list = list.filter((b) => b.commission_status === statusFilter && b.booking_status !== 'Cancelled');
+      }
     }
 
     return list;
@@ -419,6 +428,7 @@ export default function FloatingBookingCalendar({
 
                 const hasApproved = dayBookings.some((b) => b.commission_status === 'approved');
                 const hasPending = dayBookings.some((b) => b.commission_status === 'pending');
+                const hasCancelled = dayBookings.some((b) => b.commission_status === 'cancelled' || b.booking_status === 'Cancelled');
 
                 return (
                   <button
@@ -451,6 +461,9 @@ export default function FloatingBookingCalendar({
                         )}
                         {hasPending && (
                           <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-rose-300' : 'bg-rose-500'}`} />
+                        )}
+                        {!hasApproved && !hasPending && hasCancelled && (
+                          <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-neutral-400' : 'bg-neutral-300'}`} />
                         )}
                         {dayBookings.length > 1 && (
                           <span className={`text-[8px] font-bold ${isSelected ? 'text-white/90' : 'text-emerald-800'}`}>
@@ -547,13 +560,13 @@ export default function FloatingBookingCalendar({
           </div>
 
           {/* Filter buttons */}
-          <div className="flex items-center gap-1 bg-neutral-100 p-0.5 rounded-xl border border-neutral-200/60 text-xs">
-            {(['all', 'approved', 'pending'] as const).map((s) => (
+          <div className="flex items-center gap-1 bg-neutral-100 p-0.5 rounded-xl border border-neutral-200/60 text-xs overflow-x-auto">
+            {(['all', 'approved', 'pending', 'cancelled'] as const).map((s) => (
               <button
                 type="button"
                 key={s}
                 onClick={() => setStatusFilter(s)}
-                className={`px-2.5 py-1 rounded-lg capitalize font-semibold transition-all cursor-pointer ${
+                className={`px-2.5 py-1 rounded-lg capitalize font-semibold transition-all cursor-pointer whitespace-nowrap ${
                   statusFilter === s
                     ? 'bg-neutral-950 text-white shadow-2xs'
                     : 'text-neutral-600 hover:text-neutral-950'
@@ -582,16 +595,18 @@ export default function FloatingBookingCalendar({
           <div className="space-y-2.5 pb-6">
             {displayedBookings.map((b, idx) => {
               const isApproved = b.commission_status === 'approved';
-              const isPaid = b.commission_status === 'paid';
-              const isPending = b.commission_status === 'pending';
+              const isPaidCommission = b.commission_status === 'paid';
+              const isPendingCommission = b.commission_status === 'pending';
+              const isCancelled = b.commission_status === 'cancelled' || b.booking_status === 'Cancelled';
+              const isPaid = b.payment_status === 'paid' || b.payment_verified;
               const itemKey = b.id || b.booking_id || `booking-item-${idx}`;
 
               return (
                 <div
                   key={itemKey}
-                  className="p-3.5 sm:p-4 rounded-2xl border border-neutral-200/80 bg-white hover:border-neutral-300 shadow-[0_1px_4px_rgba(0,0,0,0.03)] transition-all space-y-2.5"
+                  className={`p-3.5 sm:p-4 rounded-2xl border ${isCancelled ? 'border-neutral-200 bg-neutral-50/70 opacity-80' : 'border-neutral-200/80 bg-white hover:border-neutral-300'} shadow-[0_1px_4px_rgba(0,0,0,0.03)] transition-all space-y-2.5`}
                 >
-                  {/* Top Row: Ref & Status Pill */}
+                  {/* Top Row: Ref & Multiple Status Badges */}
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-1.5">
                       <span className="font-mono text-xs font-bold text-neutral-900 bg-neutral-100 px-2 py-0.5 rounded-lg border border-neutral-200/70">
@@ -607,23 +622,64 @@ export default function FloatingBookingCalendar({
                       </button>
                     </div>
 
-                    <div className="flex items-center gap-1.5">
-                      {isApproved && (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
-                          <CheckCircle2 size={11} />
-                          Approved
+                    {/* Rich Status Badges: Payment + Treatment Status + Commission Approval */}
+                    <div className="flex flex-wrap items-center gap-1.5 justify-end">
+                      {/* 1. Payment status label (Paid / Unpaid) */}
+                      {isPaid ? (
+                        <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                          Paid
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                          Unpaid
                         </span>
                       )}
-                      {isPending && (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded-md border border-rose-200">
-                          <Clock size={11} />
-                          Pending Verification
+
+                      {/* 2. Treatment status label (Confirmed / Ongoing / Finish / Cancelled) */}
+                      {isCancelled ? (
+                        <span className="text-[10px] font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded-md border border-rose-200">
+                          Cancelled
+                        </span>
+                      ) : b.booking_status === 'Ongoing' ? (
+                        <span className="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-200 flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+                          Ongoing Treatment
+                        </span>
+                      ) : b.booking_status === 'Completed' || b.service_completed ? (
+                        <span className="text-[10px] font-bold text-teal-800 bg-teal-50 px-2 py-0.5 rounded-md border border-teal-200">
+                          Finish Treatment
+                        </span>
+                      ) : b.booking_status === 'Confirmed' ? (
+                        <span className="text-[10px] font-bold text-sky-800 bg-sky-50 px-2 py-0.5 rounded-md border border-sky-200">
+                          Confirmed
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-bold text-neutral-600 bg-neutral-100 px-2 py-0.5 rounded-md border border-neutral-200">
+                          Pending
                         </span>
                       )}
-                      {isPaid && (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-neutral-700 bg-neutral-100 px-2 py-0.5 rounded-md border border-neutral-200">
-                          Paid Out
-                        </span>
+
+                      {/* 3. Commission status label (Approved / Pending Verification / Paid Out) */}
+                      {!isCancelled && (
+                        <>
+                          {isApproved && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                              <CheckCircle2 size={11} />
+                              Approved
+                            </span>
+                          )}
+                          {isPendingCommission && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded-md border border-rose-200">
+                              <Clock size={11} />
+                              Pending Verification
+                            </span>
+                          )}
+                          {isPaidCommission && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-neutral-700 bg-neutral-100 px-2 py-0.5 rounded-md border border-neutral-200">
+                              Paid Out
+                            </span>
+                          )}
+                        </>
                       )}
                     </div>
                   </div>
@@ -666,11 +722,19 @@ export default function FloatingBookingCalendar({
 
                     <div className="flex items-center gap-3">
                       <div className="text-right">
-                        <span className="text-[10px] text-emerald-700 uppercase font-bold tracking-wider">Earned: </span>
-                        <span className="text-xs font-bold text-emerald-700 font-mono tabular-nums">
-                          +{formatIDR(b.commission_amount)}
-                        </span>
-                        <span className="text-[10px] text-neutral-400 ml-1">({b.commission_rate_pct}%)</span>
+                        {isCancelled ? (
+                          <span className="text-xs font-semibold text-rose-600 font-mono">
+                            Cancelled (Rp0)
+                          </span>
+                        ) : (
+                          <>
+                            <span className="text-[10px] text-emerald-700 uppercase font-bold tracking-wider">Earned: </span>
+                            <span className="text-xs font-bold text-emerald-700 font-mono tabular-nums">
+                              +{formatIDR(b.commission_amount)}
+                            </span>
+                            <span className="text-[10px] text-neutral-400 ml-1">({b.commission_rate_pct}%)</span>
+                          </>
+                        )}
                       </div>
 
                       <Link

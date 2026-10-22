@@ -58,13 +58,43 @@ export async function GET(req: NextRequest) {
 
     // Build enriched calendar bookings
     const calendarBookings = commissions.map((comm) => {
-      const matched = bookingsMap[comm.booking_id] || {};
-      const attr = attributionsMap[comm.booking_id] || {};
+      const bId = comm.booking_id || '';
+      const matched = bookingsMap[bId] || bookingsMap[bId.toUpperCase()] || bookingsMap[bId.toLowerCase()] || {};
+      const attr = attributionsMap[bId] || attributionsMap[bId.toUpperCase()] || {};
 
       // Appointment date: prefer scheduled booking_date, otherwise fall back to commission created_at
       const appointmentDate = matched.booking_date || (comm.created_at ? comm.created_at.split('T')[0] : '');
       const appointmentTime = matched.time || '';
       const guestName = matched.guest_name || attr.customer_name || 'Guest';
+
+      const rawBookingStatus = (matched.status || 'Pending').trim();
+      const isPaid = Boolean(comm.payment_verified);
+      const isCancelled = rawBookingStatus.toLowerCase() === 'cancelled' || comm.status === 'cancelled' || comm.status === 'declined';
+      const isCompleted = Boolean(comm.service_completed) || rawBookingStatus.toLowerCase() === 'completed';
+      const isOngoing = rawBookingStatus.toLowerCase() === 'ongoing';
+      const isConfirmed = rawBookingStatus.toLowerCase() === 'confirmed';
+
+      let displayBookingStatus = 'Pending';
+      if (isCancelled) displayBookingStatus = 'Cancelled';
+      else if (isCompleted) displayBookingStatus = 'Completed';
+      else if (isOngoing) displayBookingStatus = 'Ongoing';
+      else if (isConfirmed) displayBookingStatus = 'Confirmed';
+
+      // Couple massage pricing logic:
+      // If couple treatment was multiplied by guests, ensure treatment amount does NOT exceed gross booking amount
+      const grossAmount = Number(comm.booking_amount_gross || 0);
+      let treatmentAmount = Number(comm.eligible_treatment_amount || 0);
+      if (grossAmount > 0 && treatmentAmount > grossAmount) {
+        treatmentAmount = grossAmount;
+      }
+
+      const commissionRatePct = Number(comm.commission_rate_pct || 15);
+      let commissionAmount = Number(comm.commission_amount || 0);
+      if (isCancelled) {
+        commissionAmount = 0;
+      } else if (grossAmount > 0 && Number(comm.eligible_treatment_amount || 0) > grossAmount) {
+        commissionAmount = Math.round((treatmentAmount * commissionRatePct) / 100);
+      }
 
       return {
         id: comm.id,
@@ -75,12 +105,15 @@ export async function GET(req: NextRequest) {
         guest_name: guestName,
         location: matched.location || '',
         treatment_name: matched.treatment_name || 'Mobile Spa Treatment',
-        booking_status: matched.status || 'Confirmed',
-        gross_amount: Number(comm.booking_amount_gross || 0),
-        treatment_amount: Number(comm.eligible_treatment_amount || 0),
-        commission_rate_pct: Number(comm.commission_rate_pct || 15),
-        commission_amount: Number(comm.commission_amount || 0),
-        commission_status: comm.status, // 'pending' | 'approved' | 'paid' | 'declined'
+        booking_status: displayBookingStatus,
+        payment_status: isPaid ? 'paid' : 'unpaid',
+        payment_verified: isPaid,
+        service_completed: isCompleted,
+        gross_amount: grossAmount,
+        treatment_amount: treatmentAmount,
+        commission_rate_pct: commissionRatePct,
+        commission_amount: commissionAmount,
+        commission_status: isCancelled ? 'cancelled' : comm.status, // 'pending' | 'approved' | 'paid' | 'cancelled'
       };
     });
 
@@ -91,10 +124,26 @@ export async function GET(req: NextRequest) {
     let paidCommission = 0;
 
     for (const comm of commissions) {
-      totalRevenue += Number(comm.booking_amount_gross || 0);
-      eligibleTreatmentRevenue += Number(comm.eligible_treatment_amount || 0);
+      const bId = comm.booking_id || '';
+      const matched = bookingsMap[bId] || bookingsMap[bId.toUpperCase()] || bookingsMap[bId.toLowerCase()] || {};
+      const isCancelled = (matched.status || '').toLowerCase() === 'cancelled' || comm.status === 'cancelled' || comm.status === 'declined';
+      
+      if (isCancelled) continue; // Exclude cancelled from active commission totals
 
-      const amount = Number(comm.commission_amount || 0);
+      const grossAmount = Number(comm.booking_amount_gross || 0);
+      let eligibleAmount = Number(comm.eligible_treatment_amount || 0);
+      if (grossAmount > 0 && eligibleAmount > grossAmount) {
+        eligibleAmount = grossAmount;
+      }
+
+      totalRevenue += grossAmount;
+      eligibleTreatmentRevenue += eligibleAmount;
+
+      let amount = Number(comm.commission_amount || 0);
+      if (grossAmount > 0 && Number(comm.eligible_treatment_amount || 0) > grossAmount) {
+        amount = Math.round((eligibleAmount * Number(comm.commission_rate_pct || 15)) / 100);
+      }
+
       if (comm.status === 'pending') {
         pendingCommission += amount;
       } else if (comm.status === 'approved') {

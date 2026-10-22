@@ -2,7 +2,27 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Calendar, Plus, Download, Trash2, Edit3, Save, X, ChevronLeft, ChevronRight, Calculator, FileText, CheckCircle2, XCircle } from 'lucide-react';
+import { 
+  Calendar, 
+  Plus, 
+  Download, 
+  Trash2, 
+  Edit3, 
+  Save, 
+  X, 
+  ChevronLeft, 
+  ChevronRight, 
+  Calculator, 
+  FileText, 
+  CheckCircle2, 
+  XCircle,
+  PlayCircle,
+  CheckCheck,
+  CreditCard,
+  Clock,
+  Sparkles,
+  RefreshCw
+} from 'lucide-react';
 import { Treatment, TherapistFee } from '@/context/SpaContext';
 
 export interface Booking {
@@ -21,6 +41,8 @@ export interface Booking {
   net_profit: number;
   status?: string;
   items?: any[];
+  payment_status?: string;
+  commission?: any;
 }
 
 const toLocalDateString = (date: Date) => {
@@ -28,6 +50,12 @@ const toLocalDateString = (date: Date) => {
   const m = String(date.getMonth() + 1).padStart(2, '0');
   const d = String(date.getDate()).padStart(2, '0');
   return `${y}-${m}-${d}`;
+};
+
+// Robust Couple Package Identifier: already priced for 2 persons
+export const isCouplePackage = (title?: string) => {
+  const t = (title || '').toLowerCase();
+  return /couple|honeymoon|duo|2\s*person|for\s*2/i.test(t);
 };
 
 export default function BookingManagement({ 
@@ -86,9 +114,23 @@ export default function BookingManagement({
     fetchYearlyStats();
   }, []);
 
-  // Fetch bookings for the ENTIRE month
+  // Fetch bookings for the ENTIRE month + Realtime sync with affiliate commissions
   useEffect(() => {
     fetchMonthBookings();
+
+    const channel = supabase
+      .channel('admin_bookings_realtime_sync')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, () => {
+        fetchMonthBookings();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'affiliate_commissions' }, () => {
+        fetchMonthBookings();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [currentDate.getFullYear(), currentDate.getMonth()]);
 
   const fetchMonthBookings = async () => {
@@ -99,17 +141,42 @@ export default function BookingManagement({
       const startOfMonth = toLocalDateString(new Date(year, month, 1));
       const endOfMonth = toLocalDateString(new Date(year, month + 1, 0));
 
-      const { data, error } = await supabase
-        .from('bookings')
-        .select('*')
-        .gte('booking_date', startOfMonth)
-        .lte('booking_date', endOfMonth)
-        .order('created_at', { ascending: true });
-      
-      if (error && error.code !== '42P01') {
-        console.error("Error fetching bookings", error);
-      }
-      setMonthBookings(data || []);
+      const [bookingsRes, commissionsRes] = await Promise.all([
+        supabase
+          .from('bookings')
+          .select('*')
+          .gte('booking_date', startOfMonth)
+          .lte('booking_date', endOfMonth)
+          .order('created_at', { ascending: true }),
+        supabase
+          .from('affiliate_commissions')
+          .select('*'),
+      ]);
+
+      const data = bookingsRes.data || [];
+      const comms = commissionsRes.data || [];
+
+      // Map commissions by uppercase booking ID
+      const commMap = new Map<string, any>();
+      comms.forEach((c: any) => {
+        if (c.booking_id) {
+          commMap.set(String(c.booking_id).trim().toUpperCase(), c);
+        }
+      });
+
+      const merged: Booking[] = data.map((b: any) => {
+        const ref = String(b.reference_number || b.id || '').trim().toUpperCase();
+        const c = commMap.get(ref);
+        const isPaid = c?.payment_verified || b.payment_status === 'paid';
+
+        return {
+          ...b,
+          commission: c,
+          payment_status: isPaid ? 'paid' : (b.payment_status || 'unpaid'),
+        };
+      });
+
+      setMonthBookings(merged);
     } catch (e) {
       console.error(e);
     }
@@ -126,7 +193,7 @@ export default function BookingManagement({
     
     if (field === 'treatment') {
       newItems[index].duration = '';
-      if (typeof value === 'string' && value.toLowerCase().includes('couple')) {
+      if (typeof value === 'string' && isCouplePackage(value)) {
         newItems[index].pax = 2;
         newItems[index].therapists = 2;
       }
@@ -141,8 +208,9 @@ export default function BookingManagement({
           const priceStr = opt.price.replace(/[^0-9]/g, '');
           const price = parseInt(priceStr || '0', 10);
           
-          const isCouple = item.treatment.toLowerCase().includes('couple');
-          item.revenue = isCouple ? (price * Math.max(1, Math.ceil(item.pax / 2))) : (price * item.pax);
+          const isCouple = isCouplePackage(item.treatment);
+          // CRITICAL: Couple package price is ALREADY FOR 2 PERSONS! Do NOT multiply it by 2.
+          item.revenue = isCouple ? (price * Math.max(1, Math.round(item.pax / 2))) : (price * item.pax);
         }
 
         if (t && therapistFees.length > 0) {
@@ -215,13 +283,14 @@ export default function BookingManagement({
     fetchMonthBookings();
   };
 
+  // Change Treatment Status (Confirmed, Ongoing, Completed / Finish Treatment, Cancelled)
   const handleStatusChange = async (id: string, newStatus: string) => {
     if (!confirm(`Are you sure you want to mark this booking as ${newStatus}?`)) return;
 
     let updates: any = { status: newStatus };
+    const booking = monthBookings.find(b => b.id === id);
 
     if (newStatus === 'Confirmed' || newStatus === 'CONFIRMED') {
-      const booking = monthBookings.find(b => b.id === id);
       if (booking && booking.items && Array.isArray(booking.items) && booking.items.length > 0) {
         let totalFee = 0;
         booking.items.forEach((item: any) => {
@@ -241,7 +310,9 @@ export default function BookingManagement({
             
             if (feeObj) {
                 const baseFee = parseInt(feeObj.fee.replace(/[^0-9]/g, '') || '0', 10);
-                totalFee += baseFee * (item.guests || 1);
+                const isCouple = isCouplePackage(item.title);
+                const paxCount = isCouple ? 2 : (item.guests || 1);
+                totalFee += baseFee * paxCount;
             }
         });
         
@@ -251,6 +322,84 @@ export default function BookingManagement({
     }
 
     await supabase.from('bookings').update(updates).eq('id', id);
+
+    // Realtime Sync to affiliate_commissions
+    const ref = booking?.reference_number || booking?.id;
+    if (ref) {
+      if (newStatus === 'Cancelled') {
+        // If treatment cancel, partner sees cancel label and commission cancelled
+        await supabase
+          .from('affiliate_commissions')
+          .update({
+            status: 'cancelled',
+            updated_at: new Date().toISOString(),
+          })
+          .ilike('booking_id', ref);
+      } else if (newStatus === 'Completed') {
+        // Treatment finished
+        await supabase
+          .from('affiliate_commissions')
+          .update({
+            service_completed: true,
+            updated_at: new Date().toISOString(),
+          })
+          .ilike('booking_id', ref);
+      } else if (newStatus === 'Confirmed' || newStatus === 'Ongoing') {
+        if (booking?.commission?.status === 'cancelled') {
+          await supabase
+            .from('affiliate_commissions')
+            .update({
+              status: 'pending',
+              updated_at: new Date().toISOString(),
+            })
+            .ilike('booking_id', ref);
+        }
+      }
+    }
+
+    fetchMonthBookings();
+  };
+
+  // Toggle Payment: Paid <-> Unpaid
+  const handleTogglePayment = async (booking: Booking) => {
+    const isPaid = booking.payment_status === 'paid' || booking.commission?.payment_verified;
+    const nextStatus = isPaid ? 'unpaid' : 'paid';
+
+    await supabase.from('bookings').update({ payment_status: nextStatus }).eq('id', booking.id);
+
+    const ref = booking.reference_number || booking.id;
+    if (ref) {
+      await supabase
+        .from('affiliate_commissions')
+        .update({
+          payment_verified: nextStatus === 'paid',
+          updated_at: new Date().toISOString(),
+        })
+        .ilike('booking_id', ref);
+    }
+
+    fetchMonthBookings();
+  };
+
+  // Manual Commission Approval: Admin executes the job when treatment is done
+  const handleApproveCommission = async (booking: Booking) => {
+    const ref = booking.reference_number || booking.id;
+    if (!ref) return;
+
+    if (!confirm(`Approve affiliate commission for #${ref}? The commission will immediately become approved and withdrawable for the partner.`)) {
+      return;
+    }
+
+    await supabase
+      .from('affiliate_commissions')
+      .update({
+        status: 'approved',
+        service_completed: true,
+        approved_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .ilike('booking_id', ref);
+
     fetchMonthBookings();
   };
 
@@ -583,45 +732,120 @@ export default function BookingManagement({
                     if (dur.includes("mins")) dur = dur.replace("mins", "Minutes");
                 }
 
+                const isPaid = booking.payment_status === 'paid' || booking.commission?.payment_verified;
+                const bookingStatus = booking.status || 'Confirmed';
+                const isCancelled = bookingStatus.toLowerCase() === 'cancelled';
+                const isOngoing = bookingStatus.toLowerCase() === 'ongoing';
+                const isCompleted = bookingStatus.toLowerCase() === 'completed';
+                const isConfirmed = bookingStatus.toLowerCase() === 'confirmed';
+                const hasCommission = Boolean(booking.commission);
+                const isCommissionApproved = booking.commission?.status === 'approved';
+                const isCommissionPending = booking.commission?.status === 'pending';
+                const isCommissionCancelled = booking.commission?.status === 'cancelled';
+
                 return (
-                  <div key={booking.id} className={`bg-white border ${booking.status?.toLowerCase() === 'cancelled' ? 'border-red-200' : 'border-black/10'} rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow relative group overflow-hidden`}>
-                    <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${booking.status?.toLowerCase() === 'cancelled' ? 'bg-red-500' : (booking.status?.toLowerCase() === 'pending' ? 'bg-orange-400' : 'bg-emerald-500')}`}></div>
-                    <div className={`flex flex-col md:flex-row md:items-center justify-between gap-4 ml-2 ${booking.status?.toLowerCase() === 'cancelled' ? 'opacity-50' : ''}`}>
-                      <div className="space-y-2 w-full md:w-1/3">
-                        <div className="flex flex-wrap items-center gap-2 mb-1">
-                          <span className="text-[10px] font-bold tracking-wider uppercase bg-black/10 px-2 py-0.5 rounded-full whitespace-nowrap">{booking.pax} Pax</span>
-                          <span className={`text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full whitespace-nowrap ${
-                              booking.status?.toLowerCase() === 'cancelled' ? 'bg-red-100 text-red-700' :
-                              (booking.status?.toLowerCase() === 'pending' ? 'bg-orange-100 text-orange-700' : 'bg-emerald-100 text-emerald-700')
-                          }`}>
-                              {booking.status || 'Confirmed'}
+                  <div key={booking.id} className={`bg-white border ${isCancelled ? 'border-red-200 bg-red-50/20' : 'border-black/10'} rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden space-y-4`}>
+                    <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${
+                      isCancelled ? 'bg-red-500' :
+                      isOngoing ? 'bg-indigo-500' :
+                      isCompleted ? 'bg-teal-500' :
+                      isConfirmed ? 'bg-sky-500' : 'bg-orange-400'
+                    }`}></div>
+
+                    {/* Top Row: Booking Ref, Pax, Payment Badge, Treatment Status Badge */}
+                    <div className="flex flex-wrap items-center justify-between gap-2.5 ml-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        {booking.reference_number && (
+                          <span className="font-mono text-xs font-bold text-neutral-900 bg-black/5 px-2.5 py-1 rounded-lg border border-black/10">
+                            #{booking.reference_number}
                           </span>
-                        </div>
-                        
-                        {booking.items && booking.items.length > 0 ? (
-                            <div className="flex flex-col gap-2">
-                                {booking.items.map((it: any, idx: number) => (
-                                    <div key={idx}>
-                                        <p className="font-bold text-sm leading-snug">{it.title} {it.guests > 1 ? `(x${it.guests})` : ''}</p>
-                                        <p className="text-[10px] text-black/50 font-bold uppercase tracking-wider mt-0.5">Duration: {it.duration}</p>
-                                    </div>
-                                ))}
-                            </div>
+                        )}
+                        <span className="text-[10px] font-bold tracking-wider uppercase bg-black/10 px-2 py-0.5 rounded-full whitespace-nowrap">
+                          {booking.pax} Pax
+                        </span>
+
+                        {/* Payment Status Label / Clickable Toggle */}
+                        <button
+                          type="button"
+                          onClick={() => handleTogglePayment(booking)}
+                          className={`text-[10px] font-bold tracking-wider uppercase px-2.5 py-0.5 rounded-full border transition-all cursor-pointer flex items-center gap-1 ${
+                            isPaid
+                              ? 'bg-emerald-100 text-emerald-800 border-emerald-300 hover:bg-emerald-200'
+                              : 'bg-amber-100 text-amber-800 border-amber-300 hover:bg-amber-200'
+                          }`}
+                          title="Click to toggle Paid/Unpaid"
+                        >
+                          {isPaid ? 'Paid ✓' : 'Unpaid ✗'}
+                        </button>
+
+                        {/* Treatment Status Label */}
+                        {isCancelled ? (
+                          <span className="text-[10px] font-bold tracking-wider uppercase px-2.5 py-0.5 rounded-full bg-red-100 text-red-700 border border-red-200">
+                            Cancelled
+                          </span>
+                        ) : isOngoing ? (
+                          <span className="text-[10px] font-bold tracking-wider uppercase px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-800 border border-indigo-200 flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-pulse" />
+                            Ongoing Treatment
+                          </span>
+                        ) : isCompleted ? (
+                          <span className="text-[10px] font-bold tracking-wider uppercase px-2.5 py-0.5 rounded-full bg-teal-100 text-teal-800 border border-teal-200">
+                            Finish Treatment
+                          </span>
+                        ) : isConfirmed ? (
+                          <span className="text-[10px] font-bold tracking-wider uppercase px-2.5 py-0.5 rounded-full bg-sky-100 text-sky-800 border border-sky-200">
+                            Confirmed
+                          </span>
                         ) : (
-                            <div>
-                                <p className="font-bold text-sm leading-snug">{title}</p>
-                                {dur && <p className="text-[10px] text-black/50 font-bold uppercase tracking-wider mt-0.5">Duration: {dur}</p>}
-                            </div>
+                          <span className="text-[10px] font-bold tracking-wider uppercase px-2.5 py-0.5 rounded-full bg-orange-100 text-orange-700 border border-orange-200">
+                            Pending
+                          </span>
                         )}
                       </div>
-                      
+
+                      {/* Customer name & time */}
+                      <div className="text-right text-xs text-neutral-500">
+                        {booking.guest_name && <span className="font-semibold text-neutral-900 mr-2">{booking.guest_name}</span>}
+                        {booking.time && booking.time !== '-' && <span className="text-[11px] font-mono">⏰ {booking.time}</span>}
+                      </div>
+                    </div>
+
+                    {/* Middle Row: Treatment details & Financial Breakdown */}
+                    <div className={`flex flex-col md:flex-row md:items-center justify-between gap-4 ml-2 ${isCancelled ? 'opacity-60' : ''}`}>
+                      <div className="space-y-1 w-full md:w-1/3">
+                        {booking.items && booking.items.length > 0 ? (
+                          <div className="flex flex-col gap-1.5">
+                            {booking.items.map((it: any, idx: number) => {
+                              const isCouple = isCouplePackage(it.title);
+                              return (
+                                <div key={idx}>
+                                  <p className="font-bold text-sm leading-snug text-neutral-900">
+                                    {it.title} {isCouple ? '(Couple Package)' : it.guests > 1 ? `(x${it.guests})` : ''}
+                                  </p>
+                                  <p className="text-[10px] text-black/50 font-bold uppercase tracking-wider mt-0.5">
+                                    Duration: {it.duration}
+                                  </p>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          <div>
+                            <p className="font-bold text-sm leading-snug text-neutral-900">{title}</p>
+                            {dur && <p className="text-[10px] text-black/50 font-bold uppercase tracking-wider mt-0.5">Duration: {dur}</p>}
+                          </div>
+                        )}
+                      </div>
+
                       <div className="flex-1 grid grid-cols-3 gap-2 text-center bg-black/5 rounded-xl p-3">
                         <div>
                           <span className="block text-[9px] uppercase font-bold text-black/50 mb-1">Revenue</span>
                           <span className="font-bold text-xs">{formatCurrency(booking.revenue)}</span>
                         </div>
                         <div>
-                          <span className="block text-[9px] uppercase font-bold text-black/50 mb-1">Fees ({booking.therapists_count} {booking.therapists_count > 1 ? 'Therapists' : 'Therapist'})</span>
+                          <span className="block text-[9px] uppercase font-bold text-black/50 mb-1">
+                            Fees ({booking.therapists_count} {booking.therapists_count > 1 ? 'Therapists' : 'Therapist'})
+                          </span>
                           <span className="font-bold text-xs text-orange-600">{formatCurrency(booking.therapist_fee_total)}</span>
                         </div>
                         <div>
@@ -629,83 +853,164 @@ export default function BookingManagement({
                           <span className="font-bold text-xs text-green-700">{formatCurrency(booking.net_profit)}</span>
                         </div>
                       </div>
-                      
-                      <div className="flex flex-wrap md:flex-col gap-2 justify-end opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
-                        <div className="flex gap-2">
-                            {booking.status?.toLowerCase() !== 'confirmed' && (
-                                <button 
-                                onClick={() => handleStatusChange(booking.id, 'Confirmed')}
-                                className="p-2 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors text-emerald-600"
-                                title="Mark as Confirmed"
-                                >
-                                <CheckCircle2 size={16} />
-                                </button>
-                            )}
-                            {booking.status?.toLowerCase() !== 'cancelled' && (
-                                <button 
-                                onClick={() => handleStatusChange(booking.id, 'Cancelled')}
-                                className="p-2 bg-orange-50 hover:bg-orange-100 rounded-lg transition-colors text-orange-600"
-                                title="Mark as Cancelled"
-                                >
-                                <XCircle size={16} />
-                                </button>
-                            )}
+                    </div>
+
+                    {/* Partner Referral Attribution Box (if referred by partner) */}
+                    {hasCommission && (
+                      <div className="ml-2 p-3 bg-amber-50/70 border border-amber-200/80 rounded-xl flex flex-wrap items-center justify-between gap-2.5">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-amber-900 bg-amber-100 px-2 py-0.5 rounded">
+                            Partner: #{booking.commission?.partner_code}
+                          </span>
+                          <span className="text-xs font-bold text-emerald-800 font-mono">
+                            Commission: +{formatCurrency(booking.commission?.commission_amount || 0)}
+                          </span>
+
+                          {/* Commission Status */}
+                          {isCommissionCancelled ? (
+                            <span className="text-[10px] font-bold text-rose-700 bg-rose-100 px-2 py-0.5 rounded">
+                              Commission Cancelled
+                            </span>
+                          ) : isCommissionApproved ? (
+                            <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded flex items-center gap-1">
+                              <CheckCheck size={12} /> Approved
+                            </span>
+                          ) : (
+                            <span className="text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded">
+                              Pending Verification
+                            </span>
+                          )}
                         </div>
-                        <div className="flex gap-2">
-                            {booking.reference_number && (
-                                <button 
-                                onClick={() => {
-                                    let domain = window.location.origin;
-                                    if (booking.brand === 'bali') {
-                                        domain = 'https://www.homespaubud.com';
-                                    } else if (booking.brand === 'therapick') {
-                                        domain = 'https://www.booktherapick.com';
-                                    } else if (booking.brand === 'elexoir') {
-                                        domain = 'https://www.elexoirhomespaubud.com';
-                                    }
-                                    window.open(`${domain}/invoice/${booking.reference_number}`, '_blank');
-                                }}
-                                className="p-2 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors text-blue-600"
-                                title="View Invoice"
-                                >
-                                <FileText size={16} />
-                                </button>
-                            )}
-                            <button 
+
+                        {/* Manual Admin Approval Button */}
+                        {!isCommissionApproved && !isCommissionCancelled && (
+                          <button
+                            type="button"
+                            onClick={() => handleApproveCommission(booking)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-xs active:scale-95 cursor-pointer"
+                            title="Approve Commission Manually"
+                          >
+                            <CheckCheck size={14} />
+                            <span>Approve Commission</span>
+                          </button>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Bottom Action Bar: Status Change & Utility Actions */}
+                    <div className="ml-2 pt-2 border-t border-black/5 flex flex-wrap items-center justify-between gap-2">
+                      {/* Treatment Status Action Buttons */}
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {!isConfirmed && !isCancelled && (
+                          <button
+                            type="button"
+                            onClick={() => handleStatusChange(booking.id, 'Confirmed')}
+                            className="px-2.5 py-1 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-200 text-xs font-bold transition-colors cursor-pointer flex items-center gap-1"
+                            title="Mark as Confirmed"
+                          >
+                            <CheckCircle2 size={13} />
+                            <span>Confirmed</span>
+                          </button>
+                        )}
+
+                        {!isOngoing && !isCancelled && !isCompleted && (
+                          <button
+                            type="button"
+                            onClick={() => handleStatusChange(booking.id, 'Ongoing')}
+                            className="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200 text-xs font-bold transition-colors cursor-pointer flex items-center gap-1"
+                            title="Mark as Ongoing Treatment"
+                          >
+                            <PlayCircle size={13} />
+                            <span>Ongoing Treatment</span>
+                          </button>
+                        )}
+
+                        {!isCompleted && !isCancelled && (
+                          <button
+                            type="button"
+                            onClick={() => handleStatusChange(booking.id, 'Completed')}
+                            className="px-2.5 py-1 rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 text-xs font-bold transition-colors cursor-pointer flex items-center gap-1"
+                            title="Finish Treatment"
+                          >
+                            <CheckCheck size={13} />
+                            <span>Finish Treatment</span>
+                          </button>
+                        )}
+
+                        {!isCancelled && (
+                          <button
+                            type="button"
+                            onClick={() => handleStatusChange(booking.id, 'Cancelled')}
+                            className="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold transition-colors cursor-pointer flex items-center gap-1"
+                            title="Cancel Treatment"
+                          >
+                            <XCircle size={13} />
+                            <span>Cancel</span>
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Utility Action Buttons: Invoice, Edit, Delete */}
+                      <div className="flex items-center gap-1.5">
+                        {booking.reference_number && (
+                          <button
+                            type="button"
                             onClick={() => {
-                                // Parse out the duration if it was saved like "Title (duration)"
-                                let editTitle = booking.treatment_name;
-                                let editDur = '';
-                                const editMatch = editTitle.match(/(.*) \((.*)\)$/);
-                                if (editMatch) {
-                                    editTitle = editMatch[1];
-                                    editDur = editMatch[2];
-                                }
-                                
-                                setFormItems([{
-                                id: Math.random().toString(36).substring(2, 9),
-                                treatment: editTitle,
-                                duration: editDur,
-                                pax: booking.pax,
-                                therapists: booking.therapists_count,
-                                revenue: booking.revenue,
-                                fee: booking.therapist_fee_total
-                                }]);
-                                setIsEditing(booking.id);
-                                setShowForm(true);
-                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                              let domain = window.location.origin;
+                              if (booking.brand === 'bali') {
+                                domain = 'https://www.homespaubud.com';
+                              } else if (booking.brand === 'therapick') {
+                                domain = 'https://www.booktherapick.com';
+                              } else if (booking.brand === 'elexoir') {
+                                domain = 'https://www.elexoirhomespaubud.com';
+                              }
+                              window.open(`${domain}/invoice/${booking.reference_number}`, '_blank');
                             }}
-                            className="p-2 bg-black/5 hover:bg-black/10 rounded-lg transition-colors text-black"
-                            >
-                            <Edit3 size={16} />
-                            </button>
-                            <button 
-                            onClick={() => handleDelete(booking.id)}
-                            className="p-2 bg-red-50 hover:bg-red-100 rounded-lg transition-colors text-red-600"
-                            >
-                            <Trash2 size={16} />
-                            </button>
-                        </div>
+                            className="p-2 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors text-blue-700 cursor-pointer"
+                            title="View Invoice"
+                          >
+                            <FileText size={15} />
+                          </button>
+                        )}
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            let editTitle = booking.treatment_name;
+                            let editDur = '';
+                            const editMatch = editTitle.match(/(.*) \((.*)\)$/);
+                            if (editMatch) {
+                              editTitle = editMatch[1];
+                              editDur = editMatch[2];
+                            }
+
+                            setFormItems([{
+                              id: Math.random().toString(36).substring(2, 9),
+                              treatment: editTitle,
+                              duration: editDur,
+                              pax: booking.pax,
+                              therapists: booking.therapists_count,
+                              revenue: booking.revenue,
+                              fee: booking.therapist_fee_total
+                            }]);
+                            setIsEditing(booking.id);
+                            setShowForm(true);
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                          }}
+                          className="p-2 bg-black/5 hover:bg-black/10 rounded-lg transition-colors text-neutral-800 cursor-pointer"
+                          title="Edit Booking"
+                        >
+                          <Edit3 size={15} />
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(booking.id)}
+                          className="p-2 bg-red-50 hover:bg-red-100 rounded-lg transition-colors text-red-600 cursor-pointer"
+                          title="Delete Booking"
+                        >
+                          <Trash2 size={15} />
+                        </button>
                       </div>
                     </div>
                   </div>

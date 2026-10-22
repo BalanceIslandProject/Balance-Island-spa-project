@@ -16,18 +16,62 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
-    const { data: attributions, error } = await supabase
-      .from('affiliate_attributions')
-      .select('*')
-      .eq('partner_id', session.id)
-      .order('created_at', { ascending: false });
+    const [attrRes, commsRes, bookingsRes] = await Promise.all([
+      supabase
+        .from('affiliate_attributions')
+        .select('*')
+        .eq('partner_id', session.id)
+        .order('created_at', { ascending: false }),
+      supabase
+        .from('affiliate_commissions')
+        .select('*')
+        .eq('partner_id', session.id),
+      supabase
+        .from('bookings')
+        .select('*'),
+    ]);
 
-    if (error) {
-      return NextResponse.json({ success: false, message: error.message }, { status: 400 });
+    if (attrRes.error) {
+      return NextResponse.json({ success: false, message: attrRes.error.message }, { status: 400 });
     }
 
-    return NextResponse.json({ success: true, referrals: attributions || [] });
+    const attributions = attrRes.data || [];
+    const commissions = commsRes.data || [];
+    const bookings = bookingsRes.data || [];
+
+    const commMap = new Map<string, any>();
+    commissions.forEach((c: any) => {
+      if (c.booking_id) commMap.set(String(c.booking_id).toUpperCase(), c);
+    });
+
+    const bookMap = new Map<string, any>();
+    bookings.forEach((b: any) => {
+      if (b.reference_number) bookMap.set(String(b.reference_number).toUpperCase(), b);
+      if (b.id) bookMap.set(String(b.id).toUpperCase(), b);
+    });
+
+    const enriched = attributions.map((item: any) => {
+      const ref = String(item.booking_id || '').toUpperCase();
+      const c = commMap.get(ref);
+      const b = bookMap.get(ref);
+
+      const isPaid = c?.payment_verified || b?.payment_status === 'paid';
+      const bookingStatus = b?.status || (c?.status === 'cancelled' ? 'Cancelled' : 'Confirmed');
+
+      return {
+        ...item,
+        customer_name: item.customer_name || b?.guest_name || 'Guest',
+        treatment_name: b?.treatment_name || 'Spa Treatment',
+        booking_status: bookingStatus,
+        payment_status: isPaid ? 'paid' : 'unpaid',
+        commission_status: c?.status || 'pending',
+        commission_amount: c?.commission_amount || 0,
+      };
+    });
+
+    return NextResponse.json({ success: true, referrals: enriched });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message }, { status: 500 });
   }
 }
+

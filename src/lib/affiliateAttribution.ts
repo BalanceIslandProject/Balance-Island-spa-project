@@ -93,9 +93,18 @@ export function calculateEligibleCommission(params: {
 
       if (!isTransport && !isTip) {
         const itemPrice = Number(item.price || item.total_price || 0);
-        const itemQty = Number(item.quantity || item.guests || 1);
-        treatmentSubtotal += itemPrice * itemQty;
+        // Couple massage & honeymoon packages are ALREADY priced for 2 persons on the website.
+        // Do NOT multiply by 2 again. (2 guests = 1 couple package price).
+        const isCouple = ['couple', 'honeymoon', 'duo', '2 person', 'for 2'].some(k => title.includes(k));
+        const rawGuests = Number(item.quantity || item.guests || (isCouple ? 2 : 1));
+        const multiplier = isCouple ? Math.max(1, Math.round(rawGuests / 2)) : Math.max(1, rawGuests);
+        treatmentSubtotal += itemPrice * multiplier;
       }
+    }
+
+    // Safety guard: treatmentSubtotal cannot exceed total booking price
+    if (totalPrice > 0 && treatmentSubtotal > totalPrice) {
+      treatmentSubtotal = totalPrice;
     }
   }
 

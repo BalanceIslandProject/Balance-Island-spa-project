@@ -10,6 +10,7 @@ import {
   Download
 } from 'lucide-react';
 import FloatingBookingCalendar, { CalendarBooking } from '../FloatingBookingCalendar';
+import { supabase } from '@/lib/supabase';
 
 interface PartnerStats {
   totalClicks: number;
@@ -70,6 +71,39 @@ export default function PartnerDashboardPage() {
     }
     fetchData();
 
+    // 1. Supabase Realtime Subscription: auto-update when admin confirms, cancels, or changes booking/commission
+    const realtimeChannel = supabase
+      .channel('partner_dashboard_realtime_sync')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'affiliate_commissions' },
+        () => {
+          fetchData();
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'bookings' },
+        () => {
+          fetchData();
+        }
+      )
+      .subscribe();
+
+    // 2. Polling fallback every 8 seconds for rock-solid reliability across mobile browsers
+    const pollInterval = setInterval(() => {
+      fetchData();
+    }, 8000);
+
+    // 3. Revalidate on window focus / tab visibility
+    const onVisibilityOrFocus = () => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+        fetchData();
+      }
+    };
+    window.addEventListener('focus', onVisibilityOrFocus);
+    document.addEventListener('visibilitychange', onVisibilityOrFocus);
+
     // Listen for custom open-calendar events from mobile bottom nav
     const handleOpenCal = () => setCalendarOpen(true);
     window.addEventListener('open-booking-calendar', handleOpenCal);
@@ -82,6 +116,10 @@ export default function PartnerDashboardPage() {
     }
 
     return () => {
+      supabase.removeChannel(realtimeChannel);
+      clearInterval(pollInterval);
+      window.removeEventListener('focus', onVisibilityOrFocus);
+      document.removeEventListener('visibilitychange', onVisibilityOrFocus);
       window.removeEventListener('open-booking-calendar', handleOpenCal);
     };
   }, []);
@@ -370,38 +408,77 @@ Please verify and process the payout to my registered details. Thank you!`;
         ) : (
           <div className="divide-y divide-neutral-100">
             {recentReferrals.map((b) => {
-              const isPending = b.commission_status === 'pending';
               const isApproved = b.commission_status === 'approved';
+              const isCancelled = b.commission_status === 'cancelled' || b.booking_status === 'Cancelled';
+              const isPaid = b.payment_status === 'paid' || b.payment_verified;
 
               return (
-                <div key={b.id || b.booking_id} className="py-3 first:pt-1 last:pb-1 flex items-center justify-between gap-3">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono text-xs font-bold text-neutral-900">
+                <div key={b.id || b.booking_id} className="py-3 first:pt-1 last:pb-1 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                  <div className="min-w-0 space-y-1">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="font-mono text-xs font-bold text-neutral-900 bg-neutral-100 px-2 py-0.5 rounded border border-neutral-200/70">
                         #{b.booking_id}
                       </span>
-                      {isPending ? (
-                        <span className="text-[10px] font-semibold px-2 py-0.2 rounded-full bg-rose-50 text-rose-700 border border-rose-200/80">
+
+                      {/* Payment Label: Paid / Unpaid */}
+                      {isPaid ? (
+                        <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200/80">
+                          Paid
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200/80">
+                          Unpaid
+                        </span>
+                      )}
+
+                      {/* Treatment Status Label: Confirmed / Ongoing / Finish / Cancelled */}
+                      {isCancelled ? (
+                        <span className="text-[10px] font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-200/80">
+                          Cancelled
+                        </span>
+                      ) : b.booking_status === 'Ongoing' ? (
+                        <span className="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200/80 flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+                          Ongoing Treatment
+                        </span>
+                      ) : b.booking_status === 'Completed' || b.service_completed ? (
+                        <span className="text-[10px] font-bold text-teal-800 bg-teal-50 px-2 py-0.5 rounded border border-teal-200/80">
+                          Finish Treatment
+                        </span>
+                      ) : b.booking_status === 'Confirmed' ? (
+                        <span className="text-[10px] font-bold text-sky-800 bg-sky-50 px-2 py-0.5 rounded border border-sky-200/80">
+                          Confirmed
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-semibold text-neutral-600 bg-neutral-100 px-2 py-0.5 rounded border border-neutral-200/80">
                           Pending
                         </span>
+                      )}
+
+                      {/* Commission Approval Status */}
+                      {isCancelled ? (
+                        <span className="text-[10px] font-semibold text-neutral-500 bg-neutral-100 px-2 py-0.5 rounded">
+                          Commission Cancelled
+                        </span>
                       ) : isApproved ? (
-                        <span className="text-[10px] font-semibold px-2 py-0.2 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/80">
+                        <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100/70 px-2 py-0.5 rounded border border-emerald-300">
                           Approved
                         </span>
                       ) : (
-                        <span className="text-[10px] font-semibold px-2 py-0.2 rounded-full bg-neutral-100 text-neutral-700 border border-neutral-200/80">
-                          {b.commission_status}
+                        <span className="text-[10px] font-semibold text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-200/80">
+                          Pending Verification
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-neutral-500 truncate mt-0.5">
+
+                    <p className="text-xs text-neutral-600 truncate">
                       {b.guest_name} • {b.treatment_name || 'Spa Treatment'}
                     </p>
                   </div>
 
-                  <div className="text-right shrink-0">
-                    <span className="text-xs font-bold text-emerald-700 font-mono tabular-nums block">
-                      +{formatIDR(b.commission_amount)}
+                  <div className="text-left sm:text-right shrink-0">
+                    <span className={`text-xs font-bold font-mono tabular-nums block ${isCancelled ? 'line-through text-neutral-400' : 'text-emerald-700'}`}>
+                      {isCancelled ? 'Rp 0' : `+${formatIDR(b.commission_amount)}`}
                     </span>
                     <span className="text-[10px] text-neutral-400">
                       {safeFormatDate(b.date, { day: 'numeric', month: 'short' })}

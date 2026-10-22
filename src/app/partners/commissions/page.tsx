@@ -3,27 +3,59 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ExternalLink, ArrowLeft, Receipt, DollarSign, CheckCircle2, Clock, Wallet } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 export default function PartnerCommissionsPage() {
   const [commissions, setCommissions] = useState<any[]>([]);
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function loadCommissions() {
-      try {
-        const res = await fetch('/api/affiliates/commissions');
-        const data = await res.json();
-        if (data.success) {
-          setCommissions(data.commissions || []);
-        }
-      } catch (e) {
-        console.error('Error loading commissions:', e);
-      } finally {
-        setLoading(false);
+  const loadCommissions = async () => {
+    try {
+      const res = await fetch('/api/affiliates/commissions');
+      const data = await res.json();
+      if (data.success) {
+        setCommissions(data.commissions || []);
       }
+    } catch (e) {
+      console.error('Error loading commissions:', e);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  useEffect(() => {
     loadCommissions();
+
+    // Supabase Realtime Subscription
+    const channel = supabase
+      .channel('partner_commissions_realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'affiliate_commissions' }, () => {
+        loadCommissions();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, () => {
+        loadCommissions();
+      })
+      .subscribe();
+
+    // Polling fallback
+    const interval = setInterval(loadCommissions, 8000);
+
+    // Revalidate on focus
+    const onFocus = () => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+        loadCommissions();
+      }
+    };
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onFocus);
+
+    return () => {
+      supabase.removeChannel(channel);
+      clearInterval(interval);
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onFocus);
+    };
   }, []);
 
   const formatIDR = (val: number) => {
@@ -38,7 +70,10 @@ export default function PartnerCommissionsPage() {
     ? commissions 
     : commissions.filter((c) => c.status === filterStatus);
 
-  const totalFilteredCommission = filtered.reduce((sum, c) => sum + Number(c.commission_amount || 0), 0);
+  const totalFilteredCommission = filtered.reduce((sum, c) => {
+    if (c.status === 'cancelled') return sum;
+    return sum + Number(c.commission_amount || 0);
+  }, 0);
 
   return (
     <div className="space-y-4 sm:space-y-6 w-full">
@@ -58,13 +93,13 @@ export default function PartnerCommissionsPage() {
         </div>
 
         {/* Status Filter Buttons */}
-        <div className="flex items-center gap-1 border border-neutral-200/80 p-1 rounded-xl bg-neutral-100 text-xs self-start sm:self-auto">
-          {['all', 'pending', 'approved', 'paid'].map((s) => (
+        <div className="flex flex-wrap items-center gap-1 border border-neutral-200/80 p-1 rounded-xl bg-neutral-100 text-xs self-start sm:self-auto">
+          {['all', 'approved', 'pending', 'paid', 'cancelled'].map((s) => (
             <button
               type="button"
               key={s}
               onClick={() => setFilterStatus(s)}
-              className={`px-3 py-1.5 rounded-lg capitalize font-semibold transition-all ${
+              className={`px-3 py-1.5 rounded-lg capitalize font-semibold transition-all cursor-pointer ${
                 filterStatus === s
                   ? 'bg-neutral-950 text-white shadow-2xs'
                   : 'text-neutral-600 hover:text-neutral-950'
@@ -107,49 +142,109 @@ export default function PartnerCommissionsPage() {
           <>
             {/* Mobile Card View (< 640px) */}
             <div className="block sm:hidden divide-y divide-neutral-100">
-              {filtered.map((item) => (
-                <div key={item.id} className="p-3.5 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono font-bold text-xs text-neutral-900 bg-neutral-100 px-2 py-0.5 rounded border border-neutral-200/70">
-                      #{item.booking_id}
-                    </span>
-                    <span className="text-[11px] text-neutral-500">
-                      {new Date(item.created_at).toLocaleDateString('en-GB', {
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric',
-                      })}
-                    </span>
-                  </div>
+              {filtered.map((item) => {
+                const isPaid = item.payment_status === 'paid' || item.payment_verified;
+                const isApproved = item.status === 'approved';
+                const isCancelled = item.status === 'cancelled' || item.booking_status === 'Cancelled';
 
-                  <div className="flex items-center justify-between text-xs">
-                    <div>
-                      <span className="text-[10px] text-neutral-400 uppercase font-medium block">Treatment Net</span>
-                      <span className="font-medium text-neutral-900 font-mono tabular-nums">{formatIDR(item.eligible_treatment_amount)}</span>
+                return (
+                  <div key={item.id} className="p-3.5 space-y-2.5">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-mono font-bold text-xs text-neutral-900 bg-neutral-100 px-2 py-0.5 rounded border border-neutral-200/70">
+                          #{item.booking_id}
+                        </span>
+
+                        {/* Payment Label: Paid / Unpaid */}
+                        {isPaid ? (
+                          <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                            Paid
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                            Unpaid
+                          </span>
+                        )}
+                      </div>
+
+                      <span className="text-[11px] text-neutral-500">
+                        {new Date(item.created_at).toLocaleDateString('en-GB', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric',
+                        })}
+                      </span>
                     </div>
 
-                    <div className="text-right">
-                      <span className="text-[10px] text-emerald-700 uppercase font-bold block">Commission ({item.commission_rate_pct}%)</span>
-                      <span className="text-xs font-bold text-emerald-700 font-mono tabular-nums">+{formatIDR(item.commission_amount)}</span>
+                    {/* Treatment Name & Status */}
+                    <div className="flex items-center justify-between text-xs gap-2">
+                      <p className="text-neutral-700 truncate font-medium">
+                        {item.guest_name} • {item.treatment_name || 'Spa Treatment'}
+                      </p>
+
+                      {/* Treatment Status Label */}
+                      {isCancelled ? (
+                        <span className="text-[10px] font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-200 whitespace-nowrap">
+                          Cancelled
+                        </span>
+                      ) : item.booking_status === 'Ongoing' ? (
+                        <span className="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200 flex items-center gap-1 whitespace-nowrap">
+                          <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+                          Ongoing
+                        </span>
+                      ) : item.booking_status === 'Completed' || item.service_completed ? (
+                        <span className="text-[10px] font-bold text-teal-800 bg-teal-50 px-2 py-0.5 rounded border border-teal-200 whitespace-nowrap">
+                          Finish
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-bold text-sky-800 bg-sky-50 px-2 py-0.5 rounded border border-sky-200 whitespace-nowrap">
+                          Confirmed
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center justify-between text-xs pt-1 border-t border-neutral-100">
+                      <div>
+                        <span className="text-[10px] text-neutral-400 uppercase font-medium block">Treatment Net</span>
+                        <span className="font-medium text-neutral-900 font-mono tabular-nums">{formatIDR(item.eligible_treatment_amount)}</span>
+                      </div>
+
+                      <div className="text-right">
+                        <span className="text-[10px] text-emerald-700 uppercase font-bold block">Commission ({item.commission_rate_pct}%)</span>
+                        <span className={`text-xs font-bold font-mono tabular-nums ${isCancelled ? 'line-through text-neutral-400' : 'text-emerald-700'}`}>
+                          {isCancelled ? 'Rp 0' : `+${formatIDR(item.commission_amount)}`}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="pt-2 border-t border-neutral-100 flex items-center justify-between">
+                      {/* Commission Status */}
+                      {isCancelled ? (
+                        <span className="text-[10px] font-semibold text-neutral-500 bg-neutral-100 px-2 py-0.5 rounded">
+                          Commission Cancelled
+                        </span>
+                      ) : isApproved ? (
+                        <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100/70 px-2 py-0.5 rounded border border-emerald-300">
+                          Approved
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-semibold text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-200/80">
+                          Pending Verification
+                        </span>
+                      )}
+
+                      <Link
+                        href={`/invoice/${item.booking_id}`}
+                        target="_blank"
+                        className="inline-flex items-center gap-1 font-semibold text-[11px] text-neutral-700 hover:text-neutral-950 hover:underline"
+                      >
+                        <span>Invoice</span>
+                        <ExternalLink size={10} className="text-neutral-400" />
+                      </Link>
                     </div>
                   </div>
-
-                  <div className="pt-2 border-t border-neutral-100 flex items-center justify-between">
-                    <span className="border border-neutral-200 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider text-neutral-800 bg-neutral-50">
-                      {item.status}
-                    </span>
-
-                    <Link
-                      href={`/invoice/${item.booking_id}`}
-                      target="_blank"
-                      className="inline-flex items-center gap-1 font-semibold text-[11px] text-neutral-700 hover:text-neutral-950 hover:underline"
-                    >
-                      <span>Invoice</span>
-                      <ExternalLink size={10} className="text-neutral-400" />
-                    </Link>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {/* Desktop Table View (>= 640px) */}
@@ -159,63 +254,111 @@ export default function PartnerCommissionsPage() {
                   <tr>
                     <th className="py-3 px-4">Date</th>
                     <th className="py-3 px-4">Booking Ref</th>
-                    <th className="py-3 px-4">Gross Total</th>
+                    <th className="py-3 px-4">Customer & Treatment</th>
+                    <th className="py-3 px-4">Payment</th>
+                    <th className="py-3 px-4">Treatment Status</th>
                     <th className="py-3 px-4">Treatment Net</th>
-                    <th className="py-3 px-4">Rate</th>
                     <th className="py-3 px-4">Commission</th>
-                    <th className="py-3 px-4">Status</th>
+                    <th className="py-3 px-4">Commission Status</th>
                     <th className="py-3 px-4 text-right">Invoice</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-neutral-100">
-                  {filtered.map((item) => (
-                    <tr key={item.id} className="hover:bg-neutral-50/50 transition-colors">
-                      <td className="py-3 px-4 text-neutral-500">
-                        {new Date(item.created_at).toLocaleDateString('en-GB', {
-                          day: 'numeric',
-                          month: 'short',
-                          year: 'numeric',
-                        })}
-                      </td>
-                      <td className="py-3 px-4">
-                        <Link
-                          href={`/invoice/${item.booking_id}`}
-                          target="_blank"
-                          className="inline-flex items-center gap-1 font-mono font-bold text-neutral-900 hover:underline group"
-                          title="View treatment & invoice details"
-                        >
-                          <span>#{item.booking_id}</span>
-                          <ExternalLink size={10} className="text-neutral-400 group-hover:text-neutral-900 transition-colors" />
-                        </Link>
-                      </td>
-                      <td className="py-3 px-4 text-neutral-500 font-mono tabular-nums">
-                        {formatIDR(item.booking_amount_gross)}
-                      </td>
-                      <td className="py-3 px-4 font-medium text-neutral-900 font-mono tabular-nums">
-                        {formatIDR(item.eligible_treatment_amount)}
-                      </td>
-                      <td className="py-3 px-4 text-neutral-500 font-mono">
-                        {item.commission_rate_pct}%
-                      </td>
-                      <td className="py-3 px-4 font-bold text-emerald-700 font-mono tabular-nums">
-                        +{formatIDR(item.commission_amount)}
-                      </td>
-                      <td className="py-3 px-4">
-                        <span className="border border-neutral-200 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider text-neutral-800 bg-neutral-50">
-                          {item.status}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4 text-right">
-                        <Link
-                          href={`/invoice/${item.booking_id}`}
-                          target="_blank"
-                          className="text-neutral-700 font-semibold hover:text-neutral-950 hover:underline"
-                        >
-                          View
-                        </Link>
-                      </td>
-                    </tr>
-                  ))}
+                  {filtered.map((item) => {
+                    const isPaid = item.payment_status === 'paid' || item.payment_verified;
+                    const isApproved = item.status === 'approved';
+                    const isCancelled = item.status === 'cancelled' || item.booking_status === 'Cancelled';
+
+                    return (
+                      <tr key={item.id} className="hover:bg-neutral-50/50 transition-colors">
+                        <td className="py-3 px-4 text-neutral-500">
+                          {new Date(item.created_at).toLocaleDateString('en-GB', {
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric',
+                          })}
+                        </td>
+                        <td className="py-3 px-4">
+                          <Link
+                            href={`/invoice/${item.booking_id}`}
+                            target="_blank"
+                            className="inline-flex items-center gap-1 font-mono font-bold text-neutral-900 hover:underline group"
+                            title="View treatment & invoice details"
+                          >
+                            <span>#{item.booking_id}</span>
+                            <ExternalLink size={10} className="text-neutral-400 group-hover:text-neutral-900 transition-colors" />
+                          </Link>
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="font-semibold text-neutral-900">{item.guest_name}</div>
+                          <div className="text-[11px] text-neutral-500 truncate max-w-[160px]">{item.treatment_name || 'Spa Treatment'}</div>
+                        </td>
+                        <td className="py-3 px-4">
+                          {isPaid ? (
+                            <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                              Paid
+                            </span>
+                          ) : (
+                            <span className="text-[10px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                              Unpaid
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-3 px-4">
+                          {isCancelled ? (
+                            <span className="text-[10px] font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-200">
+                              Cancelled
+                            </span>
+                          ) : item.booking_status === 'Ongoing' ? (
+                            <span className="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200 flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+                              Ongoing
+                            </span>
+                          ) : item.booking_status === 'Completed' || item.service_completed ? (
+                            <span className="text-[10px] font-bold text-teal-800 bg-teal-50 px-2 py-0.5 rounded border border-teal-200">
+                              Finish Treatment
+                            </span>
+                          ) : (
+                            <span className="text-[10px] font-bold text-sky-800 bg-sky-50 px-2 py-0.5 rounded border border-sky-200">
+                              Confirmed
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-3 px-4 font-medium text-neutral-900 font-mono tabular-nums">
+                          {formatIDR(item.eligible_treatment_amount)}
+                        </td>
+                        <td className="py-3 px-4 font-bold font-mono tabular-nums">
+                          <span className={isCancelled ? 'line-through text-neutral-400' : 'text-emerald-700'}>
+                            {isCancelled ? 'Rp 0' : `+${formatIDR(item.commission_amount)}`}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4">
+                          {isCancelled ? (
+                            <span className="text-[10px] font-semibold text-neutral-500 bg-neutral-100 px-2 py-0.5 rounded">
+                              Cancelled
+                            </span>
+                          ) : isApproved ? (
+                            <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100/70 px-2 py-0.5 rounded border border-emerald-300">
+                              Approved
+                            </span>
+                          ) : (
+                            <span className="text-[10px] font-semibold text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-200/80">
+                              Pending
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-3 px-4 text-right">
+                          <Link
+                            href={`/invoice/${item.booking_id}`}
+                            target="_blank"
+                            className="text-neutral-700 font-semibold hover:text-neutral-950 hover:underline"
+                          >
+                            View
+                          </Link>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
