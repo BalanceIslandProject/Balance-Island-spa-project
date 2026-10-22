@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { 
   Calendar as CalendarIcon, 
@@ -14,9 +14,6 @@ import {
   Check, 
   User, 
   MapPin, 
-  CalendarDays,
-  ChevronDown,
-  ChevronUp,
   ArrowLeft
 } from 'lucide-react';
 
@@ -53,6 +50,31 @@ const MONTH_NAMES = [
 
 const DAYS_OF_WEEK = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 
+// Rock-solid safe date formatting that never crashes on malformed or ISO date strings
+const safeFormatDate = (rawDate: string | undefined | null, options?: Intl.DateTimeFormatOptions) => {
+  if (!rawDate) return '';
+  try {
+    const cleanStr = String(rawDate).includes('T') ? String(rawDate).split('T')[0] : String(rawDate);
+    const parts = cleanStr.split('-');
+    if (parts.length === 3) {
+      const year = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const day = parseInt(parts[2], 10);
+      if (!isNaN(year) && !isNaN(month) && !isNaN(day)) {
+        const d = new Date(year, month, day);
+        return d.toLocaleDateString('en-GB', options || { day: 'numeric', month: 'short' });
+      }
+    }
+    const d = new Date(rawDate);
+    if (!isNaN(d.getTime())) {
+      return d.toLocaleDateString('en-GB', options || { day: 'numeric', month: 'short' });
+    }
+  } catch {
+    // safe fallback
+  }
+  return String(rawDate);
+};
+
 export default function FloatingBookingCalendar({
   bookings = [],
   isOpen: controlledIsOpen,
@@ -82,10 +104,8 @@ export default function FloatingBookingCalendar({
   const [statusFilter, setStatusFilter] = useState<'all' | 'approved' | 'pending' | 'paid'>('all');
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  // App-like Dynamic View Mode (Month vs Week)
+  // Apple-style View Mode Control: 'month' | 'week'
   const [viewMode, setViewMode] = useState<'month' | 'week'>('month');
-  const [isAutoCollapsed, setIsAutoCollapsed] = useState(false);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const formatIDR = (val: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -167,9 +187,16 @@ export default function FloatingBookingCalendar({
   // Weekly calendar days (computed for the week containing selectedDate or active date)
   const weekDays = useMemo(() => {
     let baseDate: Date;
-    if (selectedDate) {
+    if (selectedDate && selectedDate.includes('-')) {
       const parts = selectedDate.split('-');
-      baseDate = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+      const y = Number(parts[0]);
+      const m = Number(parts[1]) - 1;
+      const d = Number(parts[2]);
+      if (!isNaN(y) && !isNaN(m) && !isNaN(d)) {
+        baseDate = new Date(y, m, d);
+      } else {
+        baseDate = new Date(currentYear, currentMonth, 1);
+      }
     } else if (currentYear === today.getFullYear() && currentMonth === today.getMonth()) {
       baseDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
     } else {
@@ -235,107 +262,130 @@ export default function FloatingBookingCalendar({
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  // Scroll listener: collapse month calendar to weekly calendar when scrolling down,
-  // and expand back to month calendar when scrolling back to the top
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    const scrollTop = e.currentTarget.scrollTop;
-    if (scrollTop > 35) {
-      if (viewMode === 'month') {
-        setViewMode('week');
-        setIsAutoCollapsed(true);
-      }
-    } else if (scrollTop <= 5) {
-      if (isAutoCollapsed) {
-        setViewMode('month');
-        setIsAutoCollapsed(false);
-      }
-    }
-  };
-
   // Calendar Content Layout
   const renderCalendarContent = () => (
-    <div className="flex flex-col h-full bg-white text-neutral-900 font-sans select-none">
+    <div className="flex flex-col h-full bg-[#FBFBFD] text-neutral-900 font-sans select-none">
       
-      {/* 1. Native Mobile App Header Bar */}
-      <div className="px-4 py-3 sm:px-5 sm:py-4 border-b border-neutral-200/80 bg-white sticky top-0 z-20 flex items-center justify-between gap-2 shadow-2xs pt-[max(0.75rem,env(safe-area-inset-top))]">
-        <div className="flex items-center gap-2.5 min-w-0">
-          {!inline && (
-            <button
-              type="button"
-              onClick={handleClose}
-              className="p-1.5 -ml-1 text-neutral-700 hover:text-neutral-950 hover:bg-neutral-100 rounded-xl transition-colors active:scale-95"
-              aria-label="Back / Close"
-            >
-              <ArrowLeft size={18} className="sm:hidden" />
-              <X size={18} className="hidden sm:block" />
-            </button>
-          )}
-
-          <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <h2 className="text-sm sm:text-base font-bold text-neutral-950 leading-tight truncate">
-                {MONTH_NAMES[currentMonth]} {currentYear}
-              </h2>
-              {/* View Mode Indicator Pill */}
+      {/* 1. Apple-Style Native Mobile App Header Bar */}
+      <div className="px-4 py-3 sm:px-6 sm:py-4 border-b border-neutral-200/70 bg-white sticky top-0 z-20 space-y-2.5 shadow-[0_1px_3px_rgba(0,0,0,0.02)] pt-[max(0.75rem,env(safe-area-inset-top))]">
+        
+        {/* Row 1: Back/Close button + Month Title + Navigation Controls */}
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2.5 min-w-0">
+            {!inline && (
               <button
                 type="button"
-                onClick={() => {
-                  setViewMode((prev) => (prev === 'month' ? 'week' : 'month'));
-                  setIsAutoCollapsed(false);
-                }}
-                className="px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase border border-neutral-200 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 transition-colors flex items-center gap-1 shrink-0"
-                title="Tap to toggle between Month and Week view"
+                onClick={handleClose}
+                className="p-1.5 -ml-1 text-neutral-800 hover:text-neutral-950 hover:bg-neutral-100 rounded-xl transition-all active:scale-95"
+                aria-label="Back / Close"
               >
-                <span>{viewMode === 'month' ? 'Month' : 'Week'}</span>
-                {viewMode === 'month' ? <ChevronUp size={10} /> : <ChevronDown size={10} />}
+                <ArrowLeft size={20} className="sm:hidden" />
+                <X size={18} className="hidden sm:block" />
               </button>
-            </div>
-            <div className="flex items-center gap-1.5 text-[11px] text-neutral-500 font-medium truncate">
-              <span>{monthStats.count} {monthStats.count === 1 ? 'booking' : 'bookings'}</span>
-              <span>•</span>
-              <span className="font-semibold text-emerald-700 tabular-nums font-mono">{formatIDR(monthStats.totalCommission)}</span>
+            )}
+
+            <h2 className="text-base sm:text-lg font-bold text-neutral-950 tracking-tight truncate">
+              {MONTH_NAMES[currentMonth]} {currentYear}
+            </h2>
+          </div>
+
+          {/* Quick controls: Today + < > */}
+          <div className="flex items-center gap-1.5 shrink-0">
+            <button
+              type="button"
+              onClick={goToToday}
+              className="px-2.5 py-1 text-xs font-semibold rounded-xl border border-neutral-200/80 text-neutral-700 hover:text-neutral-950 hover:bg-neutral-100 active:scale-95 transition-all shadow-2xs"
+              title="Jump to today"
+            >
+              Today
+            </button>
+            <div className="flex items-center border border-neutral-200/80 rounded-xl overflow-hidden bg-white shadow-2xs">
+              <button
+                type="button"
+                onClick={goToPrevMonth}
+                className="p-1.5 hover:bg-neutral-100 text-neutral-700 hover:text-neutral-950 transition-colors"
+                aria-label="Previous month"
+              >
+                <ChevronLeft size={16} />
+              </button>
+              <button
+                type="button"
+                onClick={goToNextMonth}
+                className="p-1.5 hover:bg-neutral-100 text-neutral-700 hover:text-neutral-950 transition-colors border-l border-neutral-200/80"
+                aria-label="Next month"
+              >
+                <ChevronRight size={16} />
+              </button>
             </div>
           </div>
         </div>
 
-        {/* Quick controls */}
-        <div className="flex items-center gap-1.5 shrink-0">
-          <button
-            type="button"
-            onClick={goToToday}
-            className="px-2.5 py-1 text-[11px] font-semibold rounded-lg border border-neutral-200 text-neutral-700 hover:text-neutral-950 hover:bg-neutral-100 active:scale-95 transition-all shadow-2xs"
-            title="Jump to today"
-          >
-            Today
-          </button>
-          <div className="flex items-center border border-neutral-200 rounded-lg overflow-hidden bg-white shadow-2xs">
-            <button
-              type="button"
-              onClick={goToPrevMonth}
-              className="p-1.5 hover:bg-neutral-100 text-neutral-700 hover:text-neutral-950 transition-colors"
-              aria-label="Previous month"
-            >
-              <ChevronLeft size={15} />
-            </button>
-            <button
-              type="button"
-              onClick={goToNextMonth}
-              className="p-1.5 hover:bg-neutral-100 text-neutral-700 hover:text-neutral-950 transition-colors border-l border-neutral-200"
-              aria-label="Next month"
-            >
-              <ChevronRight size={15} />
-            </button>
+        {/* Row 2: Total Bookings rounded card on LEFT, Total Amount on the RIGHT */}
+        <div className="flex items-center justify-between gap-2 pt-0.5">
+          {/* Rounded card for total bookings */}
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-neutral-100 border border-neutral-200/80 shadow-2xs">
+            <span className="w-1.5 h-1.5 rounded-full bg-neutral-900" />
+            <span className="text-xs font-bold text-neutral-900">
+              {monthStats.count} {monthStats.count === 1 ? 'booking' : 'bookings'}
+            </span>
+          </div>
+
+          {/* Total amount on the right of the screen */}
+          <div className="text-right flex items-baseline gap-1.5">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Total:</span>
+            <span className="text-sm sm:text-base font-bold text-emerald-700 font-mono tabular-nums">
+              {formatIDR(monthStats.totalCommission)}
+            </span>
           </div>
         </div>
       </div>
 
-      {/* 2. Interactive Calendar Area (Smoothly toggles between Month and Week) */}
-      <div className="border-b border-neutral-200/80 bg-neutral-50/40 p-3 sm:p-4 shrink-0 transition-all duration-200">
+      {/* 2. Apple Segmented View Toggle & Calendar Area */}
+      <div className="border-b border-neutral-200/70 bg-white p-3 sm:p-4 shrink-0 space-y-2.5">
+        
+        {/* Apple Segmented Control (Month / Week) */}
+        <div className="flex items-center justify-between">
+          <div className="inline-flex p-0.5 rounded-xl bg-neutral-100 border border-neutral-200/80 text-xs">
+            <button
+              type="button"
+              onClick={() => setViewMode('month')}
+              className={`px-3 py-1 rounded-lg font-semibold transition-all ${
+                viewMode === 'month'
+                  ? 'bg-white text-neutral-950 shadow-xs'
+                  : 'text-neutral-500 hover:text-neutral-900'
+              }`}
+            >
+              Month View
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('week')}
+              className={`px-3 py-1 rounded-lg font-semibold transition-all ${
+                viewMode === 'week'
+                  ? 'bg-white text-neutral-950 shadow-xs'
+                  : 'text-neutral-500 hover:text-neutral-900'
+              }`}
+            >
+              Week View
+            </button>
+          </div>
+
+          {selectedDate && (
+            <button
+              type="button"
+              onClick={() => setSelectedDate(null)}
+              className="text-xs font-semibold text-neutral-900 hover:underline px-2 py-1"
+            >
+              Clear Filter
+            </button>
+          )}
+        </div>
+
         {viewMode === 'month' ? (
           /* ========================================================
-             A. MONTH CALENDAR VIEW (Default expanded state)
+             A. MONTH CALENDAR VIEW (Apple Calendar Grid)
              ======================================================== */
-          <div className="bg-white rounded-2xl border border-neutral-200/80 p-3 sm:p-4 shadow-2xs transition-all">
+          <div className="bg-[#FAFAFC] rounded-2xl border border-neutral-200/80 p-3 sm:p-4 shadow-2xs">
             {/* Day of Week Headers */}
             <div className="grid grid-cols-7 gap-1 text-center mb-1">
               {DAYS_OF_WEEK.map((d, i) => (
@@ -414,8 +464,8 @@ export default function FloatingBookingCalendar({
               })}
             </div>
 
-            {/* Collapse to Weekly view prompt & Legend */}
-            <div className="flex items-center justify-between pt-2.5 mt-2.5 border-t border-neutral-100 text-xs">
+            {/* Legend */}
+            <div className="flex items-center justify-between pt-2.5 mt-2.5 border-t border-neutral-200/60 text-xs">
               <div className="flex items-center gap-3 text-[11px] text-neutral-500 font-medium">
                 <span className="flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
@@ -426,37 +476,13 @@ export default function FloatingBookingCalendar({
                   <span>Pending</span>
                 </span>
               </div>
-
-              <div className="flex items-center gap-2">
-                {selectedDate && (
-                  <button
-                    type="button"
-                    onClick={() => setSelectedDate(null)}
-                    className="text-[11px] font-semibold text-neutral-900 hover:underline"
-                  >
-                    Clear Filter
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setViewMode('week');
-                    setIsAutoCollapsed(false);
-                  }}
-                  className="inline-flex items-center gap-1 text-[11px] text-neutral-500 hover:text-neutral-900 font-medium transition-colors"
-                >
-                  <span>Week view</span>
-                  <ChevronUp size={12} />
-                </button>
-              </div>
             </div>
           </div>
         ) : (
           /* ========================================================
-             B. COMPACT WEEKLY CALENDAR STRIP (Auto-collapsed on scroll)
-             Gives maximum screen real estate to the booking details
+             B. COMPACT WEEKLY CALENDAR STRIP
              ======================================================== */
-          <div className="bg-white rounded-2xl border border-neutral-200/80 p-2 sm:p-3 shadow-2xs transition-all space-y-2">
+          <div className="bg-[#FAFAFC] rounded-2xl border border-neutral-200/80 p-2.5 sm:p-3 shadow-2xs space-y-2">
             <div className="grid grid-cols-7 gap-1.5 text-center">
               {weekDays.map((d) => (
                 <button
@@ -469,7 +495,7 @@ export default function FloatingBookingCalendar({
                       setSelectedDate(d.dateString);
                     }
                   }}
-                  className={`h-14 rounded-xl flex flex-col items-center justify-between py-1 px-0.5 transition-all relative ${
+                  className={`h-14 rounded-xl flex flex-col items-center justify-between py-1.5 px-0.5 transition-all relative ${
                     d.isSelected
                       ? 'bg-neutral-950 text-white shadow-xs scale-[1.02] z-10'
                       : d.hasBookings
@@ -497,53 +523,37 @@ export default function FloatingBookingCalendar({
                 </button>
               ))}
             </div>
-
-            {/* Expand back to Month view prompt */}
-            <div className="flex items-center justify-between pt-1 px-1 text-[11px] text-neutral-500 border-t border-neutral-100">
-              <span className="text-[10px] text-neutral-400">Weekly view (scrolling bookings)</span>
-              <button
-                type="button"
-                onClick={() => {
-                  setViewMode('month');
-                  setIsAutoCollapsed(false);
-                }}
-                className="inline-flex items-center gap-1 font-semibold text-neutral-900 hover:underline"
-              >
-                <span>Expand to full month</span>
-                <ChevronDown size={12} />
-              </button>
-            </div>
           </div>
         )}
       </div>
 
-      {/* 3. Booking Details List (Scrollable Area) */}
+      {/* 3. Booking Details List (Scrollable Area, Rock-Solid without erratic resize) */}
       <div 
-        ref={scrollContainerRef}
-        onScroll={handleScroll}
         className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3 overscroll-contain"
+        style={{ WebkitOverflowScrolling: 'touch' }}
       >
+        
         {/* Selected Date Header & Status Pills */}
         <div className="flex items-center justify-between gap-2 pb-1">
           <div className="flex items-center gap-2">
-            <h3 className="text-xs sm:text-sm font-bold text-neutral-900 truncate">
+            <h3 className="text-xs sm:text-sm font-bold text-neutral-950 truncate">
               {selectedDate 
-                ? new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+                ? safeFormatDate(selectedDate, { day: 'numeric', month: 'short', year: 'numeric' })
                 : `${MONTH_NAMES[currentMonth]} ${currentYear}`}
             </h3>
-            <span className="text-[10px] bg-neutral-100 text-neutral-700 px-2 py-0.5 rounded-md font-mono font-bold">
+            <span className="text-[10px] bg-neutral-200/70 text-neutral-800 px-2 py-0.5 rounded-md font-mono font-bold">
               {displayedBookings.length}
             </span>
           </div>
 
           {/* Filter buttons */}
-          <div className="flex items-center gap-1 bg-neutral-100 p-0.5 rounded-lg border border-neutral-200/60 text-[11px]">
+          <div className="flex items-center gap-1 bg-neutral-100 p-0.5 rounded-xl border border-neutral-200/60 text-xs">
             {(['all', 'approved', 'pending'] as const).map((s) => (
               <button
                 type="button"
                 key={s}
                 onClick={() => setStatusFilter(s)}
-                className={`px-2.5 py-1 rounded-md capitalize font-semibold transition-all ${
+                className={`px-2.5 py-1 rounded-lg capitalize font-semibold transition-all cursor-pointer ${
                   statusFilter === s
                     ? 'bg-neutral-950 text-white shadow-2xs'
                     : 'text-neutral-600 hover:text-neutral-950'
@@ -557,7 +567,7 @@ export default function FloatingBookingCalendar({
 
         {/* Booking Cards List */}
         {displayedBookings.length === 0 ? (
-          <div className="py-12 px-6 text-center rounded-2xl border border-dashed border-neutral-200 bg-neutral-50/50 space-y-2">
+          <div className="py-12 px-6 text-center rounded-2xl border border-dashed border-neutral-200 bg-white space-y-2">
             <CalendarIcon size={24} className="mx-auto text-neutral-400" />
             <p className="text-xs font-semibold text-neutral-900">
               {selectedDate 
@@ -569,16 +579,17 @@ export default function FloatingBookingCalendar({
             </p>
           </div>
         ) : (
-          <div className="space-y-2.5 pb-4">
-            {displayedBookings.map((b) => {
+          <div className="space-y-2.5 pb-6">
+            {displayedBookings.map((b, idx) => {
               const isApproved = b.commission_status === 'approved';
               const isPaid = b.commission_status === 'paid';
               const isPending = b.commission_status === 'pending';
+              const itemKey = b.id || b.booking_id || `booking-item-${idx}`;
 
               return (
                 <div
-                  key={b.id || b.booking_id}
-                  className="p-3.5 sm:p-4 rounded-2xl border border-neutral-200/80 bg-white hover:border-neutral-300 shadow-2xs transition-all space-y-2.5"
+                  key={itemKey}
+                  className="p-3.5 sm:p-4 rounded-2xl border border-neutral-200/80 bg-white hover:border-neutral-300 shadow-[0_1px_4px_rgba(0,0,0,0.03)] transition-all space-y-2.5"
                 >
                   {/* Top Row: Ref & Status Pill */}
                   <div className="flex items-center justify-between gap-2">
@@ -589,7 +600,7 @@ export default function FloatingBookingCalendar({
                       <button
                         type="button"
                         onClick={() => handleCopy(b.booking_id)}
-                        className="text-neutral-400 hover:text-neutral-800 transition-colors p-1 rounded-md hover:bg-neutral-100"
+                        className="text-neutral-400 hover:text-neutral-800 transition-colors p-1 rounded-md hover:bg-neutral-100 cursor-pointer"
                         title="Copy booking reference"
                       >
                         {copiedId === b.booking_id ? <Check size={12} className="text-emerald-600" /> : <Copy size={12} />}
@@ -633,7 +644,7 @@ export default function FloatingBookingCalendar({
                       <div className="text-[11px] font-medium text-neutral-600 flex items-center sm:justify-end gap-1">
                         <Clock size={12} className="text-neutral-400" />
                         <span>
-                          {new Date(b.date + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                          {safeFormatDate(b.date, { day: 'numeric', month: 'short' })}
                           {b.time ? ` • ${b.time}` : ''}
                         </span>
                       </div>
@@ -683,12 +694,12 @@ export default function FloatingBookingCalendar({
       </div>
 
       {/* 4. Native Footer Summary Bar */}
-      <div className="px-4 py-3 sm:px-5 border-t border-neutral-200/80 bg-neutral-50/70 flex items-center justify-between text-xs pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+      <div className="px-4 py-3 sm:px-6 border-t border-neutral-200/80 bg-white flex items-center justify-between text-xs pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-1px_3px_rgba(0,0,0,0.02)]">
         <span className="text-neutral-500 font-medium">
           {displayedBookings.length} {displayedBookings.length === 1 ? 'appointment' : 'appointments'}
         </span>
         <div className="flex items-center gap-1.5 font-mono tabular-nums">
-          <span className="text-[11px] text-neutral-500">Total:</span>
+          <span className="text-[11px] text-neutral-400">Total:</span>
           <span className="font-bold text-neutral-950 text-sm">
             {formatIDR(
               displayedBookings.reduce((sum, b) => sum + (b.commission_amount || 0), 0)
@@ -703,13 +714,13 @@ export default function FloatingBookingCalendar({
   // If used inline inside a dashboard section
   if (inline) {
     return (
-      <div className="bg-white border border-neutral-200/80 rounded-2xl overflow-hidden shadow-2xs">
+      <div className="bg-white border border-neutral-200/80 rounded-3xl overflow-hidden shadow-2xs">
         {renderCalendarContent()}
       </div>
     );
   }
 
-  // Full Screen on Mobile like an App, Modal on Desktop
+  // Full Screen on Mobile like an App, Centered Modal on Desktop
   return (
     <>
       {/* Floating Action Trigger Button (FAB) */}

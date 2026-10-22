@@ -101,6 +101,23 @@ export default function PartnerDashboardPage() {
     setTimeout(() => setCopiedLink(false), 2000);
   };
 
+  const handleDownloadQr = async () => {
+    try {
+      const response = await fetch(qrCodeUrl);
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = `BookTherapick-${partnerCode || 'partner'}-QR.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch {
+      window.open(qrCodeUrl, '_blank');
+    }
+  };
+
   const handleWithdrawWhatsApp = () => {
     if (!hasApprovedBalance) {
       alert('You currently have no approved commission balance ready for withdrawal.');
@@ -126,29 +143,36 @@ Please verify and process the payout to my registered details. Thank you!`;
     window.open(waUrl, '_blank');
   };
 
-  const handleDownloadQr = async () => {
-    try {
-      const response = await fetch(qrCodeUrl);
-      const blob = await response.blob();
-      const blobUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = blobUrl;
-      link.download = `BookTherapick-${partnerCode || 'partner'}-QR.png`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(blobUrl);
-    } catch {
-      window.open(qrCodeUrl, '_blank');
-    }
-  };
-
   const formatIDR = (val: number) => {
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
       currency: 'IDR',
       maximumFractionDigits: 0,
     }).format(val || 0);
+  };
+
+  const safeFormatDate = (rawDate: string | undefined | null, options?: Intl.DateTimeFormatOptions) => {
+    if (!rawDate) return '';
+    try {
+      const cleanStr = String(rawDate).includes('T') ? String(rawDate).split('T')[0] : String(rawDate);
+      const parts = cleanStr.split('-');
+      if (parts.length === 3) {
+        const year = parseInt(parts[0], 10);
+        const month = parseInt(parts[1], 10) - 1;
+        const day = parseInt(parts[2], 10);
+        if (!isNaN(year) && !isNaN(month) && !isNaN(day)) {
+          const d = new Date(year, month, day);
+          return d.toLocaleDateString('en-GB', options || { day: 'numeric', month: 'short' });
+        }
+      }
+      const d = new Date(rawDate);
+      if (!isNaN(d.getTime())) {
+        return d.toLocaleDateString('en-GB', options || { day: 'numeric', month: 'short' });
+      }
+    } catch {
+      // safe fallback
+    }
+    return String(rawDate);
   };
 
   if (loading) {
@@ -165,26 +189,26 @@ Please verify and process the payout to my registered details. Thank you!`;
   const recentReferrals = calendarBookings.slice(0, 3);
 
   return (
-    <div className="space-y-3.5 sm:space-y-5 w-full max-w-4xl mx-auto pb-6">
+    <div className="space-y-4 sm:space-y-5 w-full max-w-4xl mx-auto pb-8 font-sans antialiased">
       
       {/* Application Status Banner (only if pending) */}
       {profile?.status === 'pending' && (
-        <div className="p-3 border border-amber-200 rounded-xl bg-amber-50/70 text-xs text-amber-900 flex items-start gap-2">
-          <AlertCircle size={14} className="text-amber-700 shrink-0 mt-0.5" />
+        <div className="p-3.5 border border-amber-200/80 rounded-2xl bg-amber-50/70 text-xs text-amber-900 flex items-start gap-2.5 shadow-2xs">
+          <AlertCircle size={16} className="text-amber-700 shrink-0 mt-0.5" />
           <div className="leading-relaxed">
             Application under review. You can already share your referral link and QR code — all attributed bookings are recorded automatically.
           </div>
         </div>
       )}
 
-      {/* 1. Approved Balance Card (Top of the Screen) */}
-      <div className="p-4 sm:p-5 rounded-2xl bg-white border border-neutral-200/80 shadow-2xs space-y-3.5">
+      {/* 1. Approved Balance Card (Apple Design Primary Hero) */}
+      <div className="p-5 sm:p-6 rounded-3xl bg-white border border-neutral-200/70 shadow-[0_2px_12px_rgba(0,0,0,0.03)] space-y-4 transition-all">
         <div className="flex items-start justify-between">
           <div>
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500">
+            <span className="text-[11px] font-bold uppercase tracking-widest text-neutral-400 block">
               Approved Balance
             </span>
-            <div className="text-2xl sm:text-3xl font-bold text-neutral-950 font-mono tracking-tight tabular-nums mt-0.5">
+            <div className="text-3xl sm:text-4xl font-extrabold text-neutral-950 font-mono tracking-tight tabular-nums mt-1">
               {formatIDR(approvedBalance)}
             </div>
             {(stats?.pendingCommission || 0) > 0 && (
@@ -195,18 +219,18 @@ Please verify and process the payout to my registered details. Thank you!`;
           </div>
 
           {hasApprovedBalance && (
-            <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200">
+            <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200/80">
               Ready
             </span>
           )}
         </div>
 
-        {/* Clean Withdraw Button (No icons, no whatsapp text) */}
+        {/* Clean Apple Withdraw Button */}
         <button
           type="button"
           onClick={handleWithdrawWhatsApp}
           disabled={!hasApprovedBalance}
-          className={`w-full py-3 px-4 rounded-xl font-bold text-xs tracking-wide transition-all active:scale-98 flex items-center justify-center ${
+          className={`w-full py-3.5 px-4 rounded-2xl font-semibold text-xs tracking-wide transition-all active:scale-[0.98] flex items-center justify-center ${
             hasApprovedBalance
               ? 'bg-neutral-950 hover:bg-neutral-800 text-white cursor-pointer shadow-xs'
               : 'bg-neutral-100 text-neutral-400 cursor-not-allowed border border-neutral-200/60'
@@ -216,82 +240,82 @@ Please verify and process the payout to my registered details. Thank you!`;
         </button>
       </div>
 
-      {/* 2. Responsive 2-Column Metrics (Approve: Green Card | Pending: Red Card) */}
-      <div className="grid grid-cols-2 gap-3">
-        {/* Approved / Paid Out: Green Card */}
-        <div className="bg-emerald-50/60 border border-emerald-200/80 rounded-2xl p-3.5 sm:p-4 shadow-2xs space-y-1.5 transition-all">
+      {/* 2. Responsive 2-Column Metrics (Apple Rounded Cards: Green Paid Out | Red Pending) */}
+      <div className="grid grid-cols-2 gap-3 sm:gap-4">
+        {/* Approved / Paid Out: Apple Green Card */}
+        <div className="bg-[#F0FDF4] border border-[#DCFCE7] rounded-3xl p-4 sm:p-5 shadow-[0_1px_4px_rgba(0,0,0,0.02)] space-y-2 transition-all">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-600 block">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-500 block">
               Paid Out
             </span>
-            <span className="text-[9px] font-bold text-emerald-800 bg-emerald-100/80 border border-emerald-200 px-1.5 py-0.2 rounded-full">
+            <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-100/80 border border-emerald-200/70 px-2 py-0.5 rounded-full">
               Transferred
             </span>
           </div>
-          <div className="text-sm sm:text-lg font-bold text-neutral-950 font-mono tabular-nums truncate">
+          <div className="text-base sm:text-xl font-bold text-neutral-950 font-mono tabular-nums truncate">
             {formatIDR(stats?.paidCommission || 0)}
           </div>
-          <p className="text-[10px] text-neutral-500 font-medium">
+          <p className="text-[11px] text-neutral-500 font-medium">
             Approved earnings paid to bank
           </p>
         </div>
 
-        {/* Pending: Red Card */}
-        <div className="bg-rose-50/60 border border-rose-200/80 rounded-2xl p-3.5 sm:p-4 shadow-2xs space-y-1.5 transition-all">
+        {/* Pending: Apple Red Card */}
+        <div className="bg-[#FFF1F2] border border-[#FFE4E6] rounded-3xl p-4 sm:p-5 shadow-[0_1px_4px_rgba(0,0,0,0.02)] space-y-2 transition-all">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-600 block">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-500 block">
               Pending
             </span>
-            <span className="text-[9px] font-bold text-rose-700 bg-rose-100/80 border border-rose-200 px-1.5 py-0.2 rounded-full">
+            <span className="text-[10px] font-semibold text-rose-700 bg-rose-100/80 border border-rose-200/70 px-2 py-0.5 rounded-full">
               Verification
             </span>
           </div>
-          <div className="text-sm sm:text-lg font-bold text-neutral-950 font-mono tabular-nums truncate">
+          <div className="text-base sm:text-xl font-bold text-neutral-950 font-mono tabular-nums truncate">
             {formatIDR(stats?.pendingCommission || 0)}
           </div>
-          <p className="text-[10px] text-neutral-500 font-medium">
+          <p className="text-[11px] text-neutral-500 font-medium">
             Awaiting treatment completion
           </p>
         </div>
       </div>
 
-      {/* 3. Promote to Guests (Displayed QR Code with Download + Share Link with Copy) */}
-      <div className="bg-white border border-neutral-200/80 rounded-2xl p-4 sm:p-5 shadow-2xs space-y-4">
+      {/* 3. Promote to Guests Card (QR Code Without #Code Below Image + Download Button + Share Link) */}
+      <div className="bg-white border border-neutral-200/70 rounded-3xl p-5 sm:p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)] space-y-4">
         <div className="flex items-center justify-between text-xs">
           <div>
-            <h3 className="font-bold text-neutral-950 text-sm">Promote to Guests</h3>
-            <p className="text-[11px] text-neutral-500">Scan QR code or share your link to record bookings</p>
+            <h3 className="font-bold text-neutral-950 text-sm sm:text-base tracking-tight">Promote to Guests</h3>
+            <p className="text-xs text-neutral-500 mt-0.5">Scan QR code or share your link to record bookings</p>
           </div>
-          <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 shrink-0">
+          <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200/80 shrink-0">
             Active Attribution
           </span>
         </div>
 
-        {/* Displayed QR Code Section with Direct Download Button */}
-        <div className="flex flex-col sm:flex-row items-center gap-4 p-4 rounded-2xl bg-neutral-50/80 border border-neutral-200/70">
-          <div className="p-2.5 bg-white rounded-xl border border-neutral-200 shadow-2xs shrink-0">
+        {/* Displayed QR Code Section (Clean - No #BALIHEAD112 Below Image) */}
+        <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 p-4 sm:p-5 rounded-2xl bg-[#F8F9FA] border border-neutral-200/60">
+          <div className="p-3 bg-white rounded-2xl border border-neutral-200/80 shadow-2xs shrink-0">
             <img
               src={qrCodeUrl}
-              alt={`Partner QR code for ${partnerCode}`}
+              alt="Partner QR code"
               className="w-36 h-36 sm:w-40 sm:h-40 object-contain mx-auto"
             />
           </div>
-          <div className="flex-1 text-center sm:text-left space-y-2.5 w-full min-w-0">
-            <div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">
-                Partner QR Code
+          <div className="flex-1 text-center sm:text-left space-y-3 w-full min-w-0">
+            <div className="space-y-1">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block">
+                Instant Scan
               </span>
-              <h4 className="text-sm font-bold text-neutral-950 font-mono">
-                #{partnerCode}
+              <h4 className="text-sm sm:text-base font-bold text-neutral-950">
+                Official Partner QR Code
               </h4>
               <p className="text-xs text-neutral-500 leading-relaxed">
-                Guests can scan this code with their camera to book directly with your referral code attached.
+                Guests can scan this code with their phone camera to book directly with your referral attribution.
               </p>
             </div>
             <button
               type="button"
               onClick={handleDownloadQr}
-              className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-2.5 rounded-xl bg-neutral-950 text-white text-xs font-semibold hover:bg-neutral-800 active:scale-95 transition-all shadow-xs cursor-pointer"
+              className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-2.5 rounded-xl bg-neutral-950 text-white text-xs font-semibold hover:bg-neutral-800 active:scale-95 transition-all shadow-xs cursor-pointer"
             >
               <Download size={14} />
               <span>Download QR Code</span>
@@ -299,17 +323,17 @@ Please verify and process the payout to my registered details. Thank you!`;
           </div>
         </div>
 
-        {/* Share Link with Copy Button */}
+        {/* Share Link with Apple Style Copy Bar */}
         <div className="space-y-1.5 pt-1">
-          <span className="text-[11px] font-semibold text-neutral-700">Your Referral Link</span>
+          <span className="text-xs font-semibold text-neutral-700">Your Referral Link</span>
           <div className="flex items-center gap-2">
-            <div className="flex-1 bg-neutral-50 border border-neutral-200 rounded-xl px-3 py-2.5 text-xs font-mono text-neutral-900 select-all truncate">
+            <div className="flex-1 bg-[#F2F2F7] border border-neutral-200/60 rounded-xl px-3.5 py-2.5 text-xs font-mono text-neutral-900 select-all truncate">
               {referralLink}
             </div>
             <button
               type="button"
               onClick={handleCopyLink}
-              className="px-4 py-2.5 rounded-xl bg-neutral-950 text-white text-xs font-semibold hover:bg-neutral-800 active:scale-95 transition-all shadow-xs flex items-center gap-1.5 shrink-0"
+              className="px-4 py-2.5 rounded-xl bg-neutral-950 text-white text-xs font-semibold hover:bg-neutral-800 active:scale-95 transition-all shadow-xs flex items-center gap-1.5 shrink-0 cursor-pointer"
             >
               {copiedLink ? <Check size={13} /> : <Copy size={13} />}
               <span>{copiedLink ? 'Copied' : 'Copy'}</span>
@@ -318,12 +342,12 @@ Please verify and process the payout to my registered details. Thank you!`;
         </div>
       </div>
 
-      {/* 4. Recent Referrals Stream (Live Feed) */}
-      <div className="bg-white border border-neutral-200/80 rounded-2xl p-4 sm:p-5 shadow-2xs space-y-3">
+      {/* 4. Recent Referrals Stream (Apple Style Grouped List) */}
+      <div className="bg-white border border-neutral-200/70 rounded-3xl p-5 sm:p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)] space-y-3.5">
         <div className="flex items-center justify-between text-xs">
           <div className="flex items-center gap-2">
-            <h3 className="font-bold text-neutral-950 text-sm">Recent Referrals</h3>
-            <span className="text-[10px] font-mono font-bold bg-neutral-100 text-neutral-700 px-1.5 py-0.2 rounded">
+            <h3 className="font-bold text-neutral-950 text-sm sm:text-base tracking-tight">Recent Referrals</h3>
+            <span className="text-[10px] font-mono font-bold bg-neutral-100 text-neutral-700 px-2 py-0.5 rounded-full">
               {recentReferrals.length}
             </span>
           </div>
@@ -337,7 +361,7 @@ Please verify and process the payout to my registered details. Thank you!`;
         </div>
 
         {recentReferrals.length === 0 ? (
-          <div className="py-6 px-4 text-center rounded-xl border border-dashed border-neutral-200 bg-neutral-50/50 space-y-1">
+          <div className="py-8 px-4 text-center rounded-2xl border border-dashed border-neutral-200/80 bg-[#FBFBFD] space-y-1.5">
             <p className="text-xs font-semibold text-neutral-800">No referred bookings yet</p>
             <p className="text-[11px] text-neutral-500">
               Display your QR code or share your link with villa guests to receive your first commission.
@@ -350,27 +374,27 @@ Please verify and process the payout to my registered details. Thank you!`;
               const isApproved = b.commission_status === 'approved';
 
               return (
-                <div key={b.id || b.booking_id} className="py-2.5 first:pt-0 last:pb-0 flex items-center justify-between gap-3">
+                <div key={b.id || b.booking_id} className="py-3 first:pt-1 last:pb-1 flex items-center justify-between gap-3">
                   <div className="min-w-0">
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-2">
                       <span className="font-mono text-xs font-bold text-neutral-900">
                         #{b.booking_id}
                       </span>
                       {isPending ? (
-                        <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.2 rounded bg-rose-50 text-rose-700 border border-rose-200">
+                        <span className="text-[10px] font-semibold px-2 py-0.2 rounded-full bg-rose-50 text-rose-700 border border-rose-200/80">
                           Pending
                         </span>
                       ) : isApproved ? (
-                        <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.2 rounded bg-emerald-50 text-emerald-800 border border-emerald-200">
+                        <span className="text-[10px] font-semibold px-2 py-0.2 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/80">
                           Approved
                         </span>
                       ) : (
-                        <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.2 rounded bg-neutral-100 text-neutral-700 border border-neutral-200">
+                        <span className="text-[10px] font-semibold px-2 py-0.2 rounded-full bg-neutral-100 text-neutral-700 border border-neutral-200/80">
                           {b.commission_status}
                         </span>
                       )}
                     </div>
-                    <p className="text-[11px] text-neutral-500 truncate mt-0.5">
+                    <p className="text-xs text-neutral-500 truncate mt-0.5">
                       {b.guest_name} • {b.treatment_name || 'Spa Treatment'}
                     </p>
                   </div>
@@ -380,7 +404,7 @@ Please verify and process the payout to my registered details. Thank you!`;
                       +{formatIDR(b.commission_amount)}
                     </span>
                     <span className="text-[10px] text-neutral-400">
-                      {new Date(b.date + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                      {safeFormatDate(b.date, { day: 'numeric', month: 'short' })}
                     </span>
                   </div>
                 </div>
