@@ -597,93 +597,108 @@ export default function FloatingBookingCalendar({
                   key={itemKey}
                   className={`p-3.5 sm:p-4 rounded-2xl border ${isCancelled ? 'border-neutral-200 bg-neutral-50/70 opacity-80' : 'border-neutral-200/80 bg-white hover:border-neutral-300'} shadow-[0_1px_4px_rgba(0,0,0,0.03)] transition-all space-y-3`}
                 >
-                  {/* Top Row: Multiple Status Badges on TOP + Booking Ref */}
-                  <div className="flex items-center justify-between gap-2 flex-wrap pb-2 border-b border-neutral-100">
-                    {/* Status Badges Group on TOP */}
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      {/* 1. Payment status label (Paid / Unpaid) */}
-                      {isPaid ? (
-                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/90 shadow-2xs">
-                          Paid
-                        </span>
-                      ) : (
-                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200/90 shadow-2xs">
-                          Unpaid
-                        </span>
-                      )}
-
-                      {/* 2. Treatment status label (Ongoing / Finish Treatment / Confirmed / Cancelled) */}
-                      {isCancelled ? (
-                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-rose-700 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200/90 shadow-2xs">
-                          Cancelled
-                        </span>
-                      ) : b.booking_status === 'Ongoing' ? (
-                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-200/90 shadow-2xs flex items-center gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
-                          Ongoing Treatment
-                        </span>
-                      ) : b.booking_status === 'Completed' || b.service_completed ? (
-                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-teal-800 bg-teal-50 px-2 py-0.5 rounded-full border border-teal-200/90 shadow-2xs">
-                          Finish Treatment
-                        </span>
-                      ) : b.booking_status === 'Confirmed' ? (
-                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-sky-800 bg-sky-50 px-2 py-0.5 rounded-full border border-sky-200/90 shadow-2xs">
-                          Confirmed
-                        </span>
-                      ) : (
-                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-neutral-600 bg-neutral-100 px-2 py-0.5 rounded-full border border-neutral-200/90 shadow-2xs">
-                          Pending
-                        </span>
-                      )}
-
-                      {/* 3. Commission status label (Approved / Pending Verification / Paid Out) */}
-                      {!isCancelled && (
-                        <>
-                          {isApproved && (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/90 shadow-2xs">
-                              <CheckCircle2 size={11} />
-                              Approved
-                            </span>
-                          )}
-                          {isPendingCommission && (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider text-rose-700 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200/90 shadow-2xs">
-                              <Clock size={11} />
-                              Pending Verification
-                            </span>
-                          )}
-                          {isPaidCommission && (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider text-neutral-700 bg-neutral-100 px-2 py-0.5 rounded-full border border-neutral-200/90 shadow-2xs">
-                              Paid Out
-                            </span>
-                          )}
-                        </>
-                      )}
-                    </div>
-
-                    {/* Booking Reference # on top right */}
-                    <div className="flex items-center gap-1 shrink-0 ml-auto">
-                      <span className="font-mono text-[11px] font-bold text-neutral-800 bg-neutral-100 px-2 py-0.5 rounded-md border border-neutral-200/80">
-                        #{b.booking_id}
+                  {/* Top Row: Status Badges across the top */}
+                  <div className="flex items-center gap-1.5 flex-wrap pb-2 border-b border-neutral-100">
+                    {/* 1. Payment status label (Paid / Unpaid) */}
+                    {isPaid ? (
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/90 shadow-2xs">
+                        Paid
                       </span>
-                      <button
-                        type="button"
-                        onClick={() => handleCopy(b.booking_id)}
-                        className="text-neutral-400 hover:text-neutral-800 transition-colors p-1 rounded-md hover:bg-neutral-100 cursor-pointer"
-                        title="Copy booking reference"
-                      >
-                        {copiedId === b.booking_id ? <Check size={12} className="text-emerald-600" /> : <Copy size={12} />}
-                      </button>
-                    </div>
+                    ) : (
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200/90 shadow-2xs">
+                        Unpaid
+                      </span>
+                    )}
+
+                    {/* 2. Treatment status label (Ongoing / Finish Treatment / Confirmed / Cancelled) */}
+                    {isCancelled ? (
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-rose-700 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200/90 shadow-2xs">
+                        Cancelled
+                      </span>
+                    ) : b.booking_status === 'Ongoing' ? (
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-200/90 shadow-2xs flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+                        Ongoing Treatment
+                      </span>
+                    ) : b.booking_status === 'Completed' || b.service_completed ? (
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-teal-800 bg-teal-50 px-2 py-0.5 rounded-full border border-teal-200/90 shadow-2xs">
+                        Finish Treatment
+                      </span>
+                    ) : b.booking_status === 'Confirmed' ? (
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-sky-800 bg-sky-50 px-2 py-0.5 rounded-full border border-sky-200/90 shadow-2xs">
+                        Confirmed
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-neutral-600 bg-neutral-100 px-2 py-0.5 rounded-full border border-neutral-200/90 shadow-2xs">
+                        Pending
+                      </span>
+                    )}
+
+                    {/* 3. Commission status label (Approved / Pending Verification / Paid Out) */}
+                    {!isCancelled && (
+                      <>
+                        {isApproved && (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/90 shadow-2xs">
+                            <CheckCircle2 size={11} />
+                            Approved
+                          </span>
+                        )}
+                        {isPendingCommission && (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider text-rose-700 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200/90 shadow-2xs">
+                            <Clock size={11} />
+                            Pending Verification
+                          </span>
+                        )}
+                        {isPaidCommission && (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider text-neutral-700 bg-neutral-100 px-2 py-0.5 rounded-full border border-neutral-200/90 shadow-2xs">
+                            Paid Out
+                          </span>
+                        )}
+                      </>
+                    )}
                   </div>
 
-                  {/* Guest Name & Treatment */}
-                  <div className="space-y-0.5">
-                    <div className="font-bold text-sm text-neutral-950 flex items-center gap-1.5">
-                      <User size={14} className="text-neutral-400 shrink-0" />
-                      <span>{b.guest_name || 'Guest Booking'}</span>
+                  {/* Middle Row: Guest/Treatment (Left) & Invoice Code + Invoice Button (Right below Approved) */}
+                  <div className="flex items-start justify-between gap-3 pt-0.5">
+                    {/* Left: Guest & Treatment */}
+                    <div className="min-w-0 space-y-0.5">
+                      <div className="font-bold text-sm text-neutral-950 flex items-center gap-1.5">
+                        <User size={14} className="text-neutral-400 shrink-0" />
+                        <span className="truncate">{b.guest_name || 'Guest Booking'}</span>
+                      </div>
+                      <div className="text-xs font-semibold text-neutral-500 uppercase tracking-wide pl-5 truncate">
+                        {b.treatment_name || 'Mobile Spa Treatment'}
+                      </div>
                     </div>
-                    <div className="text-xs font-semibold text-neutral-500 uppercase tracking-wide pl-5 truncate">
-                      {b.treatment_name || 'Mobile Spa Treatment'}
+
+                    {/* Right: Invoice Code & Invoice Button (below Approved title) */}
+                    <div className="flex flex-col sm:flex-row items-end sm:items-center gap-1.5 shrink-0">
+                      {/* Invoice Code */}
+                      <div className="flex items-center gap-1">
+                        <span className="font-mono text-[11px] font-bold text-neutral-800 bg-neutral-100 px-2 py-0.5 rounded-md border border-neutral-200/80">
+                          #{b.booking_id}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleCopy(b.booking_id)}
+                          className="text-neutral-400 hover:text-neutral-800 transition-colors p-1 rounded-md hover:bg-neutral-100 cursor-pointer"
+                          title="Copy booking reference"
+                        >
+                          {copiedId === b.booking_id ? <Check size={12} className="text-emerald-600" /> : <Copy size={12} />}
+                        </button>
+                      </div>
+
+                      {/* Invoice Button with rounded colored bg */}
+                      <Link
+                        href={`/invoice/${b.booking_id}`}
+                        target="_blank"
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-neutral-950 hover:bg-neutral-800 text-white shadow-2xs text-[10px] font-bold uppercase tracking-wider transition-all active:scale-95 shrink-0"
+                        title="View verified booking invoice"
+                      >
+                        <FileText size={10} className="text-neutral-300" />
+                        <span>Invoice</span>
+                        <ExternalLink size={9} className="text-neutral-400" />
+                      </Link>
                     </div>
                   </div>
 
@@ -728,7 +743,7 @@ export default function FloatingBookingCalendar({
                     </div>
                   </div>
 
-                  {/* Bottom Row: Treatment Price (Left) - INVOICE BUTTON (Middle) - Earned Price (Right) */}
+                  {/* Bottom Row: Treatment Price (Left) - Earned Price (Right) with perfect balance */}
                   <div className="pt-2 border-t border-neutral-100 flex items-center justify-between gap-2 text-xs">
                     {/* Left: Treatment Price */}
                     <div className="flex flex-col">
@@ -737,18 +752,6 @@ export default function FloatingBookingCalendar({
                         {formatIDR(b.treatment_amount || b.gross_amount)}
                       </span>
                     </div>
-
-                    {/* Middle: Invoice Button with a rounded colored bg */}
-                    <Link
-                      href={`/invoice/${b.booking_id}`}
-                      target="_blank"
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-neutral-950 hover:bg-neutral-800 text-white shadow-2xs text-[10px] font-bold uppercase tracking-wider transition-all active:scale-95 shrink-0"
-                      title="View verified booking invoice"
-                    >
-                      <FileText size={11} className="text-neutral-300" />
-                      <span>Invoice</span>
-                      <ExternalLink size={10} className="text-neutral-400" />
-                    </Link>
 
                     {/* Right: Earned Commission */}
                     <div className="flex flex-col text-right">
