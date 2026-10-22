@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
     if (bookingIds.length > 0) {
       const { data: matchedBookings } = await supabase
         .from('bookings')
-        .select('reference_number, guest_name, booking_date, time, location, treatment_name, status')
+        .select('reference_number, guest_name, booking_date, time, location, room_number, treatment_name, status')
         .in('reference_number', bookingIds);
 
       if (matchedBookings) {
@@ -104,6 +104,7 @@ export async function GET(req: NextRequest) {
         created_at: comm.created_at,
         guest_name: guestName,
         location: matched.location || '',
+        room_number: matched.room_number || '',
         treatment_name: matched.treatment_name || 'Mobile Spa Treatment',
         booking_status: displayBookingStatus,
         payment_status: isPaid ? 'paid' : 'unpaid',

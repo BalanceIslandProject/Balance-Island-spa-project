@@ -14,7 +14,9 @@ import {
   Check, 
   User, 
   MapPin, 
-  ArrowLeft
+  ArrowLeft,
+  DoorOpen,
+  FileText
 } from 'lucide-react';
 
 export interface CalendarBooking {
@@ -25,6 +27,7 @@ export interface CalendarBooking {
   created_at: string;
   guest_name: string;
   location?: string;
+  room_number?: string;
   treatment_name?: string;
   booking_status?: 'Pending' | 'Confirmed' | 'Ongoing' | 'Completed' | 'Cancelled' | string;
   payment_status?: 'paid' | 'unpaid' | string;
@@ -328,19 +331,19 @@ export default function FloatingBookingCalendar({
           </div>
         </div>
 
-        {/* Row 2: TOTAL BOOKINGS rounded card on LEFT, Total Amount on the RIGHT */}
+        {/* Row 2: TOTAL rounded card on LEFT, Total Amount on the RIGHT */}
         <div className="flex items-center justify-between gap-2 pt-0.5">
-          {/* Rounded card for total bookings in capital words */}
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-neutral-100 border border-neutral-200/80 shadow-2xs">
-            <span className="w-1.5 h-1.5 rounded-full bg-neutral-900" />
-            <span className="text-[11px] font-extrabold uppercase tracking-wider text-neutral-900">
-              TOTAL BOOKINGS: {monthStats.count} {monthStats.count === 1 ? 'BOOKING' : 'BOOKINGS'}
+          {/* Refined compact rounded card without duplicating booking word */}
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-neutral-100 border border-neutral-200/80 shadow-2xs shrink-0">
+            <span className="w-1.5 h-1.5 rounded-full bg-neutral-900 shrink-0" />
+            <span className="text-[10px] font-extrabold uppercase tracking-wider text-neutral-900 whitespace-nowrap">
+              TOTAL : {monthStats.count} {monthStats.count === 1 ? 'BOOKING' : 'BOOKINGS'}
             </span>
           </div>
 
           {/* Total amount on the right of the screen */}
-          <div className="text-right flex items-baseline gap-1.5">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">Total:</span>
+          <div className="text-right flex items-baseline gap-1.5 shrink-0">
+            <span className="text-[10px] font-extrabold uppercase tracking-wider text-neutral-400">TOTAL:</span>
             <span className="text-sm sm:text-base font-bold text-emerald-700 font-mono tabular-nums">
               {formatIDR(monthStats.totalCommission)}
             </span>
@@ -592,12 +595,74 @@ export default function FloatingBookingCalendar({
               return (
                 <div
                   key={itemKey}
-                  className={`p-3.5 sm:p-4 rounded-2xl border ${isCancelled ? 'border-neutral-200 bg-neutral-50/70 opacity-80' : 'border-neutral-200/80 bg-white hover:border-neutral-300'} shadow-[0_1px_4px_rgba(0,0,0,0.03)] transition-all space-y-2.5`}
+                  className={`p-3.5 sm:p-4 rounded-2xl border ${isCancelled ? 'border-neutral-200 bg-neutral-50/70 opacity-80' : 'border-neutral-200/80 bg-white hover:border-neutral-300'} shadow-[0_1px_4px_rgba(0,0,0,0.03)] transition-all space-y-3`}
                 >
-                  {/* Top Row: Ref & Multiple Status Badges */}
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-1.5">
-                      <span className="font-mono text-xs font-bold text-neutral-900 bg-neutral-100 px-2 py-0.5 rounded-lg border border-neutral-200/70">
+                  {/* Top Row: Multiple Status Badges on TOP + Booking Ref */}
+                  <div className="flex items-center justify-between gap-2 flex-wrap pb-2 border-b border-neutral-100">
+                    {/* Status Badges Group on TOP */}
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      {/* 1. Payment status label (Paid / Unpaid) */}
+                      {isPaid ? (
+                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/90 shadow-2xs">
+                          Paid
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200/90 shadow-2xs">
+                          Unpaid
+                        </span>
+                      )}
+
+                      {/* 2. Treatment status label (Ongoing / Finish Treatment / Confirmed / Cancelled) */}
+                      {isCancelled ? (
+                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-rose-700 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200/90 shadow-2xs">
+                          Cancelled
+                        </span>
+                      ) : b.booking_status === 'Ongoing' ? (
+                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-200/90 shadow-2xs flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+                          Ongoing Treatment
+                        </span>
+                      ) : b.booking_status === 'Completed' || b.service_completed ? (
+                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-teal-800 bg-teal-50 px-2 py-0.5 rounded-full border border-teal-200/90 shadow-2xs">
+                          Finish Treatment
+                        </span>
+                      ) : b.booking_status === 'Confirmed' ? (
+                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-sky-800 bg-sky-50 px-2 py-0.5 rounded-full border border-sky-200/90 shadow-2xs">
+                          Confirmed
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-extrabold uppercase tracking-wider text-neutral-600 bg-neutral-100 px-2 py-0.5 rounded-full border border-neutral-200/90 shadow-2xs">
+                          Pending
+                        </span>
+                      )}
+
+                      {/* 3. Commission status label (Approved / Pending Verification / Paid Out) */}
+                      {!isCancelled && (
+                        <>
+                          {isApproved && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/90 shadow-2xs">
+                              <CheckCircle2 size={11} />
+                              Approved
+                            </span>
+                          )}
+                          {isPendingCommission && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider text-rose-700 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200/90 shadow-2xs">
+                              <Clock size={11} />
+                              Pending Verification
+                            </span>
+                          )}
+                          {isPaidCommission && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider text-neutral-700 bg-neutral-100 px-2 py-0.5 rounded-full border border-neutral-200/90 shadow-2xs">
+                              Paid Out
+                            </span>
+                          )}
+                        </>
+                      )}
+                    </div>
+
+                    {/* Booking Reference # on top right */}
+                    <div className="flex items-center gap-1 shrink-0 ml-auto">
+                      <span className="font-mono text-[11px] font-bold text-neutral-800 bg-neutral-100 px-2 py-0.5 rounded-md border border-neutral-200/80">
                         #{b.booking_id}
                       </span>
                       <button
@@ -609,131 +674,97 @@ export default function FloatingBookingCalendar({
                         {copiedId === b.booking_id ? <Check size={12} className="text-emerald-600" /> : <Copy size={12} />}
                       </button>
                     </div>
+                  </div>
 
-                    {/* Rich Status Badges: Payment + Treatment Status + Commission Approval */}
-                    <div className="flex flex-wrap items-center gap-1.5 justify-end">
-                      {/* 1. Payment status label (Paid / Unpaid) */}
-                      {isPaid ? (
-                        <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
-                          Paid
-                        </span>
-                      ) : (
-                        <span className="text-[10px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
-                          Unpaid
-                        </span>
-                      )}
-
-                      {/* 2. Treatment status label (Confirmed / Ongoing / Finish / Cancelled) */}
-                      {isCancelled ? (
-                        <span className="text-[10px] font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded-md border border-rose-200">
-                          Cancelled
-                        </span>
-                      ) : b.booking_status === 'Ongoing' ? (
-                        <span className="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-200 flex items-center gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
-                          Ongoing Treatment
-                        </span>
-                      ) : b.booking_status === 'Completed' || b.service_completed ? (
-                        <span className="text-[10px] font-bold text-teal-800 bg-teal-50 px-2 py-0.5 rounded-md border border-teal-200">
-                          Finish Treatment
-                        </span>
-                      ) : b.booking_status === 'Confirmed' ? (
-                        <span className="text-[10px] font-bold text-sky-800 bg-sky-50 px-2 py-0.5 rounded-md border border-sky-200">
-                          Confirmed
-                        </span>
-                      ) : (
-                        <span className="text-[10px] font-bold text-neutral-600 bg-neutral-100 px-2 py-0.5 rounded-md border border-neutral-200">
-                          Pending
-                        </span>
-                      )}
-
-                      {/* 3. Commission status label (Approved / Pending Verification / Paid Out) */}
-                      {!isCancelled && (
-                        <>
-                          {isApproved && (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
-                              <CheckCircle2 size={11} />
-                              Approved
-                            </span>
-                          )}
-                          {isPendingCommission && (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded-md border border-rose-200">
-                              <Clock size={11} />
-                              Pending Verification
-                            </span>
-                          )}
-                          {isPaidCommission && (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-neutral-700 bg-neutral-100 px-2 py-0.5 rounded-md border border-neutral-200">
-                              Paid Out
-                            </span>
-                          )}
-                        </>
-                      )}
+                  {/* Guest Name & Treatment */}
+                  <div className="space-y-0.5">
+                    <div className="font-bold text-sm text-neutral-950 flex items-center gap-1.5">
+                      <User size={14} className="text-neutral-400 shrink-0" />
+                      <span>{b.guest_name || 'Guest Booking'}</span>
+                    </div>
+                    <div className="text-xs font-semibold text-neutral-500 uppercase tracking-wide pl-5 truncate">
+                      {b.treatment_name || 'Mobile Spa Treatment'}
                     </div>
                   </div>
 
-                  {/* Middle Row: Guest, Treatment & Time */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                    <div className="space-y-0.5">
-                      <div className="font-semibold text-neutral-900 truncate flex items-center gap-1.5">
-                        <User size={13} className="text-neutral-400 shrink-0" />
-                        <span>{b.guest_name || 'Guest Booking'}</span>
+                  {/* Separated Schedule & Location Box: Date, Time, Location & Room */}
+                  <div className="bg-neutral-50/80 rounded-xl p-2.5 border border-neutral-100/90 text-xs space-y-1.5">
+                    {/* Date and Time separated */}
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="flex items-center gap-1.5 text-neutral-700 min-w-0">
+                        <CalendarIcon size={13} className="text-neutral-400 shrink-0" />
+                        <span className="text-[10px] font-bold uppercase text-neutral-400 shrink-0">Date:</span>
+                        <span className="font-semibold text-[11px] text-neutral-900 truncate">
+                          {safeFormatDate(b.date, { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </span>
                       </div>
-                      <div className="text-[11px] text-neutral-500 truncate pl-4">
-                        {b.treatment_name || 'Mobile Spa Treatment'}
+
+                      <div className="flex items-center gap-1.5 text-neutral-700 min-w-0 sm:justify-end">
+                        <Clock size={13} className="text-neutral-400 shrink-0" />
+                        <span className="text-[10px] font-bold uppercase text-neutral-400 shrink-0">Time:</span>
+                        <span className="font-semibold text-[11px] text-neutral-900 truncate">
+                          {b.time || 'Flexible'}
+                        </span>
                       </div>
                     </div>
 
-                    <div className="sm:text-right space-y-0.5">
-                      <div className="text-[11px] font-medium text-neutral-600 flex items-center sm:justify-end gap-1">
-                        <Clock size={12} className="text-neutral-400" />
-                        <span>
-                          {safeFormatDate(b.date, { day: 'numeric', month: 'short' })}
-                          {b.time ? ` • ${b.time}` : ''}
+                    {/* Location and Room Number */}
+                    <div className="grid grid-cols-2 gap-2 pt-1 border-t border-neutral-200/50">
+                      <div className="flex items-center gap-1.5 text-neutral-700 min-w-0">
+                        <MapPin size={13} className="text-neutral-400 shrink-0" />
+                        <span className="text-[10px] font-bold uppercase text-neutral-400 shrink-0">Place:</span>
+                        <span className="text-[11px] text-neutral-800 font-medium truncate" title={b.location}>
+                          {b.location || 'On-site Villa / Hotel'}
                         </span>
                       </div>
-                      {b.location && (
-                        <div className="text-[11px] text-neutral-400 truncate flex items-center sm:justify-end gap-1">
-                          <MapPin size={11} className="text-neutral-300" />
-                          <span>{b.location}</span>
+
+                      <div className="flex items-center gap-1.5 text-neutral-700 min-w-0 sm:justify-end">
+                        <DoorOpen size={13} className="text-neutral-400 shrink-0" />
+                        <span className="text-[10px] font-bold uppercase text-neutral-400 shrink-0">Room:</span>
+                        <span className="text-[11px] font-semibold text-neutral-900 truncate">
+                          {b.room_number ? b.room_number : '-'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Bottom Row: Treatment Price (Left) - INVOICE BUTTON (Middle) - Earned Price (Right) */}
+                  <div className="pt-2 border-t border-neutral-100 flex items-center justify-between gap-2 text-xs">
+                    {/* Left: Treatment Price */}
+                    <div className="flex flex-col">
+                      <span className="text-[9px] text-neutral-400 uppercase font-extrabold tracking-wider">Treatment</span>
+                      <span className="text-xs font-bold text-neutral-900 font-mono tabular-nums">
+                        {formatIDR(b.treatment_amount || b.gross_amount)}
+                      </span>
+                    </div>
+
+                    {/* Middle: Invoice Button with a rounded colored bg */}
+                    <Link
+                      href={`/invoice/${b.booking_id}`}
+                      target="_blank"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-neutral-950 hover:bg-neutral-800 text-white shadow-2xs text-[10px] font-bold uppercase tracking-wider transition-all active:scale-95 shrink-0"
+                      title="View verified booking invoice"
+                    >
+                      <FileText size={11} className="text-neutral-300" />
+                      <span>Invoice</span>
+                      <ExternalLink size={10} className="text-neutral-400" />
+                    </Link>
+
+                    {/* Right: Earned Commission */}
+                    <div className="flex flex-col text-right">
+                      <span className="text-[9px] text-emerald-700 uppercase font-extrabold tracking-wider">Earned</span>
+                      {isCancelled ? (
+                        <span className="text-xs font-bold text-rose-600 font-mono tabular-nums">
+                          IDR 0
+                        </span>
+                      ) : (
+                        <div className="flex items-baseline justify-end gap-1">
+                          <span className="text-xs font-bold text-emerald-700 font-mono tabular-nums">
+                            +{formatIDR(b.commission_amount)}
+                          </span>
+                          <span className="text-[9px] text-neutral-400 font-medium">({b.commission_rate_pct}%)</span>
                         </div>
                       )}
-                    </div>
-                  </div>
-
-                  {/* Bottom Row: Financial breakdown & Link to Invoice */}
-                  <div className="pt-2 border-t border-neutral-100 flex items-center justify-between text-xs">
-                    <div>
-                      <span className="text-[10px] text-neutral-400 uppercase font-semibold">Treatment: </span>
-                      <span className="text-neutral-900 font-medium font-mono tabular-nums">{formatIDR(b.treatment_amount || b.gross_amount)}</span>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                      <div className="text-right">
-                        {isCancelled ? (
-                          <span className="text-xs font-semibold text-rose-600 font-mono">
-                            Cancelled (IDR 0)
-                          </span>
-                        ) : (
-                          <>
-                            <span className="text-[10px] text-emerald-700 uppercase font-bold tracking-wider">Earned: </span>
-                            <span className="text-xs font-bold text-emerald-700 font-mono tabular-nums">
-                              +{formatIDR(b.commission_amount)}
-                            </span>
-                            <span className="text-[10px] text-neutral-400 ml-1">({b.commission_rate_pct}%)</span>
-                          </>
-                        )}
-                      </div>
-
-                      <Link
-                        href={`/invoice/${b.booking_id}`}
-                        target="_blank"
-                        className="inline-flex items-center gap-1 text-[11px] font-semibold text-neutral-700 hover:text-neutral-950 hover:underline shrink-0"
-                        title="View verified booking invoice"
-                      >
-                        <span>Invoice</span>
-                        <ExternalLink size={10} />
-                      </Link>
                     </div>
                   </div>
 
@@ -747,11 +778,11 @@ export default function FloatingBookingCalendar({
 
       {/* 4. Native Footer Summary Bar */}
       <div className="px-4 py-3 sm:px-6 border-t border-neutral-200/80 bg-white flex items-center justify-between text-xs pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-1px_3px_rgba(0,0,0,0.02)]">
-        <span className="text-neutral-500 font-medium">
-          {displayedBookings.length} {displayedBookings.length === 1 ? 'appointment' : 'appointments'}
+        <span className="text-neutral-600 font-extrabold uppercase tracking-wider text-[11px]">
+          {displayedBookings.length} {displayedBookings.length === 1 ? 'APPOINTMENT' : 'APPOINTMENTS'}
         </span>
         <div className="flex items-center gap-1.5 font-mono tabular-nums">
-          <span className="text-[11px] text-neutral-400">Total:</span>
+          <span className="text-[10px] font-extrabold uppercase tracking-wider text-neutral-400">TOTAL:</span>
           <span className="font-bold text-neutral-950 text-sm">
             {formatIDR(
               displayedBookings.reduce((sum, b) => sum + (b.commission_amount || 0), 0)
