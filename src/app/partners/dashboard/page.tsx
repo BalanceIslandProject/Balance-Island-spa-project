@@ -126,6 +126,23 @@ Please verify and process the payout to my registered details. Thank you!`;
     window.open(waUrl, '_blank');
   };
 
+  const handleDownloadQr = async () => {
+    try {
+      const response = await fetch(qrCodeUrl);
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = `BookTherapick-${partnerCode || 'partner'}-QR.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch {
+      window.open(qrCodeUrl, '_blank');
+    }
+  };
+
   const formatIDR = (val: number) => {
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
@@ -171,8 +188,8 @@ Please verify and process the payout to my registered details. Thank you!`;
               {formatIDR(approvedBalance)}
             </div>
             {(stats?.pendingCommission || 0) > 0 && (
-              <p className="text-xs text-rose-600 mt-1 font-medium">
-                Pending verification: <span className="font-bold text-rose-700 font-mono tabular-nums">{formatIDR(stats?.pendingCommission || 0)}</span>
+              <p className="text-xs text-neutral-500 mt-1 font-medium">
+                Pending verification: <span className="font-semibold text-neutral-800 font-mono tabular-nums">{formatIDR(stats?.pendingCommission || 0)}</span>
               </p>
             )}
           </div>
@@ -202,37 +219,37 @@ Please verify and process the payout to my registered details. Thank you!`;
       {/* 2. Responsive 2-Column Metrics (Approve: Green Card | Pending: Red Card) */}
       <div className="grid grid-cols-2 gap-3">
         {/* Approved / Paid Out: Green Card */}
-        <div className="bg-emerald-50/40 border border-emerald-200/80 rounded-2xl p-3.5 sm:p-4 shadow-2xs space-y-1.5 transition-all">
+        <div className="bg-emerald-50/60 border border-emerald-200/80 rounded-2xl p-3.5 sm:p-4 shadow-2xs space-y-1.5 transition-all">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 block">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-600 block">
               Paid Out
             </span>
-            <span className="text-[9px] font-bold text-emerald-800 bg-emerald-100/70 border border-emerald-200 px-1.5 py-0.2 rounded-full">
+            <span className="text-[9px] font-bold text-emerald-800 bg-emerald-100/80 border border-emerald-200 px-1.5 py-0.2 rounded-full">
               Transferred
             </span>
           </div>
-          <div className="text-sm sm:text-lg font-bold text-emerald-950 font-mono tabular-nums truncate">
+          <div className="text-sm sm:text-lg font-bold text-neutral-950 font-mono tabular-nums truncate">
             {formatIDR(stats?.paidCommission || 0)}
           </div>
-          <p className="text-[10px] text-emerald-700 font-medium">
+          <p className="text-[10px] text-neutral-500 font-medium">
             Approved earnings paid to bank
           </p>
         </div>
 
         {/* Pending: Red Card */}
-        <div className="bg-rose-50/50 border border-rose-200/90 rounded-2xl p-3.5 sm:p-4 shadow-2xs space-y-1.5 transition-all">
+        <div className="bg-rose-50/60 border border-rose-200/80 rounded-2xl p-3.5 sm:p-4 shadow-2xs space-y-1.5 transition-all">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-rose-700 block">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-600 block">
               Pending
             </span>
             <span className="text-[9px] font-bold text-rose-700 bg-rose-100/80 border border-rose-200 px-1.5 py-0.2 rounded-full">
               Verification
             </span>
           </div>
-          <div className="text-sm sm:text-lg font-bold text-rose-950 font-mono tabular-nums truncate">
+          <div className="text-sm sm:text-lg font-bold text-neutral-950 font-mono tabular-nums truncate">
             {formatIDR(stats?.pendingCommission || 0)}
           </div>
-          <p className="text-[10px] text-rose-600 font-medium">
+          <p className="text-[10px] text-neutral-500 font-medium">
             Awaiting treatment completion
           </p>
         </div>
@@ -271,16 +288,14 @@ Please verify and process the payout to my registered details. Thank you!`;
                 Guests can scan this code with their camera to book directly with your referral code attached.
               </p>
             </div>
-            <a
-              href={qrCodeUrl}
-              download={`BookTherapick-${partnerCode}.png`}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-2.5 rounded-xl bg-neutral-950 text-white text-xs font-semibold hover:bg-neutral-800 active:scale-95 transition-all shadow-xs"
+            <button
+              type="button"
+              onClick={handleDownloadQr}
+              className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-2.5 rounded-xl bg-neutral-950 text-white text-xs font-semibold hover:bg-neutral-800 active:scale-95 transition-all shadow-xs cursor-pointer"
             >
               <Download size={14} />
               <span>Download QR Code</span>
-            </a>
+            </button>
           </div>
         </div>
 
