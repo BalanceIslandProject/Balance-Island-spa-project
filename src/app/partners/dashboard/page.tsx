@@ -250,7 +250,7 @@ Please verify and process the payout to my registered details. Thank you!`;
             </div>
             {(stats?.pendingCommission || 0) > 0 && (
               <p className="text-xs text-neutral-500 mt-1 font-medium">
-                Pending verification: <span className="font-semibold text-neutral-800 font-mono tabular-nums">{formatIDR(stats?.pendingCommission || 0)}</span>
+                Pending: <span className="font-semibold text-neutral-800 font-mono tabular-nums">{formatIDR(stats?.pendingCommission || 0)}</span>
               </p>
             )}
           </div>
@@ -464,8 +464,8 @@ Please verify and process the payout to my registered details. Thank you!`;
                           Approved
                         </span>
                       ) : (
-                        <span className="text-[10px] font-semibold text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-200/80">
-                          Pending Verification
+                        <span className="text-[10px] font-semibold text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200/80">
+                          Pending
                         </span>
                       )}
                     </div>

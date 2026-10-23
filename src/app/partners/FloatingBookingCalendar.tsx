@@ -629,12 +629,12 @@ export default function FloatingBookingCalendar({
                         Confirmed
                       </span>
                     ) : (
-                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-neutral-600 bg-neutral-100 px-2 py-0.5 rounded-full border border-neutral-200/90 shadow-2xs">
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200/90 shadow-2xs">
                         Pending
                       </span>
                     )}
 
-                    {/* 3. Commission status label (Approved / Pending Verification / Paid Out) */}
+                    {/* 3. Commission status label (Approved / Pending / Paid Out) */}
                     {!isCancelled && (
                       <>
                         {isApproved && (
@@ -643,10 +643,10 @@ export default function FloatingBookingCalendar({
                             Approved
                           </span>
                         )}
-                        {isPendingCommission && (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider text-rose-700 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200/90 shadow-2xs">
+                        {isPendingCommission && (b.booking_status === 'Confirmed' || b.booking_status === 'Ongoing' || b.booking_status === 'Completed') && (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200/90 shadow-2xs">
                             <Clock size={11} />
-                            Pending Verification
+                            Pending
                           </span>
                         )}
                         {isPaidCommission && (
@@ -658,47 +658,46 @@ export default function FloatingBookingCalendar({
                     )}
                   </div>
 
-                  {/* Middle Row: Guest/Treatment (Left) & Invoice Code + Invoice Button (Right below Approved) */}
-                  <div className="flex items-start justify-between gap-3 pt-0.5">
-                    {/* Left: Guest & Treatment */}
-                    <div className="min-w-0 space-y-0.5">
-                      <div className="font-bold text-sm text-neutral-950 flex items-center gap-1.5">
-                        <User size={14} className="text-neutral-400 shrink-0" />
-                        <span className="truncate">{b.guest_name || 'Guest Booking'}</span>
-                      </div>
-                      <div className="text-xs font-semibold text-neutral-500 uppercase tracking-wide pl-5 truncate">
-                        {b.treatment_name || 'Mobile Spa Treatment'}
-                      </div>
+                  {/* Middle Row: Customer Name on top, then "View Treatment Details", then Invoice Code */}
+                  <div className="space-y-1.5 pt-0.5">
+                    {/* Customer Name */}
+                    <div className="font-bold text-sm text-neutral-950 flex items-center gap-1.5">
+                      <User size={15} className="text-neutral-500 shrink-0" />
+                      <span className="truncate">{b.guest_name || 'Guest Booking'}</span>
                     </div>
 
-                    {/* Right: Invoice Code & Invoice Button (below Approved title) */}
-                    <div className="flex flex-col sm:flex-row items-end sm:items-center gap-1.5 shrink-0">
-                      {/* Invoice Code */}
-                      <div className="flex items-center gap-1">
-                        <span className="font-mono text-[11px] font-bold text-neutral-800 bg-neutral-100 px-2 py-0.5 rounded-md border border-neutral-200/80">
-                          #{b.booking_id}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => handleCopy(b.booking_id)}
-                          className="text-neutral-400 hover:text-neutral-800 transition-colors p-1 rounded-md hover:bg-neutral-100 cursor-pointer"
-                          title="Copy booking reference"
-                        >
-                          {copiedId === b.booking_id ? <Check size={12} className="text-emerald-600" /> : <Copy size={12} />}
-                        </button>
-                      </div>
-
-                      {/* Invoice Button with rounded colored bg */}
+                    {/* View Treatment Details Link (without a rounded card, clearly clickable) */}
+                    <div>
                       <Link
                         href={`/invoice/${b.booking_id}`}
                         target="_blank"
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-neutral-950 hover:bg-neutral-800 text-white shadow-2xs text-[10px] font-bold uppercase tracking-wider transition-all active:scale-95 shrink-0"
-                        title="View verified booking invoice"
+                        className="group inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 hover:text-emerald-900 transition-colors py-0.5 cursor-pointer"
+                        title="View treatment details in invoice"
                       >
-                        <FileText size={10} className="text-neutral-300" />
-                        <span>Invoice</span>
-                        <ExternalLink size={9} className="text-neutral-400" />
+                        <FileText size={13} className="text-emerald-600 group-hover:scale-110 transition-transform shrink-0" />
+                        <span className="underline decoration-emerald-400 underline-offset-2 group-hover:decoration-emerald-800">
+                          View Treatment Details
+                        </span>
+                        <ExternalLink size={11} className="text-emerald-600 group-hover:translate-x-0.5 transition-transform shrink-0" />
                       </Link>
+                    </div>
+
+                    {/* Invoice Code below View Treatment Details */}
+                    <div className="flex items-center gap-1.5 text-neutral-600 text-[11px] font-medium pt-0.5">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">
+                        Invoice:
+                      </span>
+                      <span className="font-mono text-[11px] font-bold text-neutral-800 bg-neutral-100 px-2 py-0.5 rounded border border-neutral-200/80">
+                        #{b.booking_id}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleCopy(b.booking_id)}
+                        className="text-neutral-400 hover:text-neutral-800 transition-colors p-1 rounded hover:bg-neutral-100 cursor-pointer"
+                        title="Copy invoice code"
+                      >
+                        {copiedId === b.booking_id ? <Check size={12} className="text-emerald-600" /> : <Copy size={12} />}
+                      </button>
                     </div>
                   </div>
 

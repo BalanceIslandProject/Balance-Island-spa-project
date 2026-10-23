@@ -227,8 +227,8 @@ export default function PartnerCommissionsPage() {
                           Approved
                         </span>
                       ) : (
-                        <span className="text-[10px] font-semibold text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-200/80">
-                          Pending Verification
+                        <span className="text-[10px] font-semibold text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200/80">
+                          Pending
                         </span>
                       )}
 

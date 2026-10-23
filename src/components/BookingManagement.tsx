@@ -21,7 +21,13 @@ import {
   CreditCard,
   Clock,
   Sparkles,
-  RefreshCw
+  RefreshCw,
+  CheckSquare,
+  Square,
+  XSquare,
+  Copy,
+  Check,
+  User
 } from 'lucide-react';
 import { Treatment, TherapistFee } from '@/context/SpaContext';
 
@@ -421,6 +427,36 @@ export default function BookingManagement({
   const handlePrevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
   const handleNextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
 
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const handleCopy = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedId(text);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const handlePrevDay = () => {
+    const d = new Date(selectedDate + 'T00:00:00');
+    d.setDate(d.getDate() - 1);
+    const isoString = toLocalDateString(d);
+    setSelectedDate(isoString);
+    setCurrentDate(new Date(d.getFullYear(), d.getMonth(), 1));
+  };
+
+  const handleNextDay = () => {
+    const d = new Date(selectedDate + 'T00:00:00');
+    d.setDate(d.getDate() + 1);
+    const isoString = toLocalDateString(d);
+    setSelectedDate(isoString);
+    setCurrentDate(new Date(d.getFullYear(), d.getMonth(), 1));
+  };
+
+  const handleToday = () => {
+    const today = new Date();
+    const isoString = toLocalDateString(today);
+    setSelectedDate(isoString);
+    setCurrentDate(new Date(today.getFullYear(), today.getMonth(), 1));
+  };
+
   const selectDate = (day: number) => {
     const d = new Date(year, month, day);
     // YYYY-MM-DD
@@ -602,14 +638,54 @@ export default function BookingManagement({
 
         {/* Right Col: Bookings for Selected Date */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-bold">
-              Bookings for {new Date(selectedDate).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
-            </h3>
+          <div className="bg-white border border-black/10 rounded-2xl p-3.5 sm:p-4 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
+              {/* Quick Date Jumper: Prev, Today, Next */}
+              <div className="flex items-center bg-black/5 p-1 rounded-xl">
+                <button 
+                  type="button" 
+                  onClick={handlePrevDay} 
+                  className="p-1.5 hover:bg-white rounded-lg transition-colors cursor-pointer text-neutral-700 hover:text-black"
+                  title="Previous Day"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <button 
+                  type="button" 
+                  onClick={handleToday} 
+                  className={`px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                    selectedDate === toLocalDateString(new Date()) 
+                      ? 'bg-black text-white shadow-2xs' 
+                      : 'text-neutral-700 hover:bg-white'
+                  }`}
+                  title="Jump to Today"
+                >
+                  Today
+                </button>
+                <button 
+                  type="button" 
+                  onClick={handleNextDay} 
+                  className="p-1.5 hover:bg-white rounded-lg transition-colors cursor-pointer text-neutral-700 hover:text-black"
+                  title="Next Day"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+
+              <div>
+                <h3 className="text-base sm:text-lg font-bold text-neutral-950 flex items-center gap-2 flex-wrap">
+                  <span>Bookings for {new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                  <span className="text-xs font-bold font-mono bg-black/5 text-neutral-700 px-2.5 py-0.5 rounded-full border border-black/10">
+                    {dailyBookings.length} {dailyBookings.length === 1 ? 'Booking' : 'Bookings'}
+                  </span>
+                </h3>
+              </div>
+            </div>
+
             {!showForm && (
               <button 
                 onClick={() => { resetForm(); setShowForm(true); }}
-                className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-black/80 transition-colors"
+                className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-xl text-xs sm:text-sm font-bold hover:bg-black/85 transition-all shadow-2xs active:scale-95 cursor-pointer shrink-0"
               >
                 <Plus size={16} /> Add Booking
               </button>
@@ -752,15 +828,29 @@ export default function BookingManagement({
                       isConfirmed ? 'bg-sky-500' : 'bg-orange-400'
                     }`}></div>
 
-                    {/* Top Row: Booking Ref, Pax, Payment Badge, Treatment Status Badge */}
+                    {/* Top Row: Booking Ref with Copy, Pax, Payment Badge, Treatment Status Badge, Customer Name & Time */}
                     <div className="flex flex-wrap items-center justify-between gap-2.5 ml-2">
                       <div className="flex flex-wrap items-center gap-2">
                         {booking.reference_number && (
-                          <span className="font-mono text-xs font-bold text-neutral-900 bg-black/5 px-2.5 py-1 rounded-lg border border-black/10">
-                            #{booking.reference_number}
-                          </span>
+                          <div className="flex items-center gap-1">
+                            <span className="font-mono text-xs font-bold text-neutral-900 bg-black/5 px-2.5 py-1 rounded-lg border border-black/10">
+                              #{booking.reference_number}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => handleCopy(booking.reference_number!)}
+                              className="text-neutral-400 hover:text-neutral-800 transition-colors p-1 rounded hover:bg-black/5 cursor-pointer"
+                              title="Copy reference number"
+                            >
+                              {copiedId === booking.reference_number ? (
+                                <Check size={12} className="text-emerald-600" />
+                              ) : (
+                                <Copy size={12} />
+                              )}
+                            </button>
+                          </div>
                         )}
-                        <span className="text-[10px] font-bold tracking-wider uppercase bg-black/10 px-2 py-0.5 rounded-full whitespace-nowrap">
+                        <span className="text-[10px] font-bold tracking-wider uppercase bg-black/5 text-neutral-700 px-2 py-0.5 rounded-md border border-black/10 whitespace-nowrap">
                           {booking.pax} Pax
                         </span>
 
@@ -768,45 +858,56 @@ export default function BookingManagement({
                         <button
                           type="button"
                           onClick={() => handleTogglePayment(booking)}
-                          className={`text-[10px] font-bold tracking-wider uppercase px-2.5 py-0.5 rounded-full border transition-all cursor-pointer flex items-center gap-1 ${
+                          className={`text-[10px] font-extrabold tracking-wider uppercase px-2.5 py-0.5 rounded-full border transition-all cursor-pointer flex items-center gap-1 shadow-2xs ${
                             isPaid
-                              ? 'bg-emerald-100 text-emerald-800 border-emerald-300 hover:bg-emerald-200'
-                              : 'bg-amber-100 text-amber-800 border-amber-300 hover:bg-amber-200'
+                              ? 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100'
+                              : 'bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100'
                           }`}
                           title="Click to toggle Paid/Unpaid"
                         >
-                          {isPaid ? 'Paid ✓' : 'Unpaid ✗'}
+                          {isPaid ? <CheckSquare size={11} className="text-emerald-700" /> : <Square size={11} className="text-amber-600" />}
+                          <span>{isPaid ? 'Paid' : 'Unpaid'}</span>
                         </button>
 
                         {/* Treatment Status Label */}
                         {isCancelled ? (
-                          <span className="text-[10px] font-bold tracking-wider uppercase px-2.5 py-0.5 rounded-full bg-red-100 text-red-700 border border-red-200">
+                          <span className="text-[10px] font-extrabold tracking-wider uppercase px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200 shadow-2xs">
                             Cancelled
                           </span>
                         ) : isOngoing ? (
-                          <span className="text-[10px] font-bold tracking-wider uppercase px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-800 border border-indigo-200 flex items-center gap-1">
+                          <span className="text-[10px] font-extrabold tracking-wider uppercase px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-800 border border-indigo-200 shadow-2xs flex items-center gap-1">
                             <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-pulse" />
                             Ongoing Treatment
                           </span>
                         ) : isCompleted ? (
-                          <span className="text-[10px] font-bold tracking-wider uppercase px-2.5 py-0.5 rounded-full bg-teal-100 text-teal-800 border border-teal-200">
+                          <span className="text-[10px] font-extrabold tracking-wider uppercase px-2.5 py-0.5 rounded-full bg-teal-50 text-teal-800 border border-teal-200 shadow-2xs">
                             Finish Treatment
                           </span>
                         ) : isConfirmed ? (
-                          <span className="text-[10px] font-bold tracking-wider uppercase px-2.5 py-0.5 rounded-full bg-sky-100 text-sky-800 border border-sky-200">
+                          <span className="text-[10px] font-extrabold tracking-wider uppercase px-2.5 py-0.5 rounded-full bg-sky-50 text-sky-800 border border-sky-200 shadow-2xs">
                             Confirmed
                           </span>
                         ) : (
-                          <span className="text-[10px] font-bold tracking-wider uppercase px-2.5 py-0.5 rounded-full bg-orange-100 text-orange-700 border border-orange-200">
+                          <span className="text-[10px] font-extrabold tracking-wider uppercase px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 shadow-2xs">
                             Pending
                           </span>
                         )}
                       </div>
 
                       {/* Customer name & time */}
-                      <div className="text-right text-xs text-neutral-500">
-                        {booking.guest_name && <span className="font-semibold text-neutral-900 mr-2">{booking.guest_name}</span>}
-                        {booking.time && booking.time !== '-' && <span className="text-[11px] font-mono">⏰ {booking.time}</span>}
+                      <div className="flex items-center gap-2 text-xs text-neutral-600">
+                        {booking.guest_name && (
+                          <span className="font-bold text-neutral-950 flex items-center gap-1">
+                            <User size={13} className="text-neutral-400" />
+                            {booking.guest_name}
+                          </span>
+                        )}
+                        {booking.time && booking.time !== '-' && (
+                          <span className="text-[11px] font-semibold text-neutral-700 bg-neutral-100 px-2 py-0.5 rounded border border-neutral-200/80 flex items-center gap-1">
+                            <Clock size={11} className="text-neutral-500" />
+                            {booking.time}
+                          </span>
+                        )}
                       </div>
                     </div>
 
@@ -873,11 +974,11 @@ export default function BookingManagement({
                             </span>
                           ) : isCommissionApproved ? (
                             <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded flex items-center gap-1">
-                              <CheckCheck size={12} /> Approved
+                              <CheckSquare size={12} className="text-emerald-700" /> Approved
                             </span>
                           ) : (
-                            <span className="text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded">
-                              Pending Verification
+                            <span className="text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded flex items-center gap-1">
+                              <Clock size={11} className="text-amber-700" /> Pending
                             </span>
                           )}
                         </div>
@@ -890,64 +991,118 @@ export default function BookingManagement({
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-xs active:scale-95 cursor-pointer"
                             title="Approve Commission Manually"
                           >
-                            <CheckCheck size={14} />
+                            <CheckSquare size={13} />
                             <span>Approve Commission</span>
                           </button>
                         )}
                       </div>
                     )}
 
-                    {/* Bottom Action Bar: Status Change & Utility Actions */}
-                    <div className="ml-2 pt-2 border-t border-black/5 flex flex-wrap items-center justify-between gap-2">
-                      {/* Treatment Status Action Buttons */}
+                    {/* Bottom Action Bar: Checklist Workflow & Utility Actions */}
+                    <div className="ml-2 pt-2.5 border-t border-black/5 flex flex-wrap items-center justify-between gap-2.5">
+                      {/* Operational Checklist Action Buttons */}
                       <div className="flex flex-wrap items-center gap-1.5">
-                        {!isConfirmed && !isCancelled && (
+                        {/* 1. Paid / Unpaid Checklist Button */}
+                        <button
+                          type="button"
+                          onClick={() => handleTogglePayment(booking)}
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all shadow-2xs active:scale-95 cursor-pointer border ${
+                            isPaid
+                              ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-emerald-300'
+                              : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border-amber-300'
+                          }`}
+                          title={isPaid ? "Payment is Paid. Click to toggle to Unpaid" : "Payment is Unpaid. Click to mark as Paid"}
+                        >
+                          {isPaid ? (
+                            <CheckSquare size={13} className="text-emerald-700 shrink-0" />
+                          ) : (
+                            <Square size={13} className="text-amber-600 shrink-0" />
+                          )}
+                          <span>{isPaid ? 'Paid' : 'Unpaid'}</span>
+                        </button>
+
+                        {/* 2. Confirmed Checklist Button */}
+                        <button
+                          type="button"
+                          onClick={() => handleStatusChange(booking.id, isConfirmed ? 'Pending' : 'Confirmed')}
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all shadow-2xs active:scale-95 cursor-pointer border ${
+                            isConfirmed
+                              ? 'bg-sky-50 hover:bg-sky-100 text-sky-800 border-sky-300 ring-1 ring-sky-300/50'
+                              : 'bg-neutral-50 hover:bg-neutral-100 text-neutral-700 border-neutral-300'
+                          }`}
+                          title={isConfirmed ? "Booking Confirmed. Click to return to Pending" : "Click to mark Confirmed"}
+                        >
+                          {isConfirmed ? (
+                            <CheckSquare size={13} className="text-sky-700 shrink-0" />
+                          ) : (
+                            <Square size={13} className="text-neutral-400 shrink-0" />
+                          )}
+                          <span>Confirmed</span>
+                        </button>
+
+                        {/* 3. Ongoing Treatment Checklist Button */}
+                        {!isCancelled && !isCompleted && (
                           <button
                             type="button"
-                            onClick={() => handleStatusChange(booking.id, 'Confirmed')}
-                            className="px-2.5 py-1 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-200 text-xs font-bold transition-colors cursor-pointer flex items-center gap-1"
-                            title="Mark as Confirmed"
+                            onClick={() => handleStatusChange(booking.id, isOngoing ? 'Confirmed' : 'Ongoing')}
+                            className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all shadow-2xs active:scale-95 cursor-pointer border ${
+                              isOngoing
+                                ? 'bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border-indigo-300 ring-1 ring-indigo-300/50'
+                                : 'bg-neutral-50 hover:bg-neutral-100 text-neutral-700 border-neutral-300'
+                            }`}
+                            title={isOngoing ? "Ongoing Treatment active. Click to return to Confirmed" : "Click to mark Ongoing Treatment"}
                           >
-                            <CheckCircle2 size={13} />
-                            <span>Confirmed</span>
+                            {isOngoing ? (
+                              <CheckSquare size={13} className="text-indigo-700 shrink-0" />
+                            ) : (
+                              <Square size={13} className="text-neutral-400 shrink-0" />
+                            )}
+                            <span className="flex items-center gap-1">
+                              {isOngoing && <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-pulse" />}
+                              Ongoing Treatment
+                            </span>
                           </button>
                         )}
 
-                        {!isOngoing && !isCancelled && !isCompleted && (
+                        {/* 4. Finish Treatment Checklist Button */}
+                        {!isCancelled && (
                           <button
                             type="button"
-                            onClick={() => handleStatusChange(booking.id, 'Ongoing')}
-                            className="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200 text-xs font-bold transition-colors cursor-pointer flex items-center gap-1"
-                            title="Mark as Ongoing Treatment"
+                            onClick={() => handleStatusChange(booking.id, isCompleted ? 'Confirmed' : 'Completed')}
+                            className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all shadow-2xs active:scale-95 cursor-pointer border ${
+                              isCompleted
+                                ? 'bg-teal-50 hover:bg-teal-100 text-teal-800 border-teal-300 ring-1 ring-teal-300/50'
+                                : 'bg-neutral-50 hover:bg-neutral-100 text-neutral-700 border-neutral-300'
+                            }`}
+                            title={isCompleted ? "Treatment Completed. Click to revert" : "Click to mark Finish Treatment"}
                           >
-                            <PlayCircle size={13} />
-                            <span>Ongoing Treatment</span>
-                          </button>
-                        )}
-
-                        {!isCompleted && !isCancelled && (
-                          <button
-                            type="button"
-                            onClick={() => handleStatusChange(booking.id, 'Completed')}
-                            className="px-2.5 py-1 rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 text-xs font-bold transition-colors cursor-pointer flex items-center gap-1"
-                            title="Finish Treatment"
-                          >
-                            <CheckCheck size={13} />
+                            {isCompleted ? (
+                              <CheckSquare size={13} className="text-teal-700 shrink-0" />
+                            ) : (
+                              <Square size={13} className="text-neutral-400 shrink-0" />
+                            )}
                             <span>Finish Treatment</span>
                           </button>
                         )}
 
-                        {!isCancelled && (
-                          <button
-                            type="button"
-                            onClick={() => handleStatusChange(booking.id, 'Cancelled')}
-                            className="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold transition-colors cursor-pointer flex items-center gap-1"
-                            title="Cancel Treatment"
-                          >
-                            <XCircle size={13} />
-                            <span>Cancel</span>
-                          </button>
-                        )}
+                        {/* 5. Cancel Checklist Button */}
+                        <button
+                          type="button"
+                          onClick={() => handleStatusChange(booking.id, isCancelled ? 'Confirmed' : 'Cancelled')}
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all shadow-2xs active:scale-95 cursor-pointer border ${
+                            isCancelled
+                              ? 'bg-rose-100 hover:bg-rose-200 text-rose-800 border-rose-300'
+                              : 'bg-neutral-50 hover:bg-rose-50 text-neutral-600 hover:text-rose-700 border-neutral-200 hover:border-rose-300'
+                          }`}
+                          title={isCancelled ? "Booking is Cancelled. Click to reinstate" : "Cancel this booking"}
+                        >
+                          {isCancelled ? (
+                            <XSquare size={13} className="text-rose-700 shrink-0" />
+                          ) : (
+                            <XCircle size={13} className="text-rose-500 shrink-0" />
+                          )}
+                          <span>{isCancelled ? 'Cancelled' : 'Cancel'}</span>
+                        </button>
                       </div>
 
                       {/* Utility Action Buttons: Invoice, Edit, Delete */}
