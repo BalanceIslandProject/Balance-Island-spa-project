@@ -81,7 +81,7 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
       <aside className="hidden md:flex flex-col w-64 lg:w-72 bg-white/75 backdrop-blur-2xl border-r border-neutral-200/60 sticky top-0 h-screen shrink-0 z-30 self-start shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
         
         {/* Brand & Partner Identification */}
-        <div className="p-5 border-b border-neutral-200/60 flex items-center justify-between">
+        <div className="p-5 border-b border-neutral-200/60 flex items-center justify-between shrink-0">
           <Link 
             href={session ? '/partners/dashboard' : '/partners'} 
             className="flex items-center gap-2.5 group transition-opacity hover:opacity-90"
@@ -209,7 +209,7 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
         </nav>
 
         {/* Sidebar Footer */}
-        <div className="p-4 border-t border-neutral-200/60 space-y-1.5">
+        <div className="p-4 border-t border-neutral-200/60 space-y-1.5 shrink-0">
           <a
             href="https://www.booktherapick.com"
             target="_blank"
