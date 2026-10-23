@@ -7,12 +7,10 @@ import {
   Check, 
   AlertCircle,
   ChevronRight,
-  Download,
-  Sparkles,
-  CheckCircle2,
-  ArrowRight
+  Download
 } from 'lucide-react';
-import FloatingBookingCalendar, { CalendarBooking } from '../FloatingBookingCalendar';
+import { CalendarBooking } from '../FloatingBookingCalendar';
+import PartnerCalendarCard from '../PartnerCalendarCard';
 import { supabase } from '@/lib/supabase';
 
 interface PartnerStats {
@@ -47,7 +45,6 @@ export default function PartnerDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedBookingId, setCopiedBookingId] = useState<string | null>(null);
-  const [calendarOpen, setCalendarOpen] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
@@ -75,7 +72,7 @@ export default function PartnerDashboardPage() {
     }
     fetchData();
 
-    // 1. Supabase Realtime Subscription: auto-update when admin confirms, cancels, or changes booking/commission
+    // 1. Supabase Realtime Subscription
     const realtimeChannel = supabase
       .channel('partner_dashboard_realtime_sync')
       .on(
@@ -94,7 +91,7 @@ export default function PartnerDashboardPage() {
       )
       .subscribe();
 
-    // 2. Polling fallback every 8 seconds for rock-solid reliability across mobile browsers
+    // 2. Polling fallback every 8 seconds
     const pollInterval = setInterval(() => {
       fetchData();
     }, 8000);
@@ -108,23 +105,11 @@ export default function PartnerDashboardPage() {
     window.addEventListener('focus', onVisibilityOrFocus);
     document.addEventListener('visibilitychange', onVisibilityOrFocus);
 
-    // Listen for custom open-calendar events from mobile bottom nav
-    const handleOpenCal = () => setCalendarOpen(true);
-    window.addEventListener('open-booking-calendar', handleOpenCal);
-
-    if (typeof window !== 'undefined') {
-      const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.get('openCalendar') === 'true') {
-        setCalendarOpen(true);
-      }
-    }
-
     return () => {
       supabase.removeChannel(realtimeChannel);
       clearInterval(pollInterval);
       window.removeEventListener('focus', onVisibilityOrFocus);
       document.removeEventListener('visibilitychange', onVisibilityOrFocus);
-      window.removeEventListener('open-booking-calendar', handleOpenCal);
     };
   }, []);
 
@@ -240,11 +225,12 @@ Please verify and process the payout to my registered details. Thank you!`;
 
       {/* ═══════════════════════════════════════════════════════════════
           MOBILE VIEW (CLEAN SINGLE-COLUMN FLOW)
+          Liquid Apple Glass design language
          ═══════════════════════════════════════════════════════════════ */}
       <div className="lg:hidden space-y-4 sm:space-y-5 w-full max-w-4xl mx-auto pb-8">
         {/* Application Status Banner (only if pending) */}
         {profile?.status === 'pending' && (
-          <div className="p-3.5 border border-amber-200/80 rounded-2xl bg-amber-50/70 text-xs text-amber-900 flex items-start gap-2.5 shadow-2xs">
+          <div className="p-3.5 border border-amber-200/80 rounded-2xl bg-amber-50/80 backdrop-blur-md text-xs text-amber-900 flex items-start gap-2.5 shadow-2xs">
             <AlertCircle size={16} className="text-amber-700 shrink-0 mt-0.5" />
             <div className="leading-relaxed">
               Application under review. You can already share your referral link and QR code — all attributed bookings are recorded automatically.
@@ -253,10 +239,10 @@ Please verify and process the payout to my registered details. Thank you!`;
         )}
 
         {/* 1. Approved Balance Card (Hero) */}
-        <div className="p-5 sm:p-6 rounded-3xl bg-white border border-neutral-200/70 shadow-[0_2px_12px_rgba(0,0,0,0.03)] space-y-4 transition-all">
+        <div className="p-5 sm:p-6 rounded-[28px] bg-white/80 backdrop-blur-2xl border border-white/90 shadow-[0_12px_36px_rgba(0,0,0,0.04)] space-y-4 ring-1 ring-black/[0.03] transition-all">
           <div className="flex items-start justify-between">
             <div>
-              <span className="text-[11px] font-bold uppercase tracking-widest text-neutral-400 block">
+              <span className="text-[11px] font-extrabold uppercase tracking-widest text-neutral-400 block">
                 Approved Balance
               </span>
               <div className="text-3xl sm:text-4xl font-extrabold text-neutral-950 font-mono tracking-tight tabular-nums mt-1">
@@ -270,7 +256,7 @@ Please verify and process the payout to my registered details. Thank you!`;
             </div>
 
             {hasApprovedBalance && (
-              <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200/80">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-800 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20 backdrop-blur-md shadow-2xs">
                 Ready
               </span>
             )}
@@ -280,7 +266,7 @@ Please verify and process the payout to my registered details. Thank you!`;
             type="button"
             onClick={handleWithdrawWhatsApp}
             disabled={!hasApprovedBalance}
-            className={`w-full py-3.5 px-4 rounded-2xl font-semibold text-xs tracking-wide transition-all active:scale-[0.98] flex items-center justify-center ${
+            className={`w-full py-3.5 px-4 rounded-2xl font-bold text-xs tracking-wide transition-all active:scale-[0.98] flex items-center justify-center ${
               hasApprovedBalance
                 ? 'bg-neutral-950 hover:bg-neutral-800 text-white cursor-pointer shadow-xs'
                 : 'bg-neutral-100 text-neutral-400 cursor-not-allowed border border-neutral-200/60'
@@ -290,59 +276,59 @@ Please verify and process the payout to my registered details. Thank you!`;
           </button>
         </div>
 
-        {/* 2. Responsive 2-Column Metrics (Strong BG Colors, Neutral Titles) */}
+        {/* 2. Responsive 2-Column Metrics (Paid Out & Pending) */}
         <div className="grid grid-cols-2 gap-3 sm:gap-4">
-          {/* Paid Out: Strong Green BG, Neutral Title */}
-          <div className="bg-[#DCFCE7] border border-[#86EFAC] rounded-3xl p-4 sm:p-5 shadow-[0_1px_4px_rgba(0,0,0,0.02)] space-y-2 transition-all">
+          {/* Paid Out: Mint Liquid Glass */}
+          <div className="bg-emerald-500/[0.08] backdrop-blur-xl border border-emerald-500/25 rounded-[26px] p-4 sm:p-5 shadow-[0_4px_20px_rgba(16,185,129,0.06)] space-y-2 transition-all">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-extrabold uppercase tracking-wider text-neutral-900 block">
+              <span className="text-[11px] font-extrabold uppercase tracking-wider text-emerald-950/80 block">
                 Paid Out
               </span>
-              <span className="text-[10px] font-bold text-neutral-900 bg-white/90 border border-neutral-300 px-2 py-0.5 rounded-full shadow-2xs">
+              <span className="text-[10px] font-bold text-emerald-950 bg-white/90 backdrop-blur-md border border-emerald-300/80 px-2 py-0.5 rounded-full shadow-2xs">
                 Transferred
               </span>
             </div>
             <div className="text-base sm:text-xl font-bold text-neutral-950 font-mono tabular-nums truncate">
               {formatIDR(stats?.paidCommission || 0)}
             </div>
-            <p className="text-[11px] text-neutral-700 font-medium">
+            <p className="text-[11px] text-neutral-600 font-medium">
               Approved earnings paid to bank
             </p>
           </div>
 
-          {/* Pending: Strong Red/Rose BG, Neutral Title */}
-          <div className="bg-[#FFE4E6] border border-[#FDA4AF] rounded-3xl p-4 sm:p-5 shadow-[0_1px_4px_rgba(0,0,0,0.02)] space-y-2 transition-all">
+          {/* Pending: Rose Liquid Glass */}
+          <div className="bg-rose-500/[0.07] backdrop-blur-xl border border-rose-500/25 rounded-[26px] p-4 sm:p-5 shadow-[0_4px_20px_rgba(244,63,94,0.06)] space-y-2 transition-all">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-extrabold uppercase tracking-wider text-neutral-900 block">
+              <span className="text-[11px] font-extrabold uppercase tracking-wider text-rose-950/80 block">
                 Pending
               </span>
-              <span className="text-[10px] font-bold text-neutral-900 bg-white/90 border border-neutral-300 px-2 py-0.5 rounded-full shadow-2xs">
+              <span className="text-[10px] font-bold text-rose-950 bg-white/90 backdrop-blur-md border border-rose-300/80 px-2 py-0.5 rounded-full shadow-2xs">
                 Verification
               </span>
             </div>
             <div className="text-base sm:text-xl font-bold text-neutral-950 font-mono tabular-nums truncate">
               {formatIDR(stats?.pendingCommission || 0)}
             </div>
-            <p className="text-[11px] text-neutral-700 font-medium">
+            <p className="text-[11px] text-neutral-600 font-medium">
               Awaiting treatment completion
             </p>
           </div>
         </div>
 
-        {/* 3. Promote to Guests Card */}
-        <div className="bg-white border border-neutral-200/70 rounded-3xl p-5 sm:p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)] space-y-4">
-          <div className="flex items-center justify-between text-xs">
+        {/* 3. Promote to Guests Card (Positioned directly below Paid Out & Pending!) */}
+        <div className="bg-white/80 backdrop-blur-2xl border border-white/90 rounded-[28px] p-5 sm:p-6 shadow-[0_12px_36px_rgba(0,0,0,0.04)] ring-1 ring-black/[0.03] space-y-4">
+          <div className="flex items-center justify-between text-xs pb-1 border-b border-neutral-100/80">
             <div>
-              <h3 className="font-bold text-neutral-950 text-sm sm:text-base tracking-tight">Promote to Guests</h3>
+              <h3 className="font-extrabold text-neutral-950 text-sm sm:text-base tracking-tight">Promote to Guests</h3>
               <p className="text-xs text-neutral-500 mt-0.5">Scan QR code or share your link to record bookings</p>
             </div>
-            <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200/80 shrink-0">
+            <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-800 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20 backdrop-blur-md shrink-0">
               Active Attribution
             </span>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 p-4 sm:p-5 rounded-2xl bg-[#F8F9FA] border border-neutral-200/60">
-            <div className="p-3 bg-white rounded-2xl border border-neutral-200/80 shadow-2xs shrink-0">
+          <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 p-4 sm:p-5 rounded-2xl bg-neutral-50/80 border border-neutral-200/70">
+            <div className="p-3 bg-white/90 backdrop-blur-md rounded-2xl border border-neutral-200/80 shadow-2xs shrink-0">
               <img
                 src={qrCodeUrl}
                 alt="Partner QR code"
@@ -351,7 +337,7 @@ Please verify and process the payout to my registered details. Thank you!`;
             </div>
             <div className="flex-1 text-center sm:text-left space-y-3 w-full min-w-0">
               <div className="space-y-1">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-neutral-400 block">
                   Instant Scan
                 </span>
                 <h4 className="text-sm sm:text-base font-bold text-neutral-950">
@@ -373,9 +359,12 @@ Please verify and process the payout to my registered details. Thank you!`;
           </div>
 
           <div className="space-y-1.5 pt-1">
-            <span className="text-xs font-semibold text-neutral-700">Your Referral Link</span>
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-semibold text-neutral-700">Your Referral Link</span>
+              <span className="text-[10px] font-semibold text-neutral-400">30-day tracking</span>
+            </div>
             <div className="flex items-center gap-2">
-              <div className="flex-1 bg-[#F2F2F7] border border-neutral-200/60 rounded-xl px-3.5 py-2.5 text-xs font-mono text-neutral-900 select-all truncate">
+              <div className="flex-1 bg-neutral-900/[0.03] backdrop-blur-md border border-neutral-200/70 rounded-xl px-3.5 py-2.5 text-xs font-mono text-neutral-900 select-all truncate">
                 {referralLink}
               </div>
               <button
@@ -390,11 +379,14 @@ Please verify and process the payout to my registered details. Thank you!`;
           </div>
         </div>
 
-        {/* 4. Recent Referrals Stream */}
-        <div className="bg-white border border-neutral-200/70 rounded-3xl p-5 sm:p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)] space-y-3.5">
+        {/* 4. Calendar with Booking Details (Inline on Mobile) */}
+        <PartnerCalendarCard bookings={calendarBookings} />
+
+        {/* 5. Recent Referrals Stream */}
+        <div className="bg-white/80 backdrop-blur-2xl border border-white/90 rounded-[28px] p-5 sm:p-6 shadow-[0_12px_36px_rgba(0,0,0,0.04)] ring-1 ring-black/[0.03] space-y-3.5">
           <div className="flex items-center justify-between text-xs">
             <div className="flex items-center gap-2">
-              <h3 className="font-bold text-neutral-950 text-sm sm:text-base tracking-tight">Recent Referrals</h3>
+              <h3 className="font-extrabold text-neutral-950 text-sm sm:text-base tracking-tight">Recent Referrals</h3>
               <span className="text-[10px] font-mono font-bold bg-neutral-100 text-neutral-700 px-2 py-0.5 rounded-full">
                 {recentReferrals.length}
               </span>
@@ -409,7 +401,7 @@ Please verify and process the payout to my registered details. Thank you!`;
           </div>
 
           {recentReferrals.length === 0 ? (
-            <div className="py-8 px-4 text-center rounded-2xl border border-dashed border-neutral-200/80 bg-[#FBFBFD] space-y-1.5">
+            <div className="py-8 px-4 text-center rounded-2xl border border-dashed border-neutral-200/80 bg-neutral-50/50 space-y-1.5">
               <p className="text-xs font-semibold text-neutral-800">No referred bookings yet</p>
               <p className="text-[11px] text-neutral-500">
                 Display your QR code or share your link with villa guests to receive your first commission.
@@ -474,7 +466,7 @@ Please verify and process the payout to my registered details. Thank you!`;
                         )}
                       </div>
 
-                      <p className="text-xs text-neutral-600 truncate">
+                      <p className="text-xs text-neutral-600 truncate font-medium">
                         {b.guest_name} • {b.treatment_name || 'Spa Treatment'}
                       </p>
                     </div>
@@ -497,24 +489,23 @@ Please verify and process the payout to my registered details. Thank you!`;
 
       {/* ═══════════════════════════════════════════════════════════════
           DESKTOP BALANCED 2-COLUMN VIEW (APPLE DESIGN ARCHITECTURE)
-          Clean, spacious, zero clutter:
           - Left Column (7 cols):
             1. Approved Balance Hero Card
-            2. Paid Out & Pending Cards (side-by-side, un-truncated)
-            3. Recent Referrals Stream (clean Apple grouped list)
+            2. Paid Out & Pending Cards (side-by-side)
+            3. Promote to Guests Card (QR code, Download, Referral link)
+            4. Recent Referrals Stream (Apple grouped list)
           - Right Column (5 cols):
-            1. Promote to Guests Card (QR code, Download, Referral link)
-            2. Partner Concierge Tips Card (villa hosting tips, WhatsApp link)
+            1. Calendar with Booking Details (replaces Promote to Guests & Concierge Tips)
          ═══════════════════════════════════════════════════════════════ */}
-      <div className="hidden lg:grid lg:grid-cols-12 gap-8 w-full max-w-[1440px] mx-auto pb-12 items-start">
+      <div className="hidden lg:grid lg:grid-cols-12 gap-7 w-full max-w-[1440px] mx-auto pb-12 items-start">
         
         {/* ─────────────────────────────────────────────────────────────
-            COLUMN 1 (LEFT COLUMN - 7 COLS): Financial Overview & Referrals
+            COLUMN 1 (LEFT COLUMN - 7 COLS): Financial Overview, Promote & Referrals
            ───────────────────────────────────────────────────────────── */}
         <div className="lg:col-span-7 space-y-6">
           {/* Application Status Banner (if pending) */}
           {profile?.status === 'pending' && (
-            <div className="p-4 border border-amber-200/80 rounded-2xl bg-amber-50/70 text-xs text-amber-900 flex items-start gap-3 shadow-2xs">
+            <div className="p-4 border border-amber-200/80 rounded-2xl bg-amber-50/80 backdrop-blur-md text-xs text-amber-900 flex items-start gap-3 shadow-2xs">
               <AlertCircle size={17} className="text-amber-700 shrink-0 mt-0.5" />
               <div className="leading-relaxed font-medium">
                 Application under review. All attributed bookings are recorded and tracked automatically.
@@ -523,10 +514,10 @@ Please verify and process the payout to my registered details. Thank you!`;
           )}
 
           {/* 1. Approved Balance Card (Primary Apple Hero) */}
-          <div className="p-7 rounded-3xl bg-white border border-neutral-200/80 shadow-[0_2px_14px_rgba(0,0,0,0.03)] space-y-5">
+          <div className="p-7 rounded-[28px] bg-white/80 backdrop-blur-2xl border border-white/90 shadow-[0_12px_36px_rgba(0,0,0,0.04)] ring-1 ring-black/[0.03] space-y-5">
             <div className="flex items-start justify-between">
               <div>
-                <span className="text-[11px] font-bold uppercase tracking-widest text-neutral-400 block">
+                <span className="text-[11px] font-extrabold uppercase tracking-widest text-neutral-400 block">
                   Approved Balance
                 </span>
                 <div className="text-4xl font-extrabold text-neutral-950 font-mono tracking-tight tabular-nums mt-1.5">
@@ -540,7 +531,7 @@ Please verify and process the payout to my registered details. Thank you!`;
               </div>
 
               {hasApprovedBalance && (
-                <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200/80 shadow-2xs">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-800 bg-emerald-500/10 px-3.5 py-1 rounded-full border border-emerald-500/20 backdrop-blur-md shadow-2xs">
                   Ready
                 </span>
               )}
@@ -560,48 +551,114 @@ Please verify and process the payout to my registered details. Thank you!`;
             </button>
           </div>
 
-          {/* 2. Paid Out & Pending Cards: Side-by-Side (Ample space, NO truncation!) */}
+          {/* 2. Paid Out & Pending Cards: Side-by-Side (Ample space, un-truncated) */}
           <div className="grid grid-cols-2 gap-4">
-            {/* Paid Out Card: Strong Mint BG, Dark Neutral Title */}
-            <div className="bg-[#DCFCE7] border border-[#86EFAC] rounded-3xl p-5 shadow-[0_1px_4px_rgba(0,0,0,0.02)] space-y-2 transition-all">
+            {/* Paid Out Card: Mint Liquid Glass */}
+            <div className="bg-emerald-500/[0.08] backdrop-blur-xl border border-emerald-500/25 rounded-[26px] p-5 shadow-[0_8px_24px_rgba(16,185,129,0.06)] space-y-2 transition-all hover:border-emerald-500/40 hover:shadow-[0_12px_28px_rgba(16,185,129,0.1)]">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-extrabold uppercase tracking-wider text-neutral-900 block">
+                <span className="text-[11px] font-extrabold uppercase tracking-wider text-emerald-950/80 block">
                   Paid Out
                 </span>
-                <span className="text-[10px] font-bold text-neutral-900 bg-white/90 border border-neutral-300 px-2.5 py-0.5 rounded-full shadow-2xs">
+                <span className="text-[10px] font-bold text-emerald-950 bg-white/90 backdrop-blur-md border border-emerald-300/80 px-2.5 py-0.5 rounded-full shadow-2xs">
                   Transferred
                 </span>
               </div>
               <div className="text-2xl font-extrabold text-neutral-950 font-mono tabular-nums">
                 {formatIDR(stats?.paidCommission || 0)}
               </div>
-              <p className="text-[11px] text-neutral-700 font-medium">
+              <p className="text-[11px] text-neutral-600 font-medium">
                 Approved earnings paid to bank
               </p>
             </div>
 
-            {/* Pending Card: Strong Rose BG, Dark Neutral Title */}
-            <div className="bg-[#FFE4E6] border border-[#FDA4AF] rounded-3xl p-5 shadow-[0_1px_4px_rgba(0,0,0,0.02)] space-y-2 transition-all">
+            {/* Pending Card: Rose Liquid Glass */}
+            <div className="bg-rose-500/[0.07] backdrop-blur-xl border border-rose-500/25 rounded-[26px] p-5 shadow-[0_8px_24px_rgba(244,63,94,0.06)] space-y-2 transition-all hover:border-rose-500/40 hover:shadow-[0_12px_28px_rgba(244,63,94,0.1)]">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-extrabold uppercase tracking-wider text-neutral-900 block">
+                <span className="text-[11px] font-extrabold uppercase tracking-wider text-rose-950/80 block">
                   Pending
                 </span>
-                <span className="text-[10px] font-bold text-neutral-900 bg-white/90 border border-neutral-300 px-2.5 py-0.5 rounded-full shadow-2xs">
+                <span className="text-[10px] font-bold text-rose-950 bg-white/90 backdrop-blur-md border border-rose-300/80 px-2.5 py-0.5 rounded-full shadow-2xs">
                   Verification
                 </span>
               </div>
               <div className="text-2xl font-extrabold text-neutral-950 font-mono tabular-nums">
                 {formatIDR(stats?.pendingCommission || 0)}
               </div>
-              <p className="text-[11px] text-neutral-700 font-medium">
+              <p className="text-[11px] text-neutral-600 font-medium">
                 Awaiting treatment completion
               </p>
             </div>
           </div>
 
-          {/* 3. Recent Referrals Stream (Apple Grouped List) */}
-          <div className="bg-white border border-neutral-200/80 rounded-3xl p-6 shadow-[0_2px_14px_rgba(0,0,0,0.03)] space-y-4">
-            <div className="flex items-center justify-between text-xs pb-1 border-b border-neutral-100">
+          {/* 3. Promote to Guests Card (Moved directly below Paid Out & Pending card!) */}
+          <div className="bg-white/80 backdrop-blur-2xl border border-white/90 rounded-[28px] p-6 shadow-[0_12px_36px_rgba(0,0,0,0.04)] ring-1 ring-black/[0.03] space-y-5">
+            <div className="flex items-center justify-between text-xs pb-1 border-b border-neutral-100/80">
+              <div>
+                <h3 className="font-extrabold text-neutral-950 text-base tracking-tight">Promote to Guests</h3>
+                <p className="text-xs text-neutral-500 mt-0.5">Instant booking attribution & tracking</p>
+              </div>
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-800 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20 backdrop-blur-md shrink-0">
+                Active Attribution
+              </span>
+            </div>
+
+            {/* Side-by-side QR presentation inside Column 1 */}
+            <div className="p-5 rounded-2xl bg-neutral-50/80 border border-neutral-200/70 flex flex-col sm:flex-row items-center gap-6">
+              <div className="p-3.5 bg-white/90 backdrop-blur-md rounded-2xl border border-neutral-200/80 shadow-2xs shrink-0">
+                <img
+                  src={qrCodeUrl}
+                  alt="Partner QR code"
+                  className="w-36 h-36 object-contain mx-auto"
+                />
+              </div>
+              <div className="space-y-2.5 text-center sm:text-left flex-1 min-w-0">
+                <div>
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-neutral-400 block">
+                    Instant Scan
+                  </span>
+                  <h4 className="text-sm font-bold text-neutral-950">
+                    Official Partner QR Code
+                  </h4>
+                  <p className="text-xs text-neutral-500 leading-relaxed mt-0.5">
+                    Guests scan this code with their phone camera to book directly with your referral attribution.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleDownloadQr}
+                  className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-neutral-950 text-white text-xs font-semibold hover:bg-neutral-800 active:scale-95 transition-all shadow-xs cursor-pointer"
+                >
+                  <Download size={14} />
+                  <span>Download QR Code</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Apple Style Referral Link Box */}
+            <div className="space-y-1.5 pt-1">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-semibold text-neutral-700">Your Referral Link</span>
+                <span className="text-[10px] font-semibold text-neutral-400">30-day tracking</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="flex-1 bg-neutral-900/[0.03] backdrop-blur-md border border-neutral-200/70 rounded-xl px-3.5 py-2.5 text-xs font-mono text-neutral-900 select-all truncate">
+                  {referralLink}
+                </div>
+                <button
+                  type="button"
+                  onClick={handleCopyLink}
+                  className="px-4 py-2.5 rounded-xl bg-neutral-950 text-white text-xs font-semibold hover:bg-neutral-800 active:scale-95 transition-all shadow-xs flex items-center gap-1.5 shrink-0 cursor-pointer"
+                >
+                  {copiedLink ? <Check size={13} /> : <Copy size={13} />}
+                  <span>{copiedLink ? 'Copied' : 'Copy'}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* 4. Recent Referrals Stream (Apple Grouped List) */}
+          <div className="bg-white/80 backdrop-blur-2xl border border-white/90 rounded-[28px] p-6 shadow-[0_12px_36px_rgba(0,0,0,0.04)] ring-1 ring-black/[0.03] space-y-4">
+            <div className="flex items-center justify-between text-xs pb-1 border-b border-neutral-100/80">
               <div className="flex items-center gap-2">
                 <h3 className="font-extrabold text-neutral-950 text-base tracking-tight">Recent Referrals</h3>
                 <span className="text-[10px] font-mono font-bold bg-neutral-100 text-neutral-700 px-2.5 py-0.5 rounded-full border border-neutral-200/70">
@@ -618,14 +675,14 @@ Please verify and process the payout to my registered details. Thank you!`;
             </div>
 
             {recentReferrals.length === 0 ? (
-              <div className="py-10 px-4 text-center rounded-2xl border border-dashed border-neutral-200/80 bg-[#FBFBFD] space-y-1.5">
+              <div className="py-10 px-4 text-center rounded-2xl border border-dashed border-neutral-200/80 bg-neutral-50/50 space-y-1.5">
                 <p className="text-xs font-semibold text-neutral-800">No referred bookings yet</p>
                 <p className="text-[11px] text-neutral-500">
                   Share your link or QR code with guests to receive your first commission.
                 </p>
               </div>
             ) : (
-              <div className="divide-y divide-neutral-100">
+              <div className="divide-y divide-neutral-100/80">
                 {recentReferrals.map((b) => {
                   const isApproved = b.commission_status === 'approved';
                   const isCancelled = b.commission_status === 'cancelled' || b.booking_status === 'Cancelled';
@@ -638,7 +695,7 @@ Please verify and process the payout to my registered details. Thank you!`;
                           <button
                             type="button"
                             onClick={() => handleCopyBooking(b.booking_id)}
-                            className="font-mono text-xs font-bold text-neutral-900 bg-neutral-100 px-2 py-0.5 rounded border border-neutral-200/70 hover:bg-neutral-200 transition-colors inline-flex items-center gap-1 cursor-pointer"
+                            className="font-mono text-xs font-bold text-neutral-900 bg-neutral-100/90 px-2 py-0.5 rounded border border-neutral-200/70 hover:bg-neutral-200 transition-colors inline-flex items-center gap-1 cursor-pointer"
                             title="Copy booking ID"
                           >
                             <span>#{b.booking_id}</span>
@@ -703,125 +760,15 @@ Please verify and process the payout to my registered details. Thank you!`;
         </div>
 
         {/* ─────────────────────────────────────────────────────────────
-            COLUMN 2 (RIGHT COLUMN - 5 COLS): Promote to Guests, QR & Concierge
+            COLUMN 2 (RIGHT COLUMN - 5 COLS):
+            On the Promote to Guests current position, add Calendar with booking details!
            ───────────────────────────────────────────────────────────── */}
-        <div className="lg:col-span-5 space-y-6">
-          {/* Promote to Guests Card */}
-          <div className="bg-white border border-neutral-200/80 rounded-3xl p-6 shadow-[0_2px_14px_rgba(0,0,0,0.03)] space-y-4">
-            <div className="flex items-center justify-between text-xs pb-1 border-b border-neutral-100">
-              <div>
-                <h3 className="font-extrabold text-neutral-950 text-base tracking-tight">Promote to Guests</h3>
-                <p className="text-xs text-neutral-500 mt-0.5">Instant booking attribution</p>
-              </div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200/80 shrink-0">
-                Active Attribution
-              </span>
-            </div>
-
-            {/* Centered QR Presentation */}
-            <div className="p-5 rounded-2xl bg-[#F8F9FA] border border-neutral-200/60 flex flex-col items-center text-center space-y-3.5">
-              <div className="p-3.5 bg-white rounded-2xl border border-neutral-200/80 shadow-2xs">
-                <img
-                  src={qrCodeUrl}
-                  alt="Partner QR code"
-                  className="w-40 h-40 object-contain mx-auto"
-                />
-              </div>
-              <div className="space-y-1">
-                <span className="text-[10px] font-extrabold uppercase tracking-wider text-neutral-400 block">
-                  Instant Scan
-                </span>
-                <h4 className="text-sm font-bold text-neutral-950">
-                  Official Partner QR Code
-                </h4>
-                <p className="text-xs text-neutral-500 leading-relaxed max-w-xs mx-auto">
-                  Guests scan this code with their phone camera to book directly with your referral attribution.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={handleDownloadQr}
-                className="inline-flex items-center justify-center gap-2 w-full px-5 py-3 rounded-xl bg-neutral-950 text-white text-xs font-semibold hover:bg-neutral-800 active:scale-95 transition-all shadow-xs cursor-pointer"
-              >
-                <Download size={14} />
-                <span>Download QR Code</span>
-              </button>
-            </div>
-
-            {/* Apple Style Referral Link Box */}
-            <div className="space-y-1.5 pt-1">
-              <div className="flex items-center justify-between text-xs">
-                <span className="font-semibold text-neutral-700">Your Referral Link</span>
-                <span className="text-[10px] font-semibold text-neutral-400">30-day tracking</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="flex-1 bg-[#F2F2F7] border border-neutral-200/60 rounded-xl px-3.5 py-2.5 text-xs font-mono text-neutral-900 select-all truncate">
-                  {referralLink}
-                </div>
-                <button
-                  type="button"
-                  onClick={handleCopyLink}
-                  className="px-4 py-2.5 rounded-xl bg-neutral-950 text-white text-xs font-semibold hover:bg-neutral-800 active:scale-95 transition-all shadow-xs flex items-center gap-1.5 shrink-0 cursor-pointer"
-                >
-                  {copiedLink ? <Check size={13} /> : <Copy size={13} />}
-                  <span>{copiedLink ? 'Copied' : 'Copy'}</span>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Villa Concierge & Partner Support Guide */}
-          <div className="bg-white border border-neutral-200/80 rounded-3xl p-6 shadow-[0_2px_14px_rgba(0,0,0,0.03)] space-y-4">
-            <div className="flex items-center gap-2.5">
-              <span className="p-2 rounded-xl bg-amber-50 text-amber-800 border border-amber-200/80">
-                <Sparkles size={16} />
-              </span>
-              <div>
-                <h4 className="font-bold text-xs text-neutral-950">Partner Concierge Tips</h4>
-                <span className="text-[10px] text-neutral-400">Maximize villa guest bookings</span>
-              </div>
-            </div>
-
-            <ul className="text-xs text-neutral-600 space-y-2.5 pt-1">
-              <li className="flex items-start gap-2.5">
-                <CheckCircle2 size={14} className="text-emerald-600 shrink-0 mt-0.5" />
-                <span>Place QR code cards on villa coffee tables, nightstands, or reception counters.</span>
-              </li>
-              <li className="flex items-start gap-2.5">
-                <CheckCircle2 size={14} className="text-emerald-600 shrink-0 mt-0.5" />
-                <span>Share your custom link via WhatsApp when guests inquire about spa rituals.</span>
-              </li>
-              <li className="flex items-start gap-2.5">
-                <CheckCircle2 size={14} className="text-emerald-600 shrink-0 mt-0.5" />
-                <span>Automatic 30-day cookie window preserves attribution if guests book later.</span>
-              </li>
-            </ul>
-
-            <div className="pt-3 border-t border-neutral-100 flex items-center justify-between">
-              <span className="text-[11px] text-neutral-500 font-medium">Need immediate assistance?</span>
-              <a
-                href="https://wa.me/6285174119423"
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-1 text-xs font-bold text-neutral-900 hover:text-black hover:underline"
-              >
-                <span>Concierge WA</span>
-                <ArrowRight size={12} />
-              </a>
-            </div>
-          </div>
+        <div className="lg:col-span-5 space-y-6 sticky top-6">
+          <PartnerCalendarCard bookings={calendarBookings} />
         </div>
 
       </div>
 
-      {/* Floating Booking Calendar Trigger for modal/fallback */}
-      <FloatingBookingCalendar
-        bookings={calendarBookings}
-        isOpen={calendarOpen}
-        onClose={() => setCalendarOpen(false)}
-        onOpen={() => setCalendarOpen(true)}
-        showFloatingButton={false}
-      />
     </div>
   );
 }
