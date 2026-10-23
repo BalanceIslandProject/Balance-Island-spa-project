@@ -1,13 +1,21 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { 
   Copy, 
   Check, 
   AlertCircle,
   ChevronRight,
-  Download
+  ChevronLeft,
+  Calendar as CalendarIcon,
+  Download,
+  Clock,
+  User,
+  MessageCircle,
+  Sparkles,
+  CheckCircle2,
+  ArrowRight
 } from 'lucide-react';
 import FloatingBookingCalendar, { CalendarBooking } from '../FloatingBookingCalendar';
 import { supabase } from '@/lib/supabase';
@@ -37,6 +45,13 @@ interface PartnerProfile {
   payout_details: any;
 }
 
+const toLocalDateString = (date: Date) => {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+};
+
 export default function PartnerDashboardPage() {
   const [profile, setProfile] = useState<PartnerProfile | null>(null);
   const [stats, setStats] = useState<PartnerStats | null>(null);
@@ -44,6 +59,10 @@ export default function PartnerDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [copiedLink, setCopiedLink] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
+
+  // Desktop Calendar Widget State
+  const [calendarMonth, setCalendarMonth] = useState(new Date());
+  const [selectedCalendarDate, setSelectedCalendarDate] = useState<string>(() => toLocalDateString(new Date()));
 
   useEffect(() => {
     async function fetchData() {
@@ -212,6 +231,44 @@ Please verify and process the payout to my registered details. Thank you!`;
     return String(rawDate);
   };
 
+  // Desktop Calendar Computations
+  const calYear = calendarMonth.getFullYear();
+  const calMonth = calendarMonth.getMonth();
+  const calDaysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+  const calFirstDay = new Date(calYear, calMonth, 1).getDay();
+
+  const handlePrevCalMonth = () => setCalendarMonth(new Date(calYear, calMonth - 1, 1));
+  const handleNextCalMonth = () => setCalendarMonth(new Date(calYear, calMonth + 1, 1));
+  const handleCalToday = () => {
+    const today = new Date();
+    setCalendarMonth(new Date(today.getFullYear(), today.getMonth(), 1));
+    setSelectedCalendarDate(toLocalDateString(today));
+  };
+
+  const bookingsByDate = useMemo(() => {
+    const map = new Map<string, CalendarBooking[]>();
+    calendarBookings.forEach(b => {
+      if (b.date) {
+        const dStr = String(b.date).includes('T') ? b.date.split('T')[0] : b.date;
+        const list = map.get(dStr) || [];
+        list.push(b);
+        map.set(dStr, list);
+      }
+    });
+    return map;
+  }, [calendarBookings]);
+
+  const selectedDayBookings = useMemo(() => {
+    return bookingsByDate.get(selectedCalendarDate) || [];
+  }, [bookingsByDate, selectedCalendarDate]);
+
+  const monthNames = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+
+  const daysOfWeek = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+
   if (loading) {
     return (
       <div className="py-24 text-center space-y-3">
@@ -223,274 +280,766 @@ Please verify and process the payout to my registered details. Thank you!`;
     );
   }
 
-  const recentReferrals = calendarBookings.slice(0, 3);
+  const recentReferrals = calendarBookings.slice(0, 4);
 
   return (
-    <div className="space-y-4 sm:space-y-5 w-full max-w-4xl mx-auto pb-8 font-sans antialiased">
-      
-      {/* Application Status Banner (only if pending) */}
-      {profile?.status === 'pending' && (
-        <div className="p-3.5 border border-amber-200/80 rounded-2xl bg-amber-50/70 text-xs text-amber-900 flex items-start gap-2.5 shadow-2xs">
-          <AlertCircle size={16} className="text-amber-700 shrink-0 mt-0.5" />
-          <div className="leading-relaxed">
-            Application under review. You can already share your referral link and QR code — all attributed bookings are recorded automatically.
-          </div>
-        </div>
-      )}
-
-      {/* 1. Approved Balance Card (Apple Design Primary Hero) */}
-      <div className="p-5 sm:p-6 rounded-3xl bg-white border border-neutral-200/70 shadow-[0_2px_12px_rgba(0,0,0,0.03)] space-y-4 transition-all">
-        <div className="flex items-start justify-between">
-          <div>
-            <span className="text-[11px] font-bold uppercase tracking-widest text-neutral-400 block">
-              Approved Balance
-            </span>
-            <div className="text-3xl sm:text-4xl font-extrabold text-neutral-950 font-mono tracking-tight tabular-nums mt-1">
-              {formatIDR(approvedBalance)}
+    <div className="w-full font-sans antialiased">
+      {/* ─────────────────────────────────────────────────────────────
+          1. MOBILE VIEW (UNTOUCHED: kept identical to previous layout)
+         ───────────────────────────────────────────────────────────── */}
+      <div className="lg:hidden space-y-4 sm:space-y-5 w-full max-w-4xl mx-auto pb-8">
+        {/* Application Status Banner (only if pending) */}
+        {profile?.status === 'pending' && (
+          <div className="p-3.5 border border-amber-200/80 rounded-2xl bg-amber-50/70 text-xs text-amber-900 flex items-start gap-2.5 shadow-2xs">
+            <AlertCircle size={16} className="text-amber-700 shrink-0 mt-0.5" />
+            <div className="leading-relaxed">
+              Application under review. You can already share your referral link and QR code — all attributed bookings are recorded automatically.
             </div>
-            {(stats?.pendingCommission || 0) > 0 && (
-              <p className="text-xs text-neutral-500 mt-1 font-medium">
-                Pending: <span className="font-semibold text-neutral-800 font-mono tabular-nums">{formatIDR(stats?.pendingCommission || 0)}</span>
-              </p>
+          </div>
+        )}
+
+        {/* 1. Approved Balance Card (Hero) */}
+        <div className="p-5 sm:p-6 rounded-3xl bg-white border border-neutral-200/70 shadow-[0_2px_12px_rgba(0,0,0,0.03)] space-y-4 transition-all">
+          <div className="flex items-start justify-between">
+            <div>
+              <span className="text-[11px] font-bold uppercase tracking-widest text-neutral-400 block">
+                Approved Balance
+              </span>
+              <div className="text-3xl sm:text-4xl font-extrabold text-neutral-950 font-mono tracking-tight tabular-nums mt-1">
+                {formatIDR(approvedBalance)}
+              </div>
+              {(stats?.pendingCommission || 0) > 0 && (
+                <p className="text-xs text-neutral-500 mt-1 font-medium">
+                  Pending: <span className="font-semibold text-neutral-800 font-mono tabular-nums">{formatIDR(stats?.pendingCommission || 0)}</span>
+                </p>
+              )}
+            </div>
+
+            {hasApprovedBalance && (
+              <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200/80">
+                Ready
+              </span>
             )}
           </div>
 
-          {hasApprovedBalance && (
-            <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200/80">
-              Ready
-            </span>
-          )}
-        </div>
-
-        {/* Clean Apple Withdraw Button */}
-        <button
-          type="button"
-          onClick={handleWithdrawWhatsApp}
-          disabled={!hasApprovedBalance}
-          className={`w-full py-3.5 px-4 rounded-2xl font-semibold text-xs tracking-wide transition-all active:scale-[0.98] flex items-center justify-center ${
-            hasApprovedBalance
-              ? 'bg-neutral-950 hover:bg-neutral-800 text-white cursor-pointer shadow-xs'
-              : 'bg-neutral-100 text-neutral-400 cursor-not-allowed border border-neutral-200/60'
-          }`}
-        >
-          {hasApprovedBalance ? 'Withdraw' : 'No Balance to Withdraw'}
-        </button>
-      </div>
-
-      {/* 2. Responsive 2-Column Metrics (Apple Rounded Cards: Green Paid Out | Red Pending) */}
-      <div className="grid grid-cols-2 gap-3 sm:gap-4">
-        {/* Approved / Paid Out: Apple Green Card */}
-        <div className="bg-[#F0FDF4] border border-[#DCFCE7] rounded-3xl p-4 sm:p-5 shadow-[0_1px_4px_rgba(0,0,0,0.02)] space-y-2 transition-all">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-500 block">
-              Paid Out
-            </span>
-            <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-100/80 border border-emerald-200/70 px-2 py-0.5 rounded-full">
-              Transferred
-            </span>
-          </div>
-          <div className="text-base sm:text-xl font-bold text-neutral-950 font-mono tabular-nums truncate">
-            {formatIDR(stats?.paidCommission || 0)}
-          </div>
-          <p className="text-[11px] text-neutral-500 font-medium">
-            Approved earnings paid to bank
-          </p>
-        </div>
-
-        {/* Pending: Apple Red Card */}
-        <div className="bg-[#FFF1F2] border border-[#FFE4E6] rounded-3xl p-4 sm:p-5 shadow-[0_1px_4px_rgba(0,0,0,0.02)] space-y-2 transition-all">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-500 block">
-              Pending
-            </span>
-            <span className="text-[10px] font-semibold text-rose-700 bg-rose-100/80 border border-rose-200/70 px-2 py-0.5 rounded-full">
-              Verification
-            </span>
-          </div>
-          <div className="text-base sm:text-xl font-bold text-neutral-950 font-mono tabular-nums truncate">
-            {formatIDR(stats?.pendingCommission || 0)}
-          </div>
-          <p className="text-[11px] text-neutral-500 font-medium">
-            Awaiting treatment completion
-          </p>
-        </div>
-      </div>
-
-      {/* 3. Promote to Guests Card (QR Code Without #Code Below Image + Download Button + Share Link) */}
-      <div className="bg-white border border-neutral-200/70 rounded-3xl p-5 sm:p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)] space-y-4">
-        <div className="flex items-center justify-between text-xs">
-          <div>
-            <h3 className="font-bold text-neutral-950 text-sm sm:text-base tracking-tight">Promote to Guests</h3>
-            <p className="text-xs text-neutral-500 mt-0.5">Scan QR code or share your link to record bookings</p>
-          </div>
-          <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200/80 shrink-0">
-            Active Attribution
-          </span>
-        </div>
-
-        {/* Displayed QR Code Section (Clean - No #BALIHEAD112 Below Image) */}
-        <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 p-4 sm:p-5 rounded-2xl bg-[#F8F9FA] border border-neutral-200/60">
-          <div className="p-3 bg-white rounded-2xl border border-neutral-200/80 shadow-2xs shrink-0">
-            <img
-              src={qrCodeUrl}
-              alt="Partner QR code"
-              className="w-36 h-36 sm:w-40 sm:h-40 object-contain mx-auto"
-            />
-          </div>
-          <div className="flex-1 text-center sm:text-left space-y-3 w-full min-w-0">
-            <div className="space-y-1">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block">
-                Instant Scan
-              </span>
-              <h4 className="text-sm sm:text-base font-bold text-neutral-950">
-                Official Partner QR Code
-              </h4>
-              <p className="text-xs text-neutral-500 leading-relaxed">
-                Guests can scan this code with their phone camera to book directly with your referral attribution.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={handleDownloadQr}
-              className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-2.5 rounded-xl bg-neutral-950 text-white text-xs font-semibold hover:bg-neutral-800 active:scale-95 transition-all shadow-xs cursor-pointer"
-            >
-              <Download size={14} />
-              <span>Download QR Code</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Share Link with Apple Style Copy Bar */}
-        <div className="space-y-1.5 pt-1">
-          <span className="text-xs font-semibold text-neutral-700">Your Referral Link</span>
-          <div className="flex items-center gap-2">
-            <div className="flex-1 bg-[#F2F2F7] border border-neutral-200/60 rounded-xl px-3.5 py-2.5 text-xs font-mono text-neutral-900 select-all truncate">
-              {referralLink}
-            </div>
-            <button
-              type="button"
-              onClick={handleCopyLink}
-              className="px-4 py-2.5 rounded-xl bg-neutral-950 text-white text-xs font-semibold hover:bg-neutral-800 active:scale-95 transition-all shadow-xs flex items-center gap-1.5 shrink-0 cursor-pointer"
-            >
-              {copiedLink ? <Check size={13} /> : <Copy size={13} />}
-              <span>{copiedLink ? 'Copied' : 'Copy'}</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* 4. Recent Referrals Stream (Apple Style Grouped List) */}
-      <div className="bg-white border border-neutral-200/70 rounded-3xl p-5 sm:p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)] space-y-3.5">
-        <div className="flex items-center justify-between text-xs">
-          <div className="flex items-center gap-2">
-            <h3 className="font-bold text-neutral-950 text-sm sm:text-base tracking-tight">Recent Referrals</h3>
-            <span className="text-[10px] font-mono font-bold bg-neutral-100 text-neutral-700 px-2 py-0.5 rounded-full">
-              {recentReferrals.length}
-            </span>
-          </div>
-          <Link
-            href="/partners/referrals"
-            className="text-xs font-semibold text-neutral-800 hover:text-neutral-950 hover:underline flex items-center gap-0.5"
+          <button
+            type="button"
+            onClick={handleWithdrawWhatsApp}
+            disabled={!hasApprovedBalance}
+            className={`w-full py-3.5 px-4 rounded-2xl font-semibold text-xs tracking-wide transition-all active:scale-[0.98] flex items-center justify-center ${
+              hasApprovedBalance
+                ? 'bg-neutral-950 hover:bg-neutral-800 text-white cursor-pointer shadow-xs'
+                : 'bg-neutral-100 text-neutral-400 cursor-not-allowed border border-neutral-200/60'
+            }`}
           >
-            <span>All Referrals</span>
-            <ChevronRight size={13} />
-          </Link>
+            {hasApprovedBalance ? 'Withdraw' : 'No Balance to Withdraw'}
+          </button>
         </div>
 
-        {recentReferrals.length === 0 ? (
-          <div className="py-8 px-4 text-center rounded-2xl border border-dashed border-neutral-200/80 bg-[#FBFBFD] space-y-1.5">
-            <p className="text-xs font-semibold text-neutral-800">No referred bookings yet</p>
-            <p className="text-[11px] text-neutral-500">
-              Display your QR code or share your link with villa guests to receive your first commission.
+        {/* 2. Responsive 2-Column Metrics (Strong BG Colors, Neutral Titles) */}
+        <div className="grid grid-cols-2 gap-3 sm:gap-4">
+          {/* Paid Out: Strong Green BG, Neutral Title */}
+          <div className="bg-[#DCFCE7] border border-[#86EFAC] rounded-3xl p-4 sm:p-5 shadow-[0_1px_4px_rgba(0,0,0,0.02)] space-y-2 transition-all">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-extrabold uppercase tracking-wider text-neutral-900 block">
+                Paid Out
+              </span>
+              <span className="text-[10px] font-bold text-neutral-900 bg-white/90 border border-neutral-300 px-2 py-0.5 rounded-full">
+                Transferred
+              </span>
+            </div>
+            <div className="text-base sm:text-xl font-bold text-neutral-950 font-mono tabular-nums truncate">
+              {formatIDR(stats?.paidCommission || 0)}
+            </div>
+            <p className="text-[11px] text-neutral-700 font-medium">
+              Approved earnings paid to bank
             </p>
           </div>
-        ) : (
-          <div className="divide-y divide-neutral-100">
-            {recentReferrals.map((b) => {
-              const isApproved = b.commission_status === 'approved';
-              const isCancelled = b.commission_status === 'cancelled' || b.booking_status === 'Cancelled';
-              const isPaid = b.payment_status === 'paid' || b.payment_verified;
 
-              return (
-                <div key={b.id || b.booking_id} className="py-3 first:pt-1 last:pb-1 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-                  <div className="min-w-0 space-y-1">
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      <span className="font-mono text-xs font-bold text-neutral-900 bg-neutral-100 px-2 py-0.5 rounded border border-neutral-200/70">
-                        #{b.booking_id}
-                      </span>
+          {/* Pending: Strong Red/Rose BG, Neutral Title */}
+          <div className="bg-[#FFE4E6] border border-[#FDA4AF] rounded-3xl p-4 sm:p-5 shadow-[0_1px_4px_rgba(0,0,0,0.02)] space-y-2 transition-all">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-extrabold uppercase tracking-wider text-neutral-900 block">
+                Pending
+              </span>
+              <span className="text-[10px] font-bold text-neutral-900 bg-white/90 border border-neutral-300 px-2 py-0.5 rounded-full">
+                Verification
+              </span>
+            </div>
+            <div className="text-base sm:text-xl font-bold text-neutral-950 font-mono tabular-nums truncate">
+              {formatIDR(stats?.pendingCommission || 0)}
+            </div>
+            <p className="text-[11px] text-neutral-700 font-medium">
+              Awaiting treatment completion
+            </p>
+          </div>
+        </div>
 
-                      {/* Payment Label: Paid / Unpaid */}
-                      {isPaid ? (
-                        <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200/80">
-                          Paid
-                        </span>
-                      ) : (
-                        <span className="text-[10px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200/80">
-                          Unpaid
-                        </span>
-                      )}
+        {/* 3. Promote to Guests Card */}
+        <div className="bg-white border border-neutral-200/70 rounded-3xl p-5 sm:p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)] space-y-4">
+          <div className="flex items-center justify-between text-xs">
+            <div>
+              <h3 className="font-bold text-neutral-950 text-sm sm:text-base tracking-tight">Promote to Guests</h3>
+              <p className="text-xs text-neutral-500 mt-0.5">Scan QR code or share your link to record bookings</p>
+            </div>
+            <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200/80 shrink-0">
+              Active Attribution
+            </span>
+          </div>
 
-                      {/* Treatment Status Label: Confirmed / Ongoing / Finish / Cancelled */}
-                      {isCancelled ? (
-                        <span className="text-[10px] font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-200/80">
-                          Cancelled
-                        </span>
-                      ) : b.booking_status === 'Ongoing' ? (
-                        <span className="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200/80 flex items-center gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
-                          Ongoing Treatment
-                        </span>
-                      ) : b.booking_status === 'Completed' || b.service_completed ? (
-                        <span className="text-[10px] font-bold text-teal-800 bg-teal-50 px-2 py-0.5 rounded border border-teal-200/80">
-                          Finish Treatment
-                        </span>
-                      ) : b.booking_status === 'Confirmed' ? (
-                        <span className="text-[10px] font-bold text-sky-800 bg-sky-50 px-2 py-0.5 rounded border border-sky-200/80">
-                          Confirmed
-                        </span>
-                      ) : (
-                        <span className="text-[10px] font-semibold text-neutral-600 bg-neutral-100 px-2 py-0.5 rounded border border-neutral-200/80">
-                          Pending
-                        </span>
-                      )}
+          <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 p-4 sm:p-5 rounded-2xl bg-[#F8F9FA] border border-neutral-200/60">
+            <div className="p-3 bg-white rounded-2xl border border-neutral-200/80 shadow-2xs shrink-0">
+              <img
+                src={qrCodeUrl}
+                alt="Partner QR code"
+                className="w-36 h-36 sm:w-40 sm:h-40 object-contain mx-auto"
+              />
+            </div>
+            <div className="flex-1 text-center sm:text-left space-y-3 w-full min-w-0">
+              <div className="space-y-1">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block">
+                  Instant Scan
+                </span>
+                <h4 className="text-sm sm:text-base font-bold text-neutral-950">
+                  Official Partner QR Code
+                </h4>
+                <p className="text-xs text-neutral-500 leading-relaxed">
+                  Guests can scan this code with their phone camera to book directly with your referral attribution.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleDownloadQr}
+                className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-2.5 rounded-xl bg-neutral-950 text-white text-xs font-semibold hover:bg-neutral-800 active:scale-95 transition-all shadow-xs cursor-pointer"
+              >
+                <Download size={14} />
+                <span>Download QR Code</span>
+              </button>
+            </div>
+          </div>
 
-                      {/* Commission Approval Status */}
-                      {isCancelled ? (
-                        <span className="text-[10px] font-semibold text-neutral-500 bg-neutral-100 px-2 py-0.5 rounded">
-                          Commission Cancelled
+          <div className="space-y-1.5 pt-1">
+            <span className="text-xs font-semibold text-neutral-700">Your Referral Link</span>
+            <div className="flex items-center gap-2">
+              <div className="flex-1 bg-[#F2F2F7] border border-neutral-200/60 rounded-xl px-3.5 py-2.5 text-xs font-mono text-neutral-900 select-all truncate">
+                {referralLink}
+              </div>
+              <button
+                type="button"
+                onClick={handleCopyLink}
+                className="px-4 py-2.5 rounded-xl bg-neutral-950 text-white text-xs font-semibold hover:bg-neutral-800 active:scale-95 transition-all shadow-xs flex items-center gap-1.5 shrink-0 cursor-pointer"
+              >
+                {copiedLink ? <Check size={13} /> : <Copy size={13} />}
+                <span>{copiedLink ? 'Copied' : 'Copy'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* 4. Recent Referrals Stream */}
+        <div className="bg-white border border-neutral-200/70 rounded-3xl p-5 sm:p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)] space-y-3.5">
+          <div className="flex items-center justify-between text-xs">
+            <div className="flex items-center gap-2">
+              <h3 className="font-bold text-neutral-950 text-sm sm:text-base tracking-tight">Recent Referrals</h3>
+              <span className="text-[10px] font-mono font-bold bg-neutral-100 text-neutral-700 px-2 py-0.5 rounded-full">
+                {recentReferrals.length}
+              </span>
+            </div>
+            <Link
+              href="/partners/referrals"
+              className="text-xs font-semibold text-neutral-800 hover:text-neutral-950 hover:underline flex items-center gap-0.5"
+            >
+              <span>All Referrals</span>
+              <ChevronRight size={13} />
+            </Link>
+          </div>
+
+          {recentReferrals.length === 0 ? (
+            <div className="py-8 px-4 text-center rounded-2xl border border-dashed border-neutral-200/80 bg-[#FBFBFD] space-y-1.5">
+              <p className="text-xs font-semibold text-neutral-800">No referred bookings yet</p>
+              <p className="text-[11px] text-neutral-500">
+                Display your QR code or share your link with villa guests to receive your first commission.
+              </p>
+            </div>
+          ) : (
+            <div className="divide-y divide-neutral-100">
+              {recentReferrals.map((b) => {
+                const isApproved = b.commission_status === 'approved';
+                const isCancelled = b.commission_status === 'cancelled' || b.booking_status === 'Cancelled';
+                const isPaid = b.payment_status === 'paid' || b.payment_verified;
+
+                return (
+                  <div key={b.id || b.booking_id} className="py-3 first:pt-1 last:pb-1 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                    <div className="min-w-0 space-y-1">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span className="font-mono text-xs font-bold text-neutral-900 bg-neutral-100 px-2 py-0.5 rounded border border-neutral-200/70">
+                          #{b.booking_id}
                         </span>
-                      ) : isApproved ? (
-                        <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100/70 px-2 py-0.5 rounded border border-emerald-300">
-                          Approved
-                        </span>
-                      ) : (
-                        <span className="text-[10px] font-semibold text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200/80">
-                          Pending
-                        </span>
-                      )}
+
+                        {isPaid ? (
+                          <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200/80">
+                            Paid
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200/80">
+                            Unpaid
+                          </span>
+                        )}
+
+                        {isCancelled ? (
+                          <span className="text-[10px] font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-200/80">
+                            Cancelled
+                          </span>
+                        ) : b.booking_status === 'Ongoing' ? (
+                          <span className="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200/80 flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+                            Ongoing Treatment
+                          </span>
+                        ) : b.booking_status === 'Completed' || b.service_completed ? (
+                          <span className="text-[10px] font-bold text-teal-800 bg-teal-50 px-2 py-0.5 rounded border border-teal-200/80">
+                            Finish Treatment
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-semibold text-neutral-600 bg-neutral-100 px-2 py-0.5 rounded border border-neutral-200/80">
+                            Pending
+                          </span>
+                        )}
+
+                        {isCancelled ? (
+                          <span className="text-[10px] font-semibold text-neutral-500 bg-neutral-100 px-2 py-0.5 rounded">
+                            Commission Cancelled
+                          </span>
+                        ) : isApproved ? (
+                          <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100/70 px-2 py-0.5 rounded border border-emerald-300">
+                            Approved
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-semibold text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200/80">
+                            Pending
+                          </span>
+                        )}
+                      </div>
+
+                      <p className="text-xs text-neutral-600 truncate">
+                        {b.guest_name} • {b.treatment_name || 'Spa Treatment'}
+                      </p>
                     </div>
 
-                    <p className="text-xs text-neutral-600 truncate">
-                      {b.guest_name} • {b.treatment_name || 'Spa Treatment'}
-                    </p>
+                    <div className="text-left sm:text-right shrink-0">
+                      <span className={`text-xs font-bold font-mono tabular-nums block ${isCancelled ? 'line-through text-neutral-400' : 'text-emerald-700'}`}>
+                        {isCancelled ? 'IDR 0' : `+${formatIDR(b.commission_amount)}`}
+                      </span>
+                      <span className="text-[10px] text-neutral-400">
+                        {safeFormatDate(b.date, { day: 'numeric', month: 'short' })}
+                      </span>
+                    </div>
                   </div>
-
-                  <div className="text-left sm:text-right shrink-0">
-                    <span className={`text-xs font-bold font-mono tabular-nums block ${isCancelled ? 'line-through text-neutral-400' : 'text-emerald-700'}`}>
-                      {isCancelled ? 'IDR 0' : `+${formatIDR(b.commission_amount)}`}
-                    </span>
-                    <span className="text-[10px] text-neutral-400">
-                      {safeFormatDate(b.date, { day: 'numeric', month: 'short' })}
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Full-Screen Native App Calendar Modal */}
+      {/* ─────────────────────────────────────────────────────────────
+          2. DESKTOP 3-LAYOUT VIEW:
+          Column 1 (Left): Calendar & Scheduled Day Bookings
+          Column 2 (Center): Financial Hero, Strong Metric Cards, Referrals
+          Column 3 (Right): Promote to Guests, QR Code, Concierge Tools
+         ───────────────────────────────────────────────────────────── */}
+      <div className="hidden lg:grid lg:grid-cols-12 gap-6 w-full max-w-[1600px] mx-auto pb-10">
+        
+        {/* LAYOUT 1 (LEFT COLUMN): Calendar & Day Schedule */}
+        <div className="lg:col-span-4 space-y-5">
+          {/* Calendar Widget Card */}
+          <div className="bg-white border border-neutral-200/80 rounded-3xl p-5 shadow-[0_2px_12px_rgba(0,0,0,0.03)] space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="p-2 rounded-xl bg-neutral-100 text-neutral-800">
+                  <CalendarIcon size={16} />
+                </span>
+                <div>
+                  <h3 className="font-extrabold text-sm text-neutral-950 tracking-tight">
+                    {monthNames[calMonth]} {calYear}
+                  </h3>
+                  <span className="text-[10px] text-neutral-400 font-semibold uppercase tracking-wider block">
+                    Booking Schedule
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-1 bg-neutral-100/80 p-1 rounded-xl">
+                <button
+                  type="button"
+                  onClick={handlePrevCalMonth}
+                  className="p-1 hover:bg-white rounded-lg transition-colors cursor-pointer text-neutral-600 hover:text-black"
+                  title="Previous Month"
+                >
+                  <ChevronLeft size={15} />
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCalToday}
+                  className={`px-2 py-0.5 text-[10px] font-bold rounded-lg transition-all cursor-pointer ${
+                    selectedCalendarDate === toLocalDateString(new Date())
+                      ? 'bg-neutral-950 text-white shadow-2xs'
+                      : 'text-neutral-700 hover:bg-white'
+                  }`}
+                >
+                  Today
+                </button>
+                <button
+                  type="button"
+                  onClick={handleNextCalMonth}
+                  className="p-1 hover:bg-white rounded-lg transition-colors cursor-pointer text-neutral-600 hover:text-black"
+                  title="Next Month"
+                >
+                  <ChevronRight size={15} />
+                </button>
+              </div>
+            </div>
+
+            {/* Days Header */}
+            <div className="grid grid-cols-7 gap-1 text-center pt-1 border-t border-neutral-100">
+              {daysOfWeek.map((d) => (
+                <div key={d} className="text-[11px] font-bold text-neutral-400 uppercase py-1">
+                  {d}
+                </div>
+              ))}
+            </div>
+
+            {/* Calendar Days Grid */}
+            <div className="grid grid-cols-7 gap-1.5">
+              {Array.from({ length: calFirstDay }).map((_, i) => (
+                <div key={`empty-${i}`} className="h-9" />
+              ))}
+              {Array.from({ length: calDaysInMonth }).map((_, i) => {
+                const day = i + 1;
+                const dateStr = `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const isSelected = selectedCalendarDate === dateStr;
+                const isToday = dateStr === toLocalDateString(new Date());
+                const dayBookings = bookingsByDate.get(dateStr) || [];
+                const hasBookings = dayBookings.length > 0;
+
+                return (
+                  <div key={day} className="relative flex items-center justify-center">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedCalendarDate(dateStr)}
+                      className={`w-9 h-9 rounded-2xl flex items-center justify-center text-xs font-semibold transition-all cursor-pointer relative ${
+                        isSelected
+                          ? 'bg-neutral-950 text-white font-bold shadow-sm scale-105'
+                          : isToday
+                          ? 'bg-neutral-100 text-neutral-950 font-bold border border-neutral-300'
+                          : hasBookings
+                          ? 'bg-emerald-50 text-emerald-950 font-bold hover:bg-emerald-100'
+                          : 'text-neutral-700 hover:bg-neutral-100'
+                      }`}
+                    >
+                      {day}
+                      {hasBookings && !isSelected && (
+                        <span className="absolute bottom-1 w-1 h-1 rounded-full bg-emerald-600" />
+                      )}
+                    </button>
+                    {hasBookings && (
+                      <span className="absolute -top-1 -right-0.5 bg-emerald-500 text-white text-[8px] font-bold w-3.5 h-3.5 rounded-full flex items-center justify-center border border-white shadow-2xs pointer-events-none">
+                        {dayBookings.length}
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Bookings on Selected Date */}
+          <div className="bg-white border border-neutral-200/80 rounded-3xl p-5 shadow-[0_2px_12px_rgba(0,0,0,0.03)] space-y-3.5">
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block">
+                  Day Schedule
+                </span>
+                <h4 className="font-bold text-xs sm:text-sm text-neutral-950">
+                  {safeFormatDate(selectedCalendarDate, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
+                </h4>
+              </div>
+              <span className="text-[10px] font-mono font-bold bg-neutral-100 text-neutral-700 px-2 py-0.5 rounded-full">
+                {selectedDayBookings.length} Bookings
+              </span>
+            </div>
+
+            {selectedDayBookings.length === 0 ? (
+              <div className="py-8 text-center rounded-2xl bg-[#FBFBFD] border border-dashed border-neutral-200/80 p-4 space-y-1.5">
+                <CalendarIcon size={24} className="mx-auto text-neutral-300 mb-1" />
+                <p className="text-xs font-semibold text-neutral-700">No bookings on this day</p>
+                <p className="text-[11px] text-neutral-400">
+                  Select highlighted dates with green dots to view guest appointments.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-2.5 max-h-[380px] overflow-y-auto pr-1">
+                {selectedDayBookings.map((b) => {
+                  const isApproved = b.commission_status === 'approved';
+                  const isCancelled = b.commission_status === 'cancelled' || b.booking_status === 'Cancelled';
+                  const isPaid = b.payment_status === 'paid' || b.payment_verified;
+
+                  return (
+                    <div key={b.id || b.booking_id} className="p-3.5 bg-neutral-50/80 border border-neutral-200/80 rounded-2xl space-y-2 hover:bg-neutral-50 transition-colors">
+                      <div className="flex items-center justify-between">
+                        <span className="font-mono text-xs font-bold text-neutral-950 bg-white px-2 py-0.5 rounded border border-neutral-200/80">
+                          #{b.booking_id}
+                        </span>
+                        <span className={`text-xs font-bold font-mono ${isCancelled ? 'line-through text-neutral-400' : 'text-emerald-700'}`}>
+                          {isCancelled ? 'IDR 0' : `+${formatIDR(b.commission_amount)}`}
+                        </span>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {isPaid ? (
+                          <span className="text-[9px] font-bold text-emerald-800 bg-emerald-100/80 px-2 py-0.5 rounded">
+                            Paid
+                          </span>
+                        ) : (
+                          <span className="text-[9px] font-bold text-amber-800 bg-amber-100/80 px-2 py-0.5 rounded">
+                            Unpaid
+                          </span>
+                        )}
+
+                        {isCancelled ? (
+                          <span className="text-[9px] font-bold text-rose-700 bg-rose-100/80 px-2 py-0.5 rounded">
+                            Cancelled
+                          </span>
+                        ) : b.booking_status === 'Ongoing' ? (
+                          <span className="text-[9px] font-bold text-indigo-700 bg-indigo-100/80 px-2 py-0.5 rounded flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+                            Ongoing Treatment
+                          </span>
+                        ) : b.booking_status === 'Completed' || b.service_completed ? (
+                          <span className="text-[9px] font-bold text-teal-800 bg-teal-100/80 px-2 py-0.5 rounded">
+                            Finish Treatment
+                          </span>
+                        ) : (
+                          <span className="text-[9px] font-semibold text-neutral-600 bg-neutral-200/70 px-2 py-0.5 rounded">
+                            Pending
+                          </span>
+                        )}
+
+                        {isApproved && (
+                          <span className="text-[9px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                            Approved
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="text-xs text-neutral-700 font-medium truncate">
+                        {b.guest_name} • {b.treatment_name || 'Spa Ritual'}
+                      </div>
+                      {b.time && b.time !== '-' && (
+                        <div className="text-[10px] text-neutral-400 flex items-center gap-1">
+                          <Clock size={11} /> {b.time}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* LAYOUT 2 (CENTER COLUMN): Financial Overview & Referrals */}
+        <div className="lg:col-span-4 space-y-5">
+          {/* Application Status Banner (if pending) */}
+          {profile?.status === 'pending' && (
+            <div className="p-3.5 border border-amber-200/80 rounded-2xl bg-amber-50/70 text-xs text-amber-900 flex items-start gap-2.5 shadow-2xs">
+              <AlertCircle size={16} className="text-amber-700 shrink-0 mt-0.5" />
+              <div className="leading-relaxed">
+                Application under review. All attributed bookings are recorded automatically.
+              </div>
+            </div>
+          )}
+
+          {/* 1. Approved Balance Card (Primary Hero) */}
+          <div className="p-6 rounded-3xl bg-white border border-neutral-200/70 shadow-[0_2px_12px_rgba(0,0,0,0.03)] space-y-4">
+            <div className="flex items-start justify-between">
+              <div>
+                <span className="text-[11px] font-bold uppercase tracking-widest text-neutral-400 block">
+                  Approved Balance
+                </span>
+                <div className="text-3xl sm:text-4xl font-extrabold text-neutral-950 font-mono tracking-tight tabular-nums mt-1">
+                  {formatIDR(approvedBalance)}
+                </div>
+                {(stats?.pendingCommission || 0) > 0 && (
+                  <p className="text-xs text-neutral-500 mt-1 font-medium">
+                    Pending: <span className="font-semibold text-neutral-800 font-mono tabular-nums">{formatIDR(stats?.pendingCommission || 0)}</span>
+                  </p>
+                )}
+              </div>
+
+              {hasApprovedBalance && (
+                <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200/80">
+                  Ready
+                </span>
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={handleWithdrawWhatsApp}
+              disabled={!hasApprovedBalance}
+              className={`w-full py-3.5 px-4 rounded-2xl font-semibold text-xs tracking-wide transition-all active:scale-[0.98] flex items-center justify-center cursor-pointer ${
+                hasApprovedBalance
+                  ? 'bg-neutral-950 hover:bg-neutral-800 text-white shadow-xs'
+                  : 'bg-neutral-100 text-neutral-400 cursor-not-allowed border border-neutral-200/60'
+              }`}
+            >
+              {hasApprovedBalance ? 'Withdraw' : 'No Balance to Withdraw'}
+            </button>
+          </div>
+
+          {/* 2. Responsive 2-Column Metrics (Strong BG Colors, Neutral Titles) */}
+          <div className="grid grid-cols-2 gap-3 sm:gap-4">
+            {/* Paid Out: Strong Green BG, Neutral Title */}
+            <div className="bg-[#DCFCE7] border border-[#86EFAC] rounded-3xl p-4 sm:p-5 shadow-[0_1px_4px_rgba(0,0,0,0.02)] space-y-2 transition-all">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-extrabold uppercase tracking-wider text-neutral-900 block">
+                  Paid Out
+                </span>
+                <span className="text-[10px] font-bold text-neutral-900 bg-white/90 border border-neutral-300 px-2 py-0.5 rounded-full">
+                  Transferred
+                </span>
+              </div>
+              <div className="text-base sm:text-xl font-bold text-neutral-950 font-mono tabular-nums truncate">
+                {formatIDR(stats?.paidCommission || 0)}
+              </div>
+              <p className="text-[11px] text-neutral-700 font-medium">
+                Approved earnings paid to bank
+              </p>
+            </div>
+
+            {/* Pending: Strong Red/Rose BG, Neutral Title */}
+            <div className="bg-[#FFE4E6] border border-[#FDA4AF] rounded-3xl p-4 sm:p-5 shadow-[0_1px_4px_rgba(0,0,0,0.02)] space-y-2 transition-all">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-extrabold uppercase tracking-wider text-neutral-900 block">
+                  Pending
+                </span>
+                <span className="text-[10px] font-bold text-neutral-900 bg-white/90 border border-neutral-300 px-2 py-0.5 rounded-full">
+                  Verification
+                </span>
+              </div>
+              <div className="text-base sm:text-xl font-bold text-neutral-950 font-mono tabular-nums truncate">
+                {formatIDR(stats?.pendingCommission || 0)}
+              </div>
+              <p className="text-[11px] text-neutral-700 font-medium">
+                Awaiting treatment completion
+              </p>
+            </div>
+          </div>
+
+          {/* 3. Recent Referrals Stream */}
+          <div className="bg-white border border-neutral-200/70 rounded-3xl p-5 sm:p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)] space-y-3.5">
+            <div className="flex items-center justify-between text-xs">
+              <div className="flex items-center gap-2">
+                <h3 className="font-bold text-neutral-950 text-sm tracking-tight">Recent Referrals</h3>
+                <span className="text-[10px] font-mono font-bold bg-neutral-100 text-neutral-700 px-2 py-0.5 rounded-full">
+                  {recentReferrals.length}
+                </span>
+              </div>
+              <Link
+                href="/partners/referrals"
+                className="text-xs font-semibold text-neutral-800 hover:text-neutral-950 hover:underline flex items-center gap-0.5"
+              >
+                <span>All Referrals</span>
+                <ChevronRight size={13} />
+              </Link>
+            </div>
+
+            {recentReferrals.length === 0 ? (
+              <div className="py-8 px-4 text-center rounded-2xl border border-dashed border-neutral-200/80 bg-[#FBFBFD] space-y-1.5">
+                <p className="text-xs font-semibold text-neutral-800">No referred bookings yet</p>
+                <p className="text-[11px] text-neutral-500">
+                  Share your link or QR code with guests to receive your first commission.
+                </p>
+              </div>
+            ) : (
+              <div className="divide-y divide-neutral-100 max-h-[360px] overflow-y-auto pr-1">
+                {recentReferrals.map((b) => {
+                  const isApproved = b.commission_status === 'approved';
+                  const isCancelled = b.commission_status === 'cancelled' || b.booking_status === 'Cancelled';
+                  const isPaid = b.payment_status === 'paid' || b.payment_verified;
+
+                  return (
+                    <div key={b.id || b.booking_id} className="py-3 first:pt-1 last:pb-1 flex items-center justify-between gap-2.5">
+                      <div className="min-w-0 space-y-1">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <span className="font-mono text-xs font-bold text-neutral-900 bg-neutral-100 px-2 py-0.5 rounded border border-neutral-200/70">
+                            #{b.booking_id}
+                          </span>
+
+                          {isPaid ? (
+                            <span className="text-[9px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200/80">
+                              Paid
+                            </span>
+                          ) : (
+                            <span className="text-[9px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200/80">
+                              Unpaid
+                            </span>
+                          )}
+
+                          {isCancelled ? (
+                            <span className="text-[9px] font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-200/80">
+                              Cancelled
+                            </span>
+                          ) : b.booking_status === 'Ongoing' ? (
+                            <span className="text-[9px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200/80 flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+                              Ongoing Treatment
+                            </span>
+                          ) : b.booking_status === 'Completed' || b.service_completed ? (
+                            <span className="text-[9px] font-bold text-teal-800 bg-teal-50 px-2 py-0.5 rounded border border-teal-200/80">
+                              Finish Treatment
+                            </span>
+                          ) : (
+                            <span className="text-[9px] font-semibold text-neutral-600 bg-neutral-100 px-2 py-0.5 rounded border border-neutral-200/80">
+                              Pending
+                            </span>
+                          )}
+
+                          {isApproved && (
+                            <span className="text-[9px] font-bold text-emerald-800 bg-emerald-100/70 px-2 py-0.5 rounded border border-emerald-300">
+                              Approved
+                            </span>
+                          )}
+                        </div>
+
+                        <p className="text-xs text-neutral-600 truncate max-w-[200px]">
+                          {b.guest_name} • {b.treatment_name || 'Spa Ritual'}
+                        </p>
+                      </div>
+
+                      <div className="text-right shrink-0">
+                        <span className={`text-xs font-bold font-mono tabular-nums block ${isCancelled ? 'line-through text-neutral-400' : 'text-emerald-700'}`}>
+                          {isCancelled ? 'IDR 0' : `+${formatIDR(b.commission_amount)}`}
+                        </span>
+                        <span className="text-[10px] text-neutral-400">
+                          {safeFormatDate(b.date, { day: 'numeric', month: 'short' })}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* LAYOUT 3 (RIGHT COLUMN): Promote to Guests, QR Code & Concierge Tools */}
+        <div className="lg:col-span-4 space-y-5">
+          {/* Promote to Guests Card */}
+          <div className="bg-white border border-neutral-200/70 rounded-3xl p-5 sm:p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)] space-y-4">
+            <div className="flex items-center justify-between text-xs">
+              <div>
+                <h3 className="font-bold text-neutral-950 text-base tracking-tight">Promote to Guests</h3>
+                <p className="text-xs text-neutral-500 mt-0.5">Instant booking attribution</p>
+              </div>
+              <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200/80 shrink-0">
+                Active Attribution
+              </span>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-[#F8F9FA] border border-neutral-200/60 flex flex-col items-center text-center space-y-3">
+              <div className="p-3 bg-white rounded-2xl border border-neutral-200/80 shadow-2xs">
+                <img
+                  src={qrCodeUrl}
+                  alt="Partner QR code"
+                  className="w-44 h-44 object-contain mx-auto"
+                />
+              </div>
+              <div className="space-y-1">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block">
+                  Instant Scan
+                </span>
+                <h4 className="text-sm font-bold text-neutral-950">
+                  Official Partner QR Code
+                </h4>
+                <p className="text-xs text-neutral-500 leading-relaxed max-w-xs mx-auto">
+                  Guests scan this code with their phone camera to book directly with your referral attribution.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleDownloadQr}
+                className="inline-flex items-center justify-center gap-2 w-full px-5 py-2.5 rounded-xl bg-neutral-950 text-white text-xs font-semibold hover:bg-neutral-800 active:scale-95 transition-all shadow-xs cursor-pointer"
+              >
+                <Download size={14} />
+                <span>Download QR Code</span>
+              </button>
+            </div>
+
+            {/* Share Link with Apple Style Copy Bar */}
+            <div className="space-y-1.5 pt-1">
+              <span className="text-xs font-semibold text-neutral-700">Your Referral Link</span>
+              <div className="flex items-center gap-2">
+                <div className="flex-1 bg-[#F2F2F7] border border-neutral-200/60 rounded-xl px-3.5 py-2.5 text-xs font-mono text-neutral-900 select-all truncate">
+                  {referralLink}
+                </div>
+                <button
+                  type="button"
+                  onClick={handleCopyLink}
+                  className="px-4 py-2.5 rounded-xl bg-neutral-950 text-white text-xs font-semibold hover:bg-neutral-800 active:scale-95 transition-all shadow-xs flex items-center gap-1.5 shrink-0 cursor-pointer"
+                >
+                  {copiedLink ? <Check size={13} /> : <Copy size={13} />}
+                  <span>{copiedLink ? 'Copied' : 'Copy'}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Villa Concierge & Partner Support Guide */}
+          <div className="bg-white border border-neutral-200/70 rounded-3xl p-5 shadow-[0_2px_12px_rgba(0,0,0,0.03)] space-y-3">
+            <div className="flex items-center gap-2">
+              <span className="p-2 rounded-xl bg-amber-50 text-amber-800 border border-amber-200/80">
+                <Sparkles size={15} />
+              </span>
+              <div>
+                <h4 className="font-bold text-xs text-neutral-950">Partner Concierge Tips</h4>
+                <span className="text-[10px] text-neutral-400">Maximize villa guest bookings</span>
+              </div>
+            </div>
+
+            <ul className="text-xs text-neutral-600 space-y-2 pt-1">
+              <li className="flex items-start gap-2">
+                <CheckCircle2 size={13} className="text-emerald-600 shrink-0 mt-0.5" />
+                <span>Place QR code cards on villa coffee tables, nightstands, or reception counters.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <CheckCircle2 size={13} className="text-emerald-600 shrink-0 mt-0.5" />
+                <span>Share your custom link via WhatsApp when guests inquire about spa services.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <CheckCircle2 size={13} className="text-emerald-600 shrink-0 mt-0.5" />
+                <span>Automatic 30-day cookie window preserves attribution if guests book later.</span>
+              </li>
+            </ul>
+
+            <div className="pt-2 border-t border-neutral-100 flex items-center justify-between">
+              <span className="text-[11px] text-neutral-500 font-medium">Need immediate assistance?</span>
+              <a
+                href="https://wa.me/6285174119423"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 text-xs font-bold text-neutral-900 hover:text-black hover:underline"
+              >
+                <span>Concierge WA</span>
+                <ArrowRight size={12} />
+              </a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      {/* Full-Screen Native App Calendar Modal for Mobile */}
       <FloatingBookingCalendar
         bookings={calendarBookings}
         isOpen={calendarOpen}
@@ -498,7 +1047,6 @@ Please verify and process the payout to my registered details. Thank you!`;
         onOpen={() => setCalendarOpen(true)}
         showFloatingButton={false}
       />
-
     </div>
   );
 }

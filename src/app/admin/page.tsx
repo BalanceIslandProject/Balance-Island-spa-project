@@ -12,6 +12,7 @@ import Link from 'next/link';
 import { useSpa, SelectedCampaignTreatment, Treatment, Product, TherapistFee, Campaign, sortCampaigns, DEFAULT_CAMPAIGNS } from '@/context/SpaContext';
 import { supabase } from '@/lib/supabase';
 import BookingManagement from '@/components/BookingManagement';
+import TherapickBookingManagement from '@/components/TherapickBookingManagement';
 import AffiliateManagement from '@/components/admin/AffiliateManagement';
 
 // Quick Preset Campaigns for Trip & Spa Deals
@@ -147,6 +148,9 @@ export default function AdminDashboard() {
             setActiveTab('treatment');
         }
         if (siteBrandFilter !== 'therapick' && (activeTab as string) === 'affiliates') {
+            setActiveTab('treatment');
+        }
+        if (activeTab === 'bookings' && siteBrandFilter !== 'central' && siteBrandFilter !== 'therapick') {
             setActiveTab('treatment');
         }
     }, [siteBrandFilter, activeTab]);
@@ -850,7 +854,7 @@ export default function AdminDashboard() {
                 <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
                     {[
                         ...(siteBrandFilter === 'central' ? [{ id: 'bookings', icon: Calendar, label: 'Booking' }, { id: 'invoice', icon: Ticket, label: 'Invoices' }] : []),
-                        ...(siteBrandFilter === 'therapick' ? [{ id: 'affiliates', icon: Share2, label: 'Affiliates' }] : []),
+                        ...(siteBrandFilter === 'therapick' ? [{ id: 'bookings', icon: Calendar, label: 'Bookings' }, { id: 'affiliates', icon: Share2, label: 'Affiliates' }] : []),
                         { id: 'campaign', icon: Megaphone, label: 'Campaign Card' },
                         { id: 'promo', icon: Ticket, label: 'Promo Codes' },
                         { id: 'treatment', icon: PlusCircle, label: 'Treatments' },
@@ -933,7 +937,7 @@ export default function AdminDashboard() {
                                     { id: 'campaign', icon: Megaphone, label: 'Campaign Card' },
                                     { id: 'promo', icon: Ticket, label: 'Promo Codes' },
                                 ]),
-                                ...(siteBrandFilter === 'therapick' ? [{ id: 'affiliates', icon: Share2, label: 'Affiliates' }] : []),
+                                ...(siteBrandFilter === 'therapick' ? [{ id: 'bookings', icon: Calendar, label: 'Bookings' }, { id: 'affiliates', icon: Share2, label: 'Affiliates' }] : []),
                                 { id: 'store', icon: Store, label: 'Store Products' },
                                 { id: 'calculator', icon: Calculator, label: 'Commission Calc' },
                             ].map((tab) => {
@@ -1944,9 +1948,14 @@ export default function AdminDashboard() {
                         </div>
                     )}
 
-                    {/* BOOKINGS TAB (CENTRAL ADMIN ONLY) */}
+                    {/* BOOKINGS TAB (CENTRAL ADMIN) */}
                     {activeTab === 'bookings' && siteBrandFilter === 'central' && (
                         <BookingManagement treatments={treatments} therapistFees={therapistFees} />
+                    )}
+
+                    {/* BOOKINGS TAB (THERAPICK ADMIN) */}
+                    {activeTab === 'bookings' && siteBrandFilter === 'therapick' && (
+                        <TherapickBookingManagement treatments={treatments} therapistFees={therapistFees} />
                     )}
 
                     {/* INVOICE TAB (CENTRAL ADMIN ONLY) */}
@@ -2040,6 +2049,12 @@ export default function AdminDashboard() {
                         { id: 'fees', icon: Settings, label: 'Fees' },
                         { id: 'bookings', icon: Calendar, label: 'Book' },
                         { id: 'list', icon: LayoutDashboard, label: 'Menu' },
+                        { id: 'more', icon: MoreHorizontal, label: 'More' }
+                    ] : siteBrandFilter === 'therapick' ? [
+                        { id: 'bookings', icon: Calendar, label: 'Book' },
+                        { id: 'affiliates', icon: Share2, label: 'Affils' },
+                        { id: 'treatment', icon: PlusCircle, label: 'Treats' },
+                        { id: 'fees', icon: Settings, label: 'Fees' },
                         { id: 'more', icon: MoreHorizontal, label: 'More' }
                     ] : [
                         { id: 'treatment', icon: PlusCircle, label: 'Treats' },

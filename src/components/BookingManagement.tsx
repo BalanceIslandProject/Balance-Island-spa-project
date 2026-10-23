@@ -120,16 +120,13 @@ export default function BookingManagement({
     fetchYearlyStats();
   }, []);
 
-  // Fetch bookings for the ENTIRE month + Realtime sync with affiliate commissions
+  // Fetch bookings for the ENTIRE month
   useEffect(() => {
     fetchMonthBookings();
 
     const channel = supabase
-      .channel('admin_bookings_realtime_sync')
+      .channel('admin_central_bookings_realtime_sync')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, () => {
-        fetchMonthBookings();
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'affiliate_commissions' }, () => {
         fetchMonthBookings();
       })
       .subscribe();
@@ -147,50 +144,27 @@ export default function BookingManagement({
       const startOfMonth = toLocalDateString(new Date(year, month, 1));
       const endOfMonth = toLocalDateString(new Date(year, month + 1, 0));
 
-      const [bookingsRes, commissionsRes] = await Promise.all([
-        supabase
-          .from('bookings')
-          .select('*')
-          .gte('booking_date', startOfMonth)
-          .lte('booking_date', endOfMonth)
-          .order('created_at', { ascending: true }),
-        supabase
-          .from('affiliate_commissions')
-          .select('*'),
-      ]);
+      const { data, error } = await supabase
+        .from('bookings')
+        .select('*')
+        .gte('booking_date', startOfMonth)
+        .lte('booking_date', endOfMonth)
+        .order('created_at', { ascending: true });
 
-      const data = bookingsRes.data || [];
-      const comms = commissionsRes.data || [];
+      if (error && error.code !== '42P01') {
+        console.error('Error fetching bookings', error);
+      }
 
-      // Map commissions by uppercase booking ID
-      const commMap = new Map<string, any>();
-      comms.forEach((c: any) => {
-        if (c.booking_id) {
-          commMap.set(String(c.booking_id).trim().toUpperCase(), c);
-        }
-      });
-
-      const merged: Booking[] = data.map((b: any) => {
-        const ref = String(b.reference_number || b.id || '').trim().toUpperCase();
-        const c = commMap.get(ref);
-        const isPaid = c?.payment_verified || b.payment_status === 'paid';
-
-        // Smart profit detection:
-        // If booking comes from an affiliate link and commission is approved, deduct commission automatically
-        let autoCalculatedProfit = Number(b.net_profit ?? (Number(b.revenue || 0) - Number(b.therapist_fee_total || 0)));
-        if (c && c.status === 'approved' && Number(c.commission_amount || 0) > 0) {
-          autoCalculatedProfit = Math.max(0, Number(b.revenue || 0) - Number(b.therapist_fee_total || 0) - Number(c.commission_amount || 0));
-        }
-
-        return {
+      // Filter: Central Admin bookings (exclude pure therapick domain bookings)
+      const centralBookings: Booking[] = (data || [])
+        .filter((b: any) => b.brand !== 'therapick')
+        .map((b: any) => ({
           ...b,
-          net_profit: autoCalculatedProfit,
-          commission: c,
-          payment_status: isPaid ? 'paid' : (b.payment_status || 'unpaid'),
-        };
-      });
+          net_profit: b.net_profit ?? (Number(b.revenue || 0) - Number(b.therapist_fee_total || 0)),
+          payment_status: b.payment_status || 'unpaid',
+        }));
 
-      setMonthBookings(merged);
+      setMonthBookings(centralBookings);
     } catch (e) {
       console.error(e);
     }
@@ -264,7 +238,8 @@ export default function BookingManagement({
       therapists_count: item.therapists,
       revenue: item.revenue,
       therapist_fee_total: item.fee,
-      net_profit: item.revenue - item.fee
+      net_profit: item.revenue - item.fee,
+      brand: 'elexoir'
     }));
 
     if (isEditing) {
@@ -330,105 +305,21 @@ export default function BookingManagement({
             }
         });
         
-        const isCommApproved = booking?.commission?.status === 'approved';
-        const commAmount = isCommApproved ? Number(booking.commission.commission_amount || 0) : 0;
         updates.therapist_fee_total = totalFee;
-        updates.net_profit = Math.max(0, (booking.revenue || 0) - totalFee - commAmount);
+        updates.net_profit = Math.max(0, (booking.revenue || 0) - totalFee);
       }
     }
 
     await supabase.from('bookings').update(updates).eq('id', id);
-
-    // Realtime Sync to affiliate_commissions
-    const ref = booking?.reference_number || booking?.id;
-    if (ref) {
-      if (newStatus === 'Cancelled') {
-        // If treatment cancel, partner sees cancel label and commission cancelled
-        await supabase
-          .from('affiliate_commissions')
-          .update({
-            status: 'cancelled',
-            updated_at: new Date().toISOString(),
-          })
-          .ilike('booking_id', ref);
-      } else if (newStatus === 'Completed') {
-        // Treatment finished
-        await supabase
-          .from('affiliate_commissions')
-          .update({
-            service_completed: true,
-            updated_at: new Date().toISOString(),
-          })
-          .ilike('booking_id', ref);
-      } else if (newStatus === 'Confirmed' || newStatus === 'Ongoing') {
-        if (booking?.commission?.status === 'cancelled') {
-          await supabase
-            .from('affiliate_commissions')
-            .update({
-              status: 'pending',
-              updated_at: new Date().toISOString(),
-            })
-            .ilike('booking_id', ref);
-        }
-      }
-    }
-
     fetchMonthBookings();
   };
 
   // Toggle Payment: Paid <-> Unpaid
   const handleTogglePayment = async (booking: Booking) => {
-    const isPaid = booking.payment_status === 'paid' || booking.commission?.payment_verified;
+    const isPaid = booking.payment_status === 'paid';
     const nextStatus = isPaid ? 'unpaid' : 'paid';
 
     await supabase.from('bookings').update({ payment_status: nextStatus }).eq('id', booking.id);
-
-    const ref = booking.reference_number || booking.id;
-    if (ref) {
-      await supabase
-        .from('affiliate_commissions')
-        .update({
-          payment_verified: nextStatus === 'paid',
-          updated_at: new Date().toISOString(),
-        })
-        .ilike('booking_id', ref);
-    }
-
-    fetchMonthBookings();
-  };
-
-  // Manual Commission Approval: Admin executes the job when treatment is done
-  const handleApproveCommission = async (booking: Booking) => {
-    const ref = booking.reference_number || booking.id;
-    if (!ref) return;
-
-    if (!confirm(`Approve affiliate commission for #${ref}? The commission will immediately become approved and withdrawable for the partner, and profit will automatically be recalculated.`)) {
-      return;
-    }
-
-    const commAmount = Number(booking.commission?.commission_amount || 0);
-    const rev = Number(booking.revenue || 0);
-    const fee = Number(booking.therapist_fee_total || 0);
-    const autoCalculatedProfit = Math.max(0, rev - fee - commAmount);
-
-    await supabase
-      .from('affiliate_commissions')
-      .update({
-        status: 'approved',
-        service_completed: true,
-        approved_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      })
-      .ilike('booking_id', ref);
-
-    // Smart logic: Automatically recalculate and store profit in bookings table
-    await supabase
-      .from('bookings')
-      .update({
-        net_profit: autoCalculatedProfit,
-      })
-      .eq('id', booking.id);
-
     fetchMonthBookings();
   };
 
@@ -831,16 +722,12 @@ export default function BookingManagement({
                     if (dur.includes("mins")) dur = dur.replace("mins", "Minutes");
                 }
 
-                const isPaid = booking.payment_status === 'paid' || booking.commission?.payment_verified;
+                const isPaid = booking.payment_status === 'paid';
                 const bookingStatus = booking.status || 'Confirmed';
                 const isCancelled = bookingStatus.toLowerCase() === 'cancelled';
                 const isOngoing = bookingStatus.toLowerCase() === 'ongoing';
                 const isCompleted = bookingStatus.toLowerCase() === 'completed';
                 const isConfirmed = bookingStatus.toLowerCase() === 'confirmed';
-                const hasCommission = Boolean(booking.commission);
-                const isCommissionApproved = booking.commission?.status === 'approved';
-                const isCommissionPending = booking.commission?.status === 'pending';
-                const isCommissionCancelled = booking.commission?.status === 'cancelled';
 
                 return (
                   <div key={booking.id} className={`bg-white border ${isCancelled ? 'border-red-200 bg-red-50/20' : 'border-black/10'} rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden space-y-4`}>
@@ -906,7 +793,7 @@ export default function BookingManagement({
                           <span className="text-[10px] font-extrabold tracking-wider uppercase px-2.5 py-0.5 rounded-full bg-teal-50 text-teal-800 border border-teal-200 shadow-2xs">
                             Finish Treatment
                           </span>
-                        ) : isConfirmed && !hasCommission ? (
+                        ) : isConfirmed ? (
                           <span className="text-[10px] font-extrabold tracking-wider uppercase px-2.5 py-0.5 rounded-full bg-sky-50 text-sky-800 border border-sky-200 shadow-2xs">
                             Confirmed
                           </span>
@@ -975,60 +862,13 @@ export default function BookingManagement({
                         <div>
                           <span className="block text-[9px] uppercase font-bold text-black/50 mb-1">Profit</span>
                           <span className="font-bold text-xs text-green-700">{formatCurrency(booking.net_profit)}</span>
-                          {isCommissionApproved && Number(booking.commission?.commission_amount || 0) > 0 && (
-                            <span className="block text-[9px] text-neutral-400 font-mono mt-0.5">
-                              (-{formatCurrency(booking.commission.commission_amount)} comm)
-                            </span>
-                          )}
                         </div>
                       </div>
                     </div>
 
-                    {/* Partner Referral Attribution Box (if referred by partner) */}
-                    {hasCommission && (
-                      <div className="ml-2 p-3 bg-amber-50/70 border border-amber-200/80 rounded-xl flex flex-wrap items-center justify-between gap-2.5">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-amber-900 bg-amber-100 px-2 py-0.5 rounded">
-                            Partner: #{booking.commission?.partner_code}
-                          </span>
-                          <span className="text-xs font-bold text-emerald-800 font-mono">
-                            Commission: +{formatCurrency(booking.commission?.commission_amount || 0)}
-                          </span>
-
-                          {/* Commission Status */}
-                          {isCommissionCancelled ? (
-                            <span className="text-[10px] font-bold text-rose-700 bg-rose-100 px-2 py-0.5 rounded">
-                              Commission Cancelled
-                            </span>
-                          ) : isCommissionApproved ? (
-                            <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded flex items-center gap-1">
-                              <CheckSquare size={12} className="text-emerald-700" /> Approved
-                            </span>
-                          ) : (
-                            <span className="text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded flex items-center gap-1">
-                              <Clock size={11} className="text-amber-700" /> Pending
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Manual Admin Approval Button */}
-                        {!isCommissionApproved && !isCommissionCancelled && (
-                          <button
-                            type="button"
-                            onClick={() => handleApproveCommission(booking)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-xs active:scale-95 cursor-pointer"
-                            title="Approve Commission Manually"
-                          >
-                            <CheckSquare size={13} />
-                            <span>Approve Commission</span>
-                          </button>
-                        )}
-                      </div>
-                    )}
-
                     {/* Bottom Action Bar: Checklist Workflow & Utility Actions */}
                     <div className="ml-2 pt-2.5 border-t border-black/5 flex flex-wrap items-center justify-between gap-2.5">
-                      {/* Operational Checklist Action Buttons: Only 3 way (Paid/Unpaid, Ongoing, Finish) for affiliate bookings */}
+                      {/* Operational Checklist Action Buttons */}
                       <div className="flex flex-wrap items-center gap-1.5">
                         {/* 1. Paid / Unpaid Checklist Button */}
                         <button
@@ -1049,38 +889,36 @@ export default function BookingManagement({
                           <span>{isPaid ? 'Paid' : 'Unpaid'}</span>
                         </button>
 
-                        {/* 2. Confirmed Checklist Button: ONLY if NOT coming from an affiliate link! */}
-                        {!hasCommission && (
-                          <button
-                            type="button"
-                            onClick={() => handleStatusChange(booking.id, isConfirmed ? 'Pending' : 'Confirmed')}
-                            className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all shadow-2xs active:scale-95 cursor-pointer border ${
-                              isConfirmed
-                                ? 'bg-sky-50 hover:bg-sky-100 text-sky-800 border-sky-300 ring-1 ring-sky-300/50'
-                                : 'bg-neutral-50 hover:bg-neutral-100 text-neutral-700 border-neutral-300'
-                            }`}
-                            title={isConfirmed ? "Booking Confirmed. Click to return to Pending" : "Click to mark Confirmed"}
-                          >
-                            {isConfirmed ? (
-                              <CheckSquare size={13} className="text-sky-700 shrink-0" />
-                            ) : (
-                              <Square size={13} className="text-neutral-400 shrink-0" />
-                            )}
-                            <span>Confirmed</span>
-                          </button>
-                        )}
+                        {/* 2. Confirmed Checklist Button */}
+                        <button
+                          type="button"
+                          onClick={() => handleStatusChange(booking.id, isConfirmed ? 'Pending' : 'Confirmed')}
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all shadow-2xs active:scale-95 cursor-pointer border ${
+                            isConfirmed
+                              ? 'bg-sky-50 hover:bg-sky-100 text-sky-800 border-sky-300 ring-1 ring-sky-300/50'
+                              : 'bg-neutral-50 hover:bg-neutral-100 text-neutral-700 border-neutral-300'
+                          }`}
+                          title={isConfirmed ? "Booking Confirmed. Click to return to Pending" : "Click to mark Confirmed"}
+                        >
+                          {isConfirmed ? (
+                            <CheckSquare size={13} className="text-sky-700 shrink-0" />
+                          ) : (
+                            <Square size={13} className="text-neutral-400 shrink-0" />
+                          )}
+                          <span>Confirmed</span>
+                        </button>
 
                         {/* 3. Ongoing Treatment Checklist Button */}
                         {!isCancelled && (
                           <button
                             type="button"
-                            onClick={() => handleStatusChange(booking.id, isOngoing ? (hasCommission ? 'Pending' : 'Confirmed') : 'Ongoing')}
+                            onClick={() => handleStatusChange(booking.id, isOngoing ? 'Confirmed' : 'Ongoing')}
                             className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all shadow-2xs active:scale-95 cursor-pointer border ${
                               isOngoing
                                 ? 'bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border-indigo-300 ring-1 ring-indigo-300/50'
                                 : 'bg-neutral-50 hover:bg-neutral-100 text-neutral-700 border-neutral-300'
                             }`}
-                            title={isOngoing ? "Ongoing Treatment active. Click to return to Pending" : "Click to mark Ongoing Treatment"}
+                            title={isOngoing ? "Ongoing Treatment active. Click to return to Confirmed" : "Click to mark Ongoing Treatment"}
                           >
                             {isOngoing ? (
                               <CheckSquare size={13} className="text-indigo-700 shrink-0" />
@@ -1098,7 +936,7 @@ export default function BookingManagement({
                         {!isCancelled && (
                           <button
                             type="button"
-                            onClick={() => handleStatusChange(booking.id, isCompleted ? (hasCommission ? 'Pending' : 'Confirmed') : 'Completed')}
+                            onClick={() => handleStatusChange(booking.id, isCompleted ? 'Confirmed' : 'Completed')}
                             className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all shadow-2xs active:scale-95 cursor-pointer border ${
                               isCompleted
                                 ? 'bg-teal-50 hover:bg-teal-100 text-teal-800 border-teal-300 ring-1 ring-teal-300/50'
@@ -1118,7 +956,7 @@ export default function BookingManagement({
                         {/* 5. Cancel Checklist Button */}
                         <button
                           type="button"
-                          onClick={() => handleStatusChange(booking.id, isCancelled ? (hasCommission ? 'Pending' : 'Confirmed') : 'Cancelled')}
+                          onClick={() => handleStatusChange(booking.id, isCancelled ? 'Confirmed' : 'Cancelled')}
                           className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all shadow-2xs active:scale-95 cursor-pointer border ${
                             isCancelled
                               ? 'bg-rose-100 hover:bg-rose-200 text-rose-800 border-rose-300'
