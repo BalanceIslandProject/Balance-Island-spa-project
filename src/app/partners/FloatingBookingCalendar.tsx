@@ -833,8 +833,8 @@ export default function FloatingBookingCalendar({
           {/* Backdrop dismiss for desktop */}
           <div className="hidden sm:block fixed inset-0" onClick={handleClose} />
 
-          {/* Full Screen App Container on Mobile, Centered Modal on Desktop */}
-          <div className="relative z-10 w-full sm:max-w-2xl bg-white h-[100dvh] sm:h-auto sm:max-h-[88vh] sm:rounded-3xl shadow-2xl border-0 sm:border sm:border-neutral-200/80 flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200">
+          {/* Full Screen App Container on Mobile, Spacious Responsive Modal on Desktop */}
+          <div className="relative z-10 w-full sm:max-w-4xl lg:max-w-5xl bg-white h-[100dvh] sm:h-[88vh] sm:rounded-3xl shadow-2xl border-0 sm:border sm:border-neutral-200/80 flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200">
             {renderCalendarContent()}
           </div>
         </div>

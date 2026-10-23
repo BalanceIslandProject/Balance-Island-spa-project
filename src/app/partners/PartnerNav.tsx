@@ -43,11 +43,7 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
   };
 
   const handleOpenCalendar = () => {
-    if (pathname === '/partners/dashboard') {
-      window.dispatchEvent(new CustomEvent('open-booking-calendar'));
-    } else {
-      router.push('/partners/dashboard?openCalendar=true');
-    }
+    router.push('/partners/calendar');
   };
 
   const handleCopyCode = (e: React.MouseEvent) => {
@@ -160,18 +156,21 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
                 );
               })}
 
-              {/* Interactive Calendar Trigger in Sidebar */}
-              <button
-                type="button"
-                onClick={handleOpenCalendar}
-                className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold text-neutral-700 hover:text-neutral-950 hover:bg-neutral-100/80 transition-all text-left group"
+              {/* Interactive Calendar View Link in Sidebar */}
+              <Link
+                href="/partners/calendar"
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold tracking-tight transition-all ${
+                  pathname === '/partners/calendar'
+                    ? 'bg-neutral-950 text-white shadow-xs'
+                    : 'text-neutral-600 hover:text-neutral-950 hover:bg-neutral-100/80'
+                }`}
               >
                 <div className="flex items-center gap-3">
-                  <CalendarDays size={16} strokeWidth={1.8} className="text-neutral-500 group-hover:text-neutral-900" />
+                  <CalendarDays size={16} strokeWidth={pathname === '/partners/calendar' ? 2.3 : 1.8} className={pathname === '/partners/calendar' ? 'text-white' : 'text-neutral-500'} />
                   <span>Calendar View</span>
                 </div>
-                <span className="w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-emerald-100" />
-              </button>
+                <span className={`w-2 h-2 rounded-full ${pathname === '/partners/calendar' ? 'bg-emerald-400 ring-2 ring-neutral-800' : 'bg-emerald-500 ring-2 ring-emerald-100'}`} />
+              </Link>
 
               {/* Quick Link Card in Sidebar */}
               {session.partner_code && (
@@ -458,17 +457,21 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
             </Link>
 
             {/* 3. Calendar (Center Highlight Tab) */}
-            <button
-              type="button"
-              onClick={handleOpenCalendar}
-              className="flex flex-col items-center justify-center min-h-[46px] py-1 text-neutral-900 active:scale-95 transition-all group"
+            {/* 3. Calendar (Center Highlight Tab) */}
+            <Link
+              href="/partners/calendar"
+              className={`flex flex-col items-center justify-center min-h-[46px] py-1 transition-all ${
+                pathname === '/partners/calendar' ? 'text-neutral-950 font-bold' : 'text-neutral-500 hover:text-neutral-800'
+              }`}
             >
-              <div className="relative p-1 rounded-lg bg-neutral-100 group-hover:bg-neutral-200 border border-neutral-200 transition-colors">
-                <CalendarDays size={16} strokeWidth={2.2} className="text-neutral-900" />
+              <div className={`relative p-1 rounded-lg border transition-colors ${
+                pathname === '/partners/calendar' ? 'bg-neutral-950 text-white border-neutral-950' : 'bg-neutral-100 border-neutral-200 text-neutral-900'
+              }`}>
+                <CalendarDays size={16} strokeWidth={2.2} />
                 <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 ring-1 ring-white" />
               </div>
-              <span className="text-[10px] mt-0.5 font-bold tracking-tight text-neutral-900">Calendar</span>
-            </button>
+              <span className="text-[10px] mt-0.5 font-bold tracking-tight">Calendar</span>
+            </Link>
 
             {/* 4. Ledger (Commissions) */}
             <Link

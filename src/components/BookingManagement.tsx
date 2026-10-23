@@ -2,33 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
-import { 
-  Calendar, 
-  Plus, 
-  Download, 
-  Trash2, 
-  Edit3, 
-  Save, 
-  X, 
-  ChevronLeft, 
-  ChevronRight, 
-  Calculator, 
-  FileText, 
-  CheckCircle2, 
-  XCircle,
-  PlayCircle,
-  CheckCheck,
-  CreditCard,
-  Clock,
-  Sparkles,
-  RefreshCw,
-  CheckSquare,
-  Square,
-  XSquare,
-  Copy,
-  Check,
-  User
-} from 'lucide-react';
+import { Calendar, Plus, Download, Trash2, Edit3, Save, X, ChevronLeft, ChevronRight, Calculator, FileText, CheckCircle2, XCircle } from 'lucide-react';
 import { Treatment, TherapistFee } from '@/context/SpaContext';
 
 export interface Booking {
@@ -47,8 +21,6 @@ export interface Booking {
   net_profit: number;
   status?: string;
   items?: any[];
-  payment_status?: string;
-  commission?: any;
 }
 
 const toLocalDateString = (date: Date) => {
@@ -56,12 +28,6 @@ const toLocalDateString = (date: Date) => {
   const m = String(date.getMonth() + 1).padStart(2, '0');
   const d = String(date.getDate()).padStart(2, '0');
   return `${y}-${m}-${d}`;
-};
-
-// Robust Couple Package Identifier: already priced for 2 persons
-export const isCouplePackage = (title?: string) => {
-  const t = (title || '').toLowerCase();
-  return /couple|honeymoon|duo|2\s*person|for\s*2/i.test(t);
 };
 
 export default function BookingManagement({ 
@@ -123,17 +89,6 @@ export default function BookingManagement({
   // Fetch bookings for the ENTIRE month
   useEffect(() => {
     fetchMonthBookings();
-
-    const channel = supabase
-      .channel('admin_central_bookings_realtime_sync')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, () => {
-        fetchMonthBookings();
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
   }, [currentDate.getFullYear(), currentDate.getMonth()]);
 
   const fetchMonthBookings = async () => {
@@ -150,21 +105,11 @@ export default function BookingManagement({
         .gte('booking_date', startOfMonth)
         .lte('booking_date', endOfMonth)
         .order('created_at', { ascending: true });
-
+      
       if (error && error.code !== '42P01') {
-        console.error('Error fetching bookings', error);
+        console.error("Error fetching bookings", error);
       }
-
-      // Filter: Central Admin bookings (exclude pure therapick domain bookings)
-      const centralBookings: Booking[] = (data || [])
-        .filter((b: any) => b.brand !== 'therapick')
-        .map((b: any) => ({
-          ...b,
-          net_profit: b.net_profit ?? (Number(b.revenue || 0) - Number(b.therapist_fee_total || 0)),
-          payment_status: b.payment_status || 'unpaid',
-        }));
-
-      setMonthBookings(centralBookings);
+      setMonthBookings(data || []);
     } catch (e) {
       console.error(e);
     }
@@ -181,7 +126,7 @@ export default function BookingManagement({
     
     if (field === 'treatment') {
       newItems[index].duration = '';
-      if (typeof value === 'string' && isCouplePackage(value)) {
+      if (typeof value === 'string' && value.toLowerCase().includes('couple')) {
         newItems[index].pax = 2;
         newItems[index].therapists = 2;
       }
@@ -196,9 +141,8 @@ export default function BookingManagement({
           const priceStr = opt.price.replace(/[^0-9]/g, '');
           const price = parseInt(priceStr || '0', 10);
           
-          const isCouple = isCouplePackage(item.treatment);
-          // CRITICAL: Couple package price is ALREADY FOR 2 PERSONS! Do NOT multiply it by 2.
-          item.revenue = isCouple ? (price * Math.max(1, Math.round(item.pax / 2))) : (price * item.pax);
+          const isCouple = item.treatment.toLowerCase().includes('couple');
+          item.revenue = isCouple ? (price * Math.max(1, Math.ceil(item.pax / 2))) : (price * item.pax);
         }
 
         if (t && therapistFees.length > 0) {
@@ -238,8 +182,7 @@ export default function BookingManagement({
       therapists_count: item.therapists,
       revenue: item.revenue,
       therapist_fee_total: item.fee,
-      net_profit: item.revenue - item.fee,
-      brand: 'elexoir'
+      net_profit: item.revenue - item.fee
     }));
 
     if (isEditing) {
@@ -272,14 +215,13 @@ export default function BookingManagement({
     fetchMonthBookings();
   };
 
-  // Change Treatment Status (Confirmed, Ongoing, Completed / Finish Treatment, Cancelled)
   const handleStatusChange = async (id: string, newStatus: string) => {
     if (!confirm(`Are you sure you want to mark this booking as ${newStatus}?`)) return;
 
     let updates: any = { status: newStatus };
-    const booking = monthBookings.find(b => b.id === id);
 
     if (newStatus === 'Confirmed' || newStatus === 'CONFIRMED') {
+      const booking = monthBookings.find(b => b.id === id);
       if (booking && booking.items && Array.isArray(booking.items) && booking.items.length > 0) {
         let totalFee = 0;
         booking.items.forEach((item: any) => {
@@ -299,27 +241,16 @@ export default function BookingManagement({
             
             if (feeObj) {
                 const baseFee = parseInt(feeObj.fee.replace(/[^0-9]/g, '') || '0', 10);
-                const isCouple = isCouplePackage(item.title);
-                const paxCount = isCouple ? 2 : (item.guests || 1);
-                totalFee += baseFee * paxCount;
+                totalFee += baseFee * (item.guests || 1);
             }
         });
         
         updates.therapist_fee_total = totalFee;
-        updates.net_profit = Math.max(0, (booking.revenue || 0) - totalFee);
+        updates.net_profit = booking.revenue - totalFee;
       }
     }
 
     await supabase.from('bookings').update(updates).eq('id', id);
-    fetchMonthBookings();
-  };
-
-  // Toggle Payment: Paid <-> Unpaid
-  const handleTogglePayment = async (booking: Booking) => {
-    const isPaid = booking.payment_status === 'paid';
-    const nextStatus = isPaid ? 'unpaid' : 'paid';
-
-    await supabase.from('bookings').update({ payment_status: nextStatus }).eq('id', booking.id);
     fetchMonthBookings();
   };
 
@@ -340,36 +271,6 @@ export default function BookingManagement({
 
   const handlePrevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
   const handleNextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
-
-  const [copiedId, setCopiedId] = useState<string | null>(null);
-  const handleCopy = (text: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedId(text);
-    setTimeout(() => setCopiedId(null), 2000);
-  };
-
-  const handlePrevDay = () => {
-    const d = new Date(selectedDate + 'T00:00:00');
-    d.setDate(d.getDate() - 1);
-    const isoString = toLocalDateString(d);
-    setSelectedDate(isoString);
-    setCurrentDate(new Date(d.getFullYear(), d.getMonth(), 1));
-  };
-
-  const handleNextDay = () => {
-    const d = new Date(selectedDate + 'T00:00:00');
-    d.setDate(d.getDate() + 1);
-    const isoString = toLocalDateString(d);
-    setSelectedDate(isoString);
-    setCurrentDate(new Date(d.getFullYear(), d.getMonth(), 1));
-  };
-
-  const handleToday = () => {
-    const today = new Date();
-    const isoString = toLocalDateString(today);
-    setSelectedDate(isoString);
-    setCurrentDate(new Date(today.getFullYear(), today.getMonth(), 1));
-  };
 
   const selectDate = (day: number) => {
     const d = new Date(year, month, day);
@@ -552,54 +453,14 @@ export default function BookingManagement({
 
         {/* Right Col: Bookings for Selected Date */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white border border-black/10 rounded-2xl p-3.5 sm:p-4 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-3 flex-wrap">
-              {/* Quick Date Jumper: Prev, Today, Next */}
-              <div className="flex items-center bg-black/5 p-1 rounded-xl">
-                <button 
-                  type="button" 
-                  onClick={handlePrevDay} 
-                  className="p-1.5 hover:bg-white rounded-lg transition-colors cursor-pointer text-neutral-700 hover:text-black"
-                  title="Previous Day"
-                >
-                  <ChevronLeft size={16} />
-                </button>
-                <button 
-                  type="button" 
-                  onClick={handleToday} 
-                  className={`px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                    selectedDate === toLocalDateString(new Date()) 
-                      ? 'bg-black text-white shadow-2xs' 
-                      : 'text-neutral-700 hover:bg-white'
-                  }`}
-                  title="Jump to Today"
-                >
-                  Today
-                </button>
-                <button 
-                  type="button" 
-                  onClick={handleNextDay} 
-                  className="p-1.5 hover:bg-white rounded-lg transition-colors cursor-pointer text-neutral-700 hover:text-black"
-                  title="Next Day"
-                >
-                  <ChevronRight size={16} />
-                </button>
-              </div>
-
-              <div>
-                <h3 className="text-base sm:text-lg font-bold text-neutral-950 flex items-center gap-2 flex-wrap">
-                  <span>Bookings for {new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}</span>
-                  <span className="text-xs font-bold font-mono bg-black/5 text-neutral-700 px-2.5 py-0.5 rounded-full border border-black/10">
-                    {dailyBookings.length} {dailyBookings.length === 1 ? 'Booking' : 'Bookings'}
-                  </span>
-                </h3>
-              </div>
-            </div>
-
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-bold">
+              Bookings for {new Date(selectedDate).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
+            </h3>
             {!showForm && (
               <button 
                 onClick={() => { resetForm(); setShowForm(true); }}
-                className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-xl text-xs sm:text-sm font-bold hover:bg-black/85 transition-all shadow-2xs active:scale-95 cursor-pointer shrink-0"
+                className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-black/80 transition-colors"
               >
                 <Plus size={16} /> Add Booking
               </button>
@@ -722,141 +583,45 @@ export default function BookingManagement({
                     if (dur.includes("mins")) dur = dur.replace("mins", "Minutes");
                 }
 
-                const isPaid = booking.payment_status === 'paid';
-                const bookingStatus = booking.status || 'Confirmed';
-                const isCancelled = bookingStatus.toLowerCase() === 'cancelled';
-                const isOngoing = bookingStatus.toLowerCase() === 'ongoing';
-                const isCompleted = bookingStatus.toLowerCase() === 'completed';
-                const isConfirmed = bookingStatus.toLowerCase() === 'confirmed';
-
                 return (
-                  <div key={booking.id} className={`bg-white border ${isCancelled ? 'border-red-200 bg-red-50/20' : 'border-black/10'} rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden space-y-4`}>
-                    <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${
-                      isCancelled ? 'bg-red-500' :
-                      isOngoing ? 'bg-indigo-500' :
-                      isCompleted ? 'bg-teal-500' :
-                      isConfirmed ? 'bg-sky-500' : 'bg-orange-400'
-                    }`}></div>
-
-                    {/* Top Row: Booking Ref with Copy, Pax, Payment Badge, Treatment Status Badge, Customer Name & Time */}
-                    <div className="flex flex-wrap items-center justify-between gap-2.5 ml-2">
-                      <div className="flex flex-wrap items-center gap-2">
-                        {booking.reference_number && (
-                          <div className="flex items-center gap-1">
-                            <span className="font-mono text-xs font-bold text-neutral-900 bg-black/5 px-2.5 py-1 rounded-lg border border-black/10">
-                              #{booking.reference_number}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => handleCopy(booking.reference_number!)}
-                              className="text-neutral-400 hover:text-neutral-800 transition-colors p-1 rounded hover:bg-black/5 cursor-pointer"
-                              title="Copy reference number"
-                            >
-                              {copiedId === booking.reference_number ? (
-                                <Check size={12} className="text-emerald-600" />
-                              ) : (
-                                <Copy size={12} />
-                              )}
-                            </button>
-                          </div>
-                        )}
-                        <span className="text-[10px] font-bold tracking-wider uppercase bg-black/5 text-neutral-700 px-2 py-0.5 rounded-md border border-black/10 whitespace-nowrap">
-                          {booking.pax} Pax
-                        </span>
-
-                        {/* Payment Status Label / Clickable Toggle */}
-                        <button
-                          type="button"
-                          onClick={() => handleTogglePayment(booking)}
-                          className={`text-[10px] font-extrabold tracking-wider uppercase px-2.5 py-0.5 rounded-full border transition-all cursor-pointer flex items-center gap-1 shadow-2xs ${
-                            isPaid
-                              ? 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100'
-                              : 'bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100'
-                          }`}
-                          title="Click to toggle Paid/Unpaid"
-                        >
-                          {isPaid ? <CheckSquare size={11} className="text-emerald-700" /> : <Square size={11} className="text-amber-600" />}
-                          <span>{isPaid ? 'Paid' : 'Unpaid'}</span>
-                        </button>
-
-                        {/* Treatment Status Label */}
-                        {isCancelled ? (
-                          <span className="text-[10px] font-extrabold tracking-wider uppercase px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200 shadow-2xs">
-                            Cancelled
+                  <div key={booking.id} className={`bg-white border ${booking.status?.toLowerCase() === 'cancelled' ? 'border-red-200' : 'border-black/10'} rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow relative group overflow-hidden`}>
+                    <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${booking.status?.toLowerCase() === 'cancelled' ? 'bg-red-500' : (booking.status?.toLowerCase() === 'pending' ? 'bg-orange-400' : 'bg-emerald-500')}`}></div>
+                    <div className={`flex flex-col md:flex-row md:items-center justify-between gap-4 ml-2 ${booking.status?.toLowerCase() === 'cancelled' ? 'opacity-50' : ''}`}>
+                      <div className="space-y-2 w-full md:w-1/3">
+                        <div className="flex flex-wrap items-center gap-2 mb-1">
+                          <span className="text-[10px] font-bold tracking-wider uppercase bg-black/10 px-2 py-0.5 rounded-full whitespace-nowrap">{booking.pax} Pax</span>
+                          <span className={`text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full whitespace-nowrap ${
+                              booking.status?.toLowerCase() === 'cancelled' ? 'bg-red-100 text-red-700' :
+                              (booking.status?.toLowerCase() === 'pending' ? 'bg-orange-100 text-orange-700' : 'bg-emerald-100 text-emerald-700')
+                          }`}>
+                              {booking.status || 'Confirmed'}
                           </span>
-                        ) : isOngoing ? (
-                          <span className="text-[10px] font-extrabold tracking-wider uppercase px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-800 border border-indigo-200 shadow-2xs flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-pulse" />
-                            Ongoing Treatment
-                          </span>
-                        ) : isCompleted ? (
-                          <span className="text-[10px] font-extrabold tracking-wider uppercase px-2.5 py-0.5 rounded-full bg-teal-50 text-teal-800 border border-teal-200 shadow-2xs">
-                            Finish Treatment
-                          </span>
-                        ) : isConfirmed ? (
-                          <span className="text-[10px] font-extrabold tracking-wider uppercase px-2.5 py-0.5 rounded-full bg-sky-50 text-sky-800 border border-sky-200 shadow-2xs">
-                            Confirmed
-                          </span>
-                        ) : (
-                          <span className="text-[10px] font-extrabold tracking-wider uppercase px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 shadow-2xs">
-                            Pending
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Customer name & time */}
-                      <div className="flex items-center gap-2 text-xs text-neutral-600">
-                        {booking.guest_name && (
-                          <span className="font-bold text-neutral-950 flex items-center gap-1">
-                            <User size={13} className="text-neutral-400" />
-                            {booking.guest_name}
-                          </span>
-                        )}
-                        {booking.time && booking.time !== '-' && (
-                          <span className="text-[11px] font-semibold text-neutral-700 bg-neutral-100 px-2 py-0.5 rounded border border-neutral-200/80 flex items-center gap-1">
-                            <Clock size={11} className="text-neutral-500" />
-                            {booking.time}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Middle Row: Treatment details & Financial Breakdown */}
-                    <div className={`flex flex-col md:flex-row md:items-center justify-between gap-4 ml-2 ${isCancelled ? 'opacity-60' : ''}`}>
-                      <div className="space-y-1 w-full md:w-1/3">
+                        </div>
+                        
                         {booking.items && booking.items.length > 0 ? (
-                          <div className="flex flex-col gap-1.5">
-                            {booking.items.map((it: any, idx: number) => {
-                              const isCouple = isCouplePackage(it.title);
-                              return (
-                                <div key={idx}>
-                                  <p className="font-bold text-sm leading-snug text-neutral-900">
-                                    {it.title} {isCouple ? '(Couple Package)' : it.guests > 1 ? `(x${it.guests})` : ''}
-                                  </p>
-                                  <p className="text-[10px] text-black/50 font-bold uppercase tracking-wider mt-0.5">
-                                    Duration: {it.duration}
-                                  </p>
-                                </div>
-                              );
-                            })}
-                          </div>
+                            <div className="flex flex-col gap-2">
+                                {booking.items.map((it: any, idx: number) => (
+                                    <div key={idx}>
+                                        <p className="font-bold text-sm leading-snug">{it.title} {it.guests > 1 ? `(x${it.guests})` : ''}</p>
+                                        <p className="text-[10px] text-black/50 font-bold uppercase tracking-wider mt-0.5">Duration: {it.duration}</p>
+                                    </div>
+                                ))}
+                            </div>
                         ) : (
-                          <div>
-                            <p className="font-bold text-sm leading-snug text-neutral-900">{title}</p>
-                            {dur && <p className="text-[10px] text-black/50 font-bold uppercase tracking-wider mt-0.5">Duration: {dur}</p>}
-                          </div>
+                            <div>
+                                <p className="font-bold text-sm leading-snug">{title}</p>
+                                {dur && <p className="text-[10px] text-black/50 font-bold uppercase tracking-wider mt-0.5">Duration: {dur}</p>}
+                            </div>
                         )}
                       </div>
-
+                      
                       <div className="flex-1 grid grid-cols-3 gap-2 text-center bg-black/5 rounded-xl p-3">
                         <div>
                           <span className="block text-[9px] uppercase font-bold text-black/50 mb-1">Revenue</span>
                           <span className="font-bold text-xs">{formatCurrency(booking.revenue)}</span>
                         </div>
                         <div>
-                          <span className="block text-[9px] uppercase font-bold text-black/50 mb-1">
-                            Fees ({booking.therapists_count} {booking.therapists_count > 1 ? 'Therapists' : 'Therapist'})
-                          </span>
+                          <span className="block text-[9px] uppercase font-bold text-black/50 mb-1">Fees ({booking.therapists_count} {booking.therapists_count > 1 ? 'Therapists' : 'Therapist'})</span>
                           <span className="font-bold text-xs text-orange-600">{formatCurrency(booking.therapist_fee_total)}</span>
                         </div>
                         <div>
@@ -864,176 +629,83 @@ export default function BookingManagement({
                           <span className="font-bold text-xs text-green-700">{formatCurrency(booking.net_profit)}</span>
                         </div>
                       </div>
-                    </div>
-
-                    {/* Bottom Action Bar: Checklist Workflow & Utility Actions */}
-                    <div className="ml-2 pt-2.5 border-t border-black/5 flex flex-wrap items-center justify-between gap-2.5">
-                      {/* Operational Checklist Action Buttons */}
-                      <div className="flex flex-wrap items-center gap-1.5">
-                        {/* 1. Paid / Unpaid Checklist Button */}
-                        <button
-                          type="button"
-                          onClick={() => handleTogglePayment(booking)}
-                          className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all shadow-2xs active:scale-95 cursor-pointer border ${
-                            isPaid
-                              ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-emerald-300'
-                              : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border-amber-300'
-                          }`}
-                          title={isPaid ? "Payment is Paid. Click to toggle to Unpaid" : "Payment is Unpaid. Click to mark as Paid"}
-                        >
-                          {isPaid ? (
-                            <CheckSquare size={13} className="text-emerald-700 shrink-0" />
-                          ) : (
-                            <Square size={13} className="text-amber-600 shrink-0" />
-                          )}
-                          <span>{isPaid ? 'Paid' : 'Unpaid'}</span>
-                        </button>
-
-                        {/* 2. Confirmed Checklist Button */}
-                        <button
-                          type="button"
-                          onClick={() => handleStatusChange(booking.id, isConfirmed ? 'Pending' : 'Confirmed')}
-                          className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all shadow-2xs active:scale-95 cursor-pointer border ${
-                            isConfirmed
-                              ? 'bg-sky-50 hover:bg-sky-100 text-sky-800 border-sky-300 ring-1 ring-sky-300/50'
-                              : 'bg-neutral-50 hover:bg-neutral-100 text-neutral-700 border-neutral-300'
-                          }`}
-                          title={isConfirmed ? "Booking Confirmed. Click to return to Pending" : "Click to mark Confirmed"}
-                        >
-                          {isConfirmed ? (
-                            <CheckSquare size={13} className="text-sky-700 shrink-0" />
-                          ) : (
-                            <Square size={13} className="text-neutral-400 shrink-0" />
-                          )}
-                          <span>Confirmed</span>
-                        </button>
-
-                        {/* 3. Ongoing Treatment Checklist Button */}
-                        {!isCancelled && (
-                          <button
-                            type="button"
-                            onClick={() => handleStatusChange(booking.id, isOngoing ? 'Confirmed' : 'Ongoing')}
-                            className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all shadow-2xs active:scale-95 cursor-pointer border ${
-                              isOngoing
-                                ? 'bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border-indigo-300 ring-1 ring-indigo-300/50'
-                                : 'bg-neutral-50 hover:bg-neutral-100 text-neutral-700 border-neutral-300'
-                            }`}
-                            title={isOngoing ? "Ongoing Treatment active. Click to return to Confirmed" : "Click to mark Ongoing Treatment"}
-                          >
-                            {isOngoing ? (
-                              <CheckSquare size={13} className="text-indigo-700 shrink-0" />
-                            ) : (
-                              <Square size={13} className="text-neutral-400 shrink-0" />
+                      
+                      <div className="flex flex-wrap md:flex-col gap-2 justify-end opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex gap-2">
+                            {booking.status?.toLowerCase() !== 'confirmed' && (
+                                <button 
+                                onClick={() => handleStatusChange(booking.id, 'Confirmed')}
+                                className="p-2 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors text-emerald-600"
+                                title="Mark as Confirmed"
+                                >
+                                <CheckCircle2 size={16} />
+                                </button>
                             )}
-                            <span className="flex items-center gap-1">
-                              {isOngoing && <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-pulse" />}
-                              Ongoing Treatment
-                            </span>
-                          </button>
-                        )}
-
-                        {/* 4. Finish Treatment Checklist Button */}
-                        {!isCancelled && (
-                          <button
-                            type="button"
-                            onClick={() => handleStatusChange(booking.id, isCompleted ? 'Confirmed' : 'Completed')}
-                            className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all shadow-2xs active:scale-95 cursor-pointer border ${
-                              isCompleted
-                                ? 'bg-teal-50 hover:bg-teal-100 text-teal-800 border-teal-300 ring-1 ring-teal-300/50'
-                                : 'bg-neutral-50 hover:bg-neutral-100 text-neutral-700 border-neutral-300'
-                            }`}
-                            title={isCompleted ? "Treatment Completed. Click to revert" : "Click to mark Finish Treatment"}
-                          >
-                            {isCompleted ? (
-                              <CheckSquare size={13} className="text-teal-700 shrink-0" />
-                            ) : (
-                              <Square size={13} className="text-neutral-400 shrink-0" />
+                            {booking.status?.toLowerCase() !== 'cancelled' && (
+                                <button 
+                                onClick={() => handleStatusChange(booking.id, 'Cancelled')}
+                                className="p-2 bg-orange-50 hover:bg-orange-100 rounded-lg transition-colors text-orange-600"
+                                title="Mark as Cancelled"
+                                >
+                                <XCircle size={16} />
+                                </button>
                             )}
-                            <span>Finish Treatment</span>
-                          </button>
-                        )}
-
-                        {/* 5. Cancel Checklist Button */}
-                        <button
-                          type="button"
-                          onClick={() => handleStatusChange(booking.id, isCancelled ? 'Confirmed' : 'Cancelled')}
-                          className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all shadow-2xs active:scale-95 cursor-pointer border ${
-                            isCancelled
-                              ? 'bg-rose-100 hover:bg-rose-200 text-rose-800 border-rose-300'
-                              : 'bg-neutral-50 hover:bg-rose-50 text-neutral-600 hover:text-rose-700 border-neutral-200 hover:border-rose-300'
-                          }`}
-                          title={isCancelled ? "Booking is Cancelled. Click to reinstate" : "Cancel this booking"}
-                        >
-                          {isCancelled ? (
-                            <XSquare size={13} className="text-rose-700 shrink-0" />
-                          ) : (
-                            <XCircle size={13} className="text-rose-500 shrink-0" />
-                          )}
-                          <span>{isCancelled ? 'Cancelled' : 'Cancel'}</span>
-                        </button>
-                      </div>
-
-                      {/* Utility Action Buttons: Invoice, Edit, Delete */}
-                      <div className="flex items-center gap-1.5">
-                        {booking.reference_number && (
-                          <button
-                            type="button"
+                        </div>
+                        <div className="flex gap-2">
+                            {booking.reference_number && (
+                                <button 
+                                onClick={() => {
+                                    let domain = window.location.origin;
+                                    if (booking.brand === 'bali') {
+                                        domain = 'https://www.homespaubud.com';
+                                    } else if (booking.brand === 'therapick') {
+                                        domain = 'https://www.booktherapick.com';
+                                    } else if (booking.brand === 'elexoir') {
+                                        domain = 'https://www.elexoirhomespaubud.com';
+                                    }
+                                    window.open(`${domain}/invoice/${booking.reference_number}`, '_blank');
+                                }}
+                                className="p-2 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors text-blue-600"
+                                title="View Invoice"
+                                >
+                                <FileText size={16} />
+                                </button>
+                            )}
+                            <button 
                             onClick={() => {
-                              let domain = window.location.origin;
-                              if (booking.brand === 'bali') {
-                                domain = 'https://www.homespaubud.com';
-                              } else if (booking.brand === 'therapick') {
-                                domain = 'https://www.booktherapick.com';
-                              } else if (booking.brand === 'elexoir') {
-                                domain = 'https://www.elexoirhomespaubud.com';
-                              }
-                              window.open(`${domain}/invoice/${booking.reference_number}`, '_blank');
+                                // Parse out the duration if it was saved like "Title (duration)"
+                                let editTitle = booking.treatment_name;
+                                let editDur = '';
+                                const editMatch = editTitle.match(/(.*) \((.*)\)$/);
+                                if (editMatch) {
+                                    editTitle = editMatch[1];
+                                    editDur = editMatch[2];
+                                }
+                                
+                                setFormItems([{
+                                id: Math.random().toString(36).substring(2, 9),
+                                treatment: editTitle,
+                                duration: editDur,
+                                pax: booking.pax,
+                                therapists: booking.therapists_count,
+                                revenue: booking.revenue,
+                                fee: booking.therapist_fee_total
+                                }]);
+                                setIsEditing(booking.id);
+                                setShowForm(true);
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
                             }}
-                            className="p-2 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors text-blue-700 cursor-pointer"
-                            title="View Invoice"
-                          >
-                            <FileText size={15} />
-                          </button>
-                        )}
-
-                        <button
-                          type="button"
-                          onClick={() => {
-                            let editTitle = booking.treatment_name;
-                            let editDur = '';
-                            const editMatch = editTitle.match(/(.*) \((.*)\)$/);
-                            if (editMatch) {
-                              editTitle = editMatch[1];
-                              editDur = editMatch[2];
-                            }
-
-                            setFormItems([{
-                              id: Math.random().toString(36).substring(2, 9),
-                              treatment: editTitle,
-                              duration: editDur,
-                              pax: booking.pax,
-                              therapists: booking.therapists_count,
-                              revenue: booking.revenue,
-                              fee: booking.therapist_fee_total
-                            }]);
-                            setIsEditing(booking.id);
-                            setShowForm(true);
-                            window.scrollTo({ top: 0, behavior: 'smooth' });
-                          }}
-                          className="p-2 bg-black/5 hover:bg-black/10 rounded-lg transition-colors text-neutral-800 cursor-pointer"
-                          title="Edit Booking"
-                        >
-                          <Edit3 size={15} />
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(booking.id)}
-                          className="p-2 bg-red-50 hover:bg-red-100 rounded-lg transition-colors text-red-600 cursor-pointer"
-                          title="Delete Booking"
-                        >
-                          <Trash2 size={15} />
-                        </button>
+                            className="p-2 bg-black/5 hover:bg-black/10 rounded-lg transition-colors text-black"
+                            >
+                            <Edit3 size={16} />
+                            </button>
+                            <button 
+                            onClick={() => handleDelete(booking.id)}
+                            className="p-2 bg-red-50 hover:bg-red-100 rounded-lg transition-colors text-red-600"
+                            >
+                            <Trash2 size={16} />
+                            </button>
+                        </div>
                       </div>
                     </div>
                   </div>
