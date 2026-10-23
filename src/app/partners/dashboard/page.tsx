@@ -12,7 +12,6 @@ import {
   Download,
   Clock,
   User,
-  MessageCircle,
   Sparkles,
   CheckCircle2,
   ArrowRight
@@ -58,9 +57,10 @@ export default function PartnerDashboardPage() {
   const [calendarBookings, setCalendarBookings] = useState<CalendarBooking[]>([]);
   const [loading, setLoading] = useState(true);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [copiedBookingId, setCopiedBookingId] = useState<string | null>(null);
   const [calendarOpen, setCalendarOpen] = useState(false);
 
-  // Desktop Calendar Widget State
+  // Desktop Calendar State
   const [calendarMonth, setCalendarMonth] = useState(new Date());
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<string>(() => toLocalDateString(new Date()));
 
@@ -158,6 +158,12 @@ export default function PartnerDashboardPage() {
     setTimeout(() => setCopiedLink(false), 2000);
   };
 
+  const handleCopyBooking = (id: string) => {
+    navigator.clipboard.writeText(id);
+    setCopiedBookingId(id);
+    setTimeout(() => setCopiedBookingId(null), 2000);
+  };
+
   const handleDownloadQr = async () => {
     try {
       const response = await fetch(qrCodeUrl);
@@ -231,7 +237,7 @@ Please verify and process the payout to my registered details. Thank you!`;
     return String(rawDate);
   };
 
-  // Desktop Calendar Computations
+  // Calendar Computations
   const calYear = calendarMonth.getFullYear();
   const calMonth = calendarMonth.getMonth();
   const calDaysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
@@ -283,10 +289,11 @@ Please verify and process the payout to my registered details. Thank you!`;
   const recentReferrals = calendarBookings.slice(0, 4);
 
   return (
-    <div className="w-full font-sans antialiased">
-      {/* ─────────────────────────────────────────────────────────────
-          1. MOBILE VIEW (UNTOUCHED: kept identical to previous layout)
-         ───────────────────────────────────────────────────────────── */}
+    <div className="w-full font-sans antialiased text-neutral-900">
+
+      {/* ═══════════════════════════════════════════════════════════════
+          MOBILE VIEW (UNTOUCHED: identical vertical structure)
+         ═══════════════════════════════════════════════════════════════ */}
       <div className="lg:hidden space-y-4 sm:space-y-5 w-full max-w-4xl mx-auto pb-8">
         {/* Application Status Banner (only if pending) */}
         {profile?.status === 'pending' && (
@@ -541,155 +548,160 @@ Please verify and process the payout to my registered details. Thank you!`;
         </div>
       </div>
 
-      {/* ─────────────────────────────────────────────────────────────
-          2. DESKTOP 3-LAYOUT VIEW:
-          Column 1 (Left): Calendar & Scheduled Day Bookings
-          Column 2 (Center): Financial Hero, Strong Metric Cards, Referrals
-          Column 3 (Right): Promote to Guests, QR Code, Concierge Tools
-         ───────────────────────────────────────────────────────────── */}
-      <div className="hidden lg:grid lg:grid-cols-12 gap-6 w-full max-w-[1600px] mx-auto pb-10">
+      {/* ═══════════════════════════════════════════════════════════════
+          DESKTOP 3-LAYOUT VIEW (APPLE DESIGN ARCHITECTURE)
+          - Left Column: Unified Interactive Calendar & Integrated Agenda
+          - Middle Column: Approved Balance Hero, Strong Metrics (NO Truncation!), Recent Referrals
+          - Right Column: Promote to Guests, QR Code, Concierge & Villa Guidance
+         ═══════════════════════════════════════════════════════════════ */}
+      <div className="hidden lg:grid lg:grid-cols-12 gap-6 w-full max-w-[1560px] mx-auto pb-12 items-start">
         
-        {/* LAYOUT 1 (LEFT COLUMN): Calendar & Day Schedule */}
-        <div className="lg:col-span-4 space-y-5">
-          {/* Calendar Widget Card */}
-          <div className="bg-white border border-neutral-200/80 rounded-3xl p-5 shadow-[0_2px_12px_rgba(0,0,0,0.03)] space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="p-2 rounded-xl bg-neutral-100 text-neutral-800">
-                  <CalendarIcon size={16} />
-                </span>
-                <div>
-                  <h3 className="font-extrabold text-sm text-neutral-950 tracking-tight">
-                    {monthNames[calMonth]} {calYear}
-                  </h3>
-                  <span className="text-[10px] text-neutral-400 font-semibold uppercase tracking-wider block">
-                    Booking Schedule
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-1 bg-neutral-100/80 p-1 rounded-xl">
-                <button
-                  type="button"
-                  onClick={handlePrevCalMonth}
-                  className="p-1 hover:bg-white rounded-lg transition-colors cursor-pointer text-neutral-600 hover:text-black"
-                  title="Previous Month"
-                >
-                  <ChevronLeft size={15} />
-                </button>
-                <button
-                  type="button"
-                  onClick={handleCalToday}
-                  className={`px-2 py-0.5 text-[10px] font-bold rounded-lg transition-all cursor-pointer ${
-                    selectedCalendarDate === toLocalDateString(new Date())
-                      ? 'bg-neutral-950 text-white shadow-2xs'
-                      : 'text-neutral-700 hover:bg-white'
-                  }`}
-                >
-                  Today
-                </button>
-                <button
-                  type="button"
-                  onClick={handleNextCalMonth}
-                  className="p-1 hover:bg-white rounded-lg transition-colors cursor-pointer text-neutral-600 hover:text-black"
-                  title="Next Month"
-                >
-                  <ChevronRight size={15} />
-                </button>
-              </div>
+        {/* ─────────────────────────────────────────────────────────────
+            LAYOUT 1 (LEFT COLUMN): Unified Apple Calendar & Day Schedule
+           ───────────────────────────────────────────────────────────── */}
+        <div className="lg:col-span-4 bg-white border border-neutral-200/70 rounded-3xl p-6 shadow-[0_2px_14px_rgba(0,0,0,0.03)] space-y-6">
+          {/* Calendar Header with Apple Pill Control */}
+          <div className="flex items-center justify-between pb-2 border-b border-neutral-100">
+            <div>
+              <span className="text-[10px] font-extrabold uppercase tracking-widest text-neutral-400 block">
+                Booking Schedule
+              </span>
+              <h3 className="font-extrabold text-base text-neutral-950 tracking-tight mt-0.5">
+                {monthNames[calMonth]} {calYear}
+              </h3>
             </div>
 
-            {/* Days Header */}
-            <div className="grid grid-cols-7 gap-1 text-center pt-1 border-t border-neutral-100">
-              {daysOfWeek.map((d) => (
-                <div key={d} className="text-[11px] font-bold text-neutral-400 uppercase py-1">
-                  {d}
-                </div>
-              ))}
-            </div>
-
-            {/* Calendar Days Grid */}
-            <div className="grid grid-cols-7 gap-1.5">
-              {Array.from({ length: calFirstDay }).map((_, i) => (
-                <div key={`empty-${i}`} className="h-9" />
-              ))}
-              {Array.from({ length: calDaysInMonth }).map((_, i) => {
-                const day = i + 1;
-                const dateStr = `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                const isSelected = selectedCalendarDate === dateStr;
-                const isToday = dateStr === toLocalDateString(new Date());
-                const dayBookings = bookingsByDate.get(dateStr) || [];
-                const hasBookings = dayBookings.length > 0;
-
-                return (
-                  <div key={day} className="relative flex items-center justify-center">
-                    <button
-                      type="button"
-                      onClick={() => setSelectedCalendarDate(dateStr)}
-                      className={`w-9 h-9 rounded-2xl flex items-center justify-center text-xs font-semibold transition-all cursor-pointer relative ${
-                        isSelected
-                          ? 'bg-neutral-950 text-white font-bold shadow-sm scale-105'
-                          : isToday
-                          ? 'bg-neutral-100 text-neutral-950 font-bold border border-neutral-300'
-                          : hasBookings
-                          ? 'bg-emerald-50 text-emerald-950 font-bold hover:bg-emerald-100'
-                          : 'text-neutral-700 hover:bg-neutral-100'
-                      }`}
-                    >
-                      {day}
-                      {hasBookings && !isSelected && (
-                        <span className="absolute bottom-1 w-1 h-1 rounded-full bg-emerald-600" />
-                      )}
-                    </button>
-                    {hasBookings && (
-                      <span className="absolute -top-1 -right-0.5 bg-emerald-500 text-white text-[8px] font-bold w-3.5 h-3.5 rounded-full flex items-center justify-center border border-white shadow-2xs pointer-events-none">
-                        {dayBookings.length}
-                      </span>
-                    )}
-                  </div>
-                );
-              })}
+            {/* Apple Segmented Pill Navigation */}
+            <div className="inline-flex items-center bg-neutral-100 p-1 rounded-full border border-neutral-200/60 shadow-2xs">
+              <button
+                type="button"
+                onClick={handlePrevCalMonth}
+                className="p-1 hover:bg-white rounded-full transition-all cursor-pointer text-neutral-600 hover:text-black"
+                title="Previous Month"
+              >
+                <ChevronLeft size={14} />
+              </button>
+              <button
+                type="button"
+                onClick={handleCalToday}
+                className={`px-2.5 py-0.5 text-[10px] font-bold rounded-full transition-all cursor-pointer ${
+                  selectedCalendarDate === toLocalDateString(new Date())
+                    ? 'bg-neutral-950 text-white shadow-2xs'
+                    : 'text-neutral-700 hover:bg-white'
+                }`}
+              >
+                Today
+              </button>
+              <button
+                type="button"
+                onClick={handleNextCalMonth}
+                className="p-1 hover:bg-white rounded-full transition-all cursor-pointer text-neutral-600 hover:text-black"
+                title="Next Month"
+              >
+                <ChevronRight size={14} />
+              </button>
             </div>
           </div>
 
-          {/* Bookings on Selected Date */}
-          <div className="bg-white border border-neutral-200/80 rounded-3xl p-5 shadow-[0_2px_12px_rgba(0,0,0,0.03)] space-y-3.5">
+          {/* Days of Week Row */}
+          <div className="grid grid-cols-7 text-center">
+            {daysOfWeek.map((d) => (
+              <span key={d} className="text-[11px] font-bold text-neutral-400 uppercase py-1 tracking-wider">
+                {d}
+              </span>
+            ))}
+          </div>
+
+          {/* Days Grid */}
+          <div className="grid grid-cols-7 gap-y-2 gap-x-1">
+            {Array.from({ length: calFirstDay }).map((_, i) => (
+              <div key={`empty-${i}`} className="h-9" />
+            ))}
+            {Array.from({ length: calDaysInMonth }).map((_, i) => {
+              const day = i + 1;
+              const dateStr = `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+              const isSelected = selectedCalendarDate === dateStr;
+              const isToday = dateStr === toLocalDateString(new Date());
+              const dayBookings = bookingsByDate.get(dateStr) || [];
+              const hasBookings = dayBookings.length > 0;
+
+              return (
+                <div key={day} className="relative flex items-center justify-center">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedCalendarDate(dateStr)}
+                    className={`w-9 h-9 rounded-full flex flex-col items-center justify-center text-xs font-semibold transition-all cursor-pointer relative ${
+                      isSelected
+                        ? 'bg-neutral-950 text-white font-bold shadow-sm scale-105'
+                        : isToday
+                        ? 'bg-neutral-100 text-neutral-950 font-bold border border-neutral-300'
+                        : hasBookings
+                        ? 'bg-emerald-50 text-emerald-950 font-bold hover:bg-emerald-100 border border-emerald-200/60'
+                        : 'text-neutral-700 hover:bg-neutral-100'
+                    }`}
+                  >
+                    <span>{day}</span>
+                    {hasBookings && !isSelected && (
+                      <span className="w-1 h-1 rounded-full bg-emerald-600 mt-0.5" />
+                    )}
+                  </button>
+                  {hasBookings && (
+                    <span className="absolute -top-1 -right-0.5 bg-emerald-500 text-white text-[8px] font-bold w-3.5 h-3.5 rounded-full flex items-center justify-center border border-white shadow-2xs pointer-events-none">
+                      {dayBookings.length}
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Seamless Integrated Day Schedule (Apple Grouped Agenda) */}
+          <div className="pt-4 border-t border-neutral-100 space-y-3">
             <div className="flex items-center justify-between">
               <div>
                 <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400 block">
                   Day Schedule
                 </span>
-                <h4 className="font-bold text-xs sm:text-sm text-neutral-950">
+                <h4 className="font-bold text-xs text-neutral-950">
                   {safeFormatDate(selectedCalendarDate, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
                 </h4>
               </div>
-              <span className="text-[10px] font-mono font-bold bg-neutral-100 text-neutral-700 px-2 py-0.5 rounded-full">
+              <span className="text-[10px] font-mono font-bold bg-neutral-100 text-neutral-700 px-2.5 py-0.5 rounded-full border border-neutral-200/70">
                 {selectedDayBookings.length} Bookings
               </span>
             </div>
 
             {selectedDayBookings.length === 0 ? (
-              <div className="py-8 text-center rounded-2xl bg-[#FBFBFD] border border-dashed border-neutral-200/80 p-4 space-y-1.5">
-                <CalendarIcon size={24} className="mx-auto text-neutral-300 mb-1" />
-                <p className="text-xs font-semibold text-neutral-700">No bookings on this day</p>
+              <div className="py-7 text-center rounded-2xl bg-[#FBFBFD] border border-dashed border-neutral-200/80 p-4 space-y-1">
+                <CalendarIcon size={20} className="mx-auto text-neutral-300 mb-1" />
+                <p className="text-xs font-semibold text-neutral-700">No bookings for this date</p>
                 <p className="text-[11px] text-neutral-400">
-                  Select highlighted dates with green dots to view guest appointments.
+                  Click highlighted dates with dots to inspect appointments.
                 </p>
               </div>
             ) : (
-              <div className="space-y-2.5 max-h-[380px] overflow-y-auto pr-1">
+              <div className="space-y-2.5 max-h-[340px] overflow-y-auto pr-1">
                 {selectedDayBookings.map((b) => {
                   const isApproved = b.commission_status === 'approved';
                   const isCancelled = b.commission_status === 'cancelled' || b.booking_status === 'Cancelled';
                   const isPaid = b.payment_status === 'paid' || b.payment_verified;
 
                   return (
-                    <div key={b.id || b.booking_id} className="p-3.5 bg-neutral-50/80 border border-neutral-200/80 rounded-2xl space-y-2 hover:bg-neutral-50 transition-colors">
+                    <div 
+                      key={b.id || b.booking_id} 
+                      className="p-3.5 bg-[#F9FAFB] border border-neutral-200/70 rounded-2xl space-y-2 hover:border-neutral-300 transition-colors"
+                    >
                       <div className="flex items-center justify-between">
-                        <span className="font-mono text-xs font-bold text-neutral-950 bg-white px-2 py-0.5 rounded border border-neutral-200/80">
-                          #{b.booking_id}
-                        </span>
-                        <span className={`text-xs font-bold font-mono ${isCancelled ? 'line-through text-neutral-400' : 'text-emerald-700'}`}>
+                        <button
+                          type="button"
+                          onClick={() => handleCopyBooking(b.booking_id)}
+                          className="font-mono text-xs font-bold text-neutral-950 bg-white px-2 py-0.5 rounded-md border border-neutral-200/80 hover:bg-neutral-100 transition-colors inline-flex items-center gap-1 cursor-pointer"
+                          title="Copy Booking ID"
+                        >
+                          <span>#{b.booking_id}</span>
+                          {copiedBookingId === b.booking_id ? <Check size={11} className="text-emerald-600" /> : <Copy size={11} className="text-neutral-400" />}
+                        </button>
+                        <span className={`text-xs font-bold font-mono tabular-nums ${isCancelled ? 'line-through text-neutral-400' : 'text-emerald-700'}`}>
                           {isCancelled ? 'IDR 0' : `+${formatIDR(b.commission_amount)}`}
                         </span>
                       </div>
@@ -731,7 +743,7 @@ Please verify and process the payout to my registered details. Thank you!`;
                         )}
                       </div>
 
-                      <div className="text-xs text-neutral-700 font-medium truncate">
+                      <div className="text-xs text-neutral-800 font-medium truncate">
                         {b.guest_name} • {b.treatment_name || 'Spa Ritual'}
                       </div>
                       {b.time && b.time !== '-' && (
@@ -747,7 +759,9 @@ Please verify and process the payout to my registered details. Thank you!`;
           </div>
         </div>
 
-        {/* LAYOUT 2 (CENTER COLUMN): Financial Overview & Referrals */}
+        {/* ─────────────────────────────────────────────────────────────
+            LAYOUT 2 (CENTER COLUMN): Financial Overview & Referrals
+           ───────────────────────────────────────────────────────────── */}
         <div className="lg:col-span-4 space-y-5">
           {/* Application Status Banner (if pending) */}
           {profile?.status === 'pending' && (
@@ -759,8 +773,8 @@ Please verify and process the payout to my registered details. Thank you!`;
             </div>
           )}
 
-          {/* 1. Approved Balance Card (Primary Hero) */}
-          <div className="p-6 rounded-3xl bg-white border border-neutral-200/70 shadow-[0_2px_12px_rgba(0,0,0,0.03)] space-y-4">
+          {/* 1. Approved Balance Card (Primary Apple Hero) */}
+          <div className="p-6 rounded-3xl bg-white border border-neutral-200/70 shadow-[0_2px_14px_rgba(0,0,0,0.03)] space-y-4">
             <div className="flex items-start justify-between">
               <div>
                 <span className="text-[11px] font-bold uppercase tracking-widest text-neutral-400 block">
@@ -797,19 +811,19 @@ Please verify and process the payout to my registered details. Thank you!`;
             </button>
           </div>
 
-          {/* 2. Responsive 2-Column Metrics (Strong BG Colors, Neutral Titles) */}
-          <div className="grid grid-cols-2 gap-3 sm:gap-4">
-            {/* Paid Out: Strong Green BG, Neutral Title */}
-            <div className="bg-[#DCFCE7] border border-[#86EFAC] rounded-3xl p-4 sm:p-5 shadow-[0_1px_4px_rgba(0,0,0,0.02)] space-y-2 transition-all">
+          {/* 2. Paid Out & Pending Cards: Stacked Full-Width to PREVENT Any Truncation! */}
+          <div className="space-y-3">
+            {/* Paid Out Card: Strong Green Background, Neutral Dark Title */}
+            <div className="bg-[#DCFCE7] border border-[#86EFAC] rounded-2xl p-4 shadow-[0_1px_4px_rgba(0,0,0,0.02)] space-y-1.5 transition-all">
               <div className="flex items-center justify-between">
                 <span className="text-[11px] font-extrabold uppercase tracking-wider text-neutral-900 block">
                   Paid Out
                 </span>
-                <span className="text-[10px] font-bold text-neutral-900 bg-white/90 border border-neutral-300 px-2 py-0.5 rounded-full">
+                <span className="text-[10px] font-bold text-neutral-900 bg-white/90 border border-neutral-300 px-2 py-0.5 rounded-full shadow-2xs">
                   Transferred
                 </span>
               </div>
-              <div className="text-base sm:text-xl font-bold text-neutral-950 font-mono tabular-nums truncate">
+              <div className="text-xl sm:text-2xl font-extrabold text-neutral-950 font-mono tabular-nums">
                 {formatIDR(stats?.paidCommission || 0)}
               </div>
               <p className="text-[11px] text-neutral-700 font-medium">
@@ -817,17 +831,18 @@ Please verify and process the payout to my registered details. Thank you!`;
               </p>
             </div>
 
-            {/* Pending: Strong Red/Rose BG, Neutral Title */}
-            <div className="bg-[#FFE4E6] border border-[#FDA4AF] rounded-3xl p-4 sm:p-5 shadow-[0_1px_4px_rgba(0,0,0,0.02)] space-y-2 transition-all">
+            {/* Pending Card: Strong Red/Rose Background, Neutral Dark Title */}
+            <div className="bg-[#FFE4E6] border border-[#FDA4AF] rounded-2xl p-4 shadow-[0_1px_4px_rgba(0,0,0,0.02)] space-y-1.5 transition-all">
               <div className="flex items-center justify-between">
                 <span className="text-[11px] font-extrabold uppercase tracking-wider text-neutral-900 block">
                   Pending
                 </span>
-                <span className="text-[10px] font-bold text-neutral-900 bg-white/90 border border-neutral-300 px-2 py-0.5 rounded-full">
+                <span className="text-[10px] font-bold text-neutral-900 bg-white/90 border border-neutral-300 px-2 py-0.5 rounded-full shadow-2xs">
                   Verification
                 </span>
               </div>
-              <div className="text-base sm:text-xl font-bold text-neutral-950 font-mono tabular-nums truncate">
+              {/* Un-truncated, full width currency */}
+              <div className="text-xl sm:text-2xl font-extrabold text-neutral-950 font-mono tabular-nums">
                 {formatIDR(stats?.pendingCommission || 0)}
               </div>
               <p className="text-[11px] text-neutral-700 font-medium">
@@ -836,8 +851,8 @@ Please verify and process the payout to my registered details. Thank you!`;
             </div>
           </div>
 
-          {/* 3. Recent Referrals Stream */}
-          <div className="bg-white border border-neutral-200/70 rounded-3xl p-5 sm:p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)] space-y-3.5">
+          {/* 3. Recent Referrals Stream (Apple Grouped List) */}
+          <div className="bg-white border border-neutral-200/70 rounded-3xl p-5 shadow-[0_2px_14px_rgba(0,0,0,0.03)] space-y-3.5">
             <div className="flex items-center justify-between text-xs">
               <div className="flex items-center gap-2">
                 <h3 className="font-bold text-neutral-950 text-sm tracking-tight">Recent Referrals</h3>
@@ -855,21 +870,21 @@ Please verify and process the payout to my registered details. Thank you!`;
             </div>
 
             {recentReferrals.length === 0 ? (
-              <div className="py-8 px-4 text-center rounded-2xl border border-dashed border-neutral-200/80 bg-[#FBFBFD] space-y-1.5">
+              <div className="py-7 px-4 text-center rounded-2xl border border-dashed border-neutral-200/80 bg-[#FBFBFD] space-y-1">
                 <p className="text-xs font-semibold text-neutral-800">No referred bookings yet</p>
                 <p className="text-[11px] text-neutral-500">
                   Share your link or QR code with guests to receive your first commission.
                 </p>
               </div>
             ) : (
-              <div className="divide-y divide-neutral-100 max-h-[360px] overflow-y-auto pr-1">
+              <div className="divide-y divide-neutral-100 max-h-[300px] overflow-y-auto pr-1">
                 {recentReferrals.map((b) => {
                   const isApproved = b.commission_status === 'approved';
                   const isCancelled = b.commission_status === 'cancelled' || b.booking_status === 'Cancelled';
                   const isPaid = b.payment_status === 'paid' || b.payment_verified;
 
                   return (
-                    <div key={b.id || b.booking_id} className="py-3 first:pt-1 last:pb-1 flex items-center justify-between gap-2.5">
+                    <div key={b.id || b.booking_id} className="py-2.5 first:pt-1 last:pb-1 flex items-center justify-between gap-2.5">
                       <div className="min-w-0 space-y-1">
                         <div className="flex flex-wrap items-center gap-1.5">
                           <span className="font-mono text-xs font-bold text-neutral-900 bg-neutral-100 px-2 py-0.5 rounded border border-neutral-200/70">
@@ -893,11 +908,11 @@ Please verify and process the payout to my registered details. Thank you!`;
                           ) : b.booking_status === 'Ongoing' ? (
                             <span className="text-[9px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200/80 flex items-center gap-1">
                               <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
-                              Ongoing Treatment
+                              Ongoing
                             </span>
                           ) : b.booking_status === 'Completed' || b.service_completed ? (
                             <span className="text-[9px] font-bold text-teal-800 bg-teal-50 px-2 py-0.5 rounded border border-teal-200/80">
-                              Finish Treatment
+                              Finished
                             </span>
                           ) : (
                             <span className="text-[9px] font-semibold text-neutral-600 bg-neutral-100 px-2 py-0.5 rounded border border-neutral-200/80">
@@ -912,7 +927,7 @@ Please verify and process the payout to my registered details. Thank you!`;
                           )}
                         </div>
 
-                        <p className="text-xs text-neutral-600 truncate max-w-[200px]">
+                        <p className="text-xs text-neutral-600 truncate max-w-[190px]">
                           {b.guest_name} • {b.treatment_name || 'Spa Ritual'}
                         </p>
                       </div>
@@ -933,13 +948,15 @@ Please verify and process the payout to my registered details. Thank you!`;
           </div>
         </div>
 
-        {/* LAYOUT 3 (RIGHT COLUMN): Promote to Guests, QR Code & Concierge Tools */}
+        {/* ─────────────────────────────────────────────────────────────
+            LAYOUT 3 (RIGHT COLUMN): Promote to Guests, QR & Concierge
+           ───────────────────────────────────────────────────────────── */}
         <div className="lg:col-span-4 space-y-5">
           {/* Promote to Guests Card */}
-          <div className="bg-white border border-neutral-200/70 rounded-3xl p-5 sm:p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)] space-y-4">
+          <div className="bg-white border border-neutral-200/70 rounded-3xl p-6 shadow-[0_2px_14px_rgba(0,0,0,0.03)] space-y-4">
             <div className="flex items-center justify-between text-xs">
               <div>
-                <h3 className="font-bold text-neutral-950 text-base tracking-tight">Promote to Guests</h3>
+                <h3 className="font-extrabold text-neutral-950 text-base tracking-tight">Promote to Guests</h3>
                 <p className="text-xs text-neutral-500 mt-0.5">Instant booking attribution</p>
               </div>
               <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200/80 shrink-0">
@@ -947,12 +964,13 @@ Please verify and process the payout to my registered details. Thank you!`;
               </span>
             </div>
 
+            {/* Centered QR Presentation */}
             <div className="p-4 rounded-2xl bg-[#F8F9FA] border border-neutral-200/60 flex flex-col items-center text-center space-y-3">
               <div className="p-3 bg-white rounded-2xl border border-neutral-200/80 shadow-2xs">
                 <img
                   src={qrCodeUrl}
                   alt="Partner QR code"
-                  className="w-44 h-44 object-contain mx-auto"
+                  className="w-36 h-36 object-contain mx-auto"
                 />
               </div>
               <div className="space-y-1">
@@ -976,9 +994,12 @@ Please verify and process the payout to my registered details. Thank you!`;
               </button>
             </div>
 
-            {/* Share Link with Apple Style Copy Bar */}
+            {/* Apple Style Referral Link Box */}
             <div className="space-y-1.5 pt-1">
-              <span className="text-xs font-semibold text-neutral-700">Your Referral Link</span>
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-semibold text-neutral-700">Your Referral Link</span>
+                <span className="text-[10px] font-semibold text-neutral-400">30-day tracking</span>
+              </div>
               <div className="flex items-center gap-2">
                 <div className="flex-1 bg-[#F2F2F7] border border-neutral-200/60 rounded-xl px-3.5 py-2.5 text-xs font-mono text-neutral-900 select-all truncate">
                   {referralLink}
@@ -996,7 +1017,7 @@ Please verify and process the payout to my registered details. Thank you!`;
           </div>
 
           {/* Villa Concierge & Partner Support Guide */}
-          <div className="bg-white border border-neutral-200/70 rounded-3xl p-5 shadow-[0_2px_12px_rgba(0,0,0,0.03)] space-y-3">
+          <div className="bg-white border border-neutral-200/70 rounded-3xl p-5 shadow-[0_2px_14px_rgba(0,0,0,0.03)] space-y-3">
             <div className="flex items-center gap-2">
               <span className="p-2 rounded-xl bg-amber-50 text-amber-800 border border-amber-200/80">
                 <Sparkles size={15} />
@@ -1014,7 +1035,7 @@ Please verify and process the payout to my registered details. Thank you!`;
               </li>
               <li className="flex items-start gap-2">
                 <CheckCircle2 size={13} className="text-emerald-600 shrink-0 mt-0.5" />
-                <span>Share your custom link via WhatsApp when guests inquire about spa services.</span>
+                <span>Share your custom link via WhatsApp when guests inquire about spa rituals.</span>
               </li>
               <li className="flex items-start gap-2">
                 <CheckCircle2 size={13} className="text-emerald-600 shrink-0 mt-0.5" />
