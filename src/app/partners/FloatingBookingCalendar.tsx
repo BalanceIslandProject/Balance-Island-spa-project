@@ -610,7 +610,7 @@ export default function FloatingBookingCalendar({
                       </span>
                     )}
 
-                    {/* 2. Treatment status label (Ongoing / Finish Treatment / Confirmed / Cancelled) */}
+                    {/* 2. Treatment status label: Ongoing Treatment / Finish Treatment / Cancelled / Pending */}
                     {isCancelled ? (
                       <span className="text-[10px] font-extrabold uppercase tracking-wider text-rose-700 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200/90 shadow-2xs">
                         Cancelled
@@ -623,10 +623,6 @@ export default function FloatingBookingCalendar({
                     ) : b.booking_status === 'Completed' || b.service_completed ? (
                       <span className="text-[10px] font-extrabold uppercase tracking-wider text-teal-800 bg-teal-50 px-2 py-0.5 rounded-full border border-teal-200/90 shadow-2xs">
                         Finish Treatment
-                      </span>
-                    ) : b.booking_status === 'Confirmed' ? (
-                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-sky-800 bg-sky-50 px-2 py-0.5 rounded-full border border-sky-200/90 shadow-2xs">
-                        Confirmed
                       </span>
                     ) : (
                       <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200/90 shadow-2xs">
@@ -643,7 +639,7 @@ export default function FloatingBookingCalendar({
                             Approved
                           </span>
                         )}
-                        {isPendingCommission && (b.booking_status === 'Confirmed' || b.booking_status === 'Ongoing' || b.booking_status === 'Completed') && (
+                        {isPendingCommission && (b.booking_status === 'Ongoing' || b.booking_status === 'Completed') && (
                           <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200/90 shadow-2xs">
                             <Clock size={11} />
                             Pending

@@ -78,7 +78,6 @@ export async function GET(req: NextRequest) {
       if (isCancelled) displayBookingStatus = 'Cancelled';
       else if (isCompleted) displayBookingStatus = 'Completed';
       else if (isOngoing) displayBookingStatus = 'Ongoing';
-      else if (isConfirmed) displayBookingStatus = 'Confirmed';
 
       // Couple massage pricing logic:
       // If couple treatment was multiplied by guests, ensure treatment amount does NOT exceed gross booking amount

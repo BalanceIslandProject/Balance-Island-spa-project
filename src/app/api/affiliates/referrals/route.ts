@@ -56,7 +56,10 @@ export async function GET(req: NextRequest) {
       const b = bookMap.get(ref);
 
       const isPaid = c?.payment_verified || b?.payment_status === 'paid';
-      const bookingStatus = b?.status || (c?.status === 'cancelled' ? 'Cancelled' : 'Confirmed');
+      let bookingStatus = 'Pending';
+      if (b?.status === 'Cancelled' || c?.status === 'cancelled') bookingStatus = 'Cancelled';
+      else if (b?.status === 'Completed' || c?.service_completed) bookingStatus = 'Completed';
+      else if (b?.status === 'Ongoing') bookingStatus = 'Ongoing';
 
       return {
         ...item,
