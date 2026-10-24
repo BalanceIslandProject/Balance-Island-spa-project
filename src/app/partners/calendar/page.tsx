@@ -334,9 +334,9 @@ export default function PartnerCalendarPage() {
     <div className="w-full max-w-[1600px] mx-auto space-y-4 lg:space-y-3.5 pb-16 lg:pb-0 font-sans antialiased text-neutral-900 lg:h-[calc(100vh-5rem)] lg:flex lg:flex-col lg:overflow-hidden">
       
       {/* ─────────────────────────────────────────────────────────────
-          1. TOP EXECUTIVE BAR: Title & Live Status
+          1. TOP EXECUTIVE BAR: Title & Live Status (Visible on mobile only; hidden on desktop for platform feel)
          ───────────────────────────────────────────────────────────── */}
-      <div className="flex flex-col gap-3 pb-2 border-b border-neutral-200/80 shrink-0">
+      <div className="flex lg:hidden flex-col gap-3 pb-2 border-b border-neutral-200/80 shrink-0">
         {/* Row 1: Title on left, Live Schedule badge on right */}
         <div className="flex items-center justify-between w-full">
           <div>
@@ -758,16 +758,45 @@ export default function PartnerCalendarPage() {
 
         {/* ──────── APPOINTMENT DETAILS INSPECTOR (RIGHT: 4 COLS) ──────── */}
         <div className="lg:col-span-4 bg-white border border-neutral-200/80 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-sm space-y-3.5 lg:h-full lg:flex lg:flex-col lg:overflow-hidden">
-          {/* Executive Header: Big Title with Total Bookings & Commission + Approved/Pending Chips */}
-          <div className="pb-3 border-b border-neutral-100 space-y-2.5 shrink-0">
+          {/* Executive Header:
+              - Desktop: When a specific date is clicked, show ONLY the side-by-side Approved and Pending cards (saving vertical space for bookings)
+              - Mobile: Big Title with Total Bookings & Commission + Chips */}
+          {selectedDate && selectedDayStats.count > 0 && (
+            <div className="hidden lg:grid grid-cols-2 gap-2 text-xs pb-3 border-b border-neutral-100 shrink-0">
+              {/* Approved Card: White background + Green dot */}
+              <div className="flex items-center justify-between gap-1 bg-white text-neutral-950 px-3 py-2 rounded-xl border border-neutral-200/90 shadow-2xs font-semibold">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                  <span className="text-neutral-500 font-medium text-[11px]">Approved</span>
+                </div>
+                <span className="font-mono font-bold text-neutral-950 text-xs truncate">
+                  {formatIDR(selectedDayStats.approvedCommission)}
+                </span>
+              </div>
+
+              {/* Pending Card: Black background + Red dot */}
+              <div className="flex items-center justify-between gap-1 bg-neutral-950 text-white px-3 py-2 rounded-xl border border-neutral-900 shadow-2xs font-semibold">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
+                  <span className="text-neutral-300 font-medium text-[11px]">Pending</span>
+                </div>
+                <span className="font-mono font-bold text-white text-xs truncate">
+                  {formatIDR(selectedDayStats.pendingCommission)}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Mobile Header: Big Title with Total Bookings & Commission + Chips */}
+          <div className="lg:hidden pb-3 border-b border-neutral-100 space-y-2.5 shrink-0">
             {/* Big Title: Total Bookings on left & Total Commission on right */}
             <div className="flex items-center justify-between gap-3 pt-0.5">
               <div>
                 <span className="text-[10px] font-extrabold uppercase tracking-widest text-neutral-400 block">
                   Total Bookings
                 </span>
-                <div className="text-2xl sm:text-3xl font-black text-neutral-950 tracking-tight font-mono mt-0.5">
-                  {selectedDayStats.count} <span className="text-sm sm:text-base font-bold font-sans text-neutral-600">{selectedDayStats.count === 1 ? 'Booking' : 'Bookings'}</span>
+                <div className="text-2xl font-black text-neutral-950 tracking-tight font-mono mt-0.5">
+                  {selectedDayStats.count} <span className="text-sm font-bold font-sans text-neutral-600">{selectedDayStats.count === 1 ? 'Booking' : 'Bookings'}</span>
                 </div>
               </div>
 
@@ -775,7 +804,7 @@ export default function PartnerCalendarPage() {
                 <span className="text-[10px] font-extrabold uppercase tracking-widest text-emerald-800 block">
                   Commission
                 </span>
-                <div className="text-2xl sm:text-3xl font-black text-emerald-700 font-mono tracking-tight tabular-nums mt-0.5">
+                <div className="text-2xl font-black text-emerald-700 font-mono tracking-tight tabular-nums mt-0.5">
                   +{formatIDR(selectedDayStats.totalCommission)}
                 </div>
               </div>
