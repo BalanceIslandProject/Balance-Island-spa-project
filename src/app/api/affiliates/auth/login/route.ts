@@ -94,11 +94,15 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    const isProd = process.env.NODE_ENV === 'production';
+    const isTherapickDomain = host.includes('booktherapick.com');
+
     response.cookies.set('partner_session', token, {
       path: '/',
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: isProd,
       sameSite: 'lax',
+      domain: isProd && isTherapickDomain ? '.booktherapick.com' : undefined,
       maxAge: 14 * 24 * 60 * 60, // 14 days
     });
 

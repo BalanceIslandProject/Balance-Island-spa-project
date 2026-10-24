@@ -14,6 +14,13 @@ export default function TopNav() {
     const [isCartOpen, setIsCartOpen] = useState(false);
     const { history, removeHistory } = useCart();
     const dropdownRef = useRef<HTMLDivElement>(null);
+    const [partnerPortalUrl, setPartnerPortalUrl] = useState('https://partners.booktherapick.com');
+
+    useEffect(() => {
+        if (typeof window !== 'undefined' && window.location.hostname.includes('localhost')) {
+            setPartnerPortalUrl('http://partners.localhost:3000');
+        }
+    }, []);
 
     // Complete navigation items for dropdown
     const navItems = [
@@ -104,16 +111,12 @@ export default function TopNav() {
                 {/* Navbar Right Actions: Partner Button, Cart & Dropdown Toggle */}
                 <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 z-10">
                     {/* Strictly shown ONLY on BookTherapick domain: PARTNERS button on navbar */}
-                    <Link
-                        href="/partners"
-                        className={`domain-therapick-only px-3 sm:px-3.5 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-[11px] md:text-xs font-bold tracking-[0.08em] uppercase transition-all duration-200 whitespace-nowrap border ${
-                            pathname?.startsWith('/partners')
-                                ? 'text-amber-950 bg-amber-500/25 border-amber-500/30 shadow-xs'
-                                : 'text-amber-900 bg-amber-500/15 hover:bg-amber-500/25 border-amber-500/20 hover:text-amber-950 active:scale-95'
-                        }`}
+                    <a
+                        href={partnerPortalUrl}
+                        className="domain-therapick-only px-3.5 sm:px-4 py-1.5 rounded-full text-[10px] sm:text-[11px] md:text-xs font-bold tracking-[0.08em] uppercase transition-all duration-200 whitespace-nowrap bg-black text-white hover:bg-neutral-800 active:scale-95 shadow-xs border border-black/10"
                     >
                         PARTNERS
-                    </Link>
+                    </a>
 
                     {/* Cart Drawer Trigger with Red Indicator Dot matching screenshot */}
                     <button 
@@ -184,14 +187,14 @@ export default function TopNav() {
 
                             {/* Strictly shown ONLY on BookTherapick domain */}
                             <div className="domain-therapick-only mt-1 pt-1.5 border-t border-black/[0.06]">
-                                <Link 
-                                    href="/partners"
+                                <a 
+                                    href={partnerPortalUrl}
                                     onClick={() => setIsOpen(false)}
-                                    className="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold tracking-wider transition-colors text-amber-900 bg-amber-500/10 hover:bg-amber-500/20"
+                                    className="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold tracking-wider transition-colors text-white bg-black hover:bg-neutral-800 shadow-sm"
                                 >
                                     <span className="uppercase">PARTNER PORTAL</span>
-                                    <span className="text-[9px] font-sans font-bold tracking-wide text-amber-800 bg-amber-500/25 px-2 py-0.5 rounded-full uppercase">Affiliates</span>
-                                </Link>
+                                    <span className="text-[9px] font-sans font-bold tracking-wide text-neutral-300 bg-white/20 px-2 py-0.5 rounded-full uppercase">Affiliates</span>
+                                </a>
                             </div>
                         </motion.div>
                     )}
