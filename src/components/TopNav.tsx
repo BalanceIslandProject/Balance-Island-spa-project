@@ -59,68 +59,50 @@ export default function TopNav() {
 
     return (
         <>
-        <div className="fixed top-0 md:top-5 left-0 right-0 z-50 flex justify-center pointer-events-none md:px-4">
+        <div className="fixed top-3 sm:top-4 left-0 right-0 z-50 flex justify-center pointer-events-none px-3.5 sm:px-4">
             <header 
-                className={`pointer-events-auto flex items-center justify-between relative transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-auto
-                    w-[calc(100%-32px)] max-w-6xl rounded-full px-3.5 sm:px-5 py-2 sm:py-2.5 translate-y-4
+                className={`pointer-events-auto flex items-center justify-between relative transition-all duration-300 ease-out will-change-transform
+                    w-full max-w-5xl rounded-full px-3.5 sm:px-5 py-2 sm:py-2.5
                     ${isScrolled || isOpen
-                        ? 'bg-white/80 saturate-[1.8] backdrop-blur-xl border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.08)]' 
+                        ? 'bg-white/85 saturate-[1.8] backdrop-blur-xl border border-white/70 shadow-[0_8px_30px_rgb(0,0,0,0.08)]' 
                         : 'bg-transparent border-transparent shadow-none'}`} 
                 ref={dropdownRef}
                 style={{ transformOrigin: 'top center' }}
             >
-                {/* Brand Identity Display (Left) */}
-                <Link href="/" className="flex items-center gap-2.5 shrink-0 group outline-none">
-                    {/* Therapick Brand */}
-                    <div className="domain-therapick-only flex items-center gap-2 sm:gap-2.5">
+                {/* Left Section: Therapick Logo (Therapick domain) OR Store Button (Elexoir/Home Spa Ubud) */}
+                <div className="flex items-center shrink-0 z-10">
+                    {/* Therapick Domain: Logo ONLY (no text title, no divider) */}
+                    <Link href="/" className="domain-therapick-only flex items-center group outline-none">
                         <img 
                             src="/therapick-logo-2.png" 
                             alt="Therapick" 
                             className="h-6 sm:h-7 md:h-8 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
                         />
-                        <div className="flex flex-col leading-none border-l border-neutral-300/80 pl-2 sm:pl-2.5 py-0.5">
-                            <span className="text-[10px] sm:text-[11px] font-serif tracking-wide text-neutral-900 font-bold">THERAPICK</span>
-                            <span className="text-[7px] sm:text-[8px] font-sans font-bold tracking-[0.2em] text-neutral-400 uppercase mt-0.5">BALI, INDONESIA</span>
-                        </div>
-                    </div>
+                    </Link>
 
-                    {/* Elexoir Brand */}
-                    <div className="domain-ubud-only flex items-center gap-2 sm:gap-2.5">
-                        <img 
-                            src="/elexoir.png" 
-                            alt="Elexoir Home Spa" 
-                            className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 rounded-full object-cover shadow-2xs transition-transform duration-300 group-hover:scale-105"
-                        />
-                        <div className="flex flex-col leading-none">
-                            <span className="font-serif text-[13px] sm:text-[14px] md:text-[15px] font-semibold tracking-[0.14em] text-primary">
-                                ELEXOIR
-                            </span>
-                            <span className="text-[7px] sm:text-[8px] font-bold tracking-[0.22em] text-text-muted uppercase mt-0.5">
-                                BALI, INDONESIA
-                            </span>
-                        </div>
-                    </div>
+                    {/* Elexoir & Home Spa Ubud: Exact Store Button from Screenshot */}
+                    <Link 
+                        href="/store" 
+                        className="domain-spa-only flex items-center gap-1.5 sm:gap-2 bg-white border border-black/10 shadow-xs rounded-full px-3.5 sm:px-4 h-9 transition-all hover:bg-neutral-50 active:scale-95 text-primary shrink-0"
+                    >
+                        <Store size={15} strokeWidth={2} className="text-primary" />
+                        <span className="text-[10px] sm:text-[11px] font-bold tracking-widest uppercase">
+                            STORE
+                        </span>
+                    </Link>
+                </div>
 
-                    {/* Home Spa Ubud Brand */}
-                    <div className="domain-bali-only flex items-center gap-2 sm:gap-2.5">
-                        <img 
-                            src="/homespa.png" 
-                            alt="Home Spa Ubud" 
-                            className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 rounded-full object-cover shadow-2xs transition-transform duration-300 group-hover:scale-105"
-                        />
-                        <div className="flex flex-col leading-none">
-                            <span className="font-serif text-[13px] sm:text-[14px] md:text-[15px] font-semibold tracking-[0.14em] text-primary">
-                                HOME SPA
-                            </span>
-                            <span className="text-[7px] sm:text-[8px] font-bold tracking-[0.22em] text-text-muted uppercase mt-0.5">
-                                UBUD, BALI
-                            </span>
-                        </div>
-                    </div>
-                </Link>
+                {/* Center Section: BALI, INDONESIA (Elexoir & Home Spa Ubud only - matches screenshot) */}
+                <div className="domain-spa-only absolute left-1/2 -translate-x-1/2 flex items-center justify-center h-full pointer-events-none">
+                    <Link href="/" className="pointer-events-auto flex flex-col items-center justify-center leading-none">
+                        <span className="text-[11px] sm:text-xs md:text-sm font-sans text-primary tracking-widest font-bold uppercase whitespace-nowrap">
+                            BALI, INDONESIA
+                        </span>
+                    </Link>
+                </div>
 
                 {/* Navbar Right Actions: Partner Button, Cart & Dropdown Toggle */}
-                <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+                <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 z-10">
                     {/* Strictly shown ONLY on BookTherapick domain: PARTNERS button on navbar */}
                     <Link
                         href="/partners"
@@ -133,27 +115,27 @@ export default function TopNav() {
                         PARTNERS
                     </Link>
 
-                    {/* Cart Drawer Trigger */}
+                    {/* Cart Drawer Trigger with Red Indicator Dot matching screenshot */}
                     <button 
                         onClick={() => setIsCartOpen(true)}
-                        className="w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-primary transition-all duration-200 hover:bg-black/5 active:scale-95 relative border border-black/5 shrink-0"
+                        className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-primary transition-all duration-200 hover:bg-black/5 active:scale-95 relative border border-black/5 shrink-0"
                         aria-label="Open Cart"
                         title="View Bookings"
                     >
-                        <ShoppingBag size={17} />
+                        <ShoppingBag size={18} strokeWidth={1.8} />
                         {history.length > 0 && (
-                            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-emerald-500 rounded-full ring-2 ring-white"></span>
+                            <span className="absolute top-1 right-1 w-2 h-2 bg-[#EF4444] rounded-full ring-2 ring-white"></span>
                         )}
                     </button>
 
                     {/* Dropdown Menu Toggle (Hamburger / Close) */}
                     <button 
                         onClick={() => setIsOpen(!isOpen)}
-                        className="w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-primary transition-all duration-200 hover:bg-black/5 active:scale-95 border border-black/5 shrink-0"
+                        className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-primary transition-all duration-200 hover:bg-black/5 active:scale-95 border border-black/5 shrink-0"
                         aria-label="Toggle Navigation Menu"
                         title="Menu"
                     >
-                        {isOpen ? <X size={19} /> : <Menu size={19} />}
+                        {isOpen ? <X size={19} strokeWidth={2} /> : <Menu size={19} strokeWidth={2} />}
                     </button>
                 </div>
 
