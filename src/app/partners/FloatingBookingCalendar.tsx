@@ -444,7 +444,7 @@ export default function FloatingBookingCalendar({
                         setViewMode('week');
                       }
                     }}
-                    className={`h-9 sm:h-10 rounded-xl flex flex-col items-center justify-between p-1 transition-all relative ${
+                    className={`min-h-[42px] sm:min-h-[46px] rounded-xl flex flex-col justify-between p-1.5 transition-all relative ${
                       isSelected
                         ? 'bg-neutral-950 text-white shadow-xs scale-[1.02] z-10'
                         : hasBookings
@@ -452,13 +452,24 @@ export default function FloatingBookingCalendar({
                         : 'hover:bg-neutral-100 text-neutral-700'
                     } ${isToday && !isSelected ? 'ring-1.5 ring-neutral-950 font-bold' : ''}`}
                   >
-                    <span className={`text-xs ${isSelected ? 'font-bold text-white' : hasBookings ? 'font-bold text-emerald-950' : 'font-medium'}`}>
-                      {dayNum}
-                    </span>
+                    {/* Top Row: Date Number on Left, Booking count badge in TOP-RIGHT CORNER */}
+                    <div className="flex items-start justify-between w-full leading-none">
+                      <span className={`text-xs ${isSelected ? 'font-bold text-white' : hasBookings ? 'font-bold text-emerald-950' : 'font-medium'}`}>
+                        {dayNum}
+                      </span>
 
-                    {/* Booking indicator markers */}
+                      {hasBookings && (
+                        <span className={`text-[8px] sm:text-[9px] font-mono font-bold px-1 rounded-full leading-tight shrink-0 ${
+                          isSelected ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-900 border border-emerald-200/80 shadow-2xs'
+                        }`}>
+                          {dayBookings.length}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Bottom Row: Booking indicator markers */}
                     {hasBookings && (
-                      <div className="flex items-center gap-0.5 mt-auto pb-0.5">
+                      <div className="flex items-center gap-0.5 mt-auto pt-0.5">
                         {hasApproved && (
                           <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-emerald-300' : 'bg-emerald-600'}`} />
                         )}
@@ -467,11 +478,6 @@ export default function FloatingBookingCalendar({
                         )}
                         {!hasApproved && !hasPending && hasCancelled && (
                           <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-neutral-400' : 'bg-neutral-300'}`} />
-                        )}
-                        {dayBookings.length > 1 && (
-                          <span className={`text-[8px] font-bold ${isSelected ? 'text-white/90' : 'text-emerald-800'}`}>
-                            {dayBookings.length}
-                          </span>
                         )}
                       </div>
                     )}

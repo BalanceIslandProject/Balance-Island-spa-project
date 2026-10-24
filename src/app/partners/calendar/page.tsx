@@ -574,7 +574,7 @@ export default function PartnerCalendarPage() {
               <div className="grid grid-cols-7 gap-1 sm:gap-1.5 flex-1 min-h-0">
                 {/* Empty leading cells */}
                 {Array.from({ length: firstDayIndex }).map((_, i) => (
-                  <div key={`empty-${i}`} className="min-h-[40px] sm:min-h-[46px] lg:min-h-0 lg:h-[46px] xl:h-[50px] rounded-xl sm:rounded-2xl bg-neutral-50/40" />
+                  <div key={`empty-${i}`} className="min-h-[46px] sm:min-h-[50px] lg:min-h-0 lg:h-[50px] xl:h-[54px] rounded-xl sm:rounded-2xl bg-neutral-50/40" />
                 ))}
 
                 {/* Actual Month Days */}
@@ -598,7 +598,7 @@ export default function PartnerCalendarPage() {
                       key={dateString}
                       type="button"
                       onClick={() => handleDateClick(dateString)}
-                      className={`min-h-[40px] sm:min-h-[46px] lg:min-h-0 lg:h-[46px] xl:h-[50px] px-2 py-1.5 sm:px-2.5 sm:py-2 rounded-xl sm:rounded-2xl flex items-center justify-between text-left transition-all cursor-pointer border relative group ${
+                      className={`min-h-[46px] sm:min-h-[50px] lg:min-h-0 lg:h-[50px] xl:h-[54px] p-1.5 sm:p-2 rounded-xl sm:rounded-2xl flex flex-col justify-between text-left transition-all cursor-pointer border relative group ${
                         isSelected
                           ? 'bg-neutral-950 text-white border-neutral-950 shadow-md ring-2 ring-neutral-950/20 z-10'
                           : isToday
@@ -608,28 +608,44 @@ export default function PartnerCalendarPage() {
                           : 'bg-white border-neutral-200/60 hover:bg-neutral-50 hover:border-neutral-300 text-neutral-700'
                       }`}
                     >
-                      {/* Date Number */}
-                      <span
-                        className={`text-xs sm:text-sm font-bold ${
-                          isSelected
-                            ? 'text-white'
-                            : isToday
-                            ? 'text-neutral-950 underline underline-offset-2'
-                            : hasBookings
-                            ? 'text-emerald-950'
-                            : 'text-neutral-700'
-                        }`}
-                      >
-                        {dayNum}
-                      </span>
+                      {/* Top Row: Date Number on Left & Number of Bookings above the right corner */}
+                      <div className="flex items-start justify-between w-full leading-none">
+                        <span
+                          className={`text-xs sm:text-sm font-bold ${
+                            isSelected
+                              ? 'text-white'
+                              : isToday
+                              ? 'text-neutral-950 underline underline-offset-2'
+                              : hasBookings
+                              ? 'text-emerald-950'
+                              : 'text-neutral-700'
+                          }`}
+                        >
+                          {dayNum}
+                        </span>
 
-                      {/* Indicators & Count (No commission text on calendar cells) */}
+                        {/* Number of bookings badge in top-right corner */}
+                        {hasBookings && (
+                          <span
+                            className={`text-[9px] sm:text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-full leading-none shrink-0 ${
+                              isSelected
+                                ? 'bg-white/20 text-white'
+                                : 'bg-emerald-100 text-emerald-900 border border-emerald-200/90 shadow-2xs'
+                            }`}
+                            title={`${dayBookings.length} bookings`}
+                          >
+                            {dayBookings.length}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Bottom Row: Status dots (Green for approved, Red for pending) */}
                       {hasBookings && (
-                        <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
+                        <div className="flex items-center gap-1 sm:gap-1.5 mt-auto pt-0.5">
                           {hasApproved && (
                             <span
                               className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${
-                                isSelected ? 'bg-emerald-300' : 'bg-emerald-600'
+                                isSelected ? 'bg-emerald-300' : 'bg-emerald-500'
                               }`}
                               title="Approved Booking"
                             />
@@ -645,15 +661,6 @@ export default function PartnerCalendarPage() {
                           {!hasApproved && !hasPending && hasCancelled && (
                             <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-neutral-400" title="Cancelled" />
                           )}
-                          <span
-                            className={`text-[9px] sm:text-[10px] font-mono font-bold px-1.5 py-0.2 rounded-full ${
-                              isSelected
-                                ? 'bg-white/20 text-white'
-                                : 'bg-emerald-100 text-emerald-900'
-                            }`}
-                          >
-                            {dayBookings.length}
-                          </span>
                         </div>
                       )}
                     </button>

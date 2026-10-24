@@ -10,7 +10,7 @@ import {
   Download
 } from 'lucide-react';
 import { CalendarBooking } from '../FloatingBookingCalendar';
-import PartnerCalendarCard from '../PartnerCalendarCard';
+import PartnerCommissionFilterCard from '../PartnerCommissionFilterCard';
 import { supabase } from '@/lib/supabase';
 
 interface PartnerStats {
@@ -750,10 +750,10 @@ Please verify and process the payout to my registered details. Thank you!`;
 
         {/* ─────────────────────────────────────────────────────────────
             COLUMN 2 (RIGHT COLUMN - 5 COLS):
-            On the Promote to Guests current position, add Calendar with booking details!
+            Commission Section with Calendar Date Range Filter
            ───────────────────────────────────────────────────────────── */}
         <div className="lg:col-span-5 space-y-6 sticky top-6">
-          <PartnerCalendarCard bookings={calendarBookings} />
+          <PartnerCommissionFilterCard bookings={calendarBookings} />
         </div>
 
       </div>
