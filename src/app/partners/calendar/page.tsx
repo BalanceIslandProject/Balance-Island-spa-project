@@ -331,12 +331,12 @@ export default function PartnerCalendarPage() {
   }
 
   return (
-    <div className="w-full max-w-[1600px] mx-auto space-y-6 pb-16 font-sans antialiased text-neutral-900">
+    <div className="w-full max-w-[1600px] mx-auto space-y-4 lg:space-y-3.5 pb-16 lg:pb-0 font-sans antialiased text-neutral-900 lg:h-[calc(100vh-5rem)] lg:flex lg:flex-col lg:overflow-hidden">
       
       {/* ─────────────────────────────────────────────────────────────
-          1. TOP EXECUTIVE BAR: Title, Controls, KPI Summary
+          1. TOP EXECUTIVE BAR: Title & Live Status
          ───────────────────────────────────────────────────────────── */}
-      <div className="flex flex-col gap-3 pb-2 border-b border-neutral-200/80">
+      <div className="flex flex-col gap-3 pb-2 border-b border-neutral-200/80 shrink-0">
         {/* Row 1: Title on left, Live Schedule badge on right */}
         <div className="flex items-center justify-between w-full">
           <div>
@@ -352,8 +352,8 @@ export default function PartnerCalendarPage() {
           </span>
         </div>
 
-        {/* Row 2: October 2026 Navigator on Left, Month/Week Toggle on Right */}
-        <div className="flex items-center justify-between w-full gap-2 pt-1 lg:pt-0">
+        {/* Row 2: October 2026 Navigator on Left, Month/Week Toggle on Right (Visible on mobile only; on desktop it is positioned above the calendar) */}
+        <div className="flex lg:hidden items-center justify-between w-full gap-2 pt-1">
           {/* Apple Segmented Month Navigator */}
           <div className="inline-flex items-center bg-white border border-neutral-200/80 rounded-2xl p-1 shadow-2xs">
             <button
@@ -378,15 +378,6 @@ export default function PartnerCalendarPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Today button - hidden on mobile as requested, kept on desktop */}
-            <button
-              type="button"
-              onClick={goToToday}
-              className="hidden lg:inline-block px-3.5 py-2 text-xs font-semibold rounded-2xl bg-white border border-neutral-200/80 text-neutral-800 hover:bg-neutral-100 active:scale-95 transition-all shadow-2xs cursor-pointer"
-            >
-              Today
-            </button>
-
             {/* Month / Week Switcher */}
             <div className="inline-flex p-1 rounded-2xl bg-neutral-100 border border-neutral-200/80 text-xs">
               <button
@@ -416,9 +407,9 @@ export default function PartnerCalendarPage() {
           2. MONTH FINANCIAL SUMMARY STRIP (APPLE HIG METRICS)
           Visible on desktop only; hidden on mobile so only calendar & booking details show.
          ───────────────────────────────────────────────────────────── */}
-      <div className="hidden lg:grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+      <div className="hidden lg:grid grid-cols-2 md:grid-cols-4 gap-3 shrink-0">
         {/* Total Appointments */}
-        <div className="bg-white border border-neutral-200/70 rounded-2xl p-4 shadow-2xs space-y-1">
+        <div className="bg-white border border-neutral-200/70 rounded-2xl p-3 shadow-2xs space-y-0.5">
           <span className="text-[10px] font-extrabold uppercase tracking-widest text-neutral-400 block">
             Appointments
           </span>
@@ -429,7 +420,7 @@ export default function PartnerCalendarPage() {
         </div>
 
         {/* Total Commission */}
-        <div className="bg-white border border-neutral-200/70 rounded-2xl p-4 shadow-2xs space-y-1">
+        <div className="bg-white border border-neutral-200/70 rounded-2xl p-3 shadow-2xs space-y-0.5">
           <span className="text-[10px] font-extrabold uppercase tracking-widest text-neutral-400 block">
             Month Total
           </span>
@@ -440,7 +431,7 @@ export default function PartnerCalendarPage() {
         </div>
 
         {/* Approved Commission */}
-        <div className="bg-white border border-neutral-200/90 rounded-2xl p-4 shadow-2xs space-y-1">
+        <div className="bg-white border border-neutral-200/90 rounded-2xl p-3 shadow-2xs space-y-0.5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
@@ -459,7 +450,7 @@ export default function PartnerCalendarPage() {
         </div>
 
         {/* Pending Commission */}
-        <div className="bg-neutral-950 border border-neutral-900 rounded-2xl p-4 shadow-md space-y-1 text-white">
+        <div className="bg-neutral-950 border border-neutral-900 rounded-2xl p-3 shadow-md space-y-0.5 text-white">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
@@ -481,58 +472,96 @@ export default function PartnerCalendarPage() {
       {/* ─────────────────────────────────────────────────────────────
           3. FULL SCREEN RESPONSIVE DESKTOP WORKSPACE (12-COL GRID)
          ───────────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start lg:items-stretch lg:flex-1 lg:min-h-0">
         
-        {/* ──────── CALENDAR GRID AREA (LEFT / CENTER: 7 or 8 COLS) ──────── */}
-        <div className="lg:col-span-8 bg-white border border-neutral-200/80 rounded-2xl sm:rounded-3xl p-3 sm:p-6 shadow-sm space-y-3 sm:space-y-4">
+        {/* ──────── CALENDAR GRID AREA (LEFT / CENTER: 8 COLS) ──────── */}
+        <div className="lg:col-span-8 bg-white border border-neutral-200/80 rounded-2xl sm:rounded-3xl p-3 sm:p-4 lg:p-4 xl:p-5 shadow-sm space-y-3 lg:h-full lg:flex lg:flex-col lg:justify-between lg:overflow-hidden">
           
-          {/* Filter Bar & Selection Status (Visible on desktop; on mobile, filter is positioned above booking details) */}
-          <div className="hidden lg:flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-neutral-100">
-            <div className="flex items-center gap-1.5">
-              {(['all', 'approved', 'pending', 'cancelled'] as const).map((mode) => (
-                <button
-                  key={mode}
-                  type="button"
-                  onClick={() => setStatusFilter(mode)}
-                  className={`px-3 py-1 rounded-xl text-xs font-semibold capitalize transition-all cursor-pointer ${
-                    statusFilter === mode
-                      ? 'bg-neutral-950 text-white shadow-2xs'
-                      : 'text-neutral-600 hover:text-black hover:bg-neutral-100'
-                  }`}
-                >
-                  {mode}
-                </button>
-              ))}
+          {/* DESKTOP CALENDAR HEADER: < October 2026 > Navigator on Left, Today & Month/Week on Right */}
+          <div className="hidden lg:flex items-center justify-between gap-3 pb-2.5 border-b border-neutral-100 shrink-0">
+            {/* Month pagination: < October 2026 > */}
+            <div className="inline-flex items-center bg-white border border-neutral-200/80 rounded-2xl p-0.5 shadow-2xs">
+              <button
+                type="button"
+                onClick={goToPrev}
+                className="p-1.5 hover:bg-neutral-100 rounded-xl transition-colors cursor-pointer text-neutral-700 hover:text-black"
+                title="Previous"
+              >
+                <ChevronLeft size={16} />
+              </button>
+              <div className="px-3 text-xs font-bold text-neutral-950 min-w-[115px] text-center">
+                {MONTH_NAMES[currentMonth]} {currentYear}
+              </div>
+              <button
+                type="button"
+                onClick={goToNext}
+                className="p-1.5 hover:bg-neutral-100 rounded-xl transition-colors cursor-pointer text-neutral-700 hover:text-black"
+                title="Next"
+              >
+                <ChevronRight size={16} />
+              </button>
             </div>
 
-            {selectedDate && (
-              <div className="flex items-center gap-2 text-xs">
-                <span className="text-neutral-500 font-medium">
-                  Showing: <strong className="text-neutral-950">{safeFormatDate(selectedDate, { day: 'numeric', month: 'short' })}</strong>
-                </span>
+            {/* Right side: Today + Month/Week Switcher + Clear Selection */}
+            <div className="flex items-center gap-2">
+              {selectedDate && (
+                <div className="flex items-center gap-2 text-xs mr-1">
+                  <span className="text-neutral-500 font-medium">
+                    Showing: <strong className="text-neutral-950">{safeFormatDate(selectedDate, { day: 'numeric', month: 'short' })}</strong>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedDate(null);
+                      setViewMode('month');
+                    }}
+                    className="text-emerald-700 hover:underline font-bold text-xs cursor-pointer"
+                  >
+                    Clear Selection
+                  </button>
+                </div>
+              )}
+
+              <button
+                type="button"
+                onClick={goToToday}
+                className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-white border border-neutral-200/80 text-neutral-800 hover:bg-neutral-100 active:scale-95 transition-all shadow-2xs cursor-pointer"
+              >
+                Today
+              </button>
+
+              <div className="inline-flex p-0.5 rounded-xl bg-neutral-100 border border-neutral-200/80 text-xs">
                 <button
                   type="button"
-                  onClick={() => {
-                    setSelectedDate(null);
-                    setViewMode('month');
-                  }}
-                  className="text-emerald-700 hover:underline font-bold text-xs cursor-pointer"
+                  onClick={() => setViewMode('month')}
+                  className={`px-3 py-1 rounded-lg font-semibold transition-all cursor-pointer ${
+                    viewMode === 'month' ? 'bg-white text-neutral-950 shadow-2xs font-bold' : 'text-neutral-500 hover:text-neutral-900'
+                  }`}
                 >
-                  Clear Selection
+                  Month
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode('week')}
+                  className={`px-3 py-1 rounded-lg font-semibold transition-all cursor-pointer ${
+                    viewMode === 'week' ? 'bg-white text-neutral-950 shadow-2xs font-bold' : 'text-neutral-500 hover:text-neutral-900'
+                  }`}
+                >
+                  Week
                 </button>
               </div>
-            )}
+            </div>
           </div>
 
           {viewMode === 'month' ? (
             /* ════════ MONTH VIEW GRID (FULL SCREEN RESPONSIVE) ════════ */
-            <div className="space-y-1.5 sm:space-y-2">
+            <div className="space-y-1 sm:space-y-1.5 flex-1 min-h-0 flex flex-col justify-around">
               {/* Day Name Header Row */}
-              <div className="grid grid-cols-7 text-center">
+              <div className="grid grid-cols-7 text-center shrink-0">
                 {DAYS_OF_WEEK.map((d, i) => (
                   <div
                     key={d}
-                    className={`py-1 sm:py-2 text-[10px] sm:text-xs font-extrabold uppercase tracking-wider ${
+                    className={`py-1 sm:py-1.5 text-[10px] sm:text-xs font-extrabold uppercase tracking-wider ${
                       i === 0 ? 'text-rose-500' : 'text-neutral-400'
                     }`}
                   >
@@ -541,11 +570,11 @@ export default function PartnerCalendarPage() {
                 ))}
               </div>
 
-              {/* Days Grid */}
-              <div className="grid grid-cols-7 gap-1 sm:gap-2">
+              {/* Days Grid - Compact on Desktop */}
+              <div className="grid grid-cols-7 gap-1 sm:gap-1.5 flex-1 min-h-0">
                 {/* Empty leading cells */}
                 {Array.from({ length: firstDayIndex }).map((_, i) => (
-                  <div key={`empty-${i}`} className="min-h-[42px] sm:min-h-[96px] rounded-xl sm:rounded-2xl bg-neutral-50/40" />
+                  <div key={`empty-${i}`} className="min-h-[42px] sm:min-h-[75px] lg:min-h-0 lg:h-[58px] xl:h-[64px] rounded-xl sm:rounded-2xl bg-neutral-50/40" />
                 ))}
 
                 {/* Actual Month Days */}
@@ -574,7 +603,7 @@ export default function PartnerCalendarPage() {
                       key={dateString}
                       type="button"
                       onClick={() => handleDateClick(dateString)}
-                      className={`min-h-[44px] sm:min-h-[105px] p-1 sm:p-2.5 rounded-xl sm:rounded-2xl flex flex-col justify-between text-left transition-all cursor-pointer border relative group ${
+                      className={`min-h-[44px] sm:min-h-[75px] lg:min-h-0 lg:h-[58px] xl:h-[64px] p-1 sm:p-2 lg:p-1.5 rounded-xl sm:rounded-2xl flex flex-col justify-between text-left transition-all cursor-pointer border relative group ${
                         isSelected
                           ? 'bg-neutral-950 text-white border-neutral-950 shadow-md ring-2 ring-neutral-950/20 z-10'
                           : isToday
@@ -634,20 +663,13 @@ export default function PartnerCalendarPage() {
 
                       {/* Bottom Info: Commission Total on Desktop (hidden on mobile for small compact columns) */}
                       {hasBookings && (
-                        <div className="hidden sm:block mt-auto pt-1 w-full truncate">
+                        <div className="hidden sm:block mt-auto pt-0.5 w-full truncate">
                           <div
                             className={`text-[9px] sm:text-[10px] font-mono font-bold truncate ${
                               isSelected ? 'text-emerald-300' : 'text-emerald-800'
                             }`}
                           >
                             +{formatIDR(dayTotalComm)}
-                          </div>
-                          <div
-                            className={`hidden sm:block text-[9px] truncate ${
-                              isSelected ? 'text-neutral-300' : 'text-neutral-500'
-                            }`}
-                          >
-                            {dayBookings[0]?.guest_name || 'Booking'}
                           </div>
                         </div>
                       )}
@@ -658,7 +680,7 @@ export default function PartnerCalendarPage() {
             </div>
           ) : (
             /* ════════ WEEK VIEW (SPACIOUS 7-DAY STRIP) ════════ */
-            <div className="grid grid-cols-7 gap-1 sm:gap-2">
+            <div className="grid grid-cols-7 gap-1 sm:gap-2 flex-1 min-h-0">
               {weekDays.map((w) => {
                 const isSelected = selectedDate === w.dateString;
                 return (
@@ -666,7 +688,7 @@ export default function PartnerCalendarPage() {
                     key={w.dateString}
                     type="button"
                     onClick={() => setSelectedDate(w.dateString)}
-                    className={`p-1.5 sm:p-3 rounded-xl sm:rounded-2xl border text-left transition-all cursor-pointer min-h-[52px] sm:min-h-auto ${
+                    className={`p-1.5 sm:p-2.5 rounded-xl sm:rounded-2xl border text-left transition-all cursor-pointer min-h-[50px] sm:min-h-[90px] lg:min-h-0 lg:h-[80px] xl:h-[90px] flex flex-col justify-between ${
                       isSelected
                         ? 'bg-neutral-950 text-white border-neutral-950 shadow-md'
                         : w.isToday
@@ -712,7 +734,7 @@ export default function PartnerCalendarPage() {
           )}
 
           {/* Calendar Legend */}
-          <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3 pt-2.5 sm:pt-3 border-t border-neutral-100 text-xs">
+          <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3 pt-2 sm:pt-2.5 border-t border-neutral-100 text-xs shrink-0">
             <div className="flex items-center gap-3 sm:gap-4 text-[10px] sm:text-[11px] text-neutral-500 font-medium">
               <span className="flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-emerald-600" />
@@ -735,9 +757,9 @@ export default function PartnerCalendarPage() {
         </div>
 
         {/* ──────── APPOINTMENT DETAILS INSPECTOR (RIGHT: 4 COLS) ──────── */}
-        <div className="lg:col-span-4 bg-white border border-neutral-200/80 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm space-y-4 lg:sticky lg:top-6">
-          {/* Executive Header: Big Title with Total Bookings & Commission + Solid Cards */}
-          <div className="pb-3 border-b border-neutral-100 space-y-3">
+        <div className="lg:col-span-4 bg-white border border-neutral-200/80 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-sm space-y-3.5 lg:h-full lg:flex lg:flex-col lg:overflow-hidden">
+          {/* Executive Header: Big Title with Total Bookings & Commission + Approved/Pending Chips */}
+          <div className="pb-3 border-b border-neutral-100 space-y-2.5 shrink-0">
             {/* Big Title: Total Bookings on left & Total Commission on right */}
             <div className="flex items-center justify-between gap-3 pt-0.5">
               <div>
@@ -779,8 +801,8 @@ export default function PartnerCalendarPage() {
             )}
           </div>
 
-          {/* MOBILE FILTER TABS: All, Approved, Pending, Cancelled (Positioned directly above the booking details) */}
-          <div className="flex lg:hidden items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+          {/* FILTER TABS: All, Approved, Pending, Cancelled (Positioned directly above booking details on both desktop & mobile) */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar shrink-0">
             {(['all', 'approved', 'pending', 'cancelled'] as const).map((mode) => (
               <button
                 key={mode}
@@ -798,7 +820,7 @@ export default function PartnerCalendarPage() {
           </div>
 
           {selectedDayBookings.length === 0 ? (
-            <div className="py-12 text-center rounded-2xl bg-[#FBFBFD] border border-dashed border-neutral-200/80 p-5 space-y-2">
+            <div className="py-12 text-center rounded-2xl bg-[#FBFBFD] border border-dashed border-neutral-200/80 p-5 space-y-2 shrink-0">
               <CalendarIcon size={28} className="mx-auto text-neutral-300 mb-1" />
               <p className="text-xs font-bold text-neutral-800">No bookings for this date</p>
               <p className="text-[11px] text-neutral-400 leading-relaxed max-w-xs mx-auto">
@@ -806,7 +828,7 @@ export default function PartnerCalendarPage() {
               </p>
             </div>
           ) : (
-            <div className="space-y-3.5 max-h-[75vh] overflow-y-auto pr-1">
+            <div className="space-y-3 overflow-y-auto lg:flex-1 lg:min-h-0 pr-1 max-h-[75vh] lg:max-h-none">
               {selectedDayBookings.map((b) => {
                 const isApproved = b.commission_status === 'approved';
                 const isCancelled = b.commission_status === 'cancelled' || b.booking_status === 'Cancelled';
