@@ -276,40 +276,46 @@ Please verify and process the payout to my registered details. Thank you!`;
           </button>
         </div>
 
-        {/* 2. Responsive 2-Column Metrics (Paid Out & Pending - Solid Green & Red) */}
+        {/* 2. Responsive 2-Column Metrics (Paid Out: White + Green Dot, Pending: Black + Red Dot) */}
         <div className="grid grid-cols-2 gap-3 sm:gap-4">
-          {/* Paid Out: Solid Mint Green Card */}
-          <div className="bg-[#DCFCE7] border border-[#86EFAC] rounded-[26px] p-4 sm:p-5 shadow-2xs space-y-2 transition-all">
+          {/* Paid Out: White Card with Green Dot */}
+          <div className="bg-white border border-neutral-200/90 rounded-[26px] p-4 sm:p-5 shadow-2xs space-y-2 transition-all">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-extrabold uppercase tracking-wider text-neutral-900 block">
-                Paid Out
-              </span>
-              <span className="text-[10px] font-bold text-neutral-900 bg-white/90 border border-neutral-300 px-2 py-0.5 rounded-full shadow-2xs">
+              <div className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                <span className="text-[11px] font-extrabold uppercase tracking-wider text-neutral-900 block">
+                  Paid Out
+                </span>
+              </div>
+              <span className="text-[10px] font-bold text-neutral-700 bg-neutral-100 border border-neutral-200 px-2 py-0.5 rounded-full shadow-2xs">
                 Transferred
               </span>
             </div>
             <div className="text-base sm:text-xl font-extrabold text-neutral-950 font-mono tabular-nums truncate">
               {formatIDR(stats?.paidCommission || 0)}
             </div>
-            <p className="text-[11px] text-neutral-700 font-medium">
+            <p className="text-[11px] text-neutral-500 font-medium">
               Approved earnings paid to bank
             </p>
           </div>
 
-          {/* Pending: Solid Rose Red Card */}
-          <div className="bg-[#FFE4E6] border border-[#FDA4AF] rounded-[26px] p-4 sm:p-5 shadow-2xs space-y-2 transition-all">
+          {/* Pending: Black Card with Red Dot */}
+          <div className="bg-neutral-950 border border-neutral-900 rounded-[26px] p-4 sm:p-5 shadow-md space-y-2 transition-all text-white">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-extrabold uppercase tracking-wider text-neutral-900 block">
-                Pending
-              </span>
-              <span className="text-[10px] font-bold text-neutral-900 bg-white/90 border border-neutral-300 px-2 py-0.5 rounded-full shadow-2xs">
+              <div className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
+                <span className="text-[11px] font-extrabold uppercase tracking-wider text-white block">
+                  Pending
+                </span>
+              </div>
+              <span className="text-[10px] font-bold text-neutral-300 bg-white/10 border border-white/15 px-2 py-0.5 rounded-full shadow-2xs">
                 Verification
               </span>
             </div>
-            <div className="text-base sm:text-xl font-extrabold text-neutral-950 font-mono tabular-nums truncate">
+            <div className="text-base sm:text-xl font-extrabold text-white font-mono tabular-nums truncate">
               {formatIDR(stats?.pendingCommission || 0)}
             </div>
-            <p className="text-[11px] text-neutral-700 font-medium">
+            <p className="text-[11px] text-neutral-400 font-medium">
               Awaiting treatment completion
             </p>
           </div>
@@ -548,40 +554,46 @@ Please verify and process the payout to my registered details. Thank you!`;
             </button>
           </div>
 
-          {/* 2. Paid Out & Pending Cards: Side-by-Side (Solid Green & Red Cards) */}
+          {/* 2. Paid Out & Pending Cards: Side-by-Side (White + Green Dot & Black + Red Dot) */}
           <div className="grid grid-cols-2 gap-4">
-            {/* Paid Out Card: Solid Mint Green */}
-            <div className="bg-[#DCFCE7] border border-[#86EFAC] rounded-[26px] p-5 shadow-2xs space-y-2 transition-all hover:border-[#4ADE80]">
+            {/* Paid Out Card: White with Green Dot */}
+            <div className="bg-white border border-neutral-200/90 rounded-[26px] p-5 shadow-2xs space-y-2 transition-all hover:border-neutral-300">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-extrabold uppercase tracking-wider text-neutral-900 block">
-                  Paid Out
-                </span>
-                <span className="text-[10px] font-bold text-neutral-900 bg-white/90 border border-neutral-300 px-2.5 py-0.5 rounded-full shadow-2xs">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                  <span className="text-[11px] font-extrabold uppercase tracking-wider text-neutral-900 block">
+                    Paid Out
+                  </span>
+                </div>
+                <span className="text-[10px] font-bold text-neutral-700 bg-neutral-100 border border-neutral-200 px-2.5 py-0.5 rounded-full shadow-2xs">
                   Transferred
                 </span>
               </div>
               <div className="text-2xl font-extrabold text-neutral-950 font-mono tabular-nums">
                 {formatIDR(stats?.paidCommission || 0)}
               </div>
-              <p className="text-[11px] text-neutral-700 font-medium">
+              <p className="text-[11px] text-neutral-500 font-medium">
                 Approved earnings paid to bank
               </p>
             </div>
 
-            {/* Pending Card: Solid Rose Red */}
-            <div className="bg-[#FFE4E6] border border-[#FDA4AF] rounded-[26px] p-5 shadow-2xs space-y-2 transition-all hover:border-[#FB7185]">
+            {/* Pending Card: Black with Red Dot */}
+            <div className="bg-neutral-950 border border-neutral-900 rounded-[26px] p-5 shadow-md space-y-2 transition-all hover:border-neutral-800 text-white">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-extrabold uppercase tracking-wider text-neutral-900 block">
-                  Pending
-                </span>
-                <span className="text-[10px] font-bold text-neutral-900 bg-white/90 border border-neutral-300 px-2.5 py-0.5 rounded-full shadow-2xs">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
+                  <span className="text-[11px] font-extrabold uppercase tracking-wider text-white block">
+                    Pending
+                  </span>
+                </div>
+                <span className="text-[10px] font-bold text-neutral-300 bg-white/10 border border-white/15 px-2.5 py-0.5 rounded-full shadow-2xs">
                   Verification
                 </span>
               </div>
-              <div className="text-2xl font-extrabold text-neutral-950 font-mono tabular-nums">
+              <div className="text-2xl font-extrabold text-white font-mono tabular-nums">
                 {formatIDR(stats?.pendingCommission || 0)}
               </div>
-              <p className="text-[11px] text-neutral-700 font-medium">
+              <p className="text-[11px] text-neutral-400 font-medium">
                 Awaiting treatment completion
               </p>
             </div>
