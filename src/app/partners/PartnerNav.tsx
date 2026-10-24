@@ -244,9 +244,11 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
       </aside>
 
       {/* ========================================================
-          2. MOBILE STICKY HEADER (hidden on desktop, md:hidden)
+          2. MOBILE STICKY HEADER (hidden on desktop, md:hidden; hidden on calendar section on mobile)
          ======================================================== */}
-      <header className="md:hidden sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-neutral-200/60 transition-all">
+      <header className={`md:hidden sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-neutral-200/60 transition-all ${
+        pathname === '/partners/calendar' ? 'hidden' : ''
+      }`}>
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-14">
             

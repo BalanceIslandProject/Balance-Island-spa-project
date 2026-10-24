@@ -144,6 +144,36 @@ export default function PartnerCalendarPage() {
     }
   };
 
+  const goToPrev = () => {
+    if (viewMode === 'week' && selectedDate && selectedDate.includes('-')) {
+      const parts = selectedDate.split('-');
+      const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]) - 7);
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      setSelectedDate(`${yyyy}-${mm}-${dd}`);
+      setCurrentYear(d.getFullYear());
+      setCurrentMonth(d.getMonth());
+    } else {
+      goToPrevMonth();
+    }
+  };
+
+  const goToNext = () => {
+    if (viewMode === 'week' && selectedDate && selectedDate.includes('-')) {
+      const parts = selectedDate.split('-');
+      const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]) + 7);
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      setSelectedDate(`${yyyy}-${mm}-${dd}`);
+      setCurrentYear(d.getFullYear());
+      setCurrentMonth(d.getMonth());
+    } else {
+      goToNextMonth();
+    }
+  };
+
   const goToToday = () => {
     setCurrentYear(today.getFullYear());
     setCurrentMonth(today.getMonth());
@@ -151,6 +181,14 @@ export default function PartnerCalendarPage() {
     const m = String(today.getMonth() + 1).padStart(2, '0');
     const d = String(today.getDate()).padStart(2, '0');
     setSelectedDate(`${y}-${m}-${d}`);
+  };
+
+  // Turn to week view on mobile when specific date is clicked so user can see booking details without scrolling
+  const handleDateClick = (dateString: string) => {
+    setSelectedDate(dateString);
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      setViewMode('week');
+    }
   };
 
   const handleCopy = (text: string) => {
@@ -279,74 +317,78 @@ export default function PartnerCalendarPage() {
       {/* ─────────────────────────────────────────────────────────────
           1. TOP EXECUTIVE BAR: Title, Controls, KPI Summary
          ───────────────────────────────────────────────────────────── */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 sm:gap-4 pb-2 border-b border-neutral-200/80">
-        <div>
-          <div className="flex items-center gap-2">
+      <div className="flex flex-col gap-3 pb-2 border-b border-neutral-200/80">
+        {/* Row 1: Title on left, Live Schedule badge on right */}
+        <div className="flex items-center justify-between w-full">
+          <div>
             <h1 className="text-xl sm:text-2xl font-extrabold text-neutral-950 tracking-tight">
               Booking Calendar
             </h1>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-              Live Schedule
-            </span>
+            <p className="hidden sm:block text-xs text-neutral-500 mt-0.5">
+              Full-screen calendar view for scheduled treatments and commission attribution
+            </p>
           </div>
-          <p className="hidden sm:block text-xs text-neutral-500 mt-0.5">
-            Full-screen calendar view for scheduled treatments and commission attribution
-          </p>
+          <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200 shrink-0">
+            Live Schedule
+          </span>
         </div>
 
-        {/* Center / Right Controls */}
-        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+        {/* Row 2: October 2026 Navigator on Left, Month/Week Toggle on Right */}
+        <div className="flex items-center justify-between w-full gap-2 pt-1 lg:pt-0">
           {/* Apple Segmented Month Navigator */}
           <div className="inline-flex items-center bg-white border border-neutral-200/80 rounded-2xl p-1 shadow-2xs">
             <button
               type="button"
-              onClick={goToPrevMonth}
+              onClick={goToPrev}
               className="p-1.5 sm:p-2 hover:bg-neutral-100 rounded-xl transition-colors cursor-pointer text-neutral-700 hover:text-black"
-              title="Previous Month"
+              title="Previous"
             >
               <ChevronLeft size={16} />
             </button>
-            <div className="px-2 sm:px-3 text-xs font-bold text-neutral-950 min-w-[110px] sm:min-w-[130px] text-center">
+            <div className="px-2 sm:px-3 text-xs font-bold text-neutral-950 min-w-[105px] sm:min-w-[130px] text-center">
               {MONTH_NAMES[currentMonth]} {currentYear}
             </div>
             <button
               type="button"
-              onClick={goToNextMonth}
+              onClick={goToNext}
               className="p-1.5 sm:p-2 hover:bg-neutral-100 rounded-xl transition-colors cursor-pointer text-neutral-700 hover:text-black"
-              title="Next Month"
+              title="Next"
             >
               <ChevronRight size={16} />
             </button>
           </div>
 
-          <button
-            type="button"
-            onClick={goToToday}
-            className="px-3 sm:px-3.5 py-1.5 sm:py-2 text-xs font-semibold rounded-2xl bg-white border border-neutral-200/80 text-neutral-800 hover:bg-neutral-100 active:scale-95 transition-all shadow-2xs cursor-pointer"
-          >
-            Today
-          </button>
+          <div className="flex items-center gap-2">
+            {/* Today button - hidden on mobile as requested, kept on desktop */}
+            <button
+              type="button"
+              onClick={goToToday}
+              className="hidden lg:inline-block px-3.5 py-2 text-xs font-semibold rounded-2xl bg-white border border-neutral-200/80 text-neutral-800 hover:bg-neutral-100 active:scale-95 transition-all shadow-2xs cursor-pointer"
+            >
+              Today
+            </button>
 
-          {/* Month / Week Switcher */}
-          <div className="inline-flex p-1 rounded-2xl bg-neutral-100 border border-neutral-200/80 text-xs">
-            <button
-              type="button"
-              onClick={() => setViewMode('month')}
-              className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl font-semibold transition-all cursor-pointer ${
-                viewMode === 'month' ? 'bg-white text-neutral-950 shadow-2xs' : 'text-neutral-500 hover:text-neutral-900'
-              }`}
-            >
-              Month
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode('week')}
-              className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl font-semibold transition-all cursor-pointer ${
-                viewMode === 'week' ? 'bg-white text-neutral-950 shadow-2xs' : 'text-neutral-500 hover:text-neutral-900'
-              }`}
-            >
-              Week
-            </button>
+            {/* Month / Week Switcher */}
+            <div className="inline-flex p-1 rounded-2xl bg-neutral-100 border border-neutral-200/80 text-xs">
+              <button
+                type="button"
+                onClick={() => setViewMode('month')}
+                className={`px-3 py-1.5 rounded-xl font-semibold transition-all cursor-pointer ${
+                  viewMode === 'month' ? 'bg-white text-neutral-950 shadow-2xs font-bold' : 'text-neutral-500 hover:text-neutral-900'
+                }`}
+              >
+                Month
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('week')}
+                className={`px-3 py-1.5 rounded-xl font-semibold transition-all cursor-pointer ${
+                  viewMode === 'week' ? 'bg-white text-neutral-950 shadow-2xs font-bold' : 'text-neutral-500 hover:text-neutral-900'
+                }`}
+              >
+                Week
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -445,7 +487,10 @@ export default function PartnerCalendarPage() {
                 </span>
                 <button
                   type="button"
-                  onClick={() => setSelectedDate(null)}
+                  onClick={() => {
+                    setSelectedDate(null);
+                    setViewMode('month');
+                  }}
                   className="text-emerald-700 hover:underline font-bold text-xs cursor-pointer"
                 >
                   Clear Selection
@@ -503,7 +548,7 @@ export default function PartnerCalendarPage() {
                     <button
                       key={dateString}
                       type="button"
-                      onClick={() => setSelectedDate(dateString)}
+                      onClick={() => handleDateClick(dateString)}
                       className={`min-h-[44px] sm:min-h-[105px] p-1 sm:p-2.5 rounded-xl sm:rounded-2xl flex flex-col justify-between text-left transition-all cursor-pointer border relative group ${
                         isSelected
                           ? 'bg-neutral-950 text-white border-neutral-950 shadow-md ring-2 ring-neutral-950/20 z-10'
@@ -612,11 +657,25 @@ export default function PartnerCalendarPage() {
                     <div className="text-sm sm:text-lg font-bold mt-0.5">{w.dayNum}</div>
                     <div className="text-[10px] sm:text-xs font-semibold mt-1 sm:mt-2 truncate">
                       {w.dayBookings.length > 0 ? (
-                        <span className="flex items-center gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                          <span className="hidden sm:inline">{w.dayBookings.length} Bookings</span>
-                          <span className="sm:hidden font-mono">{w.dayBookings.length}</span>
-                        </span>
+                        <div className="flex items-center gap-0.5 sm:gap-1">
+                          {w.dayBookings.some((b) => b.commission_status === 'approved') && (
+                            <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-emerald-300' : 'bg-emerald-600'}`} />
+                          )}
+                          {w.dayBookings.some((b) => b.commission_status === 'pending') && (
+                            <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-rose-300' : 'bg-rose-500'}`} />
+                          )}
+                          {!w.dayBookings.some((b) => b.commission_status === 'approved' || b.commission_status === 'pending') && (
+                            <span className="w-1.5 h-1.5 rounded-full bg-neutral-400" />
+                          )}
+                          <span className="hidden sm:inline text-xs font-semibold ml-1">
+                            {w.dayBookings.length} Bookings
+                          </span>
+                          <span className={`sm:hidden text-[9px] font-mono font-bold px-1 rounded-full ${
+                            isSelected ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-900'
+                          }`}>
+                            {w.dayBookings.length}
+                          </span>
+                        </div>
                       ) : (
                         <span className="text-neutral-400 font-normal hidden sm:inline">0</span>
                       )}
@@ -667,7 +726,10 @@ export default function PartnerCalendarPage() {
               {selectedDate && (
                 <button
                   type="button"
-                  onClick={() => setSelectedDate(null)}
+                  onClick={() => {
+                    setSelectedDate(null);
+                    setViewMode('month');
+                  }}
                   className="text-[11px] text-emerald-700 hover:underline font-bold cursor-pointer"
                 >
                   All Dates
