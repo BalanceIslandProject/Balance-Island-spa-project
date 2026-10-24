@@ -302,6 +302,25 @@ export default function PartnerCalendarPage() {
     return list;
   }, [selectedDate, currentMonthBookings, bookingsByDate, statusFilter]);
 
+  // Statistics for the selected day / filter (Total Bookings & Total Commission)
+  const selectedDayStats = useMemo(() => {
+    let count = 0;
+    let totalCommission = 0;
+    let approvedCommission = 0;
+    let pendingCommission = 0;
+
+    for (const b of selectedDayBookings) {
+      const isCancelled = b.commission_status === 'cancelled' || b.booking_status === 'Cancelled';
+      if (isCancelled) continue;
+      count++;
+      totalCommission += b.commission_amount || 0;
+      if (b.commission_status === 'approved') approvedCommission += b.commission_amount || 0;
+      if (b.commission_status === 'pending') pendingCommission += b.commission_amount || 0;
+    }
+
+    return { count, totalCommission, approvedCommission, pendingCommission };
+  }, [selectedDayBookings]);
+
   if (loading) {
     return (
       <div className="py-24 text-center space-y-3">
@@ -711,18 +730,18 @@ export default function PartnerCalendarPage() {
 
         {/* ──────── APPOINTMENT DETAILS INSPECTOR (RIGHT: 4 COLS) ──────── */}
         <div className="lg:col-span-4 bg-white border border-neutral-200/80 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm space-y-4 lg:sticky lg:top-6">
-          <div className="flex items-center justify-between pb-3 border-b border-neutral-100">
-            <div>
-              <span className="text-[10px] font-extrabold uppercase tracking-widest text-neutral-400 block">
-                Booking Details
-              </span>
-              <h3 className="text-base font-extrabold text-neutral-950 tracking-tight mt-0.5">
-                {selectedDate
-                  ? safeFormatDate(selectedDate, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
-                  : 'All Appointments'}
-              </h3>
-            </div>
-            <div className="flex items-center gap-2">
+          {/* Executive Header: Date Indicator, Big Title with Total Bookings & Commission */}
+          <div className="pb-3 border-b border-neutral-100 space-y-2">
+            {/* Top row: Date label + All Dates button */}
+            <div className="flex items-center justify-between text-xs">
+              <div className="flex items-center gap-1.5 font-bold text-neutral-500">
+                <CalendarIcon size={13} className="text-neutral-400 shrink-0" />
+                <span className="text-[11px] sm:text-xs uppercase tracking-wider">
+                  {selectedDate
+                    ? safeFormatDate(selectedDate, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
+                    : 'All Dates (Current Month)'}
+                </span>
+              </div>
               {selectedDate && (
                 <button
                   type="button"
@@ -730,15 +749,47 @@ export default function PartnerCalendarPage() {
                     setSelectedDate(null);
                     setViewMode('month');
                   }}
-                  className="text-[11px] text-emerald-700 hover:underline font-bold cursor-pointer"
+                  className="text-xs text-emerald-700 hover:text-emerald-900 font-bold hover:underline cursor-pointer"
                 >
                   All Dates
                 </button>
               )}
-              <span className="text-xs font-mono font-bold bg-neutral-100 text-neutral-800 px-2.5 py-1 rounded-full border border-neutral-200/70">
-                {selectedDayBookings.length}
-              </span>
             </div>
+
+            {/* Big Title: Total Bookings on left & Total Commission on right */}
+            <div className="flex items-center justify-between gap-3 pt-0.5">
+              <div>
+                <span className="text-[10px] font-extrabold uppercase tracking-widest text-neutral-400 block">
+                  Total Bookings
+                </span>
+                <div className="text-2xl sm:text-3xl font-black text-neutral-950 tracking-tight font-mono mt-0.5">
+                  {selectedDayStats.count} <span className="text-sm sm:text-base font-bold font-sans text-neutral-600">{selectedDayStats.count === 1 ? 'Booking' : 'Bookings'}</span>
+                </div>
+              </div>
+
+              <div className="text-right">
+                <span className="text-[10px] font-extrabold uppercase tracking-widest text-emerald-800 block">
+                  Commission
+                </span>
+                <div className="text-2xl sm:text-3xl font-black text-emerald-700 font-mono tracking-tight tabular-nums mt-0.5">
+                  +{formatIDR(selectedDayStats.totalCommission)}
+                </div>
+              </div>
+            </div>
+
+            {/* Approved & Pending Commission Chips */}
+            {selectedDayStats.count > 0 && (
+              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 pt-1 text-[10px] sm:text-[11px]">
+                <span className="inline-flex items-center gap-1 bg-[#DCFCE7] text-neutral-900 px-2 py-0.5 rounded-lg border border-[#86EFAC] font-semibold">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
+                  <span>Approved: <strong className="font-mono">{formatIDR(selectedDayStats.approvedCommission)}</strong></span>
+                </span>
+                <span className="inline-flex items-center gap-1 bg-[#FFE4E6] text-neutral-900 px-2 py-0.5 rounded-lg border border-[#FDA4AF] font-semibold">
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                  <span>Pending: <strong className="font-mono">{formatIDR(selectedDayStats.pendingCommission)}</strong></span>
+                </span>
+              </div>
+            )}
           </div>
 
           {/* MOBILE FILTER TABS: All, Approved, Pending, Cancelled (Positioned directly above the booking details) */}
