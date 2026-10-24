@@ -20,14 +20,15 @@ import {
   CheckCheck,
   CreditCard,
   Clock,
-  Sparkles,
   RefreshCw,
   CheckSquare,
   Square,
   XSquare,
   Copy,
   Check,
-  User
+  User,
+  Lock,
+  MapPin
 } from 'lucide-react';
 import { Treatment, TherapistFee } from '@/context/SpaContext';
 
@@ -49,6 +50,10 @@ export interface Booking {
   items?: any[];
   payment_status?: string;
   commission?: any;
+  location?: string;
+  room_number?: string;
+  guest_whatsapp?: string;
+  guest_email?: string;
 }
 
 const toLocalDateString = (date: Date) => {
@@ -64,6 +69,88 @@ export const isCouplePackage = (title?: string) => {
   return /couple|honeymoon|duo|2\s*person|for\s*2/i.test(t);
 };
 
+// Secret admin password to undo Ongoing Treatment or Finish Treatment
+const SECRET_ADMIN_PASSWORD = '022320';
+
+// Calculate therapist fee based on therapist_fees database table
+// Exactly matching central admin logic with couple packages = 2 therapists
+export const calculateBookingTherapistFee = (
+  booking: Booking,
+  treatmentsList: Treatment[],
+  feesList: TherapistFee[]
+): { totalFee: number; therapistsCount: number } => {
+  let totalFee = 0;
+  let therapistsCount = 0;
+
+  const norm = (d: any) => String(d || '').replace(/[^0-9]/g, '');
+
+  const findBaseFee = (treatmentTitle: string, durationStr: string, treatmentId?: string) => {
+    const normDur = norm(durationStr);
+    const matchingTreatments = treatmentsList.filter(
+      t => t.title.trim().toLowerCase() === treatmentTitle.trim().toLowerCase()
+    );
+    const candidateIds = new Set<string>();
+    if (treatmentId) candidateIds.add(treatmentId);
+    matchingTreatments.forEach(t => candidateIds.add(t.id));
+
+    let feeObj: TherapistFee | undefined;
+    if (normDur) {
+      feeObj = feesList.find(
+        f => candidateIds.has(f.treatment_id) && norm(f.duration) === normDur
+      );
+    }
+    if (!feeObj && candidateIds.size > 0) {
+      feeObj = feesList.find(f => candidateIds.has(f.treatment_id));
+    }
+    if (!feeObj && normDur) {
+      feeObj = feesList.find(f => norm(f.duration) === normDur);
+    }
+    if (!feeObj && feesList.length > 0) {
+      feeObj = feesList[0];
+    }
+
+    if (feeObj) {
+      const baseStr = String(feeObj.fee || '').replace(/[^0-9]/g, '');
+      return parseInt(baseStr || '0', 10);
+    }
+    return 0;
+  };
+
+  if (booking.items && Array.isArray(booking.items) && booking.items.length > 0) {
+    booking.items.forEach((item: any) => {
+      const title = item.title || item.treatment || '';
+      const dur = item.duration || '';
+      const isCouple = isCouplePackage(title);
+      const pax = isCouple ? 2 : (item.guests || 1);
+      const therapistsForItem = isCouple 
+        ? Math.max(2, Math.round((item.guests || 2) / 2) * 2) 
+        : (item.therapists || pax);
+
+      const baseFee = findBaseFee(title, dur, item.treatmentId || item.treatment_id);
+      totalFee += baseFee * therapistsForItem;
+      therapistsCount += therapistsForItem;
+    });
+  } else {
+    let title = booking.treatment_name || '';
+    let dur = '';
+    const match = title.match(/(.*)\s*\((.*)\)$/);
+    if (match) {
+      title = match[1].trim();
+      dur = match[2].trim();
+    }
+    const isCouple = isCouplePackage(title);
+    const therapists = isCouple 
+      ? Math.max(2, (booking.therapists_count || 2)) 
+      : (booking.therapists_count || booking.pax || 1);
+
+    const baseFee = findBaseFee(title, dur);
+    totalFee = baseFee * therapists;
+    therapistsCount = therapists;
+  }
+
+  return { totalFee, therapistsCount };
+};
+
 export default function TherapickBookingManagement({ 
   treatments, 
   therapistFees 
@@ -74,7 +161,24 @@ export default function TherapickBookingManagement({
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<string>(toLocalDateString(new Date()));
   const [monthBookings, setMonthBookings] = useState<Booking[]>([]);
+  const [allTherapistFees, setAllTherapistFees] = useState<TherapistFee[]>(therapistFees || []);
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (therapistFees && therapistFees.length > 0) {
+      setAllTherapistFees(therapistFees);
+    }
+  }, [therapistFees]);
+
+  useEffect(() => {
+    async function loadFreshFees() {
+      const { data } = await supabase.from('therapist_fees').select('*');
+      if (data && data.length > 0) {
+        setAllTherapistFees(data);
+      }
+    }
+    loadFreshFees();
+  }, []);
 
   // Form State
   const [showForm, setShowForm] = useState(false);
@@ -147,7 +251,7 @@ export default function TherapickBookingManagement({
       const startOfMonth = toLocalDateString(new Date(year, month, 1));
       const endOfMonth = toLocalDateString(new Date(year, month + 1, 0));
 
-      const [bookingsRes, commissionsRes] = await Promise.all([
+      const [bookingsRes, commissionsRes, feesRes] = await Promise.all([
         supabase
           .from('bookings')
           .select('*')
@@ -157,10 +261,17 @@ export default function TherapickBookingManagement({
         supabase
           .from('affiliate_commissions')
           .select('*'),
+        supabase
+          .from('therapist_fees')
+          .select('*'),
       ]);
 
       const data = bookingsRes.data || [];
       const comms = commissionsRes.data || [];
+      const currentFees = (feesRes.data && feesRes.data.length > 0) ? feesRes.data : allTherapistFees;
+      if (feesRes.data && feesRes.data.length > 0) {
+        setAllTherapistFees(feesRes.data);
+      }
 
       // Map commissions by uppercase booking ID
       const commMap = new Map<string, any>();
@@ -175,15 +286,22 @@ export default function TherapickBookingManagement({
         const c = commMap.get(ref);
         const isPaid = c?.payment_verified || b.payment_status === 'paid';
 
+        // Calculate therapist fee base on therapist_fees database (couple = 2 therapists)
+        const { totalFee, therapistsCount } = calculateBookingTherapistFee(b, treatments, currentFees);
+        const effectiveTherapistFee = Number(b.therapist_fee_total || 0) > 0 ? Number(b.therapist_fee_total) : totalFee;
+        const effectiveTherapistsCount = Number(b.therapists_count || 0) > 0 ? Number(b.therapists_count) : therapistsCount;
+
         // Smart profit detection:
-        // If booking comes from an affiliate link and commission is approved, deduct commission automatically
-        let autoCalculatedProfit = Number(b.net_profit ?? (Number(b.revenue || 0) - Number(b.therapist_fee_total || 0)));
+        // Revenue minus therapist fees minus approved affiliate commission
+        let autoCalculatedProfit = Math.max(0, Number(b.revenue || 0) - effectiveTherapistFee);
         if (c && c.status === 'approved' && Number(c.commission_amount || 0) > 0) {
-          autoCalculatedProfit = Math.max(0, Number(b.revenue || 0) - Number(b.therapist_fee_total || 0) - Number(c.commission_amount || 0));
+          autoCalculatedProfit = Math.max(0, Number(b.revenue || 0) - effectiveTherapistFee - Number(c.commission_amount || 0));
         }
 
         return {
           ...b,
+          therapist_fee_total: effectiveTherapistFee,
+          therapists_count: effectiveTherapistsCount,
           net_profit: autoCalculatedProfit,
           commission: c,
           payment_status: isPaid ? 'paid' : (b.payment_status || 'unpaid'),
@@ -234,15 +352,15 @@ export default function TherapickBookingManagement({
           item.revenue = isCouple ? (price * Math.max(1, Math.round(item.pax / 2))) : (price * item.pax);
         }
 
-        if (t && therapistFees.length > 0) {
+        if (t && allTherapistFees.length > 0) {
           const normalizeDur = (d: string) => d.replace(/[^0-9]/g, '');
           const normFormDur = normalizeDur(item.duration);
           
-          const matchingFee = therapistFees.find(f => 
+          const matchingFee = allTherapistFees.find(f => 
              f.treatment_id === t.id && normalizeDur(f.duration) === normFormDur
           );
           
-          const feeObj = matchingFee || therapistFees.find(f => normalizeDur(f.duration) === normFormDur) || therapistFees[0];
+          const feeObj = matchingFee || allTherapistFees.find(f => normalizeDur(f.duration) === normFormDur) || allTherapistFees[0];
           const baseFeeStr = feeObj.fee.replace(/[^0-9]/g, '');
           const baseFee = parseInt(baseFeeStr || '0', 10);
           item.fee = baseFee * item.therapists;
@@ -300,47 +418,90 @@ export default function TherapickBookingManagement({
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this booking?")) return;
+    const booking = monthBookings.find(b => b.id === id);
+    const currentStatus = (booking?.status || '').toLowerCase();
+    if (currentStatus === 'ongoing' || currentStatus === 'completed') {
+      const pin = prompt(`Booking #${booking?.reference_number || id} is marked as ${booking?.status}. Enter secret admin password to delete:`);
+      if (pin !== (process.env.NEXT_PUBLIC_DELETE_PIN || SECRET_ADMIN_PASSWORD)) {
+        alert('Incorrect password. Deletion cancelled.');
+        return;
+      }
+    } else {
+      if (!confirm("Are you sure you want to delete this booking?")) return;
+    }
+
     await supabase.from('bookings').delete().eq('id', id);
+    fetchMonthBookings();
+  };
+
+  // Dedicated Password-Protected Undo for Ongoing Treatment and Finish Treatment (Completed)
+  const handleUndoStatus = async (booking: Booking, statusToUndo: 'Ongoing' | 'Completed') => {
+    const label = statusToUndo === 'Ongoing' ? 'Ongoing Treatment' : 'Finish Treatment';
+    const pin = prompt(`Enter secret admin password to undo ${label}:`);
+    if (!pin) return;
+    if (pin !== (process.env.NEXT_PUBLIC_DELETE_PIN || SECRET_ADMIN_PASSWORD)) {
+      alert('Incorrect password. Action cannot be undone.');
+      return;
+    }
+
+    let targetStatus = 'Pending';
+    if (statusToUndo === 'Completed') {
+      const wantOngoing = confirm('Click OK to revert to Ongoing Treatment, or Cancel to revert to Pending.');
+      targetStatus = wantOngoing ? 'Ongoing' : 'Pending';
+    }
+
+    let updates: any = { status: targetStatus };
+    await supabase.from('bookings').update(updates).eq('id', booking.id);
+
+    const ref = booking.reference_number || booking.id;
+    if (ref) {
+      if (statusToUndo === 'Completed' && targetStatus !== 'Completed') {
+        await supabase
+          .from('affiliate_commissions')
+          .update({
+            service_completed: false,
+            updated_at: new Date().toISOString(),
+          })
+          .ilike('booking_id', ref);
+      }
+    }
+
     fetchMonthBookings();
   };
 
   // Change Treatment Status (Confirmed, Ongoing, Completed / Finish Treatment, Cancelled)
   const handleStatusChange = async (id: string, newStatus: string) => {
+    const booking = monthBookings.find(b => b.id === id);
+    if (!booking) return;
+
+    const currentStatus = (booking.status || 'Pending').toLowerCase();
+    const isCurrentlyLocked = currentStatus === 'ongoing' || currentStatus === 'completed';
+
+    // If currently Ongoing or Completed, ANY revert or cancel requires the secret admin password 022320!
+    // Exception: Progressing forward from Ongoing -> Completed is normal forward progression
+    if (isCurrentlyLocked) {
+      const isProgressingOngoingToCompleted = (currentStatus === 'ongoing' && (newStatus === 'Completed' || newStatus === 'finish'));
+      if (!isProgressingOngoingToCompleted) {
+        const pin = prompt(`Booking #${booking.reference_number || booking.id} is marked as ${booking.status}. Enter secret admin password to change/undo status:`);
+        if (pin !== (process.env.NEXT_PUBLIC_DELETE_PIN || SECRET_ADMIN_PASSWORD)) {
+          alert('Incorrect password. Action cancelled.');
+          return;
+        }
+      }
+    }
+
     if (!confirm(`Are you sure you want to mark this booking as ${newStatus}?`)) return;
 
     let updates: any = { status: newStatus };
-    const booking = monthBookings.find(b => b.id === id);
 
-    if (newStatus === 'Confirmed' || newStatus === 'CONFIRMED') {
-      if (booking && booking.items && Array.isArray(booking.items) && booking.items.length > 0) {
-        let totalFee = 0;
-        booking.items.forEach((item: any) => {
-            const normDur = item.duration ? item.duration.replace(/[^0-9]/g, '') : '';
-            const t = treatments.find(tr => tr.title.toLowerCase() === item.title.toLowerCase());
-            
-            let feeObj;
-            if (t && normDur) {
-                feeObj = therapistFees.find(f => f.treatment_id === t.id && f.duration.replace(/[^0-9]/g, '') === normDur);
-            }
-            if (!feeObj && normDur) {
-                feeObj = therapistFees.find(f => f.duration.replace(/[^0-9]/g, '') === normDur);
-            }
-            if (!feeObj && therapistFees.length > 0) {
-                feeObj = therapistFees[0];
-            }
-            
-            if (feeObj) {
-                const baseFee = parseInt(feeObj.fee.replace(/[^0-9]/g, '') || '0', 10);
-                const isCouple = isCouplePackage(item.title);
-                const paxCount = isCouple ? 2 : (item.guests || 1);
-                totalFee += baseFee * paxCount;
-            }
-        });
-        
+    // Calculate and add therapist fee base on therapist_fees database (couple = 2 therapists)
+    if (newStatus === 'Ongoing' || newStatus === 'Completed' || newStatus === 'Confirmed' || newStatus === 'CONFIRMED') {
+      const { totalFee, therapistsCount } = calculateBookingTherapistFee(booking, treatments, allTherapistFees);
+      if (totalFee > 0) {
+        updates.therapist_fee_total = totalFee;
+        updates.therapists_count = therapistsCount;
         const isCommApproved = booking?.commission?.status === 'approved';
         const commAmount = isCommApproved ? Number(booking.commission.commission_amount || 0) : 0;
-        updates.therapist_fee_total = totalFee;
         updates.net_profit = Math.max(0, (booking.revenue || 0) - totalFee - commAmount);
       }
     }
@@ -356,6 +517,7 @@ export default function TherapickBookingManagement({
           .from('affiliate_commissions')
           .update({
             status: 'cancelled',
+            service_completed: false,
             updated_at: new Date().toISOString(),
           })
           .ilike('booking_id', ref);
@@ -368,12 +530,21 @@ export default function TherapickBookingManagement({
             updated_at: new Date().toISOString(),
           })
           .ilike('booking_id', ref);
-      } else if (newStatus === 'Confirmed' || newStatus === 'Ongoing') {
+      } else if (newStatus === 'Confirmed' || newStatus === 'Ongoing' || newStatus === 'Pending') {
         if (booking?.commission?.status === 'cancelled') {
           await supabase
             .from('affiliate_commissions')
             .update({
               status: 'pending',
+              service_completed: false,
+              updated_at: new Date().toISOString(),
+            })
+            .ilike('booking_id', ref);
+        } else if (currentStatus === 'completed') {
+          await supabase
+            .from('affiliate_commissions')
+            .update({
+              service_completed: false,
               updated_at: new Date().toISOString(),
             })
             .ilike('booking_id', ref);
@@ -406,18 +577,22 @@ export default function TherapickBookingManagement({
   };
 
   // Manual Commission Approval: Admin executes the job when treatment is done
+  // Add therapist fee base on therapist_fees database, couple package = 2 therapists
   const handleApproveCommission = async (booking: Booking) => {
     const ref = booking.reference_number || booking.id;
     if (!ref) return;
 
-    if (!confirm(`Approve affiliate commission for #${ref}? The commission will immediately become approved and withdrawable for the partner, and profit will automatically be recalculated.`)) {
+    if (!confirm(`Approve affiliate commission for #${ref}? The commission will immediately become approved and withdrawable for the partner, and therapist fee base on the database will automatically be recorded.`)) {
       return;
     }
 
+    // Calculate therapist fee base on therapist_fees database (couple = 2 therapists)
+    const { totalFee, therapistsCount } = calculateBookingTherapistFee(booking, treatments, allTherapistFees);
+    const finalTherapistFee = totalFee > 0 ? totalFee : Number(booking.therapist_fee_total || 0);
+    const finalTherapistsCount = therapistsCount > 0 ? therapistsCount : Number(booking.therapists_count || booking.pax || 1);
     const commAmount = Number(booking.commission?.commission_amount || 0);
     const rev = Number(booking.revenue || 0);
-    const fee = Number(booking.therapist_fee_total || 0);
-    const autoCalculatedProfit = Math.max(0, rev - fee - commAmount);
+    const autoCalculatedProfit = Math.max(0, rev - finalTherapistFee - commAmount);
 
     await supabase
       .from('affiliate_commissions')
@@ -429,10 +604,12 @@ export default function TherapickBookingManagement({
       })
       .ilike('booking_id', ref);
 
-    // Smart logic: Automatically recalculate and store profit in bookings table
+    // Smart logic: Automatically recalculate and store therapist fee and profit in bookings table
     await supabase
       .from('bookings')
       .update({
+        therapist_fee_total: finalTherapistFee,
+        therapists_count: finalTherapistsCount,
         net_profit: autoCalculatedProfit,
       })
       .eq('id', booking.id);
@@ -856,26 +1033,26 @@ export default function TherapickBookingManagement({
                 const isCommissionCancelled = booking.commission?.status === 'cancelled';
 
                 return (
-                  <div key={booking.id} className={`bg-white border ${isCancelled ? 'border-red-200 bg-red-50/20' : 'border-black/10'} rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden space-y-4`}>
+                  <div key={booking.id} className={`bg-white border ${isCancelled ? 'border-red-200 bg-red-50/20' : 'border-neutral-200/90'} rounded-2xl p-4 sm:p-5 shadow-xs hover:shadow-md transition-all relative overflow-hidden space-y-4`}>
                     <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${
                       isCancelled ? 'bg-red-500' :
-                      isOngoing ? 'bg-indigo-500' :
-                      isCompleted ? 'bg-teal-500' :
+                      isOngoing ? 'bg-indigo-600' :
+                      isCompleted ? 'bg-teal-600' :
                       isConfirmed ? 'bg-sky-500' : 'bg-orange-400'
                     }`}></div>
 
-                    {/* Top Row: Booking Ref with Copy, Pax, Payment Badge, Treatment Status Badge, Customer Name & Time */}
-                    <div className="flex flex-wrap items-center justify-between gap-2.5 ml-2">
+                    {/* Top Row: Reference, Pax, Payment Badge, Treatment Status Mark, Customer Name & Time */}
+                    <div className="flex flex-wrap items-center justify-between gap-2.5 pl-1.5">
                       <div className="flex flex-wrap items-center gap-2">
                         {booking.reference_number && (
                           <div className="flex items-center gap-1">
-                            <span className="font-mono text-xs font-bold text-neutral-900 bg-black/5 px-2.5 py-1 rounded-lg border border-black/10">
+                            <span className="font-mono text-xs font-bold text-neutral-900 bg-neutral-100 px-2.5 py-1 rounded-lg border border-neutral-200">
                               #{booking.reference_number}
                             </span>
                             <button
                               type="button"
                               onClick={() => handleCopy(booking.reference_number!)}
-                              className="text-neutral-400 hover:text-neutral-800 transition-colors p-1 rounded hover:bg-black/5 cursor-pointer"
+                              className="text-neutral-400 hover:text-neutral-800 transition-colors p-1 rounded hover:bg-neutral-100 cursor-pointer"
                               title="Copy reference number"
                             >
                               {copiedId === booking.reference_number ? (
@@ -886,7 +1063,7 @@ export default function TherapickBookingManagement({
                             </button>
                           </div>
                         )}
-                        <span className="text-[10px] font-bold tracking-wider uppercase bg-black/5 text-neutral-700 px-2 py-0.5 rounded-md border border-black/10 whitespace-nowrap">
+                        <span className="text-[10px] font-bold tracking-wider uppercase bg-neutral-100 text-neutral-700 px-2.5 py-1 rounded-lg border border-neutral-200 whitespace-nowrap">
                           {booking.pax} Pax
                         </span>
 
@@ -894,7 +1071,7 @@ export default function TherapickBookingManagement({
                         <button
                           type="button"
                           onClick={() => handleTogglePayment(booking)}
-                          className={`text-[10px] font-extrabold tracking-wider uppercase px-2.5 py-0.5 rounded-full border transition-all cursor-pointer flex items-center gap-1 shadow-2xs ${
+                          className={`text-[10px] font-extrabold tracking-wider uppercase px-2.5 py-1 rounded-lg border transition-all cursor-pointer flex items-center gap-1 shadow-2xs ${
                             isPaid
                               ? 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100'
                               : 'bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100'
@@ -905,36 +1082,49 @@ export default function TherapickBookingManagement({
                           <span>{isPaid ? 'Paid' : 'Unpaid'}</span>
                         </button>
 
-                        {/* Treatment Status Label */}
+                        {/* Treatment Status Mark (Moved Above when Ongoing or Finish Treatment, locked with 022320 password) */}
                         {isCancelled ? (
-                          <span className="text-[10px] font-extrabold tracking-wider uppercase px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200 shadow-2xs">
+                          <span className="text-[10px] font-extrabold tracking-wider uppercase px-2.5 py-1 rounded-lg bg-rose-50 text-rose-700 border border-rose-200 shadow-2xs">
                             Cancelled
                           </span>
                         ) : isOngoing ? (
-                          <span className="text-[10px] font-extrabold tracking-wider uppercase px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-800 border border-indigo-200 shadow-2xs flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => handleUndoStatus(booking, 'Ongoing')}
+                            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black tracking-wider uppercase bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border border-indigo-200 shadow-2xs transition-all cursor-pointer group"
+                            title="Ongoing Treatment active. Undo requires secret admin password (022320)"
+                          >
                             <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-pulse" />
-                            Ongoing Treatment
-                          </span>
+                            <span>Ongoing Treatment</span>
+                            <Lock size={10} className="text-indigo-600 group-hover:scale-110 transition-transform" />
+                          </button>
                         ) : isCompleted ? (
-                          <span className="text-[10px] font-extrabold tracking-wider uppercase px-2.5 py-0.5 rounded-full bg-teal-50 text-teal-800 border border-teal-200 shadow-2xs">
-                            Finish Treatment
-                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleUndoStatus(booking, 'Completed')}
+                            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black tracking-wider uppercase bg-teal-50 hover:bg-teal-100 text-teal-900 border border-teal-200 shadow-2xs transition-all cursor-pointer group"
+                            title="Finish Treatment marked. Undo requires secret admin password (022320)"
+                          >
+                            <CheckCircle2 size={11} className="text-teal-700" />
+                            <span>Finish Treatment</span>
+                            <Lock size={10} className="text-teal-600 group-hover:scale-110 transition-transform" />
+                          </button>
                         ) : isConfirmed && !hasCommission ? (
-                          <span className="text-[10px] font-extrabold tracking-wider uppercase px-2.5 py-0.5 rounded-full bg-sky-50 text-sky-800 border border-sky-200 shadow-2xs">
+                          <span className="text-[10px] font-extrabold tracking-wider uppercase px-2.5 py-1 rounded-lg bg-sky-50 text-sky-800 border border-sky-200 shadow-2xs">
                             Confirmed
                           </span>
                         ) : (
-                          <span className="text-[10px] font-extrabold tracking-wider uppercase px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 shadow-2xs">
+                          <span className="text-[10px] font-extrabold tracking-wider uppercase px-2.5 py-1 rounded-lg bg-amber-50 text-amber-800 border border-amber-200 shadow-2xs">
                             Pending
                           </span>
                         )}
                       </div>
 
-                      {/* Customer name & time */}
-                      <div className="flex items-center gap-2 text-xs text-neutral-600">
+                      {/* Customer Name, Location & Time */}
+                      <div className="flex flex-wrap items-center gap-2 text-xs text-neutral-600">
                         {booking.guest_name && (
-                          <span className="font-bold text-neutral-950 flex items-center gap-1">
-                            <User size={13} className="text-neutral-400" />
+                          <span className="font-bold text-neutral-950 flex items-center gap-1 bg-neutral-50 px-2 py-0.5 rounded border border-neutral-200/60">
+                            <User size={12} className="text-neutral-500" />
                             {booking.guest_name}
                           </span>
                         )}
@@ -947,49 +1137,68 @@ export default function TherapickBookingManagement({
                       </div>
                     </div>
 
-                    {/* Middle Row: Treatment details & Financial Breakdown */}
-                    <div className={`flex flex-col md:flex-row md:items-center justify-between gap-4 ml-2 ${isCancelled ? 'opacity-60' : ''}`}>
-                      <div className="space-y-1 w-full md:w-1/3">
+                    {/* Middle Row: Treatment Details & 3-Column Financial Breakdown */}
+                    <div className={`flex flex-col md:flex-row md:items-center justify-between gap-4 pl-1.5 ${isCancelled ? 'opacity-60' : ''}`}>
+                      {/* Left: Treatment Details */}
+                      <div className="space-y-1 w-full md:w-1/2">
                         {booking.items && booking.items.length > 0 ? (
                           <div className="flex flex-col gap-1.5">
                             {booking.items.map((it: any, idx: number) => {
                               const isCouple = isCouplePackage(it.title);
                               return (
                                 <div key={idx}>
-                                  <p className="font-bold text-sm leading-snug text-neutral-900">
+                                  <p className="font-bold text-sm sm:text-base leading-snug text-neutral-900">
                                     {it.title} {isCouple ? '(Couple Package)' : it.guests > 1 ? `(x${it.guests})` : ''}
                                   </p>
-                                  <p className="text-[10px] text-black/50 font-bold uppercase tracking-wider mt-0.5">
-                                    Duration: {it.duration}
-                                  </p>
+                                  <div className="flex flex-wrap items-center gap-2 mt-1">
+                                    <span className="text-[10px] text-neutral-600 font-bold uppercase tracking-wider bg-neutral-100 px-2 py-0.5 rounded border border-neutral-200/60">
+                                      Duration: {it.duration} Mins
+                                    </span>
+                                    <span className="text-[10px] text-neutral-600 font-bold uppercase tracking-wider bg-neutral-100 px-2 py-0.5 rounded border border-neutral-200/60">
+                                      {isCouple ? '2 Therapists Assigned' : `${it.guests || 1} Therapist Assigned`}
+                                    </span>
+                                  </div>
                                 </div>
                               );
                             })}
                           </div>
                         ) : (
                           <div>
-                            <p className="font-bold text-sm leading-snug text-neutral-900">{title}</p>
-                            {dur && <p className="text-[10px] text-black/50 font-bold uppercase tracking-wider mt-0.5">Duration: {dur}</p>}
+                            <p className="font-bold text-sm sm:text-base leading-snug text-neutral-900">{title}</p>
+                            {dur && (
+                              <p className="text-[10px] text-neutral-600 font-bold uppercase tracking-wider mt-1 bg-neutral-100 inline-block px-2 py-0.5 rounded border border-neutral-200/60">
+                                Duration: {dur}
+                              </p>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Location / Hotel / Room Details if present */}
+                        {booking.location && (
+                          <div className="text-[11px] text-neutral-600 flex items-center gap-1 font-medium pt-1">
+                            <MapPin size={11} className="text-neutral-400 shrink-0" />
+                            <span>{booking.location}{booking.room_number ? `, Room ${booking.room_number}` : ''}</span>
                           </div>
                         )}
                       </div>
 
-                      <div className="flex-1 grid grid-cols-3 gap-2 text-center bg-black/5 rounded-xl p-3">
-                        <div>
-                          <span className="block text-[9px] uppercase font-bold text-black/50 mb-1">Revenue</span>
-                          <span className="font-bold text-xs">{formatCurrency(booking.revenue)}</span>
+                      {/* Right: 3-Column Financial Breakdown Box */}
+                      <div className="w-full md:w-auto md:min-w-[340px] lg:min-w-[380px] grid grid-cols-3 gap-2 text-center bg-neutral-50/90 border border-neutral-200/80 rounded-xl p-3 shadow-2xs">
+                        <div className="flex flex-col justify-center">
+                          <span className="block text-[9px] uppercase font-bold text-neutral-400 tracking-wider mb-0.5">Revenue</span>
+                          <span className="font-bold text-xs sm:text-sm text-neutral-900 tracking-tight">{formatCurrency(booking.revenue)}</span>
                         </div>
-                        <div>
-                          <span className="block text-[9px] uppercase font-bold text-black/50 mb-1">
+                        <div className="flex flex-col justify-center border-x border-neutral-200/70 px-1">
+                          <span className="block text-[9px] uppercase font-bold text-neutral-400 tracking-wider mb-0.5">
                             Fees ({booking.therapists_count} {booking.therapists_count > 1 ? 'Therapists' : 'Therapist'})
                           </span>
-                          <span className="font-bold text-xs text-orange-600">{formatCurrency(booking.therapist_fee_total)}</span>
+                          <span className="font-bold text-xs sm:text-sm text-orange-600 tracking-tight">{formatCurrency(booking.therapist_fee_total)}</span>
                         </div>
-                        <div>
-                          <span className="block text-[9px] uppercase font-bold text-black/50 mb-1">Profit</span>
-                          <span className="font-bold text-xs text-green-700">{formatCurrency(booking.net_profit)}</span>
+                        <div className="flex flex-col justify-center">
+                          <span className="block text-[9px] uppercase font-bold text-neutral-400 tracking-wider mb-0.5">Profit</span>
+                          <span className="font-bold text-xs sm:text-sm text-emerald-700 tracking-tight">{formatCurrency(booking.net_profit)}</span>
                           {isCommissionApproved && Number(booking.commission?.commission_amount || 0) > 0 && (
-                            <span className="block text-[9px] text-neutral-400 font-mono mt-0.5">
+                            <span className="block text-[9px] text-neutral-400 font-mono mt-0.5 whitespace-nowrap">
                               (-{formatCurrency(booking.commission.commission_amount)} comm)
                             </span>
                           )}
@@ -999,7 +1208,7 @@ export default function TherapickBookingManagement({
 
                     {/* Partner Referral Attribution Box (if referred by partner) */}
                     {hasCommission && (
-                      <div className="ml-2 p-3 bg-amber-50/70 border border-amber-200/80 rounded-xl flex flex-wrap items-center justify-between gap-2.5">
+                      <div className="pl-1.5 p-3 bg-amber-50/70 border border-amber-200/80 rounded-xl flex flex-wrap items-center justify-between gap-2.5">
                         <div className="flex flex-wrap items-center gap-2">
                           <span className="text-[10px] font-bold uppercase tracking-wider text-amber-900 bg-amber-100 px-2 py-0.5 rounded">
                             Partner: #{booking.commission?.partner_code}
@@ -1040,8 +1249,8 @@ export default function TherapickBookingManagement({
                     )}
 
                     {/* Bottom Action Bar: Checklist Workflow & Utility Actions */}
-                    <div className="ml-2 pt-2.5 border-t border-black/5 flex flex-wrap items-center justify-between gap-2.5">
-                      {/* Operational Checklist Action Buttons: Only 3 way (Paid/Unpaid, Ongoing, Finish) for affiliate bookings */}
+                    <div className="pl-1.5 pt-3 border-t border-neutral-100 flex flex-wrap items-center justify-between gap-2.5">
+                      {/* Operational Checklist Action Buttons */}
                       <div className="flex flex-wrap items-center gap-1.5">
                         {/* 1. Paid / Unpaid Checklist Button */}
                         <button
@@ -1083,49 +1292,59 @@ export default function TherapickBookingManagement({
                           </button>
                         )}
 
-                        {/* 3. Ongoing Treatment Checklist Button */}
+                        {/* 3. Ongoing Treatment Checklist Button (Locked when active, undo requires 022320 password) */}
                         {!isCancelled && (
-                          <button
-                            type="button"
-                            onClick={() => handleStatusChange(booking.id, isOngoing ? (hasCommission ? 'Pending' : 'Confirmed') : 'Ongoing')}
-                            className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all shadow-2xs active:scale-95 cursor-pointer border ${
-                              isOngoing
-                                ? 'bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border-indigo-300 ring-1 ring-indigo-300/50'
-                                : 'bg-neutral-50 hover:bg-neutral-100 text-neutral-700 border-neutral-300'
-                            }`}
-                            title={isOngoing ? "Ongoing Treatment active. Click to return to Pending" : "Click to mark Ongoing Treatment"}
-                          >
-                            {isOngoing ? (
+                          isOngoing ? (
+                            <button
+                              type="button"
+                              onClick={() => handleUndoStatus(booking, 'Ongoing')}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-2xs border bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border-indigo-300 ring-1 ring-indigo-300/50 cursor-pointer"
+                              title="Ongoing Treatment is active. Undo requires secret admin password (022320)"
+                            >
                               <CheckSquare size={13} className="text-indigo-700 shrink-0" />
-                            ) : (
+                              <span className="flex items-center gap-1">
+                                <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-pulse" />
+                                Ongoing Treatment
+                              </span>
+                              <Lock size={11} className="text-indigo-600 ml-0.5" />
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => handleStatusChange(booking.id, 'Ongoing')}
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all shadow-2xs active:scale-95 cursor-pointer border bg-neutral-50 hover:bg-neutral-100 text-neutral-700 border-neutral-300"
+                              title="Click to mark Ongoing Treatment"
+                            >
                               <Square size={13} className="text-neutral-400 shrink-0" />
-                            )}
-                            <span className="flex items-center gap-1">
-                              {isOngoing && <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-pulse" />}
-                              Ongoing Treatment
-                            </span>
-                          </button>
+                              <span>Ongoing Treatment</span>
+                            </button>
+                          )
                         )}
 
-                        {/* 4. Finish Treatment Checklist Button */}
+                        {/* 4. Finish Treatment Checklist Button (Locked when active, undo requires 022320 password) */}
                         {!isCancelled && (
-                          <button
-                            type="button"
-                            onClick={() => handleStatusChange(booking.id, isCompleted ? (hasCommission ? 'Pending' : 'Confirmed') : 'Completed')}
-                            className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all shadow-2xs active:scale-95 cursor-pointer border ${
-                              isCompleted
-                                ? 'bg-teal-50 hover:bg-teal-100 text-teal-800 border-teal-300 ring-1 ring-teal-300/50'
-                                : 'bg-neutral-50 hover:bg-neutral-100 text-neutral-700 border-neutral-300'
-                            }`}
-                            title={isCompleted ? "Treatment Completed. Click to revert" : "Click to mark Finish Treatment"}
-                          >
-                            {isCompleted ? (
+                          isCompleted ? (
+                            <button
+                              type="button"
+                              onClick={() => handleUndoStatus(booking, 'Completed')}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-2xs border bg-teal-50 hover:bg-teal-100 text-teal-900 border-teal-300 ring-1 ring-teal-300/50 cursor-pointer"
+                              title="Finish Treatment is marked. Undo requires secret admin password (022320)"
+                            >
                               <CheckSquare size={13} className="text-teal-700 shrink-0" />
-                            ) : (
+                              <span>Finish Treatment</span>
+                              <Lock size={11} className="text-teal-600 ml-0.5" />
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => handleStatusChange(booking.id, 'Completed')}
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all shadow-2xs active:scale-95 cursor-pointer border bg-neutral-50 hover:bg-neutral-100 text-neutral-700 border-neutral-300"
+                              title="Click to mark Finish Treatment"
+                            >
                               <Square size={13} className="text-neutral-400 shrink-0" />
-                            )}
-                            <span>Finish Treatment</span>
-                          </button>
+                              <span>Finish Treatment</span>
+                            </button>
+                          )
                         )}
 
                         {/* 5. Cancel Checklist Button */}

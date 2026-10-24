@@ -839,15 +839,38 @@ export default function AdminDashboard() {
                     <div>
                         <label className="text-[10px] font-bold uppercase tracking-widest text-black/50 block mb-1.5">Brand Configured</label>
                         <select 
+                            id="brandSelect"
                             value={siteBrandFilter}
                             onChange={(e) => setSiteBrandFilter(e.target.value)}
-                            className="w-full bg-black/5 border border-black/10 rounded-lg px-3 py-2 text-xs font-bold text-black focus:outline-none focus:border-black appearance-none cursor-pointer"
+                            className="w-full bg-black/5 border border-black/10 rounded-lg px-3 py-2 text-xs font-bold text-black focus:outline-none focus:border-black cursor-pointer"
                         >
                             <option value="elexoir">Elexoir Home Spa</option>
                             <option value="bali">Home Spa Ubud</option>
                             <option value="therapick">Therapick</option>
                             <option value="central">Central Admin</option>
                         </select>
+                        <div className="grid grid-cols-2 gap-1 mt-1.5">
+                            {[
+                                { id: 'therapick', label: 'Therapick' },
+                                { id: 'central', label: 'Central' },
+                                { id: 'elexoir', label: 'Elexoir' },
+                                { id: 'bali', label: 'Home Spa' }
+                            ].map(b => (
+                                <button
+                                    key={b.id}
+                                    type="button"
+                                    id={`brand-chip-${b.id}`}
+                                    onClick={() => setSiteBrandFilter(b.id)}
+                                    className={`px-2 py-1 rounded-md text-[10px] font-bold transition-all text-center cursor-pointer ${
+                                        siteBrandFilter === b.id 
+                                            ? 'bg-black text-white shadow-xs' 
+                                            : 'bg-black/5 text-neutral-600 hover:text-black hover:bg-black/10'
+                                    }`}
+                                >
+                                    {b.label}
+                                </button>
+                            ))}
+                        </div>
                     </div>
                 </div>
 
