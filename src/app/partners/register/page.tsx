@@ -84,22 +84,11 @@ export default function PartnerRegisterPage() {
     setLoading(true);
 
     try {
-      let payout_details: any = {};
-      if (formData.payout_method === 'bank_transfer') {
-        payout_details = {
-          bank_name: formData.bank_name,
-          account_number: formData.account_number,
-          account_holder: formData.account_holder,
-        };
-      } else if (formData.payout_method === 'wise') {
-        payout_details = {
-          wise_email: formData.wise_email || formData.email,
-        };
-      } else if (formData.payout_method === 'paypal') {
-        payout_details = {
-          paypal_email: formData.paypal_email || formData.email,
-        };
-      }
+      const payout_details = {
+        bank_name: formData.bank_name || 'BCA',
+        account_number: formData.account_number,
+        account_holder: formData.account_holder,
+      };
 
       const res = await fetch('/api/affiliates/auth/register', {
         method: 'POST',
@@ -346,14 +335,13 @@ export default function PartnerRegisterPage() {
             {/* WhatsApp ONLY (Phone Number Removed) */}
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="text-xs font-semibold text-neutral-800 flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
-                  <span>WhatsApp Number *</span>
+                <label className="text-xs font-semibold text-neutral-800">
+                  WhatsApp Number *
                 </label>
                 <span className="text-[10px] text-neutral-400 font-medium">With country code</span>
               </div>
               <div className="relative">
-                <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-emerald-600 pointer-events-none">
+                <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none">
                   <MessageCircle size={15} />
                 </div>
                 <input
@@ -422,143 +410,56 @@ export default function PartnerRegisterPage() {
             </div>
           </div>
 
-          {/* Section 3: Payout Method (Interactive Visual Selector) */}
+          {/* Section 3: Bank Transfer Payout Destination */}
           <div className="space-y-3.5">
             <div className="flex items-center gap-2 border-b border-neutral-100 pb-2">
-              <CreditCard size={14} className="text-neutral-700" />
+              <Landmark size={14} className="text-neutral-700" />
               <h2 className="text-xs font-bold uppercase tracking-wider text-neutral-900">
-                3. Payout Method
+                3. Bank Transfer Payout Destination
               </h2>
             </div>
+            <p className="text-[11px] text-neutral-500">
+              Where you receive your weekly or monthly partner commissions via direct Indonesian bank transfer.
+            </p>
 
-            {/* Method Segmented Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-              <button
-                type="button"
-                onClick={() => handleSelectPayout('bank_transfer')}
-                className={`flex flex-col items-start p-3 rounded-xl border text-left transition-all ${
-                  formData.payout_method === 'bank_transfer'
-                    ? 'border-neutral-950 bg-neutral-950 text-white shadow-xs'
-                    : 'border-neutral-200 hover:border-neutral-300 bg-white text-neutral-900'
-                }`}
-              >
-                <div className="flex items-center justify-between w-full mb-1">
-                  <Landmark size={16} className={formData.payout_method === 'bank_transfer' ? 'text-white' : 'text-neutral-600'} />
-                  {formData.payout_method === 'bank_transfer' && <Check size={14} className="text-emerald-400" />}
-                </div>
-                <span className="text-xs font-bold block">Indonesian Bank</span>
-                <span className={`text-[10px] ${formData.payout_method === 'bank_transfer' ? 'text-neutral-300' : 'text-neutral-500'}`}>
-                  BCA, Mandiri, BRI (IDR)
-                </span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleSelectPayout('wise')}
-                className={`flex flex-col items-start p-3 rounded-xl border text-left transition-all ${
-                  formData.payout_method === 'wise'
-                    ? 'border-neutral-950 bg-neutral-950 text-white shadow-xs'
-                    : 'border-neutral-200 hover:border-neutral-300 bg-white text-neutral-900'
-                }`}
-              >
-                <div className="flex items-center justify-between w-full mb-1">
-                  <Globe size={16} className={formData.payout_method === 'wise' ? 'text-white' : 'text-neutral-600'} />
-                  {formData.payout_method === 'wise' && <Check size={14} className="text-emerald-400" />}
-                </div>
-                <span className="text-xs font-bold block">Wise</span>
-                <span className={`text-[10px] ${formData.payout_method === 'wise' ? 'text-neutral-300' : 'text-neutral-500'}`}>
-                  International Multi-Currency
-                </span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleSelectPayout('paypal')}
-                className={`flex flex-col items-start p-3 rounded-xl border text-left transition-all ${
-                  formData.payout_method === 'paypal'
-                    ? 'border-neutral-950 bg-neutral-950 text-white shadow-xs'
-                    : 'border-neutral-200 hover:border-neutral-300 bg-white text-neutral-900'
-                }`}
-              >
-                <div className="flex items-center justify-between w-full mb-1">
-                  <CreditCard size={16} className={formData.payout_method === 'paypal' ? 'text-white' : 'text-neutral-600'} />
-                  {formData.payout_method === 'paypal' && <Check size={14} className="text-emerald-400" />}
-                </div>
-                <span className="text-xs font-bold block">PayPal</span>
-                <span className={`text-[10px] ${formData.payout_method === 'paypal' ? 'text-neutral-300' : 'text-neutral-500'}`}>
-                  Global Email Payout
-                </span>
-              </button>
-            </div>
-
-            {/* Dynamic Payout Inputs */}
-            {formData.payout_method === 'bank_transfer' && (
-              <div className="space-y-3 p-4 rounded-2xl border border-neutral-200/80 bg-neutral-50/70">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-[11px] font-semibold text-neutral-800 mb-1">Bank Name</label>
-                    <input
-                      type="text"
-                      name="bank_name"
-                      value={formData.bank_name}
-                      onChange={handleChange}
-                      placeholder="e.g. BCA, Mandiri, BRI"
-                      className="w-full px-3 py-2 rounded-xl border border-neutral-200 text-xs bg-white text-neutral-900 focus:outline-none focus:ring-1 focus:ring-neutral-950 focus:border-neutral-950"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[11px] font-semibold text-neutral-800 mb-1">Account Number</label>
-                    <input
-                      type="text"
-                      name="account_number"
-                      value={formData.account_number}
-                      onChange={handleChange}
-                      placeholder="e.g. 1234567890"
-                      className="w-full px-3 py-2 rounded-xl border border-neutral-200 text-xs bg-white text-neutral-900 font-mono focus:outline-none focus:ring-1 focus:ring-neutral-950 focus:border-neutral-950"
-                    />
-                  </div>
-                </div>
+            {/* Direct Bank Transfer Inputs */}
+            <div className="space-y-3 p-4 rounded-2xl border border-neutral-200/80 bg-neutral-50/70">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[11px] font-semibold text-neutral-800 mb-1">Account Holder Full Name</label>
+                  <label className="block text-[11px] font-semibold text-neutral-800 mb-1">Bank Name</label>
                   <input
                     type="text"
-                    name="account_holder"
-                    value={formData.account_holder}
+                    name="bank_name"
+                    value={formData.bank_name}
                     onChange={handleChange}
-                    placeholder="As registered in your bank passbook"
+                    placeholder="e.g. BCA, Mandiri, BRI, BNI"
                     className="w-full px-3 py-2 rounded-xl border border-neutral-200 text-xs bg-white text-neutral-900 focus:outline-none focus:ring-1 focus:ring-neutral-950 focus:border-neutral-950"
                   />
                 </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-neutral-800 mb-1">Account Number</label>
+                  <input
+                    type="text"
+                    name="account_number"
+                    value={formData.account_number}
+                    onChange={handleChange}
+                    placeholder="e.g. 1234567890"
+                    className="w-full px-3 py-2 rounded-xl border border-neutral-200 text-xs bg-white text-neutral-900 font-mono focus:outline-none focus:ring-1 focus:ring-neutral-950 focus:border-neutral-950"
+                  />
+                </div>
               </div>
-            )}
-
-            {formData.payout_method === 'wise' && (
-              <div className="p-4 rounded-2xl border border-neutral-200/80 bg-neutral-50/70">
-                <label className="block text-[11px] font-semibold text-neutral-800 mb-1">Wise Registered Email</label>
+              <div>
+                <label className="block text-[11px] font-semibold text-neutral-800 mb-1">Account Holder Full Name</label>
                 <input
-                  type="email"
-                  name="wise_email"
-                  value={formData.wise_email}
+                  type="text"
+                  name="account_holder"
+                  value={formData.account_holder}
                   onChange={handleChange}
-                  placeholder="wise-account@example.com"
+                  placeholder="As registered in your bank passbook"
                   className="w-full px-3 py-2 rounded-xl border border-neutral-200 text-xs bg-white text-neutral-900 focus:outline-none focus:ring-1 focus:ring-neutral-950 focus:border-neutral-950"
                 />
               </div>
-            )}
-
-            {formData.payout_method === 'paypal' && (
-              <div className="p-4 rounded-2xl border border-neutral-200/80 bg-neutral-50/70">
-                <label className="block text-[11px] font-semibold text-neutral-800 mb-1">PayPal Email</label>
-                <input
-                  type="email"
-                  name="paypal_email"
-                  value={formData.paypal_email}
-                  onChange={handleChange}
-                  placeholder="paypal@example.com"
-                  className="w-full px-3 py-2 rounded-xl border border-neutral-200 text-xs bg-white text-neutral-900 focus:outline-none focus:ring-1 focus:ring-neutral-950 focus:border-neutral-950"
-                />
-              </div>
-            )}
+            </div>
           </div>
 
           {/* Terms Agreement */}

@@ -1,16 +1,13 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { 
   ArrowLeft, 
   User, 
   ShieldCheck, 
-  CreditCard, 
   Building2, 
-  Phone, 
-  Mail, 
   CheckCircle2, 
   AlertCircle,
   LogOut,
@@ -19,37 +16,74 @@ import {
   ExternalLink,
   MessageCircle,
   Lock,
-  Wallet,
   Landmark,
-  Sparkles,
-  HelpCircle
+  Camera,
+  Trash2
 } from 'lucide-react';
+
+/**
+ * Official Instagram Blue Verified Badge
+ * Rosette scalloped seal in #0095F6 with white checkmark
+ */
+function InstagramVerifiedBadge({ className = "w-4 h-4", title = "Verified Partner" }: { className?: string; title?: string }) {
+  return (
+    <svg
+      viewBox="0 0 40 40"
+      className={className}
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-label={title}
+    >
+      {title && <title>{title}</title>}
+      <path
+        d="M19.998 3.094 14.638 0l-5.977 3.156-5.69-1.93-2.97 5.277L0 12.383l1.93 5.69-1.93 5.69 2.97 5.277 5.69-1.93L14.638 40l5.36-3.094L25.36 40l5.977-3.156 5.69 1.93 2.97-5.277 1.93-5.69-1.93-5.69 1.93-5.69-2.97-5.277-5.69 1.93L25.36 0l-5.362 3.094z"
+        fill="#0095F6"
+      />
+      <path
+        d="m17.118 26.458-6.49-6.49 2.828-2.828 3.662 3.662 8.358-8.358 2.828 2.828-11.186 11.186z"
+        fill="#ffffff"
+      />
+    </svg>
+  );
+}
+
+const AVATAR_STORAGE_KEY = 'partner_profile_avatar_local';
 
 export default function PartnerProfilePage() {
   const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
-  const [copiedCode, setCopiedCode] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const [partner, setPartner] = useState<any>(null);
+  const [localAvatar, setLocalAvatar] = useState<string | null>(null);
+
   const [formData, setFormData] = useState({
     first_name: '',
     last_name: '',
     business_name: '',
-    phone: '',
     whatsapp: '',
-    payout_method: 'bank_transfer',
     bank_name: 'BCA',
     account_number: '',
     account_holder: '',
-    wise_email: '',
-    paypal_email: '',
   });
 
   useEffect(() => {
+    // 1. Load custom profile photo from device storage (never sent to database)
+    try {
+      const savedPhoto = localStorage.getItem(AVATAR_STORAGE_KEY);
+      if (savedPhoto) {
+        setLocalAvatar(savedPhoto);
+      }
+    } catch (e) {
+      console.error('Error loading avatar from local storage:', e);
+    }
+
+    // 2. Load partner profile from server
     async function loadProfile() {
       try {
         const res = await fetch('/api/affiliates/auth/me');
@@ -61,14 +95,10 @@ export default function PartnerProfilePage() {
             first_name: p.first_name || '',
             last_name: p.last_name || '',
             business_name: p.business_name || '',
-            phone: p.phone || '',
-            whatsapp: p.whatsapp || '',
-            payout_method: p.payout_method || 'bank_transfer',
+            whatsapp: p.whatsapp || p.phone || '',
             bank_name: p.payout_details?.bank_name || 'BCA',
             account_number: p.payout_details?.account_number || '',
             account_holder: p.payout_details?.account_holder || '',
-            wise_email: p.payout_details?.wise_email || '',
-            paypal_email: p.payout_details?.paypal_email || '',
           });
         }
       } catch (e) {
@@ -85,11 +115,79 @@ export default function PartnerProfilePage() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleCopyCode = () => {
-    if (!partner?.partner_code) return;
-    navigator.clipboard.writeText(partner.partner_code);
-    setCopiedCode(true);
-    setTimeout(() => setCopiedCode(false), 2000);
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      alert('Please select a valid image file (PNG, JPG, WebP).');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Please choose an image under 5MB.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target?.result as string;
+      if (dataUrl) {
+        // Create an optimized thumbnail canvas to keep device storage fast & lightweight
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const maxDim = 400;
+          let width = img.width;
+          let height = img.height;
+          if (width > height) {
+            if (width > maxDim) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            }
+          } else {
+            if (height > maxDim) {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height);
+            const compressed = canvas.toDataURL('image/jpeg', 0.85);
+            try {
+              localStorage.setItem(AVATAR_STORAGE_KEY, compressed);
+              setLocalAvatar(compressed);
+            } catch (storageErr) {
+              console.error('Failed to save to localStorage:', storageErr);
+              try {
+                localStorage.setItem(AVATAR_STORAGE_KEY, dataUrl);
+                setLocalAvatar(dataUrl);
+              } catch (fallbackErr) {
+                alert('Local device storage is full. Could not save photo.');
+              }
+            }
+          }
+        };
+        img.src = dataUrl;
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveAvatar = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      localStorage.removeItem(AVATAR_STORAGE_KEY);
+      setLocalAvatar(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    } catch (err) {
+      console.error('Error removing local avatar:', err);
+    }
   };
 
   const handleCopyLink = () => {
@@ -123,22 +221,11 @@ export default function PartnerProfilePage() {
     setStatusMsg(null);
 
     try {
-      let payout_details: any = {};
-      if (formData.payout_method === 'bank_transfer') {
-        payout_details = {
-          bank_name: formData.bank_name,
-          account_number: formData.account_number,
-          account_holder: formData.account_holder,
-        };
-      } else if (formData.payout_method === 'wise') {
-        payout_details = {
-          wise_email: formData.wise_email,
-        };
-      } else if (formData.payout_method === 'paypal') {
-        payout_details = {
-          paypal_email: formData.paypal_email,
-        };
-      }
+      const payout_details = {
+        bank_name: formData.bank_name || 'BCA',
+        account_number: formData.account_number,
+        account_holder: formData.account_holder,
+      };
 
       const res = await fetch('/api/affiliates/auth/me', {
         method: 'PUT',
@@ -147,9 +234,9 @@ export default function PartnerProfilePage() {
           first_name: formData.first_name,
           last_name: formData.last_name,
           business_name: formData.business_name,
-          phone: formData.phone,
+          phone: formData.whatsapp, // Synchronize for database constraint integrity
           whatsapp: formData.whatsapp,
-          payout_method: formData.payout_method,
+          payout_method: 'bank_transfer',
           payout_details,
         }),
       });
@@ -192,7 +279,7 @@ export default function PartnerProfilePage() {
           <span>Dashboard</span>
         </Link>
 
-        {/* Mobile Header Logout Quick Button */}
+        {/* Mobile Header Quick Log Out */}
         <button
           type="button"
           onClick={handleLogout}
@@ -206,27 +293,61 @@ export default function PartnerProfilePage() {
 
       {/* Hero Profile Identity Card (Native App Style) */}
       <div className="bg-white/80 backdrop-blur-xl border border-neutral-200/80 rounded-3xl p-5 sm:p-6 shadow-xs relative overflow-hidden">
-        {/* Subtle Ambient Gradient Glow */}
-        <div className="absolute top-0 right-0 w-56 h-56 bg-gradient-to-br from-emerald-100/40 via-teal-100/20 to-transparent rounded-full blur-2xl pointer-events-none -mr-16 -mt-16" />
+        {/* Subtle Ambient Glow */}
+        <div className="absolute top-0 right-0 w-56 h-56 bg-gradient-to-br from-neutral-200/40 via-sky-100/20 to-transparent rounded-full blur-2xl pointer-events-none -mr-16 -mt-16" />
+
+        {/* Hidden device-local file input */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleAvatarChange}
+          className="hidden"
+          aria-label="Upload profile photo"
+        />
 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
           <div className="flex items-center gap-4">
-            {/* Avatar with Initials */}
+            
+            {/* Avatar (Click to upload photo to device) */}
             <div className="relative shrink-0">
-              <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-2xl bg-gradient-to-br from-neutral-900 to-neutral-700 text-white font-bold text-xl sm:text-2xl flex items-center justify-center shadow-sm ring-4 ring-neutral-100/80">
-                {initials || 'P'}
+              <div 
+                onClick={() => fileInputRef.current?.click()}
+                className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-neutral-900 to-neutral-700 text-white font-bold text-xl sm:text-2xl flex items-center justify-center shadow-sm ring-4 ring-neutral-100/80 cursor-pointer overflow-hidden group relative transition-transform active:scale-95"
+                title="Tap to change profile photo (saved locally to your phone)"
+              >
+                {localAvatar ? (
+                  <img
+                    src={localAvatar}
+                    alt="Partner profile"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span>{initials || 'P'}</span>
+                )}
+
+                {/* Subtle camera overlay on hover/tap */}
+                <div className="absolute inset-0 bg-black/45 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
+                  <Camera size={20} />
+                </div>
               </div>
-              <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center ring-2 ring-white shadow-xs" title="Verified Partner">
-                <Check size={12} strokeWidth={3} />
+
+              {/* Official Instagram Blue Verified Badge (Rosette on Avatar) */}
+              <div 
+                className="absolute -bottom-1 -right-1 ring-2 ring-white rounded-full bg-white shadow-xs leading-none" 
+                title="Verified Account"
+              >
+                <InstagramVerifiedBadge className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
             </div>
 
             {/* Partner Details */}
             <div className="space-y-1 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex items-center gap-1.5 flex-wrap">
                 <h1 className="text-base sm:text-lg font-bold text-neutral-950 tracking-tight truncate">
                   {formData.first_name || 'Partner'} {formData.last_name || ''}
                 </h1>
+                <InstagramVerifiedBadge className="w-4 h-4 shrink-0" />
                 <span className="inline-flex items-center gap-1 text-[9px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 uppercase tracking-wide">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                   {partner?.status || 'Active'}
@@ -241,23 +362,40 @@ export default function PartnerProfilePage() {
               <div className="text-[11px] text-neutral-400 font-mono truncate">
                 {partner?.email}
               </div>
+
+              {/* Photo Upload Controls (Stored locally on device) */}
+              <div className="pt-0.5 flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-neutral-600 hover:text-neutral-950 hover:underline cursor-pointer"
+                >
+                  <Camera size={11} className="text-neutral-400" />
+                  <span>{localAvatar ? 'Change Photo' : 'Add Photo'}</span>
+                </button>
+                {localAvatar && (
+                  <>
+                    <span className="text-[10px] text-neutral-300">•</span>
+                    <button
+                      type="button"
+                      onClick={handleRemoveAvatar}
+                      className="inline-flex items-center gap-1 text-[11px] font-semibold text-red-500 hover:text-red-700 hover:underline cursor-pointer"
+                    >
+                      <Trash2 size={11} />
+                      <span>Remove</span>
+                    </button>
+                  </>
+                )}
+                <span className="text-[10px] text-neutral-400 font-normal">
+                  (saved to your phone)
+                </span>
+              </div>
             </div>
           </div>
 
-          {/* Quick Action Pills */}
-          <div className="flex sm:flex-col items-center sm:items-end justify-between gap-2 border-t sm:border-t-0 border-neutral-100 pt-3 sm:pt-0">
-            <button
-              type="button"
-              onClick={handleCopyCode}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-neutral-100/90 hover:bg-neutral-200/80 border border-neutral-200/80 text-[11px] font-mono font-bold text-neutral-900 transition-all active:scale-95 shadow-2xs cursor-pointer"
-              title="Click to copy partner code"
-            >
-              <span>#{partner?.partner_code}</span>
-              {copiedCode ? <Check size={12} className="text-emerald-600" /> : <Copy size={12} className="text-neutral-500" />}
-            </button>
-
-            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-neutral-600 bg-neutral-50 px-2.5 py-1 rounded-full border border-neutral-200/60 uppercase tracking-wider">
-              <Sparkles size={11} className="text-amber-500" />
+          {/* Clean Commission Rate Badge (AI Sparkle Icon & Code Pill Removed) */}
+          <div className="flex items-center sm:items-end justify-end border-t sm:border-t-0 border-neutral-100 pt-3 sm:pt-0">
+            <span className="inline-flex items-center px-3 py-1.5 rounded-full bg-neutral-100/90 border border-neutral-200/80 text-[11px] font-bold text-neutral-800 tracking-wide uppercase">
               {partner?.commission_rate_pct || 10}% Commission
             </span>
           </div>
@@ -306,10 +444,10 @@ export default function PartnerProfilePage() {
         </div>
       )}
 
-      {/* Main Form: App Grouped Card Structure */}
+      {/* Main Form */}
       <form onSubmit={handleSave} className="space-y-4 sm:space-y-6">
         
-        {/* Section 1: Personal & Business Contact Card */}
+        {/* Section 1: Contact Information (Phone Removed, WhatsApp Only with Neutral Icon) */}
         <div className="bg-white border border-neutral-200/80 rounded-3xl p-5 sm:p-6 shadow-xs space-y-4">
           <div className="flex items-center justify-between border-b border-neutral-100 pb-3">
             <div className="flex items-center gap-2.5">
@@ -372,190 +510,89 @@ export default function PartnerProfilePage() {
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-            <div>
-              <label className="block text-[11px] font-bold text-neutral-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                <Phone size={13} className="text-neutral-400" />
-                Phone Number
-              </label>
-              <input
-                type="tel"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                placeholder="+62 812 3456 7890"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 text-xs font-medium text-neutral-900 bg-neutral-50/50 hover:bg-white focus:bg-white focus:outline-none focus:ring-2 focus:ring-neutral-950/10 focus:border-neutral-950 transition-all shadow-2xs"
-              />
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-bold text-neutral-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                <MessageCircle size={13} className="text-emerald-500" />
-                WhatsApp Number
-              </label>
-              <input
-                type="tel"
-                name="whatsapp"
-                value={formData.whatsapp}
-                onChange={handleChange}
-                placeholder="+62 812 3456 7890"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 text-xs font-medium text-neutral-900 bg-neutral-50/50 hover:bg-white focus:bg-white focus:outline-none focus:ring-2 focus:ring-neutral-950/10 focus:border-neutral-950 transition-all shadow-2xs"
-              />
-            </div>
+          {/* WhatsApp ONLY (Phone Number Removed, WhatsApp Icon Matches Other Neutral Icons) */}
+          <div>
+            <label className="block text-[11px] font-bold text-neutral-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+              <MessageCircle size={13} className="text-neutral-400" />
+              WhatsApp Number
+            </label>
+            <input
+              type="tel"
+              name="whatsapp"
+              value={formData.whatsapp}
+              onChange={handleChange}
+              placeholder="+62 812 3456 7890"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 text-xs font-medium text-neutral-900 bg-neutral-50/50 hover:bg-white focus:bg-white focus:outline-none focus:ring-2 focus:ring-neutral-950/10 focus:border-neutral-950 transition-all shadow-2xs"
+            />
+            <p className="text-[11px] text-neutral-400 mt-1">
+              Used for guest booking notifications & partner support. Include country code (e.g. +62).
+            </p>
           </div>
         </div>
 
-        {/* Section 2: Payout Destination Card (App Segmented Selector) */}
+        {/* Section 2: Bank Transfer Payout Destination (Wise & PayPal Removed) */}
         <div className="bg-white border border-neutral-200/80 rounded-3xl p-5 sm:p-6 shadow-xs space-y-4">
           <div className="flex items-center justify-between border-b border-neutral-100 pb-3">
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-xl bg-neutral-100 flex items-center justify-center text-neutral-900">
-                <Wallet size={15} />
+                <Landmark size={15} />
               </div>
               <div>
                 <h2 className="text-xs sm:text-sm font-bold text-neutral-950 uppercase tracking-wider">
-                  Payout & Disbursement Destination
+                  Bank Transfer Payout Destination
                 </h2>
                 <p className="text-[11px] text-neutral-400">
-                  Where you receive your weekly or monthly partner commissions
+                  Where you receive your weekly or monthly partner commissions via direct Indonesian bank transfer
                 </p>
               </div>
             </div>
           </div>
 
-          {/* App-Style Segmented Control Pills */}
-          <div>
-            <label className="block text-[11px] font-bold text-neutral-700 uppercase tracking-wider mb-2">
-              Select Payout Method
-            </label>
-            <div className="grid grid-cols-3 gap-2 p-1 bg-neutral-100/90 rounded-2xl border border-neutral-200/70">
-              <button
-                type="button"
-                onClick={() => setFormData((prev) => ({ ...prev, payout_method: 'bank_transfer' }))}
-                className={`py-2 px-2 rounded-xl text-xs font-bold transition-all flex flex-col sm:flex-row items-center justify-center gap-1.5 ${
-                  formData.payout_method === 'bank_transfer'
-                    ? 'bg-white text-neutral-950 shadow-xs ring-1 ring-neutral-200'
-                    : 'text-neutral-500 hover:text-neutral-900'
-                }`}
-              >
-                <Landmark size={14} className={formData.payout_method === 'bank_transfer' ? 'text-neutral-950' : 'text-neutral-400'} />
-                <span className="truncate">Bank Transfer</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setFormData((prev) => ({ ...prev, payout_method: 'wise' }))}
-                className={`py-2 px-2 rounded-xl text-xs font-bold transition-all flex flex-col sm:flex-row items-center justify-center gap-1.5 ${
-                  formData.payout_method === 'wise'
-                    ? 'bg-white text-neutral-950 shadow-xs ring-1 ring-neutral-200'
-                    : 'text-neutral-500 hover:text-neutral-900'
-                }`}
-              >
-                <CreditCard size={14} className={formData.payout_method === 'wise' ? 'text-neutral-950' : 'text-neutral-400'} />
-                <span className="truncate">Wise (Intl)</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setFormData((prev) => ({ ...prev, payout_method: 'paypal' }))}
-                className={`py-2 px-2 rounded-xl text-xs font-bold transition-all flex flex-col sm:flex-row items-center justify-center gap-1.5 ${
-                  formData.payout_method === 'paypal'
-                    ? 'bg-white text-neutral-950 shadow-xs ring-1 ring-neutral-200'
-                    : 'text-neutral-500 hover:text-neutral-900'
-                }`}
-              >
-                <Wallet size={14} className={formData.payout_method === 'paypal' ? 'text-neutral-950' : 'text-neutral-400'} />
-                <span className="truncate">PayPal</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Conditional Inputs based on Method */}
-          {formData.payout_method === 'bank_transfer' && (
-            <div className="space-y-3 p-4 rounded-2xl bg-neutral-50/70 border border-neutral-200/70 animate-in fade-in-50 duration-200">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[11px] font-bold text-neutral-700 uppercase tracking-wider mb-1.5">
-                    Bank Name
-                  </label>
-                  <input
-                    type="text"
-                    name="bank_name"
-                    value={formData.bank_name}
-                    onChange={handleChange}
-                    placeholder="BCA, Mandiri, BNI, BRI, etc."
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 text-xs font-medium text-neutral-900 bg-white focus:outline-none focus:ring-2 focus:ring-neutral-950/10 focus:border-neutral-950 shadow-2xs"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-bold text-neutral-700 uppercase tracking-wider mb-1.5">
-                    Account Number
-                  </label>
-                  <input
-                    type="text"
-                    name="account_number"
-                    value={formData.account_number}
-                    onChange={handleChange}
-                    placeholder="e.g. 1234567890"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 text-xs font-mono font-medium text-neutral-900 bg-white focus:outline-none focus:ring-2 focus:ring-neutral-950/10 focus:border-neutral-950 shadow-2xs"
-                  />
-                </div>
+          <div className="space-y-3 p-4 rounded-2xl bg-neutral-50/70 border border-neutral-200/70">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[11px] font-bold text-neutral-700 uppercase tracking-wider mb-1.5">
+                  Bank Name
+                </label>
+                <input
+                  type="text"
+                  name="bank_name"
+                  value={formData.bank_name}
+                  onChange={handleChange}
+                  placeholder="BCA, Mandiri, BNI, BRI, etc."
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 text-xs font-medium text-neutral-900 bg-white focus:outline-none focus:ring-2 focus:ring-neutral-950/10 focus:border-neutral-950 shadow-2xs"
+                />
               </div>
 
               <div>
                 <label className="block text-[11px] font-bold text-neutral-700 uppercase tracking-wider mb-1.5">
-                  Account Holder Full Name
+                  Account Number
                 </label>
                 <input
                   type="text"
-                  name="account_holder"
-                  value={formData.account_holder}
+                  name="account_number"
+                  value={formData.account_number}
                   onChange={handleChange}
-                  placeholder="Exact name registered in your bank account"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 text-xs font-medium text-neutral-900 bg-white focus:outline-none focus:ring-2 focus:ring-neutral-950/10 focus:border-neutral-950 shadow-2xs"
+                  placeholder="e.g. 1234567890"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 text-xs font-mono font-medium text-neutral-900 bg-white focus:outline-none focus:ring-2 focus:ring-neutral-950/10 focus:border-neutral-950 shadow-2xs"
                 />
               </div>
             </div>
-          )}
 
-          {formData.payout_method === 'wise' && (
-            <div className="p-4 rounded-2xl bg-neutral-50/70 border border-neutral-200/70 animate-in fade-in-50 duration-200 space-y-1.5">
+            <div>
               <label className="block text-[11px] font-bold text-neutral-700 uppercase tracking-wider mb-1.5">
-                Wise Registered Email Address
+                Account Holder Full Name
               </label>
               <input
-                type="email"
-                name="wise_email"
-                value={formData.wise_email}
+                type="text"
+                name="account_holder"
+                value={formData.account_holder}
                 onChange={handleChange}
-                placeholder="your-wise-email@example.com"
+                placeholder="Exact name registered in your bank account"
                 className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 text-xs font-medium text-neutral-900 bg-white focus:outline-none focus:ring-2 focus:ring-neutral-950/10 focus:border-neutral-950 shadow-2xs"
               />
-              <p className="text-[10px] text-neutral-500">
-                Disbursements will be routed via Wise direct transfer in your local currency.
-              </p>
             </div>
-          )}
-
-          {formData.payout_method === 'paypal' && (
-            <div className="p-4 rounded-2xl bg-neutral-50/70 border border-neutral-200/70 animate-in fade-in-50 duration-200 space-y-1.5">
-              <label className="block text-[11px] font-bold text-neutral-700 uppercase tracking-wider mb-1.5">
-                PayPal Registered Email
-              </label>
-              <input
-                type="email"
-                name="paypal_email"
-                value={formData.paypal_email}
-                onChange={handleChange}
-                placeholder="your-paypal-email@example.com"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 text-xs font-medium text-neutral-900 bg-white focus:outline-none focus:ring-2 focus:ring-neutral-950/10 focus:border-neutral-950 shadow-2xs"
-              />
-              <p className="text-[10px] text-neutral-500">
-                Commissions will be transferred directly to your PayPal balance.
-              </p>
-            </div>
-          )}
+          </div>
         </div>
 
         {/* Save Changes Primary Action */}
@@ -577,7 +614,7 @@ export default function PartnerProfilePage() {
         </div>
       </form>
 
-      {/* Section 3: App Actions & Security (Prominent Mobile Logout Section) */}
+      {/* Section 3: App Actions & Security */}
       <div className="bg-white border border-neutral-200/80 rounded-3xl p-5 sm:p-6 shadow-xs space-y-4">
         <div className="flex items-center gap-2 border-b border-neutral-100 pb-3">
           <ShieldCheck size={16} className="text-neutral-500" />
@@ -587,7 +624,7 @@ export default function PartnerProfilePage() {
         </div>
 
         <div className="space-y-3">
-          {/* Dedicated WhatsApp Partner Concierge */}
+          {/* Dedicated WhatsApp Partner Concierge (Neutral icon styling) */}
           <a
             href="https://wa.me/6285174119423"
             target="_blank"
@@ -595,7 +632,7 @@ export default function PartnerProfilePage() {
             className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-neutral-50 hover:bg-neutral-100/80 border border-neutral-200/70 text-xs font-semibold text-neutral-800 transition-all active:scale-[0.99]"
           >
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+              <div className="w-8 h-8 rounded-xl bg-neutral-100 text-neutral-700 flex items-center justify-center shrink-0">
                 <MessageCircle size={15} />
               </div>
               <div className="text-left">
@@ -606,7 +643,7 @@ export default function PartnerProfilePage() {
             <ExternalLink size={14} className="text-neutral-400 shrink-0" />
           </a>
 
-          {/* Prominent Red Sign Out Button (Specially on Mobile) */}
+          {/* Prominent Red Sign Out Button */}
           <button
             type="button"
             onClick={handleLogout}
