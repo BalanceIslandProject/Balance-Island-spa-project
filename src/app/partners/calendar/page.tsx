@@ -474,8 +474,8 @@ export default function PartnerCalendarPage() {
          ───────────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start lg:items-stretch lg:flex-1 lg:min-h-0">
         
-        {/* ──────── CALENDAR GRID AREA (LEFT / CENTER: 8 COLS) ──────── */}
-        <div className="lg:col-span-8 bg-white border border-neutral-200/80 rounded-2xl sm:rounded-3xl p-3 sm:p-4 lg:p-4 xl:p-5 shadow-sm space-y-3 lg:h-full lg:flex lg:flex-col lg:justify-between lg:overflow-hidden">
+        {/* ──────── CALENDAR GRID AREA (LEFT / CENTER: 7 COLS) ──────── */}
+        <div className="lg:col-span-7 bg-white border border-neutral-200/80 rounded-2xl sm:rounded-3xl p-3 sm:p-4 lg:p-4 xl:p-5 shadow-sm space-y-3 lg:h-full lg:flex lg:flex-col lg:justify-between lg:overflow-hidden">
           
           {/* DESKTOP CALENDAR HEADER: < October 2026 > Navigator on Left, Today & Month/Week on Right */}
           <div className="hidden lg:flex items-center justify-between gap-3 pb-2.5 border-b border-neutral-100 shrink-0">
@@ -570,11 +570,11 @@ export default function PartnerCalendarPage() {
                 ))}
               </div>
 
-              {/* Days Grid - Compact on Desktop */}
+              {/* Days Grid - Compact on Desktop with clean day indicators */}
               <div className="grid grid-cols-7 gap-1 sm:gap-1.5 flex-1 min-h-0">
                 {/* Empty leading cells */}
                 {Array.from({ length: firstDayIndex }).map((_, i) => (
-                  <div key={`empty-${i}`} className="min-h-[42px] sm:min-h-[75px] lg:min-h-0 lg:h-[58px] xl:h-[64px] rounded-xl sm:rounded-2xl bg-neutral-50/40" />
+                  <div key={`empty-${i}`} className="min-h-[40px] sm:min-h-[46px] lg:min-h-0 lg:h-[46px] xl:h-[50px] rounded-xl sm:rounded-2xl bg-neutral-50/40" />
                 ))}
 
                 {/* Actual Month Days */}
@@ -593,17 +593,12 @@ export default function PartnerCalendarPage() {
                   const hasPending = dayBookings.some((b) => b.commission_status === 'pending');
                   const hasCancelled = dayBookings.some((b) => b.commission_status === 'cancelled' || b.booking_status === 'Cancelled');
 
-                  const dayTotalComm = dayBookings.reduce((sum, b) => {
-                    const isCanc = b.commission_status === 'cancelled' || b.booking_status === 'Cancelled';
-                    return isCanc ? sum : sum + (b.commission_amount || 0);
-                  }, 0);
-
                   return (
                     <button
                       key={dateString}
                       type="button"
                       onClick={() => handleDateClick(dateString)}
-                      className={`min-h-[44px] sm:min-h-[75px] lg:min-h-0 lg:h-[58px] xl:h-[64px] p-1 sm:p-2 lg:p-1.5 rounded-xl sm:rounded-2xl flex flex-col justify-between text-left transition-all cursor-pointer border relative group ${
+                      className={`min-h-[40px] sm:min-h-[46px] lg:min-h-0 lg:h-[46px] xl:h-[50px] px-2 py-1.5 sm:px-2.5 sm:py-2 rounded-xl sm:rounded-2xl flex items-center justify-between text-left transition-all cursor-pointer border relative group ${
                         isSelected
                           ? 'bg-neutral-950 text-white border-neutral-950 shadow-md ring-2 ring-neutral-950/20 z-10'
                           : isToday
@@ -613,64 +608,52 @@ export default function PartnerCalendarPage() {
                           : 'bg-white border-neutral-200/60 hover:bg-neutral-50 hover:border-neutral-300 text-neutral-700'
                       }`}
                     >
-                      {/* Top Row: Date Number + Indicators */}
-                      <div className="flex items-center justify-between w-full">
-                        <span
-                          className={`text-xs sm:text-sm font-bold ${
-                            isSelected
-                              ? 'text-white'
-                              : isToday
-                              ? 'text-neutral-950 underline underline-offset-2'
-                              : hasBookings
-                              ? 'text-emerald-950'
-                              : 'text-neutral-700'
-                          }`}
-                        >
-                          {dayNum}
-                        </span>
+                      {/* Date Number */}
+                      <span
+                        className={`text-xs sm:text-sm font-bold ${
+                          isSelected
+                            ? 'text-white'
+                            : isToday
+                            ? 'text-neutral-950 underline underline-offset-2'
+                            : hasBookings
+                            ? 'text-emerald-950'
+                            : 'text-neutral-700'
+                        }`}
+                      >
+                        {dayNum}
+                      </span>
 
-                        {hasBookings && (
-                          <div className="flex items-center gap-0.5 sm:gap-1">
-                            {hasApproved && (
-                              <span
-                                className={`w-1.5 h-1.5 rounded-full ${
-                                  isSelected ? 'bg-emerald-300' : 'bg-emerald-600'
-                                }`}
-                              />
-                            )}
-                            {hasPending && (
-                              <span
-                                className={`w-1.5 h-1.5 rounded-full ${
-                                  isSelected ? 'bg-rose-300' : 'bg-rose-500'
-                                }`}
-                              />
-                            )}
-                            {!hasApproved && !hasPending && hasCancelled && (
-                              <span className="w-1.5 h-1.5 rounded-full bg-neutral-400" />
-                            )}
-                            <span
-                              className={`text-[9px] font-mono font-bold px-1 rounded-full hidden sm:inline-block ${
-                                isSelected
-                                  ? 'bg-white/20 text-white'
-                                  : 'bg-emerald-100 text-emerald-900'
-                              }`}
-                            >
-                              {dayBookings.length}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Bottom Info: Commission Total on Desktop (hidden on mobile for small compact columns) */}
+                      {/* Indicators & Count (No commission text on calendar cells) */}
                       {hasBookings && (
-                        <div className="hidden sm:block mt-auto pt-0.5 w-full truncate">
-                          <div
-                            className={`text-[9px] sm:text-[10px] font-mono font-bold truncate ${
-                              isSelected ? 'text-emerald-300' : 'text-emerald-800'
+                        <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
+                          {hasApproved && (
+                            <span
+                              className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${
+                                isSelected ? 'bg-emerald-300' : 'bg-emerald-600'
+                              }`}
+                              title="Approved Booking"
+                            />
+                          )}
+                          {hasPending && (
+                            <span
+                              className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${
+                                isSelected ? 'bg-rose-300' : 'bg-rose-500'
+                              }`}
+                              title="Pending Booking"
+                            />
+                          )}
+                          {!hasApproved && !hasPending && hasCancelled && (
+                            <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-neutral-400" title="Cancelled" />
+                          )}
+                          <span
+                            className={`text-[9px] sm:text-[10px] font-mono font-bold px-1.5 py-0.2 rounded-full ${
+                              isSelected
+                                ? 'bg-white/20 text-white'
+                                : 'bg-emerald-100 text-emerald-900'
                             }`}
                           >
-                            +{formatIDR(dayTotalComm)}
-                          </div>
+                            {dayBookings.length}
+                          </span>
                         </div>
                       )}
                     </button>
@@ -756,32 +739,32 @@ export default function PartnerCalendarPage() {
 
         </div>
 
-        {/* ──────── APPOINTMENT DETAILS INSPECTOR (RIGHT: 4 COLS) ──────── */}
-        <div className="lg:col-span-4 bg-white border border-neutral-200/80 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-sm space-y-3.5 lg:h-full lg:flex lg:flex-col lg:overflow-hidden">
-          {/* Executive Header:
-              - Desktop: When a specific date is clicked, show ONLY the side-by-side Approved and Pending cards (saving vertical space for bookings)
-              - Mobile: Big Title with Total Bookings & Commission + Chips */}
-          {selectedDate && selectedDayStats.count > 0 && (
-            <div className="hidden lg:grid grid-cols-2 gap-2 text-xs pb-3 border-b border-neutral-100 shrink-0">
+        {/* ──────── APPOINTMENT DETAILS INSPECTOR (RIGHT: 5 COLS) ──────── */}
+        <div className="lg:col-span-5 bg-white border border-neutral-200/80 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-sm space-y-3.5 lg:h-full lg:flex lg:flex-col lg:overflow-hidden">
+          {/* Executive Header on Desktop:
+              - Side-by-side Approved and Pending cards with full, clearly readable amounts without truncation
+              - Approved (White bg + Green dot) & Pending (Black bg + Red dot) */}
+          {(selectedDate ? selectedDayStats.count > 0 : true) && (
+            <div className="hidden lg:grid grid-cols-2 gap-2.5 text-xs pb-3 border-b border-neutral-100 shrink-0">
               {/* Approved Card: White background + Green dot */}
-              <div className="flex items-center justify-between gap-1 bg-white text-neutral-950 px-3 py-2 rounded-xl border border-neutral-200/90 shadow-2xs font-semibold">
-                <div className="flex items-center gap-1.5">
+              <div className="flex items-center justify-between gap-2 bg-white text-neutral-950 px-3.5 py-2.5 rounded-xl border border-neutral-200/90 shadow-2xs font-semibold">
+                <div className="flex items-center gap-1.5 shrink-0">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-                  <span className="text-neutral-500 font-medium text-[11px]">Approved</span>
+                  <span className="text-neutral-500 font-medium text-xs">Approved</span>
                 </div>
-                <span className="font-mono font-bold text-neutral-950 text-xs truncate">
-                  {formatIDR(selectedDayStats.approvedCommission)}
+                <span className="font-mono font-bold text-neutral-950 text-xs sm:text-sm tabular-nums whitespace-nowrap shrink-0">
+                  {formatIDR(selectedDate ? selectedDayStats.approvedCommission : monthStats.approvedCommission)}
                 </span>
               </div>
 
               {/* Pending Card: Black background + Red dot */}
-              <div className="flex items-center justify-between gap-1 bg-neutral-950 text-white px-3 py-2 rounded-xl border border-neutral-900 shadow-2xs font-semibold">
-                <div className="flex items-center gap-1.5">
+              <div className="flex items-center justify-between gap-2 bg-neutral-950 text-white px-3.5 py-2.5 rounded-xl border border-neutral-900 shadow-2xs font-semibold">
+                <div className="flex items-center gap-1.5 shrink-0">
                   <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
-                  <span className="text-neutral-300 font-medium text-[11px]">Pending</span>
+                  <span className="text-neutral-300 font-medium text-xs">Pending</span>
                 </div>
-                <span className="font-mono font-bold text-white text-xs truncate">
-                  {formatIDR(selectedDayStats.pendingCommission)}
+                <span className="font-mono font-bold text-white text-xs sm:text-sm tabular-nums whitespace-nowrap shrink-0">
+                  {formatIDR(selectedDate ? selectedDayStats.pendingCommission : monthStats.pendingCommission)}
                 </span>
               </div>
             </div>
