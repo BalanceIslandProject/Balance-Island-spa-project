@@ -13,39 +13,12 @@ import {
   LogOut,
   Copy,
   Check,
-  ExternalLink,
   MessageCircle,
   Lock,
   Landmark,
   Camera,
   Trash2
 } from 'lucide-react';
-
-/**
- * Official Instagram Blue Verified Badge
- * Rosette scalloped seal in #0095F6 with white checkmark
- */
-function InstagramVerifiedBadge({ className = "w-4 h-4", title = "Verified Partner" }: { className?: string; title?: string }) {
-  return (
-    <svg
-      viewBox="0 0 40 40"
-      className={className}
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      aria-label={title}
-    >
-      {title && <title>{title}</title>}
-      <path
-        d="M19.998 3.094 14.638 0l-5.977 3.156-5.69-1.93-2.97 5.277L0 12.383l1.93 5.69-1.93 5.69 2.97 5.277 5.69-1.93L14.638 40l5.36-3.094L25.36 40l5.977-3.156 5.69 1.93 2.97-5.277 1.93-5.69-1.93-5.69 1.93-5.69-2.97-5.277-5.69 1.93L25.36 0l-5.362 3.094z"
-        fill="#0095F6"
-      />
-      <path
-        d="m17.118 26.458-6.49-6.49 2.828-2.828 3.662 3.662 8.358-8.358 2.828 2.828-11.186 11.186z"
-        fill="#ffffff"
-      />
-    </svg>
-  );
-}
 
 const AVATAR_STORAGE_KEY = 'partner_profile_avatar_local';
 
@@ -306,15 +279,15 @@ export default function PartnerProfilePage() {
           aria-label="Upload profile photo"
         />
 
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 relative z-10">
+          <div className="flex items-start gap-4">
             
             {/* Avatar (Click to upload photo to device) */}
             <div className="relative shrink-0">
               <div 
                 onClick={() => fileInputRef.current?.click()}
-                className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-neutral-900 to-neutral-700 text-white font-bold text-xl sm:text-2xl flex items-center justify-center shadow-sm ring-4 ring-neutral-100/80 cursor-pointer overflow-hidden group relative transition-transform active:scale-95"
-                title="Tap to change profile photo (saved locally to your phone)"
+                className="w-18 h-18 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-neutral-900 to-neutral-700 text-white font-bold text-xl sm:text-2xl flex items-center justify-center shadow-sm ring-4 ring-neutral-100/80 cursor-pointer overflow-hidden group relative transition-transform active:scale-95"
+                title="Tap to change profile photo"
               >
                 {localAvatar ? (
                   <img
@@ -331,73 +304,62 @@ export default function PartnerProfilePage() {
                   <Camera size={20} />
                 </div>
               </div>
-
-              {/* Official Instagram Blue Verified Badge (Rosette on Avatar) */}
-              <div 
-                className="absolute -bottom-1 -right-1 ring-2 ring-white rounded-full bg-white shadow-xs leading-none" 
-                title="Verified Account"
-              >
-                <InstagramVerifiedBadge className="w-5 h-5 sm:w-6 sm:h-6" />
-              </div>
             </div>
 
             {/* Partner Details */}
-            <div className="space-y-1 min-w-0">
-              <div className="flex items-center gap-1.5 flex-wrap">
+            <div className="space-y-1.5 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="text-base sm:text-lg font-bold text-neutral-950 tracking-tight truncate">
                   {formData.first_name || 'Partner'} {formData.last_name || ''}
                 </h1>
-                <InstagramVerifiedBadge className="w-4 h-4 shrink-0" />
                 <span className="inline-flex items-center gap-1 text-[9px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 uppercase tracking-wide">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                   {partner?.status || 'Active'}
                 </span>
               </div>
 
+              {/* Company / Business Name */}
               <div className="flex items-center gap-1.5 text-xs text-neutral-600 truncate font-medium">
                 <Building2 size={13} className="text-neutral-400 shrink-0" />
                 <span className="truncate">{formData.business_name || 'Hospitality Partner'}</span>
+              </div>
+
+              {/* Commission Rate (Directly BELOW Company Name) */}
+              <div className="pt-0.5 pb-0.5">
+                <span className="inline-flex items-center text-[10px] sm:text-[11px] font-bold text-neutral-900 bg-neutral-100/90 px-2.5 py-0.5 rounded-md border border-neutral-200/80 uppercase tracking-wider">
+                  {partner?.commission_rate_pct || 10}% Commission
+                </span>
               </div>
 
               <div className="text-[11px] text-neutral-400 font-mono truncate">
                 {partner?.email}
               </div>
 
-              {/* Photo Upload Controls (Stored locally on device) */}
-              <div className="pt-0.5 flex items-center gap-2">
+              {/* Photo Upload Controls (Clean & Professional) */}
+              <div className="pt-1 flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-neutral-600 hover:text-neutral-950 hover:underline cursor-pointer"
+                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-neutral-700 hover:text-neutral-950 hover:underline cursor-pointer transition-colors"
                 >
-                  <Camera size={11} className="text-neutral-400" />
-                  <span>{localAvatar ? 'Change Photo' : 'Add Photo'}</span>
+                  <Camera size={12} className="text-neutral-400" />
+                  <span>{localAvatar ? 'Change Photo' : 'Upload Photo'}</span>
                 </button>
                 {localAvatar && (
                   <>
-                    <span className="text-[10px] text-neutral-300">•</span>
+                    <span className="text-neutral-300">•</span>
                     <button
                       type="button"
                       onClick={handleRemoveAvatar}
-                      className="inline-flex items-center gap-1 text-[11px] font-semibold text-red-500 hover:text-red-700 hover:underline cursor-pointer"
+                      className="inline-flex items-center gap-1 text-[11px] font-semibold text-rose-600 hover:text-rose-700 hover:underline cursor-pointer transition-colors"
                     >
                       <Trash2 size={11} />
                       <span>Remove</span>
                     </button>
                   </>
                 )}
-                <span className="text-[10px] text-neutral-400 font-normal">
-                  (saved to your phone)
-                </span>
               </div>
             </div>
-          </div>
-
-          {/* Clean Commission Rate Badge (AI Sparkle Icon & Code Pill Removed) */}
-          <div className="flex items-center sm:items-end justify-end border-t sm:border-t-0 border-neutral-100 pt-3 sm:pt-0">
-            <span className="inline-flex items-center px-3 py-1.5 rounded-full bg-neutral-100/90 border border-neutral-200/80 text-[11px] font-bold text-neutral-800 tracking-wide uppercase">
-              {partner?.commission_rate_pct || 10}% Commission
-            </span>
           </div>
         </div>
 
@@ -447,21 +409,17 @@ export default function PartnerProfilePage() {
       {/* Main Form */}
       <form onSubmit={handleSave} className="space-y-4 sm:space-y-6">
         
-        {/* Section 1: Contact Information (Phone Removed, WhatsApp Only with Neutral Icon) */}
+        {/* Section 1: Contact Information */}
         <div className="bg-white border border-neutral-200/80 rounded-3xl p-5 sm:p-6 shadow-xs space-y-4">
-          <div className="flex items-center justify-between border-b border-neutral-100 pb-3">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-neutral-100 flex items-center justify-center text-neutral-900">
-                <User size={15} />
-              </div>
-              <div>
-                <h2 className="text-xs sm:text-sm font-bold text-neutral-950 uppercase tracking-wider">
-                  Contact Information
-                </h2>
-                <p className="text-[11px] text-neutral-400">
-                  Your identity and primary hospitality business details
-                </p>
-              </div>
+          <div className="flex items-start gap-2.5 border-b border-neutral-100 pb-3">
+            <User size={18} className="text-neutral-800 shrink-0 mt-0.5" />
+            <div>
+              <h2 className="text-xs sm:text-sm font-bold text-neutral-950 uppercase tracking-wider">
+                Contact Information
+              </h2>
+              <p className="text-[11px] text-neutral-400">
+                Your identity and primary hospitality business details
+              </p>
             </div>
           </div>
 
@@ -510,7 +468,7 @@ export default function PartnerProfilePage() {
             />
           </div>
 
-          {/* WhatsApp ONLY (Phone Number Removed, WhatsApp Icon Matches Other Neutral Icons) */}
+          {/* WhatsApp ONLY (Phone Removed, Neutral Icon Color) */}
           <div>
             <label className="block text-[11px] font-bold text-neutral-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
               <MessageCircle size={13} className="text-neutral-400" />
@@ -530,38 +488,56 @@ export default function PartnerProfilePage() {
           </div>
         </div>
 
-        {/* Section 2: Bank Transfer Payout Destination (Wise & PayPal Removed) */}
+        {/* Section 2: Bank Transfer Payout Destination (Clean Fintech Styling without Clunky Circle Card) */}
         <div className="bg-white border border-neutral-200/80 rounded-3xl p-5 sm:p-6 shadow-xs space-y-4">
-          <div className="flex items-center justify-between border-b border-neutral-100 pb-3">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-neutral-100 flex items-center justify-center text-neutral-900">
-                <Landmark size={15} />
-              </div>
-              <div>
-                <h2 className="text-xs sm:text-sm font-bold text-neutral-950 uppercase tracking-wider">
-                  Bank Transfer Payout Destination
-                </h2>
-                <p className="text-[11px] text-neutral-400">
-                  Where you receive your weekly or monthly partner commissions via direct Indonesian bank transfer
-                </p>
-              </div>
+          <div className="flex items-start gap-2.5 border-b border-neutral-100 pb-3">
+            <Landmark size={18} className="text-neutral-800 shrink-0 mt-0.5" />
+            <div>
+              <h2 className="text-xs sm:text-sm font-bold text-neutral-950 uppercase tracking-wider">
+                Bank Transfer Payout Destination
+              </h2>
+              <p className="text-[11px] text-neutral-400">
+                Where you receive your weekly or monthly partner commissions via direct Indonesian bank transfer
+              </p>
             </div>
           </div>
 
-          <div className="space-y-3 p-4 rounded-2xl bg-neutral-50/70 border border-neutral-200/70">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="space-y-3.5 p-4 rounded-2xl bg-neutral-50/70 border border-neutral-200/70">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               <div>
                 <label className="block text-[11px] font-bold text-neutral-700 uppercase tracking-wider mb-1.5">
                   Bank Name
                 </label>
-                <input
-                  type="text"
-                  name="bank_name"
-                  value={formData.bank_name}
-                  onChange={handleChange}
-                  placeholder="BCA, Mandiri, BNI, BRI, etc."
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 text-xs font-medium text-neutral-900 bg-white focus:outline-none focus:ring-2 focus:ring-neutral-950/10 focus:border-neutral-950 shadow-2xs"
-                />
+                <div className="relative">
+                  <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none">
+                    <Landmark size={14} />
+                  </div>
+                  <input
+                    type="text"
+                    name="bank_name"
+                    value={formData.bank_name}
+                    onChange={handleChange}
+                    placeholder="BCA, Mandiri, BNI, BRI, etc."
+                    className="w-full pl-9 pr-3.5 py-2.5 rounded-xl border border-neutral-200 text-xs font-semibold text-neutral-900 bg-white focus:outline-none focus:ring-2 focus:ring-neutral-950/10 focus:border-neutral-950 shadow-2xs"
+                  />
+                </div>
+                {/* One-Tap Indonesian Bank Quick Selectors */}
+                <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                  {['BCA', 'Mandiri', 'BNI', 'BRI'].map((bank) => (
+                    <button
+                      type="button"
+                      key={bank}
+                      onClick={() => setFormData((prev) => ({ ...prev, bank_name: bank }))}
+                      className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                        formData.bank_name?.toUpperCase() === bank
+                          ? 'bg-neutral-950 text-white shadow-2xs'
+                          : 'bg-white border border-neutral-200 text-neutral-600 hover:text-neutral-950 hover:border-neutral-300'
+                      }`}
+                    >
+                      {bank}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <div>
@@ -624,14 +600,14 @@ export default function PartnerProfilePage() {
         </div>
 
         <div className="space-y-3">
-          {/* Dedicated WhatsApp Partner Concierge (Neutral icon styling) */}
+          {/* Dedicated WhatsApp Partner Concierge (External click icon removed as requested) */}
           <a
             href="https://wa.me/6285174119423"
             target="_blank"
             rel="noreferrer"
-            className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-neutral-50 hover:bg-neutral-100/80 border border-neutral-200/70 text-xs font-semibold text-neutral-800 transition-all active:scale-[0.99]"
+            className="w-full flex items-center p-3.5 rounded-2xl bg-neutral-50 hover:bg-neutral-100/80 border border-neutral-200/70 text-xs font-semibold text-neutral-800 transition-all active:scale-[0.99]"
           >
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-2.5 w-full">
               <div className="w-8 h-8 rounded-xl bg-neutral-100 text-neutral-700 flex items-center justify-center shrink-0">
                 <MessageCircle size={15} />
               </div>
@@ -640,7 +616,6 @@ export default function PartnerProfilePage() {
                 <span className="text-[11px] text-neutral-500">Need help updating bank info or tracking?</span>
               </div>
             </div>
-            <ExternalLink size={14} className="text-neutral-400 shrink-0" />
           </a>
 
           {/* Prominent Red Sign Out Button */}

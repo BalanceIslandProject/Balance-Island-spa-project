@@ -2,12 +2,25 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ExternalLink, ArrowLeft, Receipt, DollarSign, CheckCircle2, Clock, Wallet } from 'lucide-react';
+import { 
+  ExternalLink, 
+  ArrowLeft, 
+  Receipt, 
+  CalendarDays, 
+  X, 
+  RotateCcw, 
+  Calendar as CalendarIcon,
+  ChevronDown
+} from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
 export default function PartnerCommissionsPage() {
   const [commissions, setCommissions] = useState<any[]>([]);
   const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [startDate, setStartDate] = useState<string>('');
+  const [endDate, setEndDate] = useState<string>('');
+  const [showCalendarFilter, setShowCalendarFilter] = useState<boolean>(false);
+  const [activeDatePreset, setActiveDatePreset] = useState<string>('all');
   const [loading, setLoading] = useState(true);
 
   const loadCommissions = async () => {
@@ -65,65 +78,295 @@ export default function PartnerCommissionsPage() {
     return `IDR ${formatted}`;
   };
 
-  const filtered = filterStatus === 'all' 
-    ? commissions 
-    : commissions.filter((c) => c.status === filterStatus);
+  const formatDateYMD = (d: Date) => {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  // Preset Date Handlers
+  const handleSetThisMonth = () => {
+    const now = new Date();
+    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    setStartDate(formatDateYMD(firstDay));
+    setEndDate(formatDateYMD(lastDay));
+    setActiveDatePreset('this_month');
+  };
+
+  const handleSetLastMonth = () => {
+    const now = new Date();
+    const firstDay = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const lastDay = new Date(now.getFullYear(), now.getMonth(), 0);
+    setStartDate(formatDateYMD(firstDay));
+    setEndDate(formatDateYMD(lastDay));
+    setActiveDatePreset('last_month');
+  };
+
+  const handleSetLast30Days = () => {
+    const now = new Date();
+    const past = new Date();
+    past.setDate(now.getDate() - 30);
+    setStartDate(formatDateYMD(past));
+    setEndDate(formatDateYMD(now));
+    setActiveDatePreset('last_30_days');
+  };
+
+  const handleResetDate = () => {
+    setStartDate('');
+    setEndDate('');
+    setActiveDatePreset('all');
+  };
+
+  // Combined Status and Calendar Filtering
+  const filtered = commissions.filter((c) => {
+    // 1. Status Filter
+    if (filterStatus !== 'all' && c.status !== filterStatus) {
+      return false;
+    }
+
+    // 2. Calendar Date Filter
+    if (startDate || endDate) {
+      const commissionDate = new Date(c.created_at);
+      if (startDate) {
+        const start = new Date(`${startDate}T00:00:00`);
+        if (commissionDate < start) return false;
+      }
+      if (endDate) {
+        const end = new Date(`${endDate}T23:59:59`);
+        if (commissionDate > end) return false;
+      }
+    }
+
+    return true;
+  });
 
   const totalFilteredCommission = filtered.reduce((sum, c) => {
     if (c.status === 'cancelled') return sum;
     return sum + Number(c.commission_amount || 0);
   }, 0);
 
-  return (
-    <div className="space-y-4 sm:space-y-6 w-full">
-      {/* Header & Filter Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white border border-neutral-200/80 rounded-2xl p-4 sm:p-6 shadow-2xs">
-        <div className="space-y-1">
-          <Link 
-            href="/partners/dashboard" 
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-neutral-500 hover:text-neutral-900 transition-colors mb-0.5"
-          >
-            <ArrowLeft size={13} />
-            <span>Dashboard</span>
-          </Link>
-          <h1 className="text-lg sm:text-xl font-bold text-neutral-950 tracking-tight">
-            Commission Ledger
-          </h1>
-        </div>
+  const hasDateFilter = Boolean(startDate || endDate);
 
-        {/* Status Filter Buttons */}
-        <div className="flex flex-wrap items-center gap-1 border border-neutral-200/80 p-1 rounded-xl bg-neutral-100 text-xs self-start sm:self-auto">
-          {['all', 'approved', 'pending', 'paid', 'cancelled'].map((s) => (
+  return (
+    <div className="space-y-4 sm:space-y-6 w-full pb-12">
+      {/* Header & Filter Controls Card */}
+      <div className="bg-white border border-neutral-200/80 rounded-3xl p-4 sm:p-6 shadow-xs space-y-3.5">
+        
+        {/* Top Title & Quick Actions */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="space-y-1">
+            <Link 
+              href="/partners/dashboard" 
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-neutral-500 hover:text-neutral-900 transition-colors"
+            >
+              <ArrowLeft size={13} />
+              <span>Dashboard</span>
+            </Link>
+            <h1 className="text-lg sm:text-xl font-bold text-neutral-950 tracking-tight">
+              Commission Ledger
+            </h1>
+          </div>
+
+          {/* Calendar Toggle Button */}
+          <div className="flex items-center gap-2 self-start sm:self-auto">
             <button
               type="button"
-              key={s}
-              onClick={() => setFilterStatus(s)}
-              className={`px-3 py-1.5 rounded-lg capitalize font-semibold transition-all cursor-pointer ${
-                filterStatus === s
-                  ? 'bg-neutral-950 text-white shadow-2xs'
-                  : 'text-neutral-600 hover:text-neutral-950'
+              onClick={() => setShowCalendarFilter(!showCalendarFilter)}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
+                hasDateFilter || showCalendarFilter
+                  ? 'bg-neutral-950 text-white border-neutral-950 shadow-xs'
+                  : 'bg-white text-neutral-700 border-neutral-200/80 hover:bg-neutral-50'
               }`}
             >
-              {s}
+              <CalendarDays size={13} />
+              <span>
+                {hasDateFilter 
+                  ? `${startDate || 'Start'} → ${endDate || 'End'}`
+                  : 'Calendar Filter'
+                }
+              </span>
+              <ChevronDown 
+                size={13} 
+                className={`transition-transform duration-200 ${showCalendarFilter ? 'rotate-180' : ''}`} 
+              />
             </button>
-          ))}
+
+            {hasDateFilter && (
+              <button
+                type="button"
+                onClick={handleResetDate}
+                className="p-1.5 rounded-xl bg-neutral-100 hover:bg-neutral-200 text-neutral-600 transition-colors cursor-pointer"
+                title="Reset Date Filter"
+              >
+                <RotateCcw size={13} />
+              </button>
+            )}
+          </div>
         </div>
+
+        {/* Status Filter Tabs - Strictly in ONE LINE on Mobile with Smooth Horizontal Scroll */}
+        <div className="w-full overflow-x-auto no-scrollbar pt-1">
+          <div className="inline-flex items-center gap-1 p-1 rounded-2xl bg-neutral-100/90 border border-neutral-200/70 text-xs min-w-max">
+            {['all', 'approved', 'pending', 'paid', 'cancelled'].map((s) => (
+              <button
+                type="button"
+                key={s}
+                onClick={() => setFilterStatus(s)}
+                className={`px-3 py-1.5 rounded-xl capitalize font-semibold transition-all whitespace-nowrap cursor-pointer text-xs ${
+                  filterStatus === s
+                    ? 'bg-neutral-950 text-white shadow-2xs'
+                    : 'text-neutral-600 hover:text-neutral-950'
+                }`}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Expandable Calendar Date Filter Panel */}
+        {showCalendarFilter && (
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-neutral-50/80 border border-neutral-200/80 space-y-3 animate-in fade-in-50 duration-200">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-700 flex items-center gap-1.5">
+                <CalendarIcon size={13} className="text-neutral-500" />
+                <span>Track Commissions by Date</span>
+              </span>
+              {hasDateFilter && (
+                <button
+                  type="button"
+                  onClick={handleResetDate}
+                  className="text-[10px] font-bold text-neutral-500 hover:text-neutral-950 flex items-center gap-1 cursor-pointer"
+                >
+                  <X size={11} />
+                  <span>Clear Dates</span>
+                </button>
+              )}
+            </div>
+
+            {/* Quick Presets in One Line */}
+            <div className="w-full overflow-x-auto no-scrollbar">
+              <div className="inline-flex items-center gap-1.5 min-w-max">
+                <button
+                  type="button"
+                  onClick={handleResetDate}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                    !hasDateFilter
+                      ? 'bg-neutral-950 text-white shadow-2xs'
+                      : 'bg-white text-neutral-600 border border-neutral-200 hover:border-neutral-300'
+                  }`}
+                >
+                  All Time
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSetThisMonth}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                    activeDatePreset === 'this_month' && hasDateFilter
+                      ? 'bg-neutral-950 text-white shadow-2xs'
+                      : 'bg-white text-neutral-600 border border-neutral-200 hover:border-neutral-300'
+                  }`}
+                >
+                  This Month
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSetLastMonth}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                    activeDatePreset === 'last_month' && hasDateFilter
+                      ? 'bg-neutral-950 text-white shadow-2xs'
+                      : 'bg-white text-neutral-600 border border-neutral-200 hover:border-neutral-300'
+                  }`}
+                >
+                  Last Month
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSetLast30Days}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                    activeDatePreset === 'last_30_days' && hasDateFilter
+                      ? 'bg-neutral-950 text-white shadow-2xs'
+                      : 'bg-white text-neutral-600 border border-neutral-200 hover:border-neutral-300'
+                  }`}
+                >
+                  Last 30 Days
+                </button>
+              </div>
+            </div>
+
+            {/* From & To Custom Inputs */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+              <div>
+                <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-1">
+                  From Date
+                </label>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => {
+                    setStartDate(e.target.value);
+                    setActiveDatePreset('custom');
+                  }}
+                  className="w-full px-3 py-2 rounded-xl border border-neutral-200 text-xs font-medium text-neutral-900 bg-white focus:outline-none focus:ring-2 focus:ring-neutral-950/10 focus:border-neutral-950 shadow-2xs"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-1">
+                  To Date
+                </label>
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => {
+                    setEndDate(e.target.value);
+                    setActiveDatePreset('custom');
+                  }}
+                  className="w-full px-3 py-2 rounded-xl border border-neutral-200 text-xs font-medium text-neutral-900 bg-white focus:outline-none focus:ring-2 focus:ring-neutral-950/10 focus:border-neutral-950 shadow-2xs"
+                />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Summary Metrics Row */}
       <div className="grid grid-cols-2 gap-3">
-        <div className="p-4 rounded-xl bg-white border border-neutral-200/80 shadow-2xs space-y-1">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500">Filtered Records</span>
-          <div className="text-xl sm:text-2xl font-bold text-neutral-950 font-mono tabular-nums">{filtered.length}</div>
+        <div className="p-4 rounded-2xl bg-white border border-neutral-200/80 shadow-xs space-y-1">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-500">
+              Filtered Records
+            </span>
+            {hasDateFilter && (
+              <span className="text-[9px] font-bold bg-neutral-100 text-neutral-700 px-1.5 py-0.5 rounded">
+                Calendar
+              </span>
+            )}
+          </div>
+          <div className="text-xl sm:text-2xl font-bold text-neutral-950 font-mono tabular-nums">
+            {filtered.length}
+          </div>
         </div>
-        <div className="p-4 rounded-xl bg-white border border-neutral-200/80 shadow-2xs space-y-1">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500">Filtered Earnings</span>
-          <div className="text-xl sm:text-2xl font-bold text-emerald-700 font-mono tabular-nums">{formatIDR(totalFilteredCommission)}</div>
+
+        <div className="p-4 rounded-2xl bg-white border border-neutral-200/80 shadow-xs space-y-1">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-500">
+              Filtered Earnings
+            </span>
+            <span className="text-[9px] font-bold text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+              Attributed
+            </span>
+          </div>
+          <div className="text-xl sm:text-2xl font-bold text-emerald-700 font-mono tabular-nums">
+            {formatIDR(totalFilteredCommission)}
+          </div>
         </div>
       </div>
 
       {/* Main Ledger Table / Cards */}
-      <div className="border border-neutral-200/80 rounded-2xl bg-white shadow-2xs overflow-hidden">
+      <div className="border border-neutral-200/80 rounded-3xl bg-white shadow-xs overflow-hidden">
         {loading ? (
           <div className="p-16 text-center space-y-3">
             <div className="w-6 h-6 border-2 border-neutral-900 border-t-transparent rounded-full animate-spin mx-auto" />
@@ -134,7 +377,7 @@ export default function PartnerCommissionsPage() {
             <Receipt size={24} className="mx-auto text-neutral-300" />
             <p className="text-xs font-semibold text-neutral-800">No commission records found.</p>
             <p className="text-[11px] text-neutral-500 max-w-sm mx-auto">
-              Any commissions matching the selected filter will appear here.
+              Any commissions matching the selected status and calendar date filter will appear here.
             </p>
           </div>
         ) : (
@@ -147,7 +390,7 @@ export default function PartnerCommissionsPage() {
                 const isCancelled = item.status === 'cancelled' || item.booking_status === 'Cancelled';
 
                 return (
-                  <div key={item.id} className="p-3.5 space-y-2.5">
+                  <div key={item.id} className="p-4 space-y-2.5">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div className="flex items-center gap-1.5">
                         <span className="font-mono font-bold text-xs text-neutral-900 bg-neutral-100 px-2 py-0.5 rounded border border-neutral-200/70">
@@ -166,7 +409,7 @@ export default function PartnerCommissionsPage() {
                         )}
                       </div>
 
-                      <span className="text-[11px] text-neutral-500">
+                      <span className="text-[11px] text-neutral-500 font-medium">
                         {new Date(item.created_at).toLocaleDateString('en-GB', {
                           day: 'numeric',
                           month: 'short',
