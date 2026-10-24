@@ -42,8 +42,9 @@ export async function generateViewport(): Promise<Viewport> {
 export async function generateMetadata(): Promise<Metadata> {
   const headersList = await headers();
   const host = headersList.get("host") || "www.elexoirhomespaubud.com";
-  const isTherapick = host.includes("booktherapick") || host.includes("therapick");
-  const isBaliDomain = (host.includes("homespaubud") || host.includes("ubudhomespa")) && !host.includes("elexoir");
+  const cookieHeader = headersList.get("cookie") || "";
+  const isTherapick = host.includes("booktherapick") || host.includes("therapick") || cookieHeader.includes("dev_brand=therapick");
+  const isBaliDomain = ((host.includes("homespaubud") || host.includes("ubudhomespa")) && !host.includes("elexoir")) || cookieHeader.includes("dev_brand=bali");
 
   const name = isTherapick ? "Therapick" : (isBaliDomain ? "Home Spa Ubud" : "Elexoir Home Spa Ubud");
   const url = isTherapick ? "https://www.booktherapick.com" : (isBaliDomain ? "https://www.homespaubud.com" : "https://www.elexoirhomespaubud.com");
@@ -299,8 +300,9 @@ export default async function RootLayout({
 }>) {
   const headersList = await headers();
   const host = headersList.get("host") || "www.elexoirhomespaubud.com";
-  const isTherapick = host.includes("booktherapick") || host.includes("therapick");
-  const isBaliDomain = (host.includes("homespaubud") || host.includes("ubudhomespa")) && !host.includes("elexoir");
+  const cookieHeader = headersList.get("cookie") || "";
+  const isTherapick = host.includes("booktherapick") || host.includes("therapick") || cookieHeader.includes("dev_brand=therapick");
+  const isBaliDomain = ((host.includes("homespaubud") || host.includes("ubudhomespa")) && !host.includes("elexoir")) || cookieHeader.includes("dev_brand=bali");
   const brand = isTherapick ? 'therapick' : (isBaliDomain ? 'bali' : 'elexoir');
 
   const name = isTherapick ? "Therapick" : (isBaliDomain ? "Home Spa Ubud" : "Elexoir Home Spa");
