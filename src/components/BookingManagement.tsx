@@ -48,6 +48,8 @@ export default function BookingManagement({
   type FormItem = { id: string; treatment: string; duration: string; pax: number; therapists: number; revenue: number; fee: number; };
   const createDefaultItem = (): FormItem => ({ id: Math.random().toString(36).substring(2, 9), treatment: '', duration: '', pax: 1, therapists: 1, revenue: 0, fee: 0 });
   const [formItems, setFormItems] = useState<FormItem[]>([createDefaultItem()]);
+  const [domainFilter, setDomainFilter] = useState<'all' | 'elexoir' | 'bali'>('all');
+  const [formBrand, setFormBrand] = useState<'elexoir' | 'bali'>('elexoir');
 
   // Yearly Stats for Chart
   const [yearlyStats, setYearlyStats] = useState<{ month: string, revenue: number, profit: number }[]>([]);
@@ -61,18 +63,25 @@ export default function BookingManagement({
 
       const { data } = await supabase
         .from('bookings')
-        .select('booking_date, revenue, net_profit')
+        .select('booking_date, revenue, net_profit, brand')
         .gte('booking_date', startOfYear)
         .lte('booking_date', endOfYear);
 
       if (data) {
+        // STRICT DATA ISOLATION: Central Admin is solely for Elexoir and Home Spa (bali) domains.
+        // Therapick bookings are strictly excluded.
+        const centralData = data.filter((b: any) => {
+          if (b.brand === 'therapick') return false;
+          return b.brand === 'elexoir' || b.brand === 'bali' || !b.brand;
+        });
+
         const stats = Array.from({ length: 12 }, (_, i) => ({
           month: monthNames[i].substring(0, 3),
           revenue: 0,
           profit: 0
         }));
 
-        data.forEach((b: any) => {
+        centralData.forEach((b: any) => {
           const m = parseInt(b.booking_date.split('-')[1], 10) - 1;
           if (m >= 0 && m < 12) {
             stats[m].revenue += (b.revenue || 0);
@@ -86,9 +95,20 @@ export default function BookingManagement({
     fetchYearlyStats();
   }, []);
 
-  // Fetch bookings for the ENTIRE month
+  // Fetch bookings for the ENTIRE month + Realtime sync
   useEffect(() => {
     fetchMonthBookings();
+
+    const channel = supabase
+      .channel('central_bookings_realtime_sync')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, () => {
+        fetchMonthBookings();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [currentDate.getFullYear(), currentDate.getMonth()]);
 
   const fetchMonthBookings = async () => {
@@ -109,16 +129,32 @@ export default function BookingManagement({
       if (error && error.code !== '42P01') {
         console.error("Error fetching bookings", error);
       }
-      setMonthBookings(data || []);
+
+      // STRICT DATA ISOLATION: Central Admin is solely for Elexoir and Home Spa (bali) domains.
+      // Therapick bookings are strictly excluded.
+      const centralData = (data || []).filter((b: any) => {
+        if (b.brand === 'therapick') return false;
+        return b.brand === 'elexoir' || b.brand === 'bali' || !b.brand;
+      });
+
+      setMonthBookings(centralData);
     } catch (e) {
       console.error(e);
     }
     setIsLoading(false);
   };
 
+  const filteredMonthBookings = useMemo(() => {
+    return monthBookings.filter(b => {
+      if (domainFilter === 'elexoir') return b.brand === 'elexoir' || (!b.brand && b.brand !== 'therapick');
+      if (domainFilter === 'bali') return b.brand === 'bali';
+      return true; // 'all' central domains
+    });
+  }, [monthBookings, domainFilter]);
+
   const dailyBookings = useMemo(() => {
-    return monthBookings.filter(b => b.booking_date === selectedDate);
-  }, [monthBookings, selectedDate]);
+    return filteredMonthBookings.filter(b => b.booking_date === selectedDate);
+  }, [filteredMonthBookings, selectedDate]);
 
   const updateFormItem = (index: number, field: string, value: any) => {
     const newItems = [...formItems];
@@ -182,7 +218,8 @@ export default function BookingManagement({
       therapists_count: item.therapists,
       revenue: item.revenue,
       therapist_fee_total: item.fee,
-      net_profit: item.revenue - item.fee
+      net_profit: item.revenue - item.fee,
+      brand: formBrand || 'elexoir'
     }));
 
     if (isEditing) {
@@ -207,6 +244,7 @@ export default function BookingManagement({
 
   const resetForm = () => {
     setFormItems([createDefaultItem()]);
+    setFormBrand('elexoir');
   };
 
   const handleDelete = async (id: string) => {
@@ -281,10 +319,11 @@ export default function BookingManagement({
   };
 
   const downloadCSV = async () => {
-    if (monthBookings.length === 0) return alert("No bookings this month to export.");
+    if (filteredMonthBookings.length === 0) return alert("No bookings this month to export.");
 
     const headers = [
       "Booking Reference", 
+      "Brand / Domain",
       "Date", 
       "Customer Name", 
       "Treatment Details", 
@@ -296,8 +335,9 @@ export default function BookingManagement({
       "Net Profit (IDR)"
     ];
     
+    const domainLabel = domainFilter === 'elexoir' ? 'Elexoir Home Spa' : domainFilter === 'bali' ? 'Home Spa Ubud' : 'Central Admin (Elexoir & Home Spa Ubud)';
     const csvRows = [
-      `"FINANCIAL REPORT - EXLEXOIR SPA"`,
+      `"FINANCIAL REPORT - ${domainLabel.toUpperCase()}"`,
       `"Period: ${currentDate.toLocaleString('default', { month: 'long', year: 'numeric' })}"`,
       `""`,
       headers.join(',')
@@ -307,14 +347,16 @@ export default function BookingManagement({
     let totalFee = 0;
     let totalProfit = 0;
 
-    monthBookings.forEach(b => {
+    filteredMonthBookings.forEach(b => {
       let treatmentDetails = b.treatment_name || '';
       if (b.items && b.items.length > 0) {
          treatmentDetails = b.items.map((i:any) => `${i.title} (${i.duration})`).join(' + ');
       }
       
+      const bBrand = b.brand === 'bali' ? 'Home Spa Ubud' : 'Elexoir Home Spa';
       csvRows.push([
         `"${b.reference_number || `MANUAL-${b.id.substring(0,6).toUpperCase()}`}"`,
+        `"${bBrand}"`,
         `"${b.booking_date}"`,
         `"${b.guest_name || 'Walk-in / Manual'}"`,
         `"${treatmentDetails}"`,
@@ -331,14 +373,14 @@ export default function BookingManagement({
       totalProfit += Number(b.net_profit) || 0;
     });
 
-    csvRows.push(`,,,,,,,,,`);
-    csvRows.push(`"GRAND TOTAL",,,,,,,${totalRev},${totalFee},${totalProfit}`);
+    csvRows.push(`,,,,,,,,,,`);
+    csvRows.push(`"GRAND TOTAL",,,,,,,,${totalRev},${totalFee},${totalProfit}`);
 
     const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `bookings-${monthNames[month]}-${year}.csv`;
+    a.download = `central-bookings-${monthNames[month]}-${year}.csv`;
     a.click();
     window.URL.revokeObjectURL(url);
   };
@@ -346,19 +388,61 @@ export default function BookingManagement({
   const totalDailyRevenue = useMemo(() => dailyBookings.reduce((sum, b) => sum + (b.revenue || 0), 0), [dailyBookings]);
   const totalDailyProfit = useMemo(() => dailyBookings.reduce((sum, b) => sum + (b.net_profit || 0), 0), [dailyBookings]);
 
-  const totalMonthlyRevenue = useMemo(() => monthBookings.reduce((sum, b) => sum + (b.revenue || 0), 0), [monthBookings]);
-  const totalMonthlyProfit = useMemo(() => monthBookings.reduce((sum, b) => sum + (b.net_profit || 0), 0), [monthBookings]);
+  const totalMonthlyRevenue = useMemo(() => filteredMonthBookings.reduce((sum, b) => sum + (b.revenue || 0), 0), [filteredMonthBookings]);
+  const totalMonthlyProfit = useMemo(() => filteredMonthBookings.reduce((sum, b) => sum + (b.net_profit || 0), 0), [filteredMonthBookings]);
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight text-black">Booking Management</h2>
-          <p className="text-sm text-black/60">Centralized daily bookings and financial calculator</p>
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <h2 className="text-2xl font-bold tracking-tight text-black">Booking Management</h2>
+            <span className="text-[10px] font-bold uppercase tracking-wider bg-black/5 text-black/70 px-2.5 py-0.5 rounded-full border border-black/10">
+              Elexoir &amp; Home Spa Ubud Only
+            </span>
+          </div>
+          <p className="text-sm text-black/60 mt-0.5">Centralized daily bookings and financial calculator for Elexoir and Home Spa domains</p>
         </div>
-        <button onClick={downloadCSV} className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-black/80 transition-colors">
-          <Download size={16} /> Export CSV
-        </button>
+
+        <div className="flex flex-wrap items-center gap-2.5">
+          {/* Domain Filter Pills */}
+          <div className="flex items-center bg-black/5 p-1 rounded-xl">
+            <button
+              type="button"
+              id="central-filter-all"
+              onClick={() => setDomainFilter('all')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                domainFilter === 'all' ? 'bg-black text-white shadow-xs' : 'text-neutral-600 hover:text-black'
+              }`}
+            >
+              All Central
+            </button>
+            <button
+              type="button"
+              id="central-filter-elexoir"
+              onClick={() => setDomainFilter('elexoir')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                domainFilter === 'elexoir' ? 'bg-black text-white shadow-xs' : 'text-neutral-600 hover:text-black'
+              }`}
+            >
+              Elexoir Home Spa
+            </button>
+            <button
+              type="button"
+              id="central-filter-bali"
+              onClick={() => setDomainFilter('bali')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                domainFilter === 'bali' ? 'bg-black text-white shadow-xs' : 'text-neutral-600 hover:text-black'
+              }`}
+            >
+              Home Spa Ubud
+            </button>
+          </div>
+
+          <button onClick={downloadCSV} className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-black/80 transition-colors cursor-pointer">
+            <Download size={16} /> Export CSV
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -386,7 +470,7 @@ export default function BookingManagement({
                 const isSelected = isoString === selectedDate;
                 const isToday = isoString === toLocalDateString(new Date());
                 
-                const bookingsForThisDay = monthBookings.filter(b => b.booking_date === isoString);
+                const bookingsForThisDay = filteredMonthBookings.filter(b => b.booking_date === isoString);
                 const paxCount = bookingsForThisDay.reduce((sum, b) => sum + b.pax, 0);
 
                 return (
@@ -430,11 +514,11 @@ export default function BookingManagement({
              <div className="grid grid-cols-2 gap-4 mb-4">
                <div className="bg-white/10 p-3 rounded-xl text-center">
                   <span className="block text-[10px] text-white/60 uppercase font-bold mb-1">Bookings</span>
-                  <span className="text-lg font-bold">{monthBookings.length}</span>
+                  <span className="text-lg font-bold">{filteredMonthBookings.length}</span>
                </div>
                <div className="bg-white/10 p-3 rounded-xl text-center">
                   <span className="block text-[10px] text-white/60 uppercase font-bold mb-1">Total Pax</span>
-                  <span className="text-lg font-bold">{monthBookings.reduce((sum, b) => sum + b.pax, 0)}</span>
+                  <span className="text-lg font-bold">{filteredMonthBookings.reduce((sum, b) => sum + b.pax, 0)}</span>
                </div>
              </div>
 
@@ -469,12 +553,25 @@ export default function BookingManagement({
 
           {showForm && (
             <div className="bg-white border border-black/10 rounded-2xl p-6 shadow-md relative">
-              <button onClick={() => setShowForm(false)} className="absolute top-4 right-4 p-2 text-black/50 hover:bg-black/5 rounded-full transition-colors">
+              <button onClick={() => setShowForm(false)} className="absolute top-4 right-4 p-2 text-black/50 hover:bg-black/5 rounded-full transition-colors cursor-pointer">
                 <X size={20} />
               </button>
               <h4 className="font-bold text-lg mb-6">{isEditing ? 'Edit Booking' : 'New Booking'}</h4>
               
               <form onSubmit={handleSave} className="space-y-6">
+                {/* Domain Selector for Central Admin */}
+                <div className="bg-black/[0.02] border border-black/5 p-4 rounded-xl">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-black/50 block mb-2">Target Domain / Property</label>
+                  <select 
+                    value={formBrand} 
+                    onChange={e => setFormBrand(e.target.value as 'elexoir' | 'bali')}
+                    className="w-full bg-white border border-black/10 rounded-xl px-4 py-2.5 text-sm font-bold focus:outline-none focus:border-black appearance-none cursor-pointer"
+                  >
+                    <option value="elexoir">Elexoir Home Spa (elexoirhomespaubud.com)</option>
+                    <option value="bali">Home Spa Ubud (homespaubud.com)</option>
+                  </select>
+                </div>
+
                 <div className="space-y-4">
                   {formItems.map((item, index) => (
                     <div key={item.id} className="relative bg-black/[0.02] border border-black/5 p-4 rounded-xl space-y-4">
@@ -588,7 +685,7 @@ export default function BookingManagement({
                     <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${booking.status?.toLowerCase() === 'cancelled' ? 'bg-red-500' : (booking.status?.toLowerCase() === 'pending' ? 'bg-orange-400' : 'bg-emerald-500')}`}></div>
                     <div className={`flex flex-col md:flex-row md:items-center justify-between gap-4 ml-2 ${booking.status?.toLowerCase() === 'cancelled' ? 'opacity-50' : ''}`}>
                       <div className="space-y-2 w-full md:w-1/3">
-                        <div className="flex flex-wrap items-center gap-2 mb-1">
+                        <div className="flex flex-wrap items-center gap-1.5 mb-1">
                           <span className="text-[10px] font-bold tracking-wider uppercase bg-black/10 px-2 py-0.5 rounded-full whitespace-nowrap">{booking.pax} Pax</span>
                           <span className={`text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full whitespace-nowrap ${
                               booking.status?.toLowerCase() === 'cancelled' ? 'bg-red-100 text-red-700' :
@@ -596,6 +693,11 @@ export default function BookingManagement({
                           }`}>
                               {booking.status || 'Confirmed'}
                           </span>
+                          {booking.brand === 'bali' ? (
+                            <span className="text-[10px] font-bold tracking-wider uppercase bg-emerald-50 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded-full whitespace-nowrap">Home Spa Ubud</span>
+                          ) : (
+                            <span className="text-[10px] font-bold tracking-wider uppercase bg-stone-100 text-stone-700 border border-stone-200 px-2 py-0.5 rounded-full whitespace-nowrap">Elexoir Home Spa</span>
+                          )}
                         </div>
                         
                         {booking.items && booking.items.length > 0 ? (
@@ -691,6 +793,7 @@ export default function BookingManagement({
                                 revenue: booking.revenue,
                                 fee: booking.therapist_fee_total
                                 }]);
+                                setFormBrand(booking.brand === 'bali' ? 'bali' : 'elexoir');
                                 setIsEditing(booking.id);
                                 setShowForm(true);
                                 window.scrollTo({ top: 0, behavior: 'smooth' });

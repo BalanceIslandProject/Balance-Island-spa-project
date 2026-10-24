@@ -197,9 +197,11 @@ export default function TherapickBookingManagement({
       const startOfYear = `${currentYear}-01-01`;
       const endOfYear = `${currentYear}-12-31`;
 
+      // STRICT DATA ISOLATION: Therapick has its own data exclusively for booktherapick.com
       const { data } = await supabase
         .from('bookings')
-        .select('booking_date, revenue, net_profit')
+        .select('booking_date, revenue, net_profit, brand')
+        .eq('brand', 'therapick')
         .gte('booking_date', startOfYear)
         .lte('booking_date', endOfYear);
 
@@ -210,7 +212,7 @@ export default function TherapickBookingManagement({
           profit: 0
         }));
 
-        data.forEach((b: any) => {
+        data.filter((b: any) => b.brand === 'therapick').forEach((b: any) => {
           const m = parseInt(b.booking_date.split('-')[1], 10) - 1;
           if (m >= 0 && m < 12) {
             stats[m].revenue += (b.revenue || 0);
@@ -255,6 +257,7 @@ export default function TherapickBookingManagement({
         supabase
           .from('bookings')
           .select('*')
+          .eq('brand', 'therapick')
           .gte('booking_date', startOfMonth)
           .lte('booking_date', endOfMonth)
           .order('created_at', { ascending: true }),
@@ -308,12 +311,8 @@ export default function TherapickBookingManagement({
         };
       });
 
-      // Filter: Only include Therapick bookings or bookings from affiliate referrals
-      const therapickFiltered = merged.filter(b => {
-        if (b.brand === 'therapick' || Boolean(b.commission)) return true;
-        if (b.brand !== 'elexoir' && b.brand !== 'bali') return true;
-        return false;
-      });
+      // Filter: STRICT DATA ISOLATION - Exclusively BookTherapick data
+      const therapickFiltered = merged.filter(b => b.brand === 'therapick');
 
       setMonthBookings(therapickFiltered);
     } catch (e) {
