@@ -379,9 +379,6 @@ Please verify and process the payout to my registered details. Thank you!`;
           </div>
         </div>
 
-        {/* 4. Calendar with Booking Details (Inline on Mobile) */}
-        <PartnerCalendarCard bookings={calendarBookings} />
-
         {/* 5. Recent Referrals Stream */}
         <div className="bg-white/80 backdrop-blur-2xl border border-white/90 rounded-[28px] p-5 sm:p-6 shadow-[0_12px_36px_rgba(0,0,0,0.04)] ring-1 ring-black/[0.03] space-y-3.5">
           <div className="flex items-center justify-between text-xs">

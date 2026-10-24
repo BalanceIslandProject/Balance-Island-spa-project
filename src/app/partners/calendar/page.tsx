@@ -279,7 +279,7 @@ export default function PartnerCalendarPage() {
       {/* ─────────────────────────────────────────────────────────────
           1. TOP EXECUTIVE BAR: Title, Controls, KPI Summary
          ───────────────────────────────────────────────────────────── */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-2 border-b border-neutral-200/80">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 sm:gap-4 pb-2 border-b border-neutral-200/80">
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl sm:text-2xl font-extrabold text-neutral-950 tracking-tight">
@@ -289,30 +289,30 @@ export default function PartnerCalendarPage() {
               Live Schedule
             </span>
           </div>
-          <p className="text-xs text-neutral-500 mt-0.5">
+          <p className="hidden sm:block text-xs text-neutral-500 mt-0.5">
             Full-screen calendar view for scheduled treatments and commission attribution
           </p>
         </div>
 
         {/* Center / Right Controls */}
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           {/* Apple Segmented Month Navigator */}
           <div className="inline-flex items-center bg-white border border-neutral-200/80 rounded-2xl p-1 shadow-2xs">
             <button
               type="button"
               onClick={goToPrevMonth}
-              className="p-2 hover:bg-neutral-100 rounded-xl transition-colors cursor-pointer text-neutral-700 hover:text-black"
+              className="p-1.5 sm:p-2 hover:bg-neutral-100 rounded-xl transition-colors cursor-pointer text-neutral-700 hover:text-black"
               title="Previous Month"
             >
               <ChevronLeft size={16} />
             </button>
-            <div className="px-3 text-xs font-bold text-neutral-950 min-w-[130px] text-center">
+            <div className="px-2 sm:px-3 text-xs font-bold text-neutral-950 min-w-[110px] sm:min-w-[130px] text-center">
               {MONTH_NAMES[currentMonth]} {currentYear}
             </div>
             <button
               type="button"
               onClick={goToNextMonth}
-              className="p-2 hover:bg-neutral-100 rounded-xl transition-colors cursor-pointer text-neutral-700 hover:text-black"
+              className="p-1.5 sm:p-2 hover:bg-neutral-100 rounded-xl transition-colors cursor-pointer text-neutral-700 hover:text-black"
               title="Next Month"
             >
               <ChevronRight size={16} />
@@ -322,7 +322,7 @@ export default function PartnerCalendarPage() {
           <button
             type="button"
             onClick={goToToday}
-            className="px-3.5 py-2 text-xs font-semibold rounded-2xl bg-white border border-neutral-200/80 text-neutral-800 hover:bg-neutral-100 active:scale-95 transition-all shadow-2xs cursor-pointer"
+            className="px-3 sm:px-3.5 py-1.5 sm:py-2 text-xs font-semibold rounded-2xl bg-white border border-neutral-200/80 text-neutral-800 hover:bg-neutral-100 active:scale-95 transition-all shadow-2xs cursor-pointer"
           >
             Today
           </button>
@@ -332,7 +332,7 @@ export default function PartnerCalendarPage() {
             <button
               type="button"
               onClick={() => setViewMode('month')}
-              className={`px-3 py-1.5 rounded-xl font-semibold transition-all cursor-pointer ${
+              className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl font-semibold transition-all cursor-pointer ${
                 viewMode === 'month' ? 'bg-white text-neutral-950 shadow-2xs' : 'text-neutral-500 hover:text-neutral-900'
               }`}
             >
@@ -341,7 +341,7 @@ export default function PartnerCalendarPage() {
             <button
               type="button"
               onClick={() => setViewMode('week')}
-              className={`px-3 py-1.5 rounded-xl font-semibold transition-all cursor-pointer ${
+              className={`px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl font-semibold transition-all cursor-pointer ${
                 viewMode === 'week' ? 'bg-white text-neutral-950 shadow-2xs' : 'text-neutral-500 hover:text-neutral-900'
               }`}
             >
@@ -353,8 +353,9 @@ export default function PartnerCalendarPage() {
 
       {/* ─────────────────────────────────────────────────────────────
           2. MONTH FINANCIAL SUMMARY STRIP (APPLE HIG METRICS)
+          Visible on desktop only; hidden on mobile so only calendar & booking details show.
          ───────────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+      <div className="hidden lg:grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
         {/* Total Appointments */}
         <div className="bg-white border border-neutral-200/70 rounded-2xl p-4 shadow-2xs space-y-1">
           <span className="text-[10px] font-extrabold uppercase tracking-widest text-neutral-400 block">
@@ -416,10 +417,10 @@ export default function PartnerCalendarPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
         {/* ──────── CALENDAR GRID AREA (LEFT / CENTER: 7 or 8 COLS) ──────── */}
-        <div className="lg:col-span-8 bg-white border border-neutral-200/80 rounded-3xl p-4 sm:p-6 shadow-sm space-y-4">
+        <div className="lg:col-span-8 bg-white border border-neutral-200/80 rounded-2xl sm:rounded-3xl p-3 sm:p-6 shadow-sm space-y-3 sm:space-y-4">
           
-          {/* Filter Bar & Selection Status */}
-          <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-neutral-100">
+          {/* Filter Bar & Selection Status (Visible on desktop; on mobile, filter is positioned above booking details) */}
+          <div className="hidden lg:flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-neutral-100">
             <div className="flex items-center gap-1.5">
               {(['all', 'approved', 'pending', 'cancelled'] as const).map((mode) => (
                 <button
@@ -455,13 +456,13 @@ export default function PartnerCalendarPage() {
 
           {viewMode === 'month' ? (
             /* ════════ MONTH VIEW GRID (FULL SCREEN RESPONSIVE) ════════ */
-            <div className="space-y-2">
+            <div className="space-y-1.5 sm:space-y-2">
               {/* Day Name Header Row */}
               <div className="grid grid-cols-7 text-center">
                 {DAYS_OF_WEEK.map((d, i) => (
                   <div
                     key={d}
-                    className={`py-2 text-[11px] sm:text-xs font-extrabold uppercase tracking-wider ${
+                    className={`py-1 sm:py-2 text-[10px] sm:text-xs font-extrabold uppercase tracking-wider ${
                       i === 0 ? 'text-rose-500' : 'text-neutral-400'
                     }`}
                   >
@@ -474,7 +475,7 @@ export default function PartnerCalendarPage() {
               <div className="grid grid-cols-7 gap-1 sm:gap-2">
                 {/* Empty leading cells */}
                 {Array.from({ length: firstDayIndex }).map((_, i) => (
-                  <div key={`empty-${i}`} className="min-h-[64px] sm:min-h-[96px] rounded-2xl bg-neutral-50/40" />
+                  <div key={`empty-${i}`} className="min-h-[42px] sm:min-h-[96px] rounded-xl sm:rounded-2xl bg-neutral-50/40" />
                 ))}
 
                 {/* Actual Month Days */}
@@ -503,7 +504,7 @@ export default function PartnerCalendarPage() {
                       key={dateString}
                       type="button"
                       onClick={() => setSelectedDate(dateString)}
-                      className={`min-h-[70px] sm:min-h-[105px] p-1.5 sm:p-2.5 rounded-2xl flex flex-col justify-between text-left transition-all cursor-pointer border relative group ${
+                      className={`min-h-[44px] sm:min-h-[105px] p-1 sm:p-2.5 rounded-xl sm:rounded-2xl flex flex-col justify-between text-left transition-all cursor-pointer border relative group ${
                         isSelected
                           ? 'bg-neutral-950 text-white border-neutral-950 shadow-md ring-2 ring-neutral-950/20 z-10'
                           : isToday
@@ -530,7 +531,7 @@ export default function PartnerCalendarPage() {
                         </span>
 
                         {hasBookings && (
-                          <div className="flex items-center gap-1">
+                          <div className="flex items-center gap-0.5 sm:gap-1">
                             {hasApproved && (
                               <span
                                 className={`w-1.5 h-1.5 rounded-full ${
@@ -549,7 +550,7 @@ export default function PartnerCalendarPage() {
                               <span className="w-1.5 h-1.5 rounded-full bg-neutral-400" />
                             )}
                             <span
-                              className={`text-[9px] font-mono font-bold px-1 rounded-full ${
+                              className={`text-[9px] font-mono font-bold px-1 rounded-full hidden sm:inline-block ${
                                 isSelected
                                   ? 'bg-white/20 text-white'
                                   : 'bg-emerald-100 text-emerald-900'
@@ -561,9 +562,9 @@ export default function PartnerCalendarPage() {
                         )}
                       </div>
 
-                      {/* Bottom Info: Commission Total on Desktop */}
+                      {/* Bottom Info: Commission Total on Desktop (hidden on mobile for small compact columns) */}
                       {hasBookings && (
-                        <div className="mt-auto pt-1 w-full truncate">
+                        <div className="hidden sm:block mt-auto pt-1 w-full truncate">
                           <div
                             className={`text-[9px] sm:text-[10px] font-mono font-bold truncate ${
                               isSelected ? 'text-emerald-300' : 'text-emerald-800'
@@ -587,7 +588,7 @@ export default function PartnerCalendarPage() {
             </div>
           ) : (
             /* ════════ WEEK VIEW (SPACIOUS 7-DAY STRIP) ════════ */
-            <div className="grid grid-cols-1 sm:grid-cols-7 gap-2">
+            <div className="grid grid-cols-7 gap-1 sm:gap-2">
               {weekDays.map((w) => {
                 const isSelected = selectedDate === w.dateString;
                 return (
@@ -595,7 +596,7 @@ export default function PartnerCalendarPage() {
                     key={w.dateString}
                     type="button"
                     onClick={() => setSelectedDate(w.dateString)}
-                    className={`p-3 rounded-2xl border text-left transition-all cursor-pointer ${
+                    className={`p-1.5 sm:p-3 rounded-xl sm:rounded-2xl border text-left transition-all cursor-pointer min-h-[52px] sm:min-h-auto ${
                       isSelected
                         ? 'bg-neutral-950 text-white border-neutral-950 shadow-md'
                         : w.isToday
@@ -605,12 +606,20 @@ export default function PartnerCalendarPage() {
                         : 'bg-white border-neutral-200/70 hover:bg-neutral-50 text-neutral-700'
                     }`}
                   >
-                    <div className="text-[10px] uppercase font-bold tracking-wider opacity-70">
+                    <div className="text-[9px] sm:text-[10px] uppercase font-bold tracking-wider opacity-70">
                       {w.dayName}
                     </div>
-                    <div className="text-lg font-bold mt-0.5">{w.dayNum}</div>
-                    <div className="text-xs font-semibold mt-2">
-                      {w.dayBookings.length} Bookings
+                    <div className="text-sm sm:text-lg font-bold mt-0.5">{w.dayNum}</div>
+                    <div className="text-[10px] sm:text-xs font-semibold mt-1 sm:mt-2 truncate">
+                      {w.dayBookings.length > 0 ? (
+                        <span className="flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                          <span className="hidden sm:inline">{w.dayBookings.length} Bookings</span>
+                          <span className="sm:hidden font-mono">{w.dayBookings.length}</span>
+                        </span>
+                      ) : (
+                        <span className="text-neutral-400 font-normal hidden sm:inline">0</span>
+                      )}
                     </div>
                   </button>
                 );
@@ -619,8 +628,8 @@ export default function PartnerCalendarPage() {
           )}
 
           {/* Calendar Legend */}
-          <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-neutral-100 text-xs">
-            <div className="flex items-center gap-4 text-[11px] text-neutral-500 font-medium">
+          <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3 pt-2.5 sm:pt-3 border-t border-neutral-100 text-xs">
+            <div className="flex items-center gap-3 sm:gap-4 text-[10px] sm:text-[11px] text-neutral-500 font-medium">
               <span className="flex items-center gap-1.5">
                 <span className="w-2 h-2 rounded-full bg-emerald-600" />
                 <span>Approved</span>
@@ -634,7 +643,7 @@ export default function PartnerCalendarPage() {
                 <span>Cancelled</span>
               </span>
             </div>
-            <div className="text-[11px] text-neutral-400">
+            <div className="text-[10px] sm:text-[11px] text-neutral-400 hidden sm:block">
               Click any date to inspect appointment cards
             </div>
           </div>
@@ -642,11 +651,11 @@ export default function PartnerCalendarPage() {
         </div>
 
         {/* ──────── APPOINTMENT DETAILS INSPECTOR (RIGHT: 4 COLS) ──────── */}
-        <div className="lg:col-span-4 bg-white border border-neutral-200/80 rounded-3xl p-5 sm:p-6 shadow-sm space-y-4 lg:sticky lg:top-6">
+        <div className="lg:col-span-4 bg-white border border-neutral-200/80 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm space-y-4 lg:sticky lg:top-6">
           <div className="flex items-center justify-between pb-3 border-b border-neutral-100">
             <div>
               <span className="text-[10px] font-extrabold uppercase tracking-widest text-neutral-400 block">
-                Day Inspector
+                Booking Details
               </span>
               <h3 className="text-base font-extrabold text-neutral-950 tracking-tight mt-0.5">
                 {selectedDate
@@ -654,9 +663,38 @@ export default function PartnerCalendarPage() {
                   : 'All Appointments'}
               </h3>
             </div>
-            <span className="text-xs font-mono font-bold bg-neutral-100 text-neutral-800 px-2.5 py-1 rounded-full border border-neutral-200/70">
-              {selectedDayBookings.length}
-            </span>
+            <div className="flex items-center gap-2">
+              {selectedDate && (
+                <button
+                  type="button"
+                  onClick={() => setSelectedDate(null)}
+                  className="text-[11px] text-emerald-700 hover:underline font-bold cursor-pointer"
+                >
+                  All Dates
+                </button>
+              )}
+              <span className="text-xs font-mono font-bold bg-neutral-100 text-neutral-800 px-2.5 py-1 rounded-full border border-neutral-200/70">
+                {selectedDayBookings.length}
+              </span>
+            </div>
+          </div>
+
+          {/* MOBILE FILTER TABS: All, Approved, Pending, Cancelled (Positioned directly above the booking details) */}
+          <div className="flex lg:hidden items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+            {(['all', 'approved', 'pending', 'cancelled'] as const).map((mode) => (
+              <button
+                key={mode}
+                type="button"
+                onClick={() => setStatusFilter(mode)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold capitalize whitespace-nowrap transition-all cursor-pointer ${
+                  statusFilter === mode
+                    ? 'bg-neutral-950 text-white shadow-2xs font-bold'
+                    : 'bg-neutral-100/90 text-neutral-600 hover:text-black border border-neutral-200/70 font-medium'
+                }`}
+              >
+                {mode}
+              </button>
+            ))}
           </div>
 
           {selectedDayBookings.length === 0 ? (
