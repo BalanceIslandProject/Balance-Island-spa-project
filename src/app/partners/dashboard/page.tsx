@@ -276,40 +276,40 @@ Please verify and process the payout to my registered details. Thank you!`;
           </button>
         </div>
 
-        {/* 2. Responsive 2-Column Metrics (Paid Out & Pending) */}
+        {/* 2. Responsive 2-Column Metrics (Paid Out & Pending - Solid Green & Red) */}
         <div className="grid grid-cols-2 gap-3 sm:gap-4">
-          {/* Paid Out: Mint Liquid Glass */}
-          <div className="bg-emerald-500/[0.08] backdrop-blur-xl border border-emerald-500/25 rounded-[26px] p-4 sm:p-5 shadow-[0_4px_20px_rgba(16,185,129,0.06)] space-y-2 transition-all">
+          {/* Paid Out: Solid Mint Green Card */}
+          <div className="bg-[#DCFCE7] border border-[#86EFAC] rounded-[26px] p-4 sm:p-5 shadow-2xs space-y-2 transition-all">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-extrabold uppercase tracking-wider text-emerald-950/80 block">
+              <span className="text-[11px] font-extrabold uppercase tracking-wider text-neutral-900 block">
                 Paid Out
               </span>
-              <span className="text-[10px] font-bold text-emerald-950 bg-white/90 backdrop-blur-md border border-emerald-300/80 px-2 py-0.5 rounded-full shadow-2xs">
+              <span className="text-[10px] font-bold text-neutral-900 bg-white/90 border border-neutral-300 px-2 py-0.5 rounded-full shadow-2xs">
                 Transferred
               </span>
             </div>
-            <div className="text-base sm:text-xl font-bold text-neutral-950 font-mono tabular-nums truncate">
+            <div className="text-base sm:text-xl font-extrabold text-neutral-950 font-mono tabular-nums truncate">
               {formatIDR(stats?.paidCommission || 0)}
             </div>
-            <p className="text-[11px] text-neutral-600 font-medium">
+            <p className="text-[11px] text-neutral-700 font-medium">
               Approved earnings paid to bank
             </p>
           </div>
 
-          {/* Pending: Rose Liquid Glass */}
-          <div className="bg-rose-500/[0.07] backdrop-blur-xl border border-rose-500/25 rounded-[26px] p-4 sm:p-5 shadow-[0_4px_20px_rgba(244,63,94,0.06)] space-y-2 transition-all">
+          {/* Pending: Solid Rose Red Card */}
+          <div className="bg-[#FFE4E6] border border-[#FDA4AF] rounded-[26px] p-4 sm:p-5 shadow-2xs space-y-2 transition-all">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-extrabold uppercase tracking-wider text-rose-950/80 block">
+              <span className="text-[11px] font-extrabold uppercase tracking-wider text-neutral-900 block">
                 Pending
               </span>
-              <span className="text-[10px] font-bold text-rose-950 bg-white/90 backdrop-blur-md border border-rose-300/80 px-2 py-0.5 rounded-full shadow-2xs">
+              <span className="text-[10px] font-bold text-neutral-900 bg-white/90 border border-neutral-300 px-2 py-0.5 rounded-full shadow-2xs">
                 Verification
               </span>
             </div>
-            <div className="text-base sm:text-xl font-bold text-neutral-950 font-mono tabular-nums truncate">
+            <div className="text-base sm:text-xl font-extrabold text-neutral-950 font-mono tabular-nums truncate">
               {formatIDR(stats?.pendingCommission || 0)}
             </div>
-            <p className="text-[11px] text-neutral-600 font-medium">
+            <p className="text-[11px] text-neutral-700 font-medium">
               Awaiting treatment completion
             </p>
           </div>
@@ -548,40 +548,40 @@ Please verify and process the payout to my registered details. Thank you!`;
             </button>
           </div>
 
-          {/* 2. Paid Out & Pending Cards: Side-by-Side (Ample space, un-truncated) */}
+          {/* 2. Paid Out & Pending Cards: Side-by-Side (Solid Green & Red Cards) */}
           <div className="grid grid-cols-2 gap-4">
-            {/* Paid Out Card: Mint Liquid Glass */}
-            <div className="bg-emerald-500/[0.08] backdrop-blur-xl border border-emerald-500/25 rounded-[26px] p-5 shadow-[0_8px_24px_rgba(16,185,129,0.06)] space-y-2 transition-all hover:border-emerald-500/40 hover:shadow-[0_12px_28px_rgba(16,185,129,0.1)]">
+            {/* Paid Out Card: Solid Mint Green */}
+            <div className="bg-[#DCFCE7] border border-[#86EFAC] rounded-[26px] p-5 shadow-2xs space-y-2 transition-all hover:border-[#4ADE80]">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-extrabold uppercase tracking-wider text-emerald-950/80 block">
+                <span className="text-[11px] font-extrabold uppercase tracking-wider text-neutral-900 block">
                   Paid Out
                 </span>
-                <span className="text-[10px] font-bold text-emerald-950 bg-white/90 backdrop-blur-md border border-emerald-300/80 px-2.5 py-0.5 rounded-full shadow-2xs">
+                <span className="text-[10px] font-bold text-neutral-900 bg-white/90 border border-neutral-300 px-2.5 py-0.5 rounded-full shadow-2xs">
                   Transferred
                 </span>
               </div>
               <div className="text-2xl font-extrabold text-neutral-950 font-mono tabular-nums">
                 {formatIDR(stats?.paidCommission || 0)}
               </div>
-              <p className="text-[11px] text-neutral-600 font-medium">
+              <p className="text-[11px] text-neutral-700 font-medium">
                 Approved earnings paid to bank
               </p>
             </div>
 
-            {/* Pending Card: Rose Liquid Glass */}
-            <div className="bg-rose-500/[0.07] backdrop-blur-xl border border-rose-500/25 rounded-[26px] p-5 shadow-[0_8px_24px_rgba(244,63,94,0.06)] space-y-2 transition-all hover:border-rose-500/40 hover:shadow-[0_12px_28px_rgba(244,63,94,0.1)]">
+            {/* Pending Card: Solid Rose Red */}
+            <div className="bg-[#FFE4E6] border border-[#FDA4AF] rounded-[26px] p-5 shadow-2xs space-y-2 transition-all hover:border-[#FB7185]">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-extrabold uppercase tracking-wider text-rose-950/80 block">
+                <span className="text-[11px] font-extrabold uppercase tracking-wider text-neutral-900 block">
                   Pending
                 </span>
-                <span className="text-[10px] font-bold text-rose-950 bg-white/90 backdrop-blur-md border border-rose-300/80 px-2.5 py-0.5 rounded-full shadow-2xs">
+                <span className="text-[10px] font-bold text-neutral-900 bg-white/90 border border-neutral-300 px-2.5 py-0.5 rounded-full shadow-2xs">
                   Verification
                 </span>
               </div>
               <div className="text-2xl font-extrabold text-neutral-950 font-mono tabular-nums">
                 {formatIDR(stats?.pendingCommission || 0)}
               </div>
-              <p className="text-[11px] text-neutral-600 font-medium">
+              <p className="text-[11px] text-neutral-700 font-medium">
                 Awaiting treatment completion
               </p>
             </div>

@@ -730,32 +730,8 @@ export default function PartnerCalendarPage() {
 
         {/* ──────── APPOINTMENT DETAILS INSPECTOR (RIGHT: 4 COLS) ──────── */}
         <div className="lg:col-span-4 bg-white border border-neutral-200/80 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm space-y-4 lg:sticky lg:top-6">
-          {/* Executive Header: Date Indicator, Big Title with Total Bookings & Commission */}
-          <div className="pb-3 border-b border-neutral-100 space-y-2">
-            {/* Top row: Date label + All Dates button */}
-            <div className="flex items-center justify-between text-xs">
-              <div className="flex items-center gap-1.5 font-bold text-neutral-500">
-                <CalendarIcon size={13} className="text-neutral-400 shrink-0" />
-                <span className="text-[11px] sm:text-xs uppercase tracking-wider">
-                  {selectedDate
-                    ? safeFormatDate(selectedDate, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
-                    : 'All Dates (Current Month)'}
-                </span>
-              </div>
-              {selectedDate && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedDate(null);
-                    setViewMode('month');
-                  }}
-                  className="text-xs text-emerald-700 hover:text-emerald-900 font-bold hover:underline cursor-pointer"
-                >
-                  All Dates
-                </button>
-              )}
-            </div>
-
+          {/* Executive Header: Big Title with Total Bookings & Commission + Solid Cards */}
+          <div className="pb-3 border-b border-neutral-100 space-y-3">
             {/* Big Title: Total Bookings on left & Total Commission on right */}
             <div className="flex items-center justify-between gap-3 pt-0.5">
               <div>
@@ -777,19 +753,40 @@ export default function PartnerCalendarPage() {
               </div>
             </div>
 
-            {/* Approved & Pending Commission Chips */}
-            {selectedDayStats.count > 0 && (
-              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 pt-1 text-[10px] sm:text-[11px]">
-                <span className="inline-flex items-center gap-1 bg-[#DCFCE7] text-neutral-900 px-2 py-0.5 rounded-lg border border-[#86EFAC] font-semibold">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
-                  <span>Approved: <strong className="font-mono">{formatIDR(selectedDayStats.approvedCommission)}</strong></span>
-                </span>
-                <span className="inline-flex items-center gap-1 bg-[#FFE4E6] text-neutral-900 px-2 py-0.5 rounded-lg border border-[#FDA4AF] font-semibold">
-                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
-                  <span>Pending: <strong className="font-mono">{formatIDR(selectedDayStats.pendingCommission)}</strong></span>
-                </span>
+            {/* Solid Approved & Pending Cards */}
+            <div className="grid grid-cols-2 gap-2.5 pt-1">
+              {/* Approved Card: Solid Mint Green */}
+              <div className="bg-[#DCFCE7] border border-[#86EFAC] rounded-2xl p-3 shadow-2xs space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-extrabold uppercase tracking-widest text-neutral-900 block">
+                    Approved
+                  </span>
+                  <span className="text-[9px] font-bold text-neutral-900 bg-white/90 border border-neutral-300 px-1.5 py-0.2 rounded-full">
+                    Ready
+                  </span>
+                </div>
+                <div className="text-base sm:text-xl font-extrabold text-neutral-950 font-mono tabular-nums truncate">
+                  {formatIDR(selectedDayStats.approvedCommission)}
+                </div>
+                <p className="text-[10px] text-neutral-700 truncate">Ready for bank transfer</p>
               </div>
-            )}
+
+              {/* Pending Card: Solid Rose Red */}
+              <div className="bg-[#FFE4E6] border border-[#FDA4AF] rounded-2xl p-3 shadow-2xs space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-extrabold uppercase tracking-widest text-neutral-900 block">
+                    Pending
+                  </span>
+                  <span className="text-[9px] font-bold text-neutral-900 bg-white/90 border border-neutral-300 px-1.5 py-0.2 rounded-full">
+                    Treatment
+                  </span>
+                </div>
+                <div className="text-base sm:text-xl font-extrabold text-neutral-950 font-mono tabular-nums truncate">
+                  {formatIDR(selectedDayStats.pendingCommission)}
+                </div>
+                <p className="text-[10px] text-neutral-700 truncate">Awaiting completion</p>
+              </div>
+            </div>
           </div>
 
           {/* MOBILE FILTER TABS: All, Approved, Pending, Cancelled (Positioned directly above the booking details) */}
