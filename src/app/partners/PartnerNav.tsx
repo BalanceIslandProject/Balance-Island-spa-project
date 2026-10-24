@@ -415,17 +415,17 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
               <span className="text-[10px] mt-0.5 tracking-tight">Overview</span>
             </Link>
 
-            {/* 2. Referrals */}
+            {/* 2. Payouts */}
             <Link
-              href="/partners/referrals"
+              href="/partners/payouts"
               className={`flex flex-col items-center justify-center min-h-[46px] py-1 rounded-lg transition-colors ${
-                pathname === '/partners/referrals'
+                pathname === '/partners/payouts'
                   ? 'text-neutral-950 font-bold'
                   : 'text-neutral-500 hover:text-neutral-800 font-medium'
               }`}
             >
-              <Users size={18} strokeWidth={pathname === '/partners/referrals' ? 2.5 : 1.8} />
-              <span className="text-[10px] mt-0.5 tracking-tight">Referrals</span>
+              <Wallet size={18} strokeWidth={pathname === '/partners/payouts' ? 2.5 : 1.8} />
+              <span className="text-[10px] mt-0.5 tracking-tight">Payouts</span>
             </Link>
 
             {/* 3. Calendar (Center Highlight Tab) */}

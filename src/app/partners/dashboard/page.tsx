@@ -280,15 +280,10 @@ Please verify and process the payout to my registered details. Thank you!`;
         <div className="grid grid-cols-2 gap-3 sm:gap-4">
           {/* Paid Out: White Card with Green Dot */}
           <div className="bg-white border border-neutral-200/90 rounded-[26px] p-4 sm:p-5 shadow-2xs space-y-2 transition-all">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-                <span className="text-[11px] font-extrabold uppercase tracking-wider text-neutral-900 block">
-                  Paid Out
-                </span>
-              </div>
-              <span className="text-[10px] font-bold text-neutral-700 bg-neutral-100 border border-neutral-200 px-2 py-0.5 rounded-full shadow-2xs">
-                Transferred
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+              <span className="text-[11px] font-extrabold uppercase tracking-wider text-neutral-900 block">
+                Paid Out
               </span>
             </div>
             <div className="text-base sm:text-xl font-extrabold text-neutral-950 font-mono tabular-nums truncate">
@@ -301,15 +296,10 @@ Please verify and process the payout to my registered details. Thank you!`;
 
           {/* Pending: Black Card with Red Dot */}
           <div className="bg-neutral-950 border border-neutral-900 rounded-[26px] p-4 sm:p-5 shadow-md space-y-2 transition-all text-white">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
-                <span className="text-[11px] font-extrabold uppercase tracking-wider text-white block">
-                  Pending
-                </span>
-              </div>
-              <span className="text-[10px] font-bold text-neutral-300 bg-white/10 border border-white/15 px-2 py-0.5 rounded-full shadow-2xs">
-                Verification
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
+              <span className="text-[11px] font-extrabold uppercase tracking-wider text-white block">
+                Pending
               </span>
             </div>
             <div className="text-base sm:text-xl font-extrabold text-white font-mono tabular-nums truncate">
@@ -558,15 +548,10 @@ Please verify and process the payout to my registered details. Thank you!`;
           <div className="grid grid-cols-2 gap-4">
             {/* Paid Out Card: White with Green Dot */}
             <div className="bg-white border border-neutral-200/90 rounded-[26px] p-5 shadow-2xs space-y-2 transition-all hover:border-neutral-300">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-                  <span className="text-[11px] font-extrabold uppercase tracking-wider text-neutral-900 block">
-                    Paid Out
-                  </span>
-                </div>
-                <span className="text-[10px] font-bold text-neutral-700 bg-neutral-100 border border-neutral-200 px-2.5 py-0.5 rounded-full shadow-2xs">
-                  Transferred
+              <div className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                <span className="text-[11px] font-extrabold uppercase tracking-wider text-neutral-900 block">
+                  Paid Out
                 </span>
               </div>
               <div className="text-2xl font-extrabold text-neutral-950 font-mono tabular-nums">
@@ -579,15 +564,10 @@ Please verify and process the payout to my registered details. Thank you!`;
 
             {/* Pending Card: Black with Red Dot */}
             <div className="bg-neutral-950 border border-neutral-900 rounded-[26px] p-5 shadow-md space-y-2 transition-all hover:border-neutral-800 text-white">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
-                  <span className="text-[11px] font-extrabold uppercase tracking-wider text-white block">
-                    Pending
-                  </span>
-                </div>
-                <span className="text-[10px] font-bold text-neutral-300 bg-white/10 border border-white/15 px-2.5 py-0.5 rounded-full shadow-2xs">
-                  Verification
+              <div className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
+                <span className="text-[11px] font-extrabold uppercase tracking-wider text-white block">
+                  Pending
                 </span>
               </div>
               <div className="text-2xl font-extrabold text-white font-mono tabular-nums">
