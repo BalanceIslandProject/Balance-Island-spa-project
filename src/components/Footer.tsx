@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -18,8 +18,15 @@ const GoogleReviewsLogo = () => (
 
 export default function Footer() {
   const pathname = usePathname();
+  const [isPartnersSubdomain, setIsPartnersSubdomain] = useState(false);
 
-  if (pathname?.startsWith('/admin') || pathname?.startsWith('/partners')) {
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.location.hostname.startsWith('partners.')) {
+      setIsPartnersSubdomain(true);
+    }
+  }, []);
+
+  if (isPartnersSubdomain || pathname?.startsWith('/admin') || pathname?.startsWith('/partners')) {
     return null;
   }
 

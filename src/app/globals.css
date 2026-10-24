@@ -69,6 +69,12 @@ body[data-domain="therapick"] .domain-spa-only {
   display: none !important;
 }
 
+/* Partners Subdomain Isolation: strictly never show main website header or footer */
+body[data-subdomain="partners"] header,
+body[data-subdomain="partners"] footer {
+  display: none !important;
+}
+
 /* Remove autofill yellow background in Webkit browsers */
 input:-webkit-autofill,
 input:-webkit-autofill:hover, 

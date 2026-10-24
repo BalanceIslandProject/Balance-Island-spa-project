@@ -59,8 +59,16 @@ export default function TopNav() {
         setIsOpen(false);
     }, [pathname]);
 
-    // Hide TopNav on admin, store, explore, invoice, and partners routes
-    if (pathname?.startsWith('/admin') || pathname?.startsWith('/store') || pathname?.startsWith('/explore') || pathname?.startsWith('/invoice') || pathname?.startsWith('/partners')) {
+    const [isPartnersSubdomain, setIsPartnersSubdomain] = useState(false);
+
+    useEffect(() => {
+        if (typeof window !== 'undefined' && window.location.hostname.startsWith('partners.')) {
+            setIsPartnersSubdomain(true);
+        }
+    }, []);
+
+    // Hide TopNav on admin, store, explore, invoice, partners routes, and on partners subdomain
+    if (isPartnersSubdomain || pathname?.startsWith('/admin') || pathname?.startsWith('/store') || pathname?.startsWith('/explore') || pathname?.startsWith('/invoice') || pathname?.startsWith('/partners')) {
         return null;
     }
 

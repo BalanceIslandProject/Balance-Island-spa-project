@@ -299,7 +299,9 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const headersList = await headers();
-  const host = headersList.get("host") || "www.elexoirhomespaubud.com";
+  const host = headersList.get("x-forwarded-host") || headersList.get("host") || "www.elexoirhomespaubud.com";
+  const cleanHost = host.toLowerCase().split(':')[0].trim();
+  const isPartnersSubdomain = cleanHost.startsWith("partners.");
   const cookieHeader = headersList.get("cookie") || "";
   const isTherapick = host.includes("booktherapick") || host.includes("therapick") || cookieHeader.includes("dev_brand=therapick");
   const isBaliDomain = ((host.includes("homespaubud") || host.includes("ubudhomespa")) && !host.includes("elexoir")) || cookieHeader.includes("dev_brand=bali");
@@ -688,6 +690,7 @@ export default async function RootLayout({
 
       <body
         data-domain={isTherapick ? "therapick" : (isBaliDomain ? "bali" : "ubud")}
+        data-subdomain={isPartnersSubdomain ? "partners" : undefined}
         className={`${jakarta.variable} ${newsreader.variable} font-sans bg-transparent text-text min-h-screen selection:bg-primary selection:text-white`}
       >
         <SpaProvider brand={brand} initialData={initialData}>
@@ -699,11 +702,11 @@ export default async function RootLayout({
               </Suspense>
             )}
             <div className="flex flex-col min-h-screen w-full relative">
-              <TopNav />
+              {!isPartnersSubdomain && <TopNav />}
               <main className="flex-1 w-full max-w-[100vw]">
                 {children}
               </main>
-              <Footer />
+              {!isPartnersSubdomain && <Footer />}
             </div>
           </CartProvider>
         </SpaProvider>
