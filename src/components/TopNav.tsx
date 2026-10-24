@@ -121,6 +121,8 @@ export default function TopNav() {
                     {/* Strictly shown ONLY on BookTherapick domain: PARTNERS button on navbar */}
                     <a
                         href={partnerPortalUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="domain-therapick-only px-3.5 sm:px-4 py-1.5 rounded-full text-[10px] sm:text-[11px] md:text-xs font-bold tracking-[0.08em] uppercase transition-all duration-200 whitespace-nowrap bg-black text-white hover:bg-neutral-800 active:scale-95 shadow-xs border border-black/10"
                     >
                         PARTNERS
@@ -197,6 +199,8 @@ export default function TopNav() {
                             <div className="domain-therapick-only mt-1 pt-1.5 border-t border-black/[0.06]">
                                 <a 
                                     href={partnerPortalUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
                                     onClick={() => setIsOpen(false)}
                                     className="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold tracking-wider transition-colors text-white bg-black hover:bg-neutral-800 shadow-sm"
                                 >

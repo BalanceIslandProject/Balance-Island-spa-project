@@ -66,7 +66,7 @@ export default function Footer() {
               <Link href="/privacy" className="text-sm md:text-[15px] text-text-muted hover:text-primary transition-colors duration-300">Privacy Policy</Link>
               <Link href="/terms" className="text-sm md:text-[15px] text-text-muted hover:text-primary transition-colors duration-300">Terms of Service</Link>
               {/* Strictly shown ONLY on BookTherapick domain via CSS isolation rule */}
-              <a href="https://partners.booktherapick.com" className="domain-therapick-only text-sm md:text-[15px] text-text-muted hover:text-primary transition-colors duration-300 font-medium">Partner Program</a>
+              <a href="https://partners.booktherapick.com" target="_blank" rel="noopener noreferrer" className="domain-therapick-only text-sm md:text-[15px] text-text-muted hover:text-primary transition-colors duration-300 font-medium">Partner Program</a>
             </div>
           </div>
           
