@@ -673,7 +673,7 @@ export default function AffiliateManagement() {
           <div className="bg-white rounded-2xl border border-black/10 shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-[#FAF7F2] border-b border-black/10 text-black/80 font-bold">
+                <thead className="bg-white border-b border-black/10 text-black font-bold">
                   <tr>
                     <th className="py-3 px-4">Partner Code</th>
                     <th className="py-3 px-4">Name / Villa</th>
@@ -728,7 +728,7 @@ export default function AffiliateManagement() {
                                   {formatIDR(metrics.totalEarned)}
                                 </span>
                                 {metrics.approvedUnpaid > 0 ? (
-                                  <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-50 text-amber-900 border border-amber-200">
+                                  <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-white text-black border border-black">
                                     {formatIDR(metrics.approvedUnpaid)} unpaid
                                   </span>
                                 ) : metrics.pending > 0 ? (
@@ -867,7 +867,7 @@ export default function AffiliateManagement() {
           <div className="bg-white rounded-2xl border border-black/10 shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-[#FAF7F2] border-b border-black/10 text-black/80 font-bold">
+                <thead className="bg-white border-b border-black/10 text-black font-bold">
                   <tr>
                     <th className="py-3 px-4">Date</th>
                     <th className="py-3 px-4">Booking Ref</th>
@@ -994,7 +994,7 @@ export default function AffiliateManagement() {
           <div className="bg-white rounded-2xl border border-black/10 shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-[#FAF7F2] border-b border-black/10 text-black/80 font-bold">
+                <thead className="bg-white border-b border-black/10 text-black font-bold">
                   <tr>
                     <th className="py-3 px-4">Date</th>
                     <th className="py-3 px-4">Reference</th>
@@ -1137,10 +1137,10 @@ export default function AffiliateManagement() {
 
       {/* RECORD PAYOUT MODAL WITH ACTIVE FLOATING CALENDAR & APPROVED REFERRALS SELECTOR */}
       {showPayoutModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 md:p-6">
           <form
             onSubmit={handleRecordPayout}
-            className="bg-white rounded-2xl max-w-4xl w-full max-h-[92vh] flex flex-col border border-black/15 shadow-2xl overflow-hidden"
+            className="bg-white rounded-2xl w-full h-full max-w-[98vw] max-h-[96vh] flex flex-col border border-black/15 shadow-2xl overflow-hidden"
           >
             {/* Modal Header: White Background */}
             <div className="p-4 sm:p-5 bg-white border-b border-black/10 text-black flex items-center justify-between shrink-0">
@@ -1187,7 +1187,7 @@ export default function AffiliateManagement() {
                 </div>
 
                 {payoutSelectedPartner ? (
-                  <div className="bg-[#FAF7F2] p-3 rounded-xl border border-black/10 text-[11px] space-y-1">
+                  <div className="bg-white p-3 rounded-xl border border-black/10 text-[11px] space-y-1">
                     <div className="flex justify-between">
                       <span className="text-black/60">Payout Method:</span>
                       <span className="font-semibold text-black capitalize">{payoutSelectedPartner.payout_method?.replace('_', ' ') || 'Bank Transfer'}</span>
@@ -1323,7 +1323,7 @@ export default function AffiliateManagement() {
                                 isSelected
                                   ? 'bg-black text-white border-black shadow-xs'
                                   : hasApproved
-                                  ? 'bg-emerald-50/60 border-emerald-400 hover:border-black text-black'
+                                  ? 'bg-black/5 border-black/40 hover:border-black text-black'
                                   : hasPaid
                                   ? 'bg-black/[0.02] border-black/10 hover:border-black/30 text-black'
                                   : 'bg-white border-black/5 hover:border-black/20 text-black/50'
@@ -1339,11 +1339,11 @@ export default function AffiliateManagement() {
                                   {dayNum}
                                 </span>
                                 {hasApproved && (
-                                  <span className={`w-2 h-2 rounded-full ${isSelected ? 'bg-white' : 'bg-emerald-600'}`} />
+                                  <span className={`w-2 h-2 rounded-full ${isSelected ? 'bg-white' : 'bg-black'}`} />
                                 )}
                               </div>
                               {hasApproved ? (
-                                <span className={`text-[8px] font-bold truncate ${isSelected ? 'text-white' : 'text-emerald-800'}`}>
+                                <span className={`text-[8px] font-bold truncate ${isSelected ? 'text-white' : 'text-black'}`}>
                                   {approvedOnDate.length} app
                                 </span>
                               ) : (
@@ -1380,7 +1380,7 @@ export default function AffiliateManagement() {
 
                         if (displayedApproved.length === 0) {
                           return (
-                            <div className="bg-[#FAF7F2] p-6 rounded-xl border border-black/5 text-center text-black/50 space-y-1">
+                            <div className="bg-white p-6 rounded-xl border border-black/10 text-center text-black/50 space-y-1">
                               <p className="font-semibold text-black">No approved referrals found{payoutSelectedDate ? ' for this date' : ''}.</p>
                               <p className="text-[11px]">Only bookings with an <strong className="text-black">Approved</strong> status can be paid out. Review pending bookings in the Partner Calendar to approve them first.</p>
                             </div>
@@ -1414,7 +1414,7 @@ export default function AffiliateManagement() {
                                         <span className="text-[10px] text-black/50">
                                           {safeFormatDate(c.booking_date || c.created_at)}
                                         </span>
-                                        <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-bold uppercase bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                        <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-bold uppercase bg-white text-black border border-black">
                                           Approved
                                         </span>
                                       </div>
@@ -1545,11 +1545,7 @@ export default function AffiliateManagement() {
       {selectedPartnerDetails && activePartnerMetrics && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 md:p-6">
           <div
-            className={`bg-white rounded-2xl w-full flex flex-col border border-black/15 shadow-2xl overflow-hidden transition-all duration-200 ${
-              partnerActiveTab === 'calendar'
-                ? 'h-full max-w-[98vw] max-h-[96vh]'
-                : 'max-w-4xl max-h-[92vh]'
-            }`}
+            className="bg-white rounded-2xl w-full h-full max-w-[98vw] max-h-[96vh] flex flex-col border border-black/15 shadow-2xl overflow-hidden"
           >
             {/* Modal Header: Comfortable White Background */}
             <div className="p-4 sm:p-5 bg-white border-b border-black/10 text-black flex items-start justify-between shrink-0">
@@ -1620,8 +1616,14 @@ export default function AffiliateManagement() {
               })}
             </div>
 
-            {/* Modal Tab Content (Scrollable, Clean Monochrome) */}
-            <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6">
+            {/* Modal Tab Content (Fullscreen, Clean Monochrome) */}
+            <div
+              className={`flex-1 min-h-0 ${
+                partnerActiveTab === 'calendar'
+                  ? 'overflow-hidden p-3 sm:p-4 flex flex-col'
+                  : 'overflow-y-auto p-5 sm:p-6 space-y-6'
+              }`}
+            >
               
               {/* TAB A: OVERVIEW & CONTACT (Contact and Category cleanly placed here) */}
               {partnerActiveTab === 'overview' && (
@@ -1878,10 +1880,10 @@ export default function AffiliateManagement() {
 
               {/* TAB B: INDEPENDENT PARTNER CALENDAR (FULLSCREEN DESKTOP LAYOUT) */}
               {partnerActiveTab === 'calendar' && (
-                <div className="space-y-4 text-xs">
+                <div className="flex-1 min-h-0 flex flex-col space-y-3 text-xs overflow-hidden">
                   
-                  {/* Calendar Top Controls Header */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#FAF7F2] p-3.5 rounded-2xl border border-black/10">
+                  {/* Calendar Top Controls Header (Strict Monochrome, Pure White Background) */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-2.5 sm:p-3 rounded-2xl border border-black/10 shrink-0">
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
@@ -1942,34 +1944,34 @@ export default function AffiliateManagement() {
                         <span className="flex items-center gap-1 font-semibold text-black">
                           <span className="w-2 h-2 rounded-full bg-black inline-block" /> Paid Out
                         </span>
-                        <span className="flex items-center gap-1 font-semibold text-emerald-800">
-                          <span className="w-2 h-2 rounded-full bg-emerald-600 inline-block" /> Approved
+                        <span className="flex items-center gap-1 font-semibold text-black">
+                          <span className="w-2 h-2 rounded-full border border-black bg-white inline-block" /> Approved
                         </span>
-                        <span className="flex items-center gap-1 font-semibold text-amber-800">
-                          <span className="w-2 h-2 rounded-full bg-amber-500 inline-block" /> Pending
+                        <span className="flex items-center gap-1 font-semibold text-black/50">
+                          <span className="w-2 h-2 rounded-full bg-black/20 inline-block" /> Pending
                         </span>
                       </div>
-                      <div className="hidden sm:block text-black/30">|</div>
+                      <div className="hidden sm:block text-black/20">|</div>
                       <div>
                         Month: <strong className="text-black font-bold">{partnerMonthBookings.length}</strong> bookings (<strong className="text-black font-bold">{formatIDR(partnerMonthBookings.reduce((sum, b) => sum + Number(b.commission_amount || 0), 0))}</strong>)
                       </div>
                     </div>
                   </div>
 
-                  {/* 2-Column Responsive Layout: Left Calendar Grid, Right Appointments List */}
-                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+                  {/* 2-Column Responsive Layout: Left Calendar Grid (Fixed, NEVER Scrolls Down), Right Appointments List (Scrollable) */}
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1 min-h-0 items-stretch overflow-hidden">
                     
-                    {/* Left Column: Spacious Month Grid (lg:col-span-7 xl:col-span-8) */}
-                    <div className="lg:col-span-7 xl:col-span-8 bg-white rounded-2xl border border-black/10 p-3 sm:p-4 shadow-xs">
-                      <div className="grid grid-cols-7 gap-1 text-center font-bold text-black/40 text-[11px] mb-2 uppercase tracking-wider">
+                    {/* Left Column: Fixed Month Grid (lg:col-span-7 xl:col-span-8) - Can NOT scroll down */}
+                    <div className="lg:col-span-7 xl:col-span-8 bg-white rounded-2xl border border-black/10 p-3 sm:p-4 shadow-xs flex flex-col h-full min-h-0 overflow-hidden select-none">
+                      <div className="grid grid-cols-7 gap-1 text-center font-bold text-black text-[11px] mb-2 uppercase tracking-wider shrink-0">
                         {DAYS_OF_WEEK.map((d) => (
                           <div key={d} className="py-1">{d}</div>
                         ))}
                       </div>
 
-                      <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
+                      <div className="grid grid-cols-7 gap-1.5 flex-1 min-h-0 auto-rows-fr">
                         {Array.from({ length: calendarFirstDayOfWeek }).map((_, i) => (
-                          <div key={`empty-${i}`} className="h-16 sm:h-20 xl:h-24 bg-black/[0.01] rounded-xl border border-transparent" />
+                          <div key={`empty-${i}`} className="h-full bg-black/[0.01] rounded-xl border border-transparent" />
                         ))}
 
                         {Array.from({ length: calendarDaysInMonth }).map((_, i) => {
@@ -1989,7 +1991,7 @@ export default function AffiliateManagement() {
                             <div
                               key={dateStr}
                               onClick={() => setPartnerSelectedDate(isSelected ? null : dateStr)}
-                              className={`h-16 sm:h-20 xl:h-24 p-1.5 sm:p-2 rounded-xl border transition-all cursor-pointer flex flex-col justify-between select-none ${
+                              className={`h-full p-1 sm:p-1.5 rounded-xl border transition-all cursor-pointer flex flex-col justify-between select-none ${
                                 isSelected
                                   ? 'bg-black text-white border-black shadow-md'
                                   : dayBookings.length > 0
@@ -2010,7 +2012,7 @@ export default function AffiliateManagement() {
                                   {dayNum}
                                 </span>
                                 {dayBookings.length > 0 && (
-                                  <span className={`text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded font-mono font-bold ${
+                                  <span className={`text-[9px] sm:text-[10px] px-1.5 py-0.2 rounded font-mono font-bold ${
                                     isSelected ? 'bg-white text-black' : 'bg-black text-white'
                                   }`}>
                                     {dayBookings.length}
@@ -2019,7 +2021,7 @@ export default function AffiliateManagement() {
                               </div>
 
                               {dayBookings.length > 0 ? (
-                                <div className="space-y-1">
+                                <div className="space-y-0.5">
                                   <div className={`text-[9px] sm:text-[10px] font-bold truncate ${isSelected ? 'text-white' : 'text-black'}`}>
                                     {formatIDR(dayCommSum)}
                                   </div>
@@ -2032,13 +2034,13 @@ export default function AffiliateManagement() {
                                     )}
                                     {hasApproved && (
                                       <span
-                                        className={`inline-block w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-emerald-300' : 'bg-emerald-600'}`}
+                                        className={`inline-block w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-white border border-black' : 'border border-black bg-white'}`}
                                         title="Approved"
                                       />
                                     )}
                                     {hasPending && (
                                       <span
-                                        className={`inline-block w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-amber-300' : 'bg-amber-500'}`}
+                                        className={`inline-block w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-white/60' : 'bg-black/25'}`}
                                         title="Pending"
                                       />
                                     )}
@@ -2053,9 +2055,9 @@ export default function AffiliateManagement() {
                       </div>
                     </div>
 
-                    {/* Right Column: Appointments List for Selected Date or Month (lg:col-span-5 xl:col-span-4) */}
-                    <div className="lg:col-span-5 xl:col-span-4 space-y-3">
-                      <div className="flex items-center justify-between bg-[#FAF7F2] p-3 rounded-xl border border-black/10">
+                    {/* Right Column: Appointments List for Selected Date or Month (lg:col-span-5 xl:col-span-4) - SCROLLABLE */}
+                    <div className="lg:col-span-5 xl:col-span-4 flex flex-col h-full min-h-0 space-y-2.5">
+                      <div className="flex items-center justify-between bg-white p-2.5 sm:p-3 rounded-xl border border-black/10 shrink-0">
                         <div>
                           <h4 className="font-bold text-black text-xs">
                             {partnerSelectedDate
@@ -2091,11 +2093,11 @@ export default function AffiliateManagement() {
                         }
 
                         return (
-                          <div className="space-y-2.5 max-h-[calc(96vh-240px)] overflow-y-auto pr-1">
+                          <div className="flex-1 min-h-0 overflow-y-auto space-y-2.5 pr-1">
                             {displayedList.map((b) => (
                               <div
                                 key={b.id}
-                                className="bg-white p-3.5 rounded-2xl border border-black/10 shadow-xs space-y-2.5 hover:border-black/30 transition-all"
+                                className="bg-white p-3 rounded-2xl border border-black/10 shadow-xs space-y-2 hover:border-black/30 transition-all"
                               >
                                 <div className="flex items-start justify-between">
                                   <div>
@@ -2125,15 +2127,15 @@ export default function AffiliateManagement() {
                                         <CheckCircle2 size={10} /> Paid Out
                                       </span>
                                     ) : b.status === 'approved' ? (
-                                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-300">
+                                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-white text-black border border-black">
                                         <CheckCircle2 size={10} /> Approved
                                       </span>
                                     ) : b.status === 'declined' ? (
-                                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-red-50 text-red-800 border border-red-300">
+                                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-black/5 text-black border border-black/20 line-through">
                                         Declined
                                       </span>
                                     ) : (
-                                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-300">
+                                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-black/5 text-black border border-black/15">
                                         <Clock size={10} /> Pending
                                       </span>
                                     )}
@@ -2216,7 +2218,7 @@ export default function AffiliateManagement() {
               {partnerActiveTab === 'commissions' && (
                 <div className="space-y-4 text-xs">
                   {/* Partner Commission Rate Setting & Filter Card */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#FAF7F2] p-4 rounded-2xl border border-black/10">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-black/10">
                     <div>
                       <span className="text-[10px] uppercase font-bold text-black/50 block tracking-wider">
                         Partner Commission Rate
@@ -2296,7 +2298,7 @@ export default function AffiliateManagement() {
 
                   <div className="bg-white rounded-2xl border border-black/10 shadow-xs overflow-hidden">
                     <table className="w-full text-left text-xs">
-                      <thead className="bg-[#FAF7F2] border-b border-black/10 text-black/80 font-bold">
+                      <thead className="bg-white border-b border-black/10 text-black font-bold">
                         <tr>
                           <th className="py-2.5 px-3">Date</th>
                           <th className="py-2.5 px-3">Booking Ref</th>
@@ -2361,15 +2363,15 @@ export default function AffiliateManagement() {
                                       <CheckCircle2 size={10} /> Paid Out
                                     </span>
                                   ) : c.status === 'approved' ? (
-                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-300">
+                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-white text-black border border-black">
                                       <CheckCircle2 size={10} /> Approved
                                     </span>
                                   ) : c.status === 'declined' ? (
-                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-red-50 text-red-800 border border-red-300">
+                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-black/5 text-black border border-black/20 line-through">
                                       Declined
                                     </span>
                                   ) : (
-                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-300">
+                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-black/5 text-black border border-black/15">
                                       <Clock size={10} /> Pending
                                     </span>
                                   )}
@@ -2406,7 +2408,7 @@ export default function AffiliateManagement() {
               {/* TAB D: INDEPENDENT PARTNER PAYOUTS */}
               {partnerActiveTab === 'payouts' && (
                 <div className="space-y-4 text-xs">
-                  <div className="flex items-center justify-between bg-[#FAF7F2] p-4 rounded-2xl border border-black/10">
+                  <div className="flex items-center justify-between bg-white p-4 rounded-2xl border border-black/10">
                     <div>
                       <span className="text-[10px] uppercase font-bold text-black/50 block">Approved Balance Ready for Payout</span>
                       <span className="text-lg font-bold text-black mt-0.5 block">
@@ -2425,7 +2427,7 @@ export default function AffiliateManagement() {
 
                   <div className="bg-white rounded-2xl border border-black/10 shadow-xs overflow-hidden">
                     <table className="w-full text-left text-xs">
-                      <thead className="bg-[#FAF7F2] border-b border-black/10 text-black/80 font-bold">
+                      <thead className="bg-white border-b border-black/10 text-black font-bold">
                         <tr>
                           <th className="py-2.5 px-3">Date</th>
                           <th className="py-2.5 px-3">Reference</th>
