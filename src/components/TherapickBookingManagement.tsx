@@ -28,7 +28,8 @@ import {
   Check,
   User,
   Lock,
-  MapPin
+  MapPin,
+  ExternalLink
 } from 'lucide-react';
 import { Treatment, TherapistFee } from '@/context/SpaContext';
 import { cx, btn, inputCls, selectCls, CountPill, EmptyState } from '@/components/admin/affiliate/ui';
@@ -164,6 +165,11 @@ export default function TherapickBookingManagement({
   const [monthBookings, setMonthBookings] = useState<Booking[]>([]);
   const [allTherapistFees, setAllTherapistFees] = useState<TherapistFee[]>(therapistFees || []);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
+  const selectedBooking = useMemo(
+    () => monthBookings.find(b => b.id === selectedBookingId) || null,
+    [monthBookings, selectedBookingId]
+  );
 
   useEffect(() => {
     if (therapistFees && therapistFees.length > 0) {
@@ -894,59 +900,6 @@ export default function TherapickBookingManagement({
                 );
               })}
             </div>
-            
-            {/* Daily summary */}
-            <div className="mt-5 pt-4 border-t border-[#E5E5E5] space-y-2">
-              <div className="text-xs font-semibold text-black">
-                Daily summary · {new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
-              </div>
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-[#737373]">Revenue</span>
-                <span className="font-medium text-[#171717] tabular-nums">{formatCurrency(totalDailyRevenue)}</span>
-              </div>
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-[#737373]">Therapist fees</span>
-                <span className="font-medium text-[#737373] tabular-nums">{formatCurrency(totalDailyFees)}</span>
-              </div>
-              <div className="flex justify-between items-center text-xs pt-1 border-t border-[#F0F0F0]">
-                <span className="font-medium text-[#171717]">Net profit</span>
-                <span className="font-semibold text-emerald-600 tabular-nums">{formatCurrency(totalDailyProfit)}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Monthly summary CRM card - Clean pure white, no dark gradient */}
-          <div className="bg-white border border-[#E5E5E5] rounded-xl p-5 space-y-3">
-            <div className="flex items-center justify-between">
-              <h4 className="text-xs font-semibold text-black">Monthly summary</h4>
-              <span className="text-[11px] text-[#737373]">{monthNames[month]} {year}</span>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-2.5">
-              <div className="border border-[#E5E5E5] rounded-lg p-2.5 bg-white">
-                <span className="block text-[11px] text-[#737373]">Bookings</span>
-                <span className="text-base font-semibold text-black tabular-nums mt-0.5 block">{monthBookings.length}</span>
-              </div>
-              <div className="border border-[#E5E5E5] rounded-lg p-2.5 bg-white">
-                <span className="block text-[11px] text-[#737373]">Total pax</span>
-                <span className="text-base font-semibold text-black tabular-nums mt-0.5 block">{totalMonthlyPax}</span>
-              </div>
-            </div>
-
-            <div className="space-y-2 pt-1 border-t border-[#F0F0F0] text-xs">
-              <div className="flex justify-between items-center">
-                <span className="text-[#737373]">Revenue</span>
-                <span className="font-medium text-[#171717] tabular-nums">{formatCurrency(totalMonthlyRevenue)}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-[#737373]">Therapist fees</span>
-                <span className="font-medium text-[#737373] tabular-nums">{formatCurrency(totalMonthlyFees)}</span>
-              </div>
-              <div className="flex justify-between items-center pt-1 border-t border-[#F0F0F0]">
-                <span className="font-medium text-[#171717]">Net profit</span>
-                <span className="font-semibold text-emerald-600 tabular-nums">{formatCurrency(totalMonthlyProfit)}</span>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -1140,15 +1093,12 @@ export default function TherapickBookingManagement({
               />
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               {dailyBookings.map(booking => {
                 let title = booking.treatment_name;
-                let dur = '';
                 const match = title.match(/(.*) \((.*)\)$/);
                 if (match) {
-                    title = match[1];
-                    dur = match[2];
-                    if (dur.includes("mins")) dur = dur.replace("mins", "Minutes");
+                  title = match[1];
                 }
 
                 const isPaid = booking.payment_status === 'paid' || booking.commission?.payment_verified;
@@ -1156,411 +1106,78 @@ export default function TherapickBookingManagement({
                 const isCancelled = bookingStatus.toLowerCase() === 'cancelled';
                 const isOngoing = bookingStatus.toLowerCase() === 'ongoing';
                 const isCompleted = bookingStatus.toLowerCase() === 'completed';
-                const isConfirmed = bookingStatus.toLowerCase() === 'confirmed';
-                const hasCommission = Boolean(booking.commission);
-                const isCommissionApproved = booking.commission?.status === 'approved';
-                const isCommissionCancelled = booking.commission?.status === 'cancelled';
 
                 return (
-                  <div key={booking.id} className={cx('bg-white border rounded-xl p-4 sm:p-5 transition-colors space-y-4', isCancelled ? 'border-red-200 bg-red-50/10' : 'border-[#E5E5E5] hover:border-black/30')}>
-                    {/* Top Row: Reference, Pax, Payment Badge, Treatment Status Mark, Customer Name & Time */}
-                    <div className="flex flex-wrap items-center justify-between gap-2.5">
+                  <div 
+                    key={booking.id} 
+                    className={cx(
+                      'bg-white border rounded-xl p-3.5 sm:p-4 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3',
+                      isCancelled ? 'border-red-200 bg-red-50/15' : 'border-[#E5E5E5] hover:border-black/40'
+                    )}
+                  >
+                    {/* Left: Clickable Booking ID + Customer Name + Treatment Name */}
+                    <div className="min-w-0 space-y-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        {booking.reference_number && (
-                          <div className="flex items-center gap-1">
-                            <span className="font-mono text-xs text-[#171717] bg-[#FAFAFA] px-2 py-0.5 rounded-md border border-[#E5E5E5]">
-                              #{booking.reference_number}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => handleCopy(booking.reference_number!)}
-                              className={cx(btn.base, btn.secondary, btn.icon, 'h-6 w-6 text-[#737373]')}
-                              title="Copy reference number"
-                            >
-                              {copiedId === booking.reference_number ? (
-                                <Check size={12} className="text-emerald-600" />
-                              ) : (
-                                <Copy size={12} />
-                              )}
-                            </button>
-                          </div>
-                        )}
-                        <span className="text-xs text-[#737373] bg-[#FAFAFA] px-2 py-0.5 rounded-md border border-[#E5E5E5] whitespace-nowrap">
-                          {booking.pax} Pax
-                        </span>
-
-                        {/* Payment Status Label / Clickable Toggle */}
+                        {/* Clickable Booking ID */}
                         <button
                           type="button"
-                          onClick={() => handleTogglePayment(booking)}
-                          className={cx(
-                            'text-xs font-medium px-2 py-0.5 rounded-md border transition-all cursor-pointer flex items-center gap-1',
-                            isPaid
-                              ? 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100'
-                              : 'bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100'
-                          )}
-                          title="Click to toggle Paid/Unpaid"
+                          onClick={() => setSelectedBookingId(booking.id)}
+                          className="font-mono text-xs font-semibold text-black bg-[#FAFAFA] hover:bg-black hover:text-white px-2 py-0.5 rounded border border-[#E5E5E5] transition-colors cursor-pointer inline-flex items-center gap-1 group"
+                          title="Click to view all booking details"
                         >
-                          {isPaid ? <CheckSquare size={12} className="text-emerald-700" /> : <Square size={12} className="text-amber-700" />}
-                          <span>{isPaid ? 'Paid' : 'Unpaid'}</span>
+                          <span>#{booking.reference_number || booking.id.substring(0, 8)}</span>
+                          <ExternalLink size={10} className="text-[#A3A3A3] group-hover:text-white transition-colors" />
                         </button>
 
-                        {/* Treatment Status Mark */}
+                        {/* Customer Name */}
+                        <span className="font-semibold text-sm text-black truncate">
+                          {booking.guest_name || 'Guest'}
+                        </span>
+
+                        {/* Status Badges */}
+                        {isPaid ? (
+                          <span className="text-[10px] font-medium text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                            Paid
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-medium text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
+                            Unpaid
+                          </span>
+                        )}
+
                         {isCancelled ? (
-                          <span className="text-xs font-medium px-2 py-0.5 rounded-md bg-[#F5F5F5] text-[#737373] border border-[#E5E5E5]">
+                          <span className="text-[10px] font-medium text-[#737373] bg-[#F5F5F5] px-1.5 py-0.5 rounded border border-[#E5E5E5]">
                             Cancelled
                           </span>
                         ) : isOngoing ? (
-                          <button
-                            type="button"
-                            onClick={() => handleUndoStatus(booking, 'Ongoing')}
-                            className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs font-medium bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border border-indigo-200 transition-all cursor-pointer group"
-                            title="Ongoing Treatment active. Undo requires secret admin password (022320)"
-                          >
-                            <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-pulse" />
-                            <span>Ongoing</span>
-                            <Lock size={10} className="text-indigo-600 group-hover:scale-110 transition-transform" />
-                          </button>
+                          <span className="text-[10px] font-medium text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-200 flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+                            Ongoing
+                          </span>
                         ) : isCompleted ? (
-                          <button
-                            type="button"
-                            onClick={() => handleUndoStatus(booking, 'Completed')}
-                            className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs font-medium bg-teal-50 hover:bg-teal-100 text-teal-900 border border-teal-200 transition-all cursor-pointer group"
-                            title="Finish Treatment marked. Undo requires secret admin password (022320)"
-                          >
-                            <CheckCircle2 size={11} className="text-teal-700" />
-                            <span>Finished</span>
-                            <Lock size={10} className="text-teal-600 group-hover:scale-110 transition-transform" />
-                          </button>
-                        ) : isConfirmed && !hasCommission ? (
-                          <span className="text-xs font-medium px-2 py-0.5 rounded-md bg-blue-50 text-blue-800 border border-blue-200">
-                            Confirmed
+                          <span className="text-[10px] font-medium text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200">
+                            Finished
                           </span>
-                        ) : (
-                          <span className="text-xs font-medium px-2 py-0.5 rounded-md bg-amber-50 text-amber-800 border border-amber-200">
-                            Pending
-                          </span>
-                        )}
+                        ) : null}
                       </div>
 
-                      {/* Customer Name, Location & Time */}
-                      <div className="flex flex-wrap items-center gap-2 text-xs text-[#737373]">
-                        {booking.guest_name && (
-                          <span className="font-medium text-[#171717] flex items-center gap-1 bg-[#FAFAFA] px-2 py-0.5 rounded border border-[#E5E5E5]">
-                            <User size={12} className="text-[#737373]" />
-                            {booking.guest_name}
-                          </span>
-                        )}
-                        {booking.time && booking.time !== '-' && (
-                          <span className="text-xs font-medium text-[#737373] bg-[#FAFAFA] px-2 py-0.5 rounded border border-[#E5E5E5] flex items-center gap-1">
-                            <Clock size={11} className="text-[#737373]" />
-                            {booking.time}
-                          </span>
-                        )}
-                      </div>
+                      {/* Treatment Name */}
+                      <p className="text-xs text-[#737373] font-medium truncate">
+                        {title}
+                      </p>
                     </div>
 
-                    {/* Middle Row: Treatment Details & 3-Column Financial Breakdown */}
-                    <div className={cx('flex flex-col md:flex-row md:items-center justify-between gap-4', isCancelled && 'opacity-60')}>
-                      {/* Left: Treatment Details */}
-                      <div className="space-y-1 w-full md:w-1/2">
-                        {booking.items && booking.items.length > 0 ? (
-                          <div className="flex flex-col gap-1.5">
-                            {booking.items.map((it: any, idx: number) => {
-                              const isCouple = isCouplePackage(it.title);
-                              return (
-                                <div key={idx}>
-                                  <p className="font-medium text-sm text-[#171717]">
-                                    {it.title} {isCouple ? '(Couple Package)' : it.guests > 1 ? `(x${it.guests})` : ''}
-                                  </p>
-                                  <div className="flex flex-wrap items-center gap-2 mt-1">
-                                    <span className="text-[11px] text-[#737373] bg-[#FAFAFA] px-2 py-0.5 rounded border border-[#E5E5E5]">
-                                      Duration: {it.duration} Mins
-                                    </span>
-                                    <span className="text-[11px] text-[#737373] bg-[#FAFAFA] px-2 py-0.5 rounded border border-[#E5E5E5]">
-                                      {isCouple ? '2 Therapists Assigned' : `${it.guests || 1} Therapist Assigned`}
-                                    </span>
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        ) : (
-                          <div>
-                            <p className="font-medium text-sm text-[#171717]">{title}</p>
-                            {dur && (
-                              <p className="text-[11px] text-[#737373] mt-1 bg-[#FAFAFA] inline-block px-2 py-0.5 rounded border border-[#E5E5E5]">
-                                Duration: {dur}
-                              </p>
-                            )}
-                          </div>
-                        )}
-
-                        {/* Location / Hotel / Room Details if present */}
-                        {booking.location && (
-                          <div className="text-xs text-[#737373] flex items-center gap-1 font-normal pt-1">
-                            <MapPin size={11} className="text-[#737373] shrink-0" />
-                            <span>{booking.location}{booking.room_number ? `, Room ${booking.room_number}` : ''}</span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Right: 3-Column Financial Breakdown Box */}
-                      <div className="w-full md:w-auto md:min-w-[340px] lg:min-w-[360px] grid grid-cols-3 divide-x divide-[#E5E5E5] border border-[#E5E5E5] rounded-lg p-2.5 text-center bg-[#FAFAFA]">
-                        <div className="flex flex-col justify-center px-2">
-                          <span className="block text-[10px] text-[#737373] font-medium">Revenue</span>
-                          <span className="font-semibold text-xs sm:text-[13px] text-black tabular-nums mt-0.5">{formatCurrency(booking.revenue)}</span>
-                        </div>
-                        <div className="flex flex-col justify-center px-2">
-                          <span className="block text-[10px] text-[#737373] font-medium">
-                            Fees ({booking.therapists_count} {booking.therapists_count > 1 ? 'Therapists' : 'Therapist'})
-                          </span>
-                          <span className="font-semibold text-xs sm:text-[13px] text-[#737373] tabular-nums mt-0.5">{formatCurrency(booking.therapist_fee_total)}</span>
-                        </div>
-                        <div className="flex flex-col justify-center px-2">
-                          <span className="block text-[10px] text-[#737373] font-medium">Profit</span>
-                          <span className="font-semibold text-xs sm:text-[13px] text-emerald-600 tabular-nums mt-0.5">{formatCurrency(booking.net_profit)}</span>
-                          {isCommissionApproved && Number(booking.commission?.commission_amount || 0) > 0 && (
-                            <span className="block text-[9px] text-[#737373] font-mono mt-0.5 whitespace-nowrap">
-                              (-{formatCurrency(booking.commission.commission_amount)} comm)
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Partner Referral Attribution Box (if referred by partner) */}
-                    {hasCommission && (
-                      <div className="p-3 bg-[#FAFAFA] border border-[#E5E5E5] rounded-lg flex flex-wrap items-center justify-between gap-2.5">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="text-xs font-medium text-[#171717] bg-white border border-[#E5E5E5] px-2 py-0.5 rounded">
-                            Partner: #{booking.commission?.partner_code}
-                          </span>
-                          <span className="text-xs font-semibold text-emerald-600 font-mono">
-                            Commission: +{formatCurrency(booking.commission?.commission_amount || 0)}
-                          </span>
-
-                          {/* Commission Status */}
-                          {isCommissionCancelled ? (
-                            <span className="text-xs font-medium text-[#737373] bg-[#F5F5F5] px-2 py-0.5 rounded">
-                              Commission Cancelled
-                            </span>
-                          ) : isCommissionApproved ? (
-                            <span className="text-xs font-medium text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded flex items-center gap-1">
-                              <CheckSquare size={12} className="text-emerald-700" /> Approved
-                            </span>
-                          ) : (
-                            <span className="text-xs font-medium text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded flex items-center gap-1">
-                              <Clock size={11} className="text-amber-700" /> Pending
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Manual Admin Approval Button */}
-                        {!isCommissionApproved && !isCommissionCancelled && (
-                          <button
-                            type="button"
-                            onClick={() => handleApproveCommission(booking)}
-                            className={cx(btn.base, btn.primary, btn.xs)}
-                            title="Approve Commission Manually"
-                          >
-                            <CheckSquare size={12} />
-                            <span>Approve commission</span>
-                          </button>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Bottom Action Bar: Checklist Workflow & Utility Actions */}
-                    <div className="pt-3 border-t border-[#F0F0F0] flex flex-wrap items-center justify-between gap-2.5">
-                      {/* Operational Checklist Action Buttons */}
-                      <div className="flex flex-wrap items-center gap-1.5">
-                        {/* 1. Paid / Unpaid Checklist Button */}
-                        <button
-                          type="button"
-                          onClick={() => handleTogglePayment(booking)}
-                          className={cx(
-                            btn.base,
-                            btn.xs,
-                            isPaid
-                              ? 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100'
-                              : 'bg-amber-50 text-amber-900 border-amber-200 hover:bg-amber-100'
-                          )}
-                          title={isPaid ? "Payment is Paid. Click to toggle to Unpaid" : "Payment is Unpaid. Click to mark as Paid"}
-                        >
-                          {isPaid ? (
-                            <CheckSquare size={12} className="text-emerald-700 shrink-0" />
-                          ) : (
-                            <Square size={12} className="text-amber-700 shrink-0" />
-                          )}
-                          <span>{isPaid ? 'Paid' : 'Unpaid'}</span>
-                        </button>
-
-                        {/* 2. Confirmed Checklist Button */}
-                        {!hasCommission && (
-                          <button
-                            type="button"
-                            onClick={() => handleStatusChange(booking.id, isConfirmed ? 'Pending' : 'Confirmed')}
-                            className={cx(
-                              btn.base,
-                              btn.xs,
-                              isConfirmed
-                                ? 'bg-blue-50 text-blue-800 border-blue-200 hover:bg-blue-100'
-                                : btn.secondary
-                            )}
-                            title={isConfirmed ? "Booking Confirmed. Click to return to Pending" : "Click to mark Confirmed"}
-                          >
-                            {isConfirmed ? (
-                              <CheckSquare size={12} className="text-blue-700 shrink-0" />
-                            ) : (
-                              <Square size={12} className="text-[#737373] shrink-0" />
-                            )}
-                            <span>Confirmed</span>
-                          </button>
-                        )}
-
-                        {/* 3. Ongoing Treatment Checklist Button */}
-                        {!isCancelled && (
-                          isOngoing ? (
-                            <button
-                              type="button"
-                              onClick={() => handleUndoStatus(booking, 'Ongoing')}
-                              className={cx(btn.base, btn.xs, 'bg-indigo-50 text-indigo-900 border-indigo-200 hover:bg-indigo-100')}
-                              title="Ongoing Treatment is active. Undo requires secret admin password (022320)"
-                            >
-                              <CheckSquare size={12} className="text-indigo-700 shrink-0" />
-                              <span className="flex items-center gap-1">
-                                <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-pulse" />
-                                Ongoing Treatment
-                              </span>
-                              <Lock size={10} className="text-indigo-600 ml-0.5" />
-                            </button>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() => handleStatusChange(booking.id, 'Ongoing')}
-                              className={cx(btn.base, btn.secondary, btn.xs)}
-                              title="Click to mark Ongoing Treatment"
-                            >
-                              <Square size={12} className="text-[#737373] shrink-0" />
-                              <span>Ongoing Treatment</span>
-                            </button>
-                          )
-                        )}
-
-                        {/* 4. Finish Treatment Checklist Button */}
-                        {!isCancelled && (
-                          isCompleted ? (
-                            <button
-                              type="button"
-                              onClick={() => handleUndoStatus(booking, 'Completed')}
-                              className={cx(btn.base, btn.xs, 'bg-teal-50 text-teal-900 border-teal-200 hover:bg-teal-100')}
-                              title="Finish Treatment is marked. Undo requires secret admin password (022320)"
-                            >
-                              <CheckSquare size={12} className="text-teal-700 shrink-0" />
-                              <span>Finish Treatment</span>
-                              <Lock size={10} className="text-teal-600 ml-0.5" />
-                            </button>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() => handleStatusChange(booking.id, 'Completed')}
-                              className={cx(btn.base, btn.secondary, btn.xs)}
-                              title="Click to mark Finish Treatment"
-                            >
-                              <Square size={12} className="text-[#737373] shrink-0" />
-                              <span>Finish Treatment</span>
-                            </button>
-                          )
-                        )}
-
-                        {/* 5. Cancel Checklist Button */}
-                        <button
-                          type="button"
-                          onClick={() => handleStatusChange(booking.id, isCancelled ? (hasCommission ? 'Pending' : 'Confirmed') : 'Cancelled')}
-                          className={cx(
-                            btn.base,
-                            btn.xs,
-                            isCancelled
-                              ? 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100'
-                              : 'text-[#737373] hover:text-red-600 hover:bg-red-50/50'
-                          )}
-                          title={isCancelled ? "Booking is Cancelled. Click to reinstate" : "Cancel this booking"}
-                        >
-                          {isCancelled ? (
-                            <XSquare size={12} className="text-red-700 shrink-0" />
-                          ) : (
-                            <XCircle size={12} className="text-[#737373] shrink-0" />
-                          )}
-                          <span>{isCancelled ? 'Cancelled' : 'Cancel'}</span>
-                        </button>
-                      </div>
-
-                      {/* Utility Action Buttons: Invoice, Edit, Delete */}
-                      <div className="flex items-center gap-1">
-                        {booking.reference_number && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              let domain = window.location.origin;
-                              if (booking.brand === 'bali') {
-                                domain = 'https://www.homespaubud.com';
-                              } else if (booking.brand === 'therapick') {
-                                domain = 'https://www.booktherapick.com';
-                              } else if (booking.brand === 'elexoir') {
-                                domain = 'https://www.elexoirhomespaubud.com';
-                              }
-                              window.open(`${domain}/invoice/${booking.reference_number}`, '_blank');
-                            }}
-                            className={cx(btn.base, btn.secondary, btn.icon, 'h-7 w-7 text-blue-600 hover:border-blue-300')}
-                            title="View Invoice"
-                            aria-label="View invoice"
-                          >
-                            <FileText size={14} />
-                          </button>
-                        )}
-
-                        <button
-                          type="button"
-                          onClick={() => {
-                            let editTitle = booking.treatment_name;
-                            let editDur = '';
-                            const editMatch = editTitle.match(/(.*) \((.*)\)$/);
-                            if (editMatch) {
-                              editTitle = editMatch[1];
-                              editDur = editMatch[2];
-                            }
-
-                            setFormItems([{
-                              id: Math.random().toString(36).substring(2, 9),
-                              treatment: editTitle,
-                              duration: editDur,
-                              pax: booking.pax,
-                              therapists: booking.therapists_count,
-                              revenue: booking.revenue,
-                              fee: booking.therapist_fee_total
-                            }]);
-                            setIsEditing(booking.id);
-                            setShowForm(true);
-                            window.scrollTo({ top: 0, behavior: 'smooth' });
-                          }}
-                          className={cx(btn.base, btn.secondary, btn.icon, 'h-7 w-7')}
-                          title="Edit Booking"
-                          aria-label="Edit booking"
-                        >
-                          <Edit3 size={14} />
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(booking.id)}
-                          className={cx(btn.base, btn.secondary, btn.icon, 'h-7 w-7 text-red-600 hover:border-red-300')}
-                          title="Delete Booking"
-                          aria-label="Delete booking"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
+                    {/* Right: Details CTA Button */}
+                    <div className="shrink-0 flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedBookingId(booking.id)}
+                        className={cx(btn.base, btn.secondary, btn.xs, 'gap-1')}
+                        title="View complete booking details"
+                      >
+                        <span>Details</span>
+                        <ChevronRight size={13} />
+                      </button>
                     </div>
                   </div>
                 );
@@ -1570,66 +1187,399 @@ export default function TherapickBookingManagement({
         </div>
       </div>
 
-      {/* Yearly Financial Performance Chart */}
-      {yearlyStats.length > 0 && (
-        <div className="bg-white border border-[#E5E5E5] rounded-xl p-5 md:p-6 mt-6">
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-6 gap-3">
-            <div>
-              <h3 className="text-base font-semibold text-black tracking-tight">Financial performance (YTD)</h3>
-              <p className="text-xs text-[#737373] mt-0.5">Gross revenue & net profit by month</p>
-            </div>
-            <div className="flex items-center gap-4 text-xs text-[#737373]">
-              <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-sm bg-[#E5E5E5]"></div> Revenue</div>
-              <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-sm bg-black"></div> Net profit</div>
-            </div>
-          </div>
-          
-          <div className="h-44 md:h-56 flex items-end justify-between gap-1 sm:gap-2">
-            {(() => {
-              const maxRev = Math.max(...yearlyStats.map(s => s.revenue), 1000000);
-              return yearlyStats.map((stat, idx) => {
-                const revHeight = Math.max((stat.revenue / maxRev) * 100, 2);
-                const profHeight = Math.max((stat.profit / maxRev) * 100, 1);
-                const hasData = stat.revenue > 0;
-                
-                return (
-                  <div key={idx} className="flex-1 flex flex-col items-center justify-end h-full group relative">
-                    {/* Tooltip */}
-                    {hasData && (
-                      <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-black text-white text-[10px] font-medium py-1 px-2 rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 whitespace-nowrap">
-                        <div className="text-[#A3A3A3] text-[9px]">{stat.month}</div>
-                        <div>Rev: {new Intl.NumberFormat('id-ID', { maximumFractionDigits: 0 }).format(stat.revenue)}</div>
-                        <div className="text-emerald-400">Net: {new Intl.NumberFormat('id-ID', { maximumFractionDigits: 0 }).format(stat.profit)}</div>
-                      </div>
+      {/* Complete Booking Details Modal (Opened when clicking Booking ID) */}
+      {selectedBooking && (
+        <div 
+          className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-150"
+          onClick={() => setSelectedBookingId(null)}
+        >
+          <div 
+            className="bg-white border border-[#E5E5E5] rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl space-y-0 my-8"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="p-4 sm:p-5 border-b border-[#E5E5E5] flex items-center justify-between gap-3 bg-[#FAFAFA]">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="font-mono text-xs font-semibold text-black bg-white px-2.5 py-1 rounded-md border border-[#E5E5E5]">
+                  #{selectedBooking.reference_number || selectedBooking.id.substring(0, 8)}
+                </span>
+                {selectedBooking.reference_number && (
+                  <button
+                    type="button"
+                    onClick={() => handleCopy(selectedBooking.reference_number!)}
+                    className={cx(btn.base, btn.secondary, btn.icon, 'h-7 w-7 text-[#737373]')}
+                    title="Copy reference number"
+                  >
+                    {copiedId === selectedBooking.reference_number ? (
+                      <Check size={12} className="text-emerald-600" />
+                    ) : (
+                      <Copy size={12} />
                     )}
-                    
-                    {/* Bars */}
-                    <div className="w-full max-w-[36px] relative flex items-end justify-center h-full rounded-t transition-all cursor-pointer">
-                      {/* Revenue Bar */}
-                      <div 
-                        className={cx(
-                          'absolute bottom-0 w-full rounded-t transition-all duration-500',
-                          hasData ? 'bg-[#E5E5E5] group-hover:bg-[#D4D4D4]' : 'bg-[#F5F5F5]'
-                        )} 
-                        style={{ height: `${hasData ? revHeight : 0}%` }}
-                      />
-                      {/* Profit Bar */}
-                      <div 
-                        className={cx(
-                          'absolute bottom-0 w-full rounded-t transition-all duration-500 z-10',
-                          hasData ? 'bg-black' : 'bg-transparent'
-                        )} 
-                        style={{ height: `${hasData ? profHeight : 0}%`, width: '55%' }}
-                      />
+                  </button>
+                )}
+                <span className="text-xs text-[#737373] bg-white px-2 py-1 rounded-md border border-[#E5E5E5]">
+                  {selectedBooking.pax} Pax
+                </span>
+                {selectedBooking.time && selectedBooking.time !== '-' && (
+                  <span className="text-xs text-[#737373] bg-white px-2 py-1 rounded-md border border-[#E5E5E5] flex items-center gap-1">
+                    <Clock size={11} className="text-[#737373]" />
+                    {selectedBooking.time}
+                  </span>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedBookingId(null)}
+                className="h-8 w-8 rounded-lg text-[#737373] hover:text-black hover:bg-[#F0F0F0] flex items-center justify-center transition-colors cursor-pointer"
+                aria-label="Close details"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-5 sm:p-6 space-y-5 max-h-[75vh] overflow-y-auto">
+              {/* Customer & Location */}
+              <div className="p-4 rounded-xl border border-[#E5E5E5] bg-white space-y-2.5">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-[#F5F5F5] border border-[#E5E5E5] flex items-center justify-center text-black">
+                      <User size={15} />
                     </div>
-                    
-                    <span className={cx('text-[11px] font-medium mt-2', hasData ? 'text-black' : 'text-[#A3A3A3]')}>
-                      {stat.month}
+                    <div>
+                      <h4 className="font-semibold text-sm text-black">
+                        {selectedBooking.guest_name || 'Guest'}
+                      </h4>
+                      <p className="text-xs text-[#737373]">Customer Details</p>
+                    </div>
+                  </div>
+
+                  {/* Payment & Status Badges */}
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {selectedBooking.payment_status === 'paid' || selectedBooking.commission?.payment_verified ? (
+                      <span className="text-xs font-medium text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-md border border-emerald-200">
+                        Paid
+                      </span>
+                    ) : (
+                      <span className="text-xs font-medium text-amber-800 bg-amber-50 px-2.5 py-0.5 rounded-md border border-amber-200">
+                        Unpaid
+                      </span>
+                    )}
+
+                    {selectedBooking.status?.toLowerCase() === 'cancelled' ? (
+                      <span className="text-xs font-medium text-[#737373] bg-[#F5F5F5] px-2.5 py-0.5 rounded-md border border-[#E5E5E5]">
+                        Cancelled
+                      </span>
+                    ) : selectedBooking.status?.toLowerCase() === 'ongoing' ? (
+                      <span className="text-xs font-medium text-indigo-800 bg-indigo-50 px-2.5 py-0.5 rounded-md border border-indigo-200 flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+                        Ongoing Treatment
+                      </span>
+                    ) : selectedBooking.status?.toLowerCase() === 'completed' ? (
+                      <span className="text-xs font-medium text-teal-800 bg-teal-50 px-2.5 py-0.5 rounded-md border border-teal-200 flex items-center gap-1">
+                        <CheckCircle2 size={12} className="text-teal-700" />
+                        Finished
+                      </span>
+                    ) : (
+                      <span className="text-xs font-medium text-blue-800 bg-blue-50 px-2.5 py-0.5 rounded-md border border-blue-200">
+                        Confirmed
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {selectedBooking.location && (
+                  <div className="text-xs text-[#737373] flex items-center gap-1.5 pt-2 border-t border-[#F0F0F0]">
+                    <MapPin size={13} className="text-[#737373] shrink-0" />
+                    <span>{selectedBooking.location}{selectedBooking.room_number ? `, Room ${selectedBooking.room_number}` : ''}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Treatments List */}
+              <div className="space-y-2">
+                <span className="text-xs font-semibold uppercase tracking-wider text-[#737373] block">
+                  Treatments & Rituals
+                </span>
+                <div className="p-4 rounded-xl border border-[#E5E5E5] bg-[#FAFAFA] space-y-3">
+                  {selectedBooking.items && selectedBooking.items.length > 0 ? (
+                    selectedBooking.items.map((it: any, idx: number) => {
+                      const isCouple = isCouplePackage(it.title);
+                      return (
+                        <div key={idx} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 border-b border-[#E5E5E5] last:pb-0 last:border-b-0">
+                          <div>
+                            <p className="font-semibold text-sm text-black">
+                              {it.title} {isCouple ? '(Couple Package)' : it.guests > 1 ? `(x${it.guests})` : ''}
+                            </p>
+                            <p className="text-xs text-[#737373] mt-0.5">
+                              Duration: {it.duration} Mins • {isCouple ? '2 Therapists Assigned' : `${it.guests || 1} Therapist Assigned`}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div>
+                      <p className="font-semibold text-sm text-black">{selectedBooking.treatment_name}</p>
+                      <p className="text-xs text-[#737373] mt-0.5">
+                        {selectedBooking.therapists_count} {selectedBooking.therapists_count > 1 ? 'Therapists Assigned' : 'Therapist Assigned'}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Financial Breakdown (3-column CRM Box) */}
+              <div className="space-y-2">
+                <span className="text-xs font-semibold uppercase tracking-wider text-[#737373] block">
+                  Financial Breakdown
+                </span>
+                <div className="grid grid-cols-3 divide-x divide-[#E5E5E5] border border-[#E5E5E5] rounded-xl p-3 text-center bg-white">
+                  <div className="flex flex-col justify-center px-2">
+                    <span className="block text-[10px] text-[#737373] font-medium">Revenue</span>
+                    <span className="font-semibold text-sm sm:text-base text-black tabular-nums mt-0.5">
+                      {formatCurrency(selectedBooking.revenue)}
                     </span>
                   </div>
-                );
-              });
-            })()}
+                  <div className="flex flex-col justify-center px-2">
+                    <span className="block text-[10px] text-[#737373] font-medium">
+                      Fees ({selectedBooking.therapists_count} {selectedBooking.therapists_count > 1 ? 'Therapists' : 'Therapist'})
+                    </span>
+                    <span className="font-semibold text-sm sm:text-base text-[#737373] tabular-nums mt-0.5">
+                      {formatCurrency(selectedBooking.therapist_fee_total)}
+                    </span>
+                  </div>
+                  <div className="flex flex-col justify-center px-2">
+                    <span className="block text-[10px] text-[#737373] font-medium">Net Profit</span>
+                    <span className="font-semibold text-sm sm:text-base text-emerald-600 tabular-nums mt-0.5">
+                      {formatCurrency(selectedBooking.net_profit)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Partner Attribution Box (if referred by partner) */}
+              {selectedBooking.commission && (
+                <div className="p-3.5 bg-[#FAFAFA] border border-[#E5E5E5] rounded-xl space-y-2">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-xs font-medium text-black bg-white border border-[#E5E5E5] px-2 py-0.5 rounded">
+                        Partner: #{selectedBooking.commission.partner_code}
+                      </span>
+                      <span className="text-xs font-semibold text-emerald-600 font-mono">
+                        Commission: +{formatCurrency(selectedBooking.commission.commission_amount || 0)}
+                      </span>
+                      {selectedBooking.commission.status === 'approved' ? (
+                        <span className="text-[11px] font-medium text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded flex items-center gap-1">
+                          <CheckSquare size={11} className="text-emerald-700" /> Approved
+                        </span>
+                      ) : selectedBooking.commission.status === 'cancelled' ? (
+                        <span className="text-[11px] font-medium text-[#737373] bg-[#F5F5F5] px-2 py-0.5 rounded">
+                          Cancelled
+                        </span>
+                      ) : (
+                        <span className="text-[11px] font-medium text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded flex items-center gap-1">
+                          <Clock size={11} className="text-amber-700" /> Pending
+                        </span>
+                      )}
+                    </div>
+
+                    {selectedBooking.commission.status !== 'approved' && selectedBooking.commission.status !== 'cancelled' && (
+                      <button
+                        type="button"
+                        onClick={() => handleApproveCommission(selectedBooking)}
+                        className={cx(btn.base, btn.primary, btn.xs)}
+                        title="Approve Commission Manually"
+                      >
+                        <CheckSquare size={12} />
+                        <span>Approve commission</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Operational Checklist Actions */}
+              <div className="space-y-2 pt-2 border-t border-[#E5E5E5]">
+                <span className="text-xs font-semibold uppercase tracking-wider text-[#737373] block">
+                  Workflow Checklist Actions
+                </span>
+                <div className="flex flex-wrap items-center gap-2">
+                  {/* Paid / Unpaid */}
+                  <button
+                    type="button"
+                    onClick={() => handleTogglePayment(selectedBooking)}
+                    className={cx(
+                      btn.base,
+                      btn.sm,
+                      (selectedBooking.payment_status === 'paid' || selectedBooking.commission?.payment_verified)
+                        ? 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100'
+                        : 'bg-amber-50 text-amber-900 border-amber-200 hover:bg-amber-100'
+                    )}
+                  >
+                    {(selectedBooking.payment_status === 'paid' || selectedBooking.commission?.payment_verified) ? (
+                      <CheckSquare size={14} className="text-emerald-700 shrink-0" />
+                    ) : (
+                      <Square size={14} className="text-amber-700 shrink-0" />
+                    )}
+                    <span>{(selectedBooking.payment_status === 'paid' || selectedBooking.commission?.payment_verified) ? 'Paid' : 'Unpaid'}</span>
+                  </button>
+
+                  {/* Ongoing Treatment */}
+                  {selectedBooking.status?.toLowerCase() !== 'cancelled' && (
+                    selectedBooking.status?.toLowerCase() === 'ongoing' ? (
+                      <button
+                        type="button"
+                        onClick={() => handleUndoStatus(selectedBooking, 'Ongoing')}
+                        className={cx(btn.base, btn.sm, 'bg-indigo-50 text-indigo-900 border-indigo-200 hover:bg-indigo-100')}
+                        title="Ongoing Treatment is active. Undo requires secret admin password (022320)"
+                      >
+                        <CheckSquare size={14} className="text-indigo-700 shrink-0" />
+                        <span className="flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-pulse" />
+                          Ongoing Treatment
+                        </span>
+                        <Lock size={12} className="text-indigo-600 ml-0.5" />
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => handleStatusChange(selectedBooking.id, 'Ongoing')}
+                        className={cx(btn.base, btn.secondary, btn.sm)}
+                      >
+                        <Square size={14} className="text-[#737373] shrink-0" />
+                        <span>Ongoing Treatment</span>
+                      </button>
+                    )
+                  )}
+
+                  {/* Finish Treatment */}
+                  {selectedBooking.status?.toLowerCase() !== 'cancelled' && (
+                    selectedBooking.status?.toLowerCase() === 'completed' ? (
+                      <button
+                        type="button"
+                        onClick={() => handleUndoStatus(selectedBooking, 'Completed')}
+                        className={cx(btn.base, btn.sm, 'bg-teal-50 text-teal-900 border-teal-200 hover:bg-teal-100')}
+                        title="Finish Treatment is marked. Undo requires secret admin password (022320)"
+                      >
+                        <CheckSquare size={14} className="text-teal-700 shrink-0" />
+                        <span>Finish Treatment</span>
+                        <Lock size={12} className="text-teal-600 ml-0.5" />
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => handleStatusChange(selectedBooking.id, 'Completed')}
+                        className={cx(btn.base, btn.secondary, btn.sm)}
+                      >
+                        <Square size={14} className="text-[#737373] shrink-0" />
+                        <span>Finish Treatment</span>
+                      </button>
+                    )
+                  )}
+
+                  {/* Cancel / Reinstate */}
+                  <button
+                    type="button"
+                    onClick={() => handleStatusChange(selectedBooking.id, selectedBooking.status?.toLowerCase() === 'cancelled' ? (selectedBooking.commission ? 'Pending' : 'Confirmed') : 'Cancelled')}
+                    className={cx(
+                      btn.base,
+                      btn.sm,
+                      selectedBooking.status?.toLowerCase() === 'cancelled'
+                        ? 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100'
+                        : 'text-[#737373] hover:text-red-600 hover:bg-red-50/50'
+                    )}
+                  >
+                    {selectedBooking.status?.toLowerCase() === 'cancelled' ? (
+                      <XSquare size={14} className="text-red-700 shrink-0" />
+                    ) : (
+                      <XCircle size={14} className="text-[#737373] shrink-0" />
+                    )}
+                    <span>{selectedBooking.status?.toLowerCase() === 'cancelled' ? 'Cancelled' : 'Cancel'}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer / Actions */}
+            <div className="p-4 sm:p-5 border-t border-[#E5E5E5] bg-[#FAFAFA] flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                {selectedBooking.reference_number && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      let domain = window.location.origin;
+                      if (selectedBooking.brand === 'bali') {
+                        domain = 'https://www.homespaubud.com';
+                      } else if (selectedBooking.brand === 'therapick') {
+                        domain = 'https://www.booktherapick.com';
+                      } else if (selectedBooking.brand === 'elexoir') {
+                        domain = 'https://www.elexoirhomespaubud.com';
+                      }
+                      window.open(`${domain}/invoice/${selectedBooking.reference_number}`, '_blank');
+                    }}
+                    className={cx(btn.base, btn.secondary, btn.sm, 'text-blue-600 flex-1 sm:flex-none')}
+                  >
+                    <FileText size={14} />
+                    <span>View Invoice</span>
+                  </button>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                <button
+                  type="button"
+                  onClick={() => {
+                    let editTitle = selectedBooking.treatment_name;
+                    let editDur = '';
+                    const editMatch = editTitle.match(/(.*) \((.*)\)$/);
+                    if (editMatch) {
+                      editTitle = editMatch[1];
+                      editDur = editMatch[2];
+                    }
+
+                    setFormItems([{
+                      id: Math.random().toString(36).substring(2, 9),
+                      treatment: editTitle,
+                      duration: editDur,
+                      pax: selectedBooking.pax,
+                      therapists: selectedBooking.therapists_count,
+                      revenue: selectedBooking.revenue,
+                      fee: selectedBooking.therapist_fee_total
+                    }]);
+                    setIsEditing(selectedBooking.id);
+                    setShowForm(true);
+                    setSelectedBookingId(null);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  className={cx(btn.base, btn.secondary, btn.sm)}
+                >
+                  <Edit3 size={14} />
+                  <span>Edit</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleDelete(selectedBooking.id);
+                    setSelectedBookingId(null);
+                  }}
+                  className={cx(btn.base, btn.secondary, btn.sm, 'text-red-600 hover:border-red-300')}
+                >
+                  <Trash2 size={14} />
+                  <span>Delete</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setSelectedBookingId(null)}
+                  className={cx(btn.base, btn.primary, btn.sm)}
+                >
+                  Done
+                </button>
+              </div>
+            </div>
+
           </div>
         </div>
       )}
