@@ -531,76 +531,66 @@ export default function AffiliateManagement() {
   return (
     <div className="space-y-6">
       
-      {/* PRIMARY HEADER SECTION: COMFORTABLE WHITE BACKGROUND */}
-      <div className="bg-white border border-black/10 text-black p-6 rounded-2xl shadow-xs space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2.5">
-              <h1 className="text-xl sm:text-2xl font-bold text-black tracking-tight">
-                BookTherapick Affiliate & Partner Management
-              </h1>
-              <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-black/5 text-black border border-black/10 font-mono uppercase tracking-wider">
-                Therapick Domain
-              </span>
-            </div>
-            <p className="text-xs text-black/60 mt-1">
-              Manage approved referral partners, review commissions, and record payouts
-            </p>
-          </div>
-
-          {/* Clean Monochrome Tabs on White Header */}
-          <div className="flex items-center gap-1 bg-black/5 p-1 rounded-xl shrink-0 border border-black/10">
-            {[
-              { id: 'partners', label: 'Partners', count: partners.length },
-              { id: 'commissions', label: 'Commissions', count: commissions.length },
-              { id: 'payouts', label: 'Payouts', count: payouts.length },
-              { id: 'settings', label: 'Settings' },
-            ].map((tab) => {
-              const isActive = subTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setSubTab(tab.id as any)}
-                  className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                    isActive
-                      ? 'bg-black text-white shadow-sm'
-                      : 'text-black/70 hover:text-black hover:bg-black/5'
-                  }`}
-                >
-                  <span>{tab.label}</span>
-                  {tab.count !== undefined && (
-                    <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${isActive ? 'bg-white text-black' : 'bg-black/10 text-black'}`}>
-                      {tab.count}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
+      {/* UNIFIED COMPACT TOOLBAR: SECTION TABS + SHORT SEARCH + FILTERS */}
+      <div className="bg-white p-2.5 sm:p-3 rounded-2xl border border-black/10 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+        {/* Left: Section Switcher Tabs */}
+        <div className="flex items-center gap-1 bg-black/5 p-1 rounded-xl shrink-0 border border-black/10 overflow-x-auto">
+          {[
+            { id: 'partners', label: 'Partners', count: partners.length },
+            { id: 'commissions', label: 'Commissions', count: commissions.length },
+            { id: 'payouts', label: 'Payouts', count: payouts.length },
+            { id: 'settings', label: 'Settings' },
+          ].map((tab) => {
+            const isActive = subTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setSubTab(tab.id as any)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
+                  isActive
+                    ? 'bg-black text-white shadow-sm'
+                    : 'text-black/70 hover:text-black hover:bg-black/5'
+                }`}
+              >
+                <span>{tab.label}</span>
+                {tab.count !== undefined && (
+                  <span
+                    className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                      isActive ? 'bg-white text-black' : 'bg-black/10 text-black'
+                    }`}
+                  >
+                    {tab.count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
-      </div>
 
-      {/* SUB-TAB 1: PARTNERS (MAIN TABLE) */}
-      {subTab === 'partners' && (
-        <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white p-3.5 rounded-2xl border border-black/10 shadow-sm">
-            <div className="relative flex-1">
+        {/* Right Controls when on Partners Tab */}
+        {subTab === 'partners' && (
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 w-full lg:w-auto">
+            {/* Shorter Search Bar on Desktop */}
+            <div className="relative w-full sm:w-60 md:w-64 lg:w-72 shrink-0">
               <Search className="w-4 h-4 text-black/40 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
-                placeholder="Search partner by code, name, villa..."
+                placeholder="Search partner, code, villa..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl border border-black/15 focus:outline-none focus:ring-1 focus:ring-black"
+                className="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl border border-black/15 bg-white text-black focus:outline-none focus:ring-1 focus:ring-black placeholder:text-black/40"
               />
             </div>
 
-            <div className="flex items-center gap-1 text-xs">
+            {/* Status Filter Buttons */}
+            <div className="flex items-center gap-1 text-xs overflow-x-auto shrink-0">
               {['all', 'pending', 'active', 'suspended', 'rejected'].map((st) => (
                 <button
                   key={st}
+                  type="button"
                   onClick={() => setPartnerStatusFilter(st)}
-                  className={`px-3 py-1 rounded-lg capitalize font-medium transition-colors ${
+                  className={`px-2.5 py-1 rounded-lg capitalize font-medium text-xs transition-colors whitespace-nowrap ${
                     partnerStatusFilter === st
                       ? 'bg-black text-white'
                       : 'text-black/60 hover:bg-black/5'
@@ -611,6 +601,74 @@ export default function AffiliateManagement() {
               ))}
             </div>
           </div>
+        )}
+
+        {/* Right Controls when on Commissions Tab */}
+        {subTab === 'commissions' && (
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 w-full lg:w-auto text-xs">
+            <div className="flex items-center gap-1 overflow-x-auto shrink-0">
+              {['all', 'pending', 'approved', 'paid', 'declined'].map((st) => (
+                <button
+                  key={st}
+                  type="button"
+                  onClick={() => setCommissionStatusFilter(st)}
+                  className={`px-2.5 py-1 rounded-lg capitalize font-medium transition-colors whitespace-nowrap ${
+                    commissionStatusFilter === st
+                      ? 'bg-black text-white'
+                      : 'text-black/60 hover:bg-black/5'
+                  }`}
+                >
+                  {st}
+                </button>
+              ))}
+            </div>
+            <select
+              value={globalPartnerFilter}
+              onChange={(e) => setGlobalPartnerFilter(e.target.value)}
+              className="px-2.5 py-1.5 rounded-lg border border-black/15 bg-white text-xs font-medium focus:outline-none focus:border-black shrink-0"
+            >
+              <option value="all">All Partners ({partners.length})</option>
+              {partners.map((p) => (
+                <option key={p.id} value={p.partner_code}>
+                  {p.partner_code} - {p.first_name} {p.last_name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {/* Right Controls when on Payouts Tab */}
+        {subTab === 'payouts' && (
+          <div className="flex items-center gap-2.5 w-full lg:w-auto text-xs justify-end">
+            <select
+              value={globalPayoutPartnerFilter}
+              onChange={(e) => setGlobalPayoutPartnerFilter(e.target.value)}
+              className="px-2.5 py-1.5 rounded-lg border border-black/15 bg-white text-xs font-medium focus:outline-none focus:border-black shrink-0"
+            >
+              <option value="all">All Partners ({partners.length})</option>
+              {partners.map((p) => (
+                <option key={p.id} value={p.partner_code}>
+                  {p.partner_code} - {p.first_name} {p.last_name}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              onClick={() => {
+                setPayoutForm({ partner_id: '', amount: '', payout_method: 'bank_transfer', notes: '' });
+                setShowPayoutModal(true);
+              }}
+              className="px-3.5 py-1.5 bg-black text-white rounded-xl text-xs font-bold hover:bg-black/80 shadow-sm whitespace-nowrap"
+            >
+              + Record New Payout
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* SUB-TAB 1: PARTNERS (MAIN TABLE) */}
+      {subTab === 'partners' && (
+        <div className="space-y-4">
 
           <div className="bg-white rounded-2xl border border-black/10 shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
@@ -806,43 +864,6 @@ export default function AffiliateManagement() {
       {/* SUB-TAB 2: GLOBAL COMMISSIONS */}
       {subTab === 'commissions' && (
         <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3.5 rounded-2xl border border-black/10 shadow-sm text-xs">
-            <div className="flex items-center gap-3">
-              <span className="font-bold text-black">Filter Status:</span>
-              <div className="flex items-center gap-1">
-                {['all', 'pending', 'approved', 'paid', 'declined'].map((st) => (
-                  <button
-                    key={st}
-                    onClick={() => setCommissionStatusFilter(st)}
-                    className={`px-2.5 py-1 rounded-lg capitalize font-medium ${
-                      commissionStatusFilter === st
-                        ? 'bg-black text-white'
-                        : 'text-black/60 hover:bg-black/5'
-                    }`}
-                  >
-                    {st}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-black">Partner:</span>
-              <select
-                value={globalPartnerFilter}
-                onChange={(e) => setGlobalPartnerFilter(e.target.value)}
-                className="px-2.5 py-1 rounded-lg border border-black/15 bg-white text-xs font-medium"
-              >
-                <option value="all">All Partners ({partners.length})</option>
-                {partners.map((p) => (
-                  <option key={p.id} value={p.partner_code}>
-                    {p.partner_code} - {p.first_name} {p.last_name} ({p.business_name || 'Individual'})
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
           <div className="bg-white rounded-2xl border border-black/10 shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
@@ -970,41 +991,6 @@ export default function AffiliateManagement() {
       {/* SUB-TAB 3: GLOBAL PAYOUTS */}
       {subTab === 'payouts' && (
         <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-black/10 shadow-sm">
-            <div>
-              <h3 className="font-bold text-black text-sm">Partner Commission Payouts</h3>
-              <p className="text-xs text-black/60">Record transfers to close out approved partner earnings</p>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 text-xs">
-                <span className="font-bold text-black">Filter Partner:</span>
-                <select
-                  value={globalPayoutPartnerFilter}
-                  onChange={(e) => setGlobalPayoutPartnerFilter(e.target.value)}
-                  className="px-2.5 py-1.5 rounded-lg border border-black/15 bg-white text-xs font-medium"
-                >
-                  <option value="all">All Partners ({partners.length})</option>
-                  {partners.map((p) => (
-                    <option key={p.id} value={p.partner_code}>
-                      {p.partner_code} - {p.first_name} {p.last_name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <button
-                onClick={() => {
-                  setPayoutForm({ partner_id: '', amount: '', payout_method: 'bank_transfer', notes: '' });
-                  setShowPayoutModal(true);
-                }}
-                className="px-4 py-2 bg-black text-white rounded-xl text-xs font-bold hover:bg-black/80 shadow-sm"
-              >
-                + Record New Payout
-              </button>
-            </div>
-          </div>
-
           <div className="bg-white rounded-2xl border border-black/10 shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
