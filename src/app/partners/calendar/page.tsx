@@ -331,46 +331,52 @@ export default function PartnerCalendarPage() {
   }
 
   return (
-    <div className="w-full max-w-[1600px] mx-auto space-y-4 lg:space-y-3.5 pb-16 lg:pb-0 font-sans antialiased text-neutral-900 lg:h-[calc(100vh-5rem)] lg:flex lg:flex-col lg:overflow-hidden">
+    <div className="w-full max-w-[1600px] mx-auto space-y-4 lg:space-y-3.5 pb-16 lg:pb-0 font-sans antialiased text-black lg:h-[calc(100vh-5rem)] lg:flex lg:flex-col lg:overflow-hidden">
       
       {/* ─────────────────────────────────────────────────────────────
-          1. TOP EXECUTIVE BAR: Title & Live Status (Visible on mobile only; hidden on desktop for platform feel)
+          1. TOP EXECUTIVE BAR: Title & Live Status
          ───────────────────────────────────────────────────────────── */}
-      <div className="flex lg:hidden flex-col gap-3 pb-2 border-b border-neutral-200/80 shrink-0">
-        {/* Row 1: Title on left, Live Schedule badge on right */}
-        <div className="flex items-center justify-between w-full">
+      <div className="flex flex-col gap-3 pb-2 border-b border-[#E5E5E5] shrink-0">
+        {/* Row 1: Back link + Title on left, Live Schedule badge on right */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 w-full">
           <div>
-            <h1 className="text-xl sm:text-2xl font-extrabold text-neutral-950 tracking-tight">
+            <Link 
+              href="/partners/dashboard" 
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#737373] hover:text-black transition-colors mb-1"
+            >
+              <ChevronLeft size={13} />
+              <span>Back to Dashboard</span>
+            </Link>
+            <h1 className="text-xl sm:text-2xl font-bold text-black tracking-tight">
               Booking Calendar
             </h1>
-            <p className="hidden sm:block text-xs text-neutral-500 mt-0.5">
-              Full-screen calendar view for scheduled treatments and commission attribution
+            <p className="hidden sm:block text-xs text-[#737373] mt-0.5">
+              Interactive appointment calendar for scheduled treatments and commission attribution.
             </p>
           </div>
-          <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200 shrink-0">
+          <span className="text-xs font-semibold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200 self-start sm:self-auto">
             Live Schedule
           </span>
         </div>
 
-        {/* Row 2: October 2026 Navigator on Left, Month/Week Toggle on Right (Visible on mobile only; on desktop it is positioned above the calendar) */}
+        {/* Row 2: October 2026 Navigator on Left, Month/Week Toggle on Right (Mobile only) */}
         <div className="flex lg:hidden items-center justify-between w-full gap-2 pt-1">
-          {/* Apple Segmented Month Navigator */}
-          <div className="inline-flex items-center bg-white border border-neutral-200/80 rounded-2xl p-1 shadow-2xs">
+          <div className="inline-flex items-center bg-white border border-[#E5E5E5] rounded-lg p-0.5">
             <button
               type="button"
               onClick={goToPrev}
-              className="p-1.5 sm:p-2 hover:bg-neutral-100 rounded-xl transition-colors cursor-pointer text-neutral-700 hover:text-black"
+              className="p-1.5 hover:bg-[#F5F5F5] rounded-md transition-colors cursor-pointer text-[#737373] hover:text-black"
               title="Previous"
             >
               <ChevronLeft size={16} />
             </button>
-            <div className="px-2 sm:px-3 text-xs font-bold text-neutral-950 min-w-[105px] sm:min-w-[130px] text-center">
+            <div className="px-2 sm:px-3 text-xs font-bold text-black min-w-[105px] sm:min-w-[130px] text-center">
               {MONTH_NAMES[currentMonth]} {currentYear}
             </div>
             <button
               type="button"
               onClick={goToNext}
-              className="p-1.5 sm:p-2 hover:bg-neutral-100 rounded-xl transition-colors cursor-pointer text-neutral-700 hover:text-black"
+              className="p-1.5 hover:bg-[#F5F5F5] rounded-md transition-colors cursor-pointer text-[#737373] hover:text-black"
               title="Next"
             >
               <ChevronRight size={16} />
@@ -378,13 +384,12 @@ export default function PartnerCalendarPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Month / Week Switcher */}
-            <div className="inline-flex p-1 rounded-2xl bg-neutral-100 border border-neutral-200/80 text-xs">
+            <div className="inline-flex p-0.5 rounded-lg bg-[#F5F5F5] border border-[#E5E5E5] text-xs">
               <button
                 type="button"
                 onClick={() => setViewMode('month')}
-                className={`px-3 py-1.5 rounded-xl font-semibold transition-all cursor-pointer ${
-                  viewMode === 'month' ? 'bg-white text-neutral-950 shadow-2xs font-bold' : 'text-neutral-500 hover:text-neutral-900'
+                className={`px-3 py-1 rounded-md font-semibold transition-all cursor-pointer ${
+                  viewMode === 'month' ? 'bg-black text-white shadow-xs' : 'text-[#737373] hover:text-black'
                 }`}
               >
                 Month
@@ -392,8 +397,8 @@ export default function PartnerCalendarPage() {
               <button
                 type="button"
                 onClick={() => setViewMode('week')}
-                className={`px-3 py-1.5 rounded-xl font-semibold transition-all cursor-pointer ${
-                  viewMode === 'week' ? 'bg-white text-neutral-950 shadow-2xs font-bold' : 'text-neutral-500 hover:text-neutral-900'
+                className={`px-3 py-1 rounded-md font-semibold transition-all cursor-pointer ${
+                  viewMode === 'week' ? 'bg-black text-white shadow-xs' : 'text-[#737373] hover:text-black'
                 }`}
               >
                 Week
@@ -404,68 +409,67 @@ export default function PartnerCalendarPage() {
       </div>
 
       {/* ─────────────────────────────────────────────────────────────
-          2. MONTH FINANCIAL SUMMARY STRIP (APPLE HIG METRICS)
-          Visible on desktop only; hidden on mobile so only calendar & booking details show.
+          2. MONTH FINANCIAL SUMMARY STRIP
          ───────────────────────────────────────────────────────────── */}
       <div className="hidden lg:grid grid-cols-2 md:grid-cols-4 gap-3 shrink-0">
         {/* Total Appointments */}
-        <div className="bg-white border border-neutral-200/70 rounded-2xl p-3 shadow-2xs space-y-0.5">
-          <span className="text-[10px] font-extrabold uppercase tracking-widest text-neutral-400 block">
+        <div className="bg-white border border-[#E5E5E5] rounded-xl p-3.5 space-y-0.5">
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-[#737373] block">
             Appointments
           </span>
-          <div className="text-xl sm:text-2xl font-extrabold text-neutral-950 font-mono">
+          <div className="text-xl sm:text-2xl font-bold text-black font-mono">
             {monthStats.count}
           </div>
-          <p className="text-[10px] text-neutral-500 truncate">Scheduled this month</p>
+          <p className="text-[10px] text-[#737373] truncate">Scheduled this month</p>
         </div>
 
         {/* Total Commission */}
-        <div className="bg-white border border-neutral-200/70 rounded-2xl p-3 shadow-2xs space-y-0.5">
-          <span className="text-[10px] font-extrabold uppercase tracking-widest text-neutral-400 block">
+        <div className="bg-white border border-[#E5E5E5] rounded-xl p-3.5 space-y-0.5">
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-[#737373] block">
             Month Total
           </span>
-          <div className="text-xl sm:text-2xl font-extrabold text-neutral-950 font-mono tabular-nums truncate">
+          <div className="text-xl sm:text-2xl font-bold text-black font-mono tabular-nums truncate">
             {formatIDR(monthStats.totalCommission)}
           </div>
-          <p className="text-[10px] text-neutral-500 truncate">All active commissions</p>
+          <p className="text-[10px] text-[#737373] truncate">All active commissions</p>
         </div>
 
         {/* Approved Commission */}
-        <div className="bg-white border border-neutral-200/90 rounded-2xl p-3 shadow-2xs space-y-0.5">
+        <div className="bg-white border border-[#E5E5E5] rounded-xl p-3.5 space-y-0.5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-              <span className="text-[10px] font-extrabold uppercase tracking-widest text-neutral-900 block">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-[#737373] block">
                 Approved
               </span>
             </div>
-            <span className="text-[9px] font-bold text-neutral-700 bg-neutral-100 border border-neutral-200 px-1.5 py-0.2 rounded-full">
+            <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 rounded-md">
               Ready
             </span>
           </div>
-          <div className="text-xl sm:text-2xl font-extrabold text-neutral-950 font-mono tabular-nums truncate">
+          <div className="text-xl sm:text-2xl font-bold text-emerald-700 font-mono tabular-nums truncate">
             {formatIDR(monthStats.approvedCommission)}
           </div>
-          <p className="text-[10px] text-neutral-500 truncate">Ready for bank transfer</p>
+          <p className="text-[10px] text-[#737373] truncate">Ready for bank transfer</p>
         </div>
 
         {/* Pending Commission */}
-        <div className="bg-neutral-950 border border-neutral-900 rounded-2xl p-3 shadow-md space-y-0.5 text-white">
+        <div className="bg-white border border-[#E5E5E5] rounded-xl p-3.5 space-y-0.5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
-              <span className="text-[10px] font-extrabold uppercase tracking-widest text-white block">
+              <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-[#737373] block">
                 Pending
               </span>
             </div>
-            <span className="text-[9px] font-bold text-neutral-300 bg-white/10 border border-white/15 px-1.5 py-0.2 rounded-full">
+            <span className="text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.2 rounded-md">
               Treatment
             </span>
           </div>
-          <div className="text-xl sm:text-2xl font-extrabold text-white font-mono tabular-nums truncate">
+          <div className="text-xl sm:text-2xl font-bold text-amber-700 font-mono tabular-nums truncate">
             {formatIDR(monthStats.pendingCommission)}
           </div>
-          <p className="text-[10px] text-neutral-400 truncate">Awaiting completion</p>
+          <p className="text-[10px] text-[#737373] truncate">Awaiting treatment completion</p>
         </div>
       </div>
 
@@ -475,27 +479,27 @@ export default function PartnerCalendarPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start lg:items-stretch lg:flex-1 lg:min-h-0">
         
         {/* ──────── CALENDAR GRID AREA (LEFT / CENTER: 7 COLS) ──────── */}
-        <div className="lg:col-span-7 bg-white border border-neutral-200/80 rounded-2xl sm:rounded-3xl p-3 sm:p-4 lg:p-4 xl:p-5 shadow-sm space-y-3 lg:h-full lg:flex lg:flex-col lg:justify-between lg:overflow-hidden">
+        <div className="lg:col-span-7 bg-white border border-[#E5E5E5] rounded-xl p-4 sm:p-5 space-y-3 lg:h-full lg:flex lg:flex-col lg:justify-between lg:overflow-hidden">
           
           {/* DESKTOP CALENDAR HEADER: < October 2026 > Navigator on Left, Today & Month/Week on Right */}
-          <div className="hidden lg:flex items-center justify-between gap-3 pb-2.5 border-b border-neutral-100 shrink-0">
+          <div className="hidden lg:flex items-center justify-between gap-3 pb-2.5 border-b border-[#E5E5E5] shrink-0">
             {/* Month pagination: < October 2026 > */}
-            <div className="inline-flex items-center bg-white border border-neutral-200/80 rounded-2xl p-0.5 shadow-2xs">
+            <div className="inline-flex items-center bg-white border border-[#E5E5E5] rounded-lg p-0.5">
               <button
                 type="button"
                 onClick={goToPrev}
-                className="p-1.5 hover:bg-neutral-100 rounded-xl transition-colors cursor-pointer text-neutral-700 hover:text-black"
+                className="p-1.5 hover:bg-[#F5F5F5] rounded-md transition-colors cursor-pointer text-[#737373] hover:text-black"
                 title="Previous"
               >
                 <ChevronLeft size={16} />
               </button>
-              <div className="px-3 text-xs font-bold text-neutral-950 min-w-[115px] text-center">
+              <div className="px-3 text-xs font-bold text-black min-w-[115px] text-center">
                 {MONTH_NAMES[currentMonth]} {currentYear}
               </div>
               <button
                 type="button"
                 onClick={goToNext}
-                className="p-1.5 hover:bg-neutral-100 rounded-xl transition-colors cursor-pointer text-neutral-700 hover:text-black"
+                className="p-1.5 hover:bg-[#F5F5F5] rounded-md transition-colors cursor-pointer text-[#737373] hover:text-black"
                 title="Next"
               >
                 <ChevronRight size={16} />
@@ -506,8 +510,8 @@ export default function PartnerCalendarPage() {
             <div className="flex items-center gap-2">
               {selectedDate && (
                 <div className="flex items-center gap-2 text-xs mr-1">
-                  <span className="text-neutral-500 font-medium">
-                    Showing: <strong className="text-neutral-950">{safeFormatDate(selectedDate, { day: 'numeric', month: 'short' })}</strong>
+                  <span className="text-[#737373] font-medium">
+                    Showing: <strong className="text-black">{safeFormatDate(selectedDate, { day: 'numeric', month: 'short' })}</strong>
                   </span>
                   <button
                     type="button"
@@ -515,7 +519,7 @@ export default function PartnerCalendarPage() {
                       setSelectedDate(null);
                       setViewMode('month');
                     }}
-                    className="text-emerald-700 hover:underline font-bold text-xs cursor-pointer"
+                    className="text-black hover:underline font-semibold text-xs cursor-pointer"
                   >
                     Clear Selection
                   </button>
@@ -525,17 +529,17 @@ export default function PartnerCalendarPage() {
               <button
                 type="button"
                 onClick={goToToday}
-                className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-white border border-neutral-200/80 text-neutral-800 hover:bg-neutral-100 active:scale-95 transition-all shadow-2xs cursor-pointer"
+                className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-white border border-[#E5E5E5] text-black hover:bg-[#F5F5F5] transition-colors cursor-pointer"
               >
                 Today
               </button>
 
-              <div className="inline-flex p-0.5 rounded-xl bg-neutral-100 border border-neutral-200/80 text-xs">
+              <div className="inline-flex p-0.5 rounded-lg bg-[#F5F5F5] border border-[#E5E5E5] text-xs">
                 <button
                   type="button"
                   onClick={() => setViewMode('month')}
-                  className={`px-3 py-1 rounded-lg font-semibold transition-all cursor-pointer ${
-                    viewMode === 'month' ? 'bg-white text-neutral-950 shadow-2xs font-bold' : 'text-neutral-500 hover:text-neutral-900'
+                  className={`px-3 py-1 rounded-md font-semibold transition-all cursor-pointer ${
+                    viewMode === 'month' ? 'bg-black text-white shadow-xs' : 'text-[#737373] hover:text-black'
                   }`}
                 >
                   Month
@@ -543,8 +547,8 @@ export default function PartnerCalendarPage() {
                 <button
                   type="button"
                   onClick={() => setViewMode('week')}
-                  className={`px-3 py-1 rounded-lg font-semibold transition-all cursor-pointer ${
-                    viewMode === 'week' ? 'bg-white text-neutral-950 shadow-2xs font-bold' : 'text-neutral-500 hover:text-neutral-900'
+                  className={`px-3 py-1 rounded-md font-semibold transition-all cursor-pointer ${
+                    viewMode === 'week' ? 'bg-black text-white shadow-xs' : 'text-[#737373] hover:text-black'
                   }`}
                 >
                   Week
@@ -554,15 +558,15 @@ export default function PartnerCalendarPage() {
           </div>
 
           {viewMode === 'month' ? (
-            /* ════════ MONTH VIEW GRID (FULL SCREEN RESPONSIVE) ════════ */
+            /* ════════ MONTH VIEW GRID ════════ */
             <div className="space-y-1 sm:space-y-1.5 flex-1 min-h-0 flex flex-col justify-around">
               {/* Day Name Header Row */}
               <div className="grid grid-cols-7 text-center shrink-0">
                 {DAYS_OF_WEEK.map((d, i) => (
                   <div
                     key={d}
-                    className={`py-1 sm:py-1.5 text-[10px] sm:text-xs font-extrabold uppercase tracking-wider ${
-                      i === 0 ? 'text-rose-500' : 'text-neutral-400'
+                    className={`py-1 text-[11px] font-semibold uppercase tracking-wider ${
+                      i === 0 ? 'text-red-500' : 'text-[#737373]'
                     }`}
                   >
                     {d}
@@ -570,11 +574,11 @@ export default function PartnerCalendarPage() {
                 ))}
               </div>
 
-              {/* Days Grid - Compact on Desktop with clean day indicators */}
+              {/* Days Grid */}
               <div className="grid grid-cols-7 gap-1 sm:gap-1.5 flex-1 min-h-0">
                 {/* Empty leading cells */}
                 {Array.from({ length: firstDayIndex }).map((_, i) => (
-                  <div key={`empty-${i}`} className="min-h-[46px] sm:min-h-[50px] lg:min-h-0 lg:h-[50px] xl:h-[54px] rounded-xl sm:rounded-2xl bg-neutral-50/40" />
+                  <div key={`empty-${i}`} className="min-h-[46px] sm:min-h-[50px] lg:min-h-0 lg:h-[50px] xl:h-[54px] rounded-lg bg-[#FAFAFA]" />
                 ))}
 
                 {/* Actual Month Days */}
@@ -598,39 +602,36 @@ export default function PartnerCalendarPage() {
                       key={dateString}
                       type="button"
                       onClick={() => handleDateClick(dateString)}
-                      className={`min-h-[46px] sm:min-h-[50px] lg:min-h-0 lg:h-[50px] xl:h-[54px] p-1.5 sm:p-2 rounded-xl sm:rounded-2xl flex flex-col justify-between text-left transition-all cursor-pointer border relative group ${
+                      className={`min-h-[46px] sm:min-h-[50px] lg:min-h-0 lg:h-[50px] xl:h-[54px] p-1.5 sm:p-2 rounded-lg flex flex-col justify-between text-left transition-all cursor-pointer border relative group ${
                         isSelected
-                          ? 'bg-neutral-950 text-white border-neutral-950 shadow-md ring-2 ring-neutral-950/20 z-10'
+                          ? 'bg-black text-white border-black shadow-sm z-10'
                           : isToday
-                          ? 'bg-neutral-50 border-neutral-400 hover:border-neutral-900 text-neutral-950'
+                          ? 'bg-[#FAFAFA] border-black text-black'
                           : hasBookings
-                          ? 'bg-[#F2FBF7] border-emerald-200/90 hover:border-emerald-400 text-neutral-900'
-                          : 'bg-white border-neutral-200/60 hover:bg-neutral-50 hover:border-neutral-300 text-neutral-700'
+                          ? 'bg-[#F2FBF7] border-emerald-200 hover:border-emerald-400 text-black'
+                          : 'bg-white border-[#E5E5E5] hover:bg-[#F9FAFB] text-black'
                       }`}
                     >
-                      {/* Top Row: Date Number on Left & Number of Bookings above the right corner */}
+                      {/* Top Row: Date Number & Number of Bookings */}
                       <div className="flex items-start justify-between w-full leading-none">
                         <span
-                          className={`text-xs sm:text-sm font-bold ${
+                          className={`text-xs font-semibold ${
                             isSelected
                               ? 'text-white'
                               : isToday
-                              ? 'text-neutral-950 underline underline-offset-2'
-                              : hasBookings
-                              ? 'text-emerald-950'
-                              : 'text-neutral-700'
+                              ? 'text-black underline underline-offset-2'
+                              : 'text-black'
                           }`}
                         >
                           {dayNum}
                         </span>
 
-                        {/* Number of bookings badge in top-right corner */}
                         {hasBookings && (
                           <span
-                            className={`text-[9px] sm:text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-full leading-none shrink-0 ${
+                            className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-md leading-none shrink-0 ${
                               isSelected
                                 ? 'bg-white/20 text-white'
-                                : 'bg-emerald-100 text-emerald-900 border border-emerald-200/90 shadow-2xs'
+                                : 'bg-emerald-100 text-emerald-900 border border-emerald-200'
                             }`}
                             title={`${dayBookings.length} bookings`}
                           >
@@ -639,12 +640,12 @@ export default function PartnerCalendarPage() {
                         )}
                       </div>
 
-                      {/* Bottom Row: Status dots (Green for approved, Red for pending) */}
+                      {/* Bottom Row: Status dots */}
                       {hasBookings && (
-                        <div className="flex items-center gap-1 sm:gap-1.5 mt-auto pt-0.5">
+                        <div className="flex items-center gap-1 mt-auto pt-0.5">
                           {hasApproved && (
                             <span
-                              className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${
+                              className={`w-1.5 h-1.5 rounded-full ${
                                 isSelected ? 'bg-emerald-300' : 'bg-emerald-500'
                               }`}
                               title="Approved Booking"
@@ -652,14 +653,14 @@ export default function PartnerCalendarPage() {
                           )}
                           {hasPending && (
                             <span
-                              className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${
-                                isSelected ? 'bg-rose-300' : 'bg-rose-500'
+                              className={`w-1.5 h-1.5 rounded-full ${
+                                isSelected ? 'bg-amber-300' : 'bg-amber-500'
                               }`}
                               title="Pending Booking"
                             />
                           )}
                           {!hasApproved && !hasPending && hasCancelled && (
-                            <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-neutral-400" title="Cancelled" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#737373]" title="Cancelled" />
                           )}
                         </div>
                       )}
@@ -669,7 +670,7 @@ export default function PartnerCalendarPage() {
               </div>
             </div>
           ) : (
-            /* ════════ WEEK VIEW (SPACIOUS 7-DAY STRIP) ════════ */
+            /* ════════ WEEK VIEW ════════ */
             <div className="grid grid-cols-7 gap-1 sm:gap-2 flex-1 min-h-0">
               {weekDays.map((w) => {
                 const isSelected = selectedDate === w.dateString;
@@ -678,43 +679,38 @@ export default function PartnerCalendarPage() {
                     key={w.dateString}
                     type="button"
                     onClick={() => setSelectedDate(w.dateString)}
-                    className={`p-1.5 sm:p-2.5 rounded-xl sm:rounded-2xl border text-left transition-all cursor-pointer min-h-[50px] sm:min-h-[90px] lg:min-h-0 lg:h-[80px] xl:h-[90px] flex flex-col justify-between ${
+                    className={`p-2 rounded-lg border text-left transition-all cursor-pointer min-h-[50px] sm:min-h-[90px] lg:min-h-0 lg:h-[80px] xl:h-[90px] flex flex-col justify-between ${
                       isSelected
-                        ? 'bg-neutral-950 text-white border-neutral-950 shadow-md'
+                        ? 'bg-black text-white border-black shadow-sm'
                         : w.isToday
-                        ? 'bg-neutral-50 border-neutral-400 text-neutral-950'
+                        ? 'bg-[#FAFAFA] border-black text-black'
                         : w.dayBookings.length > 0
-                        ? 'bg-[#F2FBF7] border-emerald-200 text-neutral-900'
-                        : 'bg-white border-neutral-200/70 hover:bg-neutral-50 text-neutral-700'
+                        ? 'bg-[#F2FBF7] border-emerald-200 text-black'
+                        : 'bg-white border-[#E5E5E5] hover:bg-[#F9FAFB] text-black'
                     }`}
                   >
-                    <div className="text-[9px] sm:text-[10px] uppercase font-bold tracking-wider opacity-70">
+                    <div className="text-[10px] uppercase font-semibold tracking-wider opacity-70">
                       {w.dayName}
                     </div>
-                    <div className="text-sm sm:text-lg font-bold mt-0.5">{w.dayNum}</div>
-                    <div className="text-[10px] sm:text-xs font-semibold mt-1 sm:mt-2 truncate">
+                    <div className="text-sm sm:text-base font-bold mt-0.5">{w.dayNum}</div>
+                    <div className="text-xs font-semibold mt-1 truncate">
                       {w.dayBookings.length > 0 ? (
-                        <div className="flex items-center gap-0.5 sm:gap-1">
+                        <div className="flex items-center gap-1">
                           {w.dayBookings.some((b) => b.commission_status === 'approved') && (
                             <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-emerald-300' : 'bg-emerald-600'}`} />
                           )}
                           {w.dayBookings.some((b) => b.commission_status === 'pending') && (
-                            <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-rose-300' : 'bg-rose-500'}`} />
+                            <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-amber-300' : 'bg-amber-500'}`} />
                           )}
                           {!w.dayBookings.some((b) => b.commission_status === 'approved' || b.commission_status === 'pending') && (
-                            <span className="w-1.5 h-1.5 rounded-full bg-neutral-400" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#737373]" />
                           )}
-                          <span className="hidden sm:inline text-xs font-semibold ml-1">
-                            {w.dayBookings.length} Bookings
-                          </span>
-                          <span className={`sm:hidden text-[9px] font-mono font-bold px-1 rounded-full ${
-                            isSelected ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-900'
-                          }`}>
+                          <span className="text-xs font-semibold">
                             {w.dayBookings.length}
                           </span>
                         </div>
                       ) : (
-                        <span className="text-neutral-400 font-normal hidden sm:inline">0</span>
+                        <span className="text-[#737373]/60 font-normal">0</span>
                       )}
                     </div>
                   </button>
@@ -724,113 +720,108 @@ export default function PartnerCalendarPage() {
           )}
 
           {/* Calendar Legend */}
-          <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3 pt-2 sm:pt-2.5 border-t border-neutral-100 text-xs shrink-0">
-            <div className="flex items-center gap-3 sm:gap-4 text-[10px] sm:text-[11px] text-neutral-500 font-medium">
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-2.5 border-t border-[#E5E5E5] text-xs shrink-0">
+            <div className="flex items-center gap-4 text-xs text-[#737373] font-medium">
               <span className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-600" />
+                <span className="w-2 h-2 rounded-full bg-emerald-500" />
                 <span>Approved</span>
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-rose-500" />
+                <span className="w-2 h-2 rounded-full bg-amber-500" />
                 <span>Pending</span>
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-neutral-400" />
+                <span className="w-2 h-2 rounded-full bg-[#737373]" />
                 <span>Cancelled</span>
               </span>
             </div>
-            <div className="text-[10px] sm:text-[11px] text-neutral-400 hidden sm:block">
-              Click any date to inspect appointment cards
+            <div className="text-xs text-[#737373] hidden sm:block">
+              Click any date to inspect appointment details
             </div>
           </div>
 
         </div>
 
         {/* ──────── APPOINTMENT DETAILS INSPECTOR (RIGHT: 5 COLS) ──────── */}
-        <div className="lg:col-span-5 bg-white border border-neutral-200/80 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-sm space-y-3.5 lg:h-full lg:flex lg:flex-col lg:overflow-hidden">
+        <div className="lg:col-span-5 bg-white border border-[#E5E5E5] rounded-xl p-4 sm:p-5 space-y-3.5 lg:h-full lg:flex lg:flex-col lg:overflow-hidden">
           {/* Executive Header on Desktop:
-              - Side-by-side Approved and Pending cards with full, clearly readable amounts without truncation
-              - Approved (White bg + Green dot) & Pending (Black bg + Red dot) */}
+              Side-by-side Approved and Pending cards */}
           {(selectedDate ? selectedDayStats.count > 0 : true) && (
-            <div className="hidden lg:grid grid-cols-2 gap-2.5 text-xs pb-3 border-b border-neutral-100 shrink-0">
-              {/* Approved Card: White background + Green dot */}
-              <div className="flex items-center justify-between gap-2 bg-white text-neutral-950 px-3.5 py-2.5 rounded-xl border border-neutral-200/90 shadow-2xs font-semibold">
+            <div className="hidden lg:grid grid-cols-2 gap-2.5 text-xs pb-3 border-b border-[#E5E5E5] shrink-0">
+              {/* Approved Card */}
+              <div className="flex items-center justify-between gap-2 bg-white text-black px-3.5 py-2.5 rounded-lg border border-[#E5E5E5] font-semibold">
                 <div className="flex items-center gap-1.5 shrink-0">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-                  <span className="text-neutral-500 font-medium text-xs">Approved</span>
+                  <span className="text-[#737373] font-medium text-xs">Approved</span>
                 </div>
-                <span className="font-mono font-bold text-neutral-950 text-xs sm:text-sm tabular-nums whitespace-nowrap shrink-0">
+                <span className="font-mono font-bold text-black text-xs sm:text-sm tabular-nums whitespace-nowrap shrink-0">
                   {formatIDR(selectedDate ? selectedDayStats.approvedCommission : monthStats.approvedCommission)}
                 </span>
               </div>
 
-              {/* Pending Card: Black background + Red dot */}
-              <div className="flex items-center justify-between gap-2 bg-neutral-950 text-white px-3.5 py-2.5 rounded-xl border border-neutral-900 shadow-2xs font-semibold">
+              {/* Pending Card */}
+              <div className="flex items-center justify-between gap-2 bg-white text-black px-3.5 py-2.5 rounded-lg border border-[#E5E5E5] font-semibold">
                 <div className="flex items-center gap-1.5 shrink-0">
-                  <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
-                  <span className="text-neutral-300 font-medium text-xs">Pending</span>
+                  <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
+                  <span className="text-[#737373] font-medium text-xs">Pending</span>
                 </div>
-                <span className="font-mono font-bold text-white text-xs sm:text-sm tabular-nums whitespace-nowrap shrink-0">
+                <span className="font-mono font-bold text-black text-xs sm:text-sm tabular-nums whitespace-nowrap shrink-0">
                   {formatIDR(selectedDate ? selectedDayStats.pendingCommission : monthStats.pendingCommission)}
                 </span>
               </div>
             </div>
           )}
 
-          {/* Mobile Header: Big Title with Total Bookings & Commission + Chips */}
-          <div className="lg:hidden pb-3 border-b border-neutral-100 space-y-2.5 shrink-0">
-            {/* Big Title: Total Bookings on left & Total Commission on right */}
+          {/* Mobile Header: Big Title with Total Bookings & Commission */}
+          <div className="lg:hidden pb-3 border-b border-[#E5E5E5] space-y-2.5 shrink-0">
             <div className="flex items-center justify-between gap-3 pt-0.5">
               <div>
-                <span className="text-[10px] font-extrabold uppercase tracking-widest text-neutral-400 block">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-[#737373] block">
                   Total Bookings
                 </span>
-                <div className="text-2xl font-black text-neutral-950 tracking-tight font-mono mt-0.5">
-                  {selectedDayStats.count} <span className="text-sm font-bold font-sans text-neutral-600">{selectedDayStats.count === 1 ? 'Booking' : 'Bookings'}</span>
+                <div className="text-xl font-bold text-black font-mono mt-0.5">
+                  {selectedDayStats.count} <span className="text-xs font-semibold font-sans text-[#737373]">{selectedDayStats.count === 1 ? 'Booking' : 'Bookings'}</span>
                 </div>
               </div>
 
               <div className="text-right">
-                <span className="text-[10px] font-extrabold uppercase tracking-widest text-emerald-800 block">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-emerald-700 block">
                   Commission
                 </span>
-                <div className="text-2xl font-black text-emerald-700 font-mono tracking-tight tabular-nums mt-0.5">
+                <div className="text-xl font-bold text-emerald-700 font-mono tabular-nums mt-0.5">
                   +{formatIDR(selectedDayStats.totalCommission)}
                 </div>
               </div>
             </div>
 
-            {/* Approved & Pending Compact Chips: White (Green Dot) & Black (Red Dot) */}
             {selectedDayStats.count > 0 && (
               <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
-                {/* Approved Chip: White background + Green dot */}
-                <div className="inline-flex items-center gap-1.5 bg-white text-neutral-950 px-2.5 py-1 rounded-xl border border-neutral-200/90 shadow-2xs font-semibold">
+                <div className="inline-flex items-center gap-1.5 bg-white text-black px-2.5 py-1 rounded-md border border-[#E5E5E5] font-semibold">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-                  <span className="text-neutral-500 font-medium">Approved:</span>
-                  <span className="font-mono font-bold text-neutral-950">{formatIDR(selectedDayStats.approvedCommission)}</span>
+                  <span className="text-[#737373] font-medium">Approved:</span>
+                  <span className="font-mono font-bold text-black">{formatIDR(selectedDayStats.approvedCommission)}</span>
                 </div>
 
-                {/* Pending Chip: Black background + Red dot */}
-                <div className="inline-flex items-center gap-1.5 bg-neutral-950 text-white px-2.5 py-1 rounded-xl border border-neutral-900 shadow-2xs font-semibold">
-                  <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
-                  <span className="text-neutral-300 font-medium">Pending:</span>
-                  <span className="font-mono font-bold text-white">{formatIDR(selectedDayStats.pendingCommission)}</span>
+                <div className="inline-flex items-center gap-1.5 bg-white text-black px-2.5 py-1 rounded-md border border-[#E5E5E5] font-semibold">
+                  <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
+                  <span className="text-[#737373] font-medium">Pending:</span>
+                  <span className="font-mono font-bold text-black">{formatIDR(selectedDayStats.pendingCommission)}</span>
                 </div>
               </div>
             )}
           </div>
 
-          {/* FILTER TABS: All, Approved, Pending, Cancelled (Positioned directly above booking details on both desktop & mobile) */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar shrink-0">
+          {/* FILTER TABS */}
+          <div className="flex items-center gap-1 overflow-x-auto pb-1 no-scrollbar shrink-0">
             {(['all', 'approved', 'pending', 'cancelled'] as const).map((mode) => (
               <button
                 key={mode}
                 type="button"
                 onClick={() => setStatusFilter(mode)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold capitalize whitespace-nowrap transition-all cursor-pointer ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold capitalize whitespace-nowrap transition-all cursor-pointer border ${
                   statusFilter === mode
-                    ? 'bg-neutral-950 text-white shadow-2xs font-bold'
-                    : 'bg-neutral-100/90 text-neutral-600 hover:text-black border border-neutral-200/70 font-medium'
+                    ? 'bg-black text-white border-black shadow-xs'
+                    : 'bg-white text-[#737373] border-[#E5E5E5] hover:text-black hover:border-black'
                 }`}
               >
                 {mode}
@@ -839,10 +830,10 @@ export default function PartnerCalendarPage() {
           </div>
 
           {selectedDayBookings.length === 0 ? (
-            <div className="py-12 text-center rounded-2xl bg-[#FBFBFD] border border-dashed border-neutral-200/80 p-5 space-y-2 shrink-0">
-              <CalendarIcon size={28} className="mx-auto text-neutral-300 mb-1" />
-              <p className="text-xs font-bold text-neutral-800">No bookings for this date</p>
-              <p className="text-[11px] text-neutral-400 leading-relaxed max-w-xs mx-auto">
+            <div className="py-12 text-center rounded-xl bg-[#FAFAFA] border border-[#E5E5E5] p-5 space-y-2 shrink-0">
+              <CalendarIcon size={24} className="mx-auto text-[#737373]/40 mb-1" />
+              <p className="text-xs font-bold text-black">No bookings for this date</p>
+              <p className="text-xs text-[#737373] leading-relaxed max-w-xs mx-auto">
                 Select dates highlighted with dots on the calendar grid to inspect guest details and commission breakdown.
               </p>
             </div>
@@ -856,53 +847,53 @@ export default function PartnerCalendarPage() {
                 return (
                   <div
                     key={b.id || b.booking_id}
-                    className="p-4 rounded-2xl bg-[#F9FAFB] border border-neutral-200/80 space-y-3 hover:border-neutral-300 transition-colors shadow-2xs"
+                    className="p-4 rounded-xl bg-white border border-[#E5E5E5] space-y-3 hover:border-black/30 transition-colors"
                   >
                     {/* Header: Status Pills & Action */}
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div className="flex flex-wrap items-center gap-1.5">
                         {isPaid ? (
-                          <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100/90 px-2 py-0.5 rounded border border-emerald-200">
+                          <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
                             Paid
                           </span>
                         ) : (
-                          <span className="text-[10px] font-bold text-amber-800 bg-amber-100/90 px-2 py-0.5 rounded border border-amber-200">
+                          <span className="text-[10px] font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
                             Unpaid
                           </span>
                         )}
 
                         {isCancelled ? (
-                          <span className="text-[10px] font-bold text-rose-700 bg-rose-100 px-2 py-0.5 rounded border border-rose-200">
+                          <span className="text-[10px] font-semibold text-red-600 bg-red-50 px-2 py-0.5 rounded-md border border-red-200">
                             Cancelled
                           </span>
                         ) : b.booking_status === 'Ongoing' ? (
-                          <span className="text-[10px] font-bold text-indigo-700 bg-indigo-100 px-2 py-0.5 rounded border border-indigo-200 flex items-center gap-1">
+                          <span className="text-[10px] font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-200 flex items-center gap-1">
                             <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
-                            Ongoing Treatment
+                            Ongoing
                           </span>
                         ) : b.booking_status === 'Completed' || b.service_completed ? (
-                          <span className="text-[10px] font-bold text-teal-800 bg-teal-100 px-2 py-0.5 rounded border border-teal-200">
-                            Finish Treatment
+                          <span className="text-[10px] font-semibold text-teal-700 bg-teal-50 px-2 py-0.5 rounded-md border border-teal-200">
+                            Finish
                           </span>
                         ) : (
-                          <span className="text-[10px] font-semibold text-neutral-600 bg-neutral-200/70 px-2 py-0.5 rounded">
-                            Pending
+                          <span className="text-[10px] font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200">
+                            Confirmed
                           </span>
                         )}
 
                         {b.commission_status === 'paid' ? (
-                          <span className="text-[10px] font-bold text-white bg-black px-2 py-0.5 rounded border border-black inline-flex items-center gap-1">
+                          <span className="text-[10px] font-semibold text-white bg-black px-2 py-0.5 rounded-md inline-flex items-center gap-1">
                             ✓ Paid Out
                           </span>
                         ) : isApproved ? (
-                          <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-300">
+                          <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
                             Approved
                           </span>
                         ) : null}
                       </div>
 
                       <div className="text-right">
-                        <span className={`text-xs font-mono font-bold ${isCancelled ? 'line-through text-neutral-400' : 'text-emerald-700'}`}>
+                        <span className={`text-xs font-mono font-bold ${isCancelled ? 'line-through text-[#737373]' : 'text-emerald-700'}`}>
                           {isCancelled ? 'IDR 0' : `+${formatIDR(b.commission_amount)}`}
                         </span>
                       </div>
@@ -910,8 +901,8 @@ export default function PartnerCalendarPage() {
 
                     {/* Customer Name, View Treatment Details Link, Invoice Code */}
                     <div className="space-y-1.5 pt-1">
-                      <div className="font-bold text-sm text-neutral-950 flex items-center gap-1.5">
-                        <User size={14} className="text-neutral-500 shrink-0" />
+                      <div className="font-semibold text-sm text-black flex items-center gap-1.5">
+                        <User size={14} className="text-[#737373] shrink-0" />
                         <span className="truncate">{b.guest_name || 'Guest Booking'}</span>
                       </div>
 
@@ -920,63 +911,61 @@ export default function PartnerCalendarPage() {
                         <Link
                           href={`/invoice/${b.booking_id}`}
                           target="_blank"
-                          className="group inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 hover:text-emerald-900 transition-colors py-0.5 cursor-pointer"
+                          className="group inline-flex items-center gap-1.5 text-xs font-semibold text-black hover:underline py-0.5 cursor-pointer"
                           title="View treatment details in invoice"
                         >
-                          <FileText size={13} className="text-emerald-600 group-hover:scale-110 transition-transform shrink-0" />
-                          <span className="underline decoration-emerald-400 underline-offset-2 group-hover:decoration-emerald-800">
-                            View Treatment Details
-                          </span>
-                          <ExternalLink size={11} className="text-emerald-600 group-hover:translate-x-0.5 transition-transform shrink-0" />
+                          <FileText size={13} className="text-[#737373] shrink-0" />
+                          <span>View Treatment Details</span>
+                          <ExternalLink size={11} className="text-[#737373] shrink-0" />
                         </Link>
                       </div>
 
                       {/* Invoice Code below View Treatment Details */}
-                      <div className="flex items-center gap-1.5 text-neutral-600 text-[11px] font-medium pt-0.5">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-400">
+                      <div className="flex items-center gap-1.5 text-[#737373] text-xs font-medium pt-0.5">
+                        <span className="text-[10px] font-semibold uppercase tracking-wider text-[#737373]">
                           Invoice:
                         </span>
-                        <span className="font-mono text-[11px] font-bold text-neutral-800 bg-neutral-100 px-2 py-0.5 rounded border border-neutral-200/80">
+                        <span className="font-mono text-xs font-bold text-black bg-[#F5F5F5] px-2 py-0.5 rounded border border-[#E5E5E5]">
                           #{b.booking_id}
                         </span>
                         <button
                           type="button"
                           onClick={() => handleCopy(b.booking_id)}
-                          className="text-neutral-400 hover:text-neutral-800 transition-colors p-1 rounded hover:bg-neutral-100 cursor-pointer"
+                          className="text-[#737373] hover:text-black transition-colors p-1 rounded hover:bg-[#F5F5F5] cursor-pointer"
                           title="Copy invoice code"
                         >
-                          {copiedId === b.booking_id ? <Check size={12} className="text-emerald-600" /> : <Copy size={12} />}
+                          {copiedId === b.booking_id ? <Check size={12} className="text-emerald-700" /> : <Copy size={12} />}
                         </button>
                       </div>
                     </div>
 
                     {/* Schedule & Place */}
-                    <div className="bg-white rounded-xl p-2.5 border border-neutral-200/70 text-xs space-y-1.5">
+                    <div className="bg-[#FAFAFA] rounded-lg p-2.5 border border-[#E5E5E5] text-xs space-y-1.5">
                       <div className="grid grid-cols-2 gap-2">
-                        <div className="flex items-center gap-1.5 text-neutral-700 truncate">
-                          <CalendarIcon size={12} className="text-neutral-400 shrink-0" />
-                          <span className="font-medium text-[11px] text-neutral-900 truncate">
+                        <div className="flex items-center gap-1.5 text-black truncate">
+                          <CalendarIcon size={12} className="text-[#737373] shrink-0" />
+                          <span className="font-medium text-xs text-black truncate">
                             {safeFormatDate(b.date, { day: 'numeric', month: 'short' })}
                           </span>
                         </div>
-                        <div className="flex items-center gap-1.5 text-neutral-700 justify-end truncate">
-                          <Clock size={12} className="text-neutral-400 shrink-0" />
-                          <span className="font-medium text-[11px] text-neutral-900 truncate">
+                        <div className="flex items-center gap-1.5 text-black justify-end truncate">
+                          <Clock size={12} className="text-[#737373] shrink-0" />
+                          <span className="font-medium text-xs text-black truncate">
                             {b.time || 'Flexible'}
                           </span>
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-2 pt-1 border-t border-neutral-100">
-                        <div className="flex items-center gap-1.5 text-neutral-700 truncate">
-                          <MapPin size={12} className="text-neutral-400 shrink-0" />
-                          <span className="text-[11px] text-neutral-800 font-medium truncate" title={b.location}>
+                      <div className="grid grid-cols-2 gap-2 pt-1 border-t border-[#E5E5E5]">
+                        <div className="flex items-center gap-1.5 text-black truncate">
+                          <MapPin size={12} className="text-[#737373] shrink-0" />
+                          <span className="text-xs text-black font-medium truncate" title={b.location}>
                             {b.location || 'Villa / Hotel'}
                           </span>
                         </div>
-                        <div className="flex items-center gap-1.5 text-neutral-700 justify-end truncate">
-                          <DoorOpen size={12} className="text-neutral-400 shrink-0" />
-                          <span className="text-[11px] font-semibold text-neutral-900 truncate">
+                        <div className="flex items-center gap-1.5 text-black justify-end truncate">
+                          <DoorOpen size={12} className="text-[#737373] shrink-0" />
+                          <span className="text-xs font-semibold text-black truncate">
                             {b.room_number ? `Room ${b.room_number}` : '-'}
                           </span>
                         </div>
@@ -984,15 +973,15 @@ export default function PartnerCalendarPage() {
                     </div>
 
                     {/* Bottom: Treatment Amount vs Earned Commission */}
-                    <div className="pt-2 border-t border-neutral-200/60 flex items-center justify-between text-xs">
+                    <div className="pt-2 border-t border-[#E5E5E5] flex items-center justify-between text-xs">
                       <div>
-                        <span className="text-[9px] uppercase font-bold text-neutral-400 block">Treatment</span>
-                        <span className="font-mono font-bold text-xs text-neutral-900">
+                        <span className="text-[10px] uppercase font-semibold text-[#737373] block">Treatment</span>
+                        <span className="font-mono font-bold text-xs text-black">
                           {formatIDR(b.treatment_amount || b.gross_amount)}
                         </span>
                       </div>
                       <div className="text-right">
-                        <span className="text-[9px] uppercase font-bold text-emerald-700 block">Earned ({b.commission_rate_pct}%)</span>
+                        <span className="text-[10px] uppercase font-semibold text-emerald-700 block">Earned ({b.commission_rate_pct}%)</span>
                         <span className="font-mono font-bold text-xs text-emerald-700">
                           +{formatIDR(b.commission_amount)}
                         </span>

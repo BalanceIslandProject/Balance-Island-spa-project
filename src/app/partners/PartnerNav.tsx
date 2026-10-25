@@ -76,12 +76,12 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
     <>
       {/* ========================================================
           1. DESKTOP PERMANENT SIDEBAR (hidden on mobile, md:flex)
-          Liquid Apple Glass design language
+          Clean minimalist SaaS CRM design language
          ======================================================== */}
-      <aside className="hidden md:flex flex-col w-64 lg:w-72 bg-white/75 backdrop-blur-2xl border-r border-neutral-200/60 sticky top-0 h-screen shrink-0 z-30 self-start shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
+      <aside className="hidden md:flex flex-col w-64 lg:w-72 bg-white border-r border-[#E5E5E5] sticky top-0 h-screen shrink-0 z-30 self-start">
         
         {/* Brand & Partner Identification */}
-        <div className="p-5 border-b border-neutral-200/60 flex items-center justify-between shrink-0">
+        <div className="p-5 border-b border-[#E5E5E5] flex items-center justify-between shrink-0">
           <Link 
             href={session ? '/partners/dashboard' : '/partners'} 
             className="flex items-center gap-2.5 group transition-opacity hover:opacity-90"
@@ -91,7 +91,7 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
               alt="Therapick"
               className="h-7 w-auto max-w-[150px] object-contain"
             />
-            <span className="text-[10px] uppercase tracking-wider font-bold text-neutral-900 bg-neutral-100/90 border border-neutral-200/80 px-2.5 py-0.5 rounded-lg shadow-2xs">
+            <span className="inline-flex items-center h-6 px-2 rounded-md border border-[#E5E5E5] text-[11px] font-mono text-[#737373]">
               Partner
             </span>
           </Link>
@@ -101,7 +101,7 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
         <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
           {session ? (
             <>
-              <div className="px-3 pt-2 pb-1 text-[10px] font-bold uppercase tracking-widest text-neutral-400">
+              <div className="px-3 pt-2 pb-1.5 text-[11px] font-medium uppercase tracking-wider text-[#737373]">
                 Workspace
               </div>
               
@@ -112,13 +112,13 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold tracking-tight transition-all ${
+                    className={`flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-[13px] font-medium transition-colors ${
                       isActive
-                        ? 'bg-neutral-950 text-white shadow-xs'
-                        : 'text-neutral-600 hover:text-neutral-950 hover:bg-neutral-900/[0.04]'
+                        ? 'bg-black text-white'
+                        : 'text-[#737373] hover:text-black hover:bg-[#F5F5F5]'
                     }`}
                   >
-                    <Icon size={16} strokeWidth={isActive ? 2.3 : 1.8} className={isActive ? 'text-white' : 'text-neutral-500'} />
+                    <Icon size={16} strokeWidth={isActive ? 2.2 : 1.8} className={isActive ? 'text-white' : 'text-[#737373]'} />
                     <span>{item.label}</span>
                   </Link>
                 );
@@ -127,40 +127,40 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
               {/* Interactive Calendar View Link in Sidebar */}
               <Link
                 href="/partners/calendar"
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold tracking-tight transition-all ${
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg text-[13px] font-medium transition-colors ${
                   pathname === '/partners/calendar'
-                    ? 'bg-neutral-950 text-white shadow-xs'
-                    : 'text-neutral-600 hover:text-neutral-950 hover:bg-neutral-900/[0.04]'
+                    ? 'bg-black text-white'
+                    : 'text-[#737373] hover:text-black hover:bg-[#F5F5F5]'
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <CalendarDays size={16} strokeWidth={pathname === '/partners/calendar' ? 2.3 : 1.8} className={pathname === '/partners/calendar' ? 'text-white' : 'text-neutral-500'} />
+                  <CalendarDays size={16} strokeWidth={pathname === '/partners/calendar' ? 2.2 : 1.8} className={pathname === '/partners/calendar' ? 'text-white' : 'text-[#737373]'} />
                   <span>Calendar View</span>
                 </div>
-                <span className={`w-2 h-2 rounded-full ${pathname === '/partners/calendar' ? 'bg-emerald-400 ring-2 ring-neutral-800' : 'bg-emerald-500 ring-2 ring-emerald-100'}`} />
+                <span className={`w-2 h-2 rounded-full ${pathname === '/partners/calendar' ? 'bg-emerald-400' : 'bg-emerald-500'}`} />
               </Link>
 
               {/* Quick Link Card in Sidebar */}
               {session.partner_code && (
-                <div className="mt-4 pt-4 border-t border-neutral-100/90 px-1">
-                  <div className="p-3.5 rounded-2xl bg-white/70 backdrop-blur-md border border-neutral-200/70 shadow-2xs space-y-2">
+                <div className="mt-4 pt-4 border-t border-[#E5E5E5] px-1">
+                  <div className="p-3.5 rounded-xl bg-white border border-[#E5E5E5] space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 flex items-center gap-1">
-                        <Share2 size={11} />
+                      <span className="text-[11px] font-medium uppercase tracking-wider text-[#737373] flex items-center gap-1.5">
+                        <Share2 size={12} />
                         Referral Link
                       </span>
-                      <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/70">
+                      <span className="text-[10px] text-[#737373] border border-[#E5E5E5] px-1.5 py-0.5 rounded font-mono">
                         30d Cookie
                       </span>
                     </div>
                     <button
                       type="button"
                       onClick={handleCopyLink}
-                      className="w-full text-left py-2 px-2.5 rounded-xl bg-neutral-50/90 border border-neutral-200/80 text-neutral-900 text-[11px] font-mono truncate flex items-center justify-between gap-1 hover:border-neutral-900 transition-colors shadow-2xs cursor-pointer"
+                      className="w-full text-left py-2 px-2.5 rounded-lg bg-white border border-[#E5E5E5] text-black text-[12px] font-mono truncate flex items-center justify-between gap-1 hover:border-black transition-colors cursor-pointer"
                       title="Click to copy full referral link"
                     >
                       <span className="truncate">?ref={session.partner_code}</span>
-                      {copiedLink ? <Check size={12} className="text-emerald-600 shrink-0" /> : <Copy size={12} className="text-neutral-400 shrink-0" />}
+                      {copiedLink ? <Check size={13} className="text-emerald-600 shrink-0" /> : <Copy size={13} className="text-[#A3A3A3] shrink-0" />}
                     </button>
                   </div>
                 </div>
@@ -168,15 +168,15 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
             </>
           ) : (
             <>
-              <div className="px-3 pt-2 pb-1 text-[10px] font-bold uppercase tracking-widest text-neutral-400">
+              <div className="px-3 pt-2 pb-1.5 text-[11px] font-medium uppercase tracking-wider text-[#737373]">
                 Menu
               </div>
               <Link
                 href="/partners"
-                className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+                className={`flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-[13px] font-medium transition-colors ${
                   pathname === '/partners'
-                    ? 'bg-neutral-950 text-white shadow-xs'
-                    : 'text-neutral-600 hover:text-neutral-950 hover:bg-neutral-100'
+                    ? 'bg-black text-white'
+                    : 'text-[#737373] hover:text-black hover:bg-[#F5F5F5]'
                 }`}
               >
                 <LayoutDashboard size={16} />
@@ -184,10 +184,10 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
               </Link>
               <Link
                 href="/partners/login"
-                className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+                className={`flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-[13px] font-medium transition-colors ${
                   pathname === '/partners/login'
-                    ? 'bg-neutral-950 text-white shadow-xs'
-                    : 'text-neutral-600 hover:text-neutral-950 hover:bg-neutral-100'
+                    ? 'bg-black text-white'
+                    : 'text-[#737373] hover:text-black hover:bg-[#F5F5F5]'
                 }`}
               >
                 <User size={16} />
@@ -195,10 +195,10 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
               </Link>
               <Link
                 href="/partners/register"
-                className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+                className={`flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-[13px] font-medium transition-colors ${
                   pathname === '/partners/register'
-                    ? 'bg-neutral-950 text-white shadow-xs'
-                    : 'text-neutral-600 hover:text-neutral-950 hover:bg-neutral-100'
+                    ? 'bg-black text-white'
+                    : 'text-[#737373] hover:text-black hover:bg-[#F5F5F5]'
                 }`}
               >
                 <Users size={16} />
@@ -209,12 +209,12 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
         </nav>
 
         {/* Sidebar Footer */}
-        <div className="p-4 border-t border-neutral-200/60 space-y-1.5 shrink-0">
+        <div className="p-4 border-t border-[#E5E5E5] space-y-1.5 shrink-0">
           <a
             href="https://www.booktherapick.com"
             target="_blank"
             rel="noreferrer"
-            className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-neutral-600 hover:text-neutral-950 hover:bg-neutral-100/70 transition-colors"
+            className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-[13px] font-medium text-[#737373] hover:text-black hover:bg-[#F5F5F5] transition-colors"
           >
             <span>Visit Live Site</span>
             <ExternalLink size={13} />
@@ -223,10 +223,10 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
             href="https://wa.me/6285174119423"
             target="_blank"
             rel="noreferrer"
-            className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-neutral-600 hover:text-neutral-950 hover:bg-neutral-100/70 transition-colors"
+            className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-[13px] font-medium text-[#737373] hover:text-black hover:bg-[#F5F5F5] transition-colors"
           >
             <span>WhatsApp Support</span>
-            <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/70">Help</span>
+            <span className="text-[10px] text-emerald-700 font-medium bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">Help</span>
           </a>
 
           {session && (
@@ -234,7 +234,7 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
               type="button"
               onClick={handleLogout}
               disabled={loggingOut}
-              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-red-600 hover:bg-red-50/80 transition-colors text-left pt-2 border-t border-neutral-100 cursor-pointer"
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium text-red-600 hover:bg-red-50 transition-colors text-left pt-2 border-t border-[#E5E5E5] cursor-pointer"
             >
               <LogOut size={14} />
               <span>{loggingOut ? 'Signing out...' : 'Sign Out'}</span>
@@ -244,9 +244,9 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
       </aside>
 
       {/* ========================================================
-          2. MOBILE STICKY HEADER (hidden on desktop, md:hidden; hidden on calendar section on mobile)
+          2. MOBILE STICKY HEADER (hidden on desktop, md:hidden)
          ======================================================== */}
-      <header className={`md:hidden sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-neutral-200/60 transition-all ${
+      <header className={`md:hidden sticky top-0 z-40 bg-white border-b border-[#E5E5E5] transition-all ${
         pathname === '/partners/calendar' ? 'hidden' : ''
       }`}>
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
@@ -262,7 +262,7 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
                 alt="Therapick"
                 className="h-6 w-auto max-w-[130px] object-contain"
               />
-              <span className="text-[10px] uppercase tracking-wider font-bold text-neutral-900 bg-neutral-100 border border-neutral-200 px-2 py-0.5 rounded-md">
+              <span className="inline-flex items-center h-5 px-1.5 rounded border border-[#E5E5E5] text-[10px] font-mono text-[#737373]">
                 Partner
               </span>
             </Link>
@@ -272,10 +272,10 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
               <button
                 type="button"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="p-1.5 text-neutral-800 hover:bg-neutral-100 rounded-lg transition-colors cursor-pointer"
+                className="p-1.5 text-black hover:bg-[#F5F5F5] rounded-lg transition-colors cursor-pointer border border-[#E5E5E5]"
                 aria-label="Toggle menu"
               >
-                {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+                {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
               </button>
             </div>
 
@@ -284,19 +284,19 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
 
         {/* Mobile Top Menu Drawer */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-t border-neutral-200/80 bg-white px-4 py-4 space-y-3 shadow-lg animate-in slide-in-from-top-1 duration-150">
+          <div className="md:hidden border-t border-[#E5E5E5] bg-white px-4 py-4 space-y-3 shadow-lg animate-in slide-in-from-top-1 duration-150">
             {session ? (
               <>
-                <div className="pb-3 border-b border-neutral-200 flex items-center justify-between">
+                <div className="pb-3 border-b border-[#E5E5E5] flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-full bg-neutral-950 text-white text-xs font-bold flex items-center justify-center uppercase">
+                    <div className="w-8 h-8 rounded-lg bg-black text-white text-xs font-semibold flex items-center justify-center uppercase">
                       {session.first_name?.[0] || 'P'}
                     </div>
                     <div>
-                      <span className="text-xs font-bold text-neutral-950 block">
+                      <span className="text-[13px] font-semibold text-black block">
                         {session.first_name}
                       </span>
-                      <span className="text-[11px] text-neutral-500 font-mono">
+                      <span className="text-[11px] text-[#737373] font-mono">
                         Partner #{session.partner_code}
                       </span>
                     </div>
@@ -305,7 +305,7 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
                     type="button"
                     onClick={handleLogout}
                     disabled={loggingOut}
-                    className="text-xs text-neutral-700 font-semibold px-3 py-1.5 rounded-lg border border-neutral-200 hover:bg-neutral-100 transition-colors"
+                    className="text-xs text-black font-medium px-3 py-1.5 rounded-lg border border-[#E5E5E5] hover:bg-[#F5F5F5] transition-colors"
                   >
                     {loggingOut ? 'Signing out...' : 'Log out'}
                   </button>
@@ -320,10 +320,10 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
                         key={item.href}
                         href={item.href}
                         onClick={() => setMobileMenuOpen(false)}
-                        className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                        className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
                           isActive 
-                            ? 'bg-neutral-950 text-white' 
-                            : 'text-neutral-700 hover:bg-neutral-100 border border-neutral-200/80'
+                            ? 'bg-black text-white' 
+                            : 'text-[#171717] hover:bg-[#F5F5F5] border border-[#E5E5E5]'
                         }`}
                       >
                         <Icon size={14} />
@@ -337,19 +337,19 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
                       setMobileMenuOpen(false);
                       handleOpenCalendar();
                     }}
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-neutral-800 border border-neutral-200/80 hover:bg-neutral-100 text-left"
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-[#171717] border border-[#E5E5E5] hover:bg-[#F5F5F5] text-left"
                   >
-                    <CalendarDays size={14} className="text-neutral-700" />
+                    <CalendarDays size={14} className="text-[#737373]" />
                     <span>Calendar</span>
                   </button>
                 </div>
 
-                <div className="pt-2 border-t border-neutral-100 flex items-center justify-between text-xs text-neutral-500">
+                <div className="pt-2 border-t border-[#E5E5E5] flex items-center justify-between text-xs text-[#737373]">
                   <a
                     href="https://www.booktherapick.com"
                     target="_blank"
                     rel="noreferrer"
-                    className="flex items-center gap-1 hover:text-neutral-900 font-medium"
+                    className="flex items-center gap-1 hover:text-black font-medium"
                   >
                     <span>Visit BookTherapick</span>
                     <ExternalLink size={11} />
@@ -358,7 +358,7 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
                     href="https://wa.me/6285174119423"
                     target="_blank"
                     rel="noreferrer"
-                    className="hover:text-neutral-900 font-medium"
+                    className="hover:text-black font-medium"
                   >
                     WhatsApp Support
                   </a>
@@ -369,21 +369,21 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
                 <Link
                   href="/partners"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="block text-xs font-semibold text-neutral-800 py-2"
+                  className="block text-xs font-medium text-black py-2"
                 >
                   Program Overview
                 </Link>
                 <Link
                   href="/partners/login"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="block text-xs font-semibold text-center text-neutral-900 border border-neutral-300 py-2.5 rounded-lg hover:bg-neutral-50"
+                  className="block text-xs font-medium text-center text-black border border-[#E5E5E5] py-2.5 rounded-lg hover:bg-[#F5F5F5]"
                 >
                   Partner Log In
                 </Link>
                 <Link
                   href="/partners/register"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="block text-xs font-semibold text-center text-white bg-neutral-950 py-2.5 rounded-lg hover:bg-neutral-800 shadow-xs"
+                  className="block text-xs font-medium text-center text-white bg-black py-2.5 rounded-lg hover:bg-[#262626]"
                 >
                   Join Therapick Partner Network
                 </Link>
@@ -399,7 +399,7 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
       {session && (
         <nav 
           aria-label="Mobile bottom navigation"
-          className="fixed bottom-0 inset-x-0 z-40 bg-white/85 backdrop-blur-2xl border-t border-neutral-200/60 px-2 py-1 md:hidden pb-[max(0.6rem,env(safe-area-inset-bottom))] shadow-[0_-4px_24px_rgba(0,0,0,0.04)]"
+          className="fixed bottom-0 inset-x-0 z-40 bg-white border-t border-[#E5E5E5] px-2 py-1 md:hidden pb-[max(0.6rem,env(safe-area-inset-bottom))] shadow-xs"
         >
           <div className="grid grid-cols-5 items-center">
             {/* 1. Dashboard */}
@@ -407,11 +407,11 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
               href="/partners/dashboard"
               className={`flex flex-col items-center justify-center min-h-[46px] py-1 rounded-lg transition-colors ${
                 pathname === '/partners/dashboard'
-                  ? 'text-neutral-950 font-bold'
-                  : 'text-neutral-500 hover:text-neutral-800 font-medium'
+                  ? 'text-black font-semibold'
+                  : 'text-[#737373] hover:text-black font-medium'
               }`}
             >
-              <LayoutDashboard size={18} strokeWidth={pathname === '/partners/dashboard' ? 2.5 : 1.8} />
+              <LayoutDashboard size={18} strokeWidth={pathname === '/partners/dashboard' ? 2.2 : 1.8} />
               <span className="text-[10px] mt-0.5 tracking-tight">Overview</span>
             </Link>
 
@@ -420,29 +420,28 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
               href="/partners/payouts"
               className={`flex flex-col items-center justify-center min-h-[46px] py-1 rounded-lg transition-colors ${
                 pathname === '/partners/payouts'
-                  ? 'text-neutral-950 font-bold'
-                  : 'text-neutral-500 hover:text-neutral-800 font-medium'
+                  ? 'text-black font-semibold'
+                  : 'text-[#737373] hover:text-black font-medium'
               }`}
             >
-              <Wallet size={18} strokeWidth={pathname === '/partners/payouts' ? 2.5 : 1.8} />
+              <Wallet size={18} strokeWidth={pathname === '/partners/payouts' ? 2.2 : 1.8} />
               <span className="text-[10px] mt-0.5 tracking-tight">Payouts</span>
             </Link>
 
             {/* 3. Calendar (Center Highlight Tab) */}
-            {/* 3. Calendar (Center Highlight Tab) */}
             <Link
               href="/partners/calendar"
               className={`flex flex-col items-center justify-center min-h-[46px] py-1 transition-all ${
-                pathname === '/partners/calendar' ? 'text-neutral-950 font-bold' : 'text-neutral-500 hover:text-neutral-800'
+                pathname === '/partners/calendar' ? 'text-black font-semibold' : 'text-[#737373] hover:text-black'
               }`}
             >
               <div className={`relative p-1 rounded-lg border transition-colors ${
-                pathname === '/partners/calendar' ? 'bg-neutral-950 text-white border-neutral-950' : 'bg-neutral-100 border-neutral-200 text-neutral-900'
+                pathname === '/partners/calendar' ? 'bg-black text-white border-black' : 'bg-white border-[#E5E5E5] text-black'
               }`}>
-                <CalendarDays size={16} strokeWidth={2.2} />
+                <CalendarDays size={16} strokeWidth={2} />
                 <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 ring-1 ring-white" />
               </div>
-              <span className="text-[10px] mt-0.5 font-bold tracking-tight">Calendar</span>
+              <span className="text-[10px] mt-0.5 font-semibold tracking-tight">Calendar</span>
             </Link>
 
             {/* 4. Ledger (Commissions) */}
@@ -450,11 +449,11 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
               href="/partners/commissions"
               className={`flex flex-col items-center justify-center min-h-[46px] py-1 rounded-lg transition-colors ${
                 pathname === '/partners/commissions'
-                  ? 'text-neutral-950 font-bold'
-                  : 'text-neutral-500 hover:text-neutral-800 font-medium'
+                  ? 'text-black font-semibold'
+                  : 'text-[#737373] hover:text-black font-medium'
               }`}
             >
-              <Receipt size={18} strokeWidth={pathname === '/partners/commissions' ? 2.5 : 1.8} />
+              <Receipt size={18} strokeWidth={pathname === '/partners/commissions' ? 2.2 : 1.8} />
               <span className="text-[10px] mt-0.5 tracking-tight">Ledger</span>
             </Link>
 
@@ -463,11 +462,11 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
               href="/partners/profile"
               className={`flex flex-col items-center justify-center min-h-[46px] py-1 rounded-lg transition-colors ${
                 pathname === '/partners/profile'
-                  ? 'text-neutral-950 font-bold'
-                  : 'text-neutral-500 hover:text-neutral-800 font-medium'
+                  ? 'text-black font-semibold'
+                  : 'text-[#737373] hover:text-black font-medium'
               }`}
             >
-              <User size={18} strokeWidth={pathname === '/partners/profile' ? 2.5 : 1.8} />
+              <User size={18} strokeWidth={pathname === '/partners/profile' ? 2.2 : 1.8} />
               <span className="text-[10px] mt-0.5 tracking-tight">Profile</span>
             </Link>
           </div>

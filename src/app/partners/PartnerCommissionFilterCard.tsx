@@ -180,28 +180,26 @@ export default function PartnerCommissionFilterCard({
   const hasCustomRange = Boolean(startDate || endDate);
 
   return (
-    <div
-      className={`bg-white/80 backdrop-blur-2xl border border-white/90 rounded-[28px] p-5 sm:p-6 shadow-[0_12px_36px_rgba(0,0,0,0.04)] ring-1 ring-black/[0.03] space-y-4 ${className}`}
-    >
+    <div className={`bg-white border border-[#E5E5E5] rounded-xl p-4 md:p-5 space-y-4 ${className}`}>
       {/* 1. Header with Commission Section Title & Link to Ledger */}
-      <div className="flex items-center justify-between pb-2 border-b border-neutral-100/80">
+      <div className="flex items-center justify-between pb-3 border-b border-[#E5E5E5]">
         <div className="space-y-0.5">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-xl bg-neutral-950 text-white flex items-center justify-center shadow-2xs">
+            <div className="w-7 h-7 rounded-lg border border-[#E5E5E5] bg-white text-black flex items-center justify-center">
               <Receipt size={14} />
             </div>
-            <h3 className="font-extrabold text-neutral-950 text-base tracking-tight">
+            <h3 className="font-semibold text-black text-[15px] tracking-tight">
               Commission Ledger
             </h3>
           </div>
-          <p className="text-xs text-neutral-500">
+          <p className="text-xs text-[#737373]">
             Filter commissions and attributed earnings by date range
           </p>
         </div>
 
         <Link
           href="/partners/commissions"
-          className="text-xs font-semibold text-neutral-700 hover:text-neutral-950 hover:underline flex items-center gap-0.5 transition-colors"
+          className="text-xs font-medium text-[#737373] hover:text-black flex items-center gap-0.5 transition-colors"
         >
           <span>Ledger</span>
           <ChevronRight size={13} />
@@ -209,17 +207,17 @@ export default function PartnerCommissionFilterCard({
       </div>
 
       {/* 2. Calendar Date Range Filter Controls */}
-      <div className="bg-neutral-50/80 border border-neutral-200/70 rounded-2xl p-3.5 space-y-3 shadow-2xs">
+      <div className="bg-white border border-[#E5E5E5] rounded-xl p-3.5 space-y-3">
         {/* Preset Range Pills */}
         <div className="flex items-center justify-between gap-1.5 flex-wrap">
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 flex-wrap">
             <button
               type="button"
               onClick={handleSetThisMonth}
-              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+              className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer ${
                 startDate === defaultDates.start && endDate === defaultDates.end
-                  ? 'bg-neutral-950 text-white shadow-2xs'
-                  : 'bg-white text-neutral-600 hover:text-neutral-950 border border-neutral-200/80'
+                  ? 'bg-black text-white'
+                  : 'bg-white text-[#737373] hover:text-black border border-[#E5E5E5]'
               }`}
             >
               This Month
@@ -227,14 +225,14 @@ export default function PartnerCommissionFilterCard({
             <button
               type="button"
               onClick={handleSetLast7Days}
-              className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-white text-neutral-600 hover:text-neutral-950 border border-neutral-200/80 transition-all cursor-pointer"
+              className="px-2.5 py-1 rounded-md text-xs font-medium bg-white text-[#737373] hover:text-black border border-[#E5E5E5] transition-colors cursor-pointer"
             >
               Last 7 Days
             </button>
             <button
               type="button"
               onClick={handleSetLast30Days}
-              className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-white text-neutral-600 hover:text-neutral-950 border border-neutral-200/80 transition-all cursor-pointer"
+              className="px-2.5 py-1 rounded-md text-xs font-medium bg-white text-[#737373] hover:text-black border border-[#E5E5E5] transition-colors cursor-pointer"
             >
               Last 30 Days
             </button>
@@ -244,7 +242,7 @@ export default function PartnerCommissionFilterCard({
             <button
               type="button"
               onClick={handleReset}
-              className="inline-flex items-center gap-1 text-[11px] font-bold text-neutral-500 hover:text-neutral-950 transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1 text-[11px] font-medium text-[#737373] hover:text-black transition-colors cursor-pointer"
               title="Show all bookings"
             >
               <RotateCcw size={11} />
@@ -256,58 +254,58 @@ export default function PartnerCommissionFilterCard({
         {/* Date Inputs: From & To */}
         <div className="grid grid-cols-2 gap-2.5 pt-0.5">
           <div className="space-y-1">
-            <label className="text-[10px] font-extrabold uppercase tracking-wider text-neutral-500 block">
+            <label className="text-[11px] font-medium text-[#737373] block">
               From Date
             </label>
             <div className="relative flex items-center">
-              <CalendarIcon size={13} className="absolute left-2.5 text-neutral-400 pointer-events-none" />
+              <CalendarIcon size={13} className="absolute left-2.5 text-[#A3A3A3] pointer-events-none" />
               <input
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full pl-8 pr-2 py-1.5 bg-white border border-neutral-200/90 rounded-xl text-xs font-mono font-medium text-neutral-900 focus:outline-none focus:ring-2 focus:ring-neutral-950/20 focus:border-neutral-950 shadow-2xs"
+                className="w-full pl-8 pr-2 py-1.5 bg-white border border-[#E5E5E5] rounded-lg text-xs font-mono font-medium text-black focus:outline-none focus:border-black focus:ring-1 focus:ring-black"
               />
             </div>
           </div>
 
           <div className="space-y-1">
-            <label className="text-[10px] font-extrabold uppercase tracking-wider text-neutral-500 block">
+            <label className="text-[11px] font-medium text-[#737373] block">
               To Date
             </label>
             <div className="relative flex items-center">
-              <CalendarIcon size={13} className="absolute left-2.5 text-neutral-400 pointer-events-none" />
+              <CalendarIcon size={13} className="absolute left-2.5 text-[#A3A3A3] pointer-events-none" />
               <input
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full pl-8 pr-2 py-1.5 bg-white border border-neutral-200/90 rounded-xl text-xs font-mono font-medium text-neutral-900 focus:outline-none focus:ring-2 focus:ring-neutral-950/20 focus:border-neutral-950 shadow-2xs"
+                className="w-full pl-8 pr-2 py-1.5 bg-white border border-[#E5E5E5] rounded-lg text-xs font-mono font-medium text-black focus:outline-none focus:border-black focus:ring-1 focus:ring-black"
               />
             </div>
           </div>
         </div>
 
         {/* Active Range Period Summary Label */}
-        <div className="flex items-center justify-between text-[11px] pt-0.5 text-neutral-500 font-medium">
+        <div className="flex items-center justify-between text-[11px] pt-0.5 text-[#737373] font-medium">
           <span className="truncate">
             {startDate && endDate ? (
               <>
-                Period: <strong className="text-neutral-900">{safeFormatDate(startDate)}</strong> –{' '}
-                <strong className="text-neutral-900">{safeFormatDate(endDate)}</strong>
+                Period: <strong className="text-black">{safeFormatDate(startDate)}</strong> –{' '}
+                <strong className="text-black">{safeFormatDate(endDate)}</strong>
               </>
             ) : startDate ? (
               <>
-                From <strong className="text-neutral-900">{safeFormatDate(startDate)}</strong> onwards
+                From <strong className="text-black">{safeFormatDate(startDate)}</strong> onwards
               </>
             ) : endDate ? (
               <>
-                Up to <strong className="text-neutral-900">{safeFormatDate(endDate)}</strong>
+                Up to <strong className="text-black">{safeFormatDate(endDate)}</strong>
               </>
             ) : (
               <span>Showing all recorded commissions</span>
             )}
           </span>
 
-          <span className="font-mono font-bold text-neutral-900 shrink-0 ml-2">
+          <span className="font-mono text-black shrink-0 ml-2">
             {periodStats.count} {periodStats.count === 1 ? 'Booking' : 'Bookings'}
           </span>
         </div>
@@ -315,20 +313,20 @@ export default function PartnerCommissionFilterCard({
 
       {/* 3. Aggregated Commission Cards for the Range */}
       <div className="space-y-2.5">
-        {/* Big Total in Range */}
-        <div className="p-4 rounded-2xl bg-neutral-950 text-white flex items-center justify-between gap-3 shadow-sm">
+        {/* Total in Range */}
+        <div className="p-4 rounded-xl bg-white border border-[#E5E5E5] flex items-center justify-between gap-3">
           <div>
-            <span className="text-[10px] font-extrabold uppercase tracking-widest text-emerald-400 block">
+            <span className="text-[11px] font-medium uppercase tracking-wider text-[#737373] block">
               Period Commission
             </span>
-            <div className="text-2xl font-black font-mono tracking-tight tabular-nums mt-0.5 text-white">
+            <div className="text-2xl font-semibold font-mono tracking-tight tabular-nums mt-0.5 text-black">
               +{formatIDR(periodStats.totalCommission)}
             </div>
           </div>
 
           <div className="text-right">
-            <span className="text-[10px] font-bold text-neutral-400 block">Attributed</span>
-            <span className="text-xs font-mono font-bold text-neutral-200">
+            <span className="text-[11px] text-[#737373] block">Attributed</span>
+            <span className="text-xs font-mono font-medium text-black">
               {periodStats.count} Total
             </span>
           </div>
@@ -337,23 +335,23 @@ export default function PartnerCommissionFilterCard({
         {/* Side-by-side Approved & Pending in Range */}
         <div className="grid grid-cols-2 gap-2.5">
           {/* Approved Card */}
-          <div className="flex items-center justify-between gap-2 bg-white text-neutral-950 px-3.5 py-2.5 rounded-xl border border-neutral-200/90 shadow-2xs font-semibold">
+          <div className="flex items-center justify-between gap-2 bg-white text-black px-3.5 py-2.5 rounded-xl border border-[#E5E5E5]">
             <div className="flex items-center gap-1.5 shrink-0">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-              <span className="text-neutral-500 font-medium text-xs">Approved</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+              <span className="text-[#737373] font-medium text-xs">Approved</span>
             </div>
-            <span className="font-mono font-bold text-neutral-950 text-xs sm:text-sm tabular-nums whitespace-nowrap shrink-0">
+            <span className="font-mono font-medium text-black text-xs sm:text-sm tabular-nums whitespace-nowrap shrink-0">
               {formatIDR(periodStats.approvedCommission)}
             </span>
           </div>
 
           {/* Pending Card */}
-          <div className="flex items-center justify-between gap-2 bg-neutral-900 text-white px-3.5 py-2.5 rounded-xl border border-neutral-800 shadow-2xs font-semibold">
+          <div className="flex items-center justify-between gap-2 bg-white text-black px-3.5 py-2.5 rounded-xl border border-[#E5E5E5]">
             <div className="flex items-center gap-1.5 shrink-0">
-              <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
-              <span className="text-neutral-300 font-medium text-xs">Pending</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
+              <span className="text-[#737373] font-medium text-xs">Pending</span>
             </div>
-            <span className="font-mono font-bold text-white text-xs sm:text-sm tabular-nums whitespace-nowrap shrink-0">
+            <span className="font-mono font-medium text-black text-xs sm:text-sm tabular-nums whitespace-nowrap shrink-0">
               {formatIDR(periodStats.pendingCommission)}
             </span>
           </div>
@@ -369,10 +367,10 @@ export default function PartnerCommissionFilterCard({
                 key={mode}
                 type="button"
                 onClick={() => setStatusFilter(mode)}
-                className={`px-2.5 py-1 rounded-lg text-xs font-semibold capitalize whitespace-nowrap transition-all cursor-pointer ${
+                className={`px-2.5 py-1 rounded-md text-xs font-medium capitalize whitespace-nowrap transition-colors cursor-pointer ${
                   statusFilter === mode
-                    ? 'bg-neutral-950 text-white shadow-2xs font-bold'
-                    : 'bg-neutral-100 text-neutral-600 hover:text-black border border-neutral-200/70 font-medium'
+                    ? 'bg-black text-white'
+                    : 'bg-white text-[#737373] hover:text-black border border-[#E5E5E5]'
                 }`}
               >
                 {mode}
@@ -380,22 +378,22 @@ export default function PartnerCommissionFilterCard({
             ))}
           </div>
 
-          <span className="text-[11px] text-neutral-400 font-mono">
+          <span className="text-[11px] text-[#737373] font-mono">
             {displayedBookings.length} {displayedBookings.length === 1 ? 'item' : 'items'}
           </span>
         </div>
 
         {/* Scrollable list of bookings for the selected range */}
         {displayedBookings.length === 0 ? (
-          <div className="py-8 text-center rounded-2xl bg-[#FBFBFD] border border-dashed border-neutral-200/80 p-4 space-y-1.5">
-            <CalendarIcon size={24} className="mx-auto text-neutral-300 mb-0.5" />
-            <p className="text-xs font-bold text-neutral-800">No commissions in this range</p>
-            <p className="text-[11px] text-neutral-400 leading-relaxed max-w-xs mx-auto">
+          <div className="py-8 text-center rounded-xl bg-white border border-dashed border-[#E5E5E5] p-4 space-y-1.5">
+            <CalendarIcon size={22} className="mx-auto text-[#A3A3A3] mb-0.5" />
+            <p className="text-xs font-medium text-black">No commissions in this range</p>
+            <p className="text-[11px] text-[#737373] leading-relaxed max-w-xs mx-auto">
               Select a broader date range or click &ldquo;This Month&rdquo; to view your active commissions.
             </p>
           </div>
         ) : (
-          <div className="space-y-2.5 max-h-[360px] overflow-y-auto pr-1">
+          <div className="space-y-2 max-h-[360px] overflow-y-auto pr-1">
             {displayedBookings.map((b) => {
               const isApproved = b.commission_status === 'approved';
               const isCancelled =
@@ -405,7 +403,7 @@ export default function PartnerCommissionFilterCard({
               return (
                 <div
                   key={b.id || b.booking_id}
-                  className="p-3.5 rounded-2xl bg-[#F9FAFB] border border-neutral-200/80 space-y-2 hover:border-neutral-300 transition-colors shadow-2xs"
+                  className="p-3.5 rounded-xl bg-white border border-[#E5E5E5] space-y-2 hover:border-[#A3A3A3] transition-colors"
                 >
                   {/* Row 1: Invoice Code + Status Pills + Commission */}
                   <div className="flex items-center justify-between gap-2">
@@ -413,37 +411,37 @@ export default function PartnerCommissionFilterCard({
                       <button
                         type="button"
                         onClick={() => handleCopyBooking(b.booking_id)}
-                        className="font-mono text-xs font-bold text-neutral-900 bg-white px-2 py-0.5 rounded border border-neutral-200 hover:bg-neutral-100 transition-colors inline-flex items-center gap-1 cursor-pointer"
+                        className="font-mono text-xs text-black bg-white px-2 py-0.5 rounded border border-[#E5E5E5] hover:border-black transition-colors inline-flex items-center gap-1 cursor-pointer"
                         title="Copy booking ID"
                       >
                         <span>#{b.booking_id}</span>
                         {copiedId === b.booking_id ? (
                           <Check size={11} className="text-emerald-600" />
                         ) : (
-                          <Copy size={11} className="text-neutral-400" />
+                          <Copy size={11} className="text-[#A3A3A3]" />
                         )}
                       </button>
 
                       {isPaid ? (
-                        <span className="text-[9px] font-bold text-emerald-800 bg-emerald-100/90 px-1.5 py-0.5 rounded border border-emerald-200">
+                        <span className="text-[10px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
                           Paid
                         </span>
                       ) : (
-                        <span className="text-[9px] font-bold text-amber-800 bg-amber-100/90 px-1.5 py-0.5 rounded border border-amber-200">
+                        <span className="text-[10px] font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
                           Unpaid
                         </span>
                       )}
 
                       {isApproved ? (
-                        <span className="text-[9px] font-bold text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-300">
+                        <span className="text-[10px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
                           Approved
                         </span>
                       ) : isCancelled ? (
-                        <span className="text-[9px] font-bold text-rose-700 bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">
+                        <span className="text-[10px] font-medium text-[#737373] bg-white px-2 py-0.5 rounded border border-[#E5E5E5]">
                           Cancelled
                         </span>
                       ) : (
-                        <span className="text-[9px] font-semibold text-neutral-600 bg-neutral-200/70 px-1.5 py-0.5 rounded">
+                        <span className="text-[10px] font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
                           Pending
                         </span>
                       )}
@@ -451,8 +449,8 @@ export default function PartnerCommissionFilterCard({
 
                     <div className="text-right shrink-0">
                       <span
-                        className={`text-xs font-mono font-bold ${
-                          isCancelled ? 'line-through text-neutral-400' : 'text-emerald-700'
+                        className={`text-xs font-mono font-medium ${
+                          isCancelled ? 'line-through text-[#A3A3A3]' : 'text-emerald-600'
                         }`}
                       >
                         {isCancelled ? 'IDR 0' : `+${formatIDR(b.commission_amount)}`}
@@ -463,33 +461,33 @@ export default function PartnerCommissionFilterCard({
                   {/* Row 2: Guest Name, Treatment, Date */}
                   <div className="flex items-center justify-between text-xs pt-0.5 gap-2">
                     <div className="min-w-0">
-                      <div className="font-bold text-neutral-900 flex items-center gap-1 truncate">
-                        <User size={12} className="text-neutral-400 shrink-0" />
+                      <div className="font-medium text-black flex items-center gap-1 truncate">
+                        <User size={12} className="text-[#A3A3A3] shrink-0" />
                         <span className="truncate">{b.guest_name || 'Guest Booking'}</span>
                       </div>
-                      <p className="text-[11px] text-neutral-500 truncate mt-0.5">
+                      <p className="text-[11px] text-[#737373] truncate mt-0.5">
                         {b.treatment_name || 'Spa Treatment'}
                       </p>
                     </div>
 
-                    <div className="text-right shrink-0 text-[11px] text-neutral-500 font-medium">
+                    <div className="text-right shrink-0 text-[11px] text-[#737373]">
                       <div>{safeFormatDate(b.date, { day: 'numeric', month: 'short' })}</div>
-                      {b.time && <div className="text-[10px] text-neutral-400">{b.time}</div>}
+                      {b.time && <div className="text-[10px] text-[#A3A3A3]">{b.time}</div>}
                     </div>
                   </div>
 
                   {/* Row 3: Link to Invoice */}
-                  <div className="pt-1 border-t border-neutral-200/60 flex items-center justify-between text-[11px]">
-                    <span className="text-neutral-400">
+                  <div className="pt-2 border-t border-[#E5E5E5] flex items-center justify-between text-[11px]">
+                    <span className="text-[#737373]">
                       Earned: {b.commission_rate_pct || 15}%
                     </span>
                     <Link
                       href={`/invoice/${b.booking_id}`}
                       target="_blank"
-                      className="inline-flex items-center gap-1 text-emerald-700 hover:text-emerald-900 font-bold hover:underline cursor-pointer"
+                      className="inline-flex items-center gap-1 text-black hover:underline font-medium cursor-pointer"
                     >
                       <span>View Invoice</span>
-                      <ExternalLink size={10} />
+                      <ExternalLink size={10} className="text-[#737373]" />
                     </Link>
                   </div>
                 </div>
