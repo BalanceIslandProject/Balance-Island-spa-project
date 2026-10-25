@@ -430,12 +430,12 @@ export default function PartnerCommissionsPage() {
                         <span className="text-[10px] font-semibold text-red-600 bg-red-50 px-2 py-0.5 rounded-md border border-red-200 whitespace-nowrap">
                           Cancelled
                         </span>
-                      ) : item.booking_status === 'Ongoing' ? (
+                      ) : item.booking_status === 'Ongoing' || item.treatment_status === 'Ongoing' ? (
                         <span className="text-[10px] font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-200 flex items-center gap-1 whitespace-nowrap">
                           <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
                           Ongoing
                         </span>
-                      ) : item.booking_status === 'Completed' || item.service_completed ? (
+                      ) : item.booking_status === 'Completed' || item.treatment_status === 'Finish' || item.service_completed ? (
                         <span className="text-[10px] font-semibold text-teal-700 bg-teal-50 px-2 py-0.5 rounded-md border border-teal-200 whitespace-nowrap">
                           Finish
                         </span>
@@ -560,12 +560,12 @@ export default function PartnerCommissionsPage() {
                             <span className="text-[10px] font-semibold text-red-600 bg-red-50 px-2 py-0.5 rounded-md border border-red-200">
                               Cancelled
                             </span>
-                          ) : item.booking_status === 'Ongoing' ? (
+                          ) : item.booking_status === 'Ongoing' || item.treatment_status === 'Ongoing' ? (
                             <span className="text-[10px] font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-200 flex items-center gap-1">
                               <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
                               Ongoing
                             </span>
-                          ) : item.booking_status === 'Completed' || item.service_completed ? (
+                          ) : item.booking_status === 'Completed' || item.treatment_status === 'Finish' || item.service_completed ? (
                             <span className="text-[10px] font-semibold text-teal-700 bg-teal-50 px-2 py-0.5 rounded-md border border-teal-200">
                               Finish
                             </span>

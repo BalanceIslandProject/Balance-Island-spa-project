@@ -458,12 +458,12 @@ Please verify and process the payout to my registered details. Thank you!`;
                             <span className="text-[10px] font-medium text-[#737373] bg-white px-2 py-0.5 rounded border border-[#E5E5E5]">
                               Cancelled
                             </span>
-                          ) : b.booking_status === 'Ongoing' ? (
+                          ) : b.booking_status === 'Ongoing' || b.treatment_status === 'Ongoing' || b.treatment_status === 'In Progress' ? (
                             <span className="text-[10px] font-medium text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200 flex items-center gap-1">
                               <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
                               Ongoing Treatment
                             </span>
-                          ) : b.booking_status === 'Completed' || b.service_completed ? (
+                          ) : b.booking_status === 'Completed' || b.treatment_status === 'Finish' || b.treatment_status === 'Finished' || b.service_completed ? (
                             <span className="text-[10px] font-medium text-teal-700 bg-teal-50 px-2 py-0.5 rounded border border-teal-200">
                               Finish Treatment
                             </span>

@@ -30,6 +30,7 @@ export interface CalendarBooking {
   room_number?: string;
   treatment_name?: string;
   booking_status?: 'Pending' | 'Confirmed' | 'Ongoing' | 'Completed' | 'Cancelled' | string;
+  treatment_status?: 'Scheduled' | 'In Progress' | 'Ongoing' | 'Finished' | 'Finish' | 'No Show' | string;
   payment_status?: 'paid' | 'unpaid' | string;
   payment_method?: string;
   payment_verified?: boolean;
@@ -622,12 +623,12 @@ export default function FloatingBookingCalendar({
                       <span className="text-[10px] font-extrabold uppercase tracking-wider text-rose-700 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200/90 shadow-2xs">
                         Cancelled
                       </span>
-                    ) : b.booking_status === 'Ongoing' ? (
+                    ) : b.booking_status === 'Ongoing' || b.treatment_status === 'Ongoing' || b.treatment_status === 'In Progress' ? (
                       <span className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-200/90 shadow-2xs flex items-center gap-1">
                         <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
                         Ongoing Treatment
                       </span>
-                    ) : b.booking_status === 'Completed' || b.service_completed ? (
+                    ) : b.booking_status === 'Completed' || b.treatment_status === 'Finish' || b.treatment_status === 'Finished' || b.service_completed ? (
                       <span className="text-[10px] font-extrabold uppercase tracking-wider text-teal-800 bg-teal-50 px-2 py-0.5 rounded-full border border-teal-200/90 shadow-2xs">
                         Finish Treatment
                       </span>

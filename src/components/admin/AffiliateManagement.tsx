@@ -42,6 +42,7 @@ type PartnerTab = 'overview' | 'bookings' | 'commissions' | 'payouts' | 'history
 type ConfirmState =
   | { kind: 'partner-status'; id: string; name: string; next: 'active' | 'suspended' | 'rejected'; verb: 'approve' | 'reject' | 'suspend' | 'reactivate' }
   | { kind: 'decline-commission'; id: string; ref: string }
+  | { kind: 'cancel-booking'; id: string; ref: string }
   | null;
 
 const PAGE_SIZE = 10;
@@ -775,15 +776,27 @@ export default function AffiliateManagement() {
     };
 
     const handleOngoing = () => {
-      handleUpdateCommission(c.id, { treatment_status: 'In Progress' });
+      handleUpdateCommission(c.id, { 
+        service_completed: false, 
+        booking_status: 'Ongoing', 
+        treatment_status: 'In Progress' 
+      });
     };
 
     const handleFinish = () => {
-      handleUpdateCommission(c.id, { service_completed: true, treatment_status: 'Finished' });
+      handleUpdateCommission(c.id, { 
+        service_completed: true, 
+        booking_status: 'Completed', 
+        treatment_status: 'Finished' 
+      });
     };
 
     const handleResetService = () => {
-      handleUpdateCommission(c.id, { service_completed: false, treatment_status: 'Scheduled' });
+      handleUpdateCommission(c.id, { 
+        service_completed: false, 
+        booking_status: 'Confirmed', 
+        treatment_status: 'Scheduled' 
+      });
     };
 
     return (
@@ -884,7 +897,17 @@ export default function AffiliateManagement() {
   };
 
   const CommissionActions = ({ c, size = btn.xs }: { c: any; size?: string }) => {
-    if (c.status !== 'pending') return null;
+    const isCancelled = c.status === 'cancelled' || (c.booking_status || '').toLowerCase() === 'cancelled';
+    if (isCancelled) {
+      return (
+        <div className="flex items-center justify-end gap-1.5 pt-1">
+          <span className="text-[10px] font-semibold text-[#737373] bg-[#F5F5F5] border border-[#E5E5E5] px-2 py-0.5 rounded-md">
+            Cancelled
+          </span>
+        </div>
+      );
+    }
+    if (c.status === 'paid') return null;
 
     const bStatus = (c.booking_status || '').toLowerCase();
     const tStatus = (c.treatment_status || '').toLowerCase();
@@ -892,17 +915,26 @@ export default function AffiliateManagement() {
 
     const isFinished = Boolean(c.service_completed) || tStatus === 'finished' || bStatus === 'completed';
     const isPaid = Boolean(c.payment_verified) || pStatus === 'paid';
-    const isCancelled = c.status === 'cancelled' || bStatus === 'cancelled';
     const isEligible = isFinished && isPaid && !isCancelled;
 
     return (
-      <div className="flex items-center justify-end gap-1.5 pt-1">
+      <div className="flex items-center justify-end gap-1.5 pt-1 flex-wrap">
+        <button
+          type="button"
+          disabled={actionLoading}
+          onClick={() => setConfirmState({ kind: 'cancel-booking', id: c.id, ref: c.booking_id })}
+          className={cx(btn.base, size, 'bg-white hover:bg-red-50 text-red-600 hover:text-red-700 border border-red-200 hover:border-red-300 font-medium cursor-pointer')}
+          title="Cancel this booking"
+        >
+          Cancel
+        </button>
+
         <button
           type="button"
           disabled={actionLoading}
           onClick={() => setConfirmState({ kind: 'decline-commission', id: c.id, ref: c.booking_id })}
           className={cx(btn.base, btn.secondary, size)}
-          title="Decline commission (e.g. guest cancelled)"
+          title="Decline commission"
         >
           Decline
         </button>
@@ -923,18 +955,14 @@ export default function AffiliateManagement() {
             disabled
             className={cx(btn.base, size, 'bg-[#F5F5F5] text-[#A3A3A3] border border-[#E5E5E5] cursor-not-allowed opacity-70')}
             title={
-              isCancelled
-                ? 'Booking is cancelled'
-                : !isFinished && !isPaid
+              !isFinished && !isPaid
                 ? 'Payment and treatment must be completed before approving commission'
                 : !isPaid
                 ? 'Payment must be verified before approving commission'
                 : 'Treatment must be finished before approving commission'
             }
           >
-            {isCancelled
-              ? 'Cancelled'
-              : !isFinished && !isPaid
+            {!isFinished && !isPaid
               ? 'Approve (Wait for Payment & Finish)'
               : !isPaid
               ? 'Approve (Wait for Payment)'
@@ -1855,7 +1883,7 @@ export default function AffiliateManagement() {
                     <NewIndicator count={partnerMonthBookings.filter((b) => b.status === 'pending').length} />
                     <span className="inline-flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-amber-500" />Pending</span>
                     <span className="inline-flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-blue-500" />Approved</span>
-                    <span className="inline-flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />Paid</span>
+                    <span className="inline-flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-black" />Paid Out</span>
                     <span className="tabular-nums">
                       <span className="text-[#171717] font-medium">{partnerMonthBookings.length}</span> bookings ·{' '}
                       <span className="text-[#171717] font-medium">{formatIDR(partnerMonthBookings.reduce((s, b) => s + Number(b.commission_amount || 0), 0))}</span>
@@ -2701,22 +2729,38 @@ export default function AffiliateManagement() {
         title={
           confirmState?.kind === 'partner-status'
             ? CONFIRM_COPY[confirmState.verb].title
+            : confirmState?.kind === 'cancel-booking'
+            ? 'Cancel booking'
             : 'Decline commission'
         }
         description={
           confirmState?.kind === 'partner-status'
             ? CONFIRM_COPY[confirmState.verb].body(confirmState.name)
+            : confirmState?.kind === 'cancel-booking'
+            ? `Booking #${confirmState.ref} will be marked as Cancelled and the commission will be voided.`
             : confirmState?.kind === 'decline-commission'
             ? `Commission for booking #${confirmState.ref} will be declined and excluded from payouts.`
             : ''
         }
-        confirmLabel={confirmState?.kind === 'partner-status' ? CONFIRM_COPY[confirmState.verb].confirm : 'Decline'}
+        confirmLabel={
+          confirmState?.kind === 'partner-status'
+            ? CONFIRM_COPY[confirmState.verb].confirm
+            : confirmState?.kind === 'cancel-booking'
+            ? 'Cancel Booking'
+            : 'Decline'
+        }
+        tone={confirmState?.kind === 'cancel-booking' || confirmState?.kind === 'decline-commission' ? 'danger' : 'default'}
         onCancel={() => setConfirmState(null)}
         onConfirm={async () => {
           const c = confirmState;
           if (!c) return;
-          if (c.kind === 'partner-status') await handlePartnerStatus(c.id, c.next);
-          else await handleUpdateCommission(c.id, { status: 'declined' });
+          if (c.kind === 'partner-status') {
+            await handlePartnerStatus(c.id, c.next);
+          } else if (c.kind === 'cancel-booking') {
+            await handleUpdateCommission(c.id, { status: 'cancelled', booking_status: 'Cancelled' });
+          } else {
+            await handleUpdateCommission(c.id, { status: 'declined', booking_status: 'Cancelled' });
+          }
           setConfirmState(null);
         }}
       />

@@ -568,12 +568,12 @@ export default function PartnerCalendarCard({ bookings = [], className = '' }: P
                       <span className="text-[10px] font-semibold uppercase tracking-wider text-red-600 bg-red-50 px-2 py-0.5 rounded-md border border-red-200">
                         Cancelled
                       </span>
-                    ) : b.booking_status === 'Ongoing' ? (
+                    ) : b.booking_status === 'Ongoing' || b.treatment_status === 'Ongoing' || b.treatment_status === 'In Progress' ? (
                       <span className="text-[10px] font-semibold uppercase tracking-wider text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-200 flex items-center gap-1">
                         <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
                         Ongoing
                       </span>
-                    ) : b.booking_status === 'Completed' || b.service_completed ? (
+                    ) : b.booking_status === 'Completed' || b.treatment_status === 'Finish' || b.treatment_status === 'Finished' || b.service_completed ? (
                       <span className="text-[10px] font-semibold uppercase tracking-wider text-teal-700 bg-teal-50 px-2 py-0.5 rounded-md border border-teal-200">
                         Finish
                       </span>

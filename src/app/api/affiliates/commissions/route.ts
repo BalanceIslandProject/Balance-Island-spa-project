@@ -44,8 +44,24 @@ export async function GET(req: NextRequest) {
     const enriched = commList.map((c: any) => {
       const bKey = String(c.booking_id || '').toUpperCase();
       const b = bookingsMap.get(bKey);
-      const bookingStatus = b?.status || (c.status === 'cancelled' ? 'Cancelled' : c.service_completed ? 'Completed' : 'Pending');
-      const isPaid = c.payment_verified || b?.payment_status === 'paid';
+      
+      const bStatus = (b?.status || '').trim();
+      const isCancelled = c.status === 'cancelled' || bStatus.toLowerCase() === 'cancelled';
+      const isOngoing = bStatus.toLowerCase() === 'ongoing' || (c.notes || '').toLowerCase().includes('ongoing');
+      const isCompleted = Boolean(c.service_completed) || bStatus.toLowerCase() === 'completed';
+
+      let displayBookingStatus = 'Pending';
+      if (isCancelled) displayBookingStatus = 'Cancelled';
+      else if (isCompleted) displayBookingStatus = 'Completed';
+      else if (isOngoing) displayBookingStatus = 'Ongoing';
+      else if (bStatus) displayBookingStatus = bStatus;
+
+      let treatmentStatus = 'Awaiting Treatment';
+      if (isCancelled) treatmentStatus = 'Cancelled';
+      else if (isCompleted) treatmentStatus = 'Finish';
+      else if (isOngoing) treatmentStatus = 'Ongoing';
+
+      const isPaid = c.payment_verified || b?.payment_status === 'paid' || b?.payment_status === 'Paid';
 
       // Couple price safety cap
       const gross = Number(c.booking_amount_gross || 0);
@@ -57,7 +73,8 @@ export async function GET(req: NextRequest) {
       return {
         ...c,
         eligible_treatment_amount: treatmentAmt,
-        booking_status: bookingStatus,
+        booking_status: displayBookingStatus,
+        treatment_status: treatmentStatus,
         payment_status: isPaid ? 'paid' : 'unpaid',
         guest_name: b?.guest_name || 'Guest',
         treatment_name: b?.treatment_name || 'Spa Treatment',

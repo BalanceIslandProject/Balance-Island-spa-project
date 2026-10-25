@@ -101,8 +101,9 @@ const INDIGO = { cls: 'bg-indigo-50 text-indigo-700 border-indigo-200', dot: 'bg
 
 const STATUS_MAP: Record<string, { label: string; cls: string; dot: string }> = {
   active: { label: 'Active', ...GREEN },
-  paid: { label: 'Paid', ...GREEN },
-  completed: { label: 'Paid', ...GREEN },
+  paid: { label: 'Paid Out', cls: 'bg-black text-white border-black', dot: 'bg-white' },
+  'paid out': { label: 'Paid Out', cls: 'bg-black text-white border-black', dot: 'bg-white' },
+  completed: { label: 'Paid Out', cls: 'bg-black text-white border-black', dot: 'bg-white' },
   approved: { label: 'Approved', ...BLUE },
   processing: { label: 'Processing', ...BLUE },
   pending: { label: 'Pending', ...AMBER },
@@ -118,7 +119,19 @@ const STATUS_MAP: Record<string, { label: string; cls: string; dot: string }> = 
 };
 
 export function StatusBadge({ status, className }: { status?: string | null; className?: string }) {
-  const key = (status || '').toLowerCase();
+  const key = (status || '').toLowerCase().trim();
+  if (key === 'paid' || key === 'paid out' || key === 'transferred' || key === 'settled') {
+    return (
+      <span
+        className={cx(
+          'inline-flex items-center gap-1 h-6 px-2.5 rounded-md bg-black text-white text-[11px] font-semibold whitespace-nowrap shadow-2xs',
+          className
+        )}
+      >
+        <span className="text-white text-xs leading-none">✓</span> Paid Out
+      </span>
+    );
+  }
   const s = STATUS_MAP[key] || { label: status || 'Unknown', ...GRAY };
   return (
     <span

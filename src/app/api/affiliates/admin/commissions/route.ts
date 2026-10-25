@@ -149,7 +149,11 @@ export async function PATCH(req: NextRequest) {
     }
 
     if (payment_verified !== undefined) updates.payment_verified = Boolean(payment_verified);
-    if (service_completed !== undefined) updates.service_completed = Boolean(service_completed);
+    if (service_completed !== undefined) {
+      updates.service_completed = Boolean(service_completed);
+    } else if (treatment_status === 'In Progress' || booking_status === 'Ongoing') {
+      updates.service_completed = false;
+    }
     if (notes !== undefined) updates.notes = notes;
 
     const { data: updated, error } = await supabase
@@ -163,21 +167,33 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ success: false, message: error.message }, { status: 400 });
     }
 
-    // 3. Sync to linked booking in 'bookings' table independently
+    // 3. Sync to linked booking in 'bookings' table
+    let targetStatus = booking_status || null;
+    if (!targetStatus) {
+      if (treatment_status === 'In Progress' || (treatment_status || '').toLowerCase() === 'ongoing') {
+        targetStatus = 'Ongoing';
+      } else if (treatment_status === 'Finished' || updates.service_completed === true) {
+        targetStatus = 'Completed';
+      } else if (treatment_status === 'Scheduled' || updates.service_completed === false) {
+        targetStatus = 'Confirmed';
+      } else if (status === 'cancelled') {
+        targetStatus = 'Cancelled';
+      }
+    }
+
     if (updated?.booking_id) {
       const bookingUpdates: any = {
         updated_at: new Date().toISOString(),
       };
 
-      // Only update booking status if explicitly requested
-      if (booking_status && ['Pending', 'Approved', 'Confirmed', 'Cancelled'].includes(booking_status)) {
-        bookingUpdates.status = booking_status;
+      if (targetStatus) {
+        bookingUpdates.status = targetStatus;
       }
 
       if (treatment_status) {
         bookingUpdates.treatment_status = treatment_status;
-      } else if (service_completed !== undefined) {
-        bookingUpdates.treatment_status = service_completed ? 'Finished' : 'Scheduled';
+      } else if (updates.service_completed !== undefined) {
+        bookingUpdates.treatment_status = updates.service_completed ? 'Finished' : 'Scheduled';
       }
 
       if (payment_status) {
@@ -193,10 +209,10 @@ export async function PATCH(req: NextRequest) {
           .ilike('reference_number', updated.booking_id);
 
         if (fullErr && bookingUpdates.status) {
-          // Fallback to updating only status if extended columns are not yet in cache
+          // Fallback to updating only core status if extended columns are not yet in cache
           await supabase
             .from('bookings')
-            .update({ status: bookingUpdates.status })
+            .update({ status: bookingUpdates.status, updated_at: new Date().toISOString() })
             .ilike('reference_number', updated.booking_id);
         }
       } catch (syncErr) {
@@ -204,11 +220,16 @@ export async function PATCH(req: NextRequest) {
       }
     }
 
+    const finalBookingStatus = targetStatus || booking_status || (updated.service_completed ? 'Completed' : 'Pending');
+    const finalTreatmentStatus = treatment_status || (updated.service_completed ? 'Finished' : (finalBookingStatus === 'Ongoing' ? 'In Progress' : 'Scheduled'));
+
     return NextResponse.json({ 
       success: true, 
       commission: {
         ...updated,
-        booking_status: booking_status || (updated.service_completed ? 'Finished' : 'Scheduled'),
+        booking_status: finalBookingStatus,
+        treatment_status: finalTreatmentStatus,
+        payment_status: payment_status || (updated.payment_verified ? 'Paid' : 'Unpaid'),
       } 
     });
   } catch (err: any) {
