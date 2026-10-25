@@ -5,7 +5,6 @@ import {
   Search, 
   ChevronLeft, 
   ChevronRight, 
-  Edit2, 
   Check, 
   Copy, 
   X,
@@ -13,10 +12,8 @@ import {
   Calendar as CalendarIcon,
   CheckCircle2,
   Clock,
-  ExternalLink,
-  DollarSign,
-  CheckSquare,
-  Square
+  ArrowUpRight,
+  AlertCircle
 } from 'lucide-react';
 
 const MONTH_NAMES = [
@@ -48,6 +45,109 @@ const safeFormatDate = (rawDate: string | undefined | null, options?: Intl.DateT
   return String(rawDate);
 };
 
+// Reusable refined status badge component (color ONLY where meaningful)
+const StatusBadge = ({ status }: { status: string }) => {
+  const s = (status || '').toLowerCase();
+  if (s === 'active' || s === 'approved') {
+    return (
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200/80">
+        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+        {s === 'active' ? 'Active' : 'Approved'}
+      </span>
+    );
+  }
+  if (s === 'pending') {
+    return (
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200/80">
+        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+        Pending
+      </span>
+    );
+  }
+  if (s === 'paid' || s === 'completed') {
+    return (
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-neutral-900 text-white shadow-2xs">
+        <CheckCircle2 size={11} className="text-white" />
+        {s === 'paid' ? 'Paid' : 'Completed'}
+      </span>
+    );
+  }
+  if (s === 'suspended' || s === 'inactive') {
+    return (
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-neutral-100 text-neutral-600 border border-neutral-200">
+        <span className="w-1.5 h-1.5 rounded-full bg-neutral-400" />
+        {s === 'suspended' ? 'Suspended' : 'Inactive'}
+      </span>
+    );
+  }
+  if (s === 'rejected' || s === 'declined' || s === 'failed') {
+    return (
+      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-rose-50 text-rose-700 border border-rose-200/80">
+        <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+        {s === 'declined' ? 'Declined' : s === 'rejected' ? 'Rejected' : 'Failed'}
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-neutral-100 text-neutral-700 border border-neutral-200 capitalize">
+      {status}
+    </span>
+  );
+};
+
+// Reusable Pagination component
+const Pagination = ({
+  currentPage,
+  totalPages,
+  totalItems,
+  pageSize,
+  onPageChange,
+  label = 'records',
+}: {
+  currentPage: number;
+  totalPages: number;
+  totalItems: number;
+  pageSize: number;
+  onPageChange: (p: number) => void;
+  label?: string;
+}) => {
+  if (totalItems <= pageSize) return null;
+  const start = (currentPage - 1) * pageSize + 1;
+  const end = Math.min(currentPage * pageSize, totalItems);
+
+  return (
+    <div className="flex items-center justify-between px-4 py-3 bg-white border-t border-neutral-200 text-xs">
+      <div className="text-neutral-500">
+        Showing <span className="font-semibold text-neutral-900">{start}–{end}</span> of{' '}
+        <span className="font-semibold text-neutral-900">{totalItems}</span> {label}
+      </div>
+      <div className="flex items-center gap-1.5">
+        <button
+          type="button"
+          disabled={currentPage <= 1}
+          onClick={() => onPageChange(currentPage - 1)}
+          className="h-7 px-2.5 rounded-lg border border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50 disabled:opacity-40 disabled:hover:bg-white text-xs font-medium transition-colors inline-flex items-center gap-1"
+        >
+          <ChevronLeft size={13} />
+          <span>Prev</span>
+        </button>
+        <span className="px-2 text-neutral-500">
+          Page {currentPage} of {totalPages}
+        </span>
+        <button
+          type="button"
+          disabled={currentPage >= totalPages}
+          onClick={() => onPageChange(currentPage + 1)}
+          className="h-7 px-2.5 rounded-lg border border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50 disabled:opacity-40 disabled:hover:bg-white text-xs font-medium transition-colors inline-flex items-center gap-1"
+        >
+          <span>Next</span>
+          <ChevronRight size={13} />
+        </button>
+      </div>
+    </div>
+  );
+};
+
 export default function AffiliateManagement() {
   const [subTab, setSubTab] = useState<'partners' | 'commissions' | 'payouts' | 'settings'>('partners');
   const [partners, setPartners] = useState<any[]>([]);
@@ -56,6 +156,7 @@ export default function AffiliateManagement() {
   const [settings, setSettings] = useState<any>({
     default_commission_rate_pct: 15.00,
     cookie_duration_days: 30,
+    attribution_model: 'last_touch',
     auto_approve_partners: false,
     is_program_active: true,
   });
@@ -67,6 +168,27 @@ export default function AffiliateManagement() {
   const [globalPartnerFilter, setGlobalPartnerFilter] = useState('all');
   const [globalPayoutPartnerFilter, setGlobalPayoutPartnerFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [settingsDirty, setSettingsDirty] = useState(false);
+
+  // Pagination states (10 items per page)
+  const PAGE_SIZE = 10;
+  const [partnerPage, setPartnerPage] = useState(1);
+  const [commPage, setCommPage] = useState(1);
+  const [payoutPage, setPayoutPage] = useState(1);
+
+  // Toast feedback state
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  // Confirmation modal state for consequential actions
+  const [confirmAction, setConfirmAction] = useState<{
+    type: 'suspend' | 'reactivate' | 'approve' | 'reject' | 'decline_comm';
+    id: string;
+    name?: string;
+  } | null>(null);
 
   // Payout Modal State with Active Floating Calendar & Approved Selection
   const [showPayoutModal, setShowPayoutModal] = useState(false);
@@ -107,8 +229,10 @@ export default function AffiliateManagement() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const handleCopyText = (text: string, id: string) => {
+    if (!text) return;
     navigator.clipboard.writeText(text);
     setCopiedId(id);
+    showToast('Copied to clipboard', 'success');
     setTimeout(() => setCopiedId(null), 2000);
   };
 
@@ -140,9 +264,13 @@ export default function AffiliateManagement() {
       if (pData.success) setPartners(pData.partners || []);
       if (cData.success) setCommissions(cData.commissions || []);
       if (pyData.success) setPayouts(pyData.payouts || []);
-      if (sData.success && sData.settings) setSettings(sData.settings);
+      if (sData.success && sData.settings) {
+        setSettings(sData.settings);
+        setSettingsDirty(false);
+      }
     } catch (err) {
       console.error('Failed to load affiliate admin data:', err);
+      showToast('Error loading affiliate data', 'error');
     } finally {
       setLoading(false);
     }
@@ -151,6 +279,19 @@ export default function AffiliateManagement() {
   useEffect(() => {
     fetchAllData();
   }, [partnerStatusFilter]);
+
+  // Reset pagination on filter change
+  useEffect(() => {
+    setPartnerPage(1);
+  }, [searchQuery, partnerStatusFilter]);
+
+  useEffect(() => {
+    setCommPage(1);
+  }, [commissionStatusFilter, globalPartnerFilter]);
+
+  useEffect(() => {
+    setPayoutPage(1);
+  }, [globalPayoutPartnerFilter]);
 
   // Update Partner Status
   const handlePartnerStatus = async (id: string, newStatus: string) => {
@@ -169,9 +310,13 @@ export default function AffiliateManagement() {
         if (selectedPartnerDetails && selectedPartnerDetails.id === id) {
           setSelectedPartnerDetails((prev: any) => ({ ...prev, status: newStatus }));
         }
+        showToast(`Partner status changed to ${newStatus}`, 'success');
+      } else {
+        showToast(data.message || 'Failed to update partner status', 'error');
       }
     } catch (e) {
       console.error(e);
+      showToast('Network error updating status', 'error');
     } finally {
       setActionLoading(false);
     }
@@ -195,9 +340,13 @@ export default function AffiliateManagement() {
           setSelectedPartnerDetails((prev: any) => ({ ...prev, commission_rate_pct: newRateValue }));
         }
         setEditingRateId(null);
+        showToast('Commission rate updated', 'success');
+      } else {
+        showToast(data.message || 'Failed to update commission rate', 'error');
       }
     } catch (e) {
       console.error(e);
+      showToast('Network error updating rate', 'error');
     } finally {
       setActionLoading(false);
     }
@@ -220,10 +369,13 @@ export default function AffiliateManagement() {
         if (selectedPartnerDetails && selectedPartnerDetails.id === id) {
           setSelectedPartnerDetails((prev: any) => ({ ...prev, notes: partnerNotesInput }));
         }
-        alert('Notes updated successfully');
+        showToast('Notes saved successfully', 'success');
+      } else {
+        showToast(data.message || 'Failed to save notes', 'error');
       }
     } catch (e) {
       console.error(e);
+      showToast('Network error saving notes', 'error');
     } finally {
       setActionLoading(false);
     }
@@ -243,9 +395,13 @@ export default function AffiliateManagement() {
         setCommissions((prev) =>
           prev.map((c) => (c.id === id ? { ...c, ...updates } : c))
         );
+        showToast('Commission updated', 'success');
+      } else {
+        showToast(data.message || 'Failed to update commission', 'error');
       }
     } catch (e) {
       console.error(e);
+      showToast('Network error updating commission', 'error');
     } finally {
       setActionLoading(false);
     }
@@ -273,11 +429,13 @@ export default function AffiliateManagement() {
         setSelectedCommissionIds([]);
         setPayoutSelectedDate(null);
         await fetchAllData();
+        showToast('Payout recorded successfully', 'success');
       } else {
-        alert(data.message || 'Failed to record payout');
+        showToast(data.message || 'Failed to record payout', 'error');
       }
     } catch (e) {
       console.error(e);
+      showToast('Network error recording payout', 'error');
     } finally {
       setActionLoading(false);
     }
@@ -295,10 +453,14 @@ export default function AffiliateManagement() {
       });
       const data = await res.json();
       if (data.success) {
-        alert('Settings updated successfully');
+        setSettingsDirty(false);
+        showToast('Settings saved successfully', 'success');
+      } else {
+        showToast(data.message || 'Failed to save settings', 'error');
       }
     } catch (e) {
       console.error(e);
+      showToast('Network error saving settings', 'error');
     } finally {
       setActionLoading(false);
     }
@@ -385,10 +547,6 @@ export default function AffiliateManagement() {
 
   const payoutPaidCommissions = useMemo(() => {
     return payoutPartnerCommissions.filter((c) => c.status === 'paid');
-  }, [payoutPartnerCommissions]);
-
-  const payoutPendingCommissions = useMemo(() => {
-    return payoutPartnerCommissions.filter((c) => c.status === 'pending');
   }, [payoutPartnerCommissions]);
 
   // Group approved commissions by date (YYYY-MM-DD)
@@ -540,6 +698,14 @@ export default function AffiliateManagement() {
     });
   }, [partners, searchQuery, commissions, payouts]);
 
+  // Paginated slices
+  const paginatedPartners = useMemo(() => {
+    const start = (partnerPage - 1) * PAGE_SIZE;
+    return filteredPartners.slice(start, start + PAGE_SIZE);
+  }, [filteredPartners, partnerPage]);
+
+  const totalPartnerPages = Math.ceil(filteredPartners.length / PAGE_SIZE) || 1;
+
   // Global commissions filtered for tab 2
   const filteredGlobalCommissions = commissions.filter((c) => {
     if (commissionStatusFilter !== 'all' && c.status !== commissionStatusFilter) return false;
@@ -547,11 +713,46 @@ export default function AffiliateManagement() {
     return true;
   });
 
+  const paginatedCommissions = useMemo(() => {
+    const start = (commPage - 1) * PAGE_SIZE;
+    return filteredGlobalCommissions.slice(start, start + PAGE_SIZE);
+  }, [filteredGlobalCommissions, commPage]);
+
+  const totalCommPages = Math.ceil(filteredGlobalCommissions.length / PAGE_SIZE) || 1;
+
   // Global payouts filtered for tab 3
   const filteredGlobalPayouts = payouts.filter((py) => {
     if (globalPayoutPartnerFilter !== 'all' && py.partner_code !== globalPayoutPartnerFilter) return false;
     return true;
   });
+
+  const paginatedPayouts = useMemo(() => {
+    const start = (payoutPage - 1) * PAGE_SIZE;
+    return filteredGlobalPayouts.slice(start, start + PAGE_SIZE);
+  }, [filteredGlobalPayouts, payoutPage]);
+
+  const totalPayoutPages = Math.ceil(filteredGlobalPayouts.length / PAGE_SIZE) || 1;
+
+  // Platform Summary Metrics (for compact KPI strip)
+  const platformSummary = useMemo(() => {
+    const activePartners = partners.filter((p) => p.status === 'active').length;
+    const pendingPartners = partners.filter((p) => p.status === 'pending').length;
+    const totalBookings = commissions.length;
+    const unpaidCommissions = commissions
+      .filter((c) => c.status === 'approved')
+      .reduce((sum, c) => sum + Number(c.commission_amount || 0), 0);
+    const totalPaidOut = payouts
+      .filter((py) => py.status === 'completed' || !py.status)
+      .reduce((sum, py) => sum + Number(py.amount || 0), 0);
+
+    return {
+      activePartners,
+      pendingPartners,
+      totalBookings,
+      unpaidCommissions,
+      totalPaidOut,
+    };
+  }, [partners, commissions, payouts]);
 
   // Partner metrics for currently selected modal partner
   const activePartnerMetrics = selectedPartnerDetails ? getPartnerMetrics(selectedPartnerDetails) : null;
@@ -583,12 +784,125 @@ export default function AffiliateManagement() {
   const calendarFirstDayOfWeek = new Date(partnerCalendarYear, partnerCalendarMonth, 1).getDay();
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 text-neutral-900 bg-white min-h-[750px]">
       
-      {/* UNIFIED COMPACT TOOLBAR: SECTION TABS + SHORT SEARCH + FILTERS */}
-      <div className="bg-white p-2.5 sm:p-3 rounded-2xl border border-black/10 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-        {/* Left: Section Switcher Tabs */}
-        <div className="flex items-center gap-1 bg-black/5 p-1 rounded-xl shrink-0 border border-black/10 overflow-x-auto">
+      {/* 1. PAGE HEADER: Concise Title, Short Subtext & Primary Action */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
+        <div>
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-2xl font-bold tracking-tight text-neutral-900">Affiliates</h1>
+            <span className="text-[11px] font-medium px-2 py-0.5 rounded-md bg-neutral-100 text-neutral-600 border border-neutral-200">
+              Therapick
+            </span>
+          </div>
+          <p className="text-xs text-neutral-500 mt-0.5">
+            Manage partners, commission reconciliations, and payout settlements.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          {subTab === 'payouts' ? (
+            <button
+              type="button"
+              onClick={() => {
+                setPayoutForm({ partner_id: '', amount: '', payout_method: 'bank_transfer', notes: '' });
+                setShowPayoutModal(true);
+              }}
+              className="h-8 px-3.5 bg-black text-white rounded-lg text-xs font-medium hover:bg-neutral-800 transition-colors inline-flex items-center gap-1.5 shadow-xs"
+            >
+              <Plus size={13} />
+              <span>Record Payout</span>
+            </button>
+          ) : subTab === 'partners' ? (
+            <button
+              type="button"
+              onClick={() => {
+                setPayoutForm({ partner_id: '', amount: '', payout_method: 'bank_transfer', notes: '' });
+                setShowPayoutModal(true);
+              }}
+              className="h-8 px-3 bg-white border border-neutral-200 text-neutral-800 rounded-lg text-xs font-medium hover:bg-neutral-50 transition-colors inline-flex items-center gap-1.5 shadow-2xs"
+            >
+              <Plus size={13} />
+              <span>Record Payout</span>
+            </button>
+          ) : null}
+        </div>
+      </div>
+
+      {/* 2. SUMMARY METRICS (Compact SaaS KPI Cards) */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {/* Total Partners */}
+        <div className="bg-white p-3.5 sm:p-4 rounded-xl border border-neutral-200 shadow-2xs">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-neutral-500">Partners</span>
+            <span className="text-[11px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/60">
+              {platformSummary.activePartners} active
+            </span>
+          </div>
+          <div className="text-2xl font-bold tracking-tight text-neutral-900 mt-1.5 font-mono">
+            {partners.length}
+          </div>
+          <div className="text-[11px] text-neutral-400 mt-0.5">
+            {platformSummary.pendingPartners > 0
+              ? `${platformSummary.pendingPartners} awaiting review`
+              : 'All accounts verified'}
+          </div>
+        </div>
+
+        {/* Total Bookings */}
+        <div className="bg-white p-3.5 sm:p-4 rounded-xl border border-neutral-200 shadow-2xs">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-neutral-500">Bookings</span>
+            <span className="text-[11px] font-medium text-neutral-600 bg-neutral-100 px-2 py-0.5 rounded-full">
+              Referred
+            </span>
+          </div>
+          <div className="text-2xl font-bold tracking-tight text-neutral-900 mt-1.5 font-mono">
+            {platformSummary.totalBookings}
+          </div>
+          <div className="text-[11px] text-neutral-400 mt-0.5">
+            Total bookings attributed
+          </div>
+        </div>
+
+        {/* Unpaid Balance */}
+        <div className="bg-white p-3.5 sm:p-4 rounded-xl border border-neutral-200 shadow-2xs">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-neutral-500">Unpaid Balance</span>
+            <span className="text-[11px] font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200/60">
+              Approved
+            </span>
+          </div>
+          <div className="text-2xl font-bold tracking-tight text-neutral-900 mt-1.5 font-mono">
+            {formatIDR(platformSummary.unpaidCommissions)}
+          </div>
+          <div className="text-[11px] text-neutral-400 mt-0.5">
+            Ready for settlement
+          </div>
+        </div>
+
+        {/* Total Paid Out */}
+        <div className="bg-white p-3.5 sm:p-4 rounded-xl border border-neutral-200 shadow-2xs">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-neutral-500">Paid out</span>
+            <span className="text-[11px] font-medium text-neutral-600 bg-neutral-100 px-2 py-0.5 rounded-full">
+              {payouts.length} transfers
+            </span>
+          </div>
+          <div className="text-2xl font-bold tracking-tight text-neutral-900 mt-1.5 font-mono">
+            {formatIDR(platformSummary.totalPaidOut)}
+          </div>
+          <div className="text-[11px] text-neutral-400 mt-0.5">
+            Lifetime disbursements
+          </div>
+        </div>
+      </div>
+
+      {/* 3. UNIFIED TOOLBAR: TABS + SHORT SEARCH + STATUS FILTERS */}
+      <div className="bg-white p-2.5 rounded-xl border border-neutral-200 shadow-2xs flex flex-col lg:flex-row lg:items-center justify-between gap-2.5">
+        
+        {/* Navigation Subtabs */}
+        <div className="flex items-center gap-1 bg-neutral-100 p-1 rounded-lg shrink-0 border border-neutral-200/70 overflow-x-auto">
           {[
             { id: 'partners', label: 'Partners', count: partners.length },
             { id: 'commissions', label: 'Commissions', count: commissions.length },
@@ -601,17 +915,17 @@ export default function AffiliateManagement() {
                 key={tab.id}
                 type="button"
                 onClick={() => setSubTab(tab.id as any)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all whitespace-nowrap ${
                   isActive
-                    ? 'bg-black text-white shadow-sm'
-                    : 'text-black/70 hover:text-black hover:bg-black/5'
+                    ? 'bg-black text-white shadow-xs'
+                    : 'text-neutral-600 hover:text-neutral-900 hover:bg-white/70'
                 }`}
               >
                 <span>{tab.label}</span>
                 {tab.count !== undefined && (
                   <span
                     className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
-                      isActive ? 'bg-white text-black' : 'bg-black/10 text-black'
+                      isActive ? 'bg-white text-black font-semibold' : 'bg-neutral-200/80 text-neutral-700'
                     }`}
                   >
                     {tab.count}
@@ -624,30 +938,39 @@ export default function AffiliateManagement() {
 
         {/* Right Controls when on Partners Tab */}
         {subTab === 'partners' && (
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 w-full lg:w-auto">
-            {/* Shorter Search Bar on Desktop */}
-            <div className="relative w-full sm:w-60 md:w-64 lg:w-72 shrink-0">
-              <Search className="w-4 h-4 text-black/40 absolute left-3 top-1/2 -translate-y-1/2" />
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full lg:w-auto">
+            {/* Shorter Search Bar */}
+            <div className="relative w-full sm:w-60 md:w-64 shrink-0">
+              <Search className="w-3.5 h-3.5 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 placeholder="Search partner, code, villa..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-3 py-1.5 text-xs rounded-xl border border-black/15 bg-white text-black focus:outline-none focus:ring-1 focus:ring-black placeholder:text-black/40"
+                className="w-full h-8 pl-8 pr-7 text-xs rounded-lg border border-neutral-200 bg-white text-neutral-900 focus:outline-none focus:ring-1 focus:ring-black focus:border-black placeholder:text-neutral-400"
               />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
+                >
+                  <X size={12} />
+                </button>
+              )}
             </div>
 
-            {/* Status Filter Buttons */}
+            {/* Status Filter Pills */}
             <div className="flex items-center gap-1 text-xs overflow-x-auto shrink-0">
               {['all', 'pending', 'active', 'suspended', 'rejected'].map((st) => (
                 <button
                   key={st}
                   type="button"
                   onClick={() => setPartnerStatusFilter(st)}
-                  className={`px-2.5 py-1 rounded-lg capitalize font-medium text-xs transition-colors whitespace-nowrap ${
+                  className={`h-8 px-2.5 rounded-lg capitalize font-medium text-xs transition-colors whitespace-nowrap ${
                     partnerStatusFilter === st
                       ? 'bg-black text-white'
-                      : 'text-black/60 hover:bg-black/5'
+                      : 'text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900'
                   }`}
                 >
                   {st}
@@ -659,17 +982,17 @@ export default function AffiliateManagement() {
 
         {/* Right Controls when on Commissions Tab */}
         {subTab === 'commissions' && (
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 w-full lg:w-auto text-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full lg:w-auto text-xs">
             <div className="flex items-center gap-1 overflow-x-auto shrink-0">
               {['all', 'pending', 'approved', 'paid', 'declined'].map((st) => (
                 <button
                   key={st}
                   type="button"
                   onClick={() => setCommissionStatusFilter(st)}
-                  className={`px-2.5 py-1 rounded-lg capitalize font-medium transition-colors whitespace-nowrap ${
+                  className={`h-8 px-2.5 rounded-lg capitalize font-medium transition-colors whitespace-nowrap ${
                     commissionStatusFilter === st
                       ? 'bg-black text-white'
-                      : 'text-black/60 hover:bg-black/5'
+                      : 'text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900'
                   }`}
                 >
                   {st}
@@ -679,7 +1002,7 @@ export default function AffiliateManagement() {
             <select
               value={globalPartnerFilter}
               onChange={(e) => setGlobalPartnerFilter(e.target.value)}
-              className="px-2.5 py-1.5 rounded-lg border border-black/15 bg-white text-xs font-medium focus:outline-none focus:border-black shrink-0"
+              className="h-8 px-2.5 rounded-lg border border-neutral-200 bg-white text-xs font-medium text-neutral-800 focus:outline-none focus:border-black shrink-0"
             >
               <option value="all">All Partners ({partners.length})</option>
               {partners.map((p) => (
@@ -693,11 +1016,11 @@ export default function AffiliateManagement() {
 
         {/* Right Controls when on Payouts Tab */}
         {subTab === 'payouts' && (
-          <div className="flex items-center gap-2.5 w-full lg:w-auto text-xs justify-end">
+          <div className="flex items-center gap-2 w-full lg:w-auto text-xs justify-end">
             <select
               value={globalPayoutPartnerFilter}
               onChange={(e) => setGlobalPayoutPartnerFilter(e.target.value)}
-              className="px-2.5 py-1.5 rounded-lg border border-black/15 bg-white text-xs font-medium focus:outline-none focus:border-black shrink-0"
+              className="h-8 px-2.5 rounded-lg border border-neutral-200 bg-white text-xs font-medium text-neutral-800 focus:outline-none focus:border-black shrink-0"
             >
               <option value="all">All Partners ({partners.length})</option>
               {partners.map((p) => (
@@ -712,121 +1035,139 @@ export default function AffiliateManagement() {
                 setPayoutForm({ partner_id: '', amount: '', payout_method: 'bank_transfer', notes: '' });
                 setShowPayoutModal(true);
               }}
-              className="px-3.5 py-1.5 bg-black text-white rounded-xl text-xs font-bold hover:bg-black/80 shadow-sm whitespace-nowrap"
+              className="h-8 px-3 bg-black text-white rounded-lg text-xs font-medium hover:bg-neutral-800 shadow-xs whitespace-nowrap inline-flex items-center gap-1.5"
             >
-              + Record New Payout
+              <Plus size={13} />
+              <span>Record Payout</span>
             </button>
           </div>
         )}
       </div>
 
-      {/* SUB-TAB 1: PARTNERS (MAIN TABLE) */}
+      {/* SUB-TAB 1: PARTNERS (DESKTOP TABLE + RESPONSIVE MOBILE CARDS) */}
       {subTab === 'partners' && (
         <div className="space-y-4">
-
-          <div className="bg-white rounded-2xl border border-black/10 shadow-sm overflow-hidden">
-            <div className="overflow-x-auto">
+          <div className="bg-white rounded-xl border border-neutral-200 shadow-2xs overflow-hidden">
+            
+            {/* Desktop Table (hidden on mobile) */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-white border-b border-black/10 text-black font-bold">
+                <thead className="bg-neutral-50/70 border-b border-neutral-200 text-neutral-600 font-semibold">
                   <tr>
-                    <th className="py-3 px-4">Partner Code</th>
-                    <th className="py-3 px-4">Name / Villa</th>
+                    <th className="py-3 px-4">Partner</th>
+                    <th className="py-3 px-4">Code</th>
                     <th className="py-3 px-4">Commission</th>
-                    <th className="py-3 px-4">Paid Out</th>
-                    <th className="py-3 px-4">Calendar</th>
+                    <th className="py-3 px-4">Paid out</th>
+                    <th className="py-3 px-4">Bookings</th>
                     <th className="py-3 px-4">Status</th>
                     <th className="py-3 px-4 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-black/5">
-                  {filteredPartners.length === 0 ? (
+                <tbody className="divide-y divide-neutral-100">
+                  {paginatedPartners.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="py-8 text-center text-black/50">
-                        No affiliate partners match your search or filter.
+                      <td colSpan={7} className="py-12 text-center text-neutral-500">
+                        <div className="max-w-xs mx-auto space-y-1">
+                          <p className="font-semibold text-neutral-900">No partners found</p>
+                          <p className="text-xs text-neutral-400">
+                            {searchQuery ? `No partner records matched "${searchQuery}".` : 'No partners registered in this status category.'}
+                          </p>
+                          {searchQuery && (
+                            <button
+                              type="button"
+                              onClick={() => setSearchQuery('')}
+                              className="text-xs font-semibold text-neutral-900 hover:underline pt-1 block mx-auto"
+                            >
+                              Clear search query
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ) : (
-                    filteredPartners.map((p) => {
+                    paginatedPartners.map((p) => {
                       const metrics = getPartnerMetrics(p);
+
                       return (
-                        <tr key={p.id} className="hover:bg-black/[0.02] transition-colors">
-                          {/* 1. Partner Code */}
+                        <tr key={p.id} className="hover:bg-neutral-50/70 transition-colors">
+                          {/* 1. Partner: Name and business or villa */}
+                          <td className="py-3.5 px-4 align-top">
+                            <div className="font-semibold text-neutral-900 text-sm">
+                              {p.first_name} {p.last_name || ''}
+                            </div>
+                            <div className="text-xs text-neutral-500 mt-0.5">
+                              {p.business_name || 'Individual Partner'}
+                            </div>
+                          </td>
+
+                          {/* 2. Code: Referral code */}
                           <td className="py-3.5 px-4 align-top">
                             <div className="flex flex-col items-start gap-1">
-                              <span className="font-mono font-bold text-black bg-black/5 px-2 py-0.5 rounded border border-black/10">
+                              <span className="font-mono font-medium text-neutral-800 bg-neutral-100 px-2 py-0.5 rounded border border-neutral-200">
                                 {p.partner_code}
                               </span>
-                              <span className="text-[10px] text-black/40">
-                                {new Date(p.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' })}
+                              <span className="text-[10px] text-neutral-400">
+                                {safeFormatDate(p.created_at)}
                               </span>
                             </div>
                           </td>
 
-                          {/* 2. Name / Villa (Contact & Category hidden to Details page) */}
-                          <td className="py-3.5 px-4 align-top">
-                            <div className="font-bold text-black text-sm">{p.first_name} {p.last_name || ''}</div>
-                            {p.business_name ? (
-                              <div className="text-[11px] text-black/60 mt-0.5">
-                                {p.business_name}
-                              </div>
-                            ) : (
-                              <div className="text-[11px] text-black/40 mt-0.5">Individual Partner</div>
-                            )}
-                          </td>
-
-                          {/* 3. Commission (Cleaned: rate setting inside modal, proper button) */}
+                          {/* 3. Commission: Commission amount and settlement summary */}
                           <td className="py-3.5 px-4 align-top">
                             <div className="space-y-1.5">
                               <div className="flex items-center gap-1.5 flex-wrap">
-                                <span className="font-bold text-black text-xs font-mono">
+                                <span className="font-bold text-neutral-900 text-xs font-mono">
                                   {formatIDR(metrics.totalEarned)}
                                 </span>
                                 {metrics.approvedUnpaid > 0 ? (
-                                  <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-white text-black border border-black">
+                                  <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-amber-50 text-amber-700 border border-amber-200/80">
                                     {formatIDR(metrics.approvedUnpaid)} unpaid
                                   </span>
                                 ) : metrics.pending > 0 ? (
-                                  <span className="text-[10px] px-2 py-0.5 rounded-full font-medium text-black/70 bg-black/5 border border-black/10">
+                                  <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-neutral-100 text-neutral-600 border border-neutral-200">
                                     {formatIDR(metrics.pending)} pending
                                   </span>
                                 ) : (
-                                  <span className="text-[10px] text-black/40">Settled</span>
+                                  <span className="text-[10px] text-neutral-400">Settled</span>
                                 )}
                               </div>
 
                               <div>
                                 <button
+                                  type="button"
                                   onClick={() => openPartnerModal(p, 'commissions')}
-                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-black/5 hover:bg-black hover:text-white text-black font-semibold rounded-xl text-xs transition-all border border-black/10 group shadow-2xs"
-                                  title="View partner commissions and adjust commission rate"
+                                  className="h-7 px-2.5 bg-white border border-neutral-200 hover:bg-neutral-50 text-neutral-800 font-medium rounded-lg text-xs transition-colors inline-flex items-center gap-1.5 shadow-2xs group"
+                                  title="View partner commissions"
                                 >
                                   <span>Commissions</span>
-                                  <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-black/10 group-hover:bg-white/20 font-mono font-bold">
+                                  <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-neutral-100 text-neutral-700 font-mono">
                                     {metrics.commissions.length}
                                   </span>
-                                  <span className="text-black/40 group-hover:text-white">&rarr;</span>
+                                  <span className="text-neutral-400 group-hover:text-neutral-700">&rarr;</span>
                                 </button>
                               </div>
                             </div>
                           </td>
 
-                          {/* 4. Paid Out (Independent) */}
+                          {/* 4. Paid Out: Total paid */}
                           <td className="py-3.5 px-4 align-top">
                             <div className="space-y-1">
-                              <div className="font-bold text-black text-xs">
+                              <div className="font-bold text-neutral-900 text-xs font-mono">
                                 {formatIDR(metrics.totalPaidOut)}
                               </div>
-                              <div className="flex items-center gap-1.5 flex-wrap">
+                              <div className="flex items-center gap-2 flex-wrap">
                                 <button
+                                  type="button"
                                   onClick={() => openPartnerModal(p, 'payouts')}
-                                  className="text-[11px] text-black/60 hover:text-black hover:underline"
+                                  className="text-xs text-neutral-500 hover:text-neutral-900 hover:underline"
                                 >
                                   {metrics.payouts.length} {metrics.payouts.length === 1 ? 'payout' : 'payouts'}
                                 </button>
                                 {metrics.approvedUnpaid > 0 && (
                                   <button
+                                    type="button"
                                     onClick={() => openQuickPayoutForPartner(p)}
-                                    className="text-[10px] px-2 py-0.5 bg-black text-white rounded font-bold hover:bg-black/80"
+                                    className="h-6 px-2 bg-black text-white rounded text-[11px] font-medium hover:bg-neutral-800 transition-colors shadow-2xs"
                                     title="Record payout"
                                   >
                                     + Pay
@@ -836,83 +1177,80 @@ export default function AffiliateManagement() {
                             </div>
                           </td>
 
-                          {/* 5. Calendar (Independent) */}
+                          {/* 5. Bookings: Booking count or calendar access */}
                           <td className="py-3.5 px-4 align-top">
                             <div className="space-y-1">
                               <div className="relative inline-block">
                                 <button
+                                  type="button"
                                   onClick={() => openPartnerModal(p, 'calendar')}
-                                  className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-black hover:text-white text-black font-bold rounded-xl text-xs transition-all border border-black/20 group shadow-2xs"
+                                  className="h-8 px-3 bg-white border border-neutral-200 hover:bg-neutral-50 text-neutral-800 font-medium rounded-lg text-xs transition-colors inline-flex items-center gap-1.5 shadow-2xs"
                                 >
                                   <span>Calendar</span>
-                                  <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-black/10 group-hover:bg-white/20 font-mono">
+                                  <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-neutral-100 text-neutral-700 font-mono">
                                     {metrics.bookingsCount}
                                   </span>
                                   {metrics.pendingCount > 0 && (
-                                    <span className="bg-black text-white text-[9px] font-extrabold px-1.5 py-0.2 rounded-full uppercase tracking-wider flex items-center gap-1 group-hover:bg-white group-hover:text-black">
-                                      <span className="w-1.5 h-1.5 rounded-full bg-white group-hover:bg-black animate-pulse" />
+                                    <span className="text-[10px] px-1.5 py-0.2 rounded-full font-semibold bg-amber-50 text-amber-700 border border-amber-200/80 flex items-center gap-1">
+                                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
                                       {metrics.pendingCount} New
                                     </span>
                                   )}
                                 </button>
-                                {metrics.pendingCount > 0 && (
-                                  <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-black opacity-75"></span>
-                                    <span className="relative inline-flex rounded-full h-3 w-3 bg-black border border-white"></span>
-                                  </span>
-                                )}
                               </div>
                               {metrics.latestBooking ? (
-                                <div className="text-[10px] text-black/50">
+                                <div className="text-[10px] text-neutral-400">
                                   Latest: {safeFormatDate(metrics.latestBooking.booking_date || metrics.latestBooking.created_at)}
                                 </div>
                               ) : (
-                                <div className="text-[10px] text-black/40">No bookings yet</div>
+                                <div className="text-[10px] text-neutral-400">No bookings yet</div>
                               )}
                             </div>
                           </td>
 
-                          {/* 6. Status */}
+                          {/* 6. Status: Compact colored status badge */}
                           <td className="py-3.5 px-4 align-top">
-                            <span
-                              className={`inline-flex px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
-                                p.status === 'active'
-                                  ? 'bg-black text-white'
-                                  : 'bg-black/5 text-black border border-black/15'
-                              }`}
-                            >
-                              {p.status}
-                            </span>
+                            <StatusBadge status={p.status} />
                           </td>
 
-                          {/* 7. Actions */}
-                          <td className="py-3.5 px-4 align-top text-right space-x-1 whitespace-nowrap">
+                          {/* 7. Actions: Details and relevant account action */}
+                          <td className="py-3.5 px-4 align-top text-right space-x-1.5 whitespace-nowrap">
                             <button
+                              type="button"
                               onClick={() => openPartnerModal(p, 'overview')}
-                              className="px-2.5 py-1 bg-black/5 hover:bg-black hover:text-white text-black font-semibold rounded-lg text-[11px] transition-colors"
+                              className="h-8 px-3 bg-white border border-neutral-200 hover:bg-neutral-50 text-neutral-800 font-medium rounded-lg text-xs transition-colors shadow-2xs"
                             >
                               Details
                             </button>
                             {p.status === 'pending' && (
                               <button
+                                type="button"
                                 onClick={() => handlePartnerStatus(p.id, 'active')}
-                                className="px-2.5 py-1 bg-black text-white font-bold rounded-lg text-[11px] hover:bg-black/80"
+                                className="h-8 px-3 bg-black text-white font-medium rounded-lg text-xs hover:bg-neutral-800 shadow-xs"
                               >
                                 Approve
                               </button>
                             )}
                             {p.status === 'active' && (
                               <button
-                                onClick={() => handlePartnerStatus(p.id, 'suspended')}
-                                className="px-2.5 py-1 border border-black/20 hover:bg-black/5 text-black font-semibold rounded-lg text-[11px]"
+                                type="button"
+                                onClick={() =>
+                                  setConfirmAction({
+                                    type: 'suspend',
+                                    id: p.id,
+                                    name: `${p.first_name} ${p.last_name || ''}`,
+                                  })
+                                }
+                                className="h-8 px-3 bg-white border border-neutral-200 hover:bg-neutral-50 text-neutral-700 font-medium rounded-lg text-xs transition-colors shadow-2xs"
                               >
                                 Suspend
                               </button>
                             )}
                             {p.status === 'suspended' && (
                               <button
+                                type="button"
                                 onClick={() => handlePartnerStatus(p.id, 'active')}
-                                className="px-2.5 py-1 bg-black text-white hover:bg-black/80 font-semibold rounded-lg text-[11px]"
+                                className="h-8 px-3 bg-black text-white hover:bg-neutral-800 font-medium rounded-lg text-xs shadow-xs"
                               >
                                 Reactivate
                               </button>
@@ -925,22 +1263,149 @@ export default function AffiliateManagement() {
                 </tbody>
               </table>
             </div>
+
+            {/* Mobile Cards (shown on screens < 768px) */}
+            <div className="md:hidden divide-y divide-neutral-100">
+              {paginatedPartners.length === 0 ? (
+                <div className="py-12 text-center text-neutral-500 p-4">
+                  <p className="font-semibold text-neutral-900">No partners found</p>
+                  <p className="text-xs text-neutral-400 mt-1">
+                    {searchQuery ? `No partners matched "${searchQuery}".` : 'No partners registered.'}
+                  </p>
+                </div>
+              ) : (
+                paginatedPartners.map((p) => {
+                  const metrics = getPartnerMetrics(p);
+                  return (
+                    <div key={p.id} className="p-4 space-y-3 bg-white">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <div className="font-semibold text-neutral-900 text-sm">
+                            {p.first_name} {p.last_name || ''}
+                          </div>
+                          <div className="text-xs text-neutral-500">
+                            {p.business_name || 'Individual Partner'}
+                          </div>
+                        </div>
+                        <StatusBadge status={p.status} />
+                      </div>
+
+                      <div className="flex items-center gap-2 text-xs">
+                        <span className="font-mono px-2 py-0.5 rounded bg-neutral-100 text-neutral-800 border border-neutral-200">
+                          {p.partner_code}
+                        </span>
+                        <span className="text-neutral-400">
+                          Joined {safeFormatDate(p.created_at)}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-2 p-2.5 rounded-lg bg-neutral-50/70 border border-neutral-200/60 text-xs">
+                        <div>
+                          <span className="text-[10px] text-neutral-500 block">Commission</span>
+                          <span className="font-mono font-semibold text-neutral-900">{formatIDR(metrics.totalEarned)}</span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] text-neutral-500 block">Paid out</span>
+                          <span className="font-mono font-semibold text-neutral-900">{formatIDR(metrics.totalPaidOut)}</span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] text-neutral-500 block">Bookings</span>
+                          <span className="font-mono font-semibold text-neutral-900">{metrics.bookingsCount}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between gap-2 pt-1">
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => openPartnerModal(p, 'calendar')}
+                            className="h-8 px-2.5 bg-white border border-neutral-200 hover:bg-neutral-50 text-neutral-800 rounded-lg text-xs font-medium inline-flex items-center gap-1 shadow-2xs"
+                          >
+                            <CalendarIcon size={12} />
+                            <span>Calendar</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => openPartnerModal(p, 'commissions')}
+                            className="h-8 px-2.5 bg-white border border-neutral-200 hover:bg-neutral-50 text-neutral-800 rounded-lg text-xs font-medium shadow-2xs"
+                          >
+                            Comms
+                          </button>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => openPartnerModal(p, 'overview')}
+                            className="h-8 px-3 bg-white border border-neutral-200 hover:bg-neutral-50 text-neutral-800 rounded-lg text-xs font-medium shadow-2xs"
+                          >
+                            Details
+                          </button>
+                          {p.status === 'pending' && (
+                            <button
+                              type="button"
+                              onClick={() => handlePartnerStatus(p.id, 'active')}
+                              className="h-8 px-3 bg-black text-white rounded-lg text-xs font-medium hover:bg-neutral-800"
+                            >
+                              Approve
+                            </button>
+                          )}
+                          {p.status === 'active' && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setConfirmAction({
+                                  type: 'suspend',
+                                  id: p.id,
+                                  name: `${p.first_name} ${p.last_name || ''}`,
+                                })
+                              }
+                              className="h-8 px-3 bg-white border border-neutral-200 text-neutral-700 rounded-lg text-xs font-medium hover:bg-neutral-50"
+                            >
+                              Suspend
+                            </button>
+                          )}
+                          {p.status === 'suspended' && (
+                            <button
+                              type="button"
+                              onClick={() => handlePartnerStatus(p.id, 'active')}
+                              className="h-8 px-3 bg-black text-white rounded-lg text-xs font-medium hover:bg-neutral-800"
+                            >
+                              Reactivate
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Pagination Controls */}
+            <Pagination
+              currentPage={partnerPage}
+              totalPages={totalPartnerPages}
+              totalItems={filteredPartners.length}
+              pageSize={PAGE_SIZE}
+              onPageChange={setPartnerPage}
+              label="partners"
+            />
           </div>
         </div>
       )}
 
-      {/* SUB-TAB 2: GLOBAL COMMISSIONS */}
+      {/* SUB-TAB 2: COMMISSIONS */}
       {subTab === 'commissions' && (
         <div className="space-y-4">
-          <div className="bg-white rounded-2xl border border-black/10 shadow-sm overflow-hidden">
+          <div className="bg-white rounded-xl border border-neutral-200 shadow-2xs overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-white border-b border-black/10 text-black font-bold">
+                <thead className="bg-neutral-50/70 border-b border-neutral-200 text-neutral-600 font-semibold">
                   <tr>
                     <th className="py-3 px-4">Date</th>
                     <th className="py-3 px-4">Booking Ref</th>
                     <th className="py-3 px-4">Partner</th>
-                    <th className="py-3 px-4">Gross Revenue</th>
+                    <th className="py-3 px-4">Gross</th>
                     <th className="py-3 px-4">Treatment Net</th>
                     <th className="py-3 px-4">Rate</th>
                     <th className="py-3 px-4">Commission</th>
@@ -949,44 +1414,46 @@ export default function AffiliateManagement() {
                     <th className="py-3 px-4 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-black/5">
-                  {filteredGlobalCommissions.length === 0 ? (
+                <tbody className="divide-y divide-neutral-100">
+                  {paginatedCommissions.length === 0 ? (
                     <tr>
-                      <td colSpan={10} className="py-8 text-center text-black/50">
-                        No commissions found under this filter.
+                      <td colSpan={10} className="py-12 text-center text-neutral-500">
+                        No commission records found under this filter.
                       </td>
                     </tr>
                   ) : (
-                    filteredGlobalCommissions.map((c) => (
-                      <tr key={c.id} className="hover:bg-black/[0.02]">
-                        <td className="py-3 px-4 text-black/60 whitespace-nowrap">
+                    paginatedCommissions.map((c) => (
+                      <tr key={c.id} className="hover:bg-neutral-50/70 transition-colors">
+                        <td className="py-3 px-4 text-neutral-500 whitespace-nowrap">
                           {safeFormatDate(c.booking_date || c.created_at)}
                         </td>
-                        <td className="py-3 px-4 font-mono font-bold text-black">
+                        <td className="py-3 px-4 font-mono font-bold text-neutral-900">
                           #{c.booking_id}
                           {c.guest_name && (
-                            <div className="text-[10px] text-black/50 font-sans font-normal">{c.guest_name}</div>
+                            <div className="text-[11px] text-neutral-500 font-sans font-normal">{c.guest_name}</div>
                           )}
                         </td>
                         <td className="py-3 px-4">
                           <button
+                            type="button"
                             onClick={() => {
                               const p = partners.find((item) => item.partner_code === c.partner_code || item.id === c.partner_id);
                               if (p) openPartnerModal(p, 'overview');
                             }}
-                            className="font-mono font-bold text-black hover:underline"
+                            className="font-mono font-medium text-neutral-900 hover:underline inline-flex items-center gap-1"
                           >
-                            {c.partner_code}
+                            <span>{c.partner_code}</span>
+                            <ArrowUpRight size={11} className="text-neutral-400" />
                           </button>
                         </td>
-                        <td className="py-3 px-4 text-black/60">
+                        <td className="py-3 px-4 text-neutral-500 font-mono">
                           {formatIDR(c.booking_amount_gross)}
                         </td>
-                        <td className="py-3 px-4 font-medium text-black">
+                        <td className="py-3 px-4 font-medium text-neutral-900 font-mono">
                           {formatIDR(c.eligible_treatment_amount)}
                         </td>
-                        <td className="py-3 px-4 text-black/60">{c.commission_rate_pct}%</td>
-                        <td className="py-3 px-4 font-bold text-black">
+                        <td className="py-3 px-4 text-neutral-500 font-mono">{c.commission_rate_pct}%</td>
+                        <td className="py-3 px-4 font-bold text-neutral-900 font-mono">
                           {formatIDR(c.commission_amount)}
                         </td>
                         <td className="py-3 px-4 text-[11px] space-y-1">
@@ -997,7 +1464,7 @@ export default function AffiliateManagement() {
                               onChange={(e) =>
                                 handleUpdateCommission(c.id, { payment_verified: e.target.checked })
                               }
-                              className="rounded text-black"
+                              className="rounded text-black cursor-pointer"
                             />
                             <span>Paid</span>
                           </label>
@@ -1008,38 +1475,34 @@ export default function AffiliateManagement() {
                               onChange={(e) =>
                                 handleUpdateCommission(c.id, { service_completed: e.target.checked })
                               }
-                              className="rounded text-black"
+                              className="rounded text-black cursor-pointer"
                             />
                             <span>Completed</span>
                           </label>
                         </td>
                         <td className="py-3 px-4">
-                          {c.status === 'paid' ? (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-black text-white">
-                              ✓ Paid Out
-                            </span>
-                          ) : c.status === 'approved' ? (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-black/10 text-black border border-black/20">
-                              Approved
-                            </span>
-                          ) : (
-                            <span className="inline-flex px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-black/5 text-black border border-black/10">
-                              {c.status}
-                            </span>
-                          )}
+                          <StatusBadge status={c.status} />
                         </td>
-                        <td className="py-3 px-4 text-right space-x-1 whitespace-nowrap">
+                        <td className="py-3 px-4 text-right space-x-1.5 whitespace-nowrap">
                           {c.status === 'pending' && (
                             <>
                               <button
+                                type="button"
                                 onClick={() => handleUpdateCommission(c.id, { status: 'approved' })}
-                                className="px-2 py-1 bg-black hover:bg-black/80 text-white rounded text-[11px] font-semibold"
+                                className="h-7 px-2.5 bg-black hover:bg-neutral-800 text-white rounded-lg text-xs font-medium shadow-xs"
                               >
                                 Approve
                               </button>
                               <button
-                                onClick={() => handleUpdateCommission(c.id, { status: 'declined' })}
-                                className="px-2 py-1 border border-black/20 hover:bg-black/5 text-black rounded text-[11px] font-semibold"
+                                type="button"
+                                onClick={() =>
+                                  setConfirmAction({
+                                    type: 'decline_comm',
+                                    id: c.id,
+                                    name: `#${c.booking_id}`,
+                                  })
+                                }
+                                className="h-7 px-2.5 border border-neutral-200 hover:bg-neutral-50 text-neutral-700 rounded-lg text-xs font-medium shadow-2xs"
                               >
                                 Decline
                               </button>
@@ -1052,17 +1515,26 @@ export default function AffiliateManagement() {
                 </tbody>
               </table>
             </div>
+
+            <Pagination
+              currentPage={commPage}
+              totalPages={totalCommPages}
+              totalItems={filteredGlobalCommissions.length}
+              pageSize={PAGE_SIZE}
+              onPageChange={setCommPage}
+              label="commissions"
+            />
           </div>
         </div>
       )}
 
-      {/* SUB-TAB 3: GLOBAL PAYOUTS */}
+      {/* SUB-TAB 3: PAYOUTS */}
       {subTab === 'payouts' && (
         <div className="space-y-4">
-          <div className="bg-white rounded-2xl border border-black/10 shadow-sm overflow-hidden">
+          <div className="bg-white rounded-xl border border-neutral-200 shadow-2xs overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-white border-b border-black/10 text-black font-bold">
+                <thead className="bg-neutral-50/70 border-b border-neutral-200 text-neutral-600 font-semibold">
                   <tr>
                     <th className="py-3 px-4">Date</th>
                     <th className="py-3 px-4">Reference</th>
@@ -1074,46 +1546,47 @@ export default function AffiliateManagement() {
                     <th className="py-3 px-4 text-right">Details</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-black/5">
-                  {filteredGlobalPayouts.length === 0 ? (
+                <tbody className="divide-y divide-neutral-100">
+                  {paginatedPayouts.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="py-8 text-center text-black/50">
-                        No payout records logged yet.
+                      <td colSpan={8} className="py-12 text-center text-neutral-500">
+                        No payout settlements logged yet.
                       </td>
                     </tr>
                   ) : (
-                    filteredGlobalPayouts.map((py) => (
-                      <tr key={py.id} className="hover:bg-black/[0.02]">
-                        <td className="py-3 px-4 text-black/60 whitespace-nowrap">
+                    paginatedPayouts.map((py) => (
+                      <tr key={py.id} className="hover:bg-neutral-50/70 transition-colors">
+                        <td className="py-3 px-4 text-neutral-500 whitespace-nowrap">
                           {safeFormatDate(py.created_at)}
                         </td>
-                        <td className="py-3 px-4 font-mono font-bold text-black">{py.payout_reference}</td>
+                        <td className="py-3 px-4 font-mono font-bold text-neutral-900">{py.payout_reference}</td>
                         <td className="py-3 px-4">
                           <button
+                            type="button"
                             onClick={() => {
                               const p = partners.find((item) => item.partner_code === py.partner_code || item.id === py.partner_id);
                               if (p) openPartnerModal(p, 'overview');
                             }}
-                            className="font-mono font-bold text-black hover:underline"
+                            className="font-mono font-medium text-neutral-900 hover:underline inline-flex items-center gap-1"
                           >
-                            {py.partner_code}
+                            <span>{py.partner_code}</span>
+                            <ArrowUpRight size={11} className="text-neutral-400" />
                           </button>
                         </td>
-                        <td className="py-3 px-4 font-bold text-black">{formatIDR(py.amount)}</td>
-                        <td className="py-3 px-4 capitalize">{py.payout_method?.replace('_', ' ')}</td>
+                        <td className="py-3 px-4 font-bold text-neutral-900 font-mono">{formatIDR(py.amount)}</td>
+                        <td className="py-3 px-4 capitalize text-neutral-700">{py.payout_method?.replace('_', ' ')}</td>
                         <td className="py-3 px-4">
-                          <span className="inline-flex px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-black/5 text-black border border-black/10">
-                            {py.status}
-                          </span>
+                          <StatusBadge status={py.status || 'completed'} />
                         </td>
-                        <td className="py-3 px-4 text-black/60">{py.notes || '-'}</td>
+                        <td className="py-3 px-4 text-neutral-500">{py.notes || '—'}</td>
                         <td className="py-3 px-4 text-right whitespace-nowrap">
                           <button
                             type="button"
                             onClick={() => setSelectedPayoutDetails(py)}
-                            className="px-3 py-1.5 bg-black text-white hover:bg-black/80 font-bold rounded-xl text-xs transition-all shadow-xs"
+                            className="h-7 px-3 bg-white border border-neutral-200 hover:bg-neutral-50 text-neutral-800 font-medium rounded-lg text-xs transition-colors shadow-2xs inline-flex items-center gap-1"
                           >
-                            View Bookings &rarr;
+                            <span>View Bookings</span>
+                            <span className="text-neutral-400">&rarr;</span>
                           </button>
                         </td>
                       </tr>
@@ -1122,110 +1595,173 @@ export default function AffiliateManagement() {
                 </tbody>
               </table>
             </div>
+
+            <Pagination
+              currentPage={payoutPage}
+              totalPages={totalPayoutPages}
+              totalItems={filteredGlobalPayouts.length}
+              pageSize={PAGE_SIZE}
+              onPageChange={setPayoutPage}
+              label="payouts"
+            />
           </div>
         </div>
       )}
 
-      {/* SUB-TAB 4: SETTINGS */}
+      {/* SUB-TAB 4: SETTINGS (Clearly Grouped Minimal Form) */}
       {subTab === 'settings' && (
-        <form onSubmit={handleSaveSettings} className="bg-white p-6 rounded-2xl border border-black/10 shadow-sm max-w-xl space-y-5">
-          <h3 className="font-bold text-black text-sm border-b border-black/10 pb-2">
-            Program Parameters & Rules
-          </h3>
+        <form onSubmit={handleSaveSettings} className="space-y-4 max-w-2xl">
+          
+          {/* Group 1: Commission Rules */}
+          <div className="bg-white p-5 rounded-xl border border-neutral-200 shadow-2xs space-y-4">
+            <div>
+              <h3 className="font-bold text-neutral-900 text-sm tracking-tight">Commission Rules</h3>
+              <p className="text-xs text-neutral-500 mt-0.5">
+                Baseline revenue-share rules applied to referral earnings.
+              </p>
+            </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-black mb-1">
-              Default Commission Rate (%)
-            </label>
-            <input
-              type="number"
-              min={1}
-              max={50}
-              value={settings.default_commission_rate_pct}
-              onChange={(e) =>
-                setSettings({ ...settings, default_commission_rate_pct: Number(e.target.value) })
-              }
-              className="w-full px-3 py-2 border border-black/20 rounded-xl text-xs font-medium"
-            />
-            <p className="text-[11px] text-black/50 mt-1">
-              Default commission applied to new partners (15% recommended).
-            </p>
+            <div className="space-y-1">
+              <label className="block text-xs font-semibold text-neutral-800">
+                Default Commission Rate (%)
+              </label>
+              <div className="relative max-w-xs">
+                <input
+                  type="number"
+                  min={1}
+                  max={50}
+                  step="0.5"
+                  value={settings.default_commission_rate_pct}
+                  onChange={(e) => {
+                    setSettings({ ...settings, default_commission_rate_pct: Number(e.target.value) });
+                    setSettingsDirty(true);
+                  }}
+                  className="w-full h-9 px-3 border border-neutral-200 rounded-lg text-xs font-mono font-semibold focus:outline-none focus:border-black"
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 text-xs font-medium">%</span>
+              </div>
+              <p className="text-[11px] text-neutral-400 pt-0.5">
+                Applied automatically to newly approved partners. Can be customized per partner in Partner Details.
+              </p>
+            </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-black mb-1">
-              Cookie Attribution Window (Days)
-            </label>
-            <input
-              type="number"
-              min={1}
-              max={180}
-              value={settings.cookie_duration_days}
-              onChange={(e) =>
-                setSettings({ ...settings, cookie_duration_days: Number(e.target.value) })
-              }
-              className="w-full px-3 py-2 border border-black/20 rounded-xl text-xs font-medium"
-            />
-            <p className="text-[11px] text-black/50 mt-1">
-              Duration for which a referred customer remains linked to the partner after clicking or scanning.
-            </p>
+          {/* Group 2: Program Settings & Attribution */}
+          <div className="bg-white p-5 rounded-xl border border-neutral-200 shadow-2xs space-y-4">
+            <div>
+              <h3 className="font-bold text-neutral-900 text-sm tracking-tight">Program Settings</h3>
+              <p className="text-xs text-neutral-500 mt-0.5">
+                Referral cookie duration and attribution logic for visitor bookings.
+              </p>
+            </div>
+
+            <div className="space-y-1">
+              <label className="block text-xs font-semibold text-neutral-800">
+                Attribution Window (Days)
+              </label>
+              <div className="relative max-w-xs">
+                <input
+                  type="number"
+                  min={1}
+                  max={180}
+                  value={settings.cookie_duration_days}
+                  onChange={(e) => {
+                    setSettings({ ...settings, cookie_duration_days: Number(e.target.value) });
+                    setSettingsDirty(true);
+                  }}
+                  className="w-full h-9 px-3 border border-neutral-200 rounded-lg text-xs font-mono font-semibold focus:outline-none focus:border-black"
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 text-xs font-medium">Days</span>
+              </div>
+              <p className="text-[11px] text-neutral-400 pt-0.5">
+                Number of days a referred guest remains linked to the partner after clicking their referral link.
+              </p>
+            </div>
+
+            <div className="pt-2">
+              <label className="flex items-center gap-2.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={settings.is_program_active}
+                  onChange={(e) => {
+                    setSettings({ ...settings, is_program_active: e.target.checked });
+                    setSettingsDirty(true);
+                  }}
+                  className="rounded text-black cursor-pointer"
+                />
+                <div>
+                  <span className="text-xs font-semibold text-neutral-900 block">
+                    Program Active
+                  </span>
+                  <span className="text-[11px] text-neutral-400">
+                    When active, affiliate referral tracking and code attribution are active across the website.
+                  </span>
+                </div>
+              </label>
+            </div>
           </div>
 
-          <div className="space-y-3 pt-2">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={settings.auto_approve_partners}
-                onChange={(e) =>
-                  setSettings({ ...settings, auto_approve_partners: e.target.checked })
-                }
-                className="rounded text-black"
-              />
-              <span className="text-xs font-medium text-black">
-                Automatically approve new partner applications
-              </span>
-            </label>
+          {/* Group 3: Partner Eligibility */}
+          <div className="bg-white p-5 rounded-xl border border-neutral-200 shadow-2xs space-y-4">
+            <div>
+              <h3 className="font-bold text-neutral-900 text-sm tracking-tight">Partner Eligibility</h3>
+              <p className="text-xs text-neutral-500 mt-0.5">
+                Registration approval and onboarding requirements.
+              </p>
+            </div>
 
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={settings.is_program_active}
-                onChange={(e) =>
-                  setSettings({ ...settings, is_program_active: e.target.checked })
-                }
-                className="rounded text-black"
-              />
-              <span className="text-xs font-medium text-black">
-                Partner program is active for BookTherapick
-              </span>
-            </label>
+            <div>
+              <label className="flex items-center gap-2.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={settings.auto_approve_partners}
+                  onChange={(e) => {
+                    setSettings({ ...settings, auto_approve_partners: e.target.checked });
+                    setSettingsDirty(true);
+                  }}
+                  className="rounded text-black cursor-pointer"
+                />
+                <div>
+                  <span className="text-xs font-semibold text-neutral-900 block">
+                    Auto-approve Applications
+                  </span>
+                  <span className="text-[11px] text-neutral-400">
+                    Automatically activate new partner accounts upon registration without requiring manual admin approval.
+                  </span>
+                </div>
+              </label>
+            </div>
           </div>
 
-          <div className="pt-3">
+          {/* Save Action */}
+          <div className="flex items-center gap-3 pt-2">
             <button
               type="submit"
               disabled={actionLoading}
-              className="px-5 py-2.5 bg-black text-white text-xs font-bold rounded-xl hover:bg-black/80 transition-all shadow-sm"
+              className="h-9 px-5 bg-black text-white text-xs font-medium rounded-lg hover:bg-neutral-800 disabled:opacity-40 transition-colors shadow-xs"
             >
-              Save Program Settings
+              {actionLoading ? 'Saving...' : 'Save Settings'}
             </button>
+            {settingsDirty && (
+              <span className="text-xs text-amber-700 font-medium">Unsaved changes</span>
+            )}
           </div>
         </form>
       )}
 
       {/* RECORD PAYOUT MODAL WITH ACTIVE FLOATING CALENDAR & APPROVED REFERRALS SELECTOR */}
       {showPayoutModal && (
-        <div className="fixed inset-0 z-[70] bg-black/60 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 md:p-6">
+        <div className="fixed inset-0 z-[70] bg-black/50 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 md:p-6">
           <form
             onSubmit={handleRecordPayout}
-            className="bg-white rounded-2xl w-full h-full max-w-[98vw] max-h-[96vh] flex flex-col border border-black/15 shadow-2xl overflow-hidden"
+            className="bg-white rounded-2xl w-full h-full max-w-[98vw] max-h-[96vh] flex flex-col border border-neutral-200 shadow-2xl overflow-hidden"
           >
-            {/* Modal Header: White Background */}
-            <div className="p-4 sm:p-5 bg-white border-b border-black/10 text-black flex items-center justify-between shrink-0">
+            {/* Modal Header */}
+            <div className="p-4 sm:p-5 bg-white border-b border-neutral-200 text-neutral-900 flex items-center justify-between shrink-0">
               <div className="flex items-center gap-2.5">
-                <h3 className="font-bold text-black text-base sm:text-lg">Record Partner Payout</h3>
+                <h3 className="font-bold text-neutral-900 text-base sm:text-lg">Record Payout</h3>
                 {payoutSelectedPartner && (
-                  <span className="font-mono font-bold text-black bg-black/5 px-2.5 py-0.5 rounded-lg text-xs border border-black/10">
+                  <span className="font-mono font-medium text-neutral-800 bg-neutral-100 px-2 py-0.5 rounded text-xs border border-neutral-200">
                     {payoutSelectedPartner.partner_code}
                   </span>
                 )}
@@ -1237,25 +1773,25 @@ export default function AffiliateManagement() {
                   setSelectedCommissionIds([]);
                   setPayoutSelectedDate(null);
                 }}
-                className="w-8 h-8 rounded-xl bg-black/5 hover:bg-black hover:text-white text-black flex items-center justify-center transition-colors"
+                className="w-8 h-8 rounded-lg bg-white border border-neutral-200 hover:bg-neutral-50 text-neutral-600 flex items-center justify-center transition-colors"
                 title="Close"
               >
-                <X size={16} />
+                <X size={15} />
               </button>
             </div>
 
-            <div className="p-5 sm:p-6 overflow-y-auto space-y-5 text-xs flex-1">
+            <div className="p-4 sm:p-6 overflow-y-auto space-y-5 text-xs flex-1">
               {/* 1. Select Partner & Partner Details */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-black mb-1">Select Referral Partner *</label>
+                  <label className="block text-xs font-semibold text-neutral-800 mb-1">Select Partner *</label>
                   <select
                     required
                     value={payoutForm.partner_id}
                     onChange={(e) => handleSelectPayoutPartner(e.target.value)}
-                    className="w-full px-3 py-2 border border-black/20 rounded-xl text-xs bg-white font-medium"
+                    className="w-full h-9 px-3 border border-neutral-200 rounded-lg text-xs bg-white font-medium focus:outline-none focus:border-black"
                   >
-                    <option value="">-- Choose Partner to Pay Out --</option>
+                    <option value="">-- Choose Partner to Settle --</option>
                     {partners.map((p) => (
                       <option key={p.id} value={p.id}>
                         {p.partner_code} - {p.first_name} {p.last_name} ({p.business_name || 'Individual'})
@@ -1265,30 +1801,30 @@ export default function AffiliateManagement() {
                 </div>
 
                 {payoutSelectedPartner ? (
-                  <div className="bg-white p-3 rounded-xl border border-black/10 text-[11px] space-y-1">
+                  <div className="bg-neutral-50/70 p-3 rounded-xl border border-neutral-200 text-[11px] space-y-1">
                     <div className="flex justify-between">
-                      <span className="text-black/60">Payout Method:</span>
-                      <span className="font-semibold text-black capitalize">{payoutSelectedPartner.payout_method?.replace('_', ' ') || 'Bank Transfer'}</span>
+                      <span className="text-neutral-500">Method:</span>
+                      <span className="font-medium text-neutral-900 capitalize">{payoutSelectedPartner.payout_method?.replace('_', ' ') || 'Bank Transfer'}</span>
                     </div>
                     {payoutSelectedPartner.payout_details?.bank_name ? (
                       <div className="flex justify-between">
-                        <span className="text-black/60">Bank Account:</span>
-                        <span className="font-mono font-semibold text-black">
+                        <span className="text-neutral-500">Bank:</span>
+                        <span className="font-mono font-medium text-neutral-900">
                           {payoutSelectedPartner.payout_details.bank_name} - {payoutSelectedPartner.payout_details.account_number} ({payoutSelectedPartner.payout_details.account_holder})
                         </span>
                       </div>
                     ) : (
-                      <div className="text-black/40">Bank account details not provided</div>
+                      <div className="text-neutral-400">Bank account details not specified</div>
                     )}
-                    <div className="flex justify-between pt-1 border-t border-black/5">
-                      <span className="text-black/60">Approved Unpaid Total:</span>
-                      <span className="font-bold text-black font-mono">
+                    <div className="flex justify-between pt-1 border-t border-neutral-200">
+                      <span className="text-neutral-500">Approved Unpaid:</span>
+                      <span className="font-bold text-neutral-900 font-mono">
                         {formatIDR(payoutApprovedCommissions.reduce((sum, c) => sum + Number(c.commission_amount || 0), 0))}
                       </span>
                     </div>
                   </div>
                 ) : (
-                  <div className="bg-black/[0.02] p-3 rounded-xl border border-black/5 text-[11px] text-black/50 flex items-center justify-center">
+                  <div className="bg-neutral-50/70 p-3 rounded-xl border border-neutral-200 text-[11px] text-neutral-500 flex items-center justify-center">
                     Select a partner to view approved bookings and active calendar
                   </div>
                 )}
@@ -1296,17 +1832,17 @@ export default function AffiliateManagement() {
 
               {/* 2. ACTIVE FLOATING CALENDAR & APPROVED REFERRALS SELECTOR */}
               {payoutForm.partner_id && (
-                <div className="space-y-3 pt-2 border-t border-black/10">
+                <div className="space-y-3 pt-2 border-t border-neutral-200">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div>
-                      <h4 className="font-bold text-black text-xs uppercase tracking-wider flex items-center gap-2">
-                        <span>Active Booking Calendar & Approved Commissions</span>
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-black/5 text-black font-mono">
+                      <h4 className="font-bold text-neutral-900 text-xs flex items-center gap-2">
+                        <span>Active Calendar & Approved Commissions</span>
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-700 font-mono">
                           {selectedCommissionIds.length} of {payoutApprovedCommissions.length} Selected
                         </span>
                       </h4>
-                      <p className="text-[11px] text-black/60">
-                        Click a date on the calendar to filter, or click checkboxes to include approved bookings in this payout.
+                      <p className="text-[11px] text-neutral-500">
+                        Select a date to filter bookings, or check items to include in this payout settlement.
                       </p>
                     </div>
 
@@ -1314,25 +1850,25 @@ export default function AffiliateManagement() {
                       <button
                         type="button"
                         onClick={selectAllApproved}
-                        className="px-2.5 py-1 bg-black text-white rounded-lg text-[10px] font-bold hover:bg-black/80"
+                        className="h-7 px-2.5 bg-black text-white rounded-lg text-xs font-medium hover:bg-neutral-800"
                       >
-                        Select All Approved
+                        Select All
                       </button>
                       <button
                         type="button"
                         onClick={deselectAllApproved}
-                        className="px-2.5 py-1 bg-black/5 hover:bg-black/10 text-black rounded-lg text-[10px] font-semibold border border-black/10"
+                        className="h-7 px-2.5 bg-white hover:bg-neutral-50 text-neutral-700 rounded-lg text-xs font-medium border border-neutral-200"
                       >
-                        Clear All
+                        Clear
                       </button>
                     </div>
                   </div>
 
                   {/* Two-Column Grid: Left = Floating Calendar, Right = Approved Bookings Checklist */}
-                  <div className="grid grid-cols-1 md:grid-cols-12 gap-4 bg-white rounded-2xl border border-black/10 p-3 sm:p-4 shadow-2xs">
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-4 bg-white rounded-xl border border-neutral-200 p-3 sm:p-4 shadow-2xs">
                     
                     {/* Left: Active Floating Calendar (5 cols) */}
-                    <div className="md:col-span-5 space-y-2.5 border-b md:border-b-0 md:border-r border-black/10 pb-3 md:pb-0 md:pr-4">
+                    <div className="md:col-span-5 space-y-2.5 border-b md:border-b-0 md:border-r border-neutral-200 pb-3 md:pb-0 md:pr-4">
                       <div className="flex items-center justify-between">
                         <button
                           type="button"
@@ -1345,12 +1881,12 @@ export default function AffiliateManagement() {
                             }
                             setPayoutSelectedDate(null);
                           }}
-                          className="w-7 h-7 rounded-lg bg-black/5 hover:bg-black/10 flex items-center justify-center text-black"
+                          className="w-7 h-7 rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 flex items-center justify-center text-neutral-700"
                         >
                           <ChevronLeft size={14} />
                         </button>
 
-                        <div className="font-bold text-black text-xs">
+                        <div className="font-bold text-neutral-900 text-xs">
                           {MONTH_NAMES[payoutCalendarMonth]} {payoutCalendarYear}
                         </div>
 
@@ -1365,14 +1901,14 @@ export default function AffiliateManagement() {
                             }
                             setPayoutSelectedDate(null);
                           }}
-                          className="w-7 h-7 rounded-lg bg-black/5 hover:bg-black/10 flex items-center justify-center text-black"
+                          className="w-7 h-7 rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 flex items-center justify-center text-neutral-700"
                         >
                           <ChevronRight size={14} />
                         </button>
                       </div>
 
                       {/* Mini Month Grid */}
-                      <div className="grid grid-cols-7 gap-1 text-center font-bold text-black/40 text-[10px]">
+                      <div className="grid grid-cols-7 gap-1 text-center font-bold text-neutral-400 text-[10px]">
                         {DAYS_OF_WEEK.map((d) => (
                           <div key={d} className="py-0.5">{d}</div>
                         ))}
@@ -1380,48 +1916,39 @@ export default function AffiliateManagement() {
 
                       <div className="grid grid-cols-7 gap-1">
                         {Array.from({ length: payoutCalendarFirstDayOfWeek }).map((_, i) => (
-                          <div key={`payout-empty-${i}`} className="h-9 rounded-lg bg-black/[0.01]" />
+                          <div key={`payout-empty-${i}`} className="h-9 rounded-lg bg-neutral-50/50" />
                         ))}
 
                         {Array.from({ length: payoutCalendarDaysInMonth }).map((_, i) => {
                           const dayNum = i + 1;
                           const dateStr = `${payoutCalendarYear}-${String(payoutCalendarMonth + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
                           const approvedOnDate = payoutApprovedByDate[dateStr] || [];
-                          const allOnDate = payoutAllCommsByDate[dateStr] || [];
                           const isSelected = payoutSelectedDate === dateStr;
                           const hasApproved = approvedOnDate.length > 0;
-                          const hasPaid = allOnDate.some((c) => c.status === 'paid');
 
                           return (
                             <button
                               type="button"
                               key={`payout-date-${dateStr}`}
                               onClick={() => setPayoutSelectedDate(isSelected ? null : dateStr)}
-                              className={`h-9 rounded-lg border text-left p-1 flex flex-col justify-between transition-all ${
+                              className={`h-9 rounded-lg border text-left p-1 flex flex-col justify-between transition-colors ${
                                 isSelected
                                   ? 'bg-black text-white border-black shadow-xs'
                                   : hasApproved
-                                  ? 'bg-black/5 border-black/40 hover:border-black text-black'
-                                  : hasPaid
-                                  ? 'bg-black/[0.02] border-black/10 hover:border-black/30 text-black'
-                                  : 'bg-white border-black/5 hover:border-black/20 text-black/50'
+                                  ? 'bg-emerald-50/60 border-emerald-200 text-neutral-900 hover:border-emerald-300'
+                                  : 'bg-white border-neutral-200/80 hover:border-neutral-300 text-neutral-400'
                               }`}
-                              title={
-                                hasApproved
-                                  ? `${approvedOnDate.length} approved referrals ready for payout`
-                                  : `${allOnDate.length} referrals on ${dateStr}`
-                              }
                             >
                               <div className="flex items-center justify-between w-full">
                                 <span className={`text-[10px] font-bold ${isSelected ? 'text-white' : ''}`}>
                                   {dayNum}
                                 </span>
                                 {hasApproved && (
-                                  <span className={`w-2 h-2 rounded-full ${isSelected ? 'bg-white' : 'bg-black'}`} />
+                                  <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-white' : 'bg-emerald-500'}`} />
                                 )}
                               </div>
                               {hasApproved ? (
-                                <span className={`text-[8px] font-bold truncate ${isSelected ? 'text-white' : 'text-black'}`}>
+                                <span className={`text-[8px] font-semibold truncate ${isSelected ? 'text-white' : 'text-emerald-700'}`}>
                                   {approvedOnDate.length} app
                                 </span>
                               ) : (
@@ -1433,12 +1960,12 @@ export default function AffiliateManagement() {
                       </div>
 
                       {payoutSelectedDate && (
-                        <div className="flex items-center justify-between bg-black/5 p-2 rounded-xl text-[11px]">
+                        <div className="flex items-center justify-between bg-neutral-50 p-2 rounded-lg text-[11px] border border-neutral-200">
                           <span>Filtered: <strong>{safeFormatDate(payoutSelectedDate)}</strong></span>
                           <button
                             type="button"
                             onClick={() => setPayoutSelectedDate(null)}
-                            className="text-black underline font-semibold hover:text-black/70"
+                            className="text-neutral-900 underline font-semibold hover:text-neutral-700"
                           >
                             Clear
                           </button>
@@ -1458,9 +1985,9 @@ export default function AffiliateManagement() {
 
                         if (displayedApproved.length === 0) {
                           return (
-                            <div className="bg-white p-6 rounded-xl border border-black/10 text-center text-black/50 space-y-1">
-                              <p className="font-semibold text-black">No approved referrals found{payoutSelectedDate ? ' for this date' : ''}.</p>
-                              <p className="text-[11px]">Only bookings with an <strong className="text-black">Approved</strong> status can be paid out. Review pending bookings in the Partner Calendar to approve them first.</p>
+                            <div className="bg-white p-6 rounded-xl border border-neutral-200 text-center text-neutral-500 space-y-1">
+                              <p className="font-semibold text-neutral-900">No approved referrals found{payoutSelectedDate ? ' for this date' : ''}.</p>
+                              <p className="text-[11px] text-neutral-400">Only bookings with an Approved status can be disbursed.</p>
                             </div>
                           );
                         }
@@ -1473,40 +2000,38 @@ export default function AffiliateManagement() {
                                 <div
                                   key={c.id}
                                   onClick={() => toggleCommissionSelection(c.id)}
-                                  className={`p-2.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-2 ${
+                                  className={`p-2.5 rounded-xl border transition-colors cursor-pointer flex items-center justify-between gap-2 ${
                                     isChecked
-                                      ? 'bg-black/[0.03] border-black shadow-2xs'
-                                      : 'bg-white border-black/10 hover:border-black/30'
+                                      ? 'bg-neutral-50 border-black shadow-2xs'
+                                      : 'bg-white border-neutral-200 hover:border-neutral-300'
                                   }`}
                                 >
                                   <div className="flex items-center gap-2.5 min-w-0">
                                     <input
                                       type="checkbox"
                                       checked={isChecked}
-                                      onChange={() => {}} // handled by parent div
+                                      onChange={() => {}}
                                       className="rounded text-black cursor-pointer"
                                     />
                                     <div className="min-w-0">
                                       <div className="flex items-center gap-2 flex-wrap">
-                                        <span className="font-mono font-bold text-black text-xs">#{c.booking_id}</span>
-                                        <span className="text-[10px] text-black/50">
+                                        <span className="font-mono font-bold text-neutral-900 text-xs">#{c.booking_id}</span>
+                                        <span className="text-[10px] text-neutral-400">
                                           {safeFormatDate(c.booking_date || c.created_at)}
                                         </span>
-                                        <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-bold uppercase bg-white text-black border border-black">
-                                          Approved
-                                        </span>
+                                        <StatusBadge status="approved" />
                                       </div>
-                                      <div className="text-[11px] text-black truncate mt-0.5 font-medium">
+                                      <div className="text-[11px] text-neutral-800 truncate mt-0.5 font-medium">
                                         {c.guest_name || 'Guest'} &bull; {c.treatment_name || 'Treatment'}
                                       </div>
                                     </div>
                                   </div>
 
                                   <div className="text-right shrink-0">
-                                    <span className="font-mono font-bold text-black text-xs block">
+                                    <span className="font-mono font-bold text-neutral-900 text-xs block">
                                       +{formatIDR(c.commission_amount)}
                                     </span>
-                                    <span className="text-[10px] text-black/50">
+                                    <span className="text-[10px] text-neutral-400">
                                       {c.commission_rate_pct}% of {formatIDR(c.eligible_treatment_amount)}
                                     </span>
                                   </div>
@@ -1521,27 +2046,25 @@ export default function AffiliateManagement() {
 
                   {/* Past Paid Out Referrals (Collapsible) */}
                   {payoutPaidCommissions.length > 0 && (
-                    <div className="pt-2">
+                    <div className="pt-1">
                       <button
                         type="button"
                         onClick={() => setShowPastPaidInPayoutModal((v) => !v)}
-                        className="text-[11px] font-bold text-black/60 hover:text-black flex items-center gap-1.5"
+                        className="text-[11px] font-semibold text-neutral-500 hover:text-neutral-900 flex items-center gap-1.5"
                       >
                         <span>{showPastPaidInPayoutModal ? '▼ Hide' : '▶ Show'} Previously Paid Out Referrals ({payoutPaidCommissions.length})</span>
                       </button>
 
                       {showPastPaidInPayoutModal && (
-                        <div className="mt-2 space-y-1.5 max-h-40 overflow-y-auto bg-black/[0.02] p-2.5 rounded-xl border border-black/10">
+                        <div className="mt-2 space-y-1.5 max-h-40 overflow-y-auto bg-neutral-50/70 p-2.5 rounded-xl border border-neutral-200">
                           {payoutPaidCommissions.map((c) => (
-                            <div key={`paid-${c.id}`} className="flex items-center justify-between text-[11px] p-1.5 bg-white rounded-lg border border-black/5">
+                            <div key={`paid-${c.id}`} className="flex items-center justify-between text-[11px] p-1.5 bg-white rounded-lg border border-neutral-200">
                               <div className="flex items-center gap-2">
-                                <span className="font-mono font-bold text-black">#{c.booking_id}</span>
-                                <span className="text-black/50">{safeFormatDate(c.booking_date || c.created_at)}</span>
-                                <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-white bg-black px-2 py-0.5 rounded-full">
-                                  ✓ Paid Out
-                                </span>
+                                <span className="font-mono font-semibold text-neutral-900">#{c.booking_id}</span>
+                                <span className="text-neutral-400">{safeFormatDate(c.booking_date || c.created_at)}</span>
+                                <StatusBadge status="paid" />
                               </div>
-                              <span className="font-mono font-bold text-black">{formatIDR(c.commission_amount)}</span>
+                              <span className="font-mono font-semibold text-neutral-900">{formatIDR(c.commission_amount)}</span>
                             </div>
                           ))}
                         </div>
@@ -1552,9 +2075,9 @@ export default function AffiliateManagement() {
               )}
 
               {/* 3. Payout Form Fields */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-black/10">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-neutral-200">
                 <div>
-                  <label className="block text-xs font-semibold text-black mb-1">
+                  <label className="block text-xs font-semibold text-neutral-800 mb-1">
                     Payout Amount (IDR) * {selectedCommissionIds.length > 0 && `(Auto-calculated for ${selectedCommissionIds.length} bookings)`}
                   </label>
                   <input
@@ -1563,16 +2086,16 @@ export default function AffiliateManagement() {
                     placeholder="e.g. 750000"
                     value={payoutForm.amount}
                     onChange={(e) => setPayoutForm({ ...payoutForm, amount: e.target.value })}
-                    className="w-full px-3 py-2 border border-black/20 rounded-xl text-xs font-mono font-bold"
+                    className="w-full h-9 px-3 border border-neutral-200 rounded-lg text-xs font-mono font-bold focus:outline-none focus:border-black"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-black mb-1">Payment Method</label>
+                  <label className="block text-xs font-semibold text-neutral-800 mb-1">Payment Method</label>
                   <select
                     value={payoutForm.payout_method}
                     onChange={(e) => setPayoutForm({ ...payoutForm, payout_method: e.target.value })}
-                    className="w-full px-3 py-2 border border-black/20 rounded-xl text-xs bg-white font-medium"
+                    className="w-full h-9 px-3 border border-neutral-200 rounded-lg text-xs bg-white font-medium focus:outline-none focus:border-black"
                   >
                     <option value="bank_transfer">Indonesian Bank Transfer</option>
                     <option value="wise">Wise</option>
@@ -1582,23 +2105,23 @@ export default function AffiliateManagement() {
                 </div>
 
                 <div className="md:col-span-2">
-                  <label className="block text-xs font-semibold text-black mb-1">Notes / Transfer Reference</label>
+                  <label className="block text-xs font-semibold text-neutral-800 mb-1">Notes / Transfer Reference</label>
                   <input
                     type="text"
                     placeholder="e.g. BCA Ref #88392102"
                     value={payoutForm.notes}
                     onChange={(e) => setPayoutForm({ ...payoutForm, notes: e.target.value })}
-                    className="w-full px-3 py-2 border border-black/20 rounded-xl text-xs"
+                    className="w-full h-9 px-3 border border-neutral-200 rounded-lg text-xs focus:outline-none focus:border-black"
                   />
                 </div>
               </div>
 
               {/* 4. Action Buttons */}
-              <div className="flex gap-2 pt-2 border-t border-black/10">
+              <div className="flex gap-2 pt-2 border-t border-neutral-200">
                 <button
                   type="submit"
                   disabled={actionLoading || !payoutForm.partner_id || !payoutForm.amount || Number(payoutForm.amount) <= 0}
-                  className="flex-1 py-2.5 bg-black text-white text-xs font-bold rounded-xl hover:bg-black/80 disabled:opacity-40 transition-all shadow-sm"
+                  className="flex-1 h-9 bg-black text-white text-xs font-medium rounded-lg hover:bg-neutral-800 disabled:opacity-40 transition-colors shadow-xs"
                 >
                   {actionLoading ? 'Processing...' : `Confirm Payout (${formatIDR(Number(payoutForm.amount) || 0)})`}
                 </button>
@@ -1609,7 +2132,7 @@ export default function AffiliateManagement() {
                     setSelectedCommissionIds([]);
                     setPayoutSelectedDate(null);
                   }}
-                  className="px-4 py-2.5 border border-black/20 text-xs font-semibold rounded-xl hover:bg-black/5 text-black"
+                  className="h-9 px-4 border border-neutral-200 text-xs font-medium rounded-lg hover:bg-neutral-50 text-neutral-700"
                 >
                   Cancel
                 </button>
@@ -1621,71 +2144,65 @@ export default function AffiliateManagement() {
 
       {/* INDEPENDENT PARTNER DETAILS & FULLSCREEN DESKTOP CALENDAR MODAL */}
       {selectedPartnerDetails && activePartnerMetrics && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 md:p-6">
-          <div
-            className="bg-white rounded-2xl w-full h-full max-w-[98vw] max-h-[96vh] flex flex-col border border-black/15 shadow-2xl overflow-hidden"
-          >
-            {/* Modal Header: Comfortable White Background */}
-            <div className="p-4 sm:p-5 bg-white border-b border-black/10 text-black flex items-start justify-between shrink-0">
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 md:p-6">
+          <div className="bg-white rounded-2xl w-full h-full max-w-[98vw] max-h-[96vh] flex flex-col border border-neutral-200 shadow-2xl overflow-hidden">
+            
+            {/* Modal Header */}
+            <div className="p-4 sm:p-5 bg-white border-b border-neutral-200 text-neutral-900 flex items-start justify-between shrink-0">
               <div>
                 <div className="flex items-center gap-2.5 flex-wrap">
-                  <h3 className="font-bold text-black text-lg sm:text-xl tracking-tight">
+                  <h3 className="font-bold text-neutral-900 text-lg sm:text-xl tracking-tight">
                     {selectedPartnerDetails.first_name} {selectedPartnerDetails.last_name || ''}
                   </h3>
-                  <span className="font-mono font-bold text-black bg-black/5 px-2.5 py-0.5 rounded-lg text-xs border border-black/10">
+                  <span className="font-mono font-medium text-neutral-800 bg-neutral-100 px-2 py-0.5 rounded text-xs border border-neutral-200">
                     {selectedPartnerDetails.partner_code}
                   </span>
-                  <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
-                    selectedPartnerDetails.status === 'active'
-                      ? 'bg-black text-white'
-                      : 'bg-black/5 text-black border border-black/10'
-                  }`}>
-                    {selectedPartnerDetails.status}
-                  </span>
+                  <StatusBadge status={selectedPartnerDetails.status} />
                 </div>
-                <div className="text-xs text-black/60 mt-1 flex items-center gap-2 flex-wrap">
+                <div className="text-xs text-neutral-500 mt-1 flex items-center gap-2 flex-wrap">
                   {selectedPartnerDetails.business_name && (
-                    <span className="text-black font-semibold">{selectedPartnerDetails.business_name}</span>
+                    <span className="text-neutral-800 font-medium">{selectedPartnerDetails.business_name}</span>
                   )}
                   <span>&bull;</span>
-                  <span>Rate: <strong className="text-black font-mono">{selectedPartnerDetails.commission_rate_pct}%</strong></span>
+                  <span>Rate: <strong className="text-neutral-900 font-mono">{selectedPartnerDetails.commission_rate_pct}%</strong></span>
                   <span>&bull;</span>
-                  <span>Joined: {new Date(selectedPartnerDetails.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                  <span>Joined: {safeFormatDate(selectedPartnerDetails.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                 </div>
               </div>
 
               <button
                 type="button"
                 onClick={() => setSelectedPartnerDetails(null)}
-                className="w-8 h-8 rounded-xl bg-black/5 hover:bg-black hover:text-white text-black flex items-center justify-center transition-colors"
+                className="w-8 h-8 rounded-lg bg-white border border-neutral-200 hover:bg-neutral-50 text-neutral-600 flex items-center justify-center transition-colors"
                 title="Close"
               >
-                <X size={16} />
+                <X size={15} />
               </button>
             </div>
 
             {/* Modal Sub-Tabs */}
-            <div className="flex items-center gap-1 border-b border-black/10 px-4 sm:px-6 pt-2 bg-black/[0.02] shrink-0 overflow-x-auto">
+            <div className="flex items-center gap-1 border-b border-neutral-200 px-4 sm:px-6 pt-2 bg-neutral-50/50 shrink-0 overflow-x-auto">
               {[
-                { id: 'overview', label: 'Overview & Contact' },
+                { id: 'overview', label: 'Overview' },
                 { id: 'calendar', label: 'Calendar', count: activePartnerMetrics.bookingsCount },
                 { id: 'commissions', label: 'Commissions', count: activePartnerMetrics.commissions.length },
-                { id: 'payouts', label: 'Paid Out', count: activePartnerMetrics.payouts.length },
+                { id: 'payouts', label: 'Payouts', count: activePartnerMetrics.payouts.length },
               ].map((tab) => {
                 const isActive = partnerActiveTab === tab.id;
                 return (
                   <button
                     key={tab.id}
+                    type="button"
                     onClick={() => setPartnerActiveTab(tab.id as any)}
-                    className={`flex items-center gap-1.5 px-4 py-2 text-xs font-bold border-b-2 transition-all whitespace-nowrap ${
+                    className={`flex items-center gap-1.5 px-4 py-2 text-xs font-medium border-b-2 transition-all whitespace-nowrap ${
                       isActive
-                        ? 'border-black text-black bg-white rounded-t-xl shadow-xs'
-                        : 'border-transparent text-black/60 hover:text-black hover:bg-black/5'
+                        ? 'border-black text-black bg-white rounded-t-lg shadow-2xs font-semibold'
+                        : 'border-transparent text-neutral-500 hover:text-neutral-900 hover:bg-white/50'
                     }`}
                   >
                     <span>{tab.label}</span>
                     {tab.count !== undefined && (
-                      <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${isActive ? 'bg-black text-white' : 'bg-black/10 text-black'}`}>
+                      <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${isActive ? 'bg-black text-white' : 'bg-neutral-200/80 text-neutral-700'}`}>
                         {tab.count}
                       </span>
                     )}
@@ -1694,51 +2211,51 @@ export default function AffiliateManagement() {
               })}
             </div>
 
-            {/* Modal Tab Content (Fullscreen, Clean Monochrome) */}
+            {/* Modal Tab Content */}
             <div
               className={`flex-1 min-h-0 ${
                 partnerActiveTab === 'calendar'
                   ? 'overflow-hidden p-3 sm:p-4 flex flex-col'
-                  : 'overflow-y-auto p-5 sm:p-6 space-y-6'
+                  : 'overflow-y-auto p-4 sm:p-6 space-y-5'
               }`}
             >
               
-              {/* TAB A: OVERVIEW & CONTACT (Contact and Category cleanly placed here) */}
+              {/* TAB A: OVERVIEW & PROFILE */}
               {partnerActiveTab === 'overview' && (
-                <div className="space-y-6 text-xs">
+                <div className="space-y-5 text-xs">
                   
                   {/* Financial KPI Banner */}
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    <div className="bg-black/[0.03] p-3.5 rounded-2xl border border-black/10">
-                      <span className="text-[10px] uppercase font-bold text-black/50 block">Total Commission</span>
-                      <span className="text-base font-bold text-black mt-1 block">
+                    <div className="bg-white p-3.5 rounded-xl border border-neutral-200 shadow-2xs">
+                      <span className="text-[10px] font-semibold text-neutral-500 block uppercase">Commission</span>
+                      <span className="text-base font-bold text-neutral-900 mt-1 block font-mono">
                         {formatIDR(activePartnerMetrics.totalEarned)}
                       </span>
-                      <span className="text-[10px] text-black/50">{activePartnerMetrics.commissions.length} referrals</span>
+                      <span className="text-[10px] text-neutral-400">{activePartnerMetrics.commissions.length} referrals</span>
                     </div>
 
-                    <div className="bg-black/[0.03] p-3.5 rounded-2xl border border-black/10">
-                      <span className="text-[10px] uppercase font-bold text-black/50 block">Approved Unpaid</span>
-                      <span className="text-base font-bold text-black mt-1 block">
+                    <div className="bg-white p-3.5 rounded-xl border border-neutral-200 shadow-2xs">
+                      <span className="text-[10px] font-semibold text-neutral-500 block uppercase">Unpaid</span>
+                      <span className="text-base font-bold text-neutral-900 mt-1 block font-mono">
                         {formatIDR(activePartnerMetrics.approvedUnpaid)}
                       </span>
-                      <span className="text-[10px] text-black/50">Ready to transfer</span>
+                      <span className="text-[10px] text-neutral-400">Ready to settle</span>
                     </div>
 
-                    <div className="bg-black/[0.03] p-3.5 rounded-2xl border border-black/10">
-                      <span className="text-[10px] uppercase font-bold text-black/50 block">Total Paid Out</span>
-                      <span className="text-base font-bold text-black mt-1 block">
+                    <div className="bg-white p-3.5 rounded-xl border border-neutral-200 shadow-2xs">
+                      <span className="text-[10px] font-semibold text-neutral-500 block uppercase">Paid out</span>
+                      <span className="text-base font-bold text-neutral-900 mt-1 block font-mono">
                         {formatIDR(activePartnerMetrics.totalPaidOut)}
                       </span>
-                      <span className="text-[10px] text-black/50">{activePartnerMetrics.payouts.length} transfers</span>
+                      <span className="text-[10px] text-neutral-400">{activePartnerMetrics.payouts.length} transfers</span>
                     </div>
 
-                    <div className="bg-black/[0.03] p-3.5 rounded-2xl border border-black/10">
-                      <span className="text-[10px] uppercase font-bold text-black/50 block">Pending Verification</span>
-                      <span className="text-base font-bold text-black mt-1 block">
+                    <div className="bg-white p-3.5 rounded-xl border border-neutral-200 shadow-2xs">
+                      <span className="text-[10px] font-semibold text-neutral-500 block uppercase">Pending</span>
+                      <span className="text-base font-bold text-neutral-900 mt-1 block font-mono">
                         {formatIDR(activePartnerMetrics.pending)}
                       </span>
-                      <span className="text-[10px] text-black/50">Awaiting service</span>
+                      <span className="text-[10px] text-neutral-400">Awaiting service</span>
                     </div>
                   </div>
 
@@ -1746,18 +2263,18 @@ export default function AffiliateManagement() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     
                     {/* Contact Details Card */}
-                    <div className="bg-white p-4 rounded-2xl border border-black/10 shadow-xs space-y-3">
-                      <h4 className="font-bold text-black text-xs uppercase tracking-wider border-b border-black/10 pb-2">
-                        Partner Contact Information
+                    <div className="bg-white p-4 rounded-xl border border-neutral-200 shadow-2xs space-y-3">
+                      <h4 className="font-bold text-neutral-900 text-xs border-b border-neutral-200 pb-2">
+                        Contact Details
                       </h4>
 
-                      <div className="space-y-2.5">
-                        <div className="flex items-center justify-between p-2.5 rounded-xl bg-black/[0.02] border border-black/5">
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between p-2.5 rounded-lg bg-neutral-50/70 border border-neutral-200">
                           <div>
-                            <span className="text-[10px] text-black/50 block">Email Address</span>
+                            <span className="text-[10px] text-neutral-400 block">Email Address</span>
                             <a
                               href={`mailto:${selectedPartnerDetails.email}`}
-                              className="font-semibold text-black hover:underline mt-0.5 block"
+                              className="font-medium text-neutral-900 hover:underline mt-0.5 block"
                             >
                               {selectedPartnerDetails.email}
                             </a>
@@ -1765,27 +2282,27 @@ export default function AffiliateManagement() {
                           <button
                             type="button"
                             onClick={() => handleCopyText(selectedPartnerDetails.email, 'email')}
-                            className="p-1.5 rounded-lg hover:bg-black/5 text-black/60"
+                            className="p-1.5 rounded-md hover:bg-neutral-100 text-neutral-500"
                             title="Copy email"
                           >
-                            {copiedId === 'email' ? <Check size={12} /> : <Copy size={12} />}
+                            {copiedId === 'email' ? <Check size={12} className="text-emerald-600" /> : <Copy size={12} />}
                           </button>
                         </div>
 
-                        <div className="flex items-center justify-between p-2.5 rounded-xl bg-black/[0.02] border border-black/5">
+                        <div className="flex items-center justify-between p-2.5 rounded-lg bg-neutral-50/70 border border-neutral-200">
                           <div>
-                            <span className="text-[10px] text-black/50 block">WhatsApp Direct Chat</span>
+                            <span className="text-[10px] text-neutral-400 block">WhatsApp Direct Chat</span>
                             {selectedPartnerDetails.whatsapp ? (
                               <a
                                 href={`https://wa.me/${selectedPartnerDetails.whatsapp.replace(/[^0-9]/g, '')}`}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="font-bold text-black hover:underline mt-0.5 block"
+                                className="font-semibold text-neutral-900 hover:underline mt-0.5 block"
                               >
                                 {selectedPartnerDetails.whatsapp}
                               </a>
                             ) : (
-                              <span className="text-black/40">Not provided</span>
+                              <span className="text-neutral-400">Not provided</span>
                             )}
                           </div>
                           {selectedPartnerDetails.whatsapp && (
@@ -1793,22 +2310,23 @@ export default function AffiliateManagement() {
                               href={`https://wa.me/${selectedPartnerDetails.whatsapp.replace(/[^0-9]/g, '')}`}
                               target="_blank"
                               rel="noreferrer"
-                              className="px-2.5 py-1 bg-black text-white rounded-lg text-[10px] font-bold hover:bg-black/80"
+                              className="h-7 px-2.5 bg-black text-white rounded-md text-xs font-medium hover:bg-neutral-800 inline-flex items-center gap-1 shadow-2xs"
                             >
-                              Open WA
+                              <span>Open WA</span>
+                              <ArrowUpRight size={11} />
                             </a>
                           )}
                         </div>
 
-                        <div className="flex items-center justify-between p-2.5 rounded-xl bg-black/[0.02] border border-black/5">
+                        <div className="flex items-center justify-between p-2.5 rounded-lg bg-neutral-50/70 border border-neutral-200">
                           <div>
-                            <span className="text-[10px] text-black/50 block">Phone Number</span>
+                            <span className="text-[10px] text-neutral-400 block">Phone Number</span>
                             {selectedPartnerDetails.phone ? (
-                              <a href={`tel:${selectedPartnerDetails.phone}`} className="font-semibold text-black hover:underline mt-0.5 block">
+                              <a href={`tel:${selectedPartnerDetails.phone}`} className="font-medium text-neutral-900 hover:underline mt-0.5 block">
                                 {selectedPartnerDetails.phone}
                               </a>
                             ) : (
-                              <span className="text-black/40">Not provided</span>
+                              <span className="text-neutral-400">Not provided</span>
                             )}
                           </div>
                         </div>
@@ -1816,30 +2334,30 @@ export default function AffiliateManagement() {
                     </div>
 
                     {/* Category & Business Profile Card */}
-                    <div className="bg-white p-4 rounded-2xl border border-black/10 shadow-xs space-y-3">
-                      <h4 className="font-bold text-black text-xs uppercase tracking-wider border-b border-black/10 pb-2">
-                        Partner Category & Villa
+                    <div className="bg-white p-4 rounded-xl border border-neutral-200 shadow-2xs space-y-3">
+                      <h4 className="font-bold text-neutral-900 text-xs border-b border-neutral-200 pb-2">
+                        Business & Category
                       </h4>
 
-                      <div className="space-y-2.5">
-                        <div className="p-2.5 rounded-xl bg-black/[0.02] border border-black/5">
-                          <span className="text-[10px] text-black/50 block">Category Classification</span>
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-bold bg-black text-white uppercase tracking-wider mt-1">
+                      <div className="space-y-2">
+                        <div className="p-2.5 rounded-lg bg-neutral-50/70 border border-neutral-200">
+                          <span className="text-[10px] text-neutral-400 block">Category</span>
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-neutral-100 text-neutral-800 border border-neutral-200 capitalize mt-1">
                             {selectedPartnerDetails.partner_type?.replace('_', ' ') || 'Hotel Villa'}
                           </span>
                         </div>
 
-                        <div className="p-2.5 rounded-xl bg-black/[0.02] border border-black/5">
-                          <span className="text-[10px] text-black/50 block">Business / Villa Name</span>
-                          <span className="font-semibold text-black text-xs block mt-0.5">
+                        <div className="p-2.5 rounded-lg bg-neutral-50/70 border border-neutral-200">
+                          <span className="text-[10px] text-neutral-400 block">Business / Villa Name</span>
+                          <span className="font-semibold text-neutral-900 text-xs block mt-0.5">
                             {selectedPartnerDetails.business_name || 'Individual Partner (No Villa)'}
                           </span>
                         </div>
 
-                        <div className="p-2.5 rounded-xl bg-black/[0.02] border border-black/5">
-                          <span className="text-[10px] text-black/50 block">Unique Partner Referral Link</span>
+                        <div className="p-2.5 rounded-lg bg-neutral-50/70 border border-neutral-200">
+                          <span className="text-[10px] text-neutral-400 block">Referral Link</span>
                           <div className="flex items-center justify-between gap-2 mt-1">
-                            <span className="font-mono text-[10px] text-black truncate">
+                            <span className="font-mono text-[11px] text-neutral-800 truncate">
                               https://www.booktherapick.com/?ref={selectedPartnerDetails.partner_code}
                             </span>
                             <button
@@ -1847,10 +2365,10 @@ export default function AffiliateManagement() {
                               onClick={() =>
                                 handleCopyText(`https://www.booktherapick.com/?ref=${selectedPartnerDetails.partner_code}`, 'link')
                               }
-                              className="p-1 rounded bg-black/5 hover:bg-black/10 text-black shrink-0"
+                              className="p-1 rounded bg-white border border-neutral-200 hover:bg-neutral-50 text-neutral-700 shrink-0"
                               title="Copy link"
                             >
-                              {copiedId === 'link' ? <Check size={11} /> : <Copy size={11} />}
+                              {copiedId === 'link' ? <Check size={11} className="text-emerald-600" /> : <Copy size={11} />}
                             </button>
                           </div>
                         </div>
@@ -1860,51 +2378,51 @@ export default function AffiliateManagement() {
                   </div>
 
                   {/* Payout Method & Banking Details Card */}
-                  <div className="bg-white p-4 rounded-2xl border border-black/10 shadow-xs space-y-3">
-                    <div className="flex items-center justify-between border-b border-black/10 pb-2">
-                      <h4 className="font-bold text-black text-xs uppercase tracking-wider">
-                        Payout Method & Banking Information
+                  <div className="bg-white p-4 rounded-xl border border-neutral-200 shadow-2xs space-y-3">
+                    <div className="flex items-center justify-between border-b border-neutral-200 pb-2">
+                      <h4 className="font-bold text-neutral-900 text-xs">
+                        Payout Method & Banking
                       </h4>
-                      <span className="font-bold uppercase tracking-wider text-[10px] text-black bg-black/5 px-2 py-0.5 rounded">
+                      <span className="font-medium capitalize text-xs text-neutral-700 bg-neutral-100 px-2 py-0.5 rounded border border-neutral-200">
                         {selectedPartnerDetails.payout_method?.replace('_', ' ') || 'Bank Transfer'}
                       </span>
                     </div>
 
                     {selectedPartnerDetails.payout_details?.bank_name ? (
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3 rounded-xl bg-black/[0.02] border border-black/5">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3 rounded-lg bg-neutral-50/70 border border-neutral-200">
                         <div>
-                          <span className="text-black/50 block text-[10px]">Bank Name</span>
-                          <span className="font-bold text-black">{selectedPartnerDetails.payout_details.bank_name}</span>
+                          <span className="text-neutral-400 block text-[10px]">Bank Name</span>
+                          <span className="font-semibold text-neutral-900">{selectedPartnerDetails.payout_details.bank_name}</span>
                         </div>
                         <div>
-                          <span className="text-black/50 block text-[10px]">Account Number</span>
-                          <span className="font-mono font-bold text-black text-sm flex items-center gap-1.5">
+                          <span className="text-neutral-400 block text-[10px]">Account Number</span>
+                          <span className="font-mono font-bold text-neutral-900 text-xs flex items-center gap-1.5 mt-0.5">
                             <span>{selectedPartnerDetails.payout_details.account_number}</span>
                             <button
                               type="button"
                               onClick={() => handleCopyText(selectedPartnerDetails.payout_details.account_number, 'acc')}
-                              className="text-black/40 hover:text-black"
+                              className="text-neutral-400 hover:text-neutral-700"
                             >
-                              {copiedId === 'acc' ? <Check size={12} /> : <Copy size={12} />}
+                              {copiedId === 'acc' ? <Check size={12} className="text-emerald-600" /> : <Copy size={12} />}
                             </button>
                           </span>
                         </div>
                         <div>
-                          <span className="text-black/50 block text-[10px]">Account Holder</span>
-                          <span className="font-bold text-black">{selectedPartnerDetails.payout_details.account_holder}</span>
+                          <span className="text-neutral-400 block text-[10px]">Account Holder</span>
+                          <span className="font-semibold text-neutral-900">{selectedPartnerDetails.payout_details.account_holder}</span>
                         </div>
                       </div>
                     ) : (
-                      <div className="p-3 rounded-xl bg-black/[0.02] border border-black/5 text-black/50">
+                      <div className="p-3 rounded-lg bg-neutral-50/70 border border-neutral-200 text-neutral-400">
                         No specific bank account entered yet.
                       </div>
                     )}
                   </div>
 
-                  {/* Notes & Status Actions */}
-                  <div className="bg-white p-4 rounded-2xl border border-black/10 shadow-xs space-y-3">
-                    <h4 className="font-bold text-black text-xs uppercase tracking-wider">
-                      Internal Partner Notes
+                  {/* Internal Notes & Account Controls */}
+                  <div className="bg-white p-4 rounded-xl border border-neutral-200 shadow-2xs space-y-3">
+                    <h4 className="font-bold text-neutral-900 text-xs">
+                      Internal Notes
                     </h4>
                     <div className="space-y-2">
                       <textarea
@@ -1912,13 +2430,13 @@ export default function AffiliateManagement() {
                         value={partnerNotesInput}
                         onChange={(e) => setPartnerNotesInput(e.target.value)}
                         placeholder="Add internal notes about this partner..."
-                        className="w-full p-2.5 rounded-xl border border-black/15 text-xs focus:ring-1 focus:ring-black"
+                        className="w-full p-2.5 rounded-lg border border-neutral-200 text-xs focus:outline-none focus:border-black"
                       />
                       <div className="flex justify-between items-center">
                         <button
                           type="button"
                           onClick={() => handleSaveNotes(selectedPartnerDetails.id)}
-                          className="px-3.5 py-1.5 bg-black text-white rounded-lg font-bold hover:bg-black/80"
+                          className="h-8 px-3.5 bg-black text-white rounded-lg text-xs font-medium hover:bg-neutral-800 shadow-xs"
                         >
                           Save Notes
                         </button>
@@ -1926,24 +2444,33 @@ export default function AffiliateManagement() {
                         <div className="flex gap-1.5">
                           {selectedPartnerDetails.status === 'pending' && (
                             <button
+                              type="button"
                               onClick={() => handlePartnerStatus(selectedPartnerDetails.id, 'active')}
-                              className="px-3 py-1.5 bg-black text-white font-bold rounded-lg hover:bg-black/80"
+                              className="h-8 px-3.5 bg-black text-white font-medium rounded-lg text-xs hover:bg-neutral-800 shadow-xs"
                             >
                               Approve Partner
                             </button>
                           )}
                           {selectedPartnerDetails.status === 'active' && (
                             <button
-                              onClick={() => handlePartnerStatus(selectedPartnerDetails.id, 'suspended')}
-                              className="px-3 py-1.5 border border-black/20 text-black hover:bg-black/5 font-semibold rounded-lg"
+                              type="button"
+                              onClick={() =>
+                                setConfirmAction({
+                                  type: 'suspend',
+                                  id: selectedPartnerDetails.id,
+                                  name: `${selectedPartnerDetails.first_name} ${selectedPartnerDetails.last_name || ''}`,
+                                })
+                              }
+                              className="h-8 px-3.5 border border-neutral-200 text-neutral-700 hover:bg-neutral-50 font-medium rounded-lg text-xs"
                             >
                               Suspend Partner
                             </button>
                           )}
                           {selectedPartnerDetails.status === 'suspended' && (
                             <button
+                              type="button"
                               onClick={() => handlePartnerStatus(selectedPartnerDetails.id, 'active')}
-                              className="px-3 py-1.5 bg-black text-white font-semibold rounded-lg hover:bg-black/80"
+                              className="h-8 px-3.5 bg-black text-white font-medium rounded-lg text-xs hover:bg-neutral-800 shadow-xs"
                             >
                               Reactivate Partner
                             </button>
@@ -1956,12 +2483,12 @@ export default function AffiliateManagement() {
                 </div>
               )}
 
-              {/* TAB B: INDEPENDENT PARTNER CALENDAR (FULLSCREEN DESKTOP LAYOUT) */}
+              {/* TAB B: INDEPENDENT PARTNER CALENDAR (Fixed Grid + Scrollable Appointments) */}
               {partnerActiveTab === 'calendar' && (
                 <div className="flex-1 min-h-0 flex flex-col space-y-3 text-xs overflow-hidden">
                   
-                  {/* Calendar Top Controls Header (Strict Monochrome, Pure White Background) */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-2.5 sm:p-3 rounded-2xl border border-black/10 shrink-0">
+                  {/* Calendar Top Controls */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-2.5 sm:p-3 rounded-xl border border-neutral-200 shrink-0">
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
@@ -1974,13 +2501,13 @@ export default function AffiliateManagement() {
                           }
                           setPartnerSelectedDate(null);
                         }}
-                        className="w-8 h-8 rounded-xl bg-white border border-black/15 flex items-center justify-center hover:bg-black/5 text-black"
+                        className="w-8 h-8 rounded-lg bg-white border border-neutral-200 flex items-center justify-center hover:bg-neutral-50 text-neutral-700"
                         title="Previous Month"
                       >
                         <ChevronLeft size={16} />
                       </button>
 
-                      <div className="font-bold text-black text-sm px-2">
+                      <div className="font-bold text-neutral-900 text-sm px-2">
                         {MONTH_NAMES[partnerCalendarMonth]} {partnerCalendarYear}
                       </div>
 
@@ -1995,7 +2522,7 @@ export default function AffiliateManagement() {
                           }
                           setPartnerSelectedDate(null);
                         }}
-                        className="w-8 h-8 rounded-xl bg-white border border-black/15 flex items-center justify-center hover:bg-black/5 text-black"
+                        className="w-8 h-8 rounded-lg bg-white border border-neutral-200 flex items-center justify-center hover:bg-neutral-50 text-neutral-700"
                         title="Next Month"
                       >
                         <ChevronRight size={16} />
@@ -2011,33 +2538,21 @@ export default function AffiliateManagement() {
                           const dd = String(now.getDate()).padStart(2, '0');
                           setPartnerSelectedDate(`${now.getFullYear()}-${mm}-${dd}`);
                         }}
-                        className="px-2.5 py-1 text-[11px] font-semibold bg-white border border-black/15 rounded-lg hover:bg-black/5 text-black"
+                        className="h-8 px-2.5 text-xs font-medium bg-white border border-neutral-200 rounded-lg hover:bg-neutral-50 text-neutral-700"
                       >
                         Today
                       </button>
                     </div>
 
-                    <div className="flex items-center gap-3 text-[11px] text-black/60 flex-wrap">
+                    <div className="flex items-center gap-3 text-xs text-neutral-500 flex-wrap">
                       {partnerMonthBookings.some((b) => b.status === 'pending') && (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black text-white text-[10px] font-bold tracking-tight">
-                          <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-semibold">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
                           {partnerMonthBookings.filter((b) => b.status === 'pending').length} New Bookings
                         </span>
                       )}
-                      <div className="flex items-center gap-2">
-                        <span className="flex items-center gap-1 font-semibold text-black">
-                          <span className="w-2 h-2 rounded-full bg-black inline-block" /> Paid Out
-                        </span>
-                        <span className="flex items-center gap-1 font-semibold text-black">
-                          <span className="w-2 h-2 rounded-full border border-black bg-white inline-block" /> Approved
-                        </span>
-                        <span className="flex items-center gap-1 font-semibold text-black/50">
-                          <span className="w-2 h-2 rounded-full bg-black/20 inline-block" /> Pending
-                        </span>
-                      </div>
-                      <div className="hidden sm:block text-black/20">|</div>
                       <div>
-                        Month: <strong className="text-black font-bold">{partnerMonthBookings.length}</strong> bookings (<strong className="text-black font-bold">{formatIDR(partnerMonthBookings.reduce((sum, b) => sum + Number(b.commission_amount || 0), 0))}</strong>)
+                        Month: <strong className="text-neutral-900 font-semibold">{partnerMonthBookings.length}</strong> bookings (<strong className="text-neutral-900 font-mono font-semibold">{formatIDR(partnerMonthBookings.reduce((sum, b) => sum + Number(b.commission_amount || 0), 0))}</strong>)
                       </div>
                     </div>
                   </div>
@@ -2046,8 +2561,8 @@ export default function AffiliateManagement() {
                   <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1 min-h-0 items-stretch overflow-hidden">
                     
                     {/* Left Column: Fixed Month Grid (lg:col-span-7 xl:col-span-8) - Can NOT scroll down */}
-                    <div className="lg:col-span-7 xl:col-span-8 bg-white rounded-2xl border border-black/10 p-3 sm:p-4 shadow-xs flex flex-col h-full min-h-0 overflow-hidden select-none">
-                      <div className="grid grid-cols-7 gap-1 text-center font-bold text-black text-[11px] mb-2 uppercase tracking-wider shrink-0">
+                    <div className="lg:col-span-7 xl:col-span-8 bg-white rounded-xl border border-neutral-200 p-3 sm:p-4 shadow-2xs flex flex-col h-full min-h-0 overflow-hidden select-none">
+                      <div className="grid grid-cols-7 gap-1 text-center font-bold text-neutral-400 text-[11px] mb-2 uppercase shrink-0">
                         {DAYS_OF_WEEK.map((d) => (
                           <div key={d} className="py-1">{d}</div>
                         ))}
@@ -2055,7 +2570,7 @@ export default function AffiliateManagement() {
 
                       <div className="grid grid-cols-7 gap-1.5 flex-1 min-h-0 auto-rows-fr">
                         {Array.from({ length: calendarFirstDayOfWeek }).map((_, i) => (
-                          <div key={`empty-${i}`} className="h-full bg-black/[0.01] rounded-xl border border-transparent" />
+                          <div key={`empty-${i}`} className="h-full bg-neutral-50/50 rounded-lg border border-transparent" />
                         ))}
 
                         {Array.from({ length: calendarDaysInMonth }).map((_, i) => {
@@ -2075,19 +2590,19 @@ export default function AffiliateManagement() {
                             <div
                               key={dateStr}
                               onClick={() => setPartnerSelectedDate(isSelected ? null : dateStr)}
-                              className={`h-full p-1 sm:p-1.5 rounded-xl border transition-all cursor-pointer flex flex-col justify-between select-none ${
+                              className={`h-full p-1 sm:p-1.5 rounded-lg border transition-all cursor-pointer flex flex-col justify-between select-none ${
                                 isSelected
                                   ? 'bg-black text-white border-black shadow-md'
                                   : dayBookings.length > 0
-                                  ? 'bg-white border-black/30 hover:border-black hover:shadow-xs'
-                                  : 'bg-white border-black/10 hover:border-black/30'
+                                  ? 'bg-white border-neutral-300 hover:border-black shadow-2xs'
+                                  : 'bg-white border-neutral-200/70 hover:border-neutral-300'
                               }`}
                             >
                               <div className="flex items-center justify-between">
                                 <span
-                                  className={`text-[11px] sm:text-xs font-bold w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full ${
+                                  className={`text-[11px] sm:text-xs font-semibold w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full ${
                                     isToday && !isSelected
-                                      ? 'bg-black text-white'
+                                      ? 'bg-neutral-900 text-white'
                                       : isToday && isSelected
                                       ? 'bg-white text-black font-extrabold'
                                       : ''
@@ -2098,14 +2613,14 @@ export default function AffiliateManagement() {
                                 <div className="flex items-center gap-1">
                                   {hasPending && (
                                     <span className={`text-[8px] font-extrabold uppercase px-1 rounded ${
-                                      isSelected ? 'bg-white text-black' : 'bg-black text-white animate-pulse'
+                                      isSelected ? 'bg-white text-black' : 'bg-amber-500 text-white animate-pulse'
                                     }`}>
                                       NEW
                                     </span>
                                   )}
                                   {dayBookings.length > 0 && (
                                     <span className={`text-[9px] sm:text-[10px] px-1.5 py-0.2 rounded font-mono font-bold ${
-                                      isSelected ? 'bg-white text-black' : 'bg-black text-white'
+                                      isSelected ? 'bg-white text-black' : 'bg-neutral-100 text-neutral-800'
                                     }`}>
                                       {dayBookings.length}
                                     </span>
@@ -2115,25 +2630,25 @@ export default function AffiliateManagement() {
 
                               {dayBookings.length > 0 ? (
                                 <div className="space-y-0.5">
-                                  <div className={`text-[9px] sm:text-[10px] font-bold truncate ${isSelected ? 'text-white' : 'text-black'}`}>
+                                  <div className={`text-[9px] sm:text-[10px] font-mono font-bold truncate ${isSelected ? 'text-white' : 'text-neutral-900'}`}>
                                     {formatIDR(dayCommSum)}
                                   </div>
                                   <div className="flex items-center gap-1">
                                     {hasPaid && (
                                       <span
-                                        className={`inline-block w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-white' : 'bg-black'}`}
+                                        className={`inline-block w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-white' : 'bg-neutral-900'}`}
                                         title="Paid Out"
                                       />
                                     )}
                                     {hasApproved && (
                                       <span
-                                        className={`inline-block w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-white border border-black' : 'border border-black bg-white'}`}
+                                        className={`inline-block w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-white' : 'bg-emerald-500'}`}
                                         title="Approved"
                                       />
                                     )}
                                     {hasPending && (
                                       <span
-                                        className={`inline-block w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-white/60' : 'bg-black/25'}`}
+                                        className={`inline-block w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-amber-300' : 'bg-amber-500'}`}
                                         title="Pending"
                                       />
                                     )}
@@ -2148,16 +2663,16 @@ export default function AffiliateManagement() {
                       </div>
                     </div>
 
-                    {/* Right Column: Appointments List for Selected Date or Month (lg:col-span-5 xl:col-span-4) - SCROLLABLE */}
+                    {/* Right Column: Appointments List (lg:col-span-5 xl:col-span-4) - SCROLLABLE */}
                     <div className="lg:col-span-5 xl:col-span-4 flex flex-col h-full min-h-0 space-y-2.5">
-                      <div className="flex items-center justify-between bg-white p-2.5 sm:p-3 rounded-xl border border-black/10 shrink-0">
+                      <div className="flex items-center justify-between bg-white p-2.5 sm:p-3 rounded-xl border border-neutral-200 shrink-0">
                         <div>
-                          <h4 className="font-bold text-black text-xs">
+                          <h4 className="font-bold text-neutral-900 text-xs">
                             {partnerSelectedDate
                               ? safeFormatDate(partnerSelectedDate, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
                               : `All in ${MONTH_NAMES[partnerCalendarMonth]} ${partnerCalendarYear}`}
                           </h4>
-                          <span className="text-[11px] text-black/60">
+                          <span className="text-[11px] text-neutral-500">
                             {(partnerSelectedDate ? (partnerBookingsByDate[partnerSelectedDate]?.length || 0) : partnerMonthBookings.length)} bookings
                           </span>
                         </div>
@@ -2165,7 +2680,7 @@ export default function AffiliateManagement() {
                           <button
                             type="button"
                             onClick={() => setPartnerSelectedDate(null)}
-                            className="text-[11px] font-semibold text-black hover:underline"
+                            className="text-[11px] font-semibold text-neutral-900 hover:underline"
                           >
                             Show month
                           </button>
@@ -2179,7 +2694,7 @@ export default function AffiliateManagement() {
 
                         if (displayedList.length === 0) {
                           return (
-                            <div className="bg-black/[0.02] p-8 rounded-2xl border border-black/5 text-center text-black/50">
+                            <div className="bg-neutral-50/70 p-8 rounded-xl border border-neutral-200 text-center text-neutral-400">
                               No appointments found for this period.
                             </div>
                           );
@@ -2190,68 +2705,52 @@ export default function AffiliateManagement() {
                             {displayedList.map((b) => (
                               <div
                                 key={b.id}
-                                className="bg-white p-3 rounded-2xl border border-black/10 shadow-xs space-y-2 hover:border-black/30 transition-all"
+                                className="bg-white p-3 rounded-xl border border-neutral-200 shadow-2xs space-y-2 hover:border-neutral-300 transition-colors"
                               >
                                 <div className="flex items-start justify-between">
                                   <div>
-                                    <div className="font-mono font-bold text-black text-xs flex items-center gap-1.5">
+                                    <div className="font-mono font-bold text-neutral-900 text-xs flex items-center gap-1.5">
                                       <span>#{b.booking_id}</span>
                                       <button
                                         type="button"
                                         onClick={() => handleCopyText(b.booking_id, `bk-${b.id}`)}
-                                        className="text-black/40 hover:text-black"
+                                        className="text-neutral-400 hover:text-neutral-700"
                                       >
-                                        {copiedId === `bk-${b.id}` ? <Check size={11} /> : <Copy size={11} />}
+                                        {copiedId === `bk-${b.id}` ? <Check size={11} className="text-emerald-600" /> : <Copy size={11} />}
                                       </button>
                                     </div>
-                                    <div className="text-[11px] font-semibold text-black mt-0.5">
+                                    <div className="text-[11px] font-medium text-neutral-900 mt-0.5">
                                       {b.guest_name || 'Guest'}
                                     </div>
                                     {b.location && (
-                                      <div className="text-[10px] text-black/50 mt-0.5">
+                                      <div className="text-[10px] text-neutral-400 mt-0.5">
                                         {b.location} {b.room_number ? `(${b.room_number})` : ''}
                                       </div>
                                     )}
                                   </div>
 
                                   <div className="text-right">
-                                    {b.status === 'paid' ? (
-                                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-black text-white">
-                                        <CheckCircle2 size={10} /> Paid Out
-                                      </span>
-                                    ) : b.status === 'approved' ? (
-                                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-white text-black border border-black">
-                                        <CheckCircle2 size={10} /> Approved
-                                      </span>
-                                    ) : b.status === 'declined' ? (
-                                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-black/5 text-black border border-black/20 line-through">
-                                        Declined
-                                      </span>
-                                    ) : (
-                                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-black/5 text-black border border-black/15">
-                                        <Clock size={10} /> Pending
-                                      </span>
-                                    )}
-                                    <div className="text-[10px] text-black/50 mt-1">
+                                    <StatusBadge status={b.status} />
+                                    <div className="text-[10px] text-neutral-400 mt-1">
                                       {safeFormatDate(b.booking_date || b.created_at)} {b.booking_time || ''}
                                     </div>
                                   </div>
                                 </div>
 
-                                <div className="border-t border-black/5 pt-2 flex items-center justify-between text-[11px]">
+                                <div className="border-t border-neutral-100 pt-2 flex items-center justify-between text-[11px]">
                                   <div>
-                                    <span className="text-black/50 block text-[10px]">{b.treatment_name || 'Treatment'}</span>
-                                    <span className="font-medium text-black">Net: {formatIDR(b.eligible_treatment_amount)}</span>
+                                    <span className="text-neutral-400 block text-[10px]">{b.treatment_name || 'Treatment'}</span>
+                                    <span className="font-medium text-neutral-800 font-mono">Net: {formatIDR(b.eligible_treatment_amount)}</span>
                                   </div>
 
                                   <div className="text-right">
-                                    <span className="text-black/50 block text-[10px]">Commission ({b.commission_rate_pct}%)</span>
-                                    <span className="font-bold text-black">{formatIDR(b.commission_amount)}</span>
+                                    <span className="text-neutral-400 block text-[10px]">Commission ({b.commission_rate_pct}%)</span>
+                                    <span className="font-bold text-neutral-900 font-mono">{formatIDR(b.commission_amount)}</span>
                                   </div>
                                 </div>
 
                                 {/* Admin Verification Checkboxes & Approval */}
-                                <div className="border-t border-black/5 pt-2 flex items-center justify-between text-[11px]">
+                                <div className="border-t border-neutral-100 pt-2 flex items-center justify-between text-[11px]">
                                   <div className="flex items-center gap-3">
                                     <label className="flex items-center gap-1.5 cursor-pointer">
                                       <input
@@ -2260,7 +2759,7 @@ export default function AffiliateManagement() {
                                         onChange={(e) =>
                                           handleUpdateCommission(b.id, { payment_verified: e.target.checked })
                                         }
-                                        className="rounded text-black"
+                                        className="rounded text-black cursor-pointer"
                                       />
                                       <span>Payment Paid</span>
                                     </label>
@@ -2271,7 +2770,7 @@ export default function AffiliateManagement() {
                                         onChange={(e) =>
                                           handleUpdateCommission(b.id, { service_completed: e.target.checked })
                                         }
-                                        className="rounded text-black"
+                                        className="rounded text-black cursor-pointer"
                                       />
                                       <span>Service Done</span>
                                     </label>
@@ -2282,14 +2781,20 @@ export default function AffiliateManagement() {
                                       <button
                                         type="button"
                                         onClick={() => handleUpdateCommission(b.id, { status: 'approved' })}
-                                        className="px-2.5 py-1 bg-black hover:bg-black/80 text-white rounded text-[10px] font-bold"
+                                        className="h-6 px-2.5 bg-black hover:bg-neutral-800 text-white rounded text-[10px] font-medium"
                                       >
                                         Approve
                                       </button>
                                       <button
                                         type="button"
-                                        onClick={() => handleUpdateCommission(b.id, { status: 'declined' })}
-                                        className="px-2 py-1 border border-black/20 hover:bg-black/5 text-black rounded text-[10px] font-bold"
+                                        onClick={() =>
+                                          setConfirmAction({
+                                            type: 'decline_comm',
+                                            id: b.id,
+                                            name: `#${b.booking_id}`,
+                                          })
+                                        }
+                                        className="h-6 px-2 border border-neutral-200 hover:bg-neutral-50 text-neutral-700 rounded text-[10px] font-medium"
                                       >
                                         Decline
                                       </button>
@@ -2311,10 +2816,10 @@ export default function AffiliateManagement() {
               {partnerActiveTab === 'commissions' && (
                 <div className="space-y-4 text-xs">
                   {/* Partner Commission Rate Setting & Filter Card */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-black/10">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-xl border border-neutral-200 shadow-2xs">
                     <div>
-                      <span className="text-[10px] uppercase font-bold text-black/50 block tracking-wider">
-                        Partner Commission Rate
+                      <span className="text-[10px] font-semibold text-neutral-500 block uppercase">
+                        Commission Rate
                       </span>
                       <div className="flex items-center gap-2 mt-1">
                         {editingRateId === selectedPartnerDetails.id ? (
@@ -2327,30 +2832,30 @@ export default function AffiliateManagement() {
                                 max="100"
                                 value={newRateValue}
                                 onChange={(e) => setNewRateValue(Number(e.target.value))}
-                                className="w-24 px-3 py-1.5 bg-white border border-black/30 rounded-lg text-sm font-bold text-black focus:outline-none focus:border-black"
+                                className="w-24 h-8 px-2.5 bg-white border border-neutral-300 rounded-lg text-xs font-bold text-neutral-900 focus:outline-none focus:border-black font-mono"
                                 autoFocus
                               />
-                              <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-black/50 font-bold text-xs">%</span>
+                              <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 font-bold text-xs">%</span>
                             </div>
                             <button
                               type="button"
                               onClick={() => handleSaveCommissionRate(selectedPartnerDetails.id)}
                               disabled={actionLoading}
-                              className="px-3 py-1.5 bg-black text-white text-xs font-bold rounded-lg hover:bg-black/80 disabled:opacity-50"
+                              className="h-8 px-3 bg-black text-white text-xs font-medium rounded-lg hover:bg-neutral-800 disabled:opacity-50"
                             >
                               Save
                             </button>
                             <button
                               type="button"
                               onClick={() => setEditingRateId(null)}
-                              className="px-2.5 py-1.5 border border-black/20 text-xs font-semibold rounded-lg hover:bg-black/5 text-black"
+                              className="h-8 px-2.5 border border-neutral-200 text-xs font-medium rounded-lg hover:bg-neutral-50 text-neutral-700"
                             >
                               Cancel
                             </button>
                           </div>
                         ) : (
                           <div className="flex items-center gap-2.5">
-                            <span className="text-xl font-mono font-extrabold text-black">
+                            <span className="text-xl font-mono font-bold text-neutral-900">
                               {selectedPartnerDetails.commission_rate_pct}%
                             </span>
                             <button
@@ -2359,28 +2864,28 @@ export default function AffiliateManagement() {
                                 setEditingRateId(selectedPartnerDetails.id);
                                 setNewRateValue(selectedPartnerDetails.commission_rate_pct);
                               }}
-                              className="px-3 py-1 rounded-lg border border-black/15 bg-white hover:bg-black/5 text-black text-xs font-semibold shadow-xs"
+                              className="h-7 px-2.5 rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 text-xs font-medium shadow-2xs"
                             >
                               Edit Rate
                             </button>
                           </div>
                         )}
                       </div>
-                      <span className="text-[11px] text-black/50 mt-1 block">
-                        Commission percentage automatically applied to new bookings referred by {selectedPartnerDetails.partner_code}
+                      <span className="text-[11px] text-neutral-400 mt-1 block">
+                        Commission percentage applied to new bookings referred by {selectedPartnerDetails.partner_code}.
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-1 bg-white p-1 rounded-xl border border-black/10 self-start sm:self-auto">
+                    <div className="flex items-center gap-1 bg-neutral-100 p-1 rounded-lg border border-neutral-200/70 self-start sm:self-auto">
                       {['all', 'pending', 'approved', 'paid', 'declined'].map((st) => (
                         <button
                           key={st}
                           type="button"
                           onClick={() => setPartnerCommFilter(st)}
-                          className={`px-2.5 py-1 rounded-lg capitalize font-medium text-xs transition-colors ${
+                          className={`h-7 px-2.5 rounded-md capitalize font-medium text-xs transition-colors ${
                             partnerCommFilter === st
-                              ? 'bg-black text-white'
-                              : 'text-black/60 hover:bg-black/5'
+                              ? 'bg-black text-white shadow-xs'
+                              : 'text-neutral-600 hover:text-neutral-900 hover:bg-white/60'
                           }`}
                         >
                           {st}
@@ -2389,9 +2894,9 @@ export default function AffiliateManagement() {
                     </div>
                   </div>
 
-                  <div className="bg-white rounded-2xl border border-black/10 shadow-xs overflow-hidden">
+                  <div className="bg-white rounded-xl border border-neutral-200 shadow-2xs overflow-hidden">
                     <table className="w-full text-left text-xs">
-                      <thead className="bg-white border-b border-black/10 text-black font-bold">
+                      <thead className="bg-neutral-50/70 border-b border-neutral-200 text-neutral-600 font-semibold">
                         <tr>
                           <th className="py-2.5 px-3">Date</th>
                           <th className="py-2.5 px-3">Booking Ref</th>
@@ -2403,12 +2908,12 @@ export default function AffiliateManagement() {
                           <th className="py-2.5 px-3 text-right">Actions</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-black/5">
+                      <tbody className="divide-y divide-neutral-100">
                         {activePartnerMetrics.commissions
                           .filter((c) => partnerCommFilter === 'all' || c.status === partnerCommFilter)
                           .length === 0 ? (
                           <tr>
-                            <td colSpan={8} className="py-6 text-center text-black/50">
+                            <td colSpan={8} className="py-8 text-center text-neutral-400">
                               No commissions found for this filter.
                             </td>
                           </tr>
@@ -2416,16 +2921,16 @@ export default function AffiliateManagement() {
                           activePartnerMetrics.commissions
                             .filter((c) => partnerCommFilter === 'all' || c.status === partnerCommFilter)
                             .map((c) => (
-                              <tr key={c.id} className="hover:bg-black/[0.02]">
-                                <td className="py-2.5 px-3 text-black/60 whitespace-nowrap">
+                              <tr key={c.id} className="hover:bg-neutral-50/70">
+                                <td className="py-2.5 px-3 text-neutral-500 whitespace-nowrap">
                                   {safeFormatDate(c.booking_date || c.created_at)}
                                 </td>
-                                <td className="py-2.5 px-3 font-mono font-bold text-black">
+                                <td className="py-2.5 px-3 font-mono font-bold text-neutral-900">
                                   #{c.booking_id}
                                 </td>
-                                <td className="py-2.5 px-3">{formatIDR(c.eligible_treatment_amount)}</td>
+                                <td className="py-2.5 px-3 font-mono">{formatIDR(c.eligible_treatment_amount)}</td>
                                 <td className="py-2.5 px-3 font-mono">{c.commission_rate_pct}%</td>
-                                <td className="py-2.5 px-3 font-bold text-black">{formatIDR(c.commission_amount)}</td>
+                                <td className="py-2.5 px-3 font-mono font-bold text-neutral-900">{formatIDR(c.commission_amount)}</td>
                                 <td className="py-2.5 px-3 space-y-0.5 text-[10px]">
                                   <label className="flex items-center gap-1 cursor-pointer">
                                     <input
@@ -2434,7 +2939,7 @@ export default function AffiliateManagement() {
                                       onChange={(e) =>
                                         handleUpdateCommission(c.id, { payment_verified: e.target.checked })
                                       }
-                                      className="rounded text-black"
+                                      className="rounded text-black cursor-pointer"
                                     />
                                     <span>Payment Paid</span>
                                   </label>
@@ -2445,29 +2950,13 @@ export default function AffiliateManagement() {
                                       onChange={(e) =>
                                         handleUpdateCommission(c.id, { service_completed: e.target.checked })
                                       }
-                                      className="rounded text-black"
+                                      className="rounded text-black cursor-pointer"
                                     />
                                     <span>Service Done</span>
                                   </label>
                                 </td>
                                 <td className="py-2.5 px-3">
-                                  {c.status === 'paid' ? (
-                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-black text-white">
-                                      <CheckCircle2 size={10} /> Paid Out
-                                    </span>
-                                  ) : c.status === 'approved' ? (
-                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-white text-black border border-black">
-                                      <CheckCircle2 size={10} /> Approved
-                                    </span>
-                                  ) : c.status === 'declined' ? (
-                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-black/5 text-black border border-black/20 line-through">
-                                      Declined
-                                    </span>
-                                  ) : (
-                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-black/5 text-black border border-black/15">
-                                      <Clock size={10} /> Pending
-                                    </span>
-                                  )}
+                                  <StatusBadge status={c.status} />
                                 </td>
                                 <td className="py-2.5 px-3 text-right space-x-1 whitespace-nowrap">
                                   {c.status === 'pending' && (
@@ -2475,14 +2964,20 @@ export default function AffiliateManagement() {
                                       <button
                                         type="button"
                                         onClick={() => handleUpdateCommission(c.id, { status: 'approved' })}
-                                        className="px-2.5 py-1 bg-black hover:bg-black/80 text-white rounded text-[10px] font-semibold"
+                                        className="h-6 px-2 bg-black hover:bg-neutral-800 text-white rounded text-[10px] font-medium"
                                       >
                                         Approve
                                       </button>
                                       <button
                                         type="button"
-                                        onClick={() => handleUpdateCommission(c.id, { status: 'declined' })}
-                                        className="px-2.5 py-1 border border-black/20 hover:bg-black/5 text-black rounded text-[10px] font-semibold"
+                                        onClick={() =>
+                                          setConfirmAction({
+                                            type: 'decline_comm',
+                                            id: c.id,
+                                            name: `#${c.booking_id}`,
+                                          })
+                                        }
+                                        className="h-6 px-2 border border-neutral-200 hover:bg-neutral-50 text-neutral-700 rounded text-[10px] font-medium"
                                       >
                                         Decline
                                       </button>
@@ -2501,10 +2996,10 @@ export default function AffiliateManagement() {
               {/* TAB D: INDEPENDENT PARTNER PAYOUTS */}
               {partnerActiveTab === 'payouts' && (
                 <div className="space-y-4 text-xs">
-                  <div className="flex items-center justify-between bg-white p-4 rounded-2xl border border-black/10">
+                  <div className="flex items-center justify-between bg-white p-4 rounded-xl border border-neutral-200 shadow-2xs">
                     <div>
-                      <span className="text-[10px] uppercase font-bold text-black/50 block">Approved Balance Ready for Payout</span>
-                      <span className="text-lg font-bold text-black mt-0.5 block">
+                      <span className="text-[10px] font-semibold text-neutral-500 block uppercase">Approved Balance Ready for Payout</span>
+                      <span className="text-lg font-bold text-neutral-900 mt-0.5 block font-mono">
                         {formatIDR(activePartnerMetrics.approvedUnpaid)}
                       </span>
                     </div>
@@ -2512,15 +3007,16 @@ export default function AffiliateManagement() {
                     <button
                       type="button"
                       onClick={() => openQuickPayoutForPartner(selectedPartnerDetails)}
-                      className="px-4 py-2 bg-black text-white rounded-xl font-bold hover:bg-black/80 shadow-sm"
+                      className="h-8 px-3.5 bg-black text-white rounded-lg font-medium hover:bg-neutral-800 shadow-xs inline-flex items-center gap-1"
                     >
-                      + Record Payout for {selectedPartnerDetails.first_name}
+                      <Plus size={13} />
+                      <span>Record Payout for {selectedPartnerDetails.first_name}</span>
                     </button>
                   </div>
 
-                  <div className="bg-white rounded-2xl border border-black/10 shadow-xs overflow-hidden">
+                  <div className="bg-white rounded-xl border border-neutral-200 shadow-2xs overflow-hidden">
                     <table className="w-full text-left text-xs">
-                      <thead className="bg-white border-b border-black/10 text-black font-bold">
+                      <thead className="bg-neutral-50/70 border-b border-neutral-200 text-neutral-600 font-semibold">
                         <tr>
                           <th className="py-2.5 px-3">Date</th>
                           <th className="py-2.5 px-3">Reference</th>
@@ -2531,41 +3027,34 @@ export default function AffiliateManagement() {
                           <th className="py-2.5 px-3 text-right">Details</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-black/5">
+                      <tbody className="divide-y divide-neutral-100">
                         {activePartnerMetrics.payouts.length === 0 ? (
                           <tr>
-                            <td colSpan={7} className="py-6 text-center text-black/50">
+                            <td colSpan={7} className="py-8 text-center text-neutral-400">
                               No payouts logged for this partner yet.
                             </td>
                           </tr>
                         ) : (
                           activePartnerMetrics.payouts.map((py) => (
-                            <tr key={py.id} className="hover:bg-black/[0.02]">
-                              <td className="py-2.5 px-3 text-black/60 whitespace-nowrap">
+                            <tr key={py.id} className="hover:bg-neutral-50/70">
+                              <td className="py-2.5 px-3 text-neutral-500 whitespace-nowrap">
                                 {safeFormatDate(py.created_at)}
                               </td>
-                              <td className="py-2.5 px-3 font-mono font-bold text-black">{py.payout_reference}</td>
-                              <td className="py-2.5 px-3 font-bold text-black">{formatIDR(py.amount)}</td>
-                              <td className="py-2.5 px-3 capitalize">{py.payout_method?.replace('_', ' ')}</td>
+                              <td className="py-2.5 px-3 font-mono font-bold text-neutral-900">{py.payout_reference}</td>
+                              <td className="py-2.5 px-3 font-bold text-neutral-900 font-mono">{formatIDR(py.amount)}</td>
+                              <td className="py-2.5 px-3 capitalize text-neutral-700">{py.payout_method?.replace('_', ' ')}</td>
                               <td className="py-2.5 px-3">
-                                {py.status === 'completed' ? (
-                                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-black text-white">
-                                    <CheckCircle2 size={10} /> Completed
-                                  </span>
-                                ) : (
-                                  <span className="inline-flex px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-black/5 text-black border border-black/10">
-                                    {py.status}
-                                  </span>
-                                )}
+                                <StatusBadge status={py.status || 'completed'} />
                               </td>
-                              <td className="py-2.5 px-3 text-black/60">{py.notes || '-'}</td>
+                              <td className="py-2.5 px-3 text-neutral-500">{py.notes || '—'}</td>
                               <td className="py-2.5 px-3 text-right whitespace-nowrap">
                                 <button
                                   type="button"
                                   onClick={() => setSelectedPayoutDetails(py)}
-                                  className="px-2.5 py-1 bg-black text-white hover:bg-black/80 font-bold rounded-lg text-xs transition-all shadow-xs"
+                                  className="h-7 px-2.5 bg-white border border-neutral-200 hover:bg-neutral-50 text-neutral-800 font-medium rounded-lg text-xs transition-colors shadow-2xs inline-flex items-center gap-1"
                                 >
-                                  View Bookings &rarr;
+                                  <span>View Bookings</span>
+                                  <span className="text-neutral-400">&rarr;</span>
                                 </button>
                               </td>
                             </tr>
@@ -2580,14 +3069,14 @@ export default function AffiliateManagement() {
             </div>
 
             {/* Modal Footer */}
-            <div className="p-4 border-t border-black/10 bg-black/[0.02] flex items-center justify-between shrink-0">
-              <span className="text-[11px] text-black/50 font-mono">
+            <div className="p-4 border-t border-neutral-200 bg-neutral-50/50 flex items-center justify-between shrink-0">
+              <span className="text-[11px] text-neutral-400 font-mono">
                 ID: {selectedPartnerDetails.id}
               </span>
               <button
                 type="button"
                 onClick={() => setSelectedPartnerDetails(null)}
-                className="px-5 py-2 bg-black text-white text-xs font-semibold rounded-xl hover:bg-black/80"
+                className="h-8 px-4 bg-black text-white text-xs font-medium rounded-lg hover:bg-neutral-800 shadow-xs"
               >
                 Done
               </button>
@@ -2599,23 +3088,21 @@ export default function AffiliateManagement() {
 
       {/* FULLSCREEN POPUP: PAID OUT BOOKING DETAILS BREAKDOWN FOR ADMIN */}
       {selectedPayoutDetails && (
-        <div className="fixed inset-0 z-[80] bg-black/60 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 md:p-6">
-          <div className="bg-white rounded-2xl w-full h-full max-w-[98vw] max-h-[96vh] flex flex-col border border-black/15 shadow-2xl overflow-hidden">
+        <div className="fixed inset-0 z-[80] bg-black/50 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 md:p-6">
+          <div className="bg-white rounded-2xl w-full h-full max-w-[98vw] max-h-[96vh] flex flex-col border border-neutral-200 shadow-2xl overflow-hidden">
             {/* Modal Header */}
-            <div className="p-4 sm:p-5 bg-white border-b border-black/10 text-black flex items-start justify-between shrink-0">
+            <div className="p-4 sm:p-5 bg-white border-b border-neutral-200 text-neutral-900 flex items-start justify-between shrink-0">
               <div>
                 <div className="flex items-center gap-2.5 flex-wrap">
-                  <h3 className="font-bold text-black text-lg sm:text-xl tracking-tight">
-                    Disbursement & Paid Bookings Details
+                  <h3 className="font-bold text-neutral-900 text-lg sm:text-xl tracking-tight">
+                    Disbursement Details
                   </h3>
-                  <span className="font-mono font-bold text-black bg-black/5 px-2.5 py-0.5 rounded-lg text-xs border border-black/10">
+                  <span className="font-mono font-medium text-neutral-800 bg-neutral-100 px-2 py-0.5 rounded text-xs border border-neutral-200">
                     {selectedPayoutDetails.payout_reference}
                   </span>
-                  <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-black text-white">
-                    {selectedPayoutDetails.status || 'COMPLETED'}
-                  </span>
+                  <StatusBadge status={selectedPayoutDetails.status || 'completed'} />
                 </div>
-                <div className="text-xs text-black/60 mt-1 flex items-center gap-2 flex-wrap">
+                <div className="text-xs text-neutral-500 mt-1 flex items-center gap-2 flex-wrap">
                   <span>Date: <strong>{safeFormatDate(selectedPayoutDetails.created_at)}</strong></span>
                   <span>&bull;</span>
                   <span>Method: <strong className="capitalize">{selectedPayoutDetails.payout_method?.replace('_', ' ')}</strong></span>
@@ -2636,18 +3123,18 @@ export default function AffiliateManagement() {
 
               <div className="flex items-center gap-4">
                 <div className="text-right hidden sm:block">
-                  <span className="text-[10px] text-black/50 block font-bold uppercase tracking-wider">Total Disbursed</span>
-                  <span className="font-mono font-extrabold text-xl text-black">
+                  <span className="text-[10px] text-neutral-400 block font-semibold uppercase">Total Disbursed</span>
+                  <span className="font-mono font-bold text-xl text-neutral-900">
                     {formatIDR(selectedPayoutDetails.amount)}
                   </span>
                 </div>
                 <button
                   type="button"
                   onClick={() => setSelectedPayoutDetails(null)}
-                  className="w-8 h-8 rounded-xl bg-black/5 hover:bg-black hover:text-white text-black flex items-center justify-center transition-colors"
+                  className="w-8 h-8 rounded-lg bg-white border border-neutral-200 hover:bg-neutral-50 text-neutral-600 flex items-center justify-center transition-colors"
                   title="Close"
                 >
-                  <X size={16} />
+                  <X size={15} />
                 </button>
               </div>
             </div>
@@ -2659,53 +3146,53 @@ export default function AffiliateManagement() {
 
               return (
                 <>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 sm:p-5 bg-black/[0.02] border-b border-black/10 shrink-0 text-xs">
-                    <div className="bg-white p-3 rounded-xl border border-black/10 shadow-2xs">
-                      <span className="text-[10px] uppercase font-bold text-black/50 block">Disbursed Amount</span>
-                      <span className="text-base font-bold text-black font-mono mt-0.5 block">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 sm:p-5 bg-neutral-50/50 border-b border-neutral-200 shrink-0 text-xs">
+                    <div className="bg-white p-3 rounded-xl border border-neutral-200 shadow-2xs">
+                      <span className="text-[10px] font-semibold text-neutral-500 block uppercase">Disbursed</span>
+                      <span className="text-base font-bold text-neutral-900 font-mono mt-0.5 block">
                         {formatIDR(selectedPayoutDetails.amount)}
                       </span>
                     </div>
-                    <div className="bg-white p-3 rounded-xl border border-black/10 shadow-2xs">
-                      <span className="text-[10px] uppercase font-bold text-black/50 block">Paid Referrals</span>
-                      <span className="text-base font-bold text-black mt-0.5 block">
+                    <div className="bg-white p-3 rounded-xl border border-neutral-200 shadow-2xs">
+                      <span className="text-[10px] font-semibold text-neutral-500 block uppercase">Settled Referrals</span>
+                      <span className="text-base font-bold text-neutral-900 mt-0.5 block">
                         {items.length} bookings
                       </span>
                     </div>
-                    <div className="bg-white p-3 rounded-xl border border-black/10 shadow-2xs">
-                      <span className="text-[10px] uppercase font-bold text-black/50 block">Treatment Volume</span>
-                      <span className="text-base font-bold text-black font-mono mt-0.5 block">
+                    <div className="bg-white p-3 rounded-xl border border-neutral-200 shadow-2xs">
+                      <span className="text-[10px] font-semibold text-neutral-500 block uppercase">Treatment Volume</span>
+                      <span className="text-base font-bold text-neutral-900 font-mono mt-0.5 block">
                         {formatIDR(totalTreatmentNet)}
                       </span>
                     </div>
-                    <div className="bg-white p-3 rounded-xl border border-black/10 shadow-2xs">
-                      <span className="text-[10px] uppercase font-bold text-black/50 block">Payout Mode</span>
-                      <span className="text-sm font-bold text-black capitalize mt-0.5 block">
+                    <div className="bg-white p-3 rounded-xl border border-neutral-200 shadow-2xs">
+                      <span className="text-[10px] font-semibold text-neutral-500 block uppercase">Payout Mode</span>
+                      <span className="text-xs font-semibold text-neutral-900 capitalize mt-1 block">
                         {selectedPayoutDetails.payout_method?.replace('_', ' ')}
                       </span>
                     </div>
                   </div>
 
-                  {/* Itemized Bookings List (Scrollable, Fullscreen) */}
+                  {/* Itemized Bookings List */}
                   <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
                     <div>
-                      <h4 className="font-bold text-black text-sm tracking-tight flex items-center justify-between">
-                        <span>Bookings Settled in this Payout</span>
-                        <span className="text-xs text-black/60 font-normal">
+                      <h4 className="font-bold text-neutral-900 text-sm tracking-tight flex items-center justify-between">
+                        <span>Bookings Settled in this Disbursement</span>
+                        <span className="text-xs text-neutral-500 font-normal">
                           {items.length} items linked
                         </span>
                       </h4>
                     </div>
 
                     {items.length === 0 ? (
-                      <div className="bg-white p-8 rounded-2xl border border-black/10 text-center text-black/50 space-y-1">
-                        <p className="font-semibold text-black">No itemized booking records linked to this disbursement.</p>
-                        <p className="text-xs">This disbursement was processed as a direct commission withdrawal of {formatIDR(selectedPayoutDetails.amount)}.</p>
+                      <div className="bg-white p-8 rounded-xl border border-neutral-200 text-center text-neutral-500 space-y-1">
+                        <p className="font-semibold text-neutral-900">No itemized booking records linked.</p>
+                        <p className="text-xs text-neutral-400">This disbursement was processed as a direct commission withdrawal of {formatIDR(selectedPayoutDetails.amount)}.</p>
                       </div>
                     ) : (
-                      <div className="bg-white rounded-2xl border border-black/10 shadow-2xs overflow-hidden">
+                      <div className="bg-white rounded-xl border border-neutral-200 shadow-2xs overflow-hidden">
                         <table className="w-full text-left text-xs">
-                          <thead className="bg-white border-b border-black/10 text-black font-bold">
+                          <thead className="bg-neutral-50/70 border-b border-neutral-200 text-neutral-600 font-semibold">
                             <tr>
                               <th className="py-3 px-4">Booking Ref</th>
                               <th className="py-3 px-4">Date</th>
@@ -2717,33 +3204,33 @@ export default function AffiliateManagement() {
                               <th className="py-3 px-4 text-right">Status</th>
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-black/5">
+                          <tbody className="divide-y divide-neutral-100">
                             {items.map((b) => (
-                              <tr key={b.id} className="hover:bg-black/[0.02] transition-colors">
-                                <td className="py-3.5 px-4 font-mono font-bold text-black whitespace-nowrap">
+                              <tr key={b.id} className="hover:bg-neutral-50/70 transition-colors">
+                                <td className="py-3.5 px-4 font-mono font-bold text-neutral-900 whitespace-nowrap">
                                   <div className="flex items-center gap-1.5">
                                     <span>#{b.booking_id}</span>
                                     <button
                                       type="button"
                                       onClick={() => handleCopyText(b.booking_id, `payout-bk-${b.id}`)}
-                                      className="text-black/40 hover:text-black"
+                                      className="text-neutral-400 hover:text-neutral-700"
                                     >
-                                      {copiedId === `payout-bk-${b.id}` ? <Check size={11} /> : <Copy size={11} />}
+                                      {copiedId === `payout-bk-${b.id}` ? <Check size={11} className="text-emerald-600" /> : <Copy size={11} />}
                                     </button>
                                   </div>
                                 </td>
-                                <td className="py-3.5 px-4 text-black/60 whitespace-nowrap">
+                                <td className="py-3.5 px-4 text-neutral-500 whitespace-nowrap">
                                   {safeFormatDate(b.booking_date || b.created_at)} {b.booking_time || ''}
                                 </td>
                                 <td className="py-3.5 px-4">
-                                  <div className="font-semibold text-black">{b.guest_name || 'Guest'}</div>
+                                  <div className="font-semibold text-neutral-900">{b.guest_name || 'Guest'}</div>
                                   {b.location && (
-                                    <div className="text-[10px] text-black/50">
+                                    <div className="text-[10px] text-neutral-400">
                                       {b.location} {b.room_number ? `(${b.room_number})` : ''}
                                     </div>
                                   )}
                                 </td>
-                                <td className="py-3.5 px-4 text-black font-medium">
+                                <td className="py-3.5 px-4 text-neutral-800 font-medium">
                                   {b.treatment_name || 'Spa Treatment'}
                                 </td>
                                 <td className="py-3.5 px-4 font-mono">
@@ -2752,13 +3239,11 @@ export default function AffiliateManagement() {
                                 <td className="py-3.5 px-4 font-mono">
                                   {b.commission_rate_pct}%
                                 </td>
-                                <td className="py-3.5 px-4 font-bold font-mono text-black">
+                                <td className="py-3.5 px-4 font-bold font-mono text-neutral-900">
                                   +{formatIDR(b.commission_amount)}
                                 </td>
                                 <td className="py-3.5 px-4 text-right">
-                                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-black text-white whitespace-nowrap">
-                                    <CheckCircle2 size={10} /> Paid Out
-                                  </span>
+                                  <StatusBadge status="paid" />
                                 </td>
                               </tr>
                             ))}
@@ -2772,19 +3257,80 @@ export default function AffiliateManagement() {
             })()}
 
             {/* Modal Footer */}
-            <div className="p-4 border-t border-black/10 bg-black/[0.02] flex items-center justify-between shrink-0">
-              <span className="text-[11px] text-black/50 font-mono">
-                Receipt #{selectedPayoutDetails.payout_reference} &bull; {selectedPayoutDetails.id}
+            <div className="p-4 border-t border-neutral-200 bg-neutral-50/50 flex items-center justify-between shrink-0">
+              <span className="text-[11px] text-neutral-400 font-mono">
+                Receipt #{selectedPayoutDetails.payout_reference}
               </span>
               <button
                 type="button"
                 onClick={() => setSelectedPayoutDetails(null)}
-                className="px-5 py-2 bg-black text-white text-xs font-bold rounded-xl hover:bg-black/80 shadow-sm"
+                className="h-8 px-4 bg-black text-white text-xs font-medium rounded-lg hover:bg-neutral-800 shadow-xs"
               >
                 Close
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* CONFIRMATION DIALOG FOR CONSEQUENTIAL ACTIONS */}
+      {confirmAction && (
+        <div className="fixed inset-0 z-[90] bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-sm w-full p-5 border border-neutral-200 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div className="space-y-1.5">
+              <h3 className="font-bold text-neutral-900 text-base">
+                {confirmAction.type === 'suspend'
+                  ? 'Suspend Partner Account'
+                  : confirmAction.type === 'reject'
+                  ? 'Reject Application'
+                  : 'Decline Commission'}
+              </h3>
+              <p className="text-xs text-neutral-500">
+                {confirmAction.type === 'suspend'
+                  ? `Are you sure you want to suspend ${confirmAction.name}? Their referral link will temporarily stop earning commissions.`
+                  : confirmAction.type === 'reject'
+                  ? `Are you sure you want to reject the application for ${confirmAction.name}?`
+                  : 'Are you sure you want to decline this commission record?'}
+              </p>
+            </div>
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-neutral-100">
+              <button
+                type="button"
+                onClick={() => setConfirmAction(null)}
+                className="h-8 px-3.5 rounded-lg border border-neutral-200 text-xs font-medium text-neutral-700 hover:bg-neutral-50 shadow-2xs"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (confirmAction.type === 'suspend') {
+                    handlePartnerStatus(confirmAction.id, 'suspended');
+                  } else if (confirmAction.type === 'reject') {
+                    handlePartnerStatus(confirmAction.id, 'rejected');
+                  } else if (confirmAction.type === 'decline_comm') {
+                    handleUpdateCommission(confirmAction.id, { status: 'declined' });
+                  }
+                  setConfirmAction(null);
+                }}
+                className="h-8 px-3.5 rounded-lg bg-neutral-900 text-white text-xs font-medium hover:bg-neutral-800 shadow-xs"
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MINIMAL FLOATING TOAST FEEDBACK */}
+      {toast && (
+        <div className="fixed bottom-6 right-6 z-[100] flex items-center gap-2 px-3.5 py-2.5 bg-neutral-900 text-white rounded-xl shadow-xl text-xs font-medium animate-in fade-in slide-in-from-bottom-2">
+          {toast.type === 'success' ? (
+            <CheckCircle2 size={15} className="text-emerald-400" />
+          ) : (
+            <AlertCircle size={15} className="text-rose-400" />
+          )}
+          <span>{toast.message}</span>
         </div>
       )}
 
