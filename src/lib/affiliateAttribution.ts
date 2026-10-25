@@ -170,23 +170,42 @@ export async function recordBookingAffiliation(
       partnerRatePct: partner.commission_rate_pct,
     });
 
+    // 2b. Idempotency Check: Prevent duplicate commissions or attributions
+    const { data: existingComm } = await supabase
+      .from('affiliate_commissions')
+      .select('id')
+      .eq('booking_id', bookingId)
+      .limit(1);
+
+    if (existingComm && existingComm.length > 0) {
+      return true; // Already created, prevent duplicate
+    }
+
     const firstTouchAt = cookieData.timestamp ? new Date(cookieData.timestamp).toISOString() : new Date().toISOString();
 
-    // 3. Record Attribution
-    await supabase.from('affiliate_attributions').insert([
-      {
-        partner_id: partner.id,
-        partner_code: partner.partner_code,
-        booking_id: bookingId,
-        customer_name: formData.name || null,
-        customer_email: formData.email || null,
-        customer_phone: formData.phone || formData.whatsapp || null,
-        first_touch_at: firstTouchAt,
-        last_touch_at: new Date().toISOString(),
-      },
-    ]);
+    // 3. Record Attribution (if not already recorded)
+    const { data: existingAttr } = await supabase
+      .from('affiliate_attributions')
+      .select('id')
+      .eq('booking_id', bookingId)
+      .limit(1);
 
-    // 4. Record Pending Commission
+    if (!existingAttr || existingAttr.length === 0) {
+      await supabase.from('affiliate_attributions').insert([
+        {
+          partner_id: partner.id,
+          partner_code: partner.partner_code,
+          booking_id: bookingId,
+          customer_name: formData.name || null,
+          customer_email: formData.email || null,
+          customer_phone: formData.phone || formData.whatsapp || null,
+          first_touch_at: firstTouchAt,
+          last_touch_at: new Date().toISOString(),
+        },
+      ]);
+    }
+
+    // 4. Record Pending Commission (Strictly unverified and service uncompleted until admin verifies)
     await supabase.from('affiliate_commissions').insert([
       {
         partner_id: partner.id,

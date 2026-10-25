@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
         const [bookingsRes, attributionsRes] = await Promise.all([
           supabase
             .from('bookings')
-            .select('reference_number, guest_name, guest_whatsapp, booking_date, time, location, room_number, treatment_name, status')
+            .select('*')
             .in('reference_number', bookingIds),
           supabase
             .from('affiliate_attributions')
@@ -80,6 +80,8 @@ export async function GET(req: NextRequest) {
             room_number: b.room_number || '',
             treatment_name: b.treatment_name || 'Spa Treatment',
             booking_status: b.status || (c.service_completed ? 'Completed' : 'Pending'),
+            treatment_status: b.treatment_status || (c.service_completed ? 'Finished' : 'Scheduled'),
+            payment_status: b.payment_status || (c.payment_verified ? 'Paid' : 'Unpaid'),
           };
         });
       }
@@ -98,22 +100,54 @@ export async function PATCH(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { id, status, payment_verified, service_completed, booking_status, notes } = body;
+    const { 
+      id, 
+      status, 
+      payment_verified, 
+      service_completed, 
+      booking_status, 
+      treatment_status, 
+      payment_status, 
+      notes 
+    } = body;
 
     if (!id) {
       return NextResponse.json({ success: false, message: 'Commission ID required' }, { status: 400 });
+    }
+
+    // 1. Fetch current commission record
+    const { data: currentComm, error: fetchErr } = await supabase
+      .from('affiliate_commissions')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (fetchErr || !currentComm) {
+      return NextResponse.json({ success: false, message: 'Commission not found' }, { status: 404 });
     }
 
     const updates: any = {
       updated_at: new Date().toISOString(),
     };
 
-    if (status !== undefined) {
-      updates.status = status;
-      if (status === 'approved') {
-        updates.approved_at = new Date().toISOString();
+    // 2. Commission Eligibility Guard: Approval requires verified payment + completed treatment
+    if (status === 'approved') {
+      const isPaymentVerified = payment_verified !== undefined ? Boolean(payment_verified) : Boolean(currentComm.payment_verified);
+      const isServiceCompleted = service_completed !== undefined ? Boolean(service_completed) : Boolean(currentComm.service_completed);
+
+      if (!isPaymentVerified || !isServiceCompleted) {
+        return NextResponse.json({
+          success: false,
+          message: 'Commission is not eligible for approval yet. Both verified payment and completed treatment are required.'
+        }, { status: 400 });
       }
+
+      updates.status = 'approved';
+      updates.approved_at = new Date().toISOString();
+    } else if (status !== undefined) {
+      updates.status = status;
     }
+
     if (payment_verified !== undefined) updates.payment_verified = Boolean(payment_verified);
     if (service_completed !== undefined) updates.service_completed = Boolean(service_completed);
     if (notes !== undefined) updates.notes = notes;
@@ -129,28 +163,44 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ success: false, message: error.message }, { status: 400 });
     }
 
-    // Sync to linked booking in 'bookings' table
+    // 3. Sync to linked booking in 'bookings' table independently
     if (updated?.booking_id) {
-      const bookingUpdates: any = {};
-      if (booking_status) {
+      const bookingUpdates: any = {
+        updated_at: new Date().toISOString(),
+      };
+
+      // Only update booking status if explicitly requested
+      if (booking_status && ['Pending', 'Approved', 'Confirmed', 'Cancelled'].includes(booking_status)) {
         bookingUpdates.status = booking_status;
-      } else if (service_completed === true) {
-        bookingUpdates.status = 'Completed';
-      } else if (service_completed === false && booking_status === undefined) {
-        bookingUpdates.status = 'Pending';
-      } else if (status === 'declined' || status === 'cancelled') {
-        bookingUpdates.status = 'Cancelled';
       }
 
-      if (payment_verified !== undefined) {
-        bookingUpdates.payment_status = payment_verified ? 'paid' : 'unpaid';
+      if (treatment_status) {
+        bookingUpdates.treatment_status = treatment_status;
+      } else if (service_completed !== undefined) {
+        bookingUpdates.treatment_status = service_completed ? 'Finished' : 'Scheduled';
       }
 
-      if (Object.keys(bookingUpdates).length > 0) {
-        await supabase
+      if (payment_status) {
+        bookingUpdates.payment_status = payment_status;
+      } else if (payment_verified !== undefined) {
+        bookingUpdates.payment_status = payment_verified ? 'Paid' : 'Unpaid';
+      }
+
+      try {
+        const { error: fullErr } = await supabase
           .from('bookings')
           .update(bookingUpdates)
           .ilike('reference_number', updated.booking_id);
+
+        if (fullErr && bookingUpdates.status) {
+          // Fallback to updating only status if extended columns are not yet in cache
+          await supabase
+            .from('bookings')
+            .update({ status: bookingUpdates.status })
+            .ilike('reference_number', updated.booking_id);
+        }
+      } catch (syncErr) {
+        console.error('Error syncing booking:', syncErr);
       }
     }
 
@@ -158,7 +208,7 @@ export async function PATCH(req: NextRequest) {
       success: true, 
       commission: {
         ...updated,
-        booking_status: booking_status || (updated.service_completed ? 'Completed' : 'Pending'),
+        booking_status: booking_status || (updated.service_completed ? 'Finished' : 'Scheduled'),
       } 
     });
   } catch (err: any) {

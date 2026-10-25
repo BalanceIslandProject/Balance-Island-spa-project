@@ -751,32 +751,39 @@ export default function AffiliateManagement() {
   const VerificationChecks = ({ c, compact }: { c: any; compact?: boolean }) => {
     const isCash = Boolean(c.payment_verified && (c.notes || '').toLowerCase().includes('cash'));
     const isOnline = Boolean(c.payment_verified && (c.notes || '').toLowerCase().includes('online'));
-    const isPaid = Boolean(c.payment_verified);
+    const pStatus = (c.payment_status || '').toLowerCase();
+    const isPaid = Boolean(c.payment_verified) || pStatus === 'paid';
 
+    const tStatus = (c.treatment_status || '').toLowerCase();
     const bStatus = (c.booking_status || '').toLowerCase();
-    const isOngoing = bStatus === 'ongoing';
-    const isFinished = Boolean(c.service_completed) || bStatus === 'completed';
+    const isOngoing = tStatus === 'in progress' || tStatus === 'ongoing' || bStatus === 'ongoing';
+    const isFinished = Boolean(c.service_completed) || tStatus === 'finished' || bStatus === 'completed';
 
     const handlePay = (method: 'cash' | 'online') => {
       const currentMethod = isCash ? 'cash' : isOnline ? 'online' : null;
       if (currentMethod === method) {
         // Toggle off back to unpaid
-        handleUpdateCommission(c.id, { payment_verified: false, notes: 'Unpaid' });
+        handleUpdateCommission(c.id, { payment_verified: false, notes: 'Unpaid', payment_status: 'Unpaid' });
       } else {
-        handleUpdateCommission(c.id, { payment_verified: true, notes: `Paid via ${method === 'cash' ? 'Cash' : 'Online'}` });
+        handleUpdateCommission(c.id, { 
+          payment_verified: true, 
+          notes: `Paid via ${method === 'cash' ? 'Cash' : 'Online'}`,
+          payment_status: 'Paid',
+          payment_method: method === 'cash' ? 'Cash' : 'Online'
+        });
       }
     };
 
     const handleOngoing = () => {
-      handleUpdateCommission(c.id, { booking_status: 'Ongoing' });
+      handleUpdateCommission(c.id, { treatment_status: 'In Progress' });
     };
 
     const handleFinish = () => {
-      handleUpdateCommission(c.id, { service_completed: true, booking_status: 'Completed' });
+      handleUpdateCommission(c.id, { service_completed: true, treatment_status: 'Finished' });
     };
 
     const handleResetService = () => {
-      handleUpdateCommission(c.id, { service_completed: false, booking_status: 'Pending' });
+      handleUpdateCommission(c.id, { service_completed: false, treatment_status: 'Scheduled' });
     };
 
     return (
@@ -835,7 +842,7 @@ export default function AffiliateManagement() {
                 disabled={actionLoading}
                 onClick={handleResetService}
                 className="text-[10px] text-[#A3A3A3] hover:text-black underline cursor-pointer"
-                title="Reset back to Awaiting"
+                title="Reset back to Scheduled"
               >
                 Reset
               </button>
@@ -859,7 +866,7 @@ export default function AffiliateManagement() {
             <div className="inline-flex items-center gap-1.5">
               <span className="inline-flex items-center gap-1 h-6 px-2 rounded-md border border-amber-200 bg-amber-50 text-[11px] font-medium text-amber-800">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                Awaiting
+                Scheduled
               </span>
               <button
                 type="button"
@@ -880,7 +887,13 @@ export default function AffiliateManagement() {
     if (c.status !== 'pending') return null;
 
     const bStatus = (c.booking_status || '').toLowerCase();
-    const isFinished = Boolean(c.service_completed) || bStatus === 'completed';
+    const tStatus = (c.treatment_status || '').toLowerCase();
+    const pStatus = (c.payment_status || '').toLowerCase();
+
+    const isFinished = Boolean(c.service_completed) || tStatus === 'finished' || bStatus === 'completed';
+    const isPaid = Boolean(c.payment_verified) || pStatus === 'paid';
+    const isCancelled = c.status === 'cancelled' || bStatus === 'cancelled';
+    const isEligible = isFinished && isPaid && !isCancelled;
 
     return (
       <div className="flex items-center justify-end gap-1.5 pt-1">
@@ -894,13 +907,13 @@ export default function AffiliateManagement() {
           Decline
         </button>
 
-        {isFinished ? (
+        {isEligible ? (
           <button
             type="button"
             disabled={actionLoading}
             onClick={() => handleUpdateCommission(c.id, { status: 'approved' })}
             className={cx(btn.base, btn.primary, size, 'bg-emerald-700 hover:bg-emerald-800 border-emerald-700 text-white font-semibold')}
-            title="Approve commission now that service is finished"
+            title="Approve commission now that service is finished and payment verified"
           >
             Approve Commission
           </button>
@@ -909,9 +922,23 @@ export default function AffiliateManagement() {
             type="button"
             disabled
             className={cx(btn.base, size, 'bg-[#F5F5F5] text-[#A3A3A3] border border-[#E5E5E5] cursor-not-allowed opacity-70')}
-            title="Finish treatment first before approving commission"
+            title={
+              isCancelled
+                ? 'Booking is cancelled'
+                : !isFinished && !isPaid
+                ? 'Payment and treatment must be completed before approving commission'
+                : !isPaid
+                ? 'Payment must be verified before approving commission'
+                : 'Treatment must be finished before approving commission'
+            }
           >
-            Approve (Wait for Finish)
+            {isCancelled
+              ? 'Cancelled'
+              : !isFinished && !isPaid
+              ? 'Approve (Wait for Payment & Finish)'
+              : !isPaid
+              ? 'Approve (Wait for Payment)'
+              : 'Approve (Wait for Finish)'}
           </button>
         )}
       </div>

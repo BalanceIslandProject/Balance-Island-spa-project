@@ -191,3 +191,20 @@ CREATE POLICY "Anon select affiliate payouts" ON public.affiliate_payouts
 
 CREATE POLICY "Anon insert affiliate payouts" ON public.affiliate_payouts
     FOR INSERT TO anon, authenticated WITH CHECK (true);
+
+-- 7. BOOKING STATUS, TREATMENT STATUS, PAYMENT STATUS & AFFILIATE ATTRIBUTION FIELDS
+-- (Additive migration on public.bookings to keep statuses strictly independent)
+ALTER TABLE public.bookings ADD COLUMN IF NOT EXISTS treatment_status TEXT DEFAULT 'Scheduled';
+ALTER TABLE public.bookings ADD COLUMN IF NOT EXISTS payment_status TEXT DEFAULT 'Unpaid';
+ALTER TABLE public.bookings ADD COLUMN IF NOT EXISTS payment_method TEXT DEFAULT 'Cash';
+ALTER TABLE public.bookings ADD COLUMN IF NOT EXISTS payment_amount NUMERIC DEFAULT 0;
+ALTER TABLE public.bookings ADD COLUMN IF NOT EXISTS source TEXT DEFAULT 'Direct';
+ALTER TABLE public.bookings ADD COLUMN IF NOT EXISTS affiliate_id UUID REFERENCES public.affiliate_partners(id) ON DELETE SET NULL;
+ALTER TABLE public.bookings ADD COLUMN IF NOT EXISTS affiliate_code TEXT;
+ALTER TABLE public.bookings ADD COLUMN IF NOT EXISTS treatment_status_updated_at TIMESTAMPTZ;
+ALTER TABLE public.bookings ADD COLUMN IF NOT EXISTS payment_status_updated_at TIMESTAMPTZ;
+ALTER TABLE public.bookings ADD COLUMN IF NOT EXISTS updated_by TEXT;
+
+-- Prevent duplicate commissions per booking (idempotency constraint)
+CREATE UNIQUE INDEX IF NOT EXISTS idx_affiliate_commissions_booking_id_unique ON public.affiliate_commissions(booking_id);
+

@@ -46,9 +46,13 @@ export interface Booking {
   revenue: number;
   therapist_fee_total: number;
   net_profit: number;
-  status?: string;
+  status?: string; // Booking status: 'Pending' | 'Approved' | 'Confirmed' | 'Cancelled'
+  treatment_status?: string; // Treatment progress: 'Scheduled' | 'Therapist Assigned' | 'On the Way' | 'Arrived' | 'In Progress' | 'Finished' | 'No Show'
+  payment_status?: string; // Payment status: 'Unpaid' | 'Partially Paid' | 'Paid' | 'Refunded' | 'Payment Failed'
+  payment_method?: string; // 'Cash' | 'Online'
+  source?: string; // 'Direct' or partner referral code
+  affiliate_code?: string;
   items?: any[];
-  payment_status?: string;
   commission?: any;
   location?: string;
   room_number?: string;
@@ -292,7 +296,26 @@ export default function TherapickBookingManagement({
       const merged: Booking[] = data.map((b: any) => {
         const ref = String(b.reference_number || b.id || '').trim().toUpperCase();
         const c = commMap.get(ref);
-        const isPaid = c?.payment_verified || b.payment_status === 'paid';
+
+        // 1. Independent Payment Status & Method
+        let paymentStatus = b.payment_status || (c?.payment_verified ? 'Paid' : 'Unpaid');
+        if (c?.payment_verified && paymentStatus === 'Unpaid') {
+          paymentStatus = 'Paid';
+        }
+        let paymentMethod = b.payment_method || (c?.notes?.toLowerCase().includes('cash') ? 'Cash' : c?.notes?.toLowerCase().includes('online') ? 'Online' : 'Cash');
+
+        // 2. Independent Treatment Status
+        let treatmentStatus = b.treatment_status || (c?.service_completed ? 'Finished' : (b.status === 'Ongoing' ? 'In Progress' : 'Scheduled'));
+
+        // 3. Independent Booking Status
+        let bookingStatus = b.status || 'Pending';
+        if (bookingStatus === 'Ongoing' || bookingStatus === 'Completed') {
+          bookingStatus = 'Confirmed';
+        }
+
+        // 4. Attribution Source
+        const affiliateCode = b.affiliate_code || c?.partner_code || null;
+        const source = b.source || (affiliateCode ? affiliateCode : 'Direct');
 
         // Calculate therapist fee base on therapist_fees database (couple = 2 therapists)
         const { totalFee, therapistsCount } = calculateBookingTherapistFee(b, treatments, currentFees);
@@ -308,11 +331,16 @@ export default function TherapickBookingManagement({
 
         return {
           ...b,
+          status: bookingStatus,
+          treatment_status: treatmentStatus,
+          payment_status: paymentStatus,
+          payment_method: paymentMethod,
+          source: source,
+          affiliate_code: affiliateCode,
           therapist_fee_total: effectiveTherapistFee,
           therapists_count: effectiveTherapistsCount,
           net_profit: autoCalculatedProfit,
           commission: c,
-          payment_status: isPaid ? 'paid' : (b.payment_status || 'unpaid'),
         };
       });
 
@@ -438,55 +466,104 @@ export default function TherapickBookingManagement({
     fetchMonthBookings();
   };
 
-  // Change Treatment Status (Cancel / Reinstate)
-  const handleStatusChange = async (id: string, newStatus: string) => {
+  // 1. Independent Booking Status Update ('Pending' | 'Approved' | 'Confirmed' | 'Cancelled')
+  const updateBookingStatus = async (id: string, newStatus: string) => {
     const booking = monthBookings.find(b => b.id === id);
     if (!booking) return;
 
-    if (!confirm(`Are you sure you want to mark this booking as ${newStatus}?`)) return;
-
-    let updates: any = { status: newStatus };
-
-    if (newStatus === 'Ongoing' || newStatus === 'Completed' || newStatus === 'Confirmed' || newStatus === 'CONFIRMED') {
-      const { totalFee, therapistsCount } = calculateBookingTherapistFee(booking, treatments, allTherapistFees);
-      if (totalFee > 0) {
-        updates.therapist_fee_total = totalFee;
-        updates.therapists_count = therapistsCount;
-        const isCommApproved = booking?.commission?.status === 'approved' || booking?.commission?.status === 'paid';
-        const commAmount = isCommApproved ? Number(booking.commission.commission_amount || 0) : 0;
-        updates.net_profit = Math.max(0, (booking.revenue || 0) - totalFee - commAmount);
+    try {
+      const res = await fetch('/api/admin/bookings/status', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ booking_id: id, booking_status: newStatus }),
+      });
+      const data = await res.json();
+      if (!data.success) {
+        // Fallback to Supabase
+        await supabase.from('bookings').update({ status: newStatus }).eq('id', id);
       }
+    } catch (e) {
+      console.error('Error updating booking status:', e);
+      await supabase.from('bookings').update({ status: newStatus }).eq('id', id);
     }
 
-    await supabase.from('bookings').update(updates).eq('id', id);
+    setMonthBookings(prev => prev.map(b => b.id === id ? { ...b, status: newStatus } : b));
+    fetchMonthBookings();
+  };
 
-    // Realtime Sync to affiliate_commissions
-    const ref = booking?.reference_number || booking?.id;
-    if (ref) {
-      if (newStatus === 'Cancelled') {
-        await supabase
-          .from('affiliate_commissions')
-          .update({
-            status: 'cancelled',
-            service_completed: false,
+  // 2. Independent Treatment Status Update ('Scheduled' | 'Therapist Assigned' | 'On the Way' | 'Arrived' | 'In Progress' | 'Finished' | 'No Show')
+  const updateTreatmentStatus = async (id: string, newStatus: string) => {
+    const booking = monthBookings.find(b => b.id === id);
+    if (!booking) return;
+
+    try {
+      const res = await fetch('/api/admin/bookings/status', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ booking_id: id, treatment_status: newStatus }),
+      });
+      const data = await res.json();
+      if (!data.success) {
+        const ref = booking?.reference_number || booking?.id;
+        if (ref) {
+          await supabase.from('affiliate_commissions').update({
+            service_completed: newStatus === 'Finished',
             updated_at: new Date().toISOString(),
-          })
-          .ilike('booking_id', ref);
-      } else if (newStatus === 'Confirmed' || newStatus === 'Pending') {
-        if (booking?.commission?.status === 'cancelled') {
-          await supabase
-            .from('affiliate_commissions')
-            .update({
-              status: 'pending',
-              service_completed: false,
-              updated_at: new Date().toISOString(),
-            })
-            .ilike('booking_id', ref);
+          }).ilike('booking_id', ref);
         }
       }
+    } catch (e) {
+      console.error('Error updating treatment status:', e);
     }
 
+    setMonthBookings(prev => prev.map(b => b.id === id ? { ...b, treatment_status: newStatus } : b));
     fetchMonthBookings();
+  };
+
+  // 3. Independent Payment Status Update ('Unpaid' | 'Partially Paid' | 'Paid' | 'Refunded' | 'Payment Failed')
+  const updatePaymentStatus = async (id: string, newStatus: string, method?: string) => {
+    const booking = monthBookings.find(b => b.id === id);
+    if (!booking) return;
+
+    const chosenMethod = method || booking.payment_method || 'Cash';
+
+    try {
+      const res = await fetch('/api/admin/bookings/status', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          booking_id: id, 
+          payment_status: newStatus, 
+          payment_method: chosenMethod 
+        }),
+      });
+      const data = await res.json();
+      if (!data.success) {
+        const ref = booking?.reference_number || booking?.id;
+        if (ref) {
+          await supabase.from('affiliate_commissions').update({
+            payment_verified: newStatus === 'Paid',
+            notes: newStatus === 'Paid' ? `Paid via ${chosenMethod}` : newStatus,
+            updated_at: new Date().toISOString(),
+          }).ilike('booking_id', ref);
+        }
+      }
+    } catch (e) {
+      console.error('Error updating payment status:', e);
+    }
+
+    setMonthBookings(prev => prev.map(b => b.id === id ? { 
+      ...b, 
+      payment_status: newStatus, 
+      payment_method: chosenMethod 
+    } : b));
+    fetchMonthBookings();
+  };
+
+  // Backward compatible status change helper
+  const handleStatusChange = async (id: string, newStatus: string) => {
+    if (!confirm(`Are you sure you want to mark this booking as ${newStatus}?`)) return;
+    await updateBookingStatus(id, newStatus);
   };
 
   const formatCurrency = (val: number) => {
@@ -1036,11 +1113,11 @@ export default function TherapickBookingManagement({
                   title = match[1];
                 }
 
-                const isPaid = booking.payment_status === 'paid' || booking.commission?.payment_verified;
-                const bookingStatus = booking.status || 'Confirmed';
+                const bookingStatus = booking.status || 'Pending';
                 const isCancelled = bookingStatus.toLowerCase() === 'cancelled';
-                const isOngoing = bookingStatus.toLowerCase() === 'ongoing';
-                const isCompleted = bookingStatus.toLowerCase() === 'completed';
+                const paymentStatus = booking.payment_status || (booking.commission?.payment_verified ? 'Paid' : 'Unpaid');
+                const isPaid = paymentStatus.toLowerCase() === 'paid';
+                const treatmentStatus = booking.treatment_status || (booking.commission?.service_completed ? 'Finished' : 'Scheduled');
 
                 return (
                   <div 
@@ -1050,7 +1127,7 @@ export default function TherapickBookingManagement({
                       isCancelled ? 'border-red-200 bg-red-50/15' : 'border-[#E5E5E5] hover:border-black/40'
                     )}
                   >
-                    {/* Left: Clickable Booking ID + Customer Name + Treatment Name */}
+                    {/* Left: Clickable Booking ID + Customer Name + Status Badges + Treatment Name */}
                     <div className="min-w-0 space-y-1">
                       <div className="flex flex-wrap items-center gap-2">
                         {/* Clickable Booking ID */}
@@ -1069,31 +1146,61 @@ export default function TherapickBookingManagement({
                           {booking.guest_name || 'Guest'}
                         </span>
 
-                        {/* Status Badges */}
-                        {isPaid ? (
-                          <span className="text-[10px] font-medium text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
-                            Paid
+                        {/* 1. Booking Status Badge */}
+                        <span className={cx(
+                          'text-[10px] font-medium px-1.5 py-0.5 rounded border',
+                          bookingStatus.toLowerCase() === 'cancelled'
+                            ? 'text-red-700 bg-red-50 border-red-200'
+                            : bookingStatus.toLowerCase() === 'pending'
+                            ? 'text-amber-800 bg-amber-50 border-amber-200'
+                            : bookingStatus.toLowerCase() === 'approved'
+                            ? 'text-emerald-800 bg-emerald-50 border-emerald-200'
+                            : 'text-blue-800 bg-blue-50 border-blue-200'
+                        )}>
+                          {bookingStatus}
+                        </span>
+
+                        {/* 2. Treatment Progress Badge */}
+                        <span className={cx(
+                          'text-[10px] font-medium px-1.5 py-0.5 rounded border flex items-center gap-1',
+                          treatmentStatus.toLowerCase() === 'finished'
+                            ? 'text-teal-800 bg-teal-50 border-teal-200'
+                            : treatmentStatus.toLowerCase() === 'in progress'
+                            ? 'text-indigo-800 bg-indigo-50 border-indigo-200'
+                            : treatmentStatus.toLowerCase() === 'on the way' || treatmentStatus.toLowerCase() === 'arrived'
+                            ? 'text-purple-800 bg-purple-50 border-purple-200'
+                            : 'text-[#737373] bg-[#FAFAFA] border-[#E5E5E5]'
+                        )}>
+                          {treatmentStatus.toLowerCase() === 'in progress' && (
+                            <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+                          )}
+                          {treatmentStatus}
+                        </span>
+
+                        {/* 3. Payment Status Badge */}
+                        <span className={cx(
+                          'text-[10px] font-medium px-1.5 py-0.5 rounded border',
+                          isPaid
+                            ? 'text-emerald-700 bg-emerald-50 border-emerald-200'
+                            : paymentStatus.toLowerCase() === 'partially paid'
+                            ? 'text-orange-700 bg-orange-50 border-orange-200'
+                            : paymentStatus.toLowerCase() === 'refunded'
+                            ? 'text-purple-700 bg-purple-50 border-purple-200'
+                            : 'text-amber-700 bg-amber-50 border-amber-200'
+                        )}>
+                          {paymentStatus}
+                        </span>
+
+                        {/* 4. Attribution Badge */}
+                        {booking.commission ? (
+                          <span className="text-[10px] font-mono font-medium text-black bg-white px-1.5 py-0.5 rounded border border-[#E5E5E5]">
+                            #{booking.commission.partner_code}
                           </span>
                         ) : (
-                          <span className="text-[10px] font-medium text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
-                            Unpaid
+                          <span className="text-[10px] font-medium text-[#737373] bg-[#FAFAFA] px-1.5 py-0.5 rounded border border-[#E5E5E5]">
+                            Direct
                           </span>
                         )}
-
-                        {isCancelled ? (
-                          <span className="text-[10px] font-medium text-[#737373] bg-[#F5F5F5] px-1.5 py-0.5 rounded border border-[#E5E5E5]">
-                            Cancelled
-                          </span>
-                        ) : isOngoing ? (
-                          <span className="text-[10px] font-medium text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-200 flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
-                            Ongoing
-                          </span>
-                        ) : isCompleted ? (
-                          <span className="text-[10px] font-medium text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200">
-                            Finished
-                          </span>
-                        ) : null}
                       </div>
 
                       {/* Treatment Name */}
@@ -1174,8 +1281,8 @@ export default function TherapickBookingManagement({
 
             {/* Modal Content */}
             <div className="p-5 sm:p-6 space-y-5 max-h-[75vh] overflow-y-auto">
-              {/* Customer & Location */}
-              <div className="p-4 rounded-xl border border-[#E5E5E5] bg-white space-y-2.5">
+              {/* Customer & Operational Status Controls */}
+              <div className="p-4 rounded-xl border border-[#E5E5E5] bg-white space-y-3.5">
                 <div className="flex items-center justify-between flex-wrap gap-2">
                   <div className="flex items-center gap-2">
                     <div className="w-8 h-8 rounded-full bg-[#F5F5F5] border border-[#E5E5E5] flex items-center justify-center text-black">
@@ -1185,41 +1292,91 @@ export default function TherapickBookingManagement({
                       <h4 className="font-semibold text-sm text-black">
                         {selectedBooking.guest_name || 'Guest'}
                       </h4>
-                      <p className="text-xs text-[#737373]">Customer Details</p>
+                      <p className="text-xs text-[#737373]">
+                        {selectedBooking.guest_whatsapp || selectedBooking.guest_email || 'Customer Details'}
+                      </p>
                     </div>
                   </div>
 
-                  {/* Payment & Status Badges */}
+                  {/* Summary Status Badges */}
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    {selectedBooking.payment_status === 'paid' || selectedBooking.commission?.payment_verified ? (
-                      <span className="text-xs font-medium text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-md border border-emerald-200">
-                        Paid
-                      </span>
-                    ) : (
-                      <span className="text-xs font-medium text-amber-800 bg-amber-50 px-2.5 py-0.5 rounded-md border border-amber-200">
-                        Unpaid
-                      </span>
-                    )}
+                    <span className="text-[11px] font-medium px-2 py-0.5 rounded border text-black bg-[#FAFAFA] border-[#E5E5E5]">
+                      {selectedBooking.status || 'Pending'}
+                    </span>
+                    <span className="text-[11px] font-medium px-2 py-0.5 rounded border text-indigo-700 bg-indigo-50 border-indigo-200">
+                      {selectedBooking.treatment_status || 'Scheduled'}
+                    </span>
+                    <span className="text-[11px] font-medium px-2 py-0.5 rounded border text-emerald-700 bg-emerald-50 border-emerald-200">
+                      {selectedBooking.payment_status || 'Unpaid'}
+                    </span>
+                  </div>
+                </div>
 
-                    {selectedBooking.status?.toLowerCase() === 'cancelled' ? (
-                      <span className="text-xs font-medium text-[#737373] bg-[#F5F5F5] px-2.5 py-0.5 rounded-md border border-[#E5E5E5]">
-                        Cancelled
-                      </span>
-                    ) : selectedBooking.status?.toLowerCase() === 'ongoing' ? (
-                      <span className="text-xs font-medium text-indigo-800 bg-indigo-50 px-2.5 py-0.5 rounded-md border border-indigo-200 flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
-                        Ongoing Treatment
-                      </span>
-                    ) : selectedBooking.status?.toLowerCase() === 'completed' ? (
-                      <span className="text-xs font-medium text-teal-800 bg-teal-50 px-2.5 py-0.5 rounded-md border border-teal-200 flex items-center gap-1">
-                        <CheckCircle2 size={12} className="text-teal-700" />
-                        Finished
-                      </span>
-                    ) : (
-                      <span className="text-xs font-medium text-blue-800 bg-blue-50 px-2.5 py-0.5 rounded-md border border-blue-200">
-                        Confirmed
-                      </span>
-                    )}
+                {/* Independent Status Control Panel */}
+                <div className="pt-3 border-t border-[#E5E5E5] grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {/* 1. Booking Status */}
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-semibold uppercase tracking-wider text-[#737373] block">
+                      Booking Status
+                    </label>
+                    <select
+                      value={selectedBooking.status || 'Pending'}
+                      onChange={(e) => updateBookingStatus(selectedBooking.id, e.target.value)}
+                      className="w-full bg-white border border-[#E5E5E5] rounded-lg px-2.5 py-1.5 text-xs font-medium text-black focus:outline-none focus:border-black cursor-pointer"
+                    >
+                      <option value="Pending">Pending</option>
+                      <option value="Approved">Approved</option>
+                      <option value="Confirmed">Confirmed</option>
+                      <option value="Cancelled">Cancelled</option>
+                    </select>
+                  </div>
+
+                  {/* 2. Treatment Progress */}
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-semibold uppercase tracking-wider text-[#737373] block">
+                      Treatment Progress
+                    </label>
+                    <select
+                      value={selectedBooking.treatment_status || 'Scheduled'}
+                      onChange={(e) => updateTreatmentStatus(selectedBooking.id, e.target.value)}
+                      className="w-full bg-white border border-[#E5E5E5] rounded-lg px-2.5 py-1.5 text-xs font-medium text-black focus:outline-none focus:border-black cursor-pointer"
+                    >
+                      <option value="Scheduled">Scheduled</option>
+                      <option value="Therapist Assigned">Therapist Assigned</option>
+                      <option value="On the Way">On the Way</option>
+                      <option value="Arrived">Arrived</option>
+                      <option value="In Progress">In Progress</option>
+                      <option value="Finished">Finished</option>
+                      <option value="No Show">No Show</option>
+                    </select>
+                  </div>
+
+                  {/* 3. Payment Status & Method */}
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-semibold uppercase tracking-wider text-[#737373] block">
+                      Payment Status & Method
+                    </label>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      <select
+                        value={selectedBooking.payment_status || 'Unpaid'}
+                        onChange={(e) => updatePaymentStatus(selectedBooking.id, e.target.value, selectedBooking.payment_method)}
+                        className="w-full bg-white border border-[#E5E5E5] rounded-lg px-2 py-1.5 text-xs font-medium text-black focus:outline-none focus:border-black cursor-pointer"
+                      >
+                        <option value="Unpaid">Unpaid</option>
+                        <option value="Partially Paid">Partially Paid</option>
+                        <option value="Paid">Paid</option>
+                        <option value="Refunded">Refunded</option>
+                        <option value="Payment Failed">Payment Failed</option>
+                      </select>
+                      <select
+                        value={selectedBooking.payment_method || 'Cash'}
+                        onChange={(e) => updatePaymentStatus(selectedBooking.id, selectedBooking.payment_status || 'Unpaid', e.target.value)}
+                        className="w-full bg-white border border-[#E5E5E5] rounded-lg px-2 py-1.5 text-xs font-medium text-black focus:outline-none focus:border-black cursor-pointer"
+                      >
+                        <option value="Cash">Cash</option>
+                        <option value="Online">Online</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
 
@@ -1293,35 +1450,50 @@ export default function TherapickBookingManagement({
                 </div>
               </div>
 
-              {/* Partner Attribution Box (if referred by partner) */}
-              {selectedBooking.commission && (
-                <div className="p-3.5 bg-[#FAFAFA] border border-[#E5E5E5] rounded-xl space-y-2">
-                  <div className="flex items-center justify-between flex-wrap gap-2">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-xs font-medium text-black bg-white border border-[#E5E5E5] px-2 py-0.5 rounded">
-                        Partner: #{selectedBooking.commission.partner_code}
+              {/* Partner Attribution Box (Affiliate Program or Direct Source) */}
+              <div className="p-3.5 bg-[#FAFAFA] border border-[#E5E5E5] rounded-xl space-y-2">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {selectedBooking.commission ? (
+                      <>
+                        <span className="text-xs font-semibold text-black bg-white border border-[#E5E5E5] px-2 py-0.5 rounded">
+                          Partner: #{selectedBooking.commission.partner_code}
+                        </span>
+                        <span className="text-xs font-semibold text-emerald-600 font-mono">
+                          Commission ({selectedBooking.commission.commission_rate_pct || 15}%): +{formatCurrency(selectedBooking.commission.commission_amount || 0)}
+                        </span>
+                        {selectedBooking.commission.status === 'approved' ? (
+                          <span className="text-[11px] font-medium text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded flex items-center gap-1">
+                            <CheckSquare size={11} className="text-emerald-700" /> Approved
+                          </span>
+                        ) : selectedBooking.commission.status === 'paid' ? (
+                          <span className="text-[11px] font-semibold text-white bg-black px-2 py-0.5 rounded flex items-center gap-1">
+                            ✓ Paid Out
+                          </span>
+                        ) : selectedBooking.commission.status === 'cancelled' ? (
+                          <span className="text-[11px] font-medium text-[#737373] bg-[#F5F5F5] px-2 py-0.5 rounded">
+                            Cancelled
+                          </span>
+                        ) : (
+                          <span className="text-[11px] font-medium text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded flex items-center gap-1">
+                            <Clock size={11} className="text-amber-700" /> Pending Review
+                          </span>
+                        )}
+                      </>
+                    ) : (
+                      <span className="text-xs font-medium text-[#737373] bg-white border border-[#E5E5E5] px-2 py-0.5 rounded">
+                        Attribution Source: Direct Booking (Website)
                       </span>
-                      <span className="text-xs font-semibold text-emerald-600 font-mono">
-                        Commission: +{formatCurrency(selectedBooking.commission.commission_amount || 0)}
-                      </span>
-                      {selectedBooking.commission.status === 'approved' ? (
-                        <span className="text-[11px] font-medium text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded flex items-center gap-1">
-                          <CheckSquare size={11} className="text-emerald-700" /> Approved
-                        </span>
-                      ) : selectedBooking.commission.status === 'cancelled' ? (
-                        <span className="text-[11px] font-medium text-[#737373] bg-[#F5F5F5] px-2 py-0.5 rounded">
-                          Cancelled
-                        </span>
-                      ) : (
-                        <span className="text-[11px] font-medium text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded flex items-center gap-1">
-                          <Clock size={11} className="text-amber-700" /> Pending
-                        </span>
-                      )}
-                    </div>
-
+                    )}
                   </div>
+
+                  {selectedBooking.commission && (
+                    <div className="text-[11px] font-mono text-[#737373]">
+                      Eligibility: {selectedBooking.commission.payment_verified && selectedBooking.commission.service_completed ? 'Eligible for Approval' : 'Awaiting Payment & Finish'}
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
 
             {/* Modal Footer / Actions */}
