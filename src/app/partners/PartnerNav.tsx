@@ -18,7 +18,8 @@ import {
   Check,
   Copy,
   MessageCircle,
-  Share2
+  Share2,
+  RefreshCw
 } from 'lucide-react';
 
 export default function PartnerNav({ session }: { session: PartnerSessionData | null }) {
@@ -95,6 +96,18 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
               Partner
             </span>
           </Link>
+          <button
+            type="button"
+            onClick={() => {
+              router.refresh();
+              window.location.reload();
+            }}
+            className="p-1.5 text-[#737373] hover:text-black hover:bg-[#F5F5F5] rounded-lg transition-colors cursor-pointer border border-[#E5E5E5]"
+            title="Refresh partner portal"
+            aria-label="Refresh"
+          >
+            <RefreshCw size={14} />
+          </button>
         </div>
 
         {/* Navigation Links Area */}
@@ -267,8 +280,20 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
               </span>
             </Link>
 
-            {/* Mobile Header Right (Hamburger Menu Only) */}
+            {/* Mobile Header Right (Refresh & Hamburger Menu) */}
             <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  router.refresh();
+                  window.location.reload();
+                }}
+                className="p-1.5 text-black hover:bg-[#F5F5F5] rounded-lg transition-colors cursor-pointer border border-[#E5E5E5]"
+                aria-label="Refresh page"
+                title="Refresh"
+              >
+                <RefreshCw size={16} />
+              </button>
               <button
                 type="button"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}

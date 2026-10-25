@@ -395,44 +395,44 @@ export default function BookingManagement({
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <h2 className="text-xl md:text-2xl font-semibold tracking-tight text-black">Booking Management</h2>
-            <span className="inline-flex items-center h-6 px-2 rounded-md border border-[#E5E5E5] text-[11px] font-mono text-[#737373]">
-              Elexoir &amp; Home Spa Ubud
-            </span>
-          </div>
-          <p className="text-[13px] text-[#737373] mt-0.5">Centralized daily bookings and financial calculator for Elexoir and Home Spa domains</p>
+      {/* Top Action Toolbar (Title removed, keeping Domain Filter, Refresh, and Export CSV) */}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        {/* Domain Filter Pills */}
+        <div className="flex items-center gap-1 border border-[#E5E5E5] rounded-lg p-0.5 bg-white">
+          {[
+            { id: 'all', label: 'All Central' },
+            { id: 'elexoir', label: 'Elexoir' },
+            { id: 'bali', label: 'Home Spa Ubud' },
+          ].map((tab) => {
+            const active = domainFilter === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                id={`central-filter-${tab.id}`}
+                onClick={() => setDomainFilter(tab.id as any)}
+                className={cx(
+                  'px-2.5 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer',
+                  active ? 'bg-black text-white' : 'text-[#737373] hover:text-black hover:bg-[#F5F5F5]'
+                )}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Domain Filter Pills */}
-          <div className="flex items-center gap-1 border border-[#E5E5E5] rounded-lg p-0.5 bg-white">
-            {[
-              { id: 'all', label: 'All Central' },
-              { id: 'elexoir', label: 'Elexoir' },
-              { id: 'bali', label: 'Home Spa Ubud' },
-            ].map((tab) => {
-              const active = domainFilter === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  id={`central-filter-${tab.id}`}
-                  onClick={() => setDomainFilter(tab.id as any)}
-                  className={cx(
-                    'px-2.5 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer',
-                    active ? 'bg-black text-white' : 'text-[#737373] hover:text-black hover:bg-[#F5F5F5]'
-                  )}
-                >
-                  {tab.label}
-                </button>
-              );
-            })}
-          </div>
-
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={fetchMonthBookings}
+            disabled={isLoading}
+            className={cx(btn.base, btn.secondary, btn.icon)}
+            title="Refresh bookings"
+            aria-label="Refresh bookings"
+          >
+            <RefreshCw size={15} className={cx(isLoading && 'animate-spin')} />
+          </button>
           <button
             type="button"
             onClick={downloadCSV}

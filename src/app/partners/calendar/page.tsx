@@ -16,7 +16,8 @@ import {
   ExternalLink,
   Users,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  RefreshCw
 } from 'lucide-react';
 import { CalendarBooking } from '../FloatingBookingCalendar';
 import { supabase } from '@/lib/supabase';
@@ -378,6 +379,18 @@ export default function PartnerCalendarPage() {
               Week
             </button>
           </div>
+          <button
+            type="button"
+            onClick={() => {
+              setLoading(true);
+              loadData();
+            }}
+            disabled={loading}
+            className="p-1.5 text-black hover:bg-[#F5F5F5] rounded-lg transition-colors cursor-pointer border border-[#E5E5E5]"
+            title="Refresh calendar"
+          >
+            <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+          </button>
         </div>
       </div>
 
@@ -498,6 +511,19 @@ export default function PartnerCalendarPage() {
                   </button>
                 </div>
               )}
+
+              <button
+                type="button"
+                onClick={() => {
+                  setLoading(true);
+                  loadData();
+                }}
+                disabled={loading}
+                className="p-1.5 text-black hover:bg-[#F5F5F5] rounded-lg transition-colors cursor-pointer border border-[#E5E5E5]"
+                title="Refresh calendar"
+              >
+                <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+              </button>
 
               <button
                 type="button"

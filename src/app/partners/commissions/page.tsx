@@ -9,7 +9,8 @@ import {
   X, 
   RotateCcw, 
   Calendar as CalendarIcon,
-  ChevronDown
+  ChevronDown,
+  RefreshCw
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
@@ -197,6 +198,20 @@ export default function PartnerCommissionsPage() {
                 size={13} 
                 className={`transition-transform duration-200 ${showCalendarFilter ? 'rotate-180' : ''}`} 
               />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setLoading(true);
+                loadCommissions();
+              }}
+              disabled={loading}
+              className="p-1.5 text-black hover:bg-[#F5F5F5] rounded-lg transition-colors cursor-pointer border border-[#E5E5E5]"
+              title="Refresh commissions"
+              aria-label="Refresh"
+            >
+              <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
             </button>
 
             {hasDateFilter && (

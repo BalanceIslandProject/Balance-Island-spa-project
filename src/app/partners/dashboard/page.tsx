@@ -7,7 +7,8 @@ import {
   Check, 
   AlertCircle,
   ChevronRight,
-  Download
+  Download,
+  RefreshCw
 } from 'lucide-react';
 import { CalendarBooking } from '../FloatingBookingCalendar';
 import PartnerCommissionFilterCard from '../PartnerCommissionFilterCard';
@@ -46,30 +47,31 @@ export default function PartnerDashboardPage() {
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedBookingId, setCopiedBookingId] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const [meRes, statsRes] = await Promise.all([
-          fetch('/api/affiliates/auth/me'),
-          fetch('/api/affiliates/stats'),
-        ]);
+  const fetchData = async () => {
+    try {
+      const [meRes, statsRes] = await Promise.all([
+        fetch('/api/affiliates/auth/me'),
+        fetch('/api/affiliates/stats'),
+      ]);
 
-        const meData = await meRes.json();
-        const statsData = await statsRes.json();
+      const meData = await meRes.json();
+      const statsData = await statsRes.json();
 
-        if (meData.success) {
-          setProfile(meData.partner);
-        }
-        if (statsData.success) {
-          setStats(statsData.stats);
-          setCalendarBookings(statsData.calendarBookings || []);
-        }
-      } catch (err) {
-        console.error('Failed to load dashboard:', err);
-      } finally {
-        setLoading(false);
+      if (meData.success) {
+        setProfile(meData.partner);
       }
+      if (statsData.success) {
+        setStats(statsData.stats);
+        setCalendarBookings(statsData.calendarBookings || []);
+      }
+    } catch (err) {
+      console.error('Failed to load dashboard:', err);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  useEffect(() => {
     fetchData();
 
     // 1. Supabase Realtime Subscription
@@ -220,7 +222,23 @@ Please verify and process the payout to my registered details. Thank you!`;
   }
 
   return (
-    <div className="w-full font-sans antialiased text-[#171717] space-y-6">
+    <div className="w-full font-sans antialiased text-[#171717] space-y-4">
+      {/* Top Action Toolbar */}
+      <div className="flex items-center justify-end">
+        <button
+          type="button"
+          onClick={() => {
+            setLoading(true);
+            fetchData();
+          }}
+          disabled={loading}
+          className="inline-flex items-center justify-center gap-1.5 h-9 w-9 rounded-lg border border-[#E5E5E5] bg-white text-black hover:bg-[#F5F5F5] transition-colors cursor-pointer"
+          title="Refresh dashboard"
+          aria-label="Refresh dashboard"
+        >
+          <RefreshCw size={15} className={loading ? 'animate-spin' : ''} />
+        </button>
+      </div>
       {/* Application Status Alert Banner (only if pending) */}
       {profile?.status === 'pending' && (
         <div className="p-4 border border-amber-200 rounded-xl bg-amber-50 text-xs text-amber-900 flex items-start gap-2.5">

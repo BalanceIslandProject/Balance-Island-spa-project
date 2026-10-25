@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Wallet, CheckCircle2, Clock, X, Copy, Check, Calendar, ExternalLink, DoorClosed, MapPin } from 'lucide-react';
+import { Wallet, CheckCircle2, Clock, X, Copy, Check, Calendar, ExternalLink, DoorClosed, MapPin, RefreshCw } from 'lucide-react';
 import { cleanPayoutRef } from '@/components/admin/affiliate/ui';
 
 export default function PartnerPayoutsPage() {
@@ -10,20 +10,21 @@ export default function PartnerPayoutsPage() {
   const [selectedPayout, setSelectedPayout] = useState<any | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function loadPayouts() {
-      try {
-        const res = await fetch('/api/affiliates/payouts');
-        const data = await res.json();
-        if (data.success) {
-          setPayouts(data.payouts || []);
-        }
-      } catch (e) {
-        console.error('Error loading payouts:', e);
-      } finally {
-        setLoading(false);
+  const loadPayouts = async () => {
+    try {
+      const res = await fetch('/api/affiliates/payouts');
+      const data = await res.json();
+      if (data.success) {
+        setPayouts(data.payouts || []);
       }
+    } catch (e) {
+      console.error('Error loading payouts:', e);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  useEffect(() => {
     loadPayouts();
   }, []);
 
@@ -48,6 +49,19 @@ export default function PartnerPayoutsPage() {
         <div className="inline-flex items-center gap-1.5 bg-white text-black border border-[#E5E5E5] px-3 py-1.5 rounded-lg text-xs font-semibold shadow-xs">
           <span>No Minimum Withdrawal</span>
         </div>
+        <button
+          type="button"
+          onClick={() => {
+            setLoading(true);
+            loadPayouts();
+          }}
+          disabled={loading}
+          className="p-1.5 text-black hover:bg-[#F5F5F5] rounded-lg transition-colors cursor-pointer border border-[#E5E5E5]"
+          title="Refresh payouts"
+          aria-label="Refresh"
+        >
+          <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+        </button>
       </div>
 
       {/* Main Table / Cards */}

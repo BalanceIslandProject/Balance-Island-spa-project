@@ -652,36 +652,25 @@ export default function TherapickBookingManagement({
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <h2 className="text-xl md:text-2xl font-semibold tracking-tight text-black">Therapick Bookings</h2>
-            <span className="inline-flex items-center h-6 px-2 rounded-md border border-[#E5E5E5] text-[11px] font-mono text-[#737373]">
-              Therapick & Affiliates
-            </span>
-          </div>
-          <p className="text-[13px] text-[#737373] mt-0.5">Therapick daily bookings, partner commissions, and smart financial calculator</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={fetchMonthBookings}
-            disabled={isLoading}
-            className={cx(btn.base, btn.secondary, btn.icon)}
-            title="Refresh bookings"
-            aria-label="Refresh bookings"
-          >
-            <RefreshCw size={15} className={cx(isLoading && 'animate-spin')} />
-          </button>
-          <button
-            type="button"
-            onClick={downloadCSV}
-            className={cx(btn.base, btn.primary, btn.sm)}
-          >
-            <Download size={14} /> Export CSV
-          </button>
-        </div>
+      {/* Top Action Toolbar (Title removed, keeping Refresh and Export CSV in clean position) */}
+      <div className="flex items-center justify-end gap-2">
+        <button
+          type="button"
+          onClick={fetchMonthBookings}
+          disabled={isLoading}
+          className={cx(btn.base, btn.secondary, btn.icon)}
+          title="Refresh bookings"
+          aria-label="Refresh bookings"
+        >
+          <RefreshCw size={15} className={cx(isLoading && 'animate-spin')} />
+        </button>
+        <button
+          type="button"
+          onClick={downloadCSV}
+          className={cx(btn.base, btn.primary, btn.sm)}
+        >
+          <Download size={14} /> Export CSV
+        </button>
       </div>
 
       {/* Financial Metrics Strip: Daily & Monthly (Revenue, Profit, Commission Paid) */}

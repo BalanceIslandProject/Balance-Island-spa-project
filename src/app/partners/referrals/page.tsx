@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ExternalLink, Calendar, User, Users, Clock } from 'lucide-react';
+import { ExternalLink, Calendar, User, Users, Clock, RefreshCw } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
 export default function PartnerReferralsPage() {
@@ -65,6 +65,18 @@ export default function PartnerReferralsPage() {
           <Users size={14} className="text-[#737373]" />
           <span>{referrals.length} {referrals.length === 1 ? 'Booking' : 'Bookings'}</span>
         </div>
+        <button
+          type="button"
+          onClick={() => {
+            setLoading(true);
+            loadReferrals();
+          }}
+          disabled={loading}
+          className="p-1.5 text-black hover:bg-[#F5F5F5] rounded-lg transition-colors cursor-pointer border border-[#E5E5E5]"
+          title="Refresh bookings"
+        >
+          <RefreshCw size={15} className={loading ? 'animate-spin' : ''} />
+        </button>
       </div>
 
       {/* Main Content Area */}
