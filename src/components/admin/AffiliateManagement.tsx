@@ -96,6 +96,9 @@ export default function AffiliateManagement() {
   const [partnerCommFilter, setPartnerCommFilter] = useState('all');
   const [partnerNotesInput, setPartnerNotesInput] = useState('');
 
+  // Payout Breakdown Fullscreen Details Modal State
+  const [selectedPayoutDetails, setSelectedPayoutDetails] = useState<any | null>(null);
+
   // Commission rate edit state
   const [editingRateId, setEditingRateId] = useState<string | null>(null);
   const [newRateValue, setNewRateValue] = useState<number>(15);
@@ -338,6 +341,7 @@ export default function AffiliateManagement() {
       return dateB.localeCompare(dateA);
     });
     const latestBooking = sorted[0] || null;
+    const pendingCount = pComms.filter((c) => c.status === 'pending').length;
 
     return {
       commissions: pComms,
@@ -348,6 +352,8 @@ export default function AffiliateManagement() {
       paidComms,
       totalPaidOut,
       bookingsCount,
+      pendingCount,
+      hasNewBooking: pendingCount > 0,
       latestBooking,
     };
   };
@@ -474,17 +480,65 @@ export default function AffiliateManagement() {
     setShowPayoutModal(true);
   };
 
-  // Filtered partners by search
-  const filteredPartners = partners.filter((p) => {
-    const q = searchQuery.toLowerCase();
-    return (
-      p.partner_code?.toLowerCase().includes(q) ||
-      p.first_name?.toLowerCase().includes(q) ||
-      p.last_name?.toLowerCase().includes(q) ||
-      p.business_name?.toLowerCase().includes(q) ||
-      p.email?.toLowerCase().includes(q)
-    );
-  });
+  // Helper to get bookings for a payout
+  const getPayoutBookings = (payout: any) => {
+    if (!payout) return [];
+    let items = commissions.filter((c) => c.payout_id === payout.id);
+    if (items.length === 0) {
+      items = commissions.filter(
+        (c) => (c.partner_id === payout.partner_id || c.partner_code === payout.partner_code) && c.status === 'paid'
+      );
+    }
+    return items;
+  };
+
+  // Smart Partner Ranking Algorithm: Partners who get bookings & new bookings are placed at the top!
+  const filteredPartners = useMemo(() => {
+    const list = partners.filter((p) => {
+      const q = searchQuery.toLowerCase();
+      return (
+        p.partner_code?.toLowerCase().includes(q) ||
+        p.first_name?.toLowerCase().includes(q) ||
+        p.last_name?.toLowerCase().includes(q) ||
+        p.business_name?.toLowerCase().includes(q) ||
+        p.email?.toLowerCase().includes(q)
+      );
+    });
+
+    return [...list].sort((a, b) => {
+      const mA = getPartnerMetrics(a);
+      const mB = getPartnerMetrics(b);
+
+      // 1. Partners with NEW/pending bookings come first
+      const newA = mA.pendingCount || 0;
+      const newB = mB.pendingCount || 0;
+      if (newA > 0 || newB > 0) {
+        if (newA !== newB) return newB - newA;
+      }
+
+      // 2. Partners with bookings come before partners with 0 bookings
+      const hasBookingsA = mA.bookingsCount > 0 ? 1 : 0;
+      const hasBookingsB = mB.bookingsCount > 0 ? 1 : 0;
+      if (hasBookingsA !== hasBookingsB) return hasBookingsB - hasBookingsA;
+
+      // 3. Most recent booking first
+      const dateA = mA.latestBooking ? (mA.latestBooking.booking_date || mA.latestBooking.created_at || '') : '';
+      const dateB = mB.latestBooking ? (mB.latestBooking.booking_date || mB.latestBooking.created_at || '') : '';
+      if (dateA || dateB) {
+        if (dateA && dateB) {
+          const cmp = dateB.localeCompare(dateA);
+          if (cmp !== 0) return cmp;
+        } else if (dateA) return -1;
+        else if (dateB) return 1;
+      }
+
+      // 4. Highest booking count
+      if (mA.bookingsCount !== mB.bookingsCount) return mB.bookingsCount - mA.bookingsCount;
+
+      // 5. Default created_at desc
+      return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+    });
+  }, [partners, searchQuery, commissions, payouts]);
 
   // Global commissions filtered for tab 2
   const filteredGlobalCommissions = commissions.filter((c) => {
@@ -785,15 +839,29 @@ export default function AffiliateManagement() {
                           {/* 5. Calendar (Independent) */}
                           <td className="py-3.5 px-4 align-top">
                             <div className="space-y-1">
-                              <button
-                                onClick={() => openPartnerModal(p, 'calendar')}
-                                className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-black hover:text-white text-black font-bold rounded-xl text-xs transition-all border border-black/20 group"
-                              >
-                                <span>Calendar</span>
-                                <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-black/10 group-hover:bg-white/20 font-mono">
-                                  {metrics.bookingsCount}
-                                </span>
-                              </button>
+                              <div className="relative inline-block">
+                                <button
+                                  onClick={() => openPartnerModal(p, 'calendar')}
+                                  className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-black hover:text-white text-black font-bold rounded-xl text-xs transition-all border border-black/20 group shadow-2xs"
+                                >
+                                  <span>Calendar</span>
+                                  <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-black/10 group-hover:bg-white/20 font-mono">
+                                    {metrics.bookingsCount}
+                                  </span>
+                                  {metrics.pendingCount > 0 && (
+                                    <span className="bg-black text-white text-[9px] font-extrabold px-1.5 py-0.2 rounded-full uppercase tracking-wider flex items-center gap-1 group-hover:bg-white group-hover:text-black">
+                                      <span className="w-1.5 h-1.5 rounded-full bg-white group-hover:bg-black animate-pulse" />
+                                      {metrics.pendingCount} New
+                                    </span>
+                                  )}
+                                </button>
+                                {metrics.pendingCount > 0 && (
+                                  <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-black opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-3 w-3 bg-black border border-white"></span>
+                                  </span>
+                                )}
+                              </div>
                               {metrics.latestBooking ? (
                                 <div className="text-[10px] text-black/50">
                                   Latest: {safeFormatDate(metrics.latestBooking.booking_date || metrics.latestBooking.created_at)}
@@ -1003,12 +1071,13 @@ export default function AffiliateManagement() {
                     <th className="py-3 px-4">Method</th>
                     <th className="py-3 px-4">Status</th>
                     <th className="py-3 px-4">Notes</th>
+                    <th className="py-3 px-4 text-right">Details</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-black/5">
                   {filteredGlobalPayouts.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="py-8 text-center text-black/50">
+                      <td colSpan={8} className="py-8 text-center text-black/50">
                         No payout records logged yet.
                       </td>
                     </tr>
@@ -1038,6 +1107,15 @@ export default function AffiliateManagement() {
                           </span>
                         </td>
                         <td className="py-3 px-4 text-black/60">{py.notes || '-'}</td>
+                        <td className="py-3 px-4 text-right whitespace-nowrap">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedPayoutDetails(py)}
+                            className="px-3 py-1.5 bg-black text-white hover:bg-black/80 font-bold rounded-xl text-xs transition-all shadow-xs"
+                          >
+                            View Bookings &rarr;
+                          </button>
+                        </td>
                       </tr>
                     ))
                   )}
@@ -1137,7 +1215,7 @@ export default function AffiliateManagement() {
 
       {/* RECORD PAYOUT MODAL WITH ACTIVE FLOATING CALENDAR & APPROVED REFERRALS SELECTOR */}
       {showPayoutModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 md:p-6">
+        <div className="fixed inset-0 z-[70] bg-black/60 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 md:p-6">
           <form
             onSubmit={handleRecordPayout}
             className="bg-white rounded-2xl w-full h-full max-w-[98vw] max-h-[96vh] flex flex-col border border-black/15 shadow-2xl overflow-hidden"
@@ -1940,6 +2018,12 @@ export default function AffiliateManagement() {
                     </div>
 
                     <div className="flex items-center gap-3 text-[11px] text-black/60 flex-wrap">
+                      {partnerMonthBookings.some((b) => b.status === 'pending') && (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black text-white text-[10px] font-bold tracking-tight">
+                          <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                          {partnerMonthBookings.filter((b) => b.status === 'pending').length} New Bookings
+                        </span>
+                      )}
                       <div className="flex items-center gap-2">
                         <span className="flex items-center gap-1 font-semibold text-black">
                           <span className="w-2 h-2 rounded-full bg-black inline-block" /> Paid Out
@@ -2011,13 +2095,22 @@ export default function AffiliateManagement() {
                                 >
                                   {dayNum}
                                 </span>
-                                {dayBookings.length > 0 && (
-                                  <span className={`text-[9px] sm:text-[10px] px-1.5 py-0.2 rounded font-mono font-bold ${
-                                    isSelected ? 'bg-white text-black' : 'bg-black text-white'
-                                  }`}>
-                                    {dayBookings.length}
-                                  </span>
-                                )}
+                                <div className="flex items-center gap-1">
+                                  {hasPending && (
+                                    <span className={`text-[8px] font-extrabold uppercase px-1 rounded ${
+                                      isSelected ? 'bg-white text-black' : 'bg-black text-white animate-pulse'
+                                    }`}>
+                                      NEW
+                                    </span>
+                                  )}
+                                  {dayBookings.length > 0 && (
+                                    <span className={`text-[9px] sm:text-[10px] px-1.5 py-0.2 rounded font-mono font-bold ${
+                                      isSelected ? 'bg-white text-black' : 'bg-black text-white'
+                                    }`}>
+                                      {dayBookings.length}
+                                    </span>
+                                  )}
+                                </div>
                               </div>
 
                               {dayBookings.length > 0 ? (
@@ -2435,12 +2528,13 @@ export default function AffiliateManagement() {
                           <th className="py-2.5 px-3">Method</th>
                           <th className="py-2.5 px-3">Status</th>
                           <th className="py-2.5 px-3">Notes</th>
+                          <th className="py-2.5 px-3 text-right">Details</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-black/5">
                         {activePartnerMetrics.payouts.length === 0 ? (
                           <tr>
-                            <td colSpan={6} className="py-6 text-center text-black/50">
+                            <td colSpan={7} className="py-6 text-center text-black/50">
                               No payouts logged for this partner yet.
                             </td>
                           </tr>
@@ -2465,6 +2559,15 @@ export default function AffiliateManagement() {
                                 )}
                               </td>
                               <td className="py-2.5 px-3 text-black/60">{py.notes || '-'}</td>
+                              <td className="py-2.5 px-3 text-right whitespace-nowrap">
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedPayoutDetails(py)}
+                                  className="px-2.5 py-1 bg-black text-white hover:bg-black/80 font-bold rounded-lg text-xs transition-all shadow-xs"
+                                >
+                                  View Bookings &rarr;
+                                </button>
+                              </td>
                             </tr>
                           ))
                         )}
@@ -2490,6 +2593,197 @@ export default function AffiliateManagement() {
               </button>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* FULLSCREEN POPUP: PAID OUT BOOKING DETAILS BREAKDOWN FOR ADMIN */}
+      {selectedPayoutDetails && (
+        <div className="fixed inset-0 z-[80] bg-black/60 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 md:p-6">
+          <div className="bg-white rounded-2xl w-full h-full max-w-[98vw] max-h-[96vh] flex flex-col border border-black/15 shadow-2xl overflow-hidden">
+            {/* Modal Header */}
+            <div className="p-4 sm:p-5 bg-white border-b border-black/10 text-black flex items-start justify-between shrink-0">
+              <div>
+                <div className="flex items-center gap-2.5 flex-wrap">
+                  <h3 className="font-bold text-black text-lg sm:text-xl tracking-tight">
+                    Disbursement & Paid Bookings Details
+                  </h3>
+                  <span className="font-mono font-bold text-black bg-black/5 px-2.5 py-0.5 rounded-lg text-xs border border-black/10">
+                    {selectedPayoutDetails.payout_reference}
+                  </span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-black text-white">
+                    {selectedPayoutDetails.status || 'COMPLETED'}
+                  </span>
+                </div>
+                <div className="text-xs text-black/60 mt-1 flex items-center gap-2 flex-wrap">
+                  <span>Date: <strong>{safeFormatDate(selectedPayoutDetails.created_at)}</strong></span>
+                  <span>&bull;</span>
+                  <span>Method: <strong className="capitalize">{selectedPayoutDetails.payout_method?.replace('_', ' ')}</strong></span>
+                  {selectedPayoutDetails.partner_code && (
+                    <>
+                      <span>&bull;</span>
+                      <span>Partner: <strong>{selectedPayoutDetails.partner_code}</strong></span>
+                    </>
+                  )}
+                  {selectedPayoutDetails.notes && (
+                    <>
+                      <span>&bull;</span>
+                      <span>Notes: <strong>{selectedPayoutDetails.notes}</strong></span>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-4">
+                <div className="text-right hidden sm:block">
+                  <span className="text-[10px] text-black/50 block font-bold uppercase tracking-wider">Total Disbursed</span>
+                  <span className="font-mono font-extrabold text-xl text-black">
+                    {formatIDR(selectedPayoutDetails.amount)}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedPayoutDetails(null)}
+                  className="w-8 h-8 rounded-xl bg-black/5 hover:bg-black hover:text-white text-black flex items-center justify-center transition-colors"
+                  title="Close"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            </div>
+
+            {/* Quick KPI Bar */}
+            {(() => {
+              const items = getPayoutBookings(selectedPayoutDetails);
+              const totalTreatmentNet = items.reduce((sum, b) => sum + Number(b.eligible_treatment_amount || 0), 0);
+
+              return (
+                <>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 sm:p-5 bg-black/[0.02] border-b border-black/10 shrink-0 text-xs">
+                    <div className="bg-white p-3 rounded-xl border border-black/10 shadow-2xs">
+                      <span className="text-[10px] uppercase font-bold text-black/50 block">Disbursed Amount</span>
+                      <span className="text-base font-bold text-black font-mono mt-0.5 block">
+                        {formatIDR(selectedPayoutDetails.amount)}
+                      </span>
+                    </div>
+                    <div className="bg-white p-3 rounded-xl border border-black/10 shadow-2xs">
+                      <span className="text-[10px] uppercase font-bold text-black/50 block">Paid Referrals</span>
+                      <span className="text-base font-bold text-black mt-0.5 block">
+                        {items.length} bookings
+                      </span>
+                    </div>
+                    <div className="bg-white p-3 rounded-xl border border-black/10 shadow-2xs">
+                      <span className="text-[10px] uppercase font-bold text-black/50 block">Treatment Volume</span>
+                      <span className="text-base font-bold text-black font-mono mt-0.5 block">
+                        {formatIDR(totalTreatmentNet)}
+                      </span>
+                    </div>
+                    <div className="bg-white p-3 rounded-xl border border-black/10 shadow-2xs">
+                      <span className="text-[10px] uppercase font-bold text-black/50 block">Payout Mode</span>
+                      <span className="text-sm font-bold text-black capitalize mt-0.5 block">
+                        {selectedPayoutDetails.payout_method?.replace('_', ' ')}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Itemized Bookings List (Scrollable, Fullscreen) */}
+                  <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+                    <div>
+                      <h4 className="font-bold text-black text-sm tracking-tight flex items-center justify-between">
+                        <span>Bookings Settled in this Payout</span>
+                        <span className="text-xs text-black/60 font-normal">
+                          {items.length} items linked
+                        </span>
+                      </h4>
+                    </div>
+
+                    {items.length === 0 ? (
+                      <div className="bg-white p-8 rounded-2xl border border-black/10 text-center text-black/50 space-y-1">
+                        <p className="font-semibold text-black">No itemized booking records linked to this disbursement.</p>
+                        <p className="text-xs">This disbursement was processed as a direct commission withdrawal of {formatIDR(selectedPayoutDetails.amount)}.</p>
+                      </div>
+                    ) : (
+                      <div className="bg-white rounded-2xl border border-black/10 shadow-2xs overflow-hidden">
+                        <table className="w-full text-left text-xs">
+                          <thead className="bg-white border-b border-black/10 text-black font-bold">
+                            <tr>
+                              <th className="py-3 px-4">Booking Ref</th>
+                              <th className="py-3 px-4">Date</th>
+                              <th className="py-3 px-4">Guest & Location</th>
+                              <th className="py-3 px-4">Treatment</th>
+                              <th className="py-3 px-4">Net Value</th>
+                              <th className="py-3 px-4">Rate</th>
+                              <th className="py-3 px-4">Commission Paid</th>
+                              <th className="py-3 px-4 text-right">Status</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-black/5">
+                            {items.map((b) => (
+                              <tr key={b.id} className="hover:bg-black/[0.02] transition-colors">
+                                <td className="py-3.5 px-4 font-mono font-bold text-black whitespace-nowrap">
+                                  <div className="flex items-center gap-1.5">
+                                    <span>#{b.booking_id}</span>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleCopyText(b.booking_id, `payout-bk-${b.id}`)}
+                                      className="text-black/40 hover:text-black"
+                                    >
+                                      {copiedId === `payout-bk-${b.id}` ? <Check size={11} /> : <Copy size={11} />}
+                                    </button>
+                                  </div>
+                                </td>
+                                <td className="py-3.5 px-4 text-black/60 whitespace-nowrap">
+                                  {safeFormatDate(b.booking_date || b.created_at)} {b.booking_time || ''}
+                                </td>
+                                <td className="py-3.5 px-4">
+                                  <div className="font-semibold text-black">{b.guest_name || 'Guest'}</div>
+                                  {b.location && (
+                                    <div className="text-[10px] text-black/50">
+                                      {b.location} {b.room_number ? `(${b.room_number})` : ''}
+                                    </div>
+                                  )}
+                                </td>
+                                <td className="py-3.5 px-4 text-black font-medium">
+                                  {b.treatment_name || 'Spa Treatment'}
+                                </td>
+                                <td className="py-3.5 px-4 font-mono">
+                                  {formatIDR(b.eligible_treatment_amount)}
+                                </td>
+                                <td className="py-3.5 px-4 font-mono">
+                                  {b.commission_rate_pct}%
+                                </td>
+                                <td className="py-3.5 px-4 font-bold font-mono text-black">
+                                  +{formatIDR(b.commission_amount)}
+                                </td>
+                                <td className="py-3.5 px-4 text-right">
+                                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-black text-white whitespace-nowrap">
+                                    <CheckCircle2 size={10} /> Paid Out
+                                  </span>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                </>
+              );
+            })()}
+
+            {/* Modal Footer */}
+            <div className="p-4 border-t border-black/10 bg-black/[0.02] flex items-center justify-between shrink-0">
+              <span className="text-[11px] text-black/50 font-mono">
+                Receipt #{selectedPayoutDetails.payout_reference} &bull; {selectedPayoutDetails.id}
+              </span>
+              <button
+                type="button"
+                onClick={() => setSelectedPayoutDetails(null)}
+                className="px-5 py-2 bg-black text-white text-xs font-bold rounded-xl hover:bg-black/80 shadow-sm"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}
