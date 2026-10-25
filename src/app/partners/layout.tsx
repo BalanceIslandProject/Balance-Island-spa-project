@@ -8,6 +8,15 @@ import PartnerNav from './PartnerNav';
 export const metadata = {
   title: 'Partner Program | BookTherapick Bali',
   description: 'Join the BookTherapick Partner Program. Earn commission on every completed mobile spa booking.',
+  icons: {
+    icon: [
+      { url: '/therapick-favicon.png', type: 'image/png' },
+      { url: '/favicon.ico', sizes: '32x32' },
+    ],
+    apple: [
+      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
+  },
 };
 
 export default async function PartnersLayout({

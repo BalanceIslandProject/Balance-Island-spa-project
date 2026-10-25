@@ -59,6 +59,15 @@ export async function generateMetadata(): Promise<Metadata> {
         title: title,
         description: description,
         keywords: keywords,
+        icons: {
+            icon: [
+                { url: isTherapick ? '/therapick-favicon.png' : iconUrl, type: 'image/png' },
+                { url: '/favicon.ico', sizes: '32x32' }
+            ],
+            apple: [
+                { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+            ]
+        },
         openGraph: {
             title: title,
             description: description,

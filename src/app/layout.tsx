@@ -62,6 +62,7 @@ export async function generateMetadata(): Promise<Metadata> {
       ? "Experience the top-rated mobile spa in Ubud, Bali. Professional 5-star in-villa massages, couples spa rituals, and authentic Balinese healing delivered directly to your private villa or resort anywhere in Ubud. Certified local therapists."
       : "Exclusive 5-star luxury mobile spa in Ubud, Bali. Authentic Balinese in-villa massage, deep tissue therapy, and couples wellness sanctuary delivered to your private villa or resort in Ubud Center, Sayan, Penestanan, Kedewatan, and Tegallalang.");
       
+  const faviconUrl = isTherapick ? '/therapick-favicon.png' : (isBaliDomain ? '/homespa.png' : '/elexoir.png');
   const iconUrl = isTherapick ? '/therapick-logo-2.png' : (isBaliDomain ? '/homespa.png' : '/elexoir.png');
 
   // 2. DOMAIN-ISOLATED TARGET KEYWORDS
@@ -188,13 +189,16 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     icons: {
       icon: [
-        { url: iconUrl, type: 'image/png' }
+        { url: faviconUrl, type: 'image/png' },
+        { url: '/therapick-favicon.png', type: 'image/png' },
+        { url: '/favicon.ico', sizes: '32x32' }
       ],
       shortcut: [
-        { url: iconUrl, type: 'image/png' }
+        { url: faviconUrl, type: 'image/png' }
       ],
       apple: [
-        { url: iconUrl, type: 'image/png' }
+        { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+        { url: faviconUrl, type: 'image/png' }
       ]
     },
     openGraph: {
@@ -314,6 +318,7 @@ export default async function RootLayout({
     : (isBaliDomain
       ? "Looking for the best massage in Bali? Home Spa Ubud delivers premium, 5-star professional spa treatments directly to your private villa or hotel. Serving Ubud, Canggu, Seminyak, Kuta, and Nusa Dua."
       : "Experience the top-rated luxury mobile spa in Bali. Professional in-villa massages, couples treatments & holistic rituals delivered directly to your hotel or villa in Ubud, Canggu, and Seminyak.");
+  const faviconUrl = isTherapick ? '/therapick-favicon.png' : (isBaliDomain ? '/homespa.png' : '/elexoir.png');
   const iconUrl = isTherapick ? '/therapick-logo.png' : (isBaliDomain ? '/homespa.png' : '/elexoir.png');
 
   // SSR Data Fetching with server-side caching (120s revalidation)
@@ -322,6 +327,9 @@ export default async function RootLayout({
   return (
     <html lang="en" className="antialiased scroll-smooth">
       <head>
+        <link rel="icon" type="image/png" href={faviconUrl} />
+        <link rel="shortcut icon" type="image/png" href={faviconUrl} />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-9CFBSVYEY9"
           strategy="lazyOnload"

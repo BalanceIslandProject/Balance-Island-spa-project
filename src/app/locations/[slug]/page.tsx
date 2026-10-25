@@ -95,6 +95,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         title: title,
         description: description,
         keywords: keywords,
+        icons: {
+            icon: [
+                { url: isTherapick ? '/therapick-favicon.png' : iconUrl, type: 'image/png' },
+                { url: '/favicon.ico', sizes: '32x32' }
+            ],
+            apple: [
+                { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+            ]
+        },
         robots: isNonTherapickNonUbud 
             ? { index: false, follow: true } 
             : { index: true, follow: true, googleBot: { index: true, follow: true, 'max-image-preview': 'large' } },
