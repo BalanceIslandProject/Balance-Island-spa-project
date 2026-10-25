@@ -890,11 +890,15 @@ export default function PartnerCalendarPage() {
                           </span>
                         )}
 
-                        {isApproved && (
+                        {b.commission_status === 'paid' ? (
+                          <span className="text-[10px] font-bold text-white bg-black px-2 py-0.5 rounded border border-black inline-flex items-center gap-1">
+                            ✓ Paid Out
+                          </span>
+                        ) : isApproved ? (
                           <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-300">
                             Approved
                           </span>
-                        )}
+                        ) : null}
                       </div>
 
                       <div className="text-right">

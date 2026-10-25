@@ -448,6 +448,10 @@ Please verify and process the payout to my registered details. Thank you!`;
                           <span className="text-[10px] font-semibold text-neutral-500 bg-neutral-100 px-2 py-0.5 rounded">
                             Commission Cancelled
                           </span>
+                        ) : b.commission_status === 'paid' ? (
+                          <span className="text-[10px] font-bold text-white bg-black px-2 py-0.5 rounded border border-black inline-flex items-center gap-1">
+                            ✓ Paid Out
+                          </span>
                         ) : isApproved ? (
                           <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100/70 px-2 py-0.5 rounded border border-emerald-300">
                             Approved
@@ -720,11 +724,15 @@ Please verify and process the payout to my registered details. Thank you!`;
                             </span>
                           )}
 
-                          {isApproved && (
+                          {b.commission_status === 'paid' ? (
+                            <span className="text-[10px] font-bold text-white bg-black px-2 py-0.5 rounded border border-black inline-flex items-center gap-1">
+                              ✓ Paid Out
+                            </span>
+                          ) : isApproved ? (
                             <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100/70 px-2 py-0.5 rounded border border-emerald-300">
                               Approved
                             </span>
-                          )}
+                          ) : null}
                         </div>
 
                         <p className="text-xs text-neutral-600 truncate font-medium">

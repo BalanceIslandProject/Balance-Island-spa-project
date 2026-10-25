@@ -42,6 +42,7 @@ export async function POST(req: NextRequest) {
       payout_details = {},
       proof_document_url = '',
       notes = '',
+      commission_ids = [],
     } = body;
 
     if (!partner_id || !amount) {
@@ -86,15 +87,23 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, message: payoutErr?.message || 'Payout creation failed' }, { status: 400 });
     }
 
-    // 2. Mark approved commissions for this partner as 'paid' up to payout amount or all approved
-    const { data: approvedComms } = await supabase
-      .from('affiliate_commissions')
-      .select('id, commission_amount')
-      .eq('partner_id', partner.id)
-      .eq('status', 'approved');
+    // 2. Mark specific selected commissions (or all approved) for this partner as 'paid'
+    let commIdsToMark: string[] = [];
+    if (Array.isArray(commission_ids) && commission_ids.length > 0) {
+      commIdsToMark = commission_ids;
+    } else {
+      const { data: approvedComms } = await supabase
+        .from('affiliate_commissions')
+        .select('id, commission_amount')
+        .eq('partner_id', partner.id)
+        .eq('status', 'approved');
 
-    if (approvedComms && approvedComms.length > 0) {
-      const commIds = approvedComms.map((c) => c.id);
+      if (approvedComms && approvedComms.length > 0) {
+        commIdsToMark = approvedComms.map((c) => c.id);
+      }
+    }
+
+    if (commIdsToMark.length > 0) {
       await supabase
         .from('affiliate_commissions')
         .update({
@@ -103,7 +112,7 @@ export async function POST(req: NextRequest) {
           payout_id: newPayout.id,
           updated_at: new Date().toISOString(),
         })
-        .in('id', commIds);
+        .in('id', commIdsToMark);
     }
 
     return NextResponse.json({ success: true, payout: newPayout });

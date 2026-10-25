@@ -465,6 +465,10 @@ export default function PartnerCommissionsPage() {
                         <span className="text-[10px] font-semibold text-neutral-500 bg-neutral-100 px-2 py-0.5 rounded">
                           Commission Cancelled
                         </span>
+                      ) : item.status === 'paid' ? (
+                        <span className="text-[10px] font-bold text-white bg-black px-2 py-0.5 rounded border border-black inline-flex items-center gap-1">
+                          ✓ Paid Out
+                        </span>
                       ) : isApproved ? (
                         <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100/70 px-2 py-0.5 rounded border border-emerald-300">
                           Approved
@@ -578,6 +582,10 @@ export default function PartnerCommissionsPage() {
                           {isCancelled ? (
                             <span className="text-[10px] font-semibold text-neutral-500 bg-neutral-100 px-2 py-0.5 rounded">
                               Cancelled
+                            </span>
+                          ) : item.status === 'paid' ? (
+                            <span className="text-[10px] font-bold text-white bg-black px-2 py-0.5 rounded border border-black inline-flex items-center gap-1">
+                              ✓ Paid Out
                             </span>
                           ) : isApproved ? (
                             <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100/70 px-2 py-0.5 rounded border border-emerald-300">

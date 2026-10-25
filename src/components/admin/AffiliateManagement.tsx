@@ -9,7 +9,14 @@ import {
   Check, 
   Copy, 
   X,
-  Plus
+  Plus,
+  Calendar as CalendarIcon,
+  CheckCircle2,
+  Clock,
+  ExternalLink,
+  DollarSign,
+  CheckSquare,
+  Square
 } from 'lucide-react';
 
 const MONTH_NAMES = [
@@ -61,14 +68,24 @@ export default function AffiliateManagement() {
   const [globalPayoutPartnerFilter, setGlobalPayoutPartnerFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Payout Modal State
+  // Payout Modal State with Active Floating Calendar & Approved Selection
   const [showPayoutModal, setShowPayoutModal] = useState(false);
-  const [payoutForm, setPayoutForm] = useState({
+  const [payoutForm, setPayoutForm] = useState<{
+    partner_id: string;
+    amount: string;
+    payout_method: string;
+    notes: string;
+  }>({
     partner_id: '',
     amount: '',
     payout_method: 'bank_transfer',
     notes: '',
   });
+  const [selectedCommissionIds, setSelectedCommissionIds] = useState<string[]>([]);
+  const [payoutCalendarYear, setPayoutCalendarYear] = useState(() => new Date().getFullYear());
+  const [payoutCalendarMonth, setPayoutCalendarMonth] = useState(() => new Date().getMonth());
+  const [payoutSelectedDate, setPayoutSelectedDate] = useState<string | null>(null);
+  const [showPastPaidInPayoutModal, setShowPastPaidInPayoutModal] = useState(false);
 
   // Partner Details Modal State
   const [selectedPartnerDetails, setSelectedPartnerDetails] = useState<any | null>(null);
@@ -241,13 +258,18 @@ export default function AffiliateManagement() {
       const res = await fetch('/api/affiliates/admin/payouts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payoutForm),
+        body: JSON.stringify({
+          ...payoutForm,
+          commission_ids: selectedCommissionIds,
+        }),
       });
       const data = await res.json();
       if (data.success) {
         setShowPayoutModal(false);
         setPayoutForm({ partner_id: '', amount: '', payout_method: 'bank_transfer', notes: '' });
-        fetchAllData();
+        setSelectedCommissionIds([]);
+        setPayoutSelectedDate(null);
+        await fetchAllData();
       } else {
         alert(data.message || 'Failed to record payout');
       }
@@ -338,15 +360,117 @@ export default function AffiliateManagement() {
     setPartnerNotesInput(partner.notes || '');
   };
 
+  // Payout Modal Selected Partner & Commissions
+  const payoutSelectedPartner = useMemo(() => {
+    return partners.find((item) => item.id === payoutForm.partner_id) || null;
+  }, [payoutForm.partner_id, partners]);
+
+  const payoutPartnerCommissions = useMemo(() => {
+    if (!payoutForm.partner_id) return [];
+    const p = payoutSelectedPartner;
+    return commissions.filter(
+      (c) => c.partner_id === payoutForm.partner_id || c.partner_code === p?.partner_code
+    );
+  }, [payoutForm.partner_id, payoutSelectedPartner, commissions]);
+
+  const payoutApprovedCommissions = useMemo(() => {
+    return payoutPartnerCommissions.filter((c) => c.status === 'approved');
+  }, [payoutPartnerCommissions]);
+
+  const payoutPaidCommissions = useMemo(() => {
+    return payoutPartnerCommissions.filter((c) => c.status === 'paid');
+  }, [payoutPartnerCommissions]);
+
+  const payoutPendingCommissions = useMemo(() => {
+    return payoutPartnerCommissions.filter((c) => c.status === 'pending');
+  }, [payoutPartnerCommissions]);
+
+  // Group approved commissions by date (YYYY-MM-DD)
+  const payoutApprovedByDate = useMemo(() => {
+    const map: Record<string, any[]> = {};
+    for (const c of payoutApprovedCommissions) {
+      const d = c.booking_date || (c.created_at ? c.created_at.split('T')[0] : '');
+      if (!d) continue;
+      const key = d.includes('T') ? d.split('T')[0] : d;
+      if (!map[key]) map[key] = [];
+      map[key].push(c);
+    }
+    return map;
+  }, [payoutApprovedCommissions]);
+
+  // Group all partner commissions by date for calendar indicator dots
+  const payoutAllCommsByDate = useMemo(() => {
+    const map: Record<string, any[]> = {};
+    for (const c of payoutPartnerCommissions) {
+      const d = c.booking_date || (c.created_at ? c.created_at.split('T')[0] : '');
+      if (!d) continue;
+      const key = d.includes('T') ? d.split('T')[0] : d;
+      if (!map[key]) map[key] = [];
+      map[key].push(c);
+    }
+    return map;
+  }, [payoutPartnerCommissions]);
+
+  const payoutCalendarDaysInMonth = new Date(payoutCalendarYear, payoutCalendarMonth + 1, 0).getDate();
+  const payoutCalendarFirstDayOfWeek = new Date(payoutCalendarYear, payoutCalendarMonth, 1).getDay();
+
+  const handleSelectPayoutPartner = (partnerId: string) => {
+    const p = partners.find((item) => item.id === partnerId);
+    const pComms = commissions.filter(
+      (c) => c.partner_id === partnerId || c.partner_code === p?.partner_code
+    );
+    const approved = pComms.filter((c) => c.status === 'approved');
+    const approvedIds = approved.map((c) => c.id);
+    const total = approved.reduce((sum, c) => sum + Number(c.commission_amount || 0), 0);
+
+    if (approved.length > 0) {
+      const firstDate = approved[0].booking_date || approved[0].created_at;
+      if (firstDate) {
+        const d = new Date(firstDate);
+        if (!isNaN(d.getTime())) {
+          setPayoutCalendarYear(d.getFullYear());
+          setPayoutCalendarMonth(d.getMonth());
+        }
+      }
+    }
+
+    setSelectedCommissionIds(approvedIds);
+    setPayoutSelectedDate(null);
+    setPayoutForm({
+      partner_id: partnerId,
+      amount: total > 0 ? String(total) : '',
+      payout_method: p?.payout_method || 'bank_transfer',
+      notes: p?.business_name ? `Payout for ${p.business_name}` : `Payout for ${p?.partner_code || ''}`,
+    });
+  };
+
+  const toggleCommissionSelection = (commId: string) => {
+    setSelectedCommissionIds((prev) => {
+      const isSelected = prev.includes(commId);
+      const next = isSelected ? prev.filter((id) => id !== commId) : [...prev, commId];
+      const nextTotal = payoutApprovedCommissions
+        .filter((c) => next.includes(c.id))
+        .reduce((sum, c) => sum + Number(c.commission_amount || 0), 0);
+      setPayoutForm((f) => ({ ...f, amount: String(nextTotal) }));
+      return next;
+    });
+  };
+
+  const selectAllApproved = () => {
+    const allIds = payoutApprovedCommissions.map((c) => c.id);
+    setSelectedCommissionIds(allIds);
+    const total = payoutApprovedCommissions.reduce((sum, c) => sum + Number(c.commission_amount || 0), 0);
+    setPayoutForm((f) => ({ ...f, amount: String(total) }));
+  };
+
+  const deselectAllApproved = () => {
+    setSelectedCommissionIds([]);
+    setPayoutForm((f) => ({ ...f, amount: '0' }));
+  };
+
   // Quick Open Payout Modal pre-filled for partner
   const openQuickPayoutForPartner = (partner: any) => {
-    const metrics = getPartnerMetrics(partner);
-    setPayoutForm({
-      partner_id: partner.id,
-      amount: metrics.approvedUnpaid > 0 ? String(metrics.approvedUnpaid) : '',
-      payout_method: partner.payout_method || 'bank_transfer',
-      notes: partner.business_name ? `Payout for ${partner.business_name}` : `Partner payout`,
-    });
+    handleSelectPayoutPartner(partner.id);
     setShowPayoutModal(true);
   };
 
@@ -407,25 +531,25 @@ export default function AffiliateManagement() {
   return (
     <div className="space-y-6">
       
-      {/* PRIMARY HEADER SECTION: BLACK BACKGROUND WITH WHITE TITLE */}
-      <div className="bg-black text-white p-6 rounded-2xl shadow-sm space-y-4">
+      {/* PRIMARY HEADER SECTION: COMFORTABLE WHITE BACKGROUND */}
+      <div className="bg-white border border-black/10 text-black p-6 rounded-2xl shadow-xs space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2.5">
-              <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+              <h1 className="text-xl sm:text-2xl font-bold text-black tracking-tight">
                 BookTherapick Affiliate & Partner Management
               </h1>
-              <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-white/10 text-white border border-white/20 font-mono uppercase tracking-wider">
+              <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-black/5 text-black border border-black/10 font-mono uppercase tracking-wider">
                 Therapick Domain
               </span>
             </div>
-            <p className="text-xs text-white/60 mt-1">
+            <p className="text-xs text-black/60 mt-1">
               Manage approved referral partners, review commissions, and record payouts
             </p>
           </div>
 
-          {/* Clean Monochrome Tabs (No decorative icons) */}
-          <div className="flex items-center gap-1 bg-white/10 p-1 rounded-xl shrink-0">
+          {/* Clean Monochrome Tabs on White Header */}
+          <div className="flex items-center gap-1 bg-black/5 p-1 rounded-xl shrink-0 border border-black/10">
             {[
               { id: 'partners', label: 'Partners', count: partners.length },
               { id: 'commissions', label: 'Commissions', count: commissions.length },
@@ -439,13 +563,13 @@ export default function AffiliateManagement() {
                   onClick={() => setSubTab(tab.id as any)}
                   className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
                     isActive
-                      ? 'bg-white text-black shadow-sm'
-                      : 'text-white/70 hover:text-white hover:bg-white/5'
+                      ? 'bg-black text-white shadow-sm'
+                      : 'text-black/70 hover:text-black hover:bg-black/5'
                   }`}
                 >
                   <span>{tab.label}</span>
                   {tab.count !== undefined && (
-                    <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${isActive ? 'bg-black text-white' : 'bg-white/20 text-white'}`}>
+                    <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${isActive ? 'bg-white text-black' : 'bg-black/10 text-black'}`}>
                       {tab.count}
                     </span>
                   )}
@@ -491,7 +615,7 @@ export default function AffiliateManagement() {
           <div className="bg-white rounded-2xl border border-black/10 shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-black text-white font-semibold">
+                <thead className="bg-[#FAF7F2] border-b border-black/10 text-black/80 font-bold">
                   <tr>
                     <th className="py-3 px-4">Partner Code</th>
                     <th className="py-3 px-4">Name / Villa</th>
@@ -538,64 +662,37 @@ export default function AffiliateManagement() {
                             )}
                           </td>
 
-                          {/* 3. Commission (Independent) */}
+                          {/* 3. Commission (Cleaned: rate setting inside modal, proper button) */}
                           <td className="py-3.5 px-4 align-top">
-                            <div className="space-y-1">
-                              <div className="flex items-center gap-1.5">
-                                <span className="font-bold text-black text-xs">
+                            <div className="space-y-1.5">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="font-bold text-black text-xs font-mono">
                                   {formatIDR(metrics.totalEarned)}
                                 </span>
-                                {editingRateId === p.id ? (
-                                  <div className="flex items-center gap-1">
-                                    <input
-                                      type="number"
-                                      min={1}
-                                      max={100}
-                                      value={newRateValue}
-                                      onChange={(e) => setNewRateValue(Number(e.target.value))}
-                                      className="w-12 px-1 py-0.5 border border-black/20 rounded text-xs"
-                                    />
-                                    <button
-                                      onClick={() => handleSaveCommissionRate(p.id)}
-                                      className="p-1 bg-black text-white rounded hover:bg-black/80"
-                                      title="Save rate"
-                                    >
-                                      <Check size={11} />
-                                    </button>
-                                  </div>
-                                ) : (
-                                  <button
-                                    onClick={() => {
-                                      setEditingRateId(p.id);
-                                      setNewRateValue(p.commission_rate_pct);
-                                    }}
-                                    className="text-[10px] font-semibold text-black bg-black/5 px-1.5 py-0.5 rounded border border-black/10 flex items-center gap-1 hover:bg-black/10"
-                                    title="Edit rate %"
-                                  >
-                                    <span>{p.commission_rate_pct}%</span>
-                                    <Edit2 size={9} className="opacity-50" />
-                                  </button>
-                                )}
-                              </div>
-
-                              <div className="flex items-center gap-1.5 flex-wrap">
                                 {metrics.approvedUnpaid > 0 ? (
-                                  <span className="text-[10px] px-1.5 py-0.5 rounded font-bold bg-black/5 text-black border border-black/10">
+                                  <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-amber-50 text-amber-900 border border-amber-200">
                                     {formatIDR(metrics.approvedUnpaid)} unpaid
                                   </span>
                                 ) : metrics.pending > 0 ? (
-                                  <span className="text-[10px] px-1.5 py-0.5 rounded font-medium text-black/70 bg-black/5 border border-black/10">
+                                  <span className="text-[10px] px-2 py-0.5 rounded-full font-medium text-black/70 bg-black/5 border border-black/10">
                                     {formatIDR(metrics.pending)} pending
                                   </span>
                                 ) : (
                                   <span className="text-[10px] text-black/40">Settled</span>
                                 )}
+                              </div>
 
+                              <div>
                                 <button
                                   onClick={() => openPartnerModal(p, 'commissions')}
-                                  className="text-[10px] text-black font-bold hover:underline"
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-black/5 hover:bg-black hover:text-white text-black font-semibold rounded-xl text-xs transition-all border border-black/10 group shadow-2xs"
+                                  title="View partner commissions and adjust commission rate"
                                 >
-                                  {metrics.commissions.length} {metrics.commissions.length === 1 ? 'comm' : 'comms'} &rarr;
+                                  <span>Commissions</span>
+                                  <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-black/10 group-hover:bg-white/20 font-mono font-bold">
+                                    {metrics.commissions.length}
+                                  </span>
+                                  <span className="text-black/40 group-hover:text-white">&rarr;</span>
                                 </button>
                               </div>
                             </div>
@@ -749,7 +846,7 @@ export default function AffiliateManagement() {
           <div className="bg-white rounded-2xl border border-black/10 shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-black text-white font-semibold">
+                <thead className="bg-[#FAF7F2] border-b border-black/10 text-black/80 font-bold">
                   <tr>
                     <th className="py-3 px-4">Date</th>
                     <th className="py-3 px-4">Booking Ref</th>
@@ -828,9 +925,19 @@ export default function AffiliateManagement() {
                           </label>
                         </td>
                         <td className="py-3 px-4">
-                          <span className="inline-flex px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-black/5 text-black border border-black/10">
-                            {c.status}
-                          </span>
+                          {c.status === 'paid' ? (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-black text-white">
+                              ✓ Paid Out
+                            </span>
+                          ) : c.status === 'approved' ? (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-black/10 text-black border border-black/20">
+                              Approved
+                            </span>
+                          ) : (
+                            <span className="inline-flex px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-black/5 text-black border border-black/10">
+                              {c.status}
+                            </span>
+                          )}
                         </td>
                         <td className="py-3 px-4 text-right space-x-1 whitespace-nowrap">
                           {c.status === 'pending' && (
@@ -901,7 +1008,7 @@ export default function AffiliateManagement() {
           <div className="bg-white rounded-2xl border border-black/10 shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-black text-white font-semibold">
+                <thead className="bg-[#FAF7F2] border-b border-black/10 text-black/80 font-bold">
                   <tr>
                     <th className="py-3 px-4">Date</th>
                     <th className="py-3 px-4">Reference</th>
@@ -1042,127 +1149,403 @@ export default function AffiliateManagement() {
         </form>
       )}
 
-      {/* RECORD PAYOUT MODAL */}
+      {/* RECORD PAYOUT MODAL WITH ACTIVE FLOATING CALENDAR & APPROVED REFERRALS SELECTOR */}
       {showPayoutModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5">
           <form
             onSubmit={handleRecordPayout}
-            className="bg-white rounded-2xl max-w-md w-full border border-black/10 shadow-2xl overflow-hidden"
+            className="bg-white rounded-2xl max-w-4xl w-full max-h-[92vh] flex flex-col border border-black/15 shadow-2xl overflow-hidden"
           >
-            <div className="bg-black text-white p-4 flex items-center justify-between">
-              <h3 className="font-bold text-white text-sm">Record Partner Payout</h3>
+            {/* Modal Header: White Background */}
+            <div className="p-4 sm:p-5 bg-white border-b border-black/10 text-black flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-2.5">
+                <h3 className="font-bold text-black text-base sm:text-lg">Record Partner Payout</h3>
+                {payoutSelectedPartner && (
+                  <span className="font-mono font-bold text-black bg-black/5 px-2.5 py-0.5 rounded-lg text-xs border border-black/10">
+                    {payoutSelectedPartner.partner_code}
+                  </span>
+                )}
+              </div>
               <button
                 type="button"
-                onClick={() => setShowPayoutModal(false)}
-                className="text-white/70 hover:text-white p-1"
+                onClick={() => {
+                  setShowPayoutModal(false);
+                  setSelectedCommissionIds([]);
+                  setPayoutSelectedDate(null);
+                }}
+                className="w-8 h-8 rounded-xl bg-black/5 hover:bg-black hover:text-white text-black flex items-center justify-center transition-colors"
+                title="Close"
               >
                 <X size={16} />
               </button>
             </div>
 
-            <div className="p-6 space-y-4 text-xs">
-              <div>
-                <label className="block text-xs font-semibold text-black mb-1">Select Partner *</label>
-                <select
-                  required
-                  value={payoutForm.partner_id}
-                  onChange={(e) => {
-                    const pid = e.target.value;
-                    const partner = partners.find((p) => p.id === pid);
-                    const pStats = partner ? getPartnerMetrics(partner) : null;
-                    setPayoutForm({
-                      ...payoutForm,
-                      partner_id: pid,
-                      amount: pStats && pStats.approvedUnpaid > 0 ? String(pStats.approvedUnpaid) : payoutForm.amount,
-                      payout_method: partner?.payout_method || 'bank_transfer',
-                    });
-                  }}
-                  className="w-full px-3 py-2 border border-black/20 rounded-xl text-xs bg-white"
-                >
-                  <option value="">-- Choose Partner --</option>
-                  {partners.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.partner_code} - {p.first_name} {p.last_name} ({p.business_name || 'Individual'})
-                    </option>
-                  ))}
-                </select>
-              </div>
+            <div className="p-5 sm:p-6 overflow-y-auto space-y-5 text-xs flex-1">
+              {/* 1. Select Partner & Partner Details */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-black mb-1">Select Referral Partner *</label>
+                  <select
+                    required
+                    value={payoutForm.partner_id}
+                    onChange={(e) => handleSelectPayoutPartner(e.target.value)}
+                    className="w-full px-3 py-2 border border-black/20 rounded-xl text-xs bg-white font-medium"
+                  >
+                    <option value="">-- Choose Partner to Pay Out --</option>
+                    {partners.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.partner_code} - {p.first_name} {p.last_name} ({p.business_name || 'Individual'})
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-              {payoutForm.partner_id && (() => {
-                const p = partners.find((item) => item.id === payoutForm.partner_id);
-                if (!p) return null;
-                const metrics = getPartnerMetrics(p);
-                return (
-                  <div className="bg-black/[0.03] p-3 rounded-xl border border-black/10 text-[11px] space-y-1">
-                    <div className="flex justify-between">
-                      <span className="text-black/60">Approved Unpaid Balance:</span>
-                      <span className="font-bold text-black">{formatIDR(metrics.approvedUnpaid)}</span>
-                    </div>
+                {payoutSelectedPartner ? (
+                  <div className="bg-[#FAF7F2] p-3 rounded-xl border border-black/10 text-[11px] space-y-1">
                     <div className="flex justify-between">
                       <span className="text-black/60">Payout Method:</span>
-                      <span className="font-semibold text-black capitalize">{p.payout_method?.replace('_', ' ')}</span>
+                      <span className="font-semibold text-black capitalize">{payoutSelectedPartner.payout_method?.replace('_', ' ') || 'Bank Transfer'}</span>
                     </div>
-                    {p.payout_details?.bank_name && (
+                    {payoutSelectedPartner.payout_details?.bank_name ? (
                       <div className="flex justify-between">
                         <span className="text-black/60">Bank Account:</span>
                         <span className="font-mono font-semibold text-black">
-                          {p.payout_details.bank_name} - {p.payout_details.account_number} ({p.payout_details.account_holder})
+                          {payoutSelectedPartner.payout_details.bank_name} - {payoutSelectedPartner.payout_details.account_number} ({payoutSelectedPartner.payout_details.account_holder})
                         </span>
                       </div>
+                    ) : (
+                      <div className="text-black/40">Bank account details not provided</div>
                     )}
+                    <div className="flex justify-between pt-1 border-t border-black/5">
+                      <span className="text-black/60">Approved Unpaid Total:</span>
+                      <span className="font-bold text-black font-mono">
+                        {formatIDR(payoutApprovedCommissions.reduce((sum, c) => sum + Number(c.commission_amount || 0), 0))}
+                      </span>
+                    </div>
                   </div>
-                );
-              })()}
-
-              <div>
-                <label className="block text-xs font-semibold text-black mb-1">Payout Amount (IDR) *</label>
-                <input
-                  type="number"
-                  required
-                  placeholder="e.g. 750000"
-                  value={payoutForm.amount}
-                  onChange={(e) => setPayoutForm({ ...payoutForm, amount: e.target.value })}
-                  className="w-full px-3 py-2 border border-black/20 rounded-xl text-xs"
-                />
+                ) : (
+                  <div className="bg-black/[0.02] p-3 rounded-xl border border-black/5 text-[11px] text-black/50 flex items-center justify-center">
+                    Select a partner to view approved bookings and active calendar
+                  </div>
+                )}
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-black mb-1">Payment Method</label>
-                <select
-                  value={payoutForm.payout_method}
-                  onChange={(e) => setPayoutForm({ ...payoutForm, payout_method: e.target.value })}
-                  className="w-full px-3 py-2 border border-black/20 rounded-xl text-xs bg-white"
-                >
-                  <option value="bank_transfer">Indonesian Bank Transfer</option>
-                  <option value="wise">Wise</option>
-                  <option value="paypal">PayPal</option>
-                  <option value="cash">Cash Settlement</option>
-                </select>
+              {/* 2. ACTIVE FLOATING CALENDAR & APPROVED REFERRALS SELECTOR */}
+              {payoutForm.partner_id && (
+                <div className="space-y-3 pt-2 border-t border-black/10">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                      <h4 className="font-bold text-black text-xs uppercase tracking-wider flex items-center gap-2">
+                        <span>Active Booking Calendar & Approved Commissions</span>
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-black/5 text-black font-mono">
+                          {selectedCommissionIds.length} of {payoutApprovedCommissions.length} Selected
+                        </span>
+                      </h4>
+                      <p className="text-[11px] text-black/60">
+                        Click a date on the calendar to filter, or click checkboxes to include approved bookings in this payout.
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={selectAllApproved}
+                        className="px-2.5 py-1 bg-black text-white rounded-lg text-[10px] font-bold hover:bg-black/80"
+                      >
+                        Select All Approved
+                      </button>
+                      <button
+                        type="button"
+                        onClick={deselectAllApproved}
+                        className="px-2.5 py-1 bg-black/5 hover:bg-black/10 text-black rounded-lg text-[10px] font-semibold border border-black/10"
+                      >
+                        Clear All
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Two-Column Grid: Left = Floating Calendar, Right = Approved Bookings Checklist */}
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-4 bg-white rounded-2xl border border-black/10 p-3 sm:p-4 shadow-2xs">
+                    
+                    {/* Left: Active Floating Calendar (5 cols) */}
+                    <div className="md:col-span-5 space-y-2.5 border-b md:border-b-0 md:border-r border-black/10 pb-3 md:pb-0 md:pr-4">
+                      <div className="flex items-center justify-between">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (payoutCalendarMonth === 0) {
+                              setPayoutCalendarMonth(11);
+                              setPayoutCalendarYear((y) => y - 1);
+                            } else {
+                              setPayoutCalendarMonth((m) => m - 1);
+                            }
+                            setPayoutSelectedDate(null);
+                          }}
+                          className="w-7 h-7 rounded-lg bg-black/5 hover:bg-black/10 flex items-center justify-center text-black"
+                        >
+                          <ChevronLeft size={14} />
+                        </button>
+
+                        <div className="font-bold text-black text-xs">
+                          {MONTH_NAMES[payoutCalendarMonth]} {payoutCalendarYear}
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (payoutCalendarMonth === 11) {
+                              setPayoutCalendarMonth(0);
+                              setPayoutCalendarYear((y) => y + 1);
+                            } else {
+                              setPayoutCalendarMonth((m) => m + 1);
+                            }
+                            setPayoutSelectedDate(null);
+                          }}
+                          className="w-7 h-7 rounded-lg bg-black/5 hover:bg-black/10 flex items-center justify-center text-black"
+                        >
+                          <ChevronRight size={14} />
+                        </button>
+                      </div>
+
+                      {/* Mini Month Grid */}
+                      <div className="grid grid-cols-7 gap-1 text-center font-bold text-black/40 text-[10px]">
+                        {DAYS_OF_WEEK.map((d) => (
+                          <div key={d} className="py-0.5">{d}</div>
+                        ))}
+                      </div>
+
+                      <div className="grid grid-cols-7 gap-1">
+                        {Array.from({ length: payoutCalendarFirstDayOfWeek }).map((_, i) => (
+                          <div key={`payout-empty-${i}`} className="h-9 rounded-lg bg-black/[0.01]" />
+                        ))}
+
+                        {Array.from({ length: payoutCalendarDaysInMonth }).map((_, i) => {
+                          const dayNum = i + 1;
+                          const dateStr = `${payoutCalendarYear}-${String(payoutCalendarMonth + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+                          const approvedOnDate = payoutApprovedByDate[dateStr] || [];
+                          const allOnDate = payoutAllCommsByDate[dateStr] || [];
+                          const isSelected = payoutSelectedDate === dateStr;
+                          const hasApproved = approvedOnDate.length > 0;
+                          const hasPaid = allOnDate.some((c) => c.status === 'paid');
+
+                          return (
+                            <button
+                              type="button"
+                              key={`payout-date-${dateStr}`}
+                              onClick={() => setPayoutSelectedDate(isSelected ? null : dateStr)}
+                              className={`h-9 rounded-lg border text-left p-1 flex flex-col justify-between transition-all ${
+                                isSelected
+                                  ? 'bg-black text-white border-black shadow-xs'
+                                  : hasApproved
+                                  ? 'bg-emerald-50/60 border-emerald-400 hover:border-black text-black'
+                                  : hasPaid
+                                  ? 'bg-black/[0.02] border-black/10 hover:border-black/30 text-black'
+                                  : 'bg-white border-black/5 hover:border-black/20 text-black/50'
+                              }`}
+                              title={
+                                hasApproved
+                                  ? `${approvedOnDate.length} approved referrals ready for payout`
+                                  : `${allOnDate.length} referrals on ${dateStr}`
+                              }
+                            >
+                              <div className="flex items-center justify-between w-full">
+                                <span className={`text-[10px] font-bold ${isSelected ? 'text-white' : ''}`}>
+                                  {dayNum}
+                                </span>
+                                {hasApproved && (
+                                  <span className={`w-2 h-2 rounded-full ${isSelected ? 'bg-white' : 'bg-emerald-600'}`} />
+                                )}
+                              </div>
+                              {hasApproved ? (
+                                <span className={`text-[8px] font-bold truncate ${isSelected ? 'text-white' : 'text-emerald-800'}`}>
+                                  {approvedOnDate.length} app
+                                </span>
+                              ) : (
+                                <div />
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {payoutSelectedDate && (
+                        <div className="flex items-center justify-between bg-black/5 p-2 rounded-xl text-[11px]">
+                          <span>Filtered: <strong>{safeFormatDate(payoutSelectedDate)}</strong></span>
+                          <button
+                            type="button"
+                            onClick={() => setPayoutSelectedDate(null)}
+                            className="text-black underline font-semibold hover:text-black/70"
+                          >
+                            Clear
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Right: Approved Bookings Checklist (7 cols) */}
+                    <div className="md:col-span-7 space-y-2 max-h-72 overflow-y-auto pr-1">
+                      {(() => {
+                        const displayedApproved = payoutSelectedDate
+                          ? payoutApprovedCommissions.filter((c) => {
+                              const d = c.booking_date || (c.created_at ? c.created_at.split('T')[0] : '');
+                              return d === payoutSelectedDate || d.startsWith(payoutSelectedDate);
+                            })
+                          : payoutApprovedCommissions;
+
+                        if (displayedApproved.length === 0) {
+                          return (
+                            <div className="bg-[#FAF7F2] p-6 rounded-xl border border-black/5 text-center text-black/50 space-y-1">
+                              <p className="font-semibold text-black">No approved referrals found{payoutSelectedDate ? ' for this date' : ''}.</p>
+                              <p className="text-[11px]">Only bookings with an <strong className="text-black">Approved</strong> status can be paid out. Review pending bookings in the Partner Calendar to approve them first.</p>
+                            </div>
+                          );
+                        }
+
+                        return (
+                          <div className="space-y-2">
+                            {displayedApproved.map((c) => {
+                              const isChecked = selectedCommissionIds.includes(c.id);
+                              return (
+                                <div
+                                  key={c.id}
+                                  onClick={() => toggleCommissionSelection(c.id)}
+                                  className={`p-2.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-2 ${
+                                    isChecked
+                                      ? 'bg-black/[0.03] border-black shadow-2xs'
+                                      : 'bg-white border-black/10 hover:border-black/30'
+                                  }`}
+                                >
+                                  <div className="flex items-center gap-2.5 min-w-0">
+                                    <input
+                                      type="checkbox"
+                                      checked={isChecked}
+                                      onChange={() => {}} // handled by parent div
+                                      className="rounded text-black cursor-pointer"
+                                    />
+                                    <div className="min-w-0">
+                                      <div className="flex items-center gap-2 flex-wrap">
+                                        <span className="font-mono font-bold text-black text-xs">#{c.booking_id}</span>
+                                        <span className="text-[10px] text-black/50">
+                                          {safeFormatDate(c.booking_date || c.created_at)}
+                                        </span>
+                                        <span className="inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-bold uppercase bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                          Approved
+                                        </span>
+                                      </div>
+                                      <div className="text-[11px] text-black truncate mt-0.5 font-medium">
+                                        {c.guest_name || 'Guest'} &bull; {c.treatment_name || 'Treatment'}
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  <div className="text-right shrink-0">
+                                    <span className="font-mono font-bold text-black text-xs block">
+                                      +{formatIDR(c.commission_amount)}
+                                    </span>
+                                    <span className="text-[10px] text-black/50">
+                                      {c.commission_rate_pct}% of {formatIDR(c.eligible_treatment_amount)}
+                                    </span>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  </div>
+
+                  {/* Past Paid Out Referrals (Collapsible) */}
+                  {payoutPaidCommissions.length > 0 && (
+                    <div className="pt-2">
+                      <button
+                        type="button"
+                        onClick={() => setShowPastPaidInPayoutModal((v) => !v)}
+                        className="text-[11px] font-bold text-black/60 hover:text-black flex items-center gap-1.5"
+                      >
+                        <span>{showPastPaidInPayoutModal ? '▼ Hide' : '▶ Show'} Previously Paid Out Referrals ({payoutPaidCommissions.length})</span>
+                      </button>
+
+                      {showPastPaidInPayoutModal && (
+                        <div className="mt-2 space-y-1.5 max-h-40 overflow-y-auto bg-black/[0.02] p-2.5 rounded-xl border border-black/10">
+                          {payoutPaidCommissions.map((c) => (
+                            <div key={`paid-${c.id}`} className="flex items-center justify-between text-[11px] p-1.5 bg-white rounded-lg border border-black/5">
+                              <div className="flex items-center gap-2">
+                                <span className="font-mono font-bold text-black">#{c.booking_id}</span>
+                                <span className="text-black/50">{safeFormatDate(c.booking_date || c.created_at)}</span>
+                                <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-white bg-black px-2 py-0.5 rounded-full">
+                                  ✓ Paid Out
+                                </span>
+                              </div>
+                              <span className="font-mono font-bold text-black">{formatIDR(c.commission_amount)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* 3. Payout Form Fields */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-black/10">
+                <div>
+                  <label className="block text-xs font-semibold text-black mb-1">
+                    Payout Amount (IDR) * {selectedCommissionIds.length > 0 && `(Auto-calculated for ${selectedCommissionIds.length} bookings)`}
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    placeholder="e.g. 750000"
+                    value={payoutForm.amount}
+                    onChange={(e) => setPayoutForm({ ...payoutForm, amount: e.target.value })}
+                    className="w-full px-3 py-2 border border-black/20 rounded-xl text-xs font-mono font-bold"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-black mb-1">Payment Method</label>
+                  <select
+                    value={payoutForm.payout_method}
+                    onChange={(e) => setPayoutForm({ ...payoutForm, payout_method: e.target.value })}
+                    className="w-full px-3 py-2 border border-black/20 rounded-xl text-xs bg-white font-medium"
+                  >
+                    <option value="bank_transfer">Indonesian Bank Transfer</option>
+                    <option value="wise">Wise</option>
+                    <option value="paypal">PayPal</option>
+                    <option value="cash">Cash Settlement</option>
+                  </select>
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-xs font-semibold text-black mb-1">Notes / Transfer Reference</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. BCA Ref #88392102"
+                    value={payoutForm.notes}
+                    onChange={(e) => setPayoutForm({ ...payoutForm, notes: e.target.value })}
+                    className="w-full px-3 py-2 border border-black/20 rounded-xl text-xs"
+                  />
+                </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-black mb-1">Notes / Transfer Reference</label>
-                <input
-                  type="text"
-                  placeholder="e.g. BCA Ref #88392102"
-                  value={payoutForm.notes}
-                  onChange={(e) => setPayoutForm({ ...payoutForm, notes: e.target.value })}
-                  className="w-full px-3 py-2 border border-black/20 rounded-xl text-xs"
-                />
-              </div>
-
-              <div className="flex gap-2 pt-2">
+              {/* 4. Action Buttons */}
+              <div className="flex gap-2 pt-2 border-t border-black/10">
                 <button
                   type="submit"
-                  disabled={actionLoading}
-                  className="flex-1 py-2 bg-black text-white text-xs font-bold rounded-xl hover:bg-black/80"
+                  disabled={actionLoading || !payoutForm.partner_id || !payoutForm.amount || Number(payoutForm.amount) <= 0}
+                  className="flex-1 py-2.5 bg-black text-white text-xs font-bold rounded-xl hover:bg-black/80 disabled:opacity-40 transition-all shadow-sm"
                 >
-                  Confirm Payout
+                  {actionLoading ? 'Processing...' : `Confirm Payout (${formatIDR(Number(payoutForm.amount) || 0)})`}
                 </button>
                 <button
                   type="button"
-                  onClick={() => setShowPayoutModal(false)}
-                  className="px-4 py-2 border border-black/20 text-xs font-semibold rounded-xl hover:bg-black/5"
+                  onClick={() => {
+                    setShowPayoutModal(false);
+                    setSelectedCommissionIds([]);
+                    setPayoutSelectedDate(null);
+                  }}
+                  className="px-4 py-2.5 border border-black/20 text-xs font-semibold rounded-xl hover:bg-black/5 text-black"
                 >
                   Cancel
                 </button>
@@ -1172,31 +1555,40 @@ export default function AffiliateManagement() {
         </div>
       )}
 
-      {/* INDEPENDENT PARTNER DETAILS & CALENDAR MODAL (BLACK BG HEADER & WHITE TITLE) */}
+      {/* INDEPENDENT PARTNER DETAILS & FULLSCREEN DESKTOP CALENDAR MODAL */}
       {selectedPartnerDetails && activePartnerMetrics && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5">
-          <div className="bg-white rounded-3xl max-w-4xl w-full max-h-[92vh] flex flex-col border border-black/20 shadow-2xl overflow-hidden">
-            
-            {/* Modal Header: Black Background with White Title */}
-            <div className="p-5 bg-black text-white flex items-start justify-between shrink-0">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 md:p-6">
+          <div
+            className={`bg-white rounded-2xl w-full flex flex-col border border-black/15 shadow-2xl overflow-hidden transition-all duration-200 ${
+              partnerActiveTab === 'calendar'
+                ? 'h-full max-w-[98vw] max-h-[96vh]'
+                : 'max-w-4xl max-h-[92vh]'
+            }`}
+          >
+            {/* Modal Header: Comfortable White Background */}
+            <div className="p-4 sm:p-5 bg-white border-b border-black/10 text-black flex items-start justify-between shrink-0">
               <div>
                 <div className="flex items-center gap-2.5 flex-wrap">
-                  <h3 className="font-bold text-white text-lg tracking-tight">
+                  <h3 className="font-bold text-black text-lg sm:text-xl tracking-tight">
                     {selectedPartnerDetails.first_name} {selectedPartnerDetails.last_name || ''}
                   </h3>
-                  <span className="font-mono font-bold text-white bg-white/10 px-2 py-0.5 rounded text-xs border border-white/20">
+                  <span className="font-mono font-bold text-black bg-black/5 px-2.5 py-0.5 rounded-lg text-xs border border-black/10">
                     {selectedPartnerDetails.partner_code}
                   </span>
-                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-white/15 text-white border border-white/20">
+                  <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                    selectedPartnerDetails.status === 'active'
+                      ? 'bg-black text-white'
+                      : 'bg-black/5 text-black border border-black/10'
+                  }`}>
                     {selectedPartnerDetails.status}
                   </span>
                 </div>
-                <div className="text-xs text-white/60 mt-1 flex items-center gap-2 flex-wrap">
+                <div className="text-xs text-black/60 mt-1 flex items-center gap-2 flex-wrap">
                   {selectedPartnerDetails.business_name && (
-                    <span className="text-white/80 font-medium">{selectedPartnerDetails.business_name}</span>
+                    <span className="text-black font-semibold">{selectedPartnerDetails.business_name}</span>
                   )}
                   <span>&bull;</span>
-                  <span>Rate: <strong className="text-white">{selectedPartnerDetails.commission_rate_pct}%</strong></span>
+                  <span>Rate: <strong className="text-black font-mono">{selectedPartnerDetails.commission_rate_pct}%</strong></span>
                   <span>&bull;</span>
                   <span>Joined: {new Date(selectedPartnerDetails.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                 </div>
@@ -1205,14 +1597,15 @@ export default function AffiliateManagement() {
               <button
                 type="button"
                 onClick={() => setSelectedPartnerDetails(null)}
-                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white hover:text-black text-white flex items-center justify-center transition-colors"
+                className="w-8 h-8 rounded-xl bg-black/5 hover:bg-black hover:text-white text-black flex items-center justify-center transition-colors"
+                title="Close"
               >
                 <X size={16} />
               </button>
             </div>
 
-            {/* Modal Sub-Tabs: Clean Monochrome (No AI icons) */}
-            <div className="flex items-center gap-1 border-b border-black/10 px-6 pt-2 bg-black/[0.02] shrink-0">
+            {/* Modal Sub-Tabs */}
+            <div className="flex items-center gap-1 border-b border-black/10 px-4 sm:px-6 pt-2 bg-black/[0.02] shrink-0 overflow-x-auto">
               {[
                 { id: 'overview', label: 'Overview & Contact' },
                 { id: 'calendar', label: 'Calendar', count: activePartnerMetrics.bookingsCount },
@@ -1224,9 +1617,9 @@ export default function AffiliateManagement() {
                   <button
                     key={tab.id}
                     onClick={() => setPartnerActiveTab(tab.id as any)}
-                    className={`flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold border-b-2 transition-all ${
+                    className={`flex items-center gap-1.5 px-4 py-2 text-xs font-bold border-b-2 transition-all whitespace-nowrap ${
                       isActive
-                        ? 'border-black text-black bg-white rounded-t-xl'
+                        ? 'border-black text-black bg-white rounded-t-xl shadow-xs'
                         : 'border-transparent text-black/60 hover:text-black hover:bg-black/5'
                     }`}
                   >
@@ -1497,14 +1890,15 @@ export default function AffiliateManagement() {
                 </div>
               )}
 
-              {/* TAB B: INDEPENDENT PARTNER CALENDAR */}
+              {/* TAB B: INDEPENDENT PARTNER CALENDAR (FULLSCREEN DESKTOP LAYOUT) */}
               {partnerActiveTab === 'calendar' && (
-                <div className="space-y-5 text-xs">
+                <div className="space-y-4 text-xs">
                   
-                  {/* Calendar Top Controls */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-black/[0.03] p-3.5 rounded-2xl border border-black/10">
+                  {/* Calendar Top Controls Header */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#FAF7F2] p-3.5 rounded-2xl border border-black/10">
                     <div className="flex items-center gap-2">
                       <button
+                        type="button"
                         onClick={() => {
                           if (partnerCalendarMonth === 0) {
                             setPartnerCalendarMonth(11);
@@ -1514,7 +1908,7 @@ export default function AffiliateManagement() {
                           }
                           setPartnerSelectedDate(null);
                         }}
-                        className="w-8 h-8 rounded-xl bg-white border border-black/15 flex items-center justify-center hover:bg-black/5"
+                        className="w-8 h-8 rounded-xl bg-white border border-black/15 flex items-center justify-center hover:bg-black/5 text-black"
                         title="Previous Month"
                       >
                         <ChevronLeft size={16} />
@@ -1525,6 +1919,7 @@ export default function AffiliateManagement() {
                       </div>
 
                       <button
+                        type="button"
                         onClick={() => {
                           if (partnerCalendarMonth === 11) {
                             setPartnerCalendarMonth(0);
@@ -1534,13 +1929,14 @@ export default function AffiliateManagement() {
                           }
                           setPartnerSelectedDate(null);
                         }}
-                        className="w-8 h-8 rounded-xl bg-white border border-black/15 flex items-center justify-center hover:bg-black/5"
+                        className="w-8 h-8 rounded-xl bg-white border border-black/15 flex items-center justify-center hover:bg-black/5 text-black"
                         title="Next Month"
                       >
                         <ChevronRight size={16} />
                       </button>
 
                       <button
+                        type="button"
                         onClick={() => {
                           const now = new Date();
                           setPartnerCalendarYear(now.getFullYear());
@@ -1555,212 +1951,276 @@ export default function AffiliateManagement() {
                       </button>
                     </div>
 
-                    <div className="text-[11px] text-black/60">
-                      Month Summary: <strong className="text-black">{partnerMonthBookings.length}</strong> bookings, <strong className="text-black">{formatIDR(partnerMonthBookings.reduce((sum, b) => sum + Number(b.commission_amount || 0), 0))}</strong> commission
+                    <div className="flex items-center gap-3 text-[11px] text-black/60 flex-wrap">
+                      <div className="flex items-center gap-2">
+                        <span className="flex items-center gap-1 font-semibold text-black">
+                          <span className="w-2 h-2 rounded-full bg-black inline-block" /> Paid Out
+                        </span>
+                        <span className="flex items-center gap-1 font-semibold text-emerald-800">
+                          <span className="w-2 h-2 rounded-full bg-emerald-600 inline-block" /> Approved
+                        </span>
+                        <span className="flex items-center gap-1 font-semibold text-amber-800">
+                          <span className="w-2 h-2 rounded-full bg-amber-500 inline-block" /> Pending
+                        </span>
+                      </div>
+                      <div className="hidden sm:block text-black/30">|</div>
+                      <div>
+                        Month: <strong className="text-black font-bold">{partnerMonthBookings.length}</strong> bookings (<strong className="text-black font-bold">{formatIDR(partnerMonthBookings.reduce((sum, b) => sum + Number(b.commission_amount || 0), 0))}</strong>)
+                      </div>
                     </div>
                   </div>
 
-                  {/* Clean Monochrome Calendar Grid */}
-                  <div className="bg-white rounded-2xl border border-black/10 p-3 sm:p-4 shadow-xs">
-                    <div className="grid grid-cols-7 gap-1 text-center font-bold text-black/40 text-[11px] mb-2">
-                      {DAYS_OF_WEEK.map((d) => (
-                        <div key={d} className="py-1">{d}</div>
-                      ))}
-                    </div>
+                  {/* 2-Column Responsive Layout: Left Calendar Grid, Right Appointments List */}
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+                    
+                    {/* Left Column: Spacious Month Grid (lg:col-span-7 xl:col-span-8) */}
+                    <div className="lg:col-span-7 xl:col-span-8 bg-white rounded-2xl border border-black/10 p-3 sm:p-4 shadow-xs">
+                      <div className="grid grid-cols-7 gap-1 text-center font-bold text-black/40 text-[11px] mb-2 uppercase tracking-wider">
+                        {DAYS_OF_WEEK.map((d) => (
+                          <div key={d} className="py-1">{d}</div>
+                        ))}
+                      </div>
 
-                    <div className="grid grid-cols-7 gap-1.5">
-                      {Array.from({ length: calendarFirstDayOfWeek }).map((_, i) => (
-                        <div key={`empty-${i}`} className="h-16 sm:h-20 bg-black/[0.01] rounded-xl" />
-                      ))}
+                      <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
+                        {Array.from({ length: calendarFirstDayOfWeek }).map((_, i) => (
+                          <div key={`empty-${i}`} className="h-16 sm:h-20 xl:h-24 bg-black/[0.01] rounded-xl border border-transparent" />
+                        ))}
 
-                      {Array.from({ length: calendarDaysInMonth }).map((_, i) => {
-                        const dayNum = i + 1;
-                        const dateStr = `${partnerCalendarYear}-${String(partnerCalendarMonth + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
-                        const dayBookings = partnerBookingsByDate[dateStr] || [];
-                        const isSelected = partnerSelectedDate === dateStr;
-                        const todayStr = new Date().toISOString().split('T')[0];
-                        const isToday = dateStr === todayStr;
+                        {Array.from({ length: calendarDaysInMonth }).map((_, i) => {
+                          const dayNum = i + 1;
+                          const dateStr = `${partnerCalendarYear}-${String(partnerCalendarMonth + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+                          const dayBookings = partnerBookingsByDate[dateStr] || [];
+                          const isSelected = partnerSelectedDate === dateStr;
+                          const todayStr = new Date().toISOString().split('T')[0];
+                          const isToday = dateStr === todayStr;
 
-                        return (
-                          <div
-                            key={dateStr}
-                            onClick={() => setPartnerSelectedDate(isSelected ? null : dateStr)}
-                            className={`h-16 sm:h-20 p-1.5 rounded-xl border transition-all cursor-pointer flex flex-col justify-between ${
-                              isSelected
-                                ? 'bg-black text-white border-black shadow-sm'
-                                : dayBookings.length > 0
-                                ? 'bg-black/5 border-black/30 hover:border-black'
-                                : 'bg-white border-black/10 hover:border-black/30'
-                            }`}
-                          >
-                            <div className="flex items-center justify-between">
-                              <span
-                                className={`text-[11px] font-bold w-5 h-5 flex items-center justify-center rounded-full ${
-                                  isToday && !isSelected ? 'bg-black text-white' : ''
-                                }`}
-                              >
-                                {dayNum}
-                              </span>
-                              {dayBookings.length > 0 && (
-                                <span className={`text-[10px] px-1.5 py-0.2 rounded font-mono font-bold ${
-                                  isSelected ? 'bg-white text-black' : 'bg-black text-white'
-                                }`}>
-                                  {dayBookings.length}
+                          const hasPaid = dayBookings.some((b) => b.status === 'paid');
+                          const hasApproved = dayBookings.some((b) => b.status === 'approved');
+                          const hasPending = dayBookings.some((b) => b.status === 'pending');
+                          const dayCommSum = dayBookings.reduce((sum, b) => sum + Number(b.commission_amount || 0), 0);
+
+                          return (
+                            <div
+                              key={dateStr}
+                              onClick={() => setPartnerSelectedDate(isSelected ? null : dateStr)}
+                              className={`h-16 sm:h-20 xl:h-24 p-1.5 sm:p-2 rounded-xl border transition-all cursor-pointer flex flex-col justify-between select-none ${
+                                isSelected
+                                  ? 'bg-black text-white border-black shadow-md'
+                                  : dayBookings.length > 0
+                                  ? 'bg-white border-black/30 hover:border-black hover:shadow-xs'
+                                  : 'bg-white border-black/10 hover:border-black/30'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <span
+                                  className={`text-[11px] sm:text-xs font-bold w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full ${
+                                    isToday && !isSelected
+                                      ? 'bg-black text-white'
+                                      : isToday && isSelected
+                                      ? 'bg-white text-black font-extrabold'
+                                      : ''
+                                  }`}
+                                >
+                                  {dayNum}
                                 </span>
+                                {dayBookings.length > 0 && (
+                                  <span className={`text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded font-mono font-bold ${
+                                    isSelected ? 'bg-white text-black' : 'bg-black text-white'
+                                  }`}>
+                                    {dayBookings.length}
+                                  </span>
+                                )}
+                              </div>
+
+                              {dayBookings.length > 0 ? (
+                                <div className="space-y-1">
+                                  <div className={`text-[9px] sm:text-[10px] font-bold truncate ${isSelected ? 'text-white' : 'text-black'}`}>
+                                    {formatIDR(dayCommSum)}
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    {hasPaid && (
+                                      <span
+                                        className={`inline-block w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-white' : 'bg-black'}`}
+                                        title="Paid Out"
+                                      />
+                                    )}
+                                    {hasApproved && (
+                                      <span
+                                        className={`inline-block w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-emerald-300' : 'bg-emerald-600'}`}
+                                        title="Approved"
+                                      />
+                                    )}
+                                    {hasPending && (
+                                      <span
+                                        className={`inline-block w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-amber-300' : 'bg-amber-500'}`}
+                                        title="Pending"
+                                      />
+                                    )}
+                                  </div>
+                                </div>
+                              ) : (
+                                <div />
                               )}
                             </div>
-
-                            {dayBookings.length > 0 ? (
-                              <div className={`text-[9px] font-bold truncate ${isSelected ? 'text-white' : 'text-black'}`}>
-                                {formatIDR(dayBookings.reduce((sum, b) => sum + Number(b.commission_amount || 0), 0))}
-                              </div>
-                            ) : (
-                              <div />
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Bookings for Selected Date or Current Month */}
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-bold text-black text-xs flex items-center gap-2">
-                        <span>
-                          {partnerSelectedDate
-                            ? `Bookings for ${safeFormatDate(partnerSelectedDate, { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })}`
-                            : `All Bookings in ${MONTH_NAMES[partnerCalendarMonth]} ${partnerCalendarYear}`}
-                        </span>
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-black/5 text-black font-semibold">
-                          {partnerSelectedDate
-                            ? (partnerBookingsByDate[partnerSelectedDate]?.length || 0)
-                            : partnerMonthBookings.length}
-                        </span>
-                      </h4>
-
-                      {partnerSelectedDate && (
-                        <button
-                          onClick={() => setPartnerSelectedDate(null)}
-                          className="text-[11px] text-black hover:underline font-semibold"
-                        >
-                          Show all this month
-                        </button>
-                      )}
+                          );
+                        })}
+                      </div>
                     </div>
 
-                    {(() => {
-                      const displayedList = partnerSelectedDate
-                        ? (partnerBookingsByDate[partnerSelectedDate] || [])
-                        : partnerMonthBookings;
+                    {/* Right Column: Appointments List for Selected Date or Month (lg:col-span-5 xl:col-span-4) */}
+                    <div className="lg:col-span-5 xl:col-span-4 space-y-3">
+                      <div className="flex items-center justify-between bg-[#FAF7F2] p-3 rounded-xl border border-black/10">
+                        <div>
+                          <h4 className="font-bold text-black text-xs">
+                            {partnerSelectedDate
+                              ? safeFormatDate(partnerSelectedDate, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
+                              : `All in ${MONTH_NAMES[partnerCalendarMonth]} ${partnerCalendarYear}`}
+                          </h4>
+                          <span className="text-[11px] text-black/60">
+                            {(partnerSelectedDate ? (partnerBookingsByDate[partnerSelectedDate]?.length || 0) : partnerMonthBookings.length)} bookings
+                          </span>
+                        </div>
+                        {partnerSelectedDate && (
+                          <button
+                            type="button"
+                            onClick={() => setPartnerSelectedDate(null)}
+                            className="text-[11px] font-semibold text-black hover:underline"
+                          >
+                            Show month
+                          </button>
+                        )}
+                      </div>
 
-                      if (displayedList.length === 0) {
+                      {(() => {
+                        const displayedList = partnerSelectedDate
+                          ? (partnerBookingsByDate[partnerSelectedDate] || [])
+                          : partnerMonthBookings;
+
+                        if (displayedList.length === 0) {
+                          return (
+                            <div className="bg-black/[0.02] p-8 rounded-2xl border border-black/5 text-center text-black/50">
+                              No appointments found for this period.
+                            </div>
+                          );
+                        }
+
                         return (
-                          <div className="bg-black/[0.02] p-8 rounded-2xl border border-black/5 text-center text-black/50">
-                            No appointments found for this period.
-                          </div>
-                        );
-                      }
+                          <div className="space-y-2.5 max-h-[calc(96vh-240px)] overflow-y-auto pr-1">
+                            {displayedList.map((b) => (
+                              <div
+                                key={b.id}
+                                className="bg-white p-3.5 rounded-2xl border border-black/10 shadow-xs space-y-2.5 hover:border-black/30 transition-all"
+                              >
+                                <div className="flex items-start justify-between">
+                                  <div>
+                                    <div className="font-mono font-bold text-black text-xs flex items-center gap-1.5">
+                                      <span>#{b.booking_id}</span>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleCopyText(b.booking_id, `bk-${b.id}`)}
+                                        className="text-black/40 hover:text-black"
+                                      >
+                                        {copiedId === `bk-${b.id}` ? <Check size={11} /> : <Copy size={11} />}
+                                      </button>
+                                    </div>
+                                    <div className="text-[11px] font-semibold text-black mt-0.5">
+                                      {b.guest_name || 'Guest'}
+                                    </div>
+                                    {b.location && (
+                                      <div className="text-[10px] text-black/50 mt-0.5">
+                                        {b.location} {b.room_number ? `(${b.room_number})` : ''}
+                                      </div>
+                                    )}
+                                  </div>
 
-                      return (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          {displayedList.map((b) => (
-                            <div
-                              key={b.id}
-                              className="bg-white p-3.5 rounded-2xl border border-black/10 shadow-xs space-y-2.5 hover:border-black/30 transition-all"
-                            >
-                              <div className="flex items-start justify-between">
-                                <div>
-                                  <div className="font-mono font-bold text-black text-xs flex items-center gap-1.5">
-                                    <span>#{b.booking_id}</span>
-                                    <button
-                                      onClick={() => handleCopyText(b.booking_id, `bk-${b.id}`)}
-                                      className="text-black/40 hover:text-black"
-                                    >
-                                      {copiedId === `bk-${b.id}` ? <Check size={11} /> : <Copy size={11} />}
-                                    </button>
+                                  <div className="text-right">
+                                    {b.status === 'paid' ? (
+                                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-black text-white">
+                                        <CheckCircle2 size={10} /> Paid Out
+                                      </span>
+                                    ) : b.status === 'approved' ? (
+                                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-300">
+                                        <CheckCircle2 size={10} /> Approved
+                                      </span>
+                                    ) : b.status === 'declined' ? (
+                                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-red-50 text-red-800 border border-red-300">
+                                        Declined
+                                      </span>
+                                    ) : (
+                                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-300">
+                                        <Clock size={10} /> Pending
+                                      </span>
+                                    )}
+                                    <div className="text-[10px] text-black/50 mt-1">
+                                      {safeFormatDate(b.booking_date || b.created_at)} {b.booking_time || ''}
+                                    </div>
                                   </div>
-                                  <div className="text-[11px] font-semibold text-black mt-0.5">
-                                    {b.guest_name || 'Guest'}
+                                </div>
+
+                                <div className="border-t border-black/5 pt-2 flex items-center justify-between text-[11px]">
+                                  <div>
+                                    <span className="text-black/50 block text-[10px]">{b.treatment_name || 'Treatment'}</span>
+                                    <span className="font-medium text-black">Net: {formatIDR(b.eligible_treatment_amount)}</span>
                                   </div>
-                                  {b.location && (
-                                    <div className="text-[10px] text-black/50 mt-0.5">
-                                      {b.location} {b.room_number ? `(${b.room_number})` : ''}
+
+                                  <div className="text-right">
+                                    <span className="text-black/50 block text-[10px]">Commission ({b.commission_rate_pct}%)</span>
+                                    <span className="font-bold text-black">{formatIDR(b.commission_amount)}</span>
+                                  </div>
+                                </div>
+
+                                {/* Admin Verification Checkboxes & Approval */}
+                                <div className="border-t border-black/5 pt-2 flex items-center justify-between text-[11px]">
+                                  <div className="flex items-center gap-3">
+                                    <label className="flex items-center gap-1.5 cursor-pointer">
+                                      <input
+                                        type="checkbox"
+                                        checked={b.payment_verified}
+                                        onChange={(e) =>
+                                          handleUpdateCommission(b.id, { payment_verified: e.target.checked })
+                                        }
+                                        className="rounded text-black"
+                                      />
+                                      <span>Payment Paid</span>
+                                    </label>
+                                    <label className="flex items-center gap-1.5 cursor-pointer">
+                                      <input
+                                        type="checkbox"
+                                        checked={b.service_completed}
+                                        onChange={(e) =>
+                                          handleUpdateCommission(b.id, { service_completed: e.target.checked })
+                                        }
+                                        className="rounded text-black"
+                                      />
+                                      <span>Service Done</span>
+                                    </label>
+                                  </div>
+
+                                  {b.status === 'pending' && (
+                                    <div className="flex gap-1">
+                                      <button
+                                        type="button"
+                                        onClick={() => handleUpdateCommission(b.id, { status: 'approved' })}
+                                        className="px-2.5 py-1 bg-black hover:bg-black/80 text-white rounded text-[10px] font-bold"
+                                      >
+                                        Approve
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleUpdateCommission(b.id, { status: 'declined' })}
+                                        className="px-2 py-1 border border-black/20 hover:bg-black/5 text-black rounded text-[10px] font-bold"
+                                      >
+                                        Decline
+                                      </button>
                                     </div>
                                   )}
                                 </div>
-
-                                <div className="text-right">
-                                  <span className="inline-flex px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-black/5 text-black border border-black/10">
-                                    {b.status}
-                                  </span>
-                                  <div className="text-[10px] text-black/50 mt-1">
-                                    {safeFormatDate(b.booking_date || b.created_at)} {b.booking_time || ''}
-                                  </div>
-                                </div>
                               </div>
-
-                              <div className="border-t border-black/5 pt-2 flex items-center justify-between text-[11px]">
-                                <div>
-                                  <span className="text-black/50 block text-[10px]">{b.treatment_name || 'Treatment'}</span>
-                                  <span className="font-medium text-black">Net: {formatIDR(b.eligible_treatment_amount)}</span>
-                                </div>
-
-                                <div className="text-right">
-                                  <span className="text-black/50 block text-[10px]">Commission ({b.commission_rate_pct}%)</span>
-                                  <span className="font-bold text-black">{formatIDR(b.commission_amount)}</span>
-                                </div>
-                              </div>
-
-                              {/* Admin Verification Checkboxes & Approval */}
-                              <div className="border-t border-black/5 pt-2 flex items-center justify-between text-[11px]">
-                                <div className="flex items-center gap-3">
-                                  <label className="flex items-center gap-1.5 cursor-pointer">
-                                    <input
-                                      type="checkbox"
-                                      checked={b.payment_verified}
-                                      onChange={(e) =>
-                                        handleUpdateCommission(b.id, { payment_verified: e.target.checked })
-                                      }
-                                      className="rounded text-black"
-                                    />
-                                    <span>Paid</span>
-                                  </label>
-                                  <label className="flex items-center gap-1.5 cursor-pointer">
-                                    <input
-                                      type="checkbox"
-                                      checked={b.service_completed}
-                                      onChange={(e) =>
-                                        handleUpdateCommission(b.id, { service_completed: e.target.checked })
-                                      }
-                                      className="rounded text-black"
-                                    />
-                                    <span>Completed</span>
-                                  </label>
-                                </div>
-
-                                {b.status === 'pending' && (
-                                  <div className="flex gap-1">
-                                    <button
-                                      onClick={() => handleUpdateCommission(b.id, { status: 'approved' })}
-                                      className="px-2 py-0.5 bg-black hover:bg-black/80 text-white rounded text-[10px] font-bold"
-                                    >
-                                      Approve
-                                    </button>
-                                    <button
-                                      onClick={() => handleUpdateCommission(b.id, { status: 'declined' })}
-                                      className="px-2 py-0.5 border border-black/20 hover:bg-black/5 text-black rounded text-[10px] font-bold"
-                                    >
-                                      Decline
-                                    </button>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      );
-                    })()}
+                            ))}
+                          </div>
+                        );
+                      })()}
+                    </div>
                   </div>
 
                 </div>
@@ -1769,14 +2229,74 @@ export default function AffiliateManagement() {
               {/* TAB C: INDEPENDENT PARTNER COMMISSIONS */}
               {partnerActiveTab === 'commissions' && (
                 <div className="space-y-4 text-xs">
-                  <div className="flex items-center justify-between bg-black/[0.03] p-3 rounded-xl border border-black/10">
-                    <span className="font-bold text-black">Filter Commissions:</span>
-                    <div className="flex items-center gap-1">
+                  {/* Partner Commission Rate Setting & Filter Card */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#FAF7F2] p-4 rounded-2xl border border-black/10">
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-black/50 block tracking-wider">
+                        Partner Commission Rate
+                      </span>
+                      <div className="flex items-center gap-2 mt-1">
+                        {editingRateId === selectedPartnerDetails.id ? (
+                          <div className="flex items-center gap-2">
+                            <div className="relative">
+                              <input
+                                type="number"
+                                step="0.5"
+                                min="0"
+                                max="100"
+                                value={newRateValue}
+                                onChange={(e) => setNewRateValue(Number(e.target.value))}
+                                className="w-24 px-3 py-1.5 bg-white border border-black/30 rounded-lg text-sm font-bold text-black focus:outline-none focus:border-black"
+                                autoFocus
+                              />
+                              <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-black/50 font-bold text-xs">%</span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handleSaveCommissionRate(selectedPartnerDetails.id)}
+                              disabled={actionLoading}
+                              className="px-3 py-1.5 bg-black text-white text-xs font-bold rounded-lg hover:bg-black/80 disabled:opacity-50"
+                            >
+                              Save
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setEditingRateId(null)}
+                              className="px-2.5 py-1.5 border border-black/20 text-xs font-semibold rounded-lg hover:bg-black/5 text-black"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2.5">
+                            <span className="text-xl font-mono font-extrabold text-black">
+                              {selectedPartnerDetails.commission_rate_pct}%
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditingRateId(selectedPartnerDetails.id);
+                                setNewRateValue(selectedPartnerDetails.commission_rate_pct);
+                              }}
+                              className="px-3 py-1 rounded-lg border border-black/15 bg-white hover:bg-black/5 text-black text-xs font-semibold shadow-xs"
+                            >
+                              Edit Rate
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                      <span className="text-[11px] text-black/50 mt-1 block">
+                        Commission percentage automatically applied to new bookings referred by {selectedPartnerDetails.partner_code}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-1 bg-white p-1 rounded-xl border border-black/10 self-start sm:self-auto">
                       {['all', 'pending', 'approved', 'paid', 'declined'].map((st) => (
                         <button
                           key={st}
+                          type="button"
                           onClick={() => setPartnerCommFilter(st)}
-                          className={`px-2 py-1 rounded-lg capitalize font-medium ${
+                          className={`px-2.5 py-1 rounded-lg capitalize font-medium text-xs transition-colors ${
                             partnerCommFilter === st
                               ? 'bg-black text-white'
                               : 'text-black/60 hover:bg-black/5'
@@ -1790,14 +2310,14 @@ export default function AffiliateManagement() {
 
                   <div className="bg-white rounded-2xl border border-black/10 shadow-xs overflow-hidden">
                     <table className="w-full text-left text-xs">
-                      <thead className="bg-black text-white font-semibold">
+                      <thead className="bg-[#FAF7F2] border-b border-black/10 text-black/80 font-bold">
                         <tr>
                           <th className="py-2.5 px-3">Date</th>
                           <th className="py-2.5 px-3">Booking Ref</th>
                           <th className="py-2.5 px-3">Treatment Net</th>
                           <th className="py-2.5 px-3">Rate</th>
                           <th className="py-2.5 px-3">Commission</th>
-                          <th className="py-2.5 px-3">Verified</th>
+                          <th className="py-2.5 px-3">Verification</th>
                           <th className="py-2.5 px-3">Status</th>
                           <th className="py-2.5 px-3 text-right">Actions</th>
                         </tr>
@@ -1823,7 +2343,7 @@ export default function AffiliateManagement() {
                                   #{c.booking_id}
                                 </td>
                                 <td className="py-2.5 px-3">{formatIDR(c.eligible_treatment_amount)}</td>
-                                <td className="py-2.5 px-3">{c.commission_rate_pct}%</td>
+                                <td className="py-2.5 px-3 font-mono">{c.commission_rate_pct}%</td>
                                 <td className="py-2.5 px-3 font-bold text-black">{formatIDR(c.commission_amount)}</td>
                                 <td className="py-2.5 px-3 space-y-0.5 text-[10px]">
                                   <label className="flex items-center gap-1 cursor-pointer">
@@ -1835,7 +2355,7 @@ export default function AffiliateManagement() {
                                       }
                                       className="rounded text-black"
                                     />
-                                    <span>Paid</span>
+                                    <span>Payment Paid</span>
                                   </label>
                                   <label className="flex items-center gap-1 cursor-pointer">
                                     <input
@@ -1846,26 +2366,42 @@ export default function AffiliateManagement() {
                                       }
                                       className="rounded text-black"
                                     />
-                                    <span>Done</span>
+                                    <span>Service Done</span>
                                   </label>
                                 </td>
                                 <td className="py-2.5 px-3">
-                                  <span className="inline-flex px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-black/5 text-black border border-black/10">
-                                    {c.status}
-                                  </span>
+                                  {c.status === 'paid' ? (
+                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-black text-white">
+                                      <CheckCircle2 size={10} /> Paid Out
+                                    </span>
+                                  ) : c.status === 'approved' ? (
+                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-300">
+                                      <CheckCircle2 size={10} /> Approved
+                                    </span>
+                                  ) : c.status === 'declined' ? (
+                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-red-50 text-red-800 border border-red-300">
+                                      Declined
+                                    </span>
+                                  ) : (
+                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-300">
+                                      <Clock size={10} /> Pending
+                                    </span>
+                                  )}
                                 </td>
                                 <td className="py-2.5 px-3 text-right space-x-1 whitespace-nowrap">
                                   {c.status === 'pending' && (
                                     <>
                                       <button
+                                        type="button"
                                         onClick={() => handleUpdateCommission(c.id, { status: 'approved' })}
-                                        className="px-2 py-1 bg-black hover:bg-black/80 text-white rounded text-[10px] font-semibold"
+                                        className="px-2.5 py-1 bg-black hover:bg-black/80 text-white rounded text-[10px] font-semibold"
                                       >
                                         Approve
                                       </button>
                                       <button
+                                        type="button"
                                         onClick={() => handleUpdateCommission(c.id, { status: 'declined' })}
-                                        className="px-2 py-1 border border-black/20 hover:bg-black/5 text-black rounded text-[10px] font-semibold"
+                                        className="px-2.5 py-1 border border-black/20 hover:bg-black/5 text-black rounded text-[10px] font-semibold"
                                       >
                                         Decline
                                       </button>
@@ -1884,7 +2420,7 @@ export default function AffiliateManagement() {
               {/* TAB D: INDEPENDENT PARTNER PAYOUTS */}
               {partnerActiveTab === 'payouts' && (
                 <div className="space-y-4 text-xs">
-                  <div className="flex items-center justify-between bg-black/[0.03] p-4 rounded-2xl border border-black/10">
+                  <div className="flex items-center justify-between bg-[#FAF7F2] p-4 rounded-2xl border border-black/10">
                     <div>
                       <span className="text-[10px] uppercase font-bold text-black/50 block">Approved Balance Ready for Payout</span>
                       <span className="text-lg font-bold text-black mt-0.5 block">
@@ -1893,6 +2429,7 @@ export default function AffiliateManagement() {
                     </div>
 
                     <button
+                      type="button"
                       onClick={() => openQuickPayoutForPartner(selectedPartnerDetails)}
                       className="px-4 py-2 bg-black text-white rounded-xl font-bold hover:bg-black/80 shadow-sm"
                     >
@@ -1902,7 +2439,7 @@ export default function AffiliateManagement() {
 
                   <div className="bg-white rounded-2xl border border-black/10 shadow-xs overflow-hidden">
                     <table className="w-full text-left text-xs">
-                      <thead className="bg-black text-white font-semibold">
+                      <thead className="bg-[#FAF7F2] border-b border-black/10 text-black/80 font-bold">
                         <tr>
                           <th className="py-2.5 px-3">Date</th>
                           <th className="py-2.5 px-3">Reference</th>
@@ -1929,9 +2466,15 @@ export default function AffiliateManagement() {
                               <td className="py-2.5 px-3 font-bold text-black">{formatIDR(py.amount)}</td>
                               <td className="py-2.5 px-3 capitalize">{py.payout_method?.replace('_', ' ')}</td>
                               <td className="py-2.5 px-3">
-                                <span className="inline-flex px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-black/5 text-black border border-black/10">
-                                  {py.status}
-                                </span>
+                                {py.status === 'completed' ? (
+                                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-black text-white">
+                                    <CheckCircle2 size={10} /> Completed
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-black/5 text-black border border-black/10">
+                                    {py.status}
+                                  </span>
+                                )}
                               </td>
                               <td className="py-2.5 px-3 text-black/60">{py.notes || '-'}</td>
                             </tr>

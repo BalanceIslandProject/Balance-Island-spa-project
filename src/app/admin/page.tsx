@@ -73,7 +73,17 @@ export default function AdminDashboard() {
     }, [siteBrandFilter]);
 
     useEffect(() => {
-        setSiteBrandFilter('central');
+        if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search);
+            const brandParam = params.get('brand');
+            const tabParam = params.get('tab');
+            if (brandParam) {
+                setSiteBrandFilter(brandParam);
+            }
+            if (tabParam) {
+                setActiveTab(tabParam as any);
+            }
+        }
     }, [setSiteBrandFilter]);
 
 
@@ -148,7 +158,7 @@ export default function AdminDashboard() {
             setActiveTab('treatment');
         }
         if (siteBrandFilter !== 'therapick' && (activeTab as string) === 'affiliates') {
-            setActiveTab('treatment');
+            setSiteBrandFilter('therapick');
         }
         if (activeTab === 'bookings' && siteBrandFilter !== 'central' && siteBrandFilter !== 'therapick') {
             setActiveTab('treatment');
