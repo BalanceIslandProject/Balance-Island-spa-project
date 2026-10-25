@@ -3,6 +3,18 @@ import { supabase } from '@/lib/supabase';
 import { isBookTherapickHost } from '@/lib/domainIsolation';
 import { getPartnerSession } from '@/lib/partnerAuth';
 
+function cleanPayoutRef(ref?: string): string {
+  if (!ref) return '';
+  const parts = ref.split('-');
+  if (parts.length >= 3) {
+    const prefix = parts[0] || 'PAY';
+    const pCode = parts[1].slice(0, 4);
+    const tail = parts[2].slice(-4);
+    return `${prefix}${pCode}${tail}`.toUpperCase();
+  }
+  return ref.replace(/-/g, '').toUpperCase();
+}
+
 export async function GET(req: NextRequest) {
   try {
     const host = req.headers.get('host') || '';
@@ -37,23 +49,37 @@ export async function GET(req: NextRequest) {
     const commList = commissions || [];
     const bookingIds = commList.map((c: any) => c.booking_id).filter(Boolean);
     const bookingsMap = new Map<string, any>();
-    if (bookingIds.length > 0) {
-      const { data: bookings } = await supabase
-        .from('bookings')
-        .select('reference_number, id, guest_name, guest_whatsapp, booking_date, time, location, room_number, treatment_name, status, payment_status');
+    const attrMap = new Map<string, any>();
 
-      (bookings || []).forEach((b: any) => {
+    if (bookingIds.length > 0) {
+      const [bookingsRes, attributionsRes] = await Promise.all([
+        supabase
+          .from('bookings')
+          .select('reference_number, id, guest_name, guest_whatsapp, booking_date, time, location, room_number, treatment_name, status')
+          .in('reference_number', bookingIds),
+        supabase
+          .from('affiliate_attributions')
+          .select('booking_id, customer_name, customer_phone')
+          .in('booking_id', bookingIds),
+      ]);
+
+      (bookingsRes.data || []).forEach((b: any) => {
         if (b.reference_number) bookingsMap.set(b.reference_number.toUpperCase(), b);
         if (b.id) bookingsMap.set(String(b.id).toUpperCase(), b);
+      });
+
+      (attributionsRes.data || []).forEach((a: any) => {
+        if (a.booking_id) attrMap.set(String(a.booking_id).toUpperCase(), a);
       });
     }
 
     const enrichedComms = commList.map((c: any) => {
       const bKey = String(c.booking_id || '').toUpperCase();
       const b = bookingsMap.get(bKey);
+      const a = attrMap.get(bKey);
       return {
         ...c,
-        guest_name: b?.guest_name || c.guest_name || 'Guest',
+        guest_name: b?.guest_name || a?.customer_name || c.guest_name || 'Guest',
         treatment_name: b?.treatment_name || c.treatment_name || 'Spa Treatment',
         booking_date: b?.booking_date || c.booking_date || (c.created_at ? c.created_at.split('T')[0] : ''),
         booking_time: b?.time || c.booking_time || '',
@@ -70,6 +96,7 @@ export async function GET(req: NextRequest) {
       }
       return {
         ...p,
+        payout_reference: cleanPayoutRef(p.payout_reference),
         items,
       };
     });

@@ -54,6 +54,18 @@ export const localTodayKey = () => {
   return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}`;
 };
 
+export const cleanPayoutRef = (ref?: string) => {
+  if (!ref) return '';
+  const parts = ref.split('-');
+  if (parts.length >= 3) {
+    const prefix = parts[0] || 'PAY';
+    const pCode = parts[1].slice(0, 4);
+    const tail = parts[2].slice(-4);
+    return `${prefix}${pCode}${tail}`.toUpperCase();
+  }
+  return ref.replace(/-/g, '').toUpperCase();
+};
+
 export const btn = {
   base:
     'inline-flex items-center justify-center gap-1.5 rounded-lg font-medium transition-colors whitespace-nowrap disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-1',

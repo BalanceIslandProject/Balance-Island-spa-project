@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Wallet, CheckCircle2, Clock, X, Copy, Check, Calendar, ExternalLink } from 'lucide-react';
+import { Wallet, CheckCircle2, Clock, X, Copy, Check, Calendar, ExternalLink, DoorClosed, MapPin } from 'lucide-react';
+import { cleanPayoutRef } from '@/components/admin/affiliate/ui';
 
 export default function PartnerPayoutsPage() {
   const [payouts, setPayouts] = useState<any[]>([]);
@@ -72,7 +73,7 @@ export default function PartnerPayoutsPage() {
                 <div key={item.id} className="p-4 space-y-2.5">
                   <div className="flex items-center justify-between">
                     <span className="font-mono font-bold text-xs text-black bg-[#F5F5F5] px-2 py-0.5 rounded border border-[#E5E5E5]">
-                      #{item.payout_reference}
+                      #{cleanPayoutRef(item.payout_reference)}
                     </span>
                     <span className="text-xs text-[#737373]">
                       {new Date(item.created_at).toLocaleDateString('en-GB', {
@@ -136,7 +137,7 @@ export default function PartnerPayoutsPage() {
                         })}
                       </td>
                       <td className="py-3.5 px-4 font-mono font-bold text-black">
-                        {item.payout_reference}
+                        {cleanPayoutRef(item.payout_reference)}
                       </td>
                       <td className="py-3.5 px-4 font-bold text-black font-mono tabular-nums text-sm">
                         {formatIDR(item.amount)}
@@ -182,7 +183,7 @@ export default function PartnerPayoutsPage() {
                     Disbursement Details
                   </h3>
                   <span className="font-mono font-bold text-black bg-[#F5F5F5] px-2.5 py-0.5 rounded-md text-xs border border-[#E5E5E5]">
-                    {selectedPayout.payout_reference}
+                    {cleanPayoutRef(selectedPayout.payout_reference)}
                   </span>
                   <span className="text-[10px] font-semibold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">
                     {selectedPayout.status || 'COMPLETED'}
@@ -300,13 +301,22 @@ export default function PartnerPayoutsPage() {
                           <td className="py-3.5 px-4">
                             <div className="font-semibold text-black">{b.guest_name || 'Guest'}</div>
                             {b.location && (
-                              <div className="text-[11px] text-[#737373]">
-                                {b.location} {b.room_number ? `(${b.room_number})` : ''}
+                              <div className="text-[11px] text-[#737373] flex items-center gap-1 mt-0.5">
+                                <MapPin size={11} className="text-[#737373] shrink-0" />
+                                <span>{b.location}</span>
+                              </div>
+                            )}
+                            {b.room_number && (
+                              <div className="pt-0.5">
+                                <span className="inline-flex items-center gap-1 text-[11px] font-medium text-black bg-[#F5F5F5] border border-[#E5E5E5] px-1.5 py-0.5 rounded">
+                                  <DoorClosed size={11} className="text-[#737373] shrink-0" />
+                                  Room {b.room_number}
+                                </span>
                               </div>
                             )}
                           </td>
-                          <td className="py-3.5 px-4 text-black font-medium">
-                            {b.treatment_name || 'Spa Treatment'}
+                          <td className="py-3.5 px-4">
+                            <div className="text-black font-semibold">{b.treatment_name || 'Spa Treatment'}</div>
                           </td>
                           <td className="py-3.5 px-4 font-mono text-black">
                             {formatIDR(b.eligible_treatment_amount)}
@@ -333,7 +343,7 @@ export default function PartnerPayoutsPage() {
             {/* Modal Footer */}
             <div className="p-4 border-t border-[#E5E5E5] bg-[#FAFAFA] flex items-center justify-between shrink-0">
               <span className="text-xs text-[#737373] font-mono">
-                Receipt #{selectedPayout.payout_reference}
+                Receipt #{cleanPayoutRef(selectedPayout.payout_reference)}
               </span>
               <button
                 type="button"

@@ -183,7 +183,10 @@ export async function GET(req: NextRequest) {
       calendarBookings,
       recentAttributions: attributionsRes.data || [],
       recentCommissions: commissions.slice(0, 5),
-      recentPayouts: (payoutsRes.data || []).slice(0, 5),
+      recentPayouts: (payoutsRes.data || []).slice(0, 5).map((p: any) => ({
+        ...p,
+        payout_reference: (p.payout_reference || '').replace(/-/g, ''),
+      })),
     });
   } catch (err: any) {
     console.error('Stats error:', err);

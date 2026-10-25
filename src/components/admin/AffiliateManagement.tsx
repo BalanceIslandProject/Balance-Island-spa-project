@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { ChevronLeft, ChevronRight, Check, Copy, Plus, RefreshCw, ArrowUpRight, Info } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Check, Copy, Plus, RefreshCw, ArrowUpRight, Info, DoorClosed, MapPin } from 'lucide-react';
 import {
   cx,
   btn,
@@ -15,6 +15,7 @@ import {
   safeFormatDate,
   toDateKey,
   localTodayKey,
+  cleanPayoutRef,
   StatusBadge,
   CountPill,
   NewIndicator,
@@ -1456,8 +1457,8 @@ export default function AffiliateManagement() {
                           <td className={cx(tdCls, 'text-[#737373] whitespace-nowrap')}>{safeFormatDate(py.created_at)}</td>
                           <td className={tdCls}>
                             <div className="flex items-center gap-0.5">
-                              <span className="font-mono text-xs text-[#171717] truncate max-w-[190px]" title={py.payout_reference}>{py.payout_reference}</span>
-                              <CopyBtn text={py.payout_reference} id={`ref-${py.id}`} label="Copy reference" />
+                              <span className="font-mono text-xs text-[#171717] truncate max-w-[190px]" title={cleanPayoutRef(py.payout_reference)}>{cleanPayoutRef(py.payout_reference)}</span>
+                              <CopyBtn text={cleanPayoutRef(py.payout_reference)} id={`ref-${py.id}`} label="Copy reference" />
                             </div>
                           </td>
                           <td className={tdCls}><PartnerLink code={py.partner_code} id={py.partner_id} /></td>
@@ -1492,7 +1493,7 @@ export default function AffiliateManagement() {
                         <button type="button" onClick={() => setSelectedPayoutDetails(py)} className="w-full text-left p-4 space-y-2">
                           <div className="flex items-start justify-between gap-3">
                             <div className="min-w-0">
-                              <span className="block font-mono text-xs text-[#171717] truncate">{py.payout_reference}</span>
+                              <span className="block font-mono text-xs text-[#171717] truncate">{cleanPayoutRef(py.payout_reference)}</span>
                               <span className="block text-xs text-[#737373]">{py.partner_code} · {safeFormatDate(py.created_at)}</span>
                             </div>
                             <StatusBadge status={py.status || 'completed'} />
@@ -2086,7 +2087,7 @@ export default function AffiliateManagement() {
                         <li key={py.id}>
                           <button type="button" onClick={() => setSelectedPayoutDetails(py)} className="w-full text-left px-4 py-3 hover:bg-[#FAFAFA] flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6">
                             <div className="min-w-0 flex-1">
-                              <span className="block font-mono text-xs text-[#171717] truncate">{py.payout_reference}</span>
+                              <span className="block font-mono text-xs text-[#171717] truncate">{cleanPayoutRef(py.payout_reference)}</span>
                               <span className="block text-xs text-[#737373] truncate">
                                 {safeFormatDate(py.created_at)} · <span className="capitalize">{methodLabel(py.payout_method)}</span>
                                 {py.notes ? ` · ${py.notes}` : ''}
@@ -2434,7 +2435,7 @@ export default function AffiliateManagement() {
           selectedPayoutDetails && (
             <>
               <span className="inline-flex items-center h-6 px-2 rounded-md border border-[#E5E5E5] font-mono text-xs text-[#171717] max-w-[240px] truncate">
-                {selectedPayoutDetails.payout_reference}
+                {cleanPayoutRef(selectedPayoutDetails.payout_reference)}
               </span>
               <StatusBadge status={selectedPayoutDetails.status || 'completed'} />
             </>
@@ -2491,7 +2492,7 @@ export default function AffiliateManagement() {
                               <tr>
                                 <th className={thCls}>Booking</th>
                                 <th className={thCls}>Date</th>
-                                <th className={thCls}>Guest</th>
+                                <th className={thCls}>Guest & Location</th>
                                 <th className={thCls}>Treatment</th>
                                 <th className={cx(thCls, 'text-right')}>Eligible</th>
                                 <th className={cx(thCls, 'text-right')}>Rate</th>
@@ -2512,10 +2513,23 @@ export default function AffiliateManagement() {
                                     {safeFormatDate(b.booking_date || b.created_at)} {b.booking_time || ''}
                                   </td>
                                   <td className={tdCls}>
-                                    <span className="block truncate max-w-[180px]">{b.guest_name || 'Guest'}</span>
-                                    {b.location && <span className="block text-xs text-[#737373] truncate max-w-[180px]">{b.location}{b.room_number ? ` (${b.room_number})` : ''}</span>}
+                                    <span className="block font-semibold text-black truncate max-w-[200px]">{b.guest_name || 'Guest'}</span>
+                                    {b.location && (
+                                      <span className="text-xs text-[#737373] flex items-center gap-1 mt-0.5 max-w-[200px] truncate">
+                                        <MapPin size={11} className="text-[#737373] shrink-0" />
+                                        <span>{b.location}</span>
+                                      </span>
+                                    )}
+                                    {b.room_number && (
+                                      <span className="inline-flex items-center gap-1 text-[11px] font-medium text-black bg-[#F5F5F5] border border-[#E5E5E5] px-1.5 py-0.5 rounded mt-1">
+                                        <DoorClosed size={11} className="text-[#737373] shrink-0" />
+                                        Room {b.room_number}
+                                      </span>
+                                    )}
                                   </td>
-                                  <td className={cx(tdCls, 'text-[#171717]')}><span className="block truncate max-w-[200px]">{b.treatment_name || 'Spa Treatment'}</span></td>
+                                  <td className={cx(tdCls, 'text-[#171717]')}>
+                                    <span className="block font-semibold text-black truncate max-w-[200px]">{b.treatment_name || 'Spa Treatment'}</span>
+                                  </td>
                                   <td className={cx(tdCls, 'text-right tabular-nums')}>{formatIDR(b.eligible_treatment_amount)}</td>
                                   <td className={cx(tdCls, 'text-right tabular-nums text-[#737373]')}>{b.commission_rate_pct}%</td>
                                   <td className={cx(tdCls, 'text-right tabular-nums font-medium')}>{formatIDR(b.commission_amount)}</td>
@@ -2528,10 +2542,22 @@ export default function AffiliateManagement() {
                         <ul className="md:hidden divide-y divide-[#F0F0F0]">
                           {items.map((b) => (
                             <li key={b.id} className="p-4 flex items-start justify-between gap-3">
-                              <div className="min-w-0">
+                              <div className="min-w-0 space-y-0.5">
                                 <span className="block font-mono text-xs font-medium">#{b.booking_id}</span>
-                                <span className="block text-xs text-[#737373] truncate">{b.guest_name || 'Guest'} · {safeFormatDate(b.booking_date || b.created_at)}</span>
+                                <span className="block text-xs font-semibold text-black truncate">{b.guest_name || 'Guest'} · {safeFormatDate(b.booking_date || b.created_at)}</span>
                                 <span className="block text-xs text-[#737373] truncate">{b.treatment_name || 'Spa Treatment'}</span>
+                                {b.location && (
+                                  <span className="text-xs text-[#737373] flex items-center gap-1">
+                                    <MapPin size={10} className="text-[#737373] shrink-0" />
+                                    <span className="truncate">{b.location}</span>
+                                  </span>
+                                )}
+                                {b.room_number && (
+                                  <span className="inline-flex items-center gap-1 text-[11px] font-medium text-black bg-[#F5F5F5] border border-[#E5E5E5] px-1.5 py-0.5 rounded mt-0.5">
+                                    <DoorClosed size={10} className="text-[#737373] shrink-0" />
+                                    Room {b.room_number}
+                                  </span>
+                                )}
                               </div>
                               <div className="text-right shrink-0">
                                 <span className="block text-[13px] font-semibold tabular-nums">{formatIDR(b.commission_amount)}</span>

@@ -6,6 +6,18 @@ function checkAdminAuth(req: NextRequest): boolean {
   return adminCookie?.value === 'authenticated';
 }
 
+function cleanPayoutRef(ref?: string): string {
+  if (!ref) return '';
+  const parts = ref.split('-');
+  if (parts.length >= 3) {
+    const prefix = parts[0] || 'PAY';
+    const pCode = parts[1].slice(0, 4);
+    const tail = parts[2].slice(-4);
+    return `${prefix}${pCode}${tail}`.toUpperCase();
+  }
+  return ref.replace(/-/g, '').toUpperCase();
+}
+
 export async function GET(req: NextRequest) {
   try {
     if (!checkAdminAuth(req)) {
@@ -21,7 +33,12 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: false, message: error.message }, { status: 400 });
     }
 
-    return NextResponse.json({ success: true, payouts: payouts || [] });
+    const sanitized = (payouts || []).map((p: any) => ({
+      ...p,
+      payout_reference: cleanPayoutRef(p.payout_reference),
+    }));
+
+    return NextResponse.json({ success: true, payouts: sanitized });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message }, { status: 500 });
   }
@@ -60,7 +77,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, message: 'Partner not found' }, { status: 404 });
     }
 
-    const payoutReference = `PAY-${partner.partner_code}-${Date.now().toString(36).toUpperCase()}`;
+    // Short payment reference without hyphens (e.g. PAY + 4 chars from partner code + 4 random uppercase chars)
+    const pCode = (partner.partner_code || '').replace(/[^A-Za-z0-9]/g, '').slice(0, 4).toUpperCase();
+    const rand = Math.random().toString(36).substring(2, 6).toUpperCase();
+    const payoutReference = `PAY${pCode || 'REF'}${rand}`;
 
     // 1. Insert payout record
     const { data: newPayout, error: payoutErr } = await supabase
