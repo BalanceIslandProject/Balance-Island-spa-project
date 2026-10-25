@@ -244,9 +244,15 @@ export default function RitualsDetails() {
 
 
     const handleShare = async () => {
+        const isTherapick = siteBrandFilter === 'therapick' || (typeof window !== 'undefined' && (window.location.hostname.includes('therapick') || window.location.hostname.includes('booktherapick')));
+        const isBali = siteBrandFilter === 'bali' || (typeof window !== 'undefined' && window.location.hostname.includes('homespaubud'));
+        const brandName = isTherapick ? 'Therapick Bali' : (isBali ? 'Home Spa Ubud' : 'Elexoir Home Spa');
+
         const shareData = {
-            title: `${treatment.title} - Elexoir Home Spa`,
-            text: `Book the ${treatment.title} at Elexoir Home Spa Ubud!`,
+            title: `${treatment.title} | ${brandName}`,
+            text: isTherapick
+                ? `Book ${treatment.title} with Therapick Bali:`
+                : (isBali ? `Book ${treatment.title} at Home Spa Ubud:` : `Book ${treatment.title} at Elexoir Home Spa Ubud:`),
             url: window.location.href,
         };
 

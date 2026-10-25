@@ -1,5 +1,7 @@
 import { MetadataRoute } from 'next';
 import { headers } from 'next/headers';
+import { supabase } from '@/lib/supabase';
+import { createSlug } from '@/utils/slugify';
 
 export const dynamic = 'force-dynamic';
 
@@ -61,5 +63,25 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: location === 'ubud' ? 1.0 : 0.95,
   }));
 
-  return [...coreRoutes, ...locations];
+  // Treatment ritual pages (dynamic from database)
+  let treatmentRoutes: MetadataRoute.Sitemap = [];
+  try {
+    const { data: treatments } = await supabase
+      .from('treatments')
+      .select('title, updated_at')
+      .eq('is_published', true);
+
+    if (treatments && treatments.length > 0) {
+      treatmentRoutes = treatments.map((t) => ({
+        url: `${baseUrl}/rituals/${createSlug(t.title)}`,
+        lastModified: t.updated_at ? new Date(t.updated_at) : now,
+        changeFrequency: 'weekly' as const,
+        priority: 0.85,
+      }));
+    }
+  } catch (err) {
+    console.error('Error fetching treatments for sitemap:', err);
+  }
+
+  return [...coreRoutes, ...locations, ...treatmentRoutes];
 }
