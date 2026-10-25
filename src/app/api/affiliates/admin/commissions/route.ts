@@ -29,7 +29,63 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: false, message: error.message }, { status: 400 });
     }
 
-    return NextResponse.json({ success: true, commissions: commissions || [] });
+    let enrichedCommissions = commissions || [];
+    if (enrichedCommissions.length > 0) {
+      const bookingIds = Array.from(new Set(enrichedCommissions.map((c) => c.booking_id).filter(Boolean)));
+      if (bookingIds.length > 0) {
+        const [bookingsRes, attributionsRes] = await Promise.all([
+          supabase
+            .from('bookings')
+            .select('reference_number, guest_name, guest_whatsapp, booking_date, time, location, room_number, treatment_name, status')
+            .in('reference_number', bookingIds),
+          supabase
+            .from('affiliate_attributions')
+            .select('booking_id, customer_name, customer_phone')
+            .in('booking_id', bookingIds),
+        ]);
+
+        const bookingMap: Record<string, any> = {};
+        if (bookingsRes.data) {
+          for (const b of bookingsRes.data) {
+            if (b.reference_number) {
+              bookingMap[b.reference_number] = b;
+              bookingMap[b.reference_number.toUpperCase()] = b;
+              bookingMap[b.reference_number.toLowerCase()] = b;
+            }
+          }
+        }
+
+        const attrMap: Record<string, any> = {};
+        if (attributionsRes.data) {
+          for (const a of attributionsRes.data) {
+            if (a.booking_id) {
+              attrMap[a.booking_id] = a;
+              attrMap[a.booking_id.toUpperCase()] = a;
+              attrMap[a.booking_id.toLowerCase()] = a;
+            }
+          }
+        }
+
+        enrichedCommissions = enrichedCommissions.map((c) => {
+          const b = bookingMap[c.booking_id] || bookingMap[c.booking_id?.toUpperCase()] || bookingMap[c.booking_id?.toLowerCase()] || {};
+          const a = attrMap[c.booking_id] || attrMap[c.booking_id?.toUpperCase()] || attrMap[c.booking_id?.toLowerCase()] || {};
+
+          return {
+            ...c,
+            booking_date: b.booking_date || (c.created_at ? c.created_at.split('T')[0] : ''),
+            booking_time: b.time || '',
+            guest_name: b.guest_name || a.customer_name || 'Guest',
+            guest_whatsapp: b.guest_whatsapp || a.customer_phone || '',
+            location: b.location || '',
+            room_number: b.room_number || '',
+            treatment_name: b.treatment_name || 'Spa Treatment',
+            booking_status: b.status || 'Confirmed',
+          };
+        });
+      }
+    }
+
+    return NextResponse.json({ success: true, commissions: enrichedCommissions });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message }, { status: 500 });
   }
