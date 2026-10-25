@@ -837,7 +837,7 @@ export default function AdminDashboard() {
     };
 
     return (
-        <div className="min-h-screen bg-[#F8F9FA] text-black flex flex-col md:flex-row font-sans selection:bg-black selection:text-white">
+        <div className={`min-h-screen ${activeTab === 'affiliates' ? 'bg-white' : 'bg-[#F8F9FA]'} text-black flex flex-col md:flex-row font-sans selection:bg-black selection:text-white`}>
             
             {/* Desktop Minimalist Black & White Sidebar */}
             <aside className="hidden md:flex flex-col w-64 bg-white border-r border-black/10 z-20 shrink-0 sticky top-0 h-screen self-start">

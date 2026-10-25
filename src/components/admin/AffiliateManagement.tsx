@@ -1,259 +1,151 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
-import { 
-  Search, 
-  ChevronLeft, 
-  ChevronRight, 
-  Check, 
-  Copy, 
-  X,
-  Plus,
-  Calendar as CalendarIcon,
-  CheckCircle2,
-  Clock,
-  ArrowUpRight,
-  AlertCircle
-} from 'lucide-react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { ChevronLeft, ChevronRight, Check, Copy, Plus, RefreshCw, ArrowUpRight, Info } from 'lucide-react';
+import {
+  cx,
+  btn,
+  inputCls,
+  selectCls,
+  thCls,
+  tdCls,
+  MONTH_NAMES,
+  DAYS_OF_WEEK,
+  formatIDR,
+  safeFormatDate,
+  toDateKey,
+  localTodayKey,
+  StatusBadge,
+  CountPill,
+  NewIndicator,
+  Tabs,
+  FilterChips,
+  SearchInput,
+  Pagination,
+  EmptyState,
+  ErrorState,
+  SkeletonRows,
+  SkeletonList,
+  SectionCard,
+  Field,
+  KeyValue,
+  FullScreenModal,
+  Drawer,
+  ConfirmDialog,
+  Toast,
+} from './affiliate/ui';
 
-const MONTH_NAMES = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December'
-];
+type SubTab = 'partners' | 'applications' | 'commissions' | 'payouts' | 'settings';
+type PartnerTab = 'overview' | 'bookings' | 'commissions' | 'payouts' | 'history';
 
-const DAYS_OF_WEEK = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+type ConfirmState =
+  | { kind: 'partner-status'; id: string; name: string; next: 'active' | 'suspended' | 'rejected'; verb: 'approve' | 'reject' | 'suspend' | 'reactivate' }
+  | { kind: 'decline-commission'; id: string; ref: string }
+  | null;
 
-const safeFormatDate = (rawDate: string | undefined | null, options?: Intl.DateTimeFormatOptions) => {
-  if (!rawDate) return '';
-  try {
-    const cleanStr = String(rawDate).includes('T') ? String(rawDate).split('T')[0] : String(rawDate);
-    const parts = cleanStr.split('-');
-    if (parts.length === 3) {
-      const year = parseInt(parts[0], 10);
-      const month = parseInt(parts[1], 10) - 1;
-      const day = parseInt(parts[2], 10);
-      if (!isNaN(year) && !isNaN(month) && !isNaN(day)) {
-        const d = new Date(year, month, day);
-        return d.toLocaleDateString('en-GB', options || { day: 'numeric', month: 'short' });
-      }
-    }
-    const d = new Date(rawDate);
-    if (!isNaN(d.getTime())) {
-      return d.toLocaleDateString('en-GB', options || { day: 'numeric', month: 'short' });
-    }
-  } catch {}
-  return String(rawDate);
-};
+const PAGE_SIZE = 10;
+const EMPTY_PAYOUT_FORM = { partner_id: '', amount: '', payout_method: 'bank_transfer', notes: '' };
 
-// Reusable refined status badge component (color ONLY where meaningful)
-const StatusBadge = ({ status }: { status: string }) => {
-  const s = (status || '').toLowerCase();
-  if (s === 'active' || s === 'approved') {
-    return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200/80">
-        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-        {s === 'active' ? 'Active' : 'Approved'}
-      </span>
-    );
-  }
-  if (s === 'pending') {
-    return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200/80">
-        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-        Pending
-      </span>
-    );
-  }
-  if (s === 'paid' || s === 'completed') {
-    return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-neutral-900 text-white shadow-2xs">
-        <CheckCircle2 size={11} className="text-white" />
-        {s === 'paid' ? 'Paid' : 'Completed'}
-      </span>
-    );
-  }
-  if (s === 'suspended' || s === 'inactive') {
-    return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-neutral-100 text-neutral-600 border border-neutral-200">
-        <span className="w-1.5 h-1.5 rounded-full bg-neutral-400" />
-        {s === 'suspended' ? 'Suspended' : 'Inactive'}
-      </span>
-    );
-  }
-  if (s === 'rejected' || s === 'declined' || s === 'failed') {
-    return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-rose-50 text-rose-700 border border-rose-200/80">
-        <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
-        {s === 'declined' ? 'Declined' : s === 'rejected' ? 'Rejected' : 'Failed'}
-      </span>
-    );
-  }
-  return (
-    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-neutral-100 text-neutral-700 border border-neutral-200 capitalize">
-      {status}
-    </span>
-  );
-};
+const fullName = (p: any) => `${p?.first_name || ''} ${p?.last_name || ''}`.trim() || 'Unnamed partner';
+const commDateKey = (c: any) => toDateKey(c.booking_date || c.created_at);
+const methodLabel = (m?: string) => (m ? m.replace(/_/g, ' ') : 'Bank transfer');
 
-// Reusable Pagination component
-const Pagination = ({
-  currentPage,
-  totalPages,
-  totalItems,
-  pageSize,
-  onPageChange,
-  label = 'records',
-}: {
-  currentPage: number;
-  totalPages: number;
-  totalItems: number;
-  pageSize: number;
-  onPageChange: (p: number) => void;
-  label?: string;
-}) => {
-  if (totalItems <= pageSize) return null;
-  const start = (currentPage - 1) * pageSize + 1;
-  const end = Math.min(currentPage * pageSize, totalItems);
-
-  return (
-    <div className="flex items-center justify-between px-4 py-3 bg-white border-t border-neutral-200 text-xs">
-      <div className="text-neutral-500">
-        Showing <span className="font-semibold text-neutral-900">{start}–{end}</span> of{' '}
-        <span className="font-semibold text-neutral-900">{totalItems}</span> {label}
-      </div>
-      <div className="flex items-center gap-1.5">
-        <button
-          type="button"
-          disabled={currentPage <= 1}
-          onClick={() => onPageChange(currentPage - 1)}
-          className="h-7 px-2.5 rounded-lg border border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50 disabled:opacity-40 disabled:hover:bg-white text-xs font-medium transition-colors inline-flex items-center gap-1"
-        >
-          <ChevronLeft size={13} />
-          <span>Prev</span>
-        </button>
-        <span className="px-2 text-neutral-500">
-          Page {currentPage} of {totalPages}
-        </span>
-        <button
-          type="button"
-          disabled={currentPage >= totalPages}
-          onClick={() => onPageChange(currentPage + 1)}
-          className="h-7 px-2.5 rounded-lg border border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50 disabled:opacity-40 disabled:hover:bg-white text-xs font-medium transition-colors inline-flex items-center gap-1"
-        >
-          <span>Next</span>
-          <ChevronRight size={13} />
-        </button>
-      </div>
-    </div>
-  );
+const CONFIRM_COPY = {
+  approve: { title: 'Approve partner', confirm: 'Approve', body: (n: string) => `${n} will be activated and their referral code will start tracking bookings.` },
+  reject: { title: 'Reject application', confirm: 'Reject', body: (n: string) => `${n}'s application will be marked as rejected.` },
+  suspend: { title: 'Suspend partner', confirm: 'Suspend', body: (n: string) => `${n} will be suspended. You can reactivate the account at any time.` },
+  reactivate: { title: 'Reactivate partner', confirm: 'Reactivate', body: (n: string) => `${n} will be set back to active.` },
 };
 
 export default function AffiliateManagement() {
-  const [subTab, setSubTab] = useState<'partners' | 'commissions' | 'payouts' | 'settings'>('partners');
+  /* ---------------------------------------------------------------- */
+  /* Data                                                              */
+  /* ---------------------------------------------------------------- */
   const [partners, setPartners] = useState<any[]>([]);
   const [commissions, setCommissions] = useState<any[]>([]);
   const [payouts, setPayouts] = useState<any[]>([]);
   const [settings, setSettings] = useState<any>({
-    default_commission_rate_pct: 15.00,
+    default_commission_rate_pct: 15.0,
     cookie_duration_days: 30,
     attribution_model: 'last_touch',
     auto_approve_partners: false,
     is_program_active: true,
   });
-
+  const [savedSettings, setSavedSettings] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
+
+  /* ---------------------------------------------------------------- */
+  /* View state                                                        */
+  /* ---------------------------------------------------------------- */
+  const [subTab, setSubTab] = useState<SubTab>('partners');
   const [partnerStatusFilter, setPartnerStatusFilter] = useState('all');
+  const [partnerSort, setPartnerSort] = useState('activity');
+  const [searchQuery, setSearchQuery] = useState('');
   const [commissionStatusFilter, setCommissionStatusFilter] = useState('all');
   const [globalPartnerFilter, setGlobalPartnerFilter] = useState('all');
+  const [commSearch, setCommSearch] = useState('');
   const [globalPayoutPartnerFilter, setGlobalPayoutPartnerFilter] = useState('all');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [settingsDirty, setSettingsDirty] = useState(false);
-
-  // Pagination states (10 items per page)
-  const PAGE_SIZE = 10;
+  const [payoutSearch, setPayoutSearch] = useState('');
   const [partnerPage, setPartnerPage] = useState(1);
   const [commPage, setCommPage] = useState(1);
   const [payoutPage, setPayoutPage] = useState(1);
 
-  // Toast feedback state
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
-  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3000);
-  };
+  const [confirmState, setConfirmState] = useState<ConfirmState>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  // Confirmation modal state for consequential actions
-  const [confirmAction, setConfirmAction] = useState<{
-    type: 'suspend' | 'reactivate' | 'approve' | 'reject' | 'decline_comm';
-    id: string;
-    name?: string;
-  } | null>(null);
+  // Partner workspace
+  const [selectedPartnerId, setSelectedPartnerId] = useState<string | null>(null);
+  const [partnerActiveTab, setPartnerActiveTab] = useState<PartnerTab>('overview');
+  const [partnerCalendarYear, setPartnerCalendarYear] = useState(() => new Date().getFullYear());
+  const [partnerCalendarMonth, setPartnerCalendarMonth] = useState(() => new Date().getMonth());
+  const [partnerSelectedDate, setPartnerSelectedDate] = useState<string | null>(null);
+  const [partnerCommFilter, setPartnerCommFilter] = useState('all');
+  const [partnerNotesInput, setPartnerNotesInput] = useState('');
+  const [editingRateId, setEditingRateId] = useState<string | null>(null);
+  const [newRateValue, setNewRateValue] = useState<number>(15);
 
-  // Payout Modal State with Active Floating Calendar & Approved Selection
+  // Record payout
   const [showPayoutModal, setShowPayoutModal] = useState(false);
-  const [payoutForm, setPayoutForm] = useState<{
-    partner_id: string;
-    amount: string;
-    payout_method: string;
-    notes: string;
-  }>({
-    partner_id: '',
-    amount: '',
-    payout_method: 'bank_transfer',
-    notes: '',
-  });
+  const [payoutForm, setPayoutForm] = useState<typeof EMPTY_PAYOUT_FORM>(EMPTY_PAYOUT_FORM);
+  const [payoutSubmitted, setPayoutSubmitted] = useState(false);
   const [selectedCommissionIds, setSelectedCommissionIds] = useState<string[]>([]);
   const [payoutCalendarYear, setPayoutCalendarYear] = useState(() => new Date().getFullYear());
   const [payoutCalendarMonth, setPayoutCalendarMonth] = useState(() => new Date().getMonth());
   const [payoutSelectedDate, setPayoutSelectedDate] = useState<string | null>(null);
   const [showPastPaidInPayoutModal, setShowPastPaidInPayoutModal] = useState(false);
 
-  // Partner Details Modal State
-  const [selectedPartnerDetails, setSelectedPartnerDetails] = useState<any | null>(null);
-  const [partnerActiveTab, setPartnerActiveTab] = useState<'overview' | 'calendar' | 'commissions' | 'payouts'>('overview');
-  const [partnerCalendarYear, setPartnerCalendarYear] = useState(() => new Date().getFullYear());
-  const [partnerCalendarMonth, setPartnerCalendarMonth] = useState(() => new Date().getMonth());
-  const [partnerSelectedDate, setPartnerSelectedDate] = useState<string | null>(null);
-  const [partnerCommFilter, setPartnerCommFilter] = useState('all');
-  const [partnerNotesInput, setPartnerNotesInput] = useState('');
-
-  // Payout Breakdown Fullscreen Details Modal State
+  // Detail overlays
   const [selectedPayoutDetails, setSelectedPayoutDetails] = useState<any | null>(null);
+  const [selectedCommissionId, setSelectedCommissionId] = useState<string | null>(null);
 
-  // Commission rate edit state
-  const [editingRateId, setEditingRateId] = useState<string | null>(null);
-  const [newRateValue, setNewRateValue] = useState<number>(15);
-
-  // Copy feedback state
-  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const showToast = useCallback((message: string, type: 'success' | 'error' = 'success') => {
+    setToast({ message, type });
+    window.setTimeout(() => setToast(null), 3200);
+  }, []);
 
   const handleCopyText = (text: string, id: string) => {
     if (!text) return;
-    navigator.clipboard.writeText(text);
+    navigator.clipboard?.writeText(text);
     setCopiedId(id);
-    showToast('Copied to clipboard', 'success');
-    setTimeout(() => setCopiedId(null), 2000);
+    window.setTimeout(() => setCopiedId(null), 1800);
   };
 
-  const formatIDR = (val: number) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      maximumFractionDigits: 0,
-    }).format(val || 0);
-  };
-
-  const fetchAllData = async () => {
+  /* ---------------------------------------------------------------- */
+  /* Loading — same endpoints; partners fetched once and filtered here */
+  /* ---------------------------------------------------------------- */
+  const fetchAllData = useCallback(async () => {
     setLoading(true);
+    setLoadError(null);
     try {
       const [partnersRes, commsRes, payoutsRes, settingsRes] = await Promise.all([
-        fetch(`/api/affiliates/admin/partners?status=${partnerStatusFilter}`),
+        fetch('/api/affiliates/admin/partners?status=all'),
         fetch('/api/affiliates/admin/commissions?status=all'),
         fetch('/api/affiliates/admin/payouts'),
         fetch('/api/affiliates/admin/settings'),
       ]);
-
       const [pData, cData, pyData, sData] = await Promise.all([
         partnersRes.json(),
         commsRes.json(),
@@ -266,34 +158,30 @@ export default function AffiliateManagement() {
       if (pyData.success) setPayouts(pyData.payouts || []);
       if (sData.success && sData.settings) {
         setSettings(sData.settings);
-        setSettingsDirty(false);
+        setSavedSettings(sData.settings);
       }
-    } catch (err) {
+
+      const failed = [pData, cData, pyData, sData].find((d) => !d.success);
+      if (failed) setLoadError(failed.message || 'Some affiliate data could not be loaded.');
+    } catch (err: any) {
       console.error('Failed to load affiliate admin data:', err);
-      showToast('Error loading affiliate data', 'error');
+      setLoadError(err?.message || 'Network error while loading affiliate data.');
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchAllData();
-  }, [partnerStatusFilter]);
+  }, [fetchAllData]);
 
-  // Reset pagination on filter change
-  useEffect(() => {
-    setPartnerPage(1);
-  }, [searchQuery, partnerStatusFilter]);
+  useEffect(() => setPartnerPage(1), [searchQuery, partnerStatusFilter, partnerSort]);
+  useEffect(() => setCommPage(1), [commissionStatusFilter, globalPartnerFilter, commSearch]);
+  useEffect(() => setPayoutPage(1), [globalPayoutPartnerFilter, payoutSearch]);
 
-  useEffect(() => {
-    setCommPage(1);
-  }, [commissionStatusFilter, globalPartnerFilter]);
-
-  useEffect(() => {
-    setPayoutPage(1);
-  }, [globalPayoutPartnerFilter]);
-
-  // Update Partner Status
+  /* ---------------------------------------------------------------- */
+  /* Mutations — unchanged API contracts                               */
+  /* ---------------------------------------------------------------- */
   const handlePartnerStatus = async (id: string, newStatus: string) => {
     try {
       setActionLoading(true);
@@ -304,26 +192,24 @@ export default function AffiliateManagement() {
       });
       const data = await res.json();
       if (data.success) {
-        setPartners((prev) =>
-          prev.map((p) => (p.id === id ? { ...p, status: newStatus } : p))
-        );
-        if (selectedPartnerDetails && selectedPartnerDetails.id === id) {
-          setSelectedPartnerDetails((prev: any) => ({ ...prev, status: newStatus }));
-        }
-        showToast(`Partner status changed to ${newStatus}`, 'success');
+        setPartners((prev) => prev.map((p) => (p.id === id ? { ...p, status: newStatus } : p)));
+        showToast(`Partner set to ${newStatus}`);
       } else {
-        showToast(data.message || 'Failed to update partner status', 'error');
+        showToast(data.message || 'Could not update partner status', 'error');
       }
     } catch (e) {
       console.error(e);
-      showToast('Network error updating status', 'error');
+      showToast('Network error while updating status', 'error');
     } finally {
       setActionLoading(false);
     }
   };
 
-  // Update Partner Commission Rate
   const handleSaveCommissionRate = async (id: string) => {
+    if (!(newRateValue >= 0 && newRateValue <= 100)) {
+      showToast('Rate must be between 0 and 100', 'error');
+      return;
+    }
     try {
       setActionLoading(true);
       const res = await fetch('/api/affiliates/admin/partners', {
@@ -333,26 +219,20 @@ export default function AffiliateManagement() {
       });
       const data = await res.json();
       if (data.success) {
-        setPartners((prev) =>
-          prev.map((p) => (p.id === id ? { ...p, commission_rate_pct: newRateValue } : p))
-        );
-        if (selectedPartnerDetails && selectedPartnerDetails.id === id) {
-          setSelectedPartnerDetails((prev: any) => ({ ...prev, commission_rate_pct: newRateValue }));
-        }
+        setPartners((prev) => prev.map((p) => (p.id === id ? { ...p, commission_rate_pct: newRateValue } : p)));
         setEditingRateId(null);
-        showToast('Commission rate updated', 'success');
+        showToast('Commission rate updated');
       } else {
-        showToast(data.message || 'Failed to update commission rate', 'error');
+        showToast(data.message || 'Could not update rate', 'error');
       }
     } catch (e) {
       console.error(e);
-      showToast('Network error updating rate', 'error');
+      showToast('Network error while updating rate', 'error');
     } finally {
       setActionLoading(false);
     }
   };
 
-  // Update Partner Notes
   const handleSaveNotes = async (id: string) => {
     try {
       setActionLoading(true);
@@ -363,25 +243,19 @@ export default function AffiliateManagement() {
       });
       const data = await res.json();
       if (data.success) {
-        setPartners((prev) =>
-          prev.map((p) => (p.id === id ? { ...p, notes: partnerNotesInput } : p))
-        );
-        if (selectedPartnerDetails && selectedPartnerDetails.id === id) {
-          setSelectedPartnerDetails((prev: any) => ({ ...prev, notes: partnerNotesInput }));
-        }
-        showToast('Notes saved successfully', 'success');
+        setPartners((prev) => prev.map((p) => (p.id === id ? { ...p, notes: partnerNotesInput } : p)));
+        showToast('Notes saved');
       } else {
-        showToast(data.message || 'Failed to save notes', 'error');
+        showToast(data.message || 'Could not save notes', 'error');
       }
     } catch (e) {
       console.error(e);
-      showToast('Network error saving notes', 'error');
+      showToast('Network error while saving notes', 'error');
     } finally {
       setActionLoading(false);
     }
   };
 
-  // Update Commission Status / Verifications
   const handleUpdateCommission = async (id: string, updates: any) => {
     try {
       setActionLoading(true);
@@ -392,58 +266,81 @@ export default function AffiliateManagement() {
       });
       const data = await res.json();
       if (data.success) {
-        setCommissions((prev) =>
-          prev.map((c) => (c.id === id ? { ...c, ...updates } : c))
-        );
-        showToast('Commission updated', 'success');
+        setCommissions((prev) => prev.map((c) => (c.id === id ? { ...c, ...updates } : c)));
+        if (updates.status) showToast(`Commission ${updates.status}`);
       } else {
-        showToast(data.message || 'Failed to update commission', 'error');
+        showToast(data.message || 'Could not update commission', 'error');
       }
     } catch (e) {
       console.error(e);
-      showToast('Network error updating commission', 'error');
+      showToast('Network error while updating commission', 'error');
     } finally {
       setActionLoading(false);
     }
   };
 
-  // Record Payout
+  const closePayoutModal = useCallback(() => {
+    setShowPayoutModal(false);
+    setSelectedCommissionIds([]);
+    setPayoutSelectedDate(null);
+    setPayoutSubmitted(false);
+  }, []);
+
+  const payoutErrors = {
+    partner: !payoutForm.partner_id ? 'Select a partner.' : null,
+    amount: !(Number(payoutForm.amount) > 0) ? 'Enter an amount greater than 0.' : null,
+  };
+
   const handleRecordPayout = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!payoutForm.partner_id || !payoutForm.amount) return;
+    setPayoutSubmitted(true);
+    if (payoutErrors.partner || payoutErrors.amount) return;
 
     try {
       setActionLoading(true);
       const res = await fetch('/api/affiliates/admin/payouts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...payoutForm,
-          commission_ids: selectedCommissionIds,
-        }),
+        body: JSON.stringify({ ...payoutForm, commission_ids: selectedCommissionIds }),
       });
       const data = await res.json();
       if (data.success) {
-        setShowPayoutModal(false);
-        setPayoutForm({ partner_id: '', amount: '', payout_method: 'bank_transfer', notes: '' });
-        setSelectedCommissionIds([]);
-        setPayoutSelectedDate(null);
+        closePayoutModal();
+        setPayoutForm(EMPTY_PAYOUT_FORM);
         await fetchAllData();
-        showToast('Payout recorded successfully', 'success');
+        showToast(`Payout ${data.payout?.payout_reference || ''} recorded`.replace('  ', ' '));
       } else {
-        showToast(data.message || 'Failed to record payout', 'error');
+        showToast(data.message || 'Could not record payout', 'error');
       }
-    } catch (e) {
-      console.error(e);
-      showToast('Network error recording payout', 'error');
+    } catch (err) {
+      console.error(err);
+      showToast('Network error while recording payout', 'error');
     } finally {
       setActionLoading(false);
     }
   };
 
-  // Save Settings
+  const settingsErrors = {
+    rate:
+      !(Number(settings.default_commission_rate_pct) >= 1 && Number(settings.default_commission_rate_pct) <= 50)
+        ? 'Enter a rate between 1 and 50.'
+        : null,
+    days:
+      !(Number(settings.cookie_duration_days) >= 1 && Number(settings.cookie_duration_days) <= 180)
+        ? 'Enter between 1 and 180 days.'
+        : null,
+  };
+
+  const settingsDirty = useMemo(() => {
+    if (!savedSettings) return false;
+    return ['default_commission_rate_pct', 'cookie_duration_days', 'auto_approve_partners', 'is_program_active'].some(
+      (k) => String(settings[k]) !== String(savedSettings[k])
+    );
+  }, [settings, savedSettings]);
+
   const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (settingsErrors.rate || settingsErrors.days) return;
     try {
       setActionLoading(true);
       const res = await fetch('/api/affiliates/admin/settings', {
@@ -453,192 +350,159 @@ export default function AffiliateManagement() {
       });
       const data = await res.json();
       if (data.success) {
-        setSettingsDirty(false);
-        showToast('Settings saved successfully', 'success');
+        setSavedSettings(settings);
+        showToast('Settings saved');
       } else {
-        showToast(data.message || 'Failed to save settings', 'error');
+        showToast(data.message || 'Could not save settings', 'error');
       }
-    } catch (e) {
-      console.error(e);
-      showToast('Network error saving settings', 'error');
+    } catch (err) {
+      console.error(err);
+      showToast('Network error while saving settings', 'error');
     } finally {
       setActionLoading(false);
     }
   };
 
-  // Helper: compute independent partner metrics
-  const getPartnerMetrics = (p: any) => {
-    const pComms = commissions.filter(
-      (c) => c.partner_id === p.id || c.partner_code === p.partner_code
-    );
-    const pPayouts = payouts.filter(
-      (py) => py.partner_id === p.id || py.partner_code === p.partner_code
-    );
+  /* ---------------------------------------------------------------- */
+  /* Derived metrics (same calculations as before)                     */
+  /* ---------------------------------------------------------------- */
+  const getPartnerMetrics = useCallback(
+    (p: any) => {
+      const pComms = commissions.filter((c) => c.partner_id === p.id || c.partner_code === p.partner_code);
+      const pPayouts = payouts.filter((py) => py.partner_id === p.id || py.partner_code === p.partner_code);
+      const sum = (list: any[], key: string) => list.reduce((s, x) => s + Number(x[key] || 0), 0);
 
-    const totalEarned = pComms
-      .filter((c) => c.status !== 'declined' && c.status !== 'cancelled')
-      .reduce((sum, c) => sum + Number(c.commission_amount || 0), 0);
+      const totalEarned = sum(pComms.filter((c) => c.status !== 'declined' && c.status !== 'cancelled'), 'commission_amount');
+      const approvedUnpaid = sum(pComms.filter((c) => c.status === 'approved'), 'commission_amount');
+      const pending = sum(pComms.filter((c) => c.status === 'pending'), 'commission_amount');
+      const paidComms = sum(pComms.filter((c) => c.status === 'paid'), 'commission_amount');
+      const totalPaidOut = sum(pPayouts.filter((py) => py.status === 'completed' || py.status === 'processing'), 'amount');
 
-    const approvedUnpaid = pComms
-      .filter((c) => c.status === 'approved')
-      .reduce((sum, c) => sum + Number(c.commission_amount || 0), 0);
+      const sorted = [...pComms].sort((a, b) => (b.booking_date || b.created_at || '').localeCompare(a.booking_date || a.created_at || ''));
+      const pendingCount = pComms.filter((c) => c.status === 'pending').length;
 
-    const pending = pComms
-      .filter((c) => c.status === 'pending')
-      .reduce((sum, c) => sum + Number(c.commission_amount || 0), 0);
+      return {
+        commissions: pComms,
+        payouts: pPayouts,
+        totalEarned,
+        approvedUnpaid,
+        pending,
+        paidComms,
+        totalPaidOut,
+        bookingsCount: pComms.length,
+        pendingCount,
+        latestBooking: sorted[0] || null,
+      };
+    },
+    [commissions, payouts]
+  );
 
-    const paidComms = pComms
-      .filter((c) => c.status === 'paid')
-      .reduce((sum, c) => sum + Number(c.commission_amount || 0), 0);
+  const metricsById = useMemo(() => {
+    const map: Record<string, ReturnType<typeof getPartnerMetrics>> = {};
+    for (const p of partners) map[p.id] = getPartnerMetrics(p);
+    return map;
+  }, [partners, getPartnerMetrics]);
 
-    const totalPaidOut = pPayouts
+  const partnerByCode = useMemo(() => {
+    const map: Record<string, any> = {};
+    for (const p of partners) {
+      map[p.id] = p;
+      if (p.partner_code) map[p.partner_code] = p;
+    }
+    return map;
+  }, [partners]);
+
+  const findPartner = (code?: string, id?: string) => (id && partnerByCode[id]) || (code && partnerByCode[code]) || null;
+
+  const statusCounts = useMemo(() => {
+    const counts: Record<string, number> = { all: partners.length, pending: 0, active: 0, suspended: 0, rejected: 0 };
+    for (const p of partners) counts[p.status] = (counts[p.status] || 0) + 1;
+    return counts;
+  }, [partners]);
+
+  const summary = useMemo(() => {
+    const readyToPay = commissions.filter((c) => c.status === 'approved').reduce((s, c) => s + Number(c.commission_amount || 0), 0);
+    const paidOut = payouts
       .filter((py) => py.status === 'completed' || py.status === 'processing')
-      .reduce((sum, py) => sum + Number(py.amount || 0), 0);
+      .reduce((s, py) => s + Number(py.amount || 0), 0);
+    const pendingReview = commissions.filter((c) => c.status === 'pending').length;
+    return { readyToPay, paidOut, pendingReview };
+  }, [commissions, payouts]);
 
-    const bookingsCount = pComms.length;
-
-    const sorted = [...pComms].sort((a, b) => {
-      const dateA = a.booking_date || a.created_at || '';
-      const dateB = b.booking_date || b.created_at || '';
-      return dateB.localeCompare(dateA);
+  // Smart ranking preserved as the default "Recent activity" sort
+  const filteredPartners = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    const list = partners.filter((p) => {
+      if (partnerStatusFilter !== 'all' && p.status !== partnerStatusFilter) return false;
+      if (!q) return true;
+      return [p.partner_code, p.first_name, p.last_name, p.business_name, p.email].some((v) => v?.toLowerCase().includes(q));
     });
-    const latestBooking = sorted[0] || null;
-    const pendingCount = pComms.filter((c) => c.status === 'pending').length;
 
-    return {
-      commissions: pComms,
-      payouts: pPayouts,
-      totalEarned,
-      approvedUnpaid,
-      pending,
-      paidComms,
-      totalPaidOut,
-      bookingsCount,
-      pendingCount,
-      hasNewBooking: pendingCount > 0,
-      latestBooking,
-    };
-  };
+    return [...list].sort((a, b) => {
+      const mA = metricsById[a.id];
+      const mB = metricsById[b.id];
+      if (partnerSort === 'name') return fullName(a).localeCompare(fullName(b));
+      if (partnerSort === 'commission') return mB.totalEarned - mA.totalEarned;
+      if (partnerSort === 'newest') return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
 
-  // Open Details Modal on specific tab
-  const openPartnerModal = (partner: any, tab: 'overview' | 'calendar' | 'commissions' | 'payouts' = 'overview') => {
-    setSelectedPartnerDetails(partner);
-    setPartnerActiveTab(tab);
-    setPartnerSelectedDate(null);
-    setPartnerNotesInput(partner.notes || '');
-  };
+      if (mA.pendingCount !== mB.pendingCount && (mA.pendingCount > 0 || mB.pendingCount > 0)) return mB.pendingCount - mA.pendingCount;
+      const hasA = mA.bookingsCount > 0 ? 1 : 0;
+      const hasB = mB.bookingsCount > 0 ? 1 : 0;
+      if (hasA !== hasB) return hasB - hasA;
+      const dA = mA.latestBooking ? mA.latestBooking.booking_date || mA.latestBooking.created_at || '' : '';
+      const dB = mB.latestBooking ? mB.latestBooking.booking_date || mB.latestBooking.created_at || '' : '';
+      if (dA && dB) {
+        const cmp = dB.localeCompare(dA);
+        if (cmp !== 0) return cmp;
+      } else if (dA) return -1;
+      else if (dB) return 1;
+      if (mA.bookingsCount !== mB.bookingsCount) return mB.bookingsCount - mA.bookingsCount;
+      return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+    });
+  }, [partners, searchQuery, partnerStatusFilter, partnerSort, metricsById]);
 
-  // Payout Modal Selected Partner & Commissions
-  const payoutSelectedPartner = useMemo(() => {
-    return partners.find((item) => item.id === payoutForm.partner_id) || null;
-  }, [payoutForm.partner_id, partners]);
+  const pagedPartners = filteredPartners.slice((partnerPage - 1) * PAGE_SIZE, partnerPage * PAGE_SIZE);
 
-  const payoutPartnerCommissions = useMemo(() => {
-    if (!payoutForm.partner_id) return [];
-    const p = payoutSelectedPartner;
-    return commissions.filter(
-      (c) => c.partner_id === payoutForm.partner_id || c.partner_code === p?.partner_code
-    );
-  }, [payoutForm.partner_id, payoutSelectedPartner, commissions]);
+  const applications = useMemo(
+    () => partners.filter((p) => p.status === 'pending').sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()),
+    [partners]
+  );
 
-  const payoutApprovedCommissions = useMemo(() => {
-    return payoutPartnerCommissions.filter((c) => c.status === 'approved');
-  }, [payoutPartnerCommissions]);
+  const commissionCounts = useMemo(() => {
+    const counts: Record<string, number> = { all: commissions.length, pending: 0, approved: 0, paid: 0, declined: 0 };
+    for (const c of commissions) counts[c.status] = (counts[c.status] || 0) + 1;
+    return counts;
+  }, [commissions]);
 
-  const payoutPaidCommissions = useMemo(() => {
-    return payoutPartnerCommissions.filter((c) => c.status === 'paid');
-  }, [payoutPartnerCommissions]);
+  const filteredGlobalCommissions = useMemo(() => {
+    const q = commSearch.trim().toLowerCase();
+    return commissions.filter((c) => {
+      if (commissionStatusFilter !== 'all' && c.status !== commissionStatusFilter) return false;
+      if (globalPartnerFilter !== 'all' && c.partner_code !== globalPartnerFilter) return false;
+      if (!q) return true;
+      return [c.booking_id, c.guest_name, c.partner_code, c.treatment_name].some((v) => String(v || '').toLowerCase().includes(q));
+    });
+  }, [commissions, commissionStatusFilter, globalPartnerFilter, commSearch]);
 
-  // Group approved commissions by date (YYYY-MM-DD)
-  const payoutApprovedByDate = useMemo(() => {
-    const map: Record<string, any[]> = {};
-    for (const c of payoutApprovedCommissions) {
-      const d = c.booking_date || (c.created_at ? c.created_at.split('T')[0] : '');
-      if (!d) continue;
-      const key = d.includes('T') ? d.split('T')[0] : d;
-      if (!map[key]) map[key] = [];
-      map[key].push(c);
-    }
+  const pagedCommissions = filteredGlobalCommissions.slice((commPage - 1) * PAGE_SIZE, commPage * PAGE_SIZE);
+
+  const filteredGlobalPayouts = useMemo(() => {
+    const q = payoutSearch.trim().toLowerCase();
+    return payouts.filter((py) => {
+      if (globalPayoutPartnerFilter !== 'all' && py.partner_code !== globalPayoutPartnerFilter) return false;
+      if (!q) return true;
+      return [py.payout_reference, py.partner_code, py.notes].some((v) => String(v || '').toLowerCase().includes(q));
+    });
+  }, [payouts, globalPayoutPartnerFilter, payoutSearch]);
+
+  const pagedPayouts = filteredGlobalPayouts.slice((payoutPage - 1) * PAGE_SIZE, payoutPage * PAGE_SIZE);
+
+  const payoutById = useMemo(() => {
+    const map: Record<string, any> = {};
+    for (const py of payouts) map[py.id] = py;
     return map;
-  }, [payoutApprovedCommissions]);
+  }, [payouts]);
 
-  // Group all partner commissions by date for calendar indicator dots
-  const payoutAllCommsByDate = useMemo(() => {
-    const map: Record<string, any[]> = {};
-    for (const c of payoutPartnerCommissions) {
-      const d = c.booking_date || (c.created_at ? c.created_at.split('T')[0] : '');
-      if (!d) continue;
-      const key = d.includes('T') ? d.split('T')[0] : d;
-      if (!map[key]) map[key] = [];
-      map[key].push(c);
-    }
-    return map;
-  }, [payoutPartnerCommissions]);
-
-  const payoutCalendarDaysInMonth = new Date(payoutCalendarYear, payoutCalendarMonth + 1, 0).getDate();
-  const payoutCalendarFirstDayOfWeek = new Date(payoutCalendarYear, payoutCalendarMonth, 1).getDay();
-
-  const handleSelectPayoutPartner = (partnerId: string) => {
-    const p = partners.find((item) => item.id === partnerId);
-    const pComms = commissions.filter(
-      (c) => c.partner_id === partnerId || c.partner_code === p?.partner_code
-    );
-    const approved = pComms.filter((c) => c.status === 'approved');
-    const approvedIds = approved.map((c) => c.id);
-    const total = approved.reduce((sum, c) => sum + Number(c.commission_amount || 0), 0);
-
-    if (approved.length > 0) {
-      const firstDate = approved[0].booking_date || approved[0].created_at;
-      if (firstDate) {
-        const d = new Date(firstDate);
-        if (!isNaN(d.getTime())) {
-          setPayoutCalendarYear(d.getFullYear());
-          setPayoutCalendarMonth(d.getMonth());
-        }
-      }
-    }
-
-    setSelectedCommissionIds(approvedIds);
-    setPayoutSelectedDate(null);
-    setPayoutForm({
-      partner_id: partnerId,
-      amount: total > 0 ? String(total) : '',
-      payout_method: p?.payout_method || 'bank_transfer',
-      notes: p?.business_name ? `Payout for ${p.business_name}` : `Payout for ${p?.partner_code || ''}`,
-    });
-  };
-
-  const toggleCommissionSelection = (commId: string) => {
-    setSelectedCommissionIds((prev) => {
-      const isSelected = prev.includes(commId);
-      const next = isSelected ? prev.filter((id) => id !== commId) : [...prev, commId];
-      const nextTotal = payoutApprovedCommissions
-        .filter((c) => next.includes(c.id))
-        .reduce((sum, c) => sum + Number(c.commission_amount || 0), 0);
-      setPayoutForm((f) => ({ ...f, amount: String(nextTotal) }));
-      return next;
-    });
-  };
-
-  const selectAllApproved = () => {
-    const allIds = payoutApprovedCommissions.map((c) => c.id);
-    setSelectedCommissionIds(allIds);
-    const total = payoutApprovedCommissions.reduce((sum, c) => sum + Number(c.commission_amount || 0), 0);
-    setPayoutForm((f) => ({ ...f, amount: String(total) }));
-  };
-
-  const deselectAllApproved = () => {
-    setSelectedCommissionIds([]);
-    setPayoutForm((f) => ({ ...f, amount: '0' }));
-  };
-
-  // Quick Open Payout Modal pre-filled for partner
-  const openQuickPayoutForPartner = (partner: any) => {
-    handleSelectPayoutPartner(partner.id);
-    setShowPayoutModal(true);
-  };
-
-  // Helper to get bookings for a payout
   const getPayoutBookings = (payout: any) => {
     if (!payout) return [];
     let items = commissions.filter((c) => c.payout_id === payout.id);
@@ -650,2690 +514,2038 @@ export default function AffiliateManagement() {
     return items;
   };
 
-  // Smart Partner Ranking Algorithm: Partners who get bookings & new bookings are placed at the top!
-  const filteredPartners = useMemo(() => {
-    const list = partners.filter((p) => {
-      const q = searchQuery.toLowerCase();
-      return (
-        p.partner_code?.toLowerCase().includes(q) ||
-        p.first_name?.toLowerCase().includes(q) ||
-        p.last_name?.toLowerCase().includes(q) ||
-        p.business_name?.toLowerCase().includes(q) ||
-        p.email?.toLowerCase().includes(q)
-      );
-    });
+  /* ---------------------------------------------------------------- */
+  /* Partner workspace                                                 */
+  /* ---------------------------------------------------------------- */
+  const selectedPartner = selectedPartnerId ? partners.find((p) => p.id === selectedPartnerId) || null : null;
+  const activePartnerMetrics = selectedPartner ? metricsById[selectedPartner.id] : null;
 
-    return [...list].sort((a, b) => {
-      const mA = getPartnerMetrics(a);
-      const mB = getPartnerMetrics(b);
+  const openPartnerModal = (partner: any, tab: PartnerTab = 'overview') => {
+    setSelectedPartnerId(partner.id);
+    setPartnerActiveTab(tab);
+    setPartnerSelectedDate(null);
+    setPartnerCommFilter('all');
+    setEditingRateId(null);
+    setPartnerNotesInput(partner.notes || '');
+  };
 
-      // 1. Partners with NEW/pending bookings come first
-      const newA = mA.pendingCount || 0;
-      const newB = mB.pendingCount || 0;
-      if (newA > 0 || newB > 0) {
-        if (newA !== newB) return newB - newA;
-      }
-
-      // 2. Partners with bookings come before partners with 0 bookings
-      const hasBookingsA = mA.bookingsCount > 0 ? 1 : 0;
-      const hasBookingsB = mB.bookingsCount > 0 ? 1 : 0;
-      if (hasBookingsA !== hasBookingsB) return hasBookingsB - hasBookingsA;
-
-      // 3. Most recent booking first
-      const dateA = mA.latestBooking ? (mA.latestBooking.booking_date || mA.latestBooking.created_at || '') : '';
-      const dateB = mB.latestBooking ? (mB.latestBooking.booking_date || mB.latestBooking.created_at || '') : '';
-      if (dateA || dateB) {
-        if (dateA && dateB) {
-          const cmp = dateB.localeCompare(dateA);
-          if (cmp !== 0) return cmp;
-        } else if (dateA) return -1;
-        else if (dateB) return 1;
-      }
-
-      // 4. Highest booking count
-      if (mA.bookingsCount !== mB.bookingsCount) return mB.bookingsCount - mA.bookingsCount;
-
-      // 5. Default created_at desc
-      return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
-    });
-  }, [partners, searchQuery, commissions, payouts]);
-
-  // Paginated slices
-  const paginatedPartners = useMemo(() => {
-    const start = (partnerPage - 1) * PAGE_SIZE;
-    return filteredPartners.slice(start, start + PAGE_SIZE);
-  }, [filteredPartners, partnerPage]);
-
-  const totalPartnerPages = Math.ceil(filteredPartners.length / PAGE_SIZE) || 1;
-
-  // Global commissions filtered for tab 2
-  const filteredGlobalCommissions = commissions.filter((c) => {
-    if (commissionStatusFilter !== 'all' && c.status !== commissionStatusFilter) return false;
-    if (globalPartnerFilter !== 'all' && c.partner_code !== globalPartnerFilter) return false;
-    return true;
-  });
-
-  const paginatedCommissions = useMemo(() => {
-    const start = (commPage - 1) * PAGE_SIZE;
-    return filteredGlobalCommissions.slice(start, start + PAGE_SIZE);
-  }, [filteredGlobalCommissions, commPage]);
-
-  const totalCommPages = Math.ceil(filteredGlobalCommissions.length / PAGE_SIZE) || 1;
-
-  // Global payouts filtered for tab 3
-  const filteredGlobalPayouts = payouts.filter((py) => {
-    if (globalPayoutPartnerFilter !== 'all' && py.partner_code !== globalPayoutPartnerFilter) return false;
-    return true;
-  });
-
-  const paginatedPayouts = useMemo(() => {
-    const start = (payoutPage - 1) * PAGE_SIZE;
-    return filteredGlobalPayouts.slice(start, start + PAGE_SIZE);
-  }, [filteredGlobalPayouts, payoutPage]);
-
-  const totalPayoutPages = Math.ceil(filteredGlobalPayouts.length / PAGE_SIZE) || 1;
-
-  // Platform Summary Metrics (for compact KPI strip)
-  const platformSummary = useMemo(() => {
-    const activePartners = partners.filter((p) => p.status === 'active').length;
-    const pendingPartners = partners.filter((p) => p.status === 'pending').length;
-    const totalBookings = commissions.length;
-    const unpaidCommissions = commissions
-      .filter((c) => c.status === 'approved')
-      .reduce((sum, c) => sum + Number(c.commission_amount || 0), 0);
-    const totalPaidOut = payouts
-      .filter((py) => py.status === 'completed' || !py.status)
-      .reduce((sum, py) => sum + Number(py.amount || 0), 0);
-
-    return {
-      activePartners,
-      pendingPartners,
-      totalBookings,
-      unpaidCommissions,
-      totalPaidOut,
-    };
-  }, [partners, commissions, payouts]);
-
-  // Partner metrics for currently selected modal partner
-  const activePartnerMetrics = selectedPartnerDetails ? getPartnerMetrics(selectedPartnerDetails) : null;
-
-  // Calendar calculations for selected partner modal
   const partnerMonthBookings = useMemo(() => {
     if (!activePartnerMetrics) return [];
     const prefix = `${partnerCalendarYear}-${String(partnerCalendarMonth + 1).padStart(2, '0')}`;
-    return activePartnerMetrics.commissions.filter((c) => {
-      const d = c.booking_date || (c.created_at ? c.created_at.split('T')[0] : '');
-      return d.startsWith(prefix);
-    });
+    return activePartnerMetrics.commissions.filter((c) => commDateKey(c).startsWith(prefix));
   }, [activePartnerMetrics, partnerCalendarYear, partnerCalendarMonth]);
 
   const partnerBookingsByDate = useMemo(() => {
     const map: Record<string, any[]> = {};
     if (!activePartnerMetrics) return map;
     for (const c of activePartnerMetrics.commissions) {
-      const d = c.booking_date || (c.created_at ? c.created_at.split('T')[0] : '');
-      if (!d) continue;
-      const key = d.includes('T') ? d.split('T')[0] : d;
-      if (!map[key]) map[key] = [];
-      map[key].push(c);
+      const key = commDateKey(c);
+      if (!key) continue;
+      (map[key] ||= []).push(c);
     }
     return map;
   }, [activePartnerMetrics]);
 
+  const partnerHistory = useMemo(() => {
+    if (!selectedPartner || !activePartnerMetrics) return [];
+    const events: { date: string; title: string; detail?: string; status?: string }[] = [
+      { date: selectedPartner.created_at, title: 'Joined program', detail: `Referral code ${selectedPartner.partner_code}` },
+    ];
+    for (const c of activePartnerMetrics.commissions) {
+      events.push({
+        date: c.created_at || c.booking_date,
+        title: `Booking #${c.booking_id} referred`,
+        detail: `${c.guest_name || 'Guest'} · ${formatIDR(c.commission_amount)} commission`,
+        status: c.status,
+      });
+      if (c.approved_at) events.push({ date: c.approved_at, title: `Commission approved`, detail: `Booking #${c.booking_id}` });
+    }
+    for (const py of activePartnerMetrics.payouts) {
+      events.push({
+        date: py.created_at,
+        title: 'Payout recorded',
+        detail: `${py.payout_reference} · ${formatIDR(py.amount)}`,
+        status: py.status || 'completed',
+      });
+    }
+    return events
+      .filter((e) => e.date)
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [selectedPartner, activePartnerMetrics]);
+
+  const shiftMonth = (
+    year: number,
+    month: number,
+    delta: number,
+    setY: (fn: (y: number) => number) => void,
+    setM: (m: number) => void
+  ) => {
+    const next = month + delta;
+    if (next < 0) {
+      setM(11);
+      setY((y) => y - 1);
+    } else if (next > 11) {
+      setM(0);
+      setY((y) => y + 1);
+    } else setM(next);
+  };
+
+  /* ---------------------------------------------------------------- */
+  /* Record payout helpers (unchanged selection logic)                 */
+  /* ---------------------------------------------------------------- */
+  const payoutSelectedPartner = useMemo(() => partners.find((p) => p.id === payoutForm.partner_id) || null, [payoutForm.partner_id, partners]);
+
+  const payoutPartnerCommissions = useMemo(() => {
+    if (!payoutForm.partner_id) return [];
+    return commissions.filter((c) => c.partner_id === payoutForm.partner_id || c.partner_code === payoutSelectedPartner?.partner_code);
+  }, [payoutForm.partner_id, payoutSelectedPartner, commissions]);
+
+  const payoutApprovedCommissions = useMemo(() => payoutPartnerCommissions.filter((c) => c.status === 'approved'), [payoutPartnerCommissions]);
+  const payoutPaidCommissions = useMemo(() => payoutPartnerCommissions.filter((c) => c.status === 'paid'), [payoutPartnerCommissions]);
+
+  const payoutApprovedByDate = useMemo(() => {
+    const map: Record<string, any[]> = {};
+    for (const c of payoutApprovedCommissions) {
+      const key = commDateKey(c);
+      if (key) (map[key] ||= []).push(c);
+    }
+    return map;
+  }, [payoutApprovedCommissions]);
+
+  const payoutPaidByDate = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const c of payoutPaidCommissions) {
+      const key = commDateKey(c);
+      if (key) map[key] = (map[key] || 0) + 1;
+    }
+    return map;
+  }, [payoutPaidCommissions]);
+
+  const selectedPayoutSum = payoutApprovedCommissions
+    .filter((c) => selectedCommissionIds.includes(c.id))
+    .reduce((s, c) => s + Number(c.commission_amount || 0), 0);
+
+  const handleSelectPayoutPartner = (partnerId: string) => {
+    const p = partners.find((item) => item.id === partnerId);
+    const approved = commissions.filter((c) => (c.partner_id === partnerId || c.partner_code === p?.partner_code) && c.status === 'approved');
+    const total = approved.reduce((s, c) => s + Number(c.commission_amount || 0), 0);
+
+    if (approved.length > 0) {
+      const d = new Date(approved[0].booking_date || approved[0].created_at);
+      if (!isNaN(d.getTime())) {
+        setPayoutCalendarYear(d.getFullYear());
+        setPayoutCalendarMonth(d.getMonth());
+      }
+    }
+
+    setSelectedCommissionIds(approved.map((c) => c.id));
+    setPayoutSelectedDate(null);
+    setPayoutForm({
+      partner_id: partnerId,
+      amount: total > 0 ? String(total) : '',
+      payout_method: p?.payout_method || 'bank_transfer',
+      notes: p ? (p.business_name ? `Payout for ${p.business_name}` : `Payout for ${p.partner_code || ''}`) : '',
+    });
+  };
+
+  const toggleCommissionSelection = (commId: string) => {
+    setSelectedCommissionIds((prev) => {
+      const next = prev.includes(commId) ? prev.filter((id) => id !== commId) : [...prev, commId];
+      const nextTotal = payoutApprovedCommissions.filter((c) => next.includes(c.id)).reduce((s, c) => s + Number(c.commission_amount || 0), 0);
+      setPayoutForm((f) => ({ ...f, amount: String(nextTotal) }));
+      return next;
+    });
+  };
+
+  const selectAllApproved = () => {
+    setSelectedCommissionIds(payoutApprovedCommissions.map((c) => c.id));
+    setPayoutForm((f) => ({ ...f, amount: String(payoutApprovedCommissions.reduce((s, c) => s + Number(c.commission_amount || 0), 0)) }));
+  };
+
+  const deselectAllApproved = () => {
+    setSelectedCommissionIds([]);
+    setPayoutForm((f) => ({ ...f, amount: '0' }));
+  };
+
+  const openNewPayout = () => {
+    setPayoutForm(EMPTY_PAYOUT_FORM);
+    setSelectedCommissionIds([]);
+    setPayoutSubmitted(false);
+    setShowPayoutModal(true);
+  };
+
+  const openQuickPayoutForPartner = (partner: any) => {
+    setPayoutSubmitted(false);
+    handleSelectPayoutPartner(partner.id);
+    setShowPayoutModal(true);
+  };
+
+  const selectedCommission = selectedCommissionId ? commissions.find((c) => c.id === selectedCommissionId) || null : null;
+
+  /* ---------------------------------------------------------------- */
+  /* Small render helpers                                              */
+  /* ---------------------------------------------------------------- */
+  const askStatus = (p: any, verb: 'approve' | 'reject' | 'suspend' | 'reactivate') =>
+    setConfirmState({
+      kind: 'partner-status',
+      id: p.id,
+      name: fullName(p),
+      verb,
+      next: verb === 'suspend' ? 'suspended' : verb === 'reject' ? 'rejected' : 'active',
+    });
+
+  const renderStatusActions = (p: any, size: string = btn.sm) => (
+    <>
+      {p.status === 'pending' && (
+        <>
+          <button type="button" disabled={actionLoading} onClick={() => askStatus(p, 'reject')} className={cx(btn.base, btn.secondary, size)}>
+            Reject
+          </button>
+          <button type="button" disabled={actionLoading} onClick={() => askStatus(p, 'approve')} className={cx(btn.base, btn.primary, size)}>
+            Approve
+          </button>
+        </>
+      )}
+      {p.status === 'active' && (
+        <button type="button" disabled={actionLoading} onClick={() => askStatus(p, 'suspend')} className={cx(btn.base, btn.secondary, size)}>
+          Suspend
+        </button>
+      )}
+      {(p.status === 'suspended' || p.status === 'rejected') && (
+        <button type="button" disabled={actionLoading} onClick={() => askStatus(p, 'reactivate')} className={cx(btn.base, btn.primary, size)}>
+          Reactivate
+        </button>
+      )}
+    </>
+  );
+
+  const PartnerLink = ({ code, id }: { code?: string; id?: string }) => {
+    const p = findPartner(code, id);
+    if (!p) return <span className="font-mono text-xs text-[#171717]">{code || '—'}</span>;
+    return (
+      <button
+        type="button"
+        onClick={() => openPartnerModal(p)}
+        className="group inline-flex flex-col items-start text-left min-w-0 max-w-[180px]"
+        title={`${fullName(p)} · ${p.partner_code}`}
+      >
+        <span className="text-[13px] font-medium text-[#171717] group-hover:underline truncate max-w-full">{fullName(p)}</span>
+        <span className="font-mono text-[11px] text-[#737373] truncate max-w-full">{p.partner_code}</span>
+      </button>
+    );
+  };
+
+  const CopyBtn = ({ text, id, label }: { text: string; id: string; label: string }) => (
+    <button
+      type="button"
+      aria-label={label}
+      title={label}
+      onClick={() => handleCopyText(text, id)}
+      className="inline-flex items-center justify-center h-7 w-7 rounded-md text-[#A3A3A3] hover:text-black shrink-0"
+    >
+      {copiedId === id ? <Check size={13} className="text-emerald-600" /> : <Copy size={13} />}
+    </button>
+  );
+
+  const VerificationChecks = ({ c, compact }: { c: any; compact?: boolean }) => (
+    <div className={cx('flex', compact ? 'flex-col gap-1' : 'flex-wrap gap-4')}>
+      <label className="inline-flex items-center gap-2 cursor-pointer text-xs text-[#171717]">
+        <input
+          type="checkbox"
+          checked={!!c.payment_verified}
+          disabled={actionLoading}
+          onChange={(e) => handleUpdateCommission(c.id, { payment_verified: e.target.checked })}
+          className="w-4 h-4 rounded border-[#D4D4D4] accent-black cursor-pointer"
+        />
+        Payment received
+      </label>
+      <label className="inline-flex items-center gap-2 cursor-pointer text-xs text-[#171717]">
+        <input
+          type="checkbox"
+          checked={!!c.service_completed}
+          disabled={actionLoading}
+          onChange={(e) => handleUpdateCommission(c.id, { service_completed: e.target.checked })}
+          className="w-4 h-4 rounded border-[#D4D4D4] accent-black cursor-pointer"
+        />
+        Service done
+      </label>
+    </div>
+  );
+
+  const CommissionActions = ({ c, size = btn.xs }: { c: any; size?: string }) =>
+    c.status === 'pending' ? (
+      <div className="flex items-center justify-end gap-1.5">
+        <button
+          type="button"
+          disabled={actionLoading}
+          onClick={() => setConfirmState({ kind: 'decline-commission', id: c.id, ref: c.booking_id })}
+          className={cx(btn.base, btn.secondary, size)}
+        >
+          Decline
+        </button>
+        <button
+          type="button"
+          disabled={actionLoading}
+          onClick={() => handleUpdateCommission(c.id, { status: 'approved' })}
+          className={cx(btn.base, btn.primary, size)}
+        >
+          Approve
+        </button>
+      </div>
+    ) : null;
+
+  const tableShell = (children: React.ReactNode) => (
+    <div className="bg-white border border-[#E5E5E5] rounded-xl overflow-hidden">{children}</div>
+  );
+
+  /* ---------------------------------------------------------------- */
+  /* Render                                                            */
+  /* ---------------------------------------------------------------- */
+  const subTabs = [
+    { id: 'partners', label: 'Partners', count: partners.length },
+    { id: 'applications', label: 'Applications', count: applications.length, alert: applications.length },
+    { id: 'commissions', label: 'Commissions', count: commissions.length, alert: summary.pendingReview },
+    { id: 'payouts', label: 'Payouts', count: payouts.length },
+    { id: 'settings', label: 'Settings' },
+  ];
+
   const calendarDaysInMonth = new Date(partnerCalendarYear, partnerCalendarMonth + 1, 0).getDate();
   const calendarFirstDayOfWeek = new Date(partnerCalendarYear, partnerCalendarMonth, 1).getDay();
+  const payoutCalendarDaysInMonth = new Date(payoutCalendarYear, payoutCalendarMonth + 1, 0).getDate();
+  const payoutCalendarFirstDayOfWeek = new Date(payoutCalendarYear, payoutCalendarMonth, 1).getDay();
+  const todayKey = localTodayKey();
 
   return (
-    <div className="space-y-6 text-neutral-900 bg-white min-h-[750px]">
-      
-      {/* 1. PAGE HEADER: Concise Title, Short Subtext & Primary Action */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
+    <div className="bg-white text-[#171717] space-y-6">
+      {/* Page header */}
+      <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
         <div>
-          <div className="flex items-center gap-2.5">
-            <h1 className="text-2xl font-bold tracking-tight text-neutral-900">Affiliates</h1>
-            <span className="text-[11px] font-medium px-2 py-0.5 rounded-md bg-neutral-100 text-neutral-600 border border-neutral-200">
-              Therapick
-            </span>
-          </div>
-          <p className="text-xs text-neutral-500 mt-0.5">
-            Manage partners, commission reconciliations, and payout settlements.
-          </p>
+          <h1 className="text-2xl font-semibold tracking-tight text-black">Affiliates</h1>
+          <p className="text-[13px] text-[#737373] mt-0.5">Therapick partner program</p>
         </div>
+        <div className="flex items-center gap-2">
+          <button
+            id="aff-refresh"
+            type="button"
+            onClick={fetchAllData}
+            disabled={loading}
+            aria-label="Refresh data"
+            className={cx(btn.base, btn.secondary, btn.icon)}
+          >
+            <RefreshCw size={15} className={loading ? 'animate-spin' : ''} />
+          </button>
+          <button id="aff-record-payout" type="button" onClick={openNewPayout} className={cx(btn.base, btn.primary, btn.md)}>
+            <Plus size={15} />
+            Record payout
+          </button>
+        </div>
+      </header>
 
-        <div className="flex items-center gap-2 self-start sm:self-auto">
-          {subTab === 'payouts' ? (
-            <button
-              type="button"
-              onClick={() => {
-                setPayoutForm({ partner_id: '', amount: '', payout_method: 'bank_transfer', notes: '' });
-                setShowPayoutModal(true);
-              }}
-              className="h-8 px-3.5 bg-black text-white rounded-lg text-xs font-medium hover:bg-neutral-800 transition-colors inline-flex items-center gap-1.5 shadow-xs"
-            >
-              <Plus size={13} />
-              <span>Record Payout</span>
-            </button>
-          ) : subTab === 'partners' ? (
-            <button
-              type="button"
-              onClick={() => {
-                setPayoutForm({ partner_id: '', amount: '', payout_method: 'bank_transfer', notes: '' });
-                setShowPayoutModal(true);
-              }}
-              className="h-8 px-3 bg-white border border-neutral-200 text-neutral-800 rounded-lg text-xs font-medium hover:bg-neutral-50 transition-colors inline-flex items-center gap-1.5 shadow-2xs"
-            >
-              <Plus size={13} />
-              <span>Record Payout</span>
-            </button>
-          ) : null}
-        </div>
+      {/* Summary metrics */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 border border-[#E5E5E5] rounded-xl divide-[#E5E5E5] [&>*]:border-[#E5E5E5] overflow-hidden">
+        {[
+          { label: 'Active partners', value: String(statusCounts.active || 0), hint: `${partners.length} total` },
+          { label: 'Applications', value: String(applications.length), hint: applications.length ? 'Awaiting review' : 'Nothing to review' },
+          { label: 'Ready to pay', value: formatIDR(summary.readyToPay), hint: 'Approved, unpaid' },
+          { label: 'Paid out', value: formatIDR(summary.paidOut), hint: `${payouts.length} payouts` },
+        ].map((m, i) => (
+          <div
+            key={m.label}
+            className={cx('p-4 bg-white', i % 2 === 1 && 'border-l', i >= 2 && 'border-t lg:border-t-0', i === 2 && 'lg:border-l')}
+          >
+            <div className="text-xs text-[#737373]">{m.label}</div>
+            <div className="text-lg md:text-xl font-semibold text-black mt-1 tabular-nums truncate">{loading ? '—' : m.value}</div>
+            <div className="text-[11px] text-[#A3A3A3] mt-0.5">{m.hint}</div>
+          </div>
+        ))}
       </div>
 
-      {/* 2. SUMMARY METRICS (Compact SaaS KPI Cards) */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {/* Total Partners */}
-        <div className="bg-white p-3.5 sm:p-4 rounded-xl border border-neutral-200 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-neutral-500">Partners</span>
-            <span className="text-[11px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/60">
-              {platformSummary.activePartners} active
-            </span>
-          </div>
-          <div className="text-2xl font-bold tracking-tight text-neutral-900 mt-1.5 font-mono">
-            {partners.length}
-          </div>
-          <div className="text-[11px] text-neutral-400 mt-0.5">
-            {platformSummary.pendingPartners > 0
-              ? `${platformSummary.pendingPartners} awaiting review`
-              : 'All accounts verified'}
-          </div>
-        </div>
+      {/* Section navigation */}
+      <Tabs idPrefix="aff-tab" items={subTabs} value={subTab} onChange={(id) => setSubTab(id as SubTab)} />
 
-        {/* Total Bookings */}
-        <div className="bg-white p-3.5 sm:p-4 rounded-xl border border-neutral-200 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-neutral-500">Bookings</span>
-            <span className="text-[11px] font-medium text-neutral-600 bg-neutral-100 px-2 py-0.5 rounded-full">
-              Referred
-            </span>
-          </div>
-          <div className="text-2xl font-bold tracking-tight text-neutral-900 mt-1.5 font-mono">
-            {platformSummary.totalBookings}
-          </div>
-          <div className="text-[11px] text-neutral-400 mt-0.5">
-            Total bookings attributed
-          </div>
-        </div>
-
-        {/* Unpaid Balance */}
-        <div className="bg-white p-3.5 sm:p-4 rounded-xl border border-neutral-200 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-neutral-500">Unpaid Balance</span>
-            <span className="text-[11px] font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200/60">
-              Approved
-            </span>
-          </div>
-          <div className="text-2xl font-bold tracking-tight text-neutral-900 mt-1.5 font-mono">
-            {formatIDR(platformSummary.unpaidCommissions)}
-          </div>
-          <div className="text-[11px] text-neutral-400 mt-0.5">
-            Ready for settlement
-          </div>
-        </div>
-
-        {/* Total Paid Out */}
-        <div className="bg-white p-3.5 sm:p-4 rounded-xl border border-neutral-200 shadow-2xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-neutral-500">Paid out</span>
-            <span className="text-[11px] font-medium text-neutral-600 bg-neutral-100 px-2 py-0.5 rounded-full">
-              {payouts.length} transfers
-            </span>
-          </div>
-          <div className="text-2xl font-bold tracking-tight text-neutral-900 mt-1.5 font-mono">
-            {formatIDR(platformSummary.totalPaidOut)}
-          </div>
-          <div className="text-[11px] text-neutral-400 mt-0.5">
-            Lifetime disbursements
-          </div>
-        </div>
-      </div>
-
-      {/* 3. UNIFIED TOOLBAR: TABS + SHORT SEARCH + STATUS FILTERS */}
-      <div className="bg-white p-2.5 rounded-xl border border-neutral-200 shadow-2xs flex flex-col lg:flex-row lg:items-center justify-between gap-2.5">
-        
-        {/* Navigation Subtabs */}
-        <div className="flex items-center gap-1 bg-neutral-100 p-1 rounded-lg shrink-0 border border-neutral-200/70 overflow-x-auto">
-          {[
-            { id: 'partners', label: 'Partners', count: partners.length },
-            { id: 'commissions', label: 'Commissions', count: commissions.length },
-            { id: 'payouts', label: 'Payouts', count: payouts.length },
-            { id: 'settings', label: 'Settings' },
-          ].map((tab) => {
-            const isActive = subTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setSubTab(tab.id as any)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all whitespace-nowrap ${
-                  isActive
-                    ? 'bg-black text-white shadow-xs'
-                    : 'text-neutral-600 hover:text-neutral-900 hover:bg-white/70'
-                }`}
-              >
-                <span>{tab.label}</span>
-                {tab.count !== undefined && (
-                  <span
-                    className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
-                      isActive ? 'bg-white text-black font-semibold' : 'bg-neutral-200/80 text-neutral-700'
-                    }`}
-                  >
-                    {tab.count}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Right Controls when on Partners Tab */}
-        {subTab === 'partners' && (
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full lg:w-auto">
-            {/* Shorter Search Bar */}
-            <div className="relative w-full sm:w-60 md:w-64 shrink-0">
-              <Search className="w-3.5 h-3.5 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                placeholder="Search partner, code, villa..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full h-8 pl-8 pr-7 text-xs rounded-lg border border-neutral-200 bg-white text-neutral-900 focus:outline-none focus:ring-1 focus:ring-black focus:border-black placeholder:text-neutral-400"
-              />
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
-                >
-                  <X size={12} />
-                </button>
-              )}
-            </div>
-
-            {/* Status Filter Pills */}
-            <div className="flex items-center gap-1 text-xs overflow-x-auto shrink-0">
-              {['all', 'pending', 'active', 'suspended', 'rejected'].map((st) => (
-                <button
-                  key={st}
-                  type="button"
-                  onClick={() => setPartnerStatusFilter(st)}
-                  className={`h-8 px-2.5 rounded-lg capitalize font-medium text-xs transition-colors whitespace-nowrap ${
-                    partnerStatusFilter === st
-                      ? 'bg-black text-white'
-                      : 'text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900'
-                  }`}
-                >
-                  {st}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Right Controls when on Commissions Tab */}
-        {subTab === 'commissions' && (
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full lg:w-auto text-xs">
-            <div className="flex items-center gap-1 overflow-x-auto shrink-0">
-              {['all', 'pending', 'approved', 'paid', 'declined'].map((st) => (
-                <button
-                  key={st}
-                  type="button"
-                  onClick={() => setCommissionStatusFilter(st)}
-                  className={`h-8 px-2.5 rounded-lg capitalize font-medium transition-colors whitespace-nowrap ${
-                    commissionStatusFilter === st
-                      ? 'bg-black text-white'
-                      : 'text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900'
-                  }`}
-                >
-                  {st}
-                </button>
-              ))}
-            </div>
-            <select
-              value={globalPartnerFilter}
-              onChange={(e) => setGlobalPartnerFilter(e.target.value)}
-              className="h-8 px-2.5 rounded-lg border border-neutral-200 bg-white text-xs font-medium text-neutral-800 focus:outline-none focus:border-black shrink-0"
-            >
-              <option value="all">All Partners ({partners.length})</option>
-              {partners.map((p) => (
-                <option key={p.id} value={p.partner_code}>
-                  {p.partner_code} - {p.first_name} {p.last_name}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-
-        {/* Right Controls when on Payouts Tab */}
-        {subTab === 'payouts' && (
-          <div className="flex items-center gap-2 w-full lg:w-auto text-xs justify-end">
-            <select
-              value={globalPayoutPartnerFilter}
-              onChange={(e) => setGlobalPayoutPartnerFilter(e.target.value)}
-              className="h-8 px-2.5 rounded-lg border border-neutral-200 bg-white text-xs font-medium text-neutral-800 focus:outline-none focus:border-black shrink-0"
-            >
-              <option value="all">All Partners ({partners.length})</option>
-              {partners.map((p) => (
-                <option key={p.id} value={p.partner_code}>
-                  {p.partner_code} - {p.first_name} {p.last_name}
-                </option>
-              ))}
-            </select>
-            <button
-              type="button"
-              onClick={() => {
-                setPayoutForm({ partner_id: '', amount: '', payout_method: 'bank_transfer', notes: '' });
-                setShowPayoutModal(true);
-              }}
-              className="h-8 px-3 bg-black text-white rounded-lg text-xs font-medium hover:bg-neutral-800 shadow-xs whitespace-nowrap inline-flex items-center gap-1.5"
-            >
-              <Plus size={13} />
-              <span>Record Payout</span>
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* SUB-TAB 1: PARTNERS (DESKTOP TABLE + RESPONSIVE MOBILE CARDS) */}
+      {/* ============================ PARTNERS ============================ */}
       {subTab === 'partners' && (
-        <div className="space-y-4">
-          <div className="bg-white rounded-xl border border-neutral-200 shadow-2xs overflow-hidden">
-            
-            {/* Desktop Table (hidden on mobile) */}
-            <div className="hidden md:block overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-neutral-50/70 border-b border-neutral-200 text-neutral-600 font-semibold">
-                  <tr>
-                    <th className="py-3 px-4">Partner</th>
-                    <th className="py-3 px-4">Code</th>
-                    <th className="py-3 px-4">Commission</th>
-                    <th className="py-3 px-4">Paid out</th>
-                    <th className="py-3 px-4">Bookings</th>
-                    <th className="py-3 px-4">Status</th>
-                    <th className="py-3 px-4 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-neutral-100">
-                  {paginatedPartners.length === 0 ? (
+        <section className="space-y-4" aria-labelledby="aff-partners-title">
+          <h2 id="aff-partners-title" className="sr-only">Partners</h2>
+          <div className="flex flex-col xl:flex-row xl:items-center gap-3 justify-between">
+            <FilterChips
+              idPrefix="aff-partner-status"
+              value={partnerStatusFilter}
+              onChange={setPartnerStatusFilter}
+              options={[
+                { value: 'all', label: 'All', count: statusCounts.all },
+                { value: 'active', label: 'Active', count: statusCounts.active || 0 },
+                { value: 'pending', label: 'Pending', count: statusCounts.pending || 0 },
+                { value: 'suspended', label: 'Suspended', count: statusCounts.suspended || 0 },
+                { value: 'rejected', label: 'Rejected', count: statusCounts.rejected || 0 },
+              ]}
+            />
+            <div className="flex flex-col sm:flex-row gap-2">
+              <SearchInput id="aff-partner-search" value={searchQuery} onChange={setSearchQuery} placeholder="Search name, code, villa…" className="sm:w-64" />
+              <select
+                id="aff-partner-sort"
+                aria-label="Sort partners"
+                value={partnerSort}
+                onChange={(e) => setPartnerSort(e.target.value)}
+                className={cx(selectCls, 'sm:w-44')}
+              >
+                <option value="activity">Recent activity</option>
+                <option value="commission">Highest commission</option>
+                <option value="newest">Newest</option>
+                <option value="name">Name A–Z</option>
+              </select>
+            </div>
+          </div>
+
+          {tableShell(
+            <>
+              {/* Desktop */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-[13px]">
+                  <thead className="border-b border-[#E5E5E5]">
                     <tr>
-                      <td colSpan={7} className="py-12 text-center text-neutral-500">
-                        <div className="max-w-xs mx-auto space-y-1">
-                          <p className="font-semibold text-neutral-900">No partners found</p>
-                          <p className="text-xs text-neutral-400">
-                            {searchQuery ? `No partner records matched "${searchQuery}".` : 'No partners registered in this status category.'}
-                          </p>
-                          {searchQuery && (
-                            <button
-                              type="button"
-                              onClick={() => setSearchQuery('')}
-                              className="text-xs font-semibold text-neutral-900 hover:underline pt-1 block mx-auto"
-                            >
-                              Clear search query
-                            </button>
-                          )}
-                        </div>
-                      </td>
+                      <th className={thCls}>Partner</th>
+                      <th className={thCls}>Code</th>
+                      <th className={cx(thCls, 'text-right')}>Commission</th>
+                      <th className={cx(thCls, 'text-right')}>Paid out</th>
+                      <th className={thCls}>Bookings</th>
+                      <th className={thCls}>Status</th>
+                      <th className={cx(thCls, 'text-right')}>Actions</th>
                     </tr>
-                  ) : (
-                    paginatedPartners.map((p) => {
-                      const metrics = getPartnerMetrics(p);
-
-                      return (
-                        <tr key={p.id} className="hover:bg-neutral-50/70 transition-colors">
-                          {/* 1. Partner: Name and business or villa */}
-                          <td className="py-3.5 px-4 align-top">
-                            <div className="font-semibold text-neutral-900 text-sm">
-                              {p.first_name} {p.last_name || ''}
-                            </div>
-                            <div className="text-xs text-neutral-500 mt-0.5">
-                              {p.business_name || 'Individual Partner'}
-                            </div>
-                          </td>
-
-                          {/* 2. Code: Referral code */}
-                          <td className="py-3.5 px-4 align-top">
-                            <div className="flex flex-col items-start gap-1">
-                              <span className="font-mono font-medium text-neutral-800 bg-neutral-100 px-2 py-0.5 rounded border border-neutral-200">
-                                {p.partner_code}
-                              </span>
-                              <span className="text-[10px] text-neutral-400">
-                                {safeFormatDate(p.created_at)}
-                              </span>
-                            </div>
-                          </td>
-
-                          {/* 3. Commission: Commission amount and settlement summary */}
-                          <td className="py-3.5 px-4 align-top">
-                            <div className="space-y-1.5">
-                              <div className="flex items-center gap-1.5 flex-wrap">
-                                <span className="font-bold text-neutral-900 text-xs font-mono">
-                                  {formatIDR(metrics.totalEarned)}
-                                </span>
-                                {metrics.approvedUnpaid > 0 ? (
-                                  <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-amber-50 text-amber-700 border border-amber-200/80">
-                                    {formatIDR(metrics.approvedUnpaid)} unpaid
-                                  </span>
-                                ) : metrics.pending > 0 ? (
-                                  <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-neutral-100 text-neutral-600 border border-neutral-200">
-                                    {formatIDR(metrics.pending)} pending
-                                  </span>
+                  </thead>
+                  <tbody>
+                    {loading ? (
+                      <SkeletonRows cols={7} />
+                    ) : loadError && partners.length === 0 ? (
+                      <tr><td colSpan={7}><ErrorState message={loadError} onRetry={fetchAllData} /></td></tr>
+                    ) : pagedPartners.length === 0 ? (
+                      <tr>
+                        <td colSpan={7}>
+                          <EmptyState
+                            title="No partners found"
+                            description={searchQuery ? `Nothing matches “${searchQuery}”.` : 'No partners in this status.'}
+                            action={
+                              (searchQuery || partnerStatusFilter !== 'all') && (
+                                <button type="button" onClick={() => { setSearchQuery(''); setPartnerStatusFilter('all'); }} className={cx(btn.base, btn.secondary, btn.sm)}>
+                                  Clear filters
+                                </button>
+                              )
+                            }
+                          />
+                        </td>
+                      </tr>
+                    ) : (
+                      pagedPartners.map((p) => {
+                        const m = metricsById[p.id];
+                        return (
+                          <tr key={p.id} className="border-b border-[#F0F0F0] last:border-0 hover:bg-[#FAFAFA]">
+                            <td className={tdCls}>
+                              <button type="button" onClick={() => openPartnerModal(p)} className="text-left max-w-[240px] block group" title={`${fullName(p)} — ${p.business_name || 'Individual'}`}>
+                                <span className="block font-medium text-[#171717] truncate group-hover:underline">{fullName(p)}</span>
+                                <span className="block text-xs text-[#737373] truncate">{p.business_name || 'Individual'}</span>
+                              </button>
+                            </td>
+                            <td className={tdCls}>
+                              <div className="flex items-center gap-0.5">
+                                <span className="font-mono text-xs text-[#171717] truncate max-w-[130px]" title={p.partner_code}>{p.partner_code}</span>
+                                <CopyBtn text={p.partner_code} id={`code-${p.id}`} label="Copy referral code" />
+                              </div>
+                            </td>
+                            <td className={cx(tdCls, 'text-right')}>
+                              <div className="font-medium tabular-nums text-[#171717]">{formatIDR(m.totalEarned)}</div>
+                              <div className="text-xs text-[#737373] tabular-nums">
+                                {m.approvedUnpaid > 0 ? `${formatIDR(m.approvedUnpaid)} unpaid` : m.pending > 0 ? `${formatIDR(m.pending)} pending` : 'Settled'}
+                              </div>
+                            </td>
+                            <td className={cx(tdCls, 'text-right')}>
+                              <div className="font-medium tabular-nums text-[#171717]">{formatIDR(m.totalPaidOut)}</div>
+                              <div className="text-xs text-[#737373]">
+                                {m.approvedUnpaid > 0 ? (
+                                  <button type="button" onClick={() => openQuickPayoutForPartner(p)} className="text-black font-medium hover:underline">
+                                    Pay now
+                                  </button>
                                 ) : (
-                                  <span className="text-[10px] text-neutral-400">Settled</span>
-                                )}
-                              </div>
-
-                              <div>
-                                <button
-                                  type="button"
-                                  onClick={() => openPartnerModal(p, 'commissions')}
-                                  className="h-7 px-2.5 bg-white border border-neutral-200 hover:bg-neutral-50 text-neutral-800 font-medium rounded-lg text-xs transition-colors inline-flex items-center gap-1.5 shadow-2xs group"
-                                  title="View partner commissions"
-                                >
-                                  <span>Commissions</span>
-                                  <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-neutral-100 text-neutral-700 font-mono">
-                                    {metrics.commissions.length}
-                                  </span>
-                                  <span className="text-neutral-400 group-hover:text-neutral-700">&rarr;</span>
-                                </button>
-                              </div>
-                            </div>
-                          </td>
-
-                          {/* 4. Paid Out: Total paid */}
-                          <td className="py-3.5 px-4 align-top">
-                            <div className="space-y-1">
-                              <div className="font-bold text-neutral-900 text-xs font-mono">
-                                {formatIDR(metrics.totalPaidOut)}
-                              </div>
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <button
-                                  type="button"
-                                  onClick={() => openPartnerModal(p, 'payouts')}
-                                  className="text-xs text-neutral-500 hover:text-neutral-900 hover:underline"
-                                >
-                                  {metrics.payouts.length} {metrics.payouts.length === 1 ? 'payout' : 'payouts'}
-                                </button>
-                                {metrics.approvedUnpaid > 0 && (
-                                  <button
-                                    type="button"
-                                    onClick={() => openQuickPayoutForPartner(p)}
-                                    className="h-6 px-2 bg-black text-white rounded text-[11px] font-medium hover:bg-neutral-800 transition-colors shadow-2xs"
-                                    title="Record payout"
-                                  >
-                                    + Pay
+                                  <button type="button" onClick={() => openPartnerModal(p, 'payouts')} className="hover:text-black hover:underline">
+                                    {m.payouts.length} {m.payouts.length === 1 ? 'payout' : 'payouts'}
                                   </button>
                                 )}
                               </div>
-                            </div>
-                          </td>
-
-                          {/* 5. Bookings: Booking count or calendar access */}
-                          <td className="py-3.5 px-4 align-top">
-                            <div className="space-y-1">
-                              <div className="relative inline-block">
+                            </td>
+                            <td className={tdCls}>
+                              <div className="flex items-center gap-2">
                                 <button
                                   type="button"
-                                  onClick={() => openPartnerModal(p, 'calendar')}
-                                  className="h-8 px-3 bg-white border border-neutral-200 hover:bg-neutral-50 text-neutral-800 font-medium rounded-lg text-xs transition-colors inline-flex items-center gap-1.5 shadow-2xs"
+                                  onClick={() => openPartnerModal(p, 'bookings')}
+                                  className={cx(btn.base, btn.secondary, btn.xs)}
+                                  title={m.latestBooking ? `Latest: ${safeFormatDate(m.latestBooking.booking_date || m.latestBooking.created_at)}` : 'No bookings yet'}
                                 >
-                                  <span>Calendar</span>
-                                  <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-neutral-100 text-neutral-700 font-mono">
-                                    {metrics.bookingsCount}
-                                  </span>
-                                  {metrics.pendingCount > 0 && (
-                                    <span className="text-[10px] px-1.5 py-0.2 rounded-full font-semibold bg-amber-50 text-amber-700 border border-amber-200/80 flex items-center gap-1">
-                                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                                      {metrics.pendingCount} New
-                                    </span>
-                                  )}
+                                  Calendar
+                                  <CountPill>{m.bookingsCount}</CountPill>
                                 </button>
+                                <NewIndicator count={m.pendingCount} />
                               </div>
-                              {metrics.latestBooking ? (
-                                <div className="text-[10px] text-neutral-400">
-                                  Latest: {safeFormatDate(metrics.latestBooking.booking_date || metrics.latestBooking.created_at)}
-                                </div>
-                              ) : (
-                                <div className="text-[10px] text-neutral-400">No bookings yet</div>
-                              )}
-                            </div>
-                          </td>
+                            </td>
+                            <td className={tdCls}><StatusBadge status={p.status} /></td>
+                            <td className={cx(tdCls, 'text-right')}>
+                              <div className="flex items-center justify-end gap-1.5">
+                                <button type="button" onClick={() => openPartnerModal(p)} className={cx(btn.base, btn.secondary, btn.xs)}>
+                                  Details
+                                </button>
+                                {renderStatusActions(p, btn.xs)}
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
 
-                          {/* 6. Status: Compact colored status badge */}
-                          <td className="py-3.5 px-4 align-top">
+              {/* Mobile */}
+              <div className="md:hidden">
+                {loading ? (
+                  <SkeletonList />
+                ) : loadError && partners.length === 0 ? (
+                  <ErrorState message={loadError} onRetry={fetchAllData} />
+                ) : pagedPartners.length === 0 ? (
+                  <EmptyState title="No partners found" description={searchQuery ? `Nothing matches “${searchQuery}”.` : 'No partners in this status.'} />
+                ) : (
+                  <ul className="divide-y divide-[#F0F0F0]">
+                    {pagedPartners.map((p) => {
+                      const m = metricsById[p.id];
+                      return (
+                        <li key={p.id} className="p-4 space-y-3">
+                          <div className="flex items-start justify-between gap-3">
+                            <button type="button" onClick={() => openPartnerModal(p)} className="text-left min-w-0">
+                              <span className="block font-medium text-[#171717] truncate">{fullName(p)}</span>
+                              <span className="block text-xs text-[#737373] truncate">
+                                {p.business_name || 'Individual'} · <span className="font-mono">{p.partner_code}</span>
+                              </span>
+                            </button>
                             <StatusBadge status={p.status} />
-                          </td>
-
-                          {/* 7. Actions: Details and relevant account action */}
-                          <td className="py-3.5 px-4 align-top text-right space-x-1.5 whitespace-nowrap">
-                            <button
-                              type="button"
-                              onClick={() => openPartnerModal(p, 'overview')}
-                              className="h-8 px-3 bg-white border border-neutral-200 hover:bg-neutral-50 text-neutral-800 font-medium rounded-lg text-xs transition-colors shadow-2xs"
-                            >
+                          </div>
+                          <dl className="grid grid-cols-3 gap-3 text-xs">
+                            <div>
+                              <dt className="text-[#737373]">Commission</dt>
+                              <dd className="font-medium tabular-nums text-[#171717] mt-0.5">{formatIDR(m.totalEarned)}</dd>
+                            </div>
+                            <div>
+                              <dt className="text-[#737373]">Paid out</dt>
+                              <dd className="font-medium tabular-nums text-[#171717] mt-0.5">{formatIDR(m.totalPaidOut)}</dd>
+                            </div>
+                            <div>
+                              <dt className="text-[#737373]">Bookings</dt>
+                              <dd className="font-medium tabular-nums text-[#171717] mt-0.5 flex items-center gap-1.5">
+                                {m.bookingsCount}
+                                <NewIndicator count={m.pendingCount} />
+                              </dd>
+                            </div>
+                          </dl>
+                          <div className="flex flex-wrap gap-2">
+                            <button type="button" onClick={() => openPartnerModal(p)} className={cx(btn.base, btn.secondary, btn.sm, 'flex-1')}>
                               Details
                             </button>
-                            {p.status === 'pending' && (
-                              <button
-                                type="button"
-                                onClick={() => handlePartnerStatus(p.id, 'active')}
-                                className="h-8 px-3 bg-black text-white font-medium rounded-lg text-xs hover:bg-neutral-800 shadow-xs"
-                              >
-                                Approve
+                            <button type="button" onClick={() => openPartnerModal(p, 'bookings')} className={cx(btn.base, btn.secondary, btn.sm, 'flex-1')}>
+                              Calendar
+                            </button>
+                            {m.approvedUnpaid > 0 && (
+                              <button type="button" onClick={() => openQuickPayoutForPartner(p)} className={cx(btn.base, btn.secondary, btn.sm, 'flex-1')}>
+                                Pay
                               </button>
                             )}
-                            {p.status === 'active' && (
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  setConfirmAction({
-                                    type: 'suspend',
-                                    id: p.id,
-                                    name: `${p.first_name} ${p.last_name || ''}`,
-                                  })
-                                }
-                                className="h-8 px-3 bg-white border border-neutral-200 hover:bg-neutral-50 text-neutral-700 font-medium rounded-lg text-xs transition-colors shadow-2xs"
-                              >
-                                Suspend
+                            {renderStatusActions(p)}
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
+
+              <Pagination page={partnerPage} total={filteredPartners.length} pageSize={PAGE_SIZE} onChange={setPartnerPage} label="partners" />
+            </>
+          )}
+        </section>
+      )}
+
+      {/* ========================== APPLICATIONS ========================== */}
+      {subTab === 'applications' && (
+        <section className="space-y-4" aria-labelledby="aff-apps-title">
+          <div className="flex items-center justify-between gap-3">
+            <h2 id="aff-apps-title" className="text-[15px] font-semibold text-black">Pending applications</h2>
+            {settings.auto_approve_partners && <span className="text-xs text-[#737373]">Auto-approve is on</span>}
+          </div>
+          {tableShell(
+            loading ? (
+              <SkeletonList />
+            ) : applications.length === 0 ? (
+              <EmptyState title="No pending applications" description="New partner registrations will appear here for review." />
+            ) : (
+              <>
+                <div className="hidden md:block overflow-x-auto">
+                  <table className="w-full text-[13px]">
+                    <thead className="border-b border-[#E5E5E5]">
+                      <tr>
+                        <th className={thCls}>Applicant</th>
+                        <th className={thCls}>Category</th>
+                        <th className={thCls}>Contact</th>
+                        <th className={thCls}>Code</th>
+                        <th className={thCls}>Applied</th>
+                        <th className={cx(thCls, 'text-right')}>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {applications.map((p) => (
+                        <tr key={p.id} className="border-b border-[#F0F0F0] last:border-0 hover:bg-[#FAFAFA]">
+                          <td className={tdCls}>
+                            <span className="block font-medium text-[#171717] truncate max-w-[220px]">{fullName(p)}</span>
+                            <span className="block text-xs text-[#737373] truncate max-w-[220px]">{p.business_name || 'Individual'}</span>
+                          </td>
+                          <td className={cx(tdCls, 'capitalize text-[#171717]')}>{p.partner_type?.replace(/_/g, ' ') || '—'}</td>
+                          <td className={tdCls}>
+                            <span className="block text-[#171717] truncate max-w-[200px]">{p.email}</span>
+                            <span className="block text-xs text-[#737373]">{p.whatsapp || p.phone || '—'}</span>
+                          </td>
+                          <td className={cx(tdCls, 'font-mono text-xs')}>{p.partner_code}</td>
+                          <td className={cx(tdCls, 'text-[#737373] whitespace-nowrap')}>{safeFormatDate(p.created_at)}</td>
+                          <td className={cx(tdCls, 'text-right')}>
+                            <div className="flex items-center justify-end gap-1.5">
+                              <button type="button" onClick={() => openPartnerModal(p)} className={cx(btn.base, btn.secondary, btn.xs)}>
+                                Review
                               </button>
-                            )}
-                            {p.status === 'suspended' && (
-                              <button
-                                type="button"
-                                onClick={() => handlePartnerStatus(p.id, 'active')}
-                                className="h-8 px-3 bg-black text-white hover:bg-neutral-800 font-medium rounded-lg text-xs shadow-xs"
-                              >
-                                Reactivate
-                              </button>
-                            )}
+                              {renderStatusActions(p, btn.xs)}
+                            </div>
                           </td>
                         </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Mobile Cards (shown on screens < 768px) */}
-            <div className="md:hidden divide-y divide-neutral-100">
-              {paginatedPartners.length === 0 ? (
-                <div className="py-12 text-center text-neutral-500 p-4">
-                  <p className="font-semibold text-neutral-900">No partners found</p>
-                  <p className="text-xs text-neutral-400 mt-1">
-                    {searchQuery ? `No partners matched "${searchQuery}".` : 'No partners registered.'}
-                  </p>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
-              ) : (
-                paginatedPartners.map((p) => {
-                  const metrics = getPartnerMetrics(p);
-                  return (
-                    <div key={p.id} className="p-4 space-y-3 bg-white">
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <div className="font-semibold text-neutral-900 text-sm">
-                            {p.first_name} {p.last_name || ''}
-                          </div>
-                          <div className="text-xs text-neutral-500">
-                            {p.business_name || 'Individual Partner'}
-                          </div>
+                <ul className="md:hidden divide-y divide-[#F0F0F0]">
+                  {applications.map((p) => (
+                    <li key={p.id} className="p-4 space-y-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <span className="block font-medium text-[#171717] truncate">{fullName(p)}</span>
+                          <span className="block text-xs text-[#737373] truncate">{p.business_name || 'Individual'} · Applied {safeFormatDate(p.created_at)}</span>
                         </div>
                         <StatusBadge status={p.status} />
                       </div>
-
-                      <div className="flex items-center gap-2 text-xs">
-                        <span className="font-mono px-2 py-0.5 rounded bg-neutral-100 text-neutral-800 border border-neutral-200">
-                          {p.partner_code}
-                        </span>
-                        <span className="text-neutral-400">
-                          Joined {safeFormatDate(p.created_at)}
-                        </span>
+                      <div className="text-xs text-[#737373] truncate">{p.email} · {p.whatsapp || p.phone || '—'}</div>
+                      <div className="flex gap-2">
+                        <button type="button" onClick={() => openPartnerModal(p)} className={cx(btn.base, btn.secondary, btn.sm, 'flex-1')}>
+                          Review
+                        </button>
+                        {renderStatusActions(p)}
                       </div>
-
-                      <div className="grid grid-cols-3 gap-2 p-2.5 rounded-lg bg-neutral-50/70 border border-neutral-200/60 text-xs">
-                        <div>
-                          <span className="text-[10px] text-neutral-500 block">Commission</span>
-                          <span className="font-mono font-semibold text-neutral-900">{formatIDR(metrics.totalEarned)}</span>
-                        </div>
-                        <div>
-                          <span className="text-[10px] text-neutral-500 block">Paid out</span>
-                          <span className="font-mono font-semibold text-neutral-900">{formatIDR(metrics.totalPaidOut)}</span>
-                        </div>
-                        <div>
-                          <span className="text-[10px] text-neutral-500 block">Bookings</span>
-                          <span className="font-mono font-semibold text-neutral-900">{metrics.bookingsCount}</span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between gap-2 pt-1">
-                        <div className="flex items-center gap-1.5">
-                          <button
-                            type="button"
-                            onClick={() => openPartnerModal(p, 'calendar')}
-                            className="h-8 px-2.5 bg-white border border-neutral-200 hover:bg-neutral-50 text-neutral-800 rounded-lg text-xs font-medium inline-flex items-center gap-1 shadow-2xs"
-                          >
-                            <CalendarIcon size={12} />
-                            <span>Calendar</span>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => openPartnerModal(p, 'commissions')}
-                            className="h-8 px-2.5 bg-white border border-neutral-200 hover:bg-neutral-50 text-neutral-800 rounded-lg text-xs font-medium shadow-2xs"
-                          >
-                            Comms
-                          </button>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <button
-                            type="button"
-                            onClick={() => openPartnerModal(p, 'overview')}
-                            className="h-8 px-3 bg-white border border-neutral-200 hover:bg-neutral-50 text-neutral-800 rounded-lg text-xs font-medium shadow-2xs"
-                          >
-                            Details
-                          </button>
-                          {p.status === 'pending' && (
-                            <button
-                              type="button"
-                              onClick={() => handlePartnerStatus(p.id, 'active')}
-                              className="h-8 px-3 bg-black text-white rounded-lg text-xs font-medium hover:bg-neutral-800"
-                            >
-                              Approve
-                            </button>
-                          )}
-                          {p.status === 'active' && (
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setConfirmAction({
-                                  type: 'suspend',
-                                  id: p.id,
-                                  name: `${p.first_name} ${p.last_name || ''}`,
-                                })
-                              }
-                              className="h-8 px-3 bg-white border border-neutral-200 text-neutral-700 rounded-lg text-xs font-medium hover:bg-neutral-50"
-                            >
-                              Suspend
-                            </button>
-                          )}
-                          {p.status === 'suspended' && (
-                            <button
-                              type="button"
-                              onClick={() => handlePartnerStatus(p.id, 'active')}
-                              className="h-8 px-3 bg-black text-white rounded-lg text-xs font-medium hover:bg-neutral-800"
-                            >
-                              Reactivate
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-
-            {/* Pagination Controls */}
-            <Pagination
-              currentPage={partnerPage}
-              totalPages={totalPartnerPages}
-              totalItems={filteredPartners.length}
-              pageSize={PAGE_SIZE}
-              onPageChange={setPartnerPage}
-              label="partners"
-            />
-          </div>
-        </div>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )
+          )}
+        </section>
       )}
 
-      {/* SUB-TAB 2: COMMISSIONS */}
+      {/* ========================== COMMISSIONS =========================== */}
       {subTab === 'commissions' && (
-        <div className="space-y-4">
-          <div className="bg-white rounded-xl border border-neutral-200 shadow-2xs overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-neutral-50/70 border-b border-neutral-200 text-neutral-600 font-semibold">
-                  <tr>
-                    <th className="py-3 px-4">Date</th>
-                    <th className="py-3 px-4">Booking Ref</th>
-                    <th className="py-3 px-4">Partner</th>
-                    <th className="py-3 px-4">Gross</th>
-                    <th className="py-3 px-4">Treatment Net</th>
-                    <th className="py-3 px-4">Rate</th>
-                    <th className="py-3 px-4">Commission</th>
-                    <th className="py-3 px-4">Verifications</th>
-                    <th className="py-3 px-4">Status</th>
-                    <th className="py-3 px-4 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-neutral-100">
-                  {paginatedCommissions.length === 0 ? (
+        <section className="space-y-4" aria-labelledby="aff-comm-title">
+          <h2 id="aff-comm-title" className="sr-only">Commissions</h2>
+          <div className="flex flex-col xl:flex-row xl:items-center gap-3 justify-between">
+            <FilterChips
+              idPrefix="aff-comm-status"
+              value={commissionStatusFilter}
+              onChange={setCommissionStatusFilter}
+              options={[
+                { value: 'all', label: 'All', count: commissionCounts.all },
+                { value: 'pending', label: 'Pending', count: commissionCounts.pending || 0 },
+                { value: 'approved', label: 'Approved', count: commissionCounts.approved || 0 },
+                { value: 'paid', label: 'Paid', count: commissionCounts.paid || 0 },
+                { value: 'declined', label: 'Declined', count: commissionCounts.declined || 0 },
+              ]}
+            />
+            <div className="flex flex-col sm:flex-row gap-2">
+              <SearchInput id="aff-comm-search" value={commSearch} onChange={setCommSearch} placeholder="Search booking, guest…" className="sm:w-60" />
+              <select
+                id="aff-comm-partner"
+                aria-label="Filter by partner"
+                value={globalPartnerFilter}
+                onChange={(e) => setGlobalPartnerFilter(e.target.value)}
+                className={cx(selectCls, 'sm:w-52')}
+              >
+                <option value="all">All partners</option>
+                {partners.map((p) => (
+                  <option key={p.id} value={p.partner_code}>{p.partner_code} — {fullName(p)}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {tableShell(
+            <>
+              <div className="hidden lg:block overflow-x-auto">
+                <table className="w-full text-[13px]">
+                  <thead className="border-b border-[#E5E5E5]">
                     <tr>
-                      <td colSpan={10} className="py-12 text-center text-neutral-500">
-                        No commission records found under this filter.
-                      </td>
+                      <th className={thCls}>Date</th>
+                      <th className={thCls}>Booking</th>
+                      <th className={thCls}>Partner</th>
+                      <th className={cx(thCls, 'text-right')}>Booking amount</th>
+                      <th className={cx(thCls, 'text-right')}>Eligible</th>
+                      <th className={cx(thCls, 'text-right')}>Rate</th>
+                      <th className={cx(thCls, 'text-right')}>Commission</th>
+                      <th className={thCls}>Checks</th>
+                      <th className={thCls}>Status</th>
+                      <th className={cx(thCls, 'text-right')}>Actions</th>
                     </tr>
-                  ) : (
-                    paginatedCommissions.map((c) => (
-                      <tr key={c.id} className="hover:bg-neutral-50/70 transition-colors">
-                        <td className="py-3 px-4 text-neutral-500 whitespace-nowrap">
-                          {safeFormatDate(c.booking_date || c.created_at)}
-                        </td>
-                        <td className="py-3 px-4 font-mono font-bold text-neutral-900">
-                          #{c.booking_id}
-                          {c.guest_name && (
-                            <div className="text-[11px] text-neutral-500 font-sans font-normal">{c.guest_name}</div>
-                          )}
-                        </td>
-                        <td className="py-3 px-4">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const p = partners.find((item) => item.partner_code === c.partner_code || item.id === c.partner_id);
-                              if (p) openPartnerModal(p, 'overview');
-                            }}
-                            className="font-mono font-medium text-neutral-900 hover:underline inline-flex items-center gap-1"
-                          >
-                            <span>{c.partner_code}</span>
-                            <ArrowUpRight size={11} className="text-neutral-400" />
+                  </thead>
+                  <tbody>
+                    {loading ? (
+                      <SkeletonRows cols={10} />
+                    ) : pagedCommissions.length === 0 ? (
+                      <tr><td colSpan={10}><EmptyState title="No commissions found" description="Try a different status, partner, or search." /></td></tr>
+                    ) : (
+                      pagedCommissions.map((c) => {
+                        const settledPayout = c.payout_id ? payoutById[c.payout_id] : null;
+                        return (
+                          <tr key={c.id} className="border-b border-[#F0F0F0] last:border-0 hover:bg-[#FAFAFA]">
+                            <td className={cx(tdCls, 'text-[#737373] whitespace-nowrap')}>{safeFormatDate(c.booking_date || c.created_at)}</td>
+                            <td className={tdCls}>
+                              <button type="button" onClick={() => setSelectedCommissionId(c.id)} className="text-left group max-w-[160px] block" title="View commission details">
+                                <span className="block font-mono text-xs font-medium text-[#171717] group-hover:underline">#{c.booking_id}</span>
+                                <span className="block text-xs text-[#737373] truncate">{c.guest_name || 'Guest'}</span>
+                              </button>
+                            </td>
+                            <td className={tdCls}><PartnerLink code={c.partner_code} id={c.partner_id} /></td>
+                            <td className={cx(tdCls, 'text-right tabular-nums text-[#737373]')}>{formatIDR(c.booking_amount_gross)}</td>
+                            <td className={cx(tdCls, 'text-right tabular-nums')}>{formatIDR(c.eligible_treatment_amount)}</td>
+                            <td className={cx(tdCls, 'text-right tabular-nums text-[#737373]')}>{c.commission_rate_pct}%</td>
+                            <td className={cx(tdCls, 'text-right tabular-nums font-medium')}>{formatIDR(c.commission_amount)}</td>
+                            <td className={tdCls}><VerificationChecks c={c} compact /></td>
+                            <td className={tdCls}>
+                              <StatusBadge status={c.status} />
+                              {c.status === 'paid' && (
+                                <span className="block text-[11px] text-[#737373] mt-1 font-mono truncate max-w-[150px]" title={settledPayout?.payout_reference}>
+                                  {settledPayout?.payout_reference || (c.paid_at ? safeFormatDate(c.paid_at) : '')}
+                                </span>
+                              )}
+                            </td>
+                            <td className={cx(tdCls, 'text-right')}><CommissionActions c={c} /></td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="lg:hidden">
+                {loading ? (
+                  <SkeletonList />
+                ) : pagedCommissions.length === 0 ? (
+                  <EmptyState title="No commissions found" description="Try a different status, partner, or search." />
+                ) : (
+                  <ul className="divide-y divide-[#F0F0F0]">
+                    {pagedCommissions.map((c) => (
+                      <li key={c.id} className="p-4 space-y-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <button type="button" onClick={() => setSelectedCommissionId(c.id)} className="text-left min-w-0">
+                            <span className="block font-mono text-xs font-medium text-[#171717]">#{c.booking_id}</span>
+                            <span className="block text-xs text-[#737373] truncate">
+                              {c.guest_name || 'Guest'} · {c.partner_code} · {safeFormatDate(c.booking_date || c.created_at)}
+                            </span>
                           </button>
-                        </td>
-                        <td className="py-3 px-4 text-neutral-500 font-mono">
-                          {formatIDR(c.booking_amount_gross)}
-                        </td>
-                        <td className="py-3 px-4 font-medium text-neutral-900 font-mono">
-                          {formatIDR(c.eligible_treatment_amount)}
-                        </td>
-                        <td className="py-3 px-4 text-neutral-500 font-mono">{c.commission_rate_pct}%</td>
-                        <td className="py-3 px-4 font-bold text-neutral-900 font-mono">
-                          {formatIDR(c.commission_amount)}
-                        </td>
-                        <td className="py-3 px-4 text-[11px] space-y-1">
-                          <label className="flex items-center gap-1.5 cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={c.payment_verified}
-                              onChange={(e) =>
-                                handleUpdateCommission(c.id, { payment_verified: e.target.checked })
-                              }
-                              className="rounded text-black cursor-pointer"
-                            />
-                            <span>Paid</span>
-                          </label>
-                          <label className="flex items-center gap-1.5 cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={c.service_completed}
-                              onChange={(e) =>
-                                handleUpdateCommission(c.id, { service_completed: e.target.checked })
-                              }
-                              className="rounded text-black cursor-pointer"
-                            />
-                            <span>Completed</span>
-                          </label>
-                        </td>
-                        <td className="py-3 px-4">
                           <StatusBadge status={c.status} />
-                        </td>
-                        <td className="py-3 px-4 text-right space-x-1.5 whitespace-nowrap">
-                          {c.status === 'pending' && (
-                            <>
-                              <button
-                                type="button"
-                                onClick={() => handleUpdateCommission(c.id, { status: 'approved' })}
-                                className="h-7 px-2.5 bg-black hover:bg-neutral-800 text-white rounded-lg text-xs font-medium shadow-xs"
-                              >
-                                Approve
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  setConfirmAction({
-                                    type: 'decline_comm',
-                                    id: c.id,
-                                    name: `#${c.booking_id}`,
-                                  })
-                                }
-                                className="h-7 px-2.5 border border-neutral-200 hover:bg-neutral-50 text-neutral-700 rounded-lg text-xs font-medium shadow-2xs"
-                              >
-                                Decline
-                              </button>
-                            </>
-                          )}
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+                        </div>
+                        <div className="flex items-end justify-between gap-3">
+                          <div className="text-xs text-[#737373] tabular-nums">
+                            {c.commission_rate_pct}% of {formatIDR(c.eligible_treatment_amount)}
+                          </div>
+                          <div className="text-[15px] font-semibold tabular-nums text-black">{formatIDR(c.commission_amount)}</div>
+                        </div>
+                        <VerificationChecks c={c} />
+                        <CommissionActions c={c} size={btn.sm} />
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
 
-            <Pagination
-              currentPage={commPage}
-              totalPages={totalCommPages}
-              totalItems={filteredGlobalCommissions.length}
-              pageSize={PAGE_SIZE}
-              onPageChange={setCommPage}
-              label="commissions"
-            />
-          </div>
-        </div>
+              <Pagination page={commPage} total={filteredGlobalCommissions.length} pageSize={PAGE_SIZE} onChange={setCommPage} label="commissions" />
+            </>
+          )}
+        </section>
       )}
 
-      {/* SUB-TAB 3: PAYOUTS */}
+      {/* ============================ PAYOUTS ============================= */}
       {subTab === 'payouts' && (
-        <div className="space-y-4">
-          <div className="bg-white rounded-xl border border-neutral-200 shadow-2xs overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-neutral-50/70 border-b border-neutral-200 text-neutral-600 font-semibold">
-                  <tr>
-                    <th className="py-3 px-4">Date</th>
-                    <th className="py-3 px-4">Reference</th>
-                    <th className="py-3 px-4">Partner</th>
-                    <th className="py-3 px-4">Amount</th>
-                    <th className="py-3 px-4">Method</th>
-                    <th className="py-3 px-4">Status</th>
-                    <th className="py-3 px-4">Notes</th>
-                    <th className="py-3 px-4 text-right">Details</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-neutral-100">
-                  {paginatedPayouts.length === 0 ? (
+        <section className="space-y-4" aria-labelledby="aff-payout-title">
+          <h2 id="aff-payout-title" className="sr-only">Payouts</h2>
+          <div className="flex flex-col sm:flex-row gap-2 sm:justify-end">
+            <SearchInput id="aff-payout-search" value={payoutSearch} onChange={setPayoutSearch} placeholder="Search reference, notes…" className="sm:w-64" />
+            <select
+              id="aff-payout-partner"
+              aria-label="Filter by partner"
+              value={globalPayoutPartnerFilter}
+              onChange={(e) => setGlobalPayoutPartnerFilter(e.target.value)}
+              className={cx(selectCls, 'sm:w-52')}
+            >
+              <option value="all">All partners</option>
+              {partners.map((p) => (
+                <option key={p.id} value={p.partner_code}>{p.partner_code} — {fullName(p)}</option>
+              ))}
+            </select>
+          </div>
+
+          {tableShell(
+            <>
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-[13px]">
+                  <thead className="border-b border-[#E5E5E5]">
                     <tr>
-                      <td colSpan={8} className="py-12 text-center text-neutral-500">
-                        No payout settlements logged yet.
-                      </td>
+                      <th className={thCls}>Date</th>
+                      <th className={thCls}>Reference</th>
+                      <th className={thCls}>Partner</th>
+                      <th className={cx(thCls, 'text-right')}>Amount</th>
+                      <th className={thCls}>Method</th>
+                      <th className={thCls}>Status</th>
+                      <th className={thCls}>Notes</th>
+                      <th className={cx(thCls, 'text-right')}>Bookings</th>
                     </tr>
-                  ) : (
-                    paginatedPayouts.map((py) => (
-                      <tr key={py.id} className="hover:bg-neutral-50/70 transition-colors">
-                        <td className="py-3 px-4 text-neutral-500 whitespace-nowrap">
-                          {safeFormatDate(py.created_at)}
-                        </td>
-                        <td className="py-3 px-4 font-mono font-bold text-neutral-900">{py.payout_reference}</td>
-                        <td className="py-3 px-4">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const p = partners.find((item) => item.partner_code === py.partner_code || item.id === py.partner_id);
-                              if (p) openPartnerModal(p, 'overview');
-                            }}
-                            className="font-mono font-medium text-neutral-900 hover:underline inline-flex items-center gap-1"
-                          >
-                            <span>{py.partner_code}</span>
-                            <ArrowUpRight size={11} className="text-neutral-400" />
-                          </button>
-                        </td>
-                        <td className="py-3 px-4 font-bold text-neutral-900 font-mono">{formatIDR(py.amount)}</td>
-                        <td className="py-3 px-4 capitalize text-neutral-700">{py.payout_method?.replace('_', ' ')}</td>
-                        <td className="py-3 px-4">
-                          <StatusBadge status={py.status || 'completed'} />
-                        </td>
-                        <td className="py-3 px-4 text-neutral-500">{py.notes || '—'}</td>
-                        <td className="py-3 px-4 text-right whitespace-nowrap">
-                          <button
-                            type="button"
-                            onClick={() => setSelectedPayoutDetails(py)}
-                            className="h-7 px-3 bg-white border border-neutral-200 hover:bg-neutral-50 text-neutral-800 font-medium rounded-lg text-xs transition-colors shadow-2xs inline-flex items-center gap-1"
-                          >
-                            <span>View Bookings</span>
-                            <span className="text-neutral-400">&rarr;</span>
-                          </button>
+                  </thead>
+                  <tbody>
+                    {loading ? (
+                      <SkeletonRows cols={8} />
+                    ) : pagedPayouts.length === 0 ? (
+                      <tr>
+                        <td colSpan={8}>
+                          <EmptyState
+                            title="No payouts yet"
+                            description="Recorded payouts will appear here."
+                            action={<button type="button" onClick={openNewPayout} className={cx(btn.base, btn.primary, btn.sm)}><Plus size={14} />Record payout</button>}
+                          />
                         </td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+                    ) : (
+                      pagedPayouts.map((py) => (
+                        <tr key={py.id} className="border-b border-[#F0F0F0] last:border-0 hover:bg-[#FAFAFA]">
+                          <td className={cx(tdCls, 'text-[#737373] whitespace-nowrap')}>{safeFormatDate(py.created_at)}</td>
+                          <td className={tdCls}>
+                            <div className="flex items-center gap-0.5">
+                              <span className="font-mono text-xs text-[#171717] truncate max-w-[190px]" title={py.payout_reference}>{py.payout_reference}</span>
+                              <CopyBtn text={py.payout_reference} id={`ref-${py.id}`} label="Copy reference" />
+                            </div>
+                          </td>
+                          <td className={tdCls}><PartnerLink code={py.partner_code} id={py.partner_id} /></td>
+                          <td className={cx(tdCls, 'text-right tabular-nums font-medium')}>{formatIDR(py.amount)}</td>
+                          <td className={cx(tdCls, 'capitalize text-[#171717] whitespace-nowrap')}>{methodLabel(py.payout_method)}</td>
+                          <td className={tdCls}><StatusBadge status={py.status || 'completed'} /></td>
+                          <td className={cx(tdCls, 'text-[#737373]')}>
+                            <span className="block truncate max-w-[200px]" title={py.notes || ''}>{py.notes || '—'}</span>
+                          </td>
+                          <td className={cx(tdCls, 'text-right')}>
+                            <button type="button" onClick={() => setSelectedPayoutDetails(py)} className={cx(btn.base, btn.secondary, btn.xs)}>
+                              View
+                              <CountPill>{getPayoutBookings(py).length}</CountPill>
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
 
-            <Pagination
-              currentPage={payoutPage}
-              totalPages={totalPayoutPages}
-              totalItems={filteredGlobalPayouts.length}
-              pageSize={PAGE_SIZE}
-              onPageChange={setPayoutPage}
-              label="payouts"
-            />
-          </div>
-        </div>
+              <div className="md:hidden">
+                {loading ? (
+                  <SkeletonList />
+                ) : pagedPayouts.length === 0 ? (
+                  <EmptyState title="No payouts yet" description="Recorded payouts will appear here." />
+                ) : (
+                  <ul className="divide-y divide-[#F0F0F0]">
+                    {pagedPayouts.map((py) => (
+                      <li key={py.id}>
+                        <button type="button" onClick={() => setSelectedPayoutDetails(py)} className="w-full text-left p-4 space-y-2">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <span className="block font-mono text-xs text-[#171717] truncate">{py.payout_reference}</span>
+                              <span className="block text-xs text-[#737373]">{py.partner_code} · {safeFormatDate(py.created_at)}</span>
+                            </div>
+                            <StatusBadge status={py.status || 'completed'} />
+                          </div>
+                          <div className="flex items-end justify-between gap-3">
+                            <span className="text-xs text-[#737373] capitalize">{methodLabel(py.payout_method)} · {getPayoutBookings(py).length} bookings</span>
+                            <span className="text-[15px] font-semibold tabular-nums text-black">{formatIDR(py.amount)}</span>
+                          </div>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
+              <Pagination page={payoutPage} total={filteredGlobalPayouts.length} pageSize={PAGE_SIZE} onChange={setPayoutPage} label="payouts" />
+            </>
+          )}
+        </section>
       )}
 
-      {/* SUB-TAB 4: SETTINGS (Clearly Grouped Minimal Form) */}
+      {/* ============================ SETTINGS ============================ */}
       {subTab === 'settings' && (
-        <form onSubmit={handleSaveSettings} className="space-y-4 max-w-2xl">
-          
-          {/* Group 1: Commission Rules */}
-          <div className="bg-white p-5 rounded-xl border border-neutral-200 shadow-2xs space-y-4">
-            <div>
-              <h3 className="font-bold text-neutral-900 text-sm tracking-tight">Commission Rules</h3>
-              <p className="text-xs text-neutral-500 mt-0.5">
-                Baseline revenue-share rules applied to referral earnings.
-              </p>
-            </div>
+        <form onSubmit={handleSaveSettings} noValidate className="max-w-3xl space-y-4" aria-labelledby="aff-settings-title">
+          <h2 id="aff-settings-title" className="sr-only">Settings</h2>
 
-            <div className="space-y-1">
-              <label className="block text-xs font-semibold text-neutral-800">
-                Default Commission Rate (%)
-              </label>
-              <div className="relative max-w-xs">
+          <SectionCard title="Commission rules" description="Applied when a partner is created. Each partner's rate can be changed in their profile.">
+            <Field label="Default commission rate" htmlFor="set-rate" hint="Between 1% and 50%." error={settingsErrors.rate}>
+              <div className="relative sm:max-w-[200px]">
                 <input
+                  id="set-rate"
                   type="number"
                   min={1}
                   max={50}
                   step="0.5"
                   value={settings.default_commission_rate_pct}
-                  onChange={(e) => {
-                    setSettings({ ...settings, default_commission_rate_pct: Number(e.target.value) });
-                    setSettingsDirty(true);
-                  }}
-                  className="w-full h-9 px-3 border border-neutral-200 rounded-lg text-xs font-mono font-semibold focus:outline-none focus:border-black"
+                  onChange={(e) => setSettings({ ...settings, default_commission_rate_pct: e.target.value === '' ? '' : Number(e.target.value) })}
+                  className={cx(inputCls, 'pr-9 tabular-nums', settingsErrors.rate && 'border-red-400')}
                 />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 text-xs font-medium">%</span>
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[13px] text-[#737373]">%</span>
               </div>
-              <p className="text-[11px] text-neutral-400 pt-0.5">
-                Applied automatically to newly approved partners. Can be customized per partner in Partner Details.
-              </p>
-            </div>
-          </div>
+            </Field>
+          </SectionCard>
 
-          {/* Group 2: Program Settings & Attribution */}
-          <div className="bg-white p-5 rounded-xl border border-neutral-200 shadow-2xs space-y-4">
-            <div>
-              <h3 className="font-bold text-neutral-900 text-sm tracking-tight">Program Settings</h3>
-              <p className="text-xs text-neutral-500 mt-0.5">
-                Referral cookie duration and attribution logic for visitor bookings.
-              </p>
-            </div>
+          <SectionCard title="Partner settings" description="How new partner registrations are handled.">
+            <label htmlFor="set-auto" className="flex items-start gap-3 cursor-pointer">
+              <input
+                id="set-auto"
+                type="checkbox"
+                checked={!!settings.auto_approve_partners}
+                onChange={(e) => setSettings({ ...settings, auto_approve_partners: e.target.checked })}
+                className="mt-0.5 w-4 h-4 rounded border-[#D4D4D4] accent-black cursor-pointer"
+              />
+              <span>
+                <span className="block text-[13px] font-medium text-[#171717]">Auto-approve applications</span>
+                <span className="block text-xs text-[#737373] mt-0.5">New partners become active immediately without manual review.</span>
+              </span>
+            </label>
+          </SectionCard>
 
-            <div className="space-y-1">
-              <label className="block text-xs font-semibold text-neutral-800">
-                Attribution Window (Days)
-              </label>
-              <div className="relative max-w-xs">
+          <SectionCard title="Program configuration" description="Referral tracking across the Therapick website.">
+            <div className="space-y-5">
+              <label htmlFor="set-active" className="flex items-start gap-3 cursor-pointer">
                 <input
-                  type="number"
-                  min={1}
-                  max={180}
-                  value={settings.cookie_duration_days}
-                  onChange={(e) => {
-                    setSettings({ ...settings, cookie_duration_days: Number(e.target.value) });
-                    setSettingsDirty(true);
-                  }}
-                  className="w-full h-9 px-3 border border-neutral-200 rounded-lg text-xs font-mono font-semibold focus:outline-none focus:border-black"
-                />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 text-xs font-medium">Days</span>
-              </div>
-              <p className="text-[11px] text-neutral-400 pt-0.5">
-                Number of days a referred guest remains linked to the partner after clicking their referral link.
-              </p>
-            </div>
-
-            <div className="pt-2">
-              <label className="flex items-center gap-2.5 cursor-pointer">
-                <input
+                  id="set-active"
                   type="checkbox"
-                  checked={settings.is_program_active}
-                  onChange={(e) => {
-                    setSettings({ ...settings, is_program_active: e.target.checked });
-                    setSettingsDirty(true);
-                  }}
-                  className="rounded text-black cursor-pointer"
+                  checked={!!settings.is_program_active}
+                  onChange={(e) => setSettings({ ...settings, is_program_active: e.target.checked })}
+                  className="mt-0.5 w-4 h-4 rounded border-[#D4D4D4] accent-black cursor-pointer"
                 />
-                <div>
-                  <span className="text-xs font-semibold text-neutral-900 block">
-                    Program Active
-                  </span>
-                  <span className="text-[11px] text-neutral-400">
-                    When active, affiliate referral tracking and code attribution are active across the website.
-                  </span>
-                </div>
+                <span>
+                  <span className="block text-[13px] font-medium text-[#171717]">Program active</span>
+                  <span className="block text-xs text-[#737373] mt-0.5">When off, referral links stop attributing new bookings.</span>
+                </span>
               </label>
-            </div>
-          </div>
-
-          {/* Group 3: Partner Eligibility */}
-          <div className="bg-white p-5 rounded-xl border border-neutral-200 shadow-2xs space-y-4">
-            <div>
-              <h3 className="font-bold text-neutral-900 text-sm tracking-tight">Partner Eligibility</h3>
-              <p className="text-xs text-neutral-500 mt-0.5">
-                Registration approval and onboarding requirements.
-              </p>
-            </div>
-
-            <div>
-              <label className="flex items-center gap-2.5 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={settings.auto_approve_partners}
-                  onChange={(e) => {
-                    setSettings({ ...settings, auto_approve_partners: e.target.checked });
-                    setSettingsDirty(true);
-                  }}
-                  className="rounded text-black cursor-pointer"
-                />
-                <div>
-                  <span className="text-xs font-semibold text-neutral-900 block">
-                    Auto-approve Applications
-                  </span>
-                  <span className="text-[11px] text-neutral-400">
-                    Automatically activate new partner accounts upon registration without requiring manual admin approval.
-                  </span>
-                </div>
-              </label>
-            </div>
-          </div>
-
-          {/* Save Action */}
-          <div className="flex items-center gap-3 pt-2">
-            <button
-              type="submit"
-              disabled={actionLoading}
-              className="h-9 px-5 bg-black text-white text-xs font-medium rounded-lg hover:bg-neutral-800 disabled:opacity-40 transition-colors shadow-xs"
-            >
-              {actionLoading ? 'Saving...' : 'Save Settings'}
-            </button>
-            {settingsDirty && (
-              <span className="text-xs text-amber-700 font-medium">Unsaved changes</span>
-            )}
-          </div>
-        </form>
-      )}
-
-      {/* RECORD PAYOUT MODAL WITH ACTIVE FLOATING CALENDAR & APPROVED REFERRALS SELECTOR */}
-      {showPayoutModal && (
-        <div className="fixed inset-0 z-[70] bg-black/50 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 md:p-6">
-          <form
-            onSubmit={handleRecordPayout}
-            className="bg-white rounded-2xl w-full h-full max-w-[98vw] max-h-[96vh] flex flex-col border border-neutral-200 shadow-2xl overflow-hidden"
-          >
-            {/* Modal Header */}
-            <div className="p-4 sm:p-5 bg-white border-b border-neutral-200 text-neutral-900 flex items-center justify-between shrink-0">
-              <div className="flex items-center gap-2.5">
-                <h3 className="font-bold text-neutral-900 text-base sm:text-lg">Record Payout</h3>
-                {payoutSelectedPartner && (
-                  <span className="font-mono font-medium text-neutral-800 bg-neutral-100 px-2 py-0.5 rounded text-xs border border-neutral-200">
-                    {payoutSelectedPartner.partner_code}
-                  </span>
-                )}
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setShowPayoutModal(false);
-                  setSelectedCommissionIds([]);
-                  setPayoutSelectedDate(null);
-                }}
-                className="w-8 h-8 rounded-lg bg-white border border-neutral-200 hover:bg-neutral-50 text-neutral-600 flex items-center justify-center transition-colors"
-                title="Close"
-              >
-                <X size={15} />
-              </button>
-            </div>
-
-            <div className="p-4 sm:p-6 overflow-y-auto space-y-5 text-xs flex-1">
-              {/* 1. Select Partner & Partner Details */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-neutral-800 mb-1">Select Partner *</label>
-                  <select
-                    required
-                    value={payoutForm.partner_id}
-                    onChange={(e) => handleSelectPayoutPartner(e.target.value)}
-                    className="w-full h-9 px-3 border border-neutral-200 rounded-lg text-xs bg-white font-medium focus:outline-none focus:border-black"
-                  >
-                    <option value="">-- Choose Partner to Settle --</option>
-                    {partners.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.partner_code} - {p.first_name} {p.last_name} ({p.business_name || 'Individual'})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {payoutSelectedPartner ? (
-                  <div className="bg-neutral-50/70 p-3 rounded-xl border border-neutral-200 text-[11px] space-y-1">
-                    <div className="flex justify-between">
-                      <span className="text-neutral-500">Method:</span>
-                      <span className="font-medium text-neutral-900 capitalize">{payoutSelectedPartner.payout_method?.replace('_', ' ') || 'Bank Transfer'}</span>
-                    </div>
-                    {payoutSelectedPartner.payout_details?.bank_name ? (
-                      <div className="flex justify-between">
-                        <span className="text-neutral-500">Bank:</span>
-                        <span className="font-mono font-medium text-neutral-900">
-                          {payoutSelectedPartner.payout_details.bank_name} - {payoutSelectedPartner.payout_details.account_number} ({payoutSelectedPartner.payout_details.account_holder})
-                        </span>
-                      </div>
-                    ) : (
-                      <div className="text-neutral-400">Bank account details not specified</div>
-                    )}
-                    <div className="flex justify-between pt-1 border-t border-neutral-200">
-                      <span className="text-neutral-500">Approved Unpaid:</span>
-                      <span className="font-bold text-neutral-900 font-mono">
-                        {formatIDR(payoutApprovedCommissions.reduce((sum, c) => sum + Number(c.commission_amount || 0), 0))}
-                      </span>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="bg-neutral-50/70 p-3 rounded-xl border border-neutral-200 text-[11px] text-neutral-500 flex items-center justify-center">
-                    Select a partner to view approved bookings and active calendar
-                  </div>
-                )}
-              </div>
-
-              {/* 2. ACTIVE FLOATING CALENDAR & APPROVED REFERRALS SELECTOR */}
-              {payoutForm.partner_id && (
-                <div className="space-y-3 pt-2 border-t border-neutral-200">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <div>
-                      <h4 className="font-bold text-neutral-900 text-xs flex items-center gap-2">
-                        <span>Active Calendar & Approved Commissions</span>
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-neutral-100 text-neutral-700 font-mono">
-                          {selectedCommissionIds.length} of {payoutApprovedCommissions.length} Selected
-                        </span>
-                      </h4>
-                      <p className="text-[11px] text-neutral-500">
-                        Select a date to filter bookings, or check items to include in this payout settlement.
-                      </p>
-                    </div>
-
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      <button
-                        type="button"
-                        onClick={selectAllApproved}
-                        className="h-7 px-2.5 bg-black text-white rounded-lg text-xs font-medium hover:bg-neutral-800"
-                      >
-                        Select All
-                      </button>
-                      <button
-                        type="button"
-                        onClick={deselectAllApproved}
-                        className="h-7 px-2.5 bg-white hover:bg-neutral-50 text-neutral-700 rounded-lg text-xs font-medium border border-neutral-200"
-                      >
-                        Clear
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Two-Column Grid: Left = Floating Calendar, Right = Approved Bookings Checklist */}
-                  <div className="grid grid-cols-1 md:grid-cols-12 gap-4 bg-white rounded-xl border border-neutral-200 p-3 sm:p-4 shadow-2xs">
-                    
-                    {/* Left: Active Floating Calendar (5 cols) */}
-                    <div className="md:col-span-5 space-y-2.5 border-b md:border-b-0 md:border-r border-neutral-200 pb-3 md:pb-0 md:pr-4">
-                      <div className="flex items-center justify-between">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (payoutCalendarMonth === 0) {
-                              setPayoutCalendarMonth(11);
-                              setPayoutCalendarYear((y) => y - 1);
-                            } else {
-                              setPayoutCalendarMonth((m) => m - 1);
-                            }
-                            setPayoutSelectedDate(null);
-                          }}
-                          className="w-7 h-7 rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 flex items-center justify-center text-neutral-700"
-                        >
-                          <ChevronLeft size={14} />
-                        </button>
-
-                        <div className="font-bold text-neutral-900 text-xs">
-                          {MONTH_NAMES[payoutCalendarMonth]} {payoutCalendarYear}
-                        </div>
-
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (payoutCalendarMonth === 11) {
-                              setPayoutCalendarMonth(0);
-                              setPayoutCalendarYear((y) => y + 1);
-                            } else {
-                              setPayoutCalendarMonth((m) => m + 1);
-                            }
-                            setPayoutSelectedDate(null);
-                          }}
-                          className="w-7 h-7 rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 flex items-center justify-center text-neutral-700"
-                        >
-                          <ChevronRight size={14} />
-                        </button>
-                      </div>
-
-                      {/* Mini Month Grid */}
-                      <div className="grid grid-cols-7 gap-1 text-center font-bold text-neutral-400 text-[10px]">
-                        {DAYS_OF_WEEK.map((d) => (
-                          <div key={d} className="py-0.5">{d}</div>
-                        ))}
-                      </div>
-
-                      <div className="grid grid-cols-7 gap-1">
-                        {Array.from({ length: payoutCalendarFirstDayOfWeek }).map((_, i) => (
-                          <div key={`payout-empty-${i}`} className="h-9 rounded-lg bg-neutral-50/50" />
-                        ))}
-
-                        {Array.from({ length: payoutCalendarDaysInMonth }).map((_, i) => {
-                          const dayNum = i + 1;
-                          const dateStr = `${payoutCalendarYear}-${String(payoutCalendarMonth + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
-                          const approvedOnDate = payoutApprovedByDate[dateStr] || [];
-                          const isSelected = payoutSelectedDate === dateStr;
-                          const hasApproved = approvedOnDate.length > 0;
-
-                          return (
-                            <button
-                              type="button"
-                              key={`payout-date-${dateStr}`}
-                              onClick={() => setPayoutSelectedDate(isSelected ? null : dateStr)}
-                              className={`h-9 rounded-lg border text-left p-1 flex flex-col justify-between transition-colors ${
-                                isSelected
-                                  ? 'bg-black text-white border-black shadow-xs'
-                                  : hasApproved
-                                  ? 'bg-emerald-50/60 border-emerald-200 text-neutral-900 hover:border-emerald-300'
-                                  : 'bg-white border-neutral-200/80 hover:border-neutral-300 text-neutral-400'
-                              }`}
-                            >
-                              <div className="flex items-center justify-between w-full">
-                                <span className={`text-[10px] font-bold ${isSelected ? 'text-white' : ''}`}>
-                                  {dayNum}
-                                </span>
-                                {hasApproved && (
-                                  <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-white' : 'bg-emerald-500'}`} />
-                                )}
-                              </div>
-                              {hasApproved ? (
-                                <span className={`text-[8px] font-semibold truncate ${isSelected ? 'text-white' : 'text-emerald-700'}`}>
-                                  {approvedOnDate.length} app
-                                </span>
-                              ) : (
-                                <div />
-                              )}
-                            </button>
-                          );
-                        })}
-                      </div>
-
-                      {payoutSelectedDate && (
-                        <div className="flex items-center justify-between bg-neutral-50 p-2 rounded-lg text-[11px] border border-neutral-200">
-                          <span>Filtered: <strong>{safeFormatDate(payoutSelectedDate)}</strong></span>
-                          <button
-                            type="button"
-                            onClick={() => setPayoutSelectedDate(null)}
-                            className="text-neutral-900 underline font-semibold hover:text-neutral-700"
-                          >
-                            Clear
-                          </button>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Right: Approved Bookings Checklist (7 cols) */}
-                    <div className="md:col-span-7 space-y-2 max-h-72 overflow-y-auto pr-1">
-                      {(() => {
-                        const displayedApproved = payoutSelectedDate
-                          ? payoutApprovedCommissions.filter((c) => {
-                              const d = c.booking_date || (c.created_at ? c.created_at.split('T')[0] : '');
-                              return d === payoutSelectedDate || d.startsWith(payoutSelectedDate);
-                            })
-                          : payoutApprovedCommissions;
-
-                        if (displayedApproved.length === 0) {
-                          return (
-                            <div className="bg-white p-6 rounded-xl border border-neutral-200 text-center text-neutral-500 space-y-1">
-                              <p className="font-semibold text-neutral-900">No approved referrals found{payoutSelectedDate ? ' for this date' : ''}.</p>
-                              <p className="text-[11px] text-neutral-400">Only bookings with an Approved status can be disbursed.</p>
-                            </div>
-                          );
-                        }
-
-                        return (
-                          <div className="space-y-2">
-                            {displayedApproved.map((c) => {
-                              const isChecked = selectedCommissionIds.includes(c.id);
-                              return (
-                                <div
-                                  key={c.id}
-                                  onClick={() => toggleCommissionSelection(c.id)}
-                                  className={`p-2.5 rounded-xl border transition-colors cursor-pointer flex items-center justify-between gap-2 ${
-                                    isChecked
-                                      ? 'bg-neutral-50 border-black shadow-2xs'
-                                      : 'bg-white border-neutral-200 hover:border-neutral-300'
-                                  }`}
-                                >
-                                  <div className="flex items-center gap-2.5 min-w-0">
-                                    <input
-                                      type="checkbox"
-                                      checked={isChecked}
-                                      onChange={() => {}}
-                                      className="rounded text-black cursor-pointer"
-                                    />
-                                    <div className="min-w-0">
-                                      <div className="flex items-center gap-2 flex-wrap">
-                                        <span className="font-mono font-bold text-neutral-900 text-xs">#{c.booking_id}</span>
-                                        <span className="text-[10px] text-neutral-400">
-                                          {safeFormatDate(c.booking_date || c.created_at)}
-                                        </span>
-                                        <StatusBadge status="approved" />
-                                      </div>
-                                      <div className="text-[11px] text-neutral-800 truncate mt-0.5 font-medium">
-                                        {c.guest_name || 'Guest'} &bull; {c.treatment_name || 'Treatment'}
-                                      </div>
-                                    </div>
-                                  </div>
-
-                                  <div className="text-right shrink-0">
-                                    <span className="font-mono font-bold text-neutral-900 text-xs block">
-                                      +{formatIDR(c.commission_amount)}
-                                    </span>
-                                    <span className="text-[10px] text-neutral-400">
-                                      {c.commission_rate_pct}% of {formatIDR(c.eligible_treatment_amount)}
-                                    </span>
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        );
-                      })()}
-                    </div>
-                  </div>
-
-                  {/* Past Paid Out Referrals (Collapsible) */}
-                  {payoutPaidCommissions.length > 0 && (
-                    <div className="pt-1">
-                      <button
-                        type="button"
-                        onClick={() => setShowPastPaidInPayoutModal((v) => !v)}
-                        className="text-[11px] font-semibold text-neutral-500 hover:text-neutral-900 flex items-center gap-1.5"
-                      >
-                        <span>{showPastPaidInPayoutModal ? '▼ Hide' : '▶ Show'} Previously Paid Out Referrals ({payoutPaidCommissions.length})</span>
-                      </button>
-
-                      {showPastPaidInPayoutModal && (
-                        <div className="mt-2 space-y-1.5 max-h-40 overflow-y-auto bg-neutral-50/70 p-2.5 rounded-xl border border-neutral-200">
-                          {payoutPaidCommissions.map((c) => (
-                            <div key={`paid-${c.id}`} className="flex items-center justify-between text-[11px] p-1.5 bg-white rounded-lg border border-neutral-200">
-                              <div className="flex items-center gap-2">
-                                <span className="font-mono font-semibold text-neutral-900">#{c.booking_id}</span>
-                                <span className="text-neutral-400">{safeFormatDate(c.booking_date || c.created_at)}</span>
-                                <StatusBadge status="paid" />
-                              </div>
-                              <span className="font-mono font-semibold text-neutral-900">{formatIDR(c.commission_amount)}</span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* 3. Payout Form Fields */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-neutral-200">
-                <div>
-                  <label className="block text-xs font-semibold text-neutral-800 mb-1">
-                    Payout Amount (IDR) * {selectedCommissionIds.length > 0 && `(Auto-calculated for ${selectedCommissionIds.length} bookings)`}
-                  </label>
+              <Field label="Attribution window" htmlFor="set-days" hint="Days a guest stays linked to a partner after using their link (1–180)." error={settingsErrors.days}>
+                <div className="relative sm:max-w-[200px]">
                   <input
+                    id="set-days"
                     type="number"
-                    required
-                    placeholder="e.g. 750000"
-                    value={payoutForm.amount}
-                    onChange={(e) => setPayoutForm({ ...payoutForm, amount: e.target.value })}
-                    className="w-full h-9 px-3 border border-neutral-200 rounded-lg text-xs font-mono font-bold focus:outline-none focus:border-black"
+                    min={1}
+                    max={180}
+                    value={settings.cookie_duration_days}
+                    onChange={(e) => setSettings({ ...settings, cookie_duration_days: e.target.value === '' ? '' : Number(e.target.value) })}
+                    className={cx(inputCls, 'pr-12 tabular-nums', settingsErrors.days && 'border-red-400')}
                   />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[13px] text-[#737373]">days</span>
                 </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-neutral-800 mb-1">Payment Method</label>
-                  <select
-                    value={payoutForm.payout_method}
-                    onChange={(e) => setPayoutForm({ ...payoutForm, payout_method: e.target.value })}
-                    className="w-full h-9 px-3 border border-neutral-200 rounded-lg text-xs bg-white font-medium focus:outline-none focus:border-black"
-                  >
-                    <option value="bank_transfer">Indonesian Bank Transfer</option>
-                    <option value="wise">Wise</option>
-                    <option value="paypal">PayPal</option>
-                    <option value="cash">Cash Settlement</option>
-                  </select>
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="block text-xs font-semibold text-neutral-800 mb-1">Notes / Transfer Reference</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. BCA Ref #88392102"
-                    value={payoutForm.notes}
-                    onChange={(e) => setPayoutForm({ ...payoutForm, notes: e.target.value })}
-                    className="w-full h-9 px-3 border border-neutral-200 rounded-lg text-xs focus:outline-none focus:border-black"
-                  />
-                </div>
-              </div>
-
-              {/* 4. Action Buttons */}
-              <div className="flex gap-2 pt-2 border-t border-neutral-200">
-                <button
-                  type="submit"
-                  disabled={actionLoading || !payoutForm.partner_id || !payoutForm.amount || Number(payoutForm.amount) <= 0}
-                  className="flex-1 h-9 bg-black text-white text-xs font-medium rounded-lg hover:bg-neutral-800 disabled:opacity-40 transition-colors shadow-xs"
-                >
-                  {actionLoading ? 'Processing...' : `Confirm Payout (${formatIDR(Number(payoutForm.amount) || 0)})`}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowPayoutModal(false);
-                    setSelectedCommissionIds([]);
-                    setPayoutSelectedDate(null);
-                  }}
-                  className="h-9 px-4 border border-neutral-200 text-xs font-medium rounded-lg hover:bg-neutral-50 text-neutral-700"
-                >
-                  Cancel
-                </button>
-              </div>
+              </Field>
             </div>
-          </form>
-        </div>
-      )}
+          </SectionCard>
 
-      {/* INDEPENDENT PARTNER DETAILS & FULLSCREEN DESKTOP CALENDAR MODAL */}
-      {selectedPartnerDetails && activePartnerMetrics && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 md:p-6">
-          <div className="bg-white rounded-2xl w-full h-full max-w-[98vw] max-h-[96vh] flex flex-col border border-neutral-200 shadow-2xl overflow-hidden">
-            
-            {/* Modal Header */}
-            <div className="p-4 sm:p-5 bg-white border-b border-neutral-200 text-neutral-900 flex items-start justify-between shrink-0">
-              <div>
-                <div className="flex items-center gap-2.5 flex-wrap">
-                  <h3 className="font-bold text-neutral-900 text-lg sm:text-xl tracking-tight">
-                    {selectedPartnerDetails.first_name} {selectedPartnerDetails.last_name || ''}
-                  </h3>
-                  <span className="font-mono font-medium text-neutral-800 bg-neutral-100 px-2 py-0.5 rounded text-xs border border-neutral-200">
-                    {selectedPartnerDetails.partner_code}
-                  </span>
-                  <StatusBadge status={selectedPartnerDetails.status} />
-                </div>
-                <div className="text-xs text-neutral-500 mt-1 flex items-center gap-2 flex-wrap">
-                  {selectedPartnerDetails.business_name && (
-                    <span className="text-neutral-800 font-medium">{selectedPartnerDetails.business_name}</span>
-                  )}
-                  <span>&bull;</span>
-                  <span>Rate: <strong className="text-neutral-900 font-mono">{selectedPartnerDetails.commission_rate_pct}%</strong></span>
-                  <span>&bull;</span>
-                  <span>Joined: {safeFormatDate(selectedPartnerDetails.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-                </div>
-              </div>
-
+          <div className="sticky bottom-24 md:bottom-4 z-10 flex items-center justify-between gap-3 bg-white border border-[#E5E5E5] rounded-xl px-4 py-3">
+            <span className="text-xs text-[#737373]">
+              {settingsDirty ? <span className="text-amber-700 font-medium">Unsaved changes</span> : 'All changes saved'}
+            </span>
+            <div className="flex gap-2">
               <button
                 type="button"
-                onClick={() => setSelectedPartnerDetails(null)}
-                className="w-8 h-8 rounded-lg bg-white border border-neutral-200 hover:bg-neutral-50 text-neutral-600 flex items-center justify-center transition-colors"
-                title="Close"
-              >
-                <X size={15} />
-              </button>
-            </div>
-
-            {/* Modal Sub-Tabs */}
-            <div className="flex items-center gap-1 border-b border-neutral-200 px-4 sm:px-6 pt-2 bg-neutral-50/50 shrink-0 overflow-x-auto">
-              {[
-                { id: 'overview', label: 'Overview' },
-                { id: 'calendar', label: 'Calendar', count: activePartnerMetrics.bookingsCount },
-                { id: 'commissions', label: 'Commissions', count: activePartnerMetrics.commissions.length },
-                { id: 'payouts', label: 'Payouts', count: activePartnerMetrics.payouts.length },
-              ].map((tab) => {
-                const isActive = partnerActiveTab === tab.id;
-                return (
-                  <button
-                    key={tab.id}
-                    type="button"
-                    onClick={() => setPartnerActiveTab(tab.id as any)}
-                    className={`flex items-center gap-1.5 px-4 py-2 text-xs font-medium border-b-2 transition-all whitespace-nowrap ${
-                      isActive
-                        ? 'border-black text-black bg-white rounded-t-lg shadow-2xs font-semibold'
-                        : 'border-transparent text-neutral-500 hover:text-neutral-900 hover:bg-white/50'
-                    }`}
-                  >
-                    <span>{tab.label}</span>
-                    {tab.count !== undefined && (
-                      <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${isActive ? 'bg-black text-white' : 'bg-neutral-200/80 text-neutral-700'}`}>
-                        {tab.count}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Modal Tab Content */}
-            <div
-              className={`flex-1 min-h-0 ${
-                partnerActiveTab === 'calendar'
-                  ? 'overflow-hidden p-3 sm:p-4 flex flex-col'
-                  : 'overflow-y-auto p-4 sm:p-6 space-y-5'
-              }`}
-            >
-              
-              {/* TAB A: OVERVIEW & PROFILE */}
-              {partnerActiveTab === 'overview' && (
-                <div className="space-y-5 text-xs">
-                  
-                  {/* Financial KPI Banner */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    <div className="bg-white p-3.5 rounded-xl border border-neutral-200 shadow-2xs">
-                      <span className="text-[10px] font-semibold text-neutral-500 block uppercase">Commission</span>
-                      <span className="text-base font-bold text-neutral-900 mt-1 block font-mono">
-                        {formatIDR(activePartnerMetrics.totalEarned)}
-                      </span>
-                      <span className="text-[10px] text-neutral-400">{activePartnerMetrics.commissions.length} referrals</span>
-                    </div>
-
-                    <div className="bg-white p-3.5 rounded-xl border border-neutral-200 shadow-2xs">
-                      <span className="text-[10px] font-semibold text-neutral-500 block uppercase">Unpaid</span>
-                      <span className="text-base font-bold text-neutral-900 mt-1 block font-mono">
-                        {formatIDR(activePartnerMetrics.approvedUnpaid)}
-                      </span>
-                      <span className="text-[10px] text-neutral-400">Ready to settle</span>
-                    </div>
-
-                    <div className="bg-white p-3.5 rounded-xl border border-neutral-200 shadow-2xs">
-                      <span className="text-[10px] font-semibold text-neutral-500 block uppercase">Paid out</span>
-                      <span className="text-base font-bold text-neutral-900 mt-1 block font-mono">
-                        {formatIDR(activePartnerMetrics.totalPaidOut)}
-                      </span>
-                      <span className="text-[10px] text-neutral-400">{activePartnerMetrics.payouts.length} transfers</span>
-                    </div>
-
-                    <div className="bg-white p-3.5 rounded-xl border border-neutral-200 shadow-2xs">
-                      <span className="text-[10px] font-semibold text-neutral-500 block uppercase">Pending</span>
-                      <span className="text-base font-bold text-neutral-900 mt-1 block font-mono">
-                        {formatIDR(activePartnerMetrics.pending)}
-                      </span>
-                      <span className="text-[10px] text-neutral-400">Awaiting service</span>
-                    </div>
-                  </div>
-
-                  {/* Contact Information & Category Cards */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    
-                    {/* Contact Details Card */}
-                    <div className="bg-white p-4 rounded-xl border border-neutral-200 shadow-2xs space-y-3">
-                      <h4 className="font-bold text-neutral-900 text-xs border-b border-neutral-200 pb-2">
-                        Contact Details
-                      </h4>
-
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between p-2.5 rounded-lg bg-neutral-50/70 border border-neutral-200">
-                          <div>
-                            <span className="text-[10px] text-neutral-400 block">Email Address</span>
-                            <a
-                              href={`mailto:${selectedPartnerDetails.email}`}
-                              className="font-medium text-neutral-900 hover:underline mt-0.5 block"
-                            >
-                              {selectedPartnerDetails.email}
-                            </a>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => handleCopyText(selectedPartnerDetails.email, 'email')}
-                            className="p-1.5 rounded-md hover:bg-neutral-100 text-neutral-500"
-                            title="Copy email"
-                          >
-                            {copiedId === 'email' ? <Check size={12} className="text-emerald-600" /> : <Copy size={12} />}
-                          </button>
-                        </div>
-
-                        <div className="flex items-center justify-between p-2.5 rounded-lg bg-neutral-50/70 border border-neutral-200">
-                          <div>
-                            <span className="text-[10px] text-neutral-400 block">WhatsApp Direct Chat</span>
-                            {selectedPartnerDetails.whatsapp ? (
-                              <a
-                                href={`https://wa.me/${selectedPartnerDetails.whatsapp.replace(/[^0-9]/g, '')}`}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="font-semibold text-neutral-900 hover:underline mt-0.5 block"
-                              >
-                                {selectedPartnerDetails.whatsapp}
-                              </a>
-                            ) : (
-                              <span className="text-neutral-400">Not provided</span>
-                            )}
-                          </div>
-                          {selectedPartnerDetails.whatsapp && (
-                            <a
-                              href={`https://wa.me/${selectedPartnerDetails.whatsapp.replace(/[^0-9]/g, '')}`}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="h-7 px-2.5 bg-black text-white rounded-md text-xs font-medium hover:bg-neutral-800 inline-flex items-center gap-1 shadow-2xs"
-                            >
-                              <span>Open WA</span>
-                              <ArrowUpRight size={11} />
-                            </a>
-                          )}
-                        </div>
-
-                        <div className="flex items-center justify-between p-2.5 rounded-lg bg-neutral-50/70 border border-neutral-200">
-                          <div>
-                            <span className="text-[10px] text-neutral-400 block">Phone Number</span>
-                            {selectedPartnerDetails.phone ? (
-                              <a href={`tel:${selectedPartnerDetails.phone}`} className="font-medium text-neutral-900 hover:underline mt-0.5 block">
-                                {selectedPartnerDetails.phone}
-                              </a>
-                            ) : (
-                              <span className="text-neutral-400">Not provided</span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Category & Business Profile Card */}
-                    <div className="bg-white p-4 rounded-xl border border-neutral-200 shadow-2xs space-y-3">
-                      <h4 className="font-bold text-neutral-900 text-xs border-b border-neutral-200 pb-2">
-                        Business & Category
-                      </h4>
-
-                      <div className="space-y-2">
-                        <div className="p-2.5 rounded-lg bg-neutral-50/70 border border-neutral-200">
-                          <span className="text-[10px] text-neutral-400 block">Category</span>
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-neutral-100 text-neutral-800 border border-neutral-200 capitalize mt-1">
-                            {selectedPartnerDetails.partner_type?.replace('_', ' ') || 'Hotel Villa'}
-                          </span>
-                        </div>
-
-                        <div className="p-2.5 rounded-lg bg-neutral-50/70 border border-neutral-200">
-                          <span className="text-[10px] text-neutral-400 block">Business / Villa Name</span>
-                          <span className="font-semibold text-neutral-900 text-xs block mt-0.5">
-                            {selectedPartnerDetails.business_name || 'Individual Partner (No Villa)'}
-                          </span>
-                        </div>
-
-                        <div className="p-2.5 rounded-lg bg-neutral-50/70 border border-neutral-200">
-                          <span className="text-[10px] text-neutral-400 block">Referral Link</span>
-                          <div className="flex items-center justify-between gap-2 mt-1">
-                            <span className="font-mono text-[11px] text-neutral-800 truncate">
-                              https://www.booktherapick.com/?ref={selectedPartnerDetails.partner_code}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                handleCopyText(`https://www.booktherapick.com/?ref=${selectedPartnerDetails.partner_code}`, 'link')
-                              }
-                              className="p-1 rounded bg-white border border-neutral-200 hover:bg-neutral-50 text-neutral-700 shrink-0"
-                              title="Copy link"
-                            >
-                              {copiedId === 'link' ? <Check size={11} className="text-emerald-600" /> : <Copy size={11} />}
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                  </div>
-
-                  {/* Payout Method & Banking Details Card */}
-                  <div className="bg-white p-4 rounded-xl border border-neutral-200 shadow-2xs space-y-3">
-                    <div className="flex items-center justify-between border-b border-neutral-200 pb-2">
-                      <h4 className="font-bold text-neutral-900 text-xs">
-                        Payout Method & Banking
-                      </h4>
-                      <span className="font-medium capitalize text-xs text-neutral-700 bg-neutral-100 px-2 py-0.5 rounded border border-neutral-200">
-                        {selectedPartnerDetails.payout_method?.replace('_', ' ') || 'Bank Transfer'}
-                      </span>
-                    </div>
-
-                    {selectedPartnerDetails.payout_details?.bank_name ? (
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3 rounded-lg bg-neutral-50/70 border border-neutral-200">
-                        <div>
-                          <span className="text-neutral-400 block text-[10px]">Bank Name</span>
-                          <span className="font-semibold text-neutral-900">{selectedPartnerDetails.payout_details.bank_name}</span>
-                        </div>
-                        <div>
-                          <span className="text-neutral-400 block text-[10px]">Account Number</span>
-                          <span className="font-mono font-bold text-neutral-900 text-xs flex items-center gap-1.5 mt-0.5">
-                            <span>{selectedPartnerDetails.payout_details.account_number}</span>
-                            <button
-                              type="button"
-                              onClick={() => handleCopyText(selectedPartnerDetails.payout_details.account_number, 'acc')}
-                              className="text-neutral-400 hover:text-neutral-700"
-                            >
-                              {copiedId === 'acc' ? <Check size={12} className="text-emerald-600" /> : <Copy size={12} />}
-                            </button>
-                          </span>
-                        </div>
-                        <div>
-                          <span className="text-neutral-400 block text-[10px]">Account Holder</span>
-                          <span className="font-semibold text-neutral-900">{selectedPartnerDetails.payout_details.account_holder}</span>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="p-3 rounded-lg bg-neutral-50/70 border border-neutral-200 text-neutral-400">
-                        No specific bank account entered yet.
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Internal Notes & Account Controls */}
-                  <div className="bg-white p-4 rounded-xl border border-neutral-200 shadow-2xs space-y-3">
-                    <h4 className="font-bold text-neutral-900 text-xs">
-                      Internal Notes
-                    </h4>
-                    <div className="space-y-2">
-                      <textarea
-                        rows={2}
-                        value={partnerNotesInput}
-                        onChange={(e) => setPartnerNotesInput(e.target.value)}
-                        placeholder="Add internal notes about this partner..."
-                        className="w-full p-2.5 rounded-lg border border-neutral-200 text-xs focus:outline-none focus:border-black"
-                      />
-                      <div className="flex justify-between items-center">
-                        <button
-                          type="button"
-                          onClick={() => handleSaveNotes(selectedPartnerDetails.id)}
-                          className="h-8 px-3.5 bg-black text-white rounded-lg text-xs font-medium hover:bg-neutral-800 shadow-xs"
-                        >
-                          Save Notes
-                        </button>
-                        
-                        <div className="flex gap-1.5">
-                          {selectedPartnerDetails.status === 'pending' && (
-                            <button
-                              type="button"
-                              onClick={() => handlePartnerStatus(selectedPartnerDetails.id, 'active')}
-                              className="h-8 px-3.5 bg-black text-white font-medium rounded-lg text-xs hover:bg-neutral-800 shadow-xs"
-                            >
-                              Approve Partner
-                            </button>
-                          )}
-                          {selectedPartnerDetails.status === 'active' && (
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setConfirmAction({
-                                  type: 'suspend',
-                                  id: selectedPartnerDetails.id,
-                                  name: `${selectedPartnerDetails.first_name} ${selectedPartnerDetails.last_name || ''}`,
-                                })
-                              }
-                              className="h-8 px-3.5 border border-neutral-200 text-neutral-700 hover:bg-neutral-50 font-medium rounded-lg text-xs"
-                            >
-                              Suspend Partner
-                            </button>
-                          )}
-                          {selectedPartnerDetails.status === 'suspended' && (
-                            <button
-                              type="button"
-                              onClick={() => handlePartnerStatus(selectedPartnerDetails.id, 'active')}
-                              className="h-8 px-3.5 bg-black text-white font-medium rounded-lg text-xs hover:bg-neutral-800 shadow-xs"
-                            >
-                              Reactivate Partner
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                </div>
-              )}
-
-              {/* TAB B: INDEPENDENT PARTNER CALENDAR (Fixed Grid + Scrollable Appointments) */}
-              {partnerActiveTab === 'calendar' && (
-                <div className="flex-1 min-h-0 flex flex-col space-y-3 text-xs overflow-hidden">
-                  
-                  {/* Calendar Top Controls */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-2.5 sm:p-3 rounded-xl border border-neutral-200 shrink-0">
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (partnerCalendarMonth === 0) {
-                            setPartnerCalendarMonth(11);
-                            setPartnerCalendarYear((y) => y - 1);
-                          } else {
-                            setPartnerCalendarMonth((m) => m - 1);
-                          }
-                          setPartnerSelectedDate(null);
-                        }}
-                        className="w-8 h-8 rounded-lg bg-white border border-neutral-200 flex items-center justify-center hover:bg-neutral-50 text-neutral-700"
-                        title="Previous Month"
-                      >
-                        <ChevronLeft size={16} />
-                      </button>
-
-                      <div className="font-bold text-neutral-900 text-sm px-2">
-                        {MONTH_NAMES[partnerCalendarMonth]} {partnerCalendarYear}
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (partnerCalendarMonth === 11) {
-                            setPartnerCalendarMonth(0);
-                            setPartnerCalendarYear((y) => y + 1);
-                          } else {
-                            setPartnerCalendarMonth((m) => m + 1);
-                          }
-                          setPartnerSelectedDate(null);
-                        }}
-                        className="w-8 h-8 rounded-lg bg-white border border-neutral-200 flex items-center justify-center hover:bg-neutral-50 text-neutral-700"
-                        title="Next Month"
-                      >
-                        <ChevronRight size={16} />
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const now = new Date();
-                          setPartnerCalendarYear(now.getFullYear());
-                          setPartnerCalendarMonth(now.getMonth());
-                          const mm = String(now.getMonth() + 1).padStart(2, '0');
-                          const dd = String(now.getDate()).padStart(2, '0');
-                          setPartnerSelectedDate(`${now.getFullYear()}-${mm}-${dd}`);
-                        }}
-                        className="h-8 px-2.5 text-xs font-medium bg-white border border-neutral-200 rounded-lg hover:bg-neutral-50 text-neutral-700"
-                      >
-                        Today
-                      </button>
-                    </div>
-
-                    <div className="flex items-center gap-3 text-xs text-neutral-500 flex-wrap">
-                      {partnerMonthBookings.some((b) => b.status === 'pending') && (
-                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-semibold">
-                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                          {partnerMonthBookings.filter((b) => b.status === 'pending').length} New Bookings
-                        </span>
-                      )}
-                      <div>
-                        Month: <strong className="text-neutral-900 font-semibold">{partnerMonthBookings.length}</strong> bookings (<strong className="text-neutral-900 font-mono font-semibold">{formatIDR(partnerMonthBookings.reduce((sum, b) => sum + Number(b.commission_amount || 0), 0))}</strong>)
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* 2-Column Responsive Layout: Left Calendar Grid (Fixed, NEVER Scrolls Down), Right Appointments List (Scrollable) */}
-                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1 min-h-0 items-stretch overflow-hidden">
-                    
-                    {/* Left Column: Fixed Month Grid (lg:col-span-7 xl:col-span-8) - Can NOT scroll down */}
-                    <div className="lg:col-span-7 xl:col-span-8 bg-white rounded-xl border border-neutral-200 p-3 sm:p-4 shadow-2xs flex flex-col h-full min-h-0 overflow-hidden select-none">
-                      <div className="grid grid-cols-7 gap-1 text-center font-bold text-neutral-400 text-[11px] mb-2 uppercase shrink-0">
-                        {DAYS_OF_WEEK.map((d) => (
-                          <div key={d} className="py-1">{d}</div>
-                        ))}
-                      </div>
-
-                      <div className="grid grid-cols-7 gap-1.5 flex-1 min-h-0 auto-rows-fr">
-                        {Array.from({ length: calendarFirstDayOfWeek }).map((_, i) => (
-                          <div key={`empty-${i}`} className="h-full bg-neutral-50/50 rounded-lg border border-transparent" />
-                        ))}
-
-                        {Array.from({ length: calendarDaysInMonth }).map((_, i) => {
-                          const dayNum = i + 1;
-                          const dateStr = `${partnerCalendarYear}-${String(partnerCalendarMonth + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
-                          const dayBookings = partnerBookingsByDate[dateStr] || [];
-                          const isSelected = partnerSelectedDate === dateStr;
-                          const todayStr = new Date().toISOString().split('T')[0];
-                          const isToday = dateStr === todayStr;
-
-                          const hasPaid = dayBookings.some((b) => b.status === 'paid');
-                          const hasApproved = dayBookings.some((b) => b.status === 'approved');
-                          const hasPending = dayBookings.some((b) => b.status === 'pending');
-                          const dayCommSum = dayBookings.reduce((sum, b) => sum + Number(b.commission_amount || 0), 0);
-
-                          return (
-                            <div
-                              key={dateStr}
-                              onClick={() => setPartnerSelectedDate(isSelected ? null : dateStr)}
-                              className={`h-full p-1 sm:p-1.5 rounded-lg border transition-all cursor-pointer flex flex-col justify-between select-none ${
-                                isSelected
-                                  ? 'bg-black text-white border-black shadow-md'
-                                  : dayBookings.length > 0
-                                  ? 'bg-white border-neutral-300 hover:border-black shadow-2xs'
-                                  : 'bg-white border-neutral-200/70 hover:border-neutral-300'
-                              }`}
-                            >
-                              <div className="flex items-center justify-between">
-                                <span
-                                  className={`text-[11px] sm:text-xs font-semibold w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full ${
-                                    isToday && !isSelected
-                                      ? 'bg-neutral-900 text-white'
-                                      : isToday && isSelected
-                                      ? 'bg-white text-black font-extrabold'
-                                      : ''
-                                  }`}
-                                >
-                                  {dayNum}
-                                </span>
-                                <div className="flex items-center gap-1">
-                                  {hasPending && (
-                                    <span className={`text-[8px] font-extrabold uppercase px-1 rounded ${
-                                      isSelected ? 'bg-white text-black' : 'bg-amber-500 text-white animate-pulse'
-                                    }`}>
-                                      NEW
-                                    </span>
-                                  )}
-                                  {dayBookings.length > 0 && (
-                                    <span className={`text-[9px] sm:text-[10px] px-1.5 py-0.2 rounded font-mono font-bold ${
-                                      isSelected ? 'bg-white text-black' : 'bg-neutral-100 text-neutral-800'
-                                    }`}>
-                                      {dayBookings.length}
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-
-                              {dayBookings.length > 0 ? (
-                                <div className="space-y-0.5">
-                                  <div className={`text-[9px] sm:text-[10px] font-mono font-bold truncate ${isSelected ? 'text-white' : 'text-neutral-900'}`}>
-                                    {formatIDR(dayCommSum)}
-                                  </div>
-                                  <div className="flex items-center gap-1">
-                                    {hasPaid && (
-                                      <span
-                                        className={`inline-block w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-white' : 'bg-neutral-900'}`}
-                                        title="Paid Out"
-                                      />
-                                    )}
-                                    {hasApproved && (
-                                      <span
-                                        className={`inline-block w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-white' : 'bg-emerald-500'}`}
-                                        title="Approved"
-                                      />
-                                    )}
-                                    {hasPending && (
-                                      <span
-                                        className={`inline-block w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-amber-300' : 'bg-amber-500'}`}
-                                        title="Pending"
-                                      />
-                                    )}
-                                  </div>
-                                </div>
-                              ) : (
-                                <div />
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                    {/* Right Column: Appointments List (lg:col-span-5 xl:col-span-4) - SCROLLABLE */}
-                    <div className="lg:col-span-5 xl:col-span-4 flex flex-col h-full min-h-0 space-y-2.5">
-                      <div className="flex items-center justify-between bg-white p-2.5 sm:p-3 rounded-xl border border-neutral-200 shrink-0">
-                        <div>
-                          <h4 className="font-bold text-neutral-900 text-xs">
-                            {partnerSelectedDate
-                              ? safeFormatDate(partnerSelectedDate, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
-                              : `All in ${MONTH_NAMES[partnerCalendarMonth]} ${partnerCalendarYear}`}
-                          </h4>
-                          <span className="text-[11px] text-neutral-500">
-                            {(partnerSelectedDate ? (partnerBookingsByDate[partnerSelectedDate]?.length || 0) : partnerMonthBookings.length)} bookings
-                          </span>
-                        </div>
-                        {partnerSelectedDate && (
-                          <button
-                            type="button"
-                            onClick={() => setPartnerSelectedDate(null)}
-                            className="text-[11px] font-semibold text-neutral-900 hover:underline"
-                          >
-                            Show month
-                          </button>
-                        )}
-                      </div>
-
-                      {(() => {
-                        const displayedList = partnerSelectedDate
-                          ? (partnerBookingsByDate[partnerSelectedDate] || [])
-                          : partnerMonthBookings;
-
-                        if (displayedList.length === 0) {
-                          return (
-                            <div className="bg-neutral-50/70 p-8 rounded-xl border border-neutral-200 text-center text-neutral-400">
-                              No appointments found for this period.
-                            </div>
-                          );
-                        }
-
-                        return (
-                          <div className="flex-1 min-h-0 overflow-y-auto space-y-2.5 pr-1">
-                            {displayedList.map((b) => (
-                              <div
-                                key={b.id}
-                                className="bg-white p-3 rounded-xl border border-neutral-200 shadow-2xs space-y-2 hover:border-neutral-300 transition-colors"
-                              >
-                                <div className="flex items-start justify-between">
-                                  <div>
-                                    <div className="font-mono font-bold text-neutral-900 text-xs flex items-center gap-1.5">
-                                      <span>#{b.booking_id}</span>
-                                      <button
-                                        type="button"
-                                        onClick={() => handleCopyText(b.booking_id, `bk-${b.id}`)}
-                                        className="text-neutral-400 hover:text-neutral-700"
-                                      >
-                                        {copiedId === `bk-${b.id}` ? <Check size={11} className="text-emerald-600" /> : <Copy size={11} />}
-                                      </button>
-                                    </div>
-                                    <div className="text-[11px] font-medium text-neutral-900 mt-0.5">
-                                      {b.guest_name || 'Guest'}
-                                    </div>
-                                    {b.location && (
-                                      <div className="text-[10px] text-neutral-400 mt-0.5">
-                                        {b.location} {b.room_number ? `(${b.room_number})` : ''}
-                                      </div>
-                                    )}
-                                  </div>
-
-                                  <div className="text-right">
-                                    <StatusBadge status={b.status} />
-                                    <div className="text-[10px] text-neutral-400 mt-1">
-                                      {safeFormatDate(b.booking_date || b.created_at)} {b.booking_time || ''}
-                                    </div>
-                                  </div>
-                                </div>
-
-                                <div className="border-t border-neutral-100 pt-2 flex items-center justify-between text-[11px]">
-                                  <div>
-                                    <span className="text-neutral-400 block text-[10px]">{b.treatment_name || 'Treatment'}</span>
-                                    <span className="font-medium text-neutral-800 font-mono">Net: {formatIDR(b.eligible_treatment_amount)}</span>
-                                  </div>
-
-                                  <div className="text-right">
-                                    <span className="text-neutral-400 block text-[10px]">Commission ({b.commission_rate_pct}%)</span>
-                                    <span className="font-bold text-neutral-900 font-mono">{formatIDR(b.commission_amount)}</span>
-                                  </div>
-                                </div>
-
-                                {/* Admin Verification Checkboxes & Approval */}
-                                <div className="border-t border-neutral-100 pt-2 flex items-center justify-between text-[11px]">
-                                  <div className="flex items-center gap-3">
-                                    <label className="flex items-center gap-1.5 cursor-pointer">
-                                      <input
-                                        type="checkbox"
-                                        checked={b.payment_verified}
-                                        onChange={(e) =>
-                                          handleUpdateCommission(b.id, { payment_verified: e.target.checked })
-                                        }
-                                        className="rounded text-black cursor-pointer"
-                                      />
-                                      <span>Payment Paid</span>
-                                    </label>
-                                    <label className="flex items-center gap-1.5 cursor-pointer">
-                                      <input
-                                        type="checkbox"
-                                        checked={b.service_completed}
-                                        onChange={(e) =>
-                                          handleUpdateCommission(b.id, { service_completed: e.target.checked })
-                                        }
-                                        className="rounded text-black cursor-pointer"
-                                      />
-                                      <span>Service Done</span>
-                                    </label>
-                                  </div>
-
-                                  {b.status === 'pending' && (
-                                    <div className="flex gap-1">
-                                      <button
-                                        type="button"
-                                        onClick={() => handleUpdateCommission(b.id, { status: 'approved' })}
-                                        className="h-6 px-2.5 bg-black hover:bg-neutral-800 text-white rounded text-[10px] font-medium"
-                                      >
-                                        Approve
-                                      </button>
-                                      <button
-                                        type="button"
-                                        onClick={() =>
-                                          setConfirmAction({
-                                            type: 'decline_comm',
-                                            id: b.id,
-                                            name: `#${b.booking_id}`,
-                                          })
-                                        }
-                                        className="h-6 px-2 border border-neutral-200 hover:bg-neutral-50 text-neutral-700 rounded text-[10px] font-medium"
-                                      >
-                                        Decline
-                                      </button>
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        );
-                      })()}
-                    </div>
-                  </div>
-
-                </div>
-              )}
-
-              {/* TAB C: INDEPENDENT PARTNER COMMISSIONS */}
-              {partnerActiveTab === 'commissions' && (
-                <div className="space-y-4 text-xs">
-                  {/* Partner Commission Rate Setting & Filter Card */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-xl border border-neutral-200 shadow-2xs">
-                    <div>
-                      <span className="text-[10px] font-semibold text-neutral-500 block uppercase">
-                        Commission Rate
-                      </span>
-                      <div className="flex items-center gap-2 mt-1">
-                        {editingRateId === selectedPartnerDetails.id ? (
-                          <div className="flex items-center gap-2">
-                            <div className="relative">
-                              <input
-                                type="number"
-                                step="0.5"
-                                min="0"
-                                max="100"
-                                value={newRateValue}
-                                onChange={(e) => setNewRateValue(Number(e.target.value))}
-                                className="w-24 h-8 px-2.5 bg-white border border-neutral-300 rounded-lg text-xs font-bold text-neutral-900 focus:outline-none focus:border-black font-mono"
-                                autoFocus
-                              />
-                              <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 font-bold text-xs">%</span>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => handleSaveCommissionRate(selectedPartnerDetails.id)}
-                              disabled={actionLoading}
-                              className="h-8 px-3 bg-black text-white text-xs font-medium rounded-lg hover:bg-neutral-800 disabled:opacity-50"
-                            >
-                              Save
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setEditingRateId(null)}
-                              className="h-8 px-2.5 border border-neutral-200 text-xs font-medium rounded-lg hover:bg-neutral-50 text-neutral-700"
-                            >
-                              Cancel
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-2.5">
-                            <span className="text-xl font-mono font-bold text-neutral-900">
-                              {selectedPartnerDetails.commission_rate_pct}%
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setEditingRateId(selectedPartnerDetails.id);
-                                setNewRateValue(selectedPartnerDetails.commission_rate_pct);
-                              }}
-                              className="h-7 px-2.5 rounded-lg border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-700 text-xs font-medium shadow-2xs"
-                            >
-                              Edit Rate
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                      <span className="text-[11px] text-neutral-400 mt-1 block">
-                        Commission percentage applied to new bookings referred by {selectedPartnerDetails.partner_code}.
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-1 bg-neutral-100 p-1 rounded-lg border border-neutral-200/70 self-start sm:self-auto">
-                      {['all', 'pending', 'approved', 'paid', 'declined'].map((st) => (
-                        <button
-                          key={st}
-                          type="button"
-                          onClick={() => setPartnerCommFilter(st)}
-                          className={`h-7 px-2.5 rounded-md capitalize font-medium text-xs transition-colors ${
-                            partnerCommFilter === st
-                              ? 'bg-black text-white shadow-xs'
-                              : 'text-neutral-600 hover:text-neutral-900 hover:bg-white/60'
-                          }`}
-                        >
-                          {st}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="bg-white rounded-xl border border-neutral-200 shadow-2xs overflow-hidden">
-                    <table className="w-full text-left text-xs">
-                      <thead className="bg-neutral-50/70 border-b border-neutral-200 text-neutral-600 font-semibold">
-                        <tr>
-                          <th className="py-2.5 px-3">Date</th>
-                          <th className="py-2.5 px-3">Booking Ref</th>
-                          <th className="py-2.5 px-3">Treatment Net</th>
-                          <th className="py-2.5 px-3">Rate</th>
-                          <th className="py-2.5 px-3">Commission</th>
-                          <th className="py-2.5 px-3">Verification</th>
-                          <th className="py-2.5 px-3">Status</th>
-                          <th className="py-2.5 px-3 text-right">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-neutral-100">
-                        {activePartnerMetrics.commissions
-                          .filter((c) => partnerCommFilter === 'all' || c.status === partnerCommFilter)
-                          .length === 0 ? (
-                          <tr>
-                            <td colSpan={8} className="py-8 text-center text-neutral-400">
-                              No commissions found for this filter.
-                            </td>
-                          </tr>
-                        ) : (
-                          activePartnerMetrics.commissions
-                            .filter((c) => partnerCommFilter === 'all' || c.status === partnerCommFilter)
-                            .map((c) => (
-                              <tr key={c.id} className="hover:bg-neutral-50/70">
-                                <td className="py-2.5 px-3 text-neutral-500 whitespace-nowrap">
-                                  {safeFormatDate(c.booking_date || c.created_at)}
-                                </td>
-                                <td className="py-2.5 px-3 font-mono font-bold text-neutral-900">
-                                  #{c.booking_id}
-                                </td>
-                                <td className="py-2.5 px-3 font-mono">{formatIDR(c.eligible_treatment_amount)}</td>
-                                <td className="py-2.5 px-3 font-mono">{c.commission_rate_pct}%</td>
-                                <td className="py-2.5 px-3 font-mono font-bold text-neutral-900">{formatIDR(c.commission_amount)}</td>
-                                <td className="py-2.5 px-3 space-y-0.5 text-[10px]">
-                                  <label className="flex items-center gap-1 cursor-pointer">
-                                    <input
-                                      type="checkbox"
-                                      checked={c.payment_verified}
-                                      onChange={(e) =>
-                                        handleUpdateCommission(c.id, { payment_verified: e.target.checked })
-                                      }
-                                      className="rounded text-black cursor-pointer"
-                                    />
-                                    <span>Payment Paid</span>
-                                  </label>
-                                  <label className="flex items-center gap-1 cursor-pointer">
-                                    <input
-                                      type="checkbox"
-                                      checked={c.service_completed}
-                                      onChange={(e) =>
-                                        handleUpdateCommission(c.id, { service_completed: e.target.checked })
-                                      }
-                                      className="rounded text-black cursor-pointer"
-                                    />
-                                    <span>Service Done</span>
-                                  </label>
-                                </td>
-                                <td className="py-2.5 px-3">
-                                  <StatusBadge status={c.status} />
-                                </td>
-                                <td className="py-2.5 px-3 text-right space-x-1 whitespace-nowrap">
-                                  {c.status === 'pending' && (
-                                    <>
-                                      <button
-                                        type="button"
-                                        onClick={() => handleUpdateCommission(c.id, { status: 'approved' })}
-                                        className="h-6 px-2 bg-black hover:bg-neutral-800 text-white rounded text-[10px] font-medium"
-                                      >
-                                        Approve
-                                      </button>
-                                      <button
-                                        type="button"
-                                        onClick={() =>
-                                          setConfirmAction({
-                                            type: 'decline_comm',
-                                            id: c.id,
-                                            name: `#${c.booking_id}`,
-                                          })
-                                        }
-                                        className="h-6 px-2 border border-neutral-200 hover:bg-neutral-50 text-neutral-700 rounded text-[10px] font-medium"
-                                      >
-                                        Decline
-                                      </button>
-                                    </>
-                                  )}
-                                </td>
-                              </tr>
-                            ))
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-
-              {/* TAB D: INDEPENDENT PARTNER PAYOUTS */}
-              {partnerActiveTab === 'payouts' && (
-                <div className="space-y-4 text-xs">
-                  <div className="flex items-center justify-between bg-white p-4 rounded-xl border border-neutral-200 shadow-2xs">
-                    <div>
-                      <span className="text-[10px] font-semibold text-neutral-500 block uppercase">Approved Balance Ready for Payout</span>
-                      <span className="text-lg font-bold text-neutral-900 mt-0.5 block font-mono">
-                        {formatIDR(activePartnerMetrics.approvedUnpaid)}
-                      </span>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => openQuickPayoutForPartner(selectedPartnerDetails)}
-                      className="h-8 px-3.5 bg-black text-white rounded-lg font-medium hover:bg-neutral-800 shadow-xs inline-flex items-center gap-1"
-                    >
-                      <Plus size={13} />
-                      <span>Record Payout for {selectedPartnerDetails.first_name}</span>
-                    </button>
-                  </div>
-
-                  <div className="bg-white rounded-xl border border-neutral-200 shadow-2xs overflow-hidden">
-                    <table className="w-full text-left text-xs">
-                      <thead className="bg-neutral-50/70 border-b border-neutral-200 text-neutral-600 font-semibold">
-                        <tr>
-                          <th className="py-2.5 px-3">Date</th>
-                          <th className="py-2.5 px-3">Reference</th>
-                          <th className="py-2.5 px-3">Amount</th>
-                          <th className="py-2.5 px-3">Method</th>
-                          <th className="py-2.5 px-3">Status</th>
-                          <th className="py-2.5 px-3">Notes</th>
-                          <th className="py-2.5 px-3 text-right">Details</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-neutral-100">
-                        {activePartnerMetrics.payouts.length === 0 ? (
-                          <tr>
-                            <td colSpan={7} className="py-8 text-center text-neutral-400">
-                              No payouts logged for this partner yet.
-                            </td>
-                          </tr>
-                        ) : (
-                          activePartnerMetrics.payouts.map((py) => (
-                            <tr key={py.id} className="hover:bg-neutral-50/70">
-                              <td className="py-2.5 px-3 text-neutral-500 whitespace-nowrap">
-                                {safeFormatDate(py.created_at)}
-                              </td>
-                              <td className="py-2.5 px-3 font-mono font-bold text-neutral-900">{py.payout_reference}</td>
-                              <td className="py-2.5 px-3 font-bold text-neutral-900 font-mono">{formatIDR(py.amount)}</td>
-                              <td className="py-2.5 px-3 capitalize text-neutral-700">{py.payout_method?.replace('_', ' ')}</td>
-                              <td className="py-2.5 px-3">
-                                <StatusBadge status={py.status || 'completed'} />
-                              </td>
-                              <td className="py-2.5 px-3 text-neutral-500">{py.notes || '—'}</td>
-                              <td className="py-2.5 px-3 text-right whitespace-nowrap">
-                                <button
-                                  type="button"
-                                  onClick={() => setSelectedPayoutDetails(py)}
-                                  className="h-7 px-2.5 bg-white border border-neutral-200 hover:bg-neutral-50 text-neutral-800 font-medium rounded-lg text-xs transition-colors shadow-2xs inline-flex items-center gap-1"
-                                >
-                                  <span>View Bookings</span>
-                                  <span className="text-neutral-400">&rarr;</span>
-                                </button>
-                              </td>
-                            </tr>
-                          ))
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-
-            </div>
-
-            {/* Modal Footer */}
-            <div className="p-4 border-t border-neutral-200 bg-neutral-50/50 flex items-center justify-between shrink-0">
-              <span className="text-[11px] text-neutral-400 font-mono">
-                ID: {selectedPartnerDetails.id}
-              </span>
-              <button
-                type="button"
-                onClick={() => setSelectedPartnerDetails(null)}
-                className="h-8 px-4 bg-black text-white text-xs font-medium rounded-lg hover:bg-neutral-800 shadow-xs"
-              >
-                Done
-              </button>
-            </div>
-
-          </div>
-        </div>
-      )}
-
-      {/* FULLSCREEN POPUP: PAID OUT BOOKING DETAILS BREAKDOWN FOR ADMIN */}
-      {selectedPayoutDetails && (
-        <div className="fixed inset-0 z-[80] bg-black/50 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 md:p-6">
-          <div className="bg-white rounded-2xl w-full h-full max-w-[98vw] max-h-[96vh] flex flex-col border border-neutral-200 shadow-2xl overflow-hidden">
-            {/* Modal Header */}
-            <div className="p-4 sm:p-5 bg-white border-b border-neutral-200 text-neutral-900 flex items-start justify-between shrink-0">
-              <div>
-                <div className="flex items-center gap-2.5 flex-wrap">
-                  <h3 className="font-bold text-neutral-900 text-lg sm:text-xl tracking-tight">
-                    Disbursement Details
-                  </h3>
-                  <span className="font-mono font-medium text-neutral-800 bg-neutral-100 px-2 py-0.5 rounded text-xs border border-neutral-200">
-                    {selectedPayoutDetails.payout_reference}
-                  </span>
-                  <StatusBadge status={selectedPayoutDetails.status || 'completed'} />
-                </div>
-                <div className="text-xs text-neutral-500 mt-1 flex items-center gap-2 flex-wrap">
-                  <span>Date: <strong>{safeFormatDate(selectedPayoutDetails.created_at)}</strong></span>
-                  <span>&bull;</span>
-                  <span>Method: <strong className="capitalize">{selectedPayoutDetails.payout_method?.replace('_', ' ')}</strong></span>
-                  {selectedPayoutDetails.partner_code && (
-                    <>
-                      <span>&bull;</span>
-                      <span>Partner: <strong>{selectedPayoutDetails.partner_code}</strong></span>
-                    </>
-                  )}
-                  {selectedPayoutDetails.notes && (
-                    <>
-                      <span>&bull;</span>
-                      <span>Notes: <strong>{selectedPayoutDetails.notes}</strong></span>
-                    </>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex items-center gap-4">
-                <div className="text-right hidden sm:block">
-                  <span className="text-[10px] text-neutral-400 block font-semibold uppercase">Total Disbursed</span>
-                  <span className="font-mono font-bold text-xl text-neutral-900">
-                    {formatIDR(selectedPayoutDetails.amount)}
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setSelectedPayoutDetails(null)}
-                  className="w-8 h-8 rounded-lg bg-white border border-neutral-200 hover:bg-neutral-50 text-neutral-600 flex items-center justify-center transition-colors"
-                  title="Close"
-                >
-                  <X size={15} />
-                </button>
-              </div>
-            </div>
-
-            {/* Quick KPI Bar */}
-            {(() => {
-              const items = getPayoutBookings(selectedPayoutDetails);
-              const totalTreatmentNet = items.reduce((sum, b) => sum + Number(b.eligible_treatment_amount || 0), 0);
-
-              return (
-                <>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 sm:p-5 bg-neutral-50/50 border-b border-neutral-200 shrink-0 text-xs">
-                    <div className="bg-white p-3 rounded-xl border border-neutral-200 shadow-2xs">
-                      <span className="text-[10px] font-semibold text-neutral-500 block uppercase">Disbursed</span>
-                      <span className="text-base font-bold text-neutral-900 font-mono mt-0.5 block">
-                        {formatIDR(selectedPayoutDetails.amount)}
-                      </span>
-                    </div>
-                    <div className="bg-white p-3 rounded-xl border border-neutral-200 shadow-2xs">
-                      <span className="text-[10px] font-semibold text-neutral-500 block uppercase">Settled Referrals</span>
-                      <span className="text-base font-bold text-neutral-900 mt-0.5 block">
-                        {items.length} bookings
-                      </span>
-                    </div>
-                    <div className="bg-white p-3 rounded-xl border border-neutral-200 shadow-2xs">
-                      <span className="text-[10px] font-semibold text-neutral-500 block uppercase">Treatment Volume</span>
-                      <span className="text-base font-bold text-neutral-900 font-mono mt-0.5 block">
-                        {formatIDR(totalTreatmentNet)}
-                      </span>
-                    </div>
-                    <div className="bg-white p-3 rounded-xl border border-neutral-200 shadow-2xs">
-                      <span className="text-[10px] font-semibold text-neutral-500 block uppercase">Payout Mode</span>
-                      <span className="text-xs font-semibold text-neutral-900 capitalize mt-1 block">
-                        {selectedPayoutDetails.payout_method?.replace('_', ' ')}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Itemized Bookings List */}
-                  <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
-                    <div>
-                      <h4 className="font-bold text-neutral-900 text-sm tracking-tight flex items-center justify-between">
-                        <span>Bookings Settled in this Disbursement</span>
-                        <span className="text-xs text-neutral-500 font-normal">
-                          {items.length} items linked
-                        </span>
-                      </h4>
-                    </div>
-
-                    {items.length === 0 ? (
-                      <div className="bg-white p-8 rounded-xl border border-neutral-200 text-center text-neutral-500 space-y-1">
-                        <p className="font-semibold text-neutral-900">No itemized booking records linked.</p>
-                        <p className="text-xs text-neutral-400">This disbursement was processed as a direct commission withdrawal of {formatIDR(selectedPayoutDetails.amount)}.</p>
-                      </div>
-                    ) : (
-                      <div className="bg-white rounded-xl border border-neutral-200 shadow-2xs overflow-hidden">
-                        <table className="w-full text-left text-xs">
-                          <thead className="bg-neutral-50/70 border-b border-neutral-200 text-neutral-600 font-semibold">
-                            <tr>
-                              <th className="py-3 px-4">Booking Ref</th>
-                              <th className="py-3 px-4">Date</th>
-                              <th className="py-3 px-4">Guest & Location</th>
-                              <th className="py-3 px-4">Treatment</th>
-                              <th className="py-3 px-4">Net Value</th>
-                              <th className="py-3 px-4">Rate</th>
-                              <th className="py-3 px-4">Commission Paid</th>
-                              <th className="py-3 px-4 text-right">Status</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-neutral-100">
-                            {items.map((b) => (
-                              <tr key={b.id} className="hover:bg-neutral-50/70 transition-colors">
-                                <td className="py-3.5 px-4 font-mono font-bold text-neutral-900 whitespace-nowrap">
-                                  <div className="flex items-center gap-1.5">
-                                    <span>#{b.booking_id}</span>
-                                    <button
-                                      type="button"
-                                      onClick={() => handleCopyText(b.booking_id, `payout-bk-${b.id}`)}
-                                      className="text-neutral-400 hover:text-neutral-700"
-                                    >
-                                      {copiedId === `payout-bk-${b.id}` ? <Check size={11} className="text-emerald-600" /> : <Copy size={11} />}
-                                    </button>
-                                  </div>
-                                </td>
-                                <td className="py-3.5 px-4 text-neutral-500 whitespace-nowrap">
-                                  {safeFormatDate(b.booking_date || b.created_at)} {b.booking_time || ''}
-                                </td>
-                                <td className="py-3.5 px-4">
-                                  <div className="font-semibold text-neutral-900">{b.guest_name || 'Guest'}</div>
-                                  {b.location && (
-                                    <div className="text-[10px] text-neutral-400">
-                                      {b.location} {b.room_number ? `(${b.room_number})` : ''}
-                                    </div>
-                                  )}
-                                </td>
-                                <td className="py-3.5 px-4 text-neutral-800 font-medium">
-                                  {b.treatment_name || 'Spa Treatment'}
-                                </td>
-                                <td className="py-3.5 px-4 font-mono">
-                                  {formatIDR(b.eligible_treatment_amount)}
-                                </td>
-                                <td className="py-3.5 px-4 font-mono">
-                                  {b.commission_rate_pct}%
-                                </td>
-                                <td className="py-3.5 px-4 font-bold font-mono text-neutral-900">
-                                  +{formatIDR(b.commission_amount)}
-                                </td>
-                                <td className="py-3.5 px-4 text-right">
-                                  <StatusBadge status="paid" />
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
-                  </div>
-                </>
-              );
-            })()}
-
-            {/* Modal Footer */}
-            <div className="p-4 border-t border-neutral-200 bg-neutral-50/50 flex items-center justify-between shrink-0">
-              <span className="text-[11px] text-neutral-400 font-mono">
-                Receipt #{selectedPayoutDetails.payout_reference}
-              </span>
-              <button
-                type="button"
-                onClick={() => setSelectedPayoutDetails(null)}
-                className="h-8 px-4 bg-black text-white text-xs font-medium rounded-lg hover:bg-neutral-800 shadow-xs"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* CONFIRMATION DIALOG FOR CONSEQUENTIAL ACTIONS */}
-      {confirmAction && (
-        <div className="fixed inset-0 z-[90] bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-sm w-full p-5 border border-neutral-200 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
-            <div className="space-y-1.5">
-              <h3 className="font-bold text-neutral-900 text-base">
-                {confirmAction.type === 'suspend'
-                  ? 'Suspend Partner Account'
-                  : confirmAction.type === 'reject'
-                  ? 'Reject Application'
-                  : 'Decline Commission'}
-              </h3>
-              <p className="text-xs text-neutral-500">
-                {confirmAction.type === 'suspend'
-                  ? `Are you sure you want to suspend ${confirmAction.name}? Their referral link will temporarily stop earning commissions.`
-                  : confirmAction.type === 'reject'
-                  ? `Are you sure you want to reject the application for ${confirmAction.name}?`
-                  : 'Are you sure you want to decline this commission record?'}
-              </p>
-            </div>
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-neutral-100">
-              <button
-                type="button"
-                onClick={() => setConfirmAction(null)}
-                className="h-8 px-3.5 rounded-lg border border-neutral-200 text-xs font-medium text-neutral-700 hover:bg-neutral-50 shadow-2xs"
+                disabled={!settingsDirty || actionLoading}
+                onClick={() => savedSettings && setSettings(savedSettings)}
+                className={cx(btn.base, btn.secondary, btn.sm)}
               >
                 Cancel
               </button>
               <button
-                type="button"
-                onClick={() => {
-                  if (confirmAction.type === 'suspend') {
-                    handlePartnerStatus(confirmAction.id, 'suspended');
-                  } else if (confirmAction.type === 'reject') {
-                    handlePartnerStatus(confirmAction.id, 'rejected');
-                  } else if (confirmAction.type === 'decline_comm') {
-                    handleUpdateCommission(confirmAction.id, { status: 'declined' });
-                  }
-                  setConfirmAction(null);
-                }}
-                className="h-8 px-3.5 rounded-lg bg-neutral-900 text-white text-xs font-medium hover:bg-neutral-800 shadow-xs"
+                id="aff-settings-save"
+                type="submit"
+                disabled={!settingsDirty || actionLoading || !!settingsErrors.rate || !!settingsErrors.days}
+                className={cx(btn.base, btn.primary, btn.sm)}
               >
-                Confirm
+                {actionLoading ? 'Saving…' : 'Save changes'}
               </button>
             </div>
           </div>
-        </div>
+        </form>
       )}
 
-      {/* MINIMAL FLOATING TOAST FEEDBACK */}
-      {toast && (
-        <div className="fixed bottom-6 right-6 z-[100] flex items-center gap-2 px-3.5 py-2.5 bg-neutral-900 text-white rounded-xl shadow-xl text-xs font-medium animate-in fade-in slide-in-from-bottom-2">
-          {toast.type === 'success' ? (
-            <CheckCircle2 size={15} className="text-emerald-400" />
-          ) : (
-            <AlertCircle size={15} className="text-rose-400" />
-          )}
-          <span>{toast.message}</span>
-        </div>
-      )}
+      {/* ======================= PARTNER WORKSPACE ======================== */}
+      <FullScreenModal
+        open={!!(selectedPartner && activePartnerMetrics)}
+        onClose={() => setSelectedPartnerId(null)}
+        zIndex="z-[70]"
+        title={selectedPartner ? fullName(selectedPartner) : ''}
+        meta={
+          selectedPartner && (
+            <>
+              <span className="inline-flex items-center h-6 px-2 rounded-md border border-[#E5E5E5] font-mono text-xs text-[#171717]">
+                {selectedPartner.partner_code}
+              </span>
+              <StatusBadge status={selectedPartner.status} />
+            </>
+          )
+        }
+        subtitle={
+          selectedPartner && (
+            <span>
+              {selectedPartner.business_name || 'Individual'} · {selectedPartner.commission_rate_pct}% rate · Joined {safeFormatDate(selectedPartner.created_at)}
+            </span>
+          )
+        }
+        actions={
+          selectedPartner &&
+          activePartnerMetrics && (
+            <>
+              {activePartnerMetrics.approvedUnpaid > 0 && (
+                <button type="button" onClick={() => openQuickPayoutForPartner(selectedPartner)} className={cx(btn.base, btn.secondary, btn.sm)}>
+                  <Plus size={14} />
+                  Record payout
+                </button>
+              )}
+              {renderStatusActions(selectedPartner)}
+            </>
+          )
+        }
+        tabs={
+          activePartnerMetrics && (
+            <Tabs
+              idPrefix="aff-partner-tab"
+              className="border-b-0"
+              value={partnerActiveTab}
+              onChange={(id) => setPartnerActiveTab(id as PartnerTab)}
+              items={[
+                { id: 'overview', label: 'Overview' },
+                { id: 'bookings', label: 'Bookings', count: activePartnerMetrics.bookingsCount, alert: activePartnerMetrics.pendingCount },
+                { id: 'commissions', label: 'Commissions', count: activePartnerMetrics.commissions.length },
+                { id: 'payouts', label: 'Payouts', count: activePartnerMetrics.payouts.length },
+                { id: 'history', label: 'History' },
+              ]}
+            />
+          )
+        }
+        bodyClassName={partnerActiveTab === 'bookings' ? 'overflow-y-auto lg:overflow-hidden' : 'overflow-y-auto'}
+      >
+        {selectedPartner && activePartnerMetrics && (
+          <>
+            {/* Overview */}
+            {partnerActiveTab === 'overview' && (
+              <div className="px-4 md:px-8 py-6 space-y-6 max-w-6xl">
+                <div className="grid grid-cols-2 lg:grid-cols-4 border border-[#E5E5E5] rounded-xl overflow-hidden">
+                  {[
+                    { label: 'Commission', value: activePartnerMetrics.totalEarned, hint: `${activePartnerMetrics.commissions.length} bookings` },
+                    { label: 'Ready to pay', value: activePartnerMetrics.approvedUnpaid, hint: 'Approved, unpaid' },
+                    { label: 'Paid out', value: activePartnerMetrics.totalPaidOut, hint: `${activePartnerMetrics.payouts.length} payouts` },
+                    { label: 'Pending', value: activePartnerMetrics.pending, hint: 'Awaiting approval' },
+                  ].map((k, i) => (
+                    <div key={k.label} className={cx('p-4', i % 2 === 1 && 'border-l border-[#E5E5E5]', i >= 2 && 'border-t lg:border-t-0 border-[#E5E5E5]', i === 2 && 'lg:border-l')}>
+                      <div className="text-xs text-[#737373]">{k.label}</div>
+                      <div className="text-lg font-semibold text-black tabular-nums mt-1">{formatIDR(k.value)}</div>
+                      <div className="text-[11px] text-[#A3A3A3] mt-0.5">{k.hint}</div>
+                    </div>
+                  ))}
+                </div>
 
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <SectionCard title="Contact information" bodyClassName="px-4 md:px-5 pb-2 pt-2">
+                    <dl>
+                      <KeyValue label="Email">
+                        <span className="inline-flex items-center gap-0.5">
+                          <a href={`mailto:${selectedPartner.email}`} className="hover:underline break-all">{selectedPartner.email || '—'}</a>
+                          {selectedPartner.email && <CopyBtn text={selectedPartner.email} id="email" label="Copy email" />}
+                        </span>
+                      </KeyValue>
+                      <KeyValue label="WhatsApp">
+                        {selectedPartner.whatsapp ? (
+                          <a
+                            href={`https://wa.me/${selectedPartner.whatsapp.replace(/[^0-9]/g, '')}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1 hover:underline"
+                          >
+                            {selectedPartner.whatsapp}
+                            <ArrowUpRight size={12} className="text-[#737373]" />
+                          </a>
+                        ) : (
+                          <span className="text-[#A3A3A3]">Not provided</span>
+                        )}
+                      </KeyValue>
+                      <KeyValue label="Phone">
+                        {selectedPartner.phone ? (
+                          <a href={`tel:${selectedPartner.phone}`} className="hover:underline">{selectedPartner.phone}</a>
+                        ) : (
+                          <span className="text-[#A3A3A3]">Not provided</span>
+                        )}
+                      </KeyValue>
+                    </dl>
+                  </SectionCard>
+
+                  <SectionCard title="Business details" bodyClassName="px-4 md:px-5 pb-2 pt-2">
+                    <dl>
+                      <KeyValue label="Business / villa">{selectedPartner.business_name || 'Individual'}</KeyValue>
+                      <KeyValue label="Category"><span className="capitalize">{selectedPartner.partner_type?.replace(/_/g, ' ') || '—'}</span></KeyValue>
+                      <KeyValue label="Referral link">
+                        <span className="inline-flex items-center gap-0.5 min-w-0">
+                          <span className="font-mono text-xs truncate max-w-[220px]" title={`https://www.booktherapick.com/?ref=${selectedPartner.partner_code}`}>
+                            booktherapick.com/?ref={selectedPartner.partner_code}
+                          </span>
+                          <CopyBtn text={`https://www.booktherapick.com/?ref=${selectedPartner.partner_code}`} id="link" label="Copy referral link" />
+                        </span>
+                      </KeyValue>
+                    </dl>
+                  </SectionCard>
+
+                  <SectionCard title="Payout details" bodyClassName="px-4 md:px-5 pb-2 pt-2">
+                    <dl>
+                      <KeyValue label="Method"><span className="capitalize">{methodLabel(selectedPartner.payout_method)}</span></KeyValue>
+                      {selectedPartner.payout_details?.bank_name ? (
+                        <>
+                          <KeyValue label="Bank">{selectedPartner.payout_details.bank_name}</KeyValue>
+                          <KeyValue label="Account number">
+                            <span className="inline-flex items-center gap-0.5 font-mono">
+                              {selectedPartner.payout_details.account_number}
+                              <CopyBtn text={selectedPartner.payout_details.account_number} id="acc" label="Copy account number" />
+                            </span>
+                          </KeyValue>
+                          <KeyValue label="Account holder">{selectedPartner.payout_details.account_holder}</KeyValue>
+                        </>
+                      ) : (
+                        <KeyValue label="Bank account"><span className="text-[#A3A3A3]">Not provided</span></KeyValue>
+                      )}
+                    </dl>
+                  </SectionCard>
+
+                  <SectionCard title="Internal notes" description="Visible to admins only.">
+                    <label htmlFor="partner-notes" className="sr-only">Internal notes</label>
+                    <textarea
+                      id="partner-notes"
+                      rows={3}
+                      value={partnerNotesInput}
+                      onChange={(e) => setPartnerNotesInput(e.target.value)}
+                      placeholder="Add a note about this partner…"
+                      className="w-full rounded-lg border border-[#E5E5E5] bg-white p-3 text-[13px] text-[#171717] placeholder:text-[#A3A3A3] focus:outline-none focus:border-black focus:ring-1 focus:ring-black resize-y"
+                    />
+                    <div className="flex items-center justify-end gap-2 mt-3">
+                      {partnerNotesInput !== (selectedPartner.notes || '') && (
+                        <button type="button" onClick={() => setPartnerNotesInput(selectedPartner.notes || '')} className={cx(btn.base, btn.secondary, btn.sm)}>
+                          Cancel
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        disabled={actionLoading || partnerNotesInput === (selectedPartner.notes || '')}
+                        onClick={() => handleSaveNotes(selectedPartner.id)}
+                        className={cx(btn.base, btn.primary, btn.sm)}
+                      >
+                        Save notes
+                      </button>
+                    </div>
+                  </SectionCard>
+                </div>
+              </div>
+            )}
+
+            {/* Bookings calendar — grid fixed, list scrolls */}
+            {partnerActiveTab === 'bookings' && (
+              <div className="px-4 md:px-8 py-4 lg:h-full flex flex-col gap-4 min-h-0">
+                <div className="shrink-0 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      aria-label="Previous month"
+                      onClick={() => { shiftMonth(partnerCalendarYear, partnerCalendarMonth, -1, setPartnerCalendarYear, setPartnerCalendarMonth); setPartnerSelectedDate(null); }}
+                      className={cx(btn.base, btn.secondary, btn.icon)}
+                    >
+                      <ChevronLeft size={16} />
+                    </button>
+                    <h3 className="text-[15px] font-semibold text-black min-w-[140px] text-center">
+                      {MONTH_NAMES[partnerCalendarMonth]} {partnerCalendarYear}
+                    </h3>
+                    <button
+                      type="button"
+                      aria-label="Next month"
+                      onClick={() => { shiftMonth(partnerCalendarYear, partnerCalendarMonth, 1, setPartnerCalendarYear, setPartnerCalendarMonth); setPartnerSelectedDate(null); }}
+                      className={cx(btn.base, btn.secondary, btn.icon)}
+                    >
+                      <ChevronRight size={16} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const n = new Date();
+                        setPartnerCalendarYear(n.getFullYear());
+                        setPartnerCalendarMonth(n.getMonth());
+                        setPartnerSelectedDate(localTodayKey());
+                      }}
+                      className={cx(btn.base, btn.secondary, btn.sm)}
+                    >
+                      Today
+                    </button>
+                  </div>
+                  <div className="flex items-center gap-3 flex-wrap text-xs text-[#737373]">
+                    <NewIndicator count={partnerMonthBookings.filter((b) => b.status === 'pending').length} />
+                    <span className="inline-flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-amber-500" />Pending</span>
+                    <span className="inline-flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-blue-500" />Approved</span>
+                    <span className="inline-flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />Paid</span>
+                    <span className="tabular-nums">
+                      <span className="text-[#171717] font-medium">{partnerMonthBookings.length}</span> bookings ·{' '}
+                      <span className="text-[#171717] font-medium">{formatIDR(partnerMonthBookings.reduce((s, b) => s + Number(b.commission_amount || 0), 0))}</span>
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:flex-1 lg:min-h-0">
+                  <div className="lg:col-span-8 border border-[#E5E5E5] rounded-xl p-3 flex flex-col lg:min-h-0 select-none">
+                    <div className="grid grid-cols-7 gap-1 text-center text-[11px] font-medium text-[#737373] mb-2 shrink-0">
+                      {DAYS_OF_WEEK.map((d) => <div key={d} className="py-1">{d}</div>)}
+                    </div>
+                    <div className="grid grid-cols-7 gap-1 lg:flex-1 lg:min-h-0 auto-rows-[64px] lg:auto-rows-fr">
+                      {Array.from({ length: calendarFirstDayOfWeek }).map((_, i) => <div key={`e-${i}`} />)}
+                      {Array.from({ length: calendarDaysInMonth }).map((_, i) => {
+                        const day = i + 1;
+                        const key = `${partnerCalendarYear}-${String(partnerCalendarMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                        const list = partnerBookingsByDate[key] || [];
+                        const selected = partnerSelectedDate === key;
+                        const isToday = key === todayKey;
+                        const total = list.reduce((s, b) => s + Number(b.commission_amount || 0), 0);
+                        return (
+                          <button
+                            key={key}
+                            type="button"
+                            aria-pressed={selected}
+                            aria-label={`${safeFormatDate(key)}, ${list.length} bookings`}
+                            onClick={() => setPartnerSelectedDate(selected ? null : key)}
+                            className={cx(
+                              'h-full min-h-0 rounded-lg border p-1.5 flex flex-col justify-between text-left transition-colors',
+                              selected ? 'border-black ring-1 ring-black' : list.length ? 'border-[#D4D4D4] hover:border-black' : 'border-[#F0F0F0] hover:border-[#D4D4D4]'
+                            )}
+                          >
+                            <div className="flex items-center justify-between gap-1">
+                              <span
+                                className={cx(
+                                  'text-xs font-medium w-6 h-6 inline-flex items-center justify-center rounded-full',
+                                  isToday ? 'bg-black text-white' : list.length ? 'text-[#171717]' : 'text-[#A3A3A3]'
+                                )}
+                              >
+                                {day}
+                              </span>
+                              {list.length > 0 && <span className="text-[11px] tabular-nums text-[#737373]">{list.length}</span>}
+                            </div>
+                            {list.length > 0 && (
+                              <div className="min-w-0">
+                                <div className="hidden sm:block text-[11px] font-medium tabular-nums text-[#171717] truncate">{formatIDR(total)}</div>
+                                <div className="flex items-center gap-1 mt-0.5">
+                                  {list.some((b) => b.status === 'pending') && <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />}
+                                  {list.some((b) => b.status === 'approved') && <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />}
+                                  {list.some((b) => b.status === 'paid') && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />}
+                                </div>
+                              </div>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="lg:col-span-4 flex flex-col lg:min-h-0 border border-[#E5E5E5] rounded-xl">
+                    <div className="shrink-0 flex items-center justify-between gap-2 px-4 py-3 border-b border-[#E5E5E5]">
+                      <div>
+                        <h4 className="text-[13px] font-semibold text-black">
+                          {partnerSelectedDate
+                            ? safeFormatDate(partnerSelectedDate, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
+                            : `${MONTH_NAMES[partnerCalendarMonth]} ${partnerCalendarYear}`}
+                        </h4>
+                        <span className="text-xs text-[#737373]">
+                          {(partnerSelectedDate ? partnerBookingsByDate[partnerSelectedDate]?.length || 0 : partnerMonthBookings.length)} bookings
+                        </span>
+                      </div>
+                      {partnerSelectedDate && (
+                        <button type="button" onClick={() => setPartnerSelectedDate(null)} className={cx(btn.base, btn.secondary, btn.xs)}>
+                          Whole month
+                        </button>
+                      )}
+                    </div>
+                    {(() => {
+                      const list = partnerSelectedDate ? partnerBookingsByDate[partnerSelectedDate] || [] : partnerMonthBookings;
+                      if (list.length === 0) return <EmptyState title="No bookings" description="Nothing scheduled for this period." />;
+                      return (
+                        <ul className="lg:flex-1 lg:min-h-0 overflow-y-auto divide-y divide-[#F0F0F0]">
+                          {list.map((b) => (
+                            <li key={b.id} className="p-4 space-y-2.5">
+                              <div className="flex items-start justify-between gap-2">
+                                <button type="button" onClick={() => setSelectedCommissionId(b.id)} className="text-left min-w-0 group">
+                                  <span className="block font-mono text-xs font-medium text-[#171717] group-hover:underline">#{b.booking_id}</span>
+                                  <span className="block text-[13px] text-[#171717] truncate">{b.guest_name || 'Guest'}</span>
+                                  <span className="block text-xs text-[#737373] truncate">
+                                    {safeFormatDate(b.booking_date || b.created_at, { day: 'numeric', month: 'short' })} {b.booking_time || ''}
+                                    {b.location ? ` · ${b.location}` : ''}
+                                  </span>
+                                </button>
+                                <StatusBadge status={b.status} />
+                              </div>
+                              <div className="flex items-end justify-between text-xs">
+                                <span className="text-[#737373] truncate pr-2">{b.treatment_name || 'Treatment'}</span>
+                                <span className="font-medium tabular-nums text-[#171717] whitespace-nowrap">{formatIDR(b.commission_amount)}</span>
+                              </div>
+                              <VerificationChecks c={b} />
+                              <CommissionActions c={b} />
+                            </li>
+                          ))}
+                        </ul>
+                      );
+                    })()}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Commissions */}
+            {partnerActiveTab === 'commissions' && (
+              <div className="px-4 md:px-8 py-6 space-y-4">
+                <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
+                  <div>
+                    <div className="text-xs text-[#737373]">Commission rate</div>
+                    {editingRateId === selectedPartner.id ? (
+                      <div className="flex items-center gap-2 mt-1">
+                        <div className="relative w-28">
+                          <label htmlFor="partner-rate" className="sr-only">Commission rate</label>
+                          <input
+                            id="partner-rate"
+                            type="number"
+                            step="0.5"
+                            min={0}
+                            max={100}
+                            value={newRateValue}
+                            onChange={(e) => setNewRateValue(Number(e.target.value))}
+                            className={cx(inputCls, 'pr-8 tabular-nums')}
+                            autoFocus
+                          />
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[13px] text-[#737373]">%</span>
+                        </div>
+                        <button type="button" onClick={() => setEditingRateId(null)} className={cx(btn.base, btn.secondary, btn.sm)}>Cancel</button>
+                        <button type="button" disabled={actionLoading} onClick={() => handleSaveCommissionRate(selectedPartner.id)} className={cx(btn.base, btn.primary, btn.sm)}>
+                          Save
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-3 mt-1">
+                        <span className="text-xl font-semibold text-black tabular-nums">{selectedPartner.commission_rate_pct}%</span>
+                        <button
+                          type="button"
+                          onClick={() => { setEditingRateId(selectedPartner.id); setNewRateValue(Number(selectedPartner.commission_rate_pct)); }}
+                          className={cx(btn.base, btn.secondary, btn.xs)}
+                        >
+                          Edit rate
+                        </button>
+                      </div>
+                    )}
+                    <p className="text-xs text-[#737373] mt-1">Applies to new bookings. Existing commissions keep their recorded rate.</p>
+                  </div>
+                  <FilterChips
+                    idPrefix="aff-pcomm"
+                    value={partnerCommFilter}
+                    onChange={setPartnerCommFilter}
+                    options={['all', 'pending', 'approved', 'paid', 'declined'].map((s) => ({
+                      value: s,
+                      label: s.charAt(0).toUpperCase() + s.slice(1),
+                      count: s === 'all' ? activePartnerMetrics.commissions.length : activePartnerMetrics.commissions.filter((c) => c.status === s).length,
+                    }))}
+                  />
+                </div>
+
+                {(() => {
+                  const list = activePartnerMetrics.commissions.filter((c) => partnerCommFilter === 'all' || c.status === partnerCommFilter);
+                  return tableShell(
+                    list.length === 0 ? (
+                      <EmptyState title="No commissions" description="Nothing matches this filter." />
+                    ) : (
+                      <>
+                        <div className="hidden md:block overflow-x-auto">
+                          <table className="w-full text-[13px]">
+                            <thead className="border-b border-[#E5E5E5]">
+                              <tr>
+                                <th className={thCls}>Date</th>
+                                <th className={thCls}>Booking</th>
+                                <th className={cx(thCls, 'text-right')}>Eligible</th>
+                                <th className={cx(thCls, 'text-right')}>Rate</th>
+                                <th className={cx(thCls, 'text-right')}>Commission</th>
+                                <th className={thCls}>Checks</th>
+                                <th className={thCls}>Status</th>
+                                <th className={cx(thCls, 'text-right')}>Actions</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {list.map((c) => (
+                                <tr key={c.id} className="border-b border-[#F0F0F0] last:border-0 hover:bg-[#FAFAFA]">
+                                  <td className={cx(tdCls, 'text-[#737373] whitespace-nowrap')}>{safeFormatDate(c.booking_date || c.created_at)}</td>
+                                  <td className={tdCls}>
+                                    <button type="button" onClick={() => setSelectedCommissionId(c.id)} className="text-left group">
+                                      <span className="block font-mono text-xs font-medium group-hover:underline">#{c.booking_id}</span>
+                                      <span className="block text-xs text-[#737373] truncate max-w-[160px]">{c.guest_name || 'Guest'}</span>
+                                    </button>
+                                  </td>
+                                  <td className={cx(tdCls, 'text-right tabular-nums')}>{formatIDR(c.eligible_treatment_amount)}</td>
+                                  <td className={cx(tdCls, 'text-right tabular-nums text-[#737373]')}>{c.commission_rate_pct}%</td>
+                                  <td className={cx(tdCls, 'text-right tabular-nums font-medium')}>{formatIDR(c.commission_amount)}</td>
+                                  <td className={tdCls}><VerificationChecks c={c} compact /></td>
+                                  <td className={tdCls}><StatusBadge status={c.status} /></td>
+                                  <td className={cx(tdCls, 'text-right')}><CommissionActions c={c} /></td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                        <ul className="md:hidden divide-y divide-[#F0F0F0]">
+                          {list.map((c) => (
+                            <li key={c.id} className="p-4 space-y-2.5">
+                              <div className="flex items-start justify-between gap-2">
+                                <button type="button" onClick={() => setSelectedCommissionId(c.id)} className="text-left min-w-0">
+                                  <span className="block font-mono text-xs font-medium">#{c.booking_id}</span>
+                                  <span className="block text-xs text-[#737373]">{safeFormatDate(c.booking_date || c.created_at)} · {c.commission_rate_pct}%</span>
+                                </button>
+                                <StatusBadge status={c.status} />
+                              </div>
+                              <div className="text-right text-[15px] font-semibold tabular-nums text-black">{formatIDR(c.commission_amount)}</div>
+                              <VerificationChecks c={c} />
+                              <CommissionActions c={c} size={btn.sm} />
+                            </li>
+                          ))}
+                        </ul>
+                      </>
+                    )
+                  );
+                })()}
+              </div>
+            )}
+
+            {/* Payouts */}
+            {partnerActiveTab === 'payouts' && (
+              <div className="px-4 md:px-8 py-6 space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 border border-[#E5E5E5] rounded-xl p-4">
+                  <div>
+                    <div className="text-xs text-[#737373]">Ready to pay</div>
+                    <div className="text-xl font-semibold text-black tabular-nums mt-1">{formatIDR(activePartnerMetrics.approvedUnpaid)}</div>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={activePartnerMetrics.approvedUnpaid <= 0}
+                    onClick={() => openQuickPayoutForPartner(selectedPartner)}
+                    className={cx(btn.base, btn.primary, btn.md)}
+                  >
+                    <Plus size={15} />
+                    Record payout
+                  </button>
+                </div>
+                {tableShell(
+                  activePartnerMetrics.payouts.length === 0 ? (
+                    <EmptyState title="No payouts yet" description="Payouts recorded for this partner will appear here." />
+                  ) : (
+                    <ul className="divide-y divide-[#F0F0F0]">
+                      {activePartnerMetrics.payouts.map((py) => (
+                        <li key={py.id}>
+                          <button type="button" onClick={() => setSelectedPayoutDetails(py)} className="w-full text-left px-4 py-3 hover:bg-[#FAFAFA] flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6">
+                            <div className="min-w-0 flex-1">
+                              <span className="block font-mono text-xs text-[#171717] truncate">{py.payout_reference}</span>
+                              <span className="block text-xs text-[#737373] truncate">
+                                {safeFormatDate(py.created_at)} · <span className="capitalize">{methodLabel(py.payout_method)}</span>
+                                {py.notes ? ` · ${py.notes}` : ''}
+                              </span>
+                            </div>
+                            <span className="text-xs text-[#737373] whitespace-nowrap">{getPayoutBookings(py).length} bookings</span>
+                            <StatusBadge status={py.status || 'completed'} />
+                            <span className="text-[13px] font-semibold tabular-nums text-black sm:w-32 sm:text-right">{formatIDR(py.amount)}</span>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )
+                )}
+              </div>
+            )}
+
+            {/* History */}
+            {partnerActiveTab === 'history' && (
+              <div className="px-4 md:px-8 py-6 max-w-3xl">
+                {partnerHistory.length === 0 ? (
+                  <EmptyState title="No activity yet" />
+                ) : (
+                  <ol className="relative border-l border-[#E5E5E5] ml-1.5 space-y-5">
+                    {partnerHistory.map((ev, i) => (
+                      <li key={i} className="pl-5 relative">
+                        <span className="absolute -left-[5px] top-1.5 w-2.5 h-2.5 rounded-full bg-white border-2 border-[#A3A3A3]" aria-hidden="true" />
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-[13px] font-medium text-[#171717]">{ev.title}</span>
+                          {ev.status && <StatusBadge status={ev.status} />}
+                        </div>
+                        {ev.detail && <div className="text-xs text-[#737373] mt-0.5">{ev.detail}</div>}
+                        <div className="text-[11px] text-[#A3A3A3] mt-0.5">{safeFormatDate(ev.date)}</div>
+                      </li>
+                    ))}
+                  </ol>
+                )}
+              </div>
+            )}
+          </>
+        )}
+      </FullScreenModal>
+
+      {/* ========================== RECORD PAYOUT ========================== */}
+      <FullScreenModal
+        open={showPayoutModal}
+        onClose={closePayoutModal}
+        zIndex="z-[75]"
+        onSubmit={handleRecordPayout}
+        title="Record payout"
+        meta={payoutSelectedPartner && (
+          <span className="inline-flex items-center h-6 px-2 rounded-md border border-[#E5E5E5] font-mono text-xs text-[#171717]">{payoutSelectedPartner.partner_code}</span>
+        )}
+        subtitle="Select approved bookings to settle and log the transfer."
+        footer={
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="text-xs text-[#737373]">
+              {payoutForm.partner_id ? (
+                <>
+                  <span className="text-[#171717] font-medium tabular-nums">{selectedCommissionIds.length}</span> of {payoutApprovedCommissions.length} bookings selected ·{' '}
+                  <span className="text-[#171717] font-medium tabular-nums">{formatIDR(selectedPayoutSum)}</span>
+                </>
+              ) : (
+                'Choose a partner to begin.'
+              )}
+            </div>
+            <div className="flex gap-2">
+              <button type="button" onClick={closePayoutModal} className={cx(btn.base, btn.secondary, btn.md, 'flex-1 sm:flex-none')}>
+                Cancel
+              </button>
+              <button id="aff-payout-submit" type="submit" disabled={actionLoading} className={cx(btn.base, btn.primary, btn.md, 'flex-1 sm:flex-none')}>
+                {actionLoading ? 'Recording…' : `Record ${formatIDR(Number(payoutForm.amount) || 0)}`}
+              </button>
+            </div>
+          </div>
+        }
+      >
+        <div className="px-4 md:px-8 py-6 grid grid-cols-1 xl:grid-cols-12 gap-6 max-w-7xl">
+          {/* Form */}
+          <div className="xl:col-span-4 space-y-5">
+            <SectionCard title="Payout">
+              <div className="space-y-4">
+                <Field label="Partner" htmlFor="payout-partner" error={payoutSubmitted ? payoutErrors.partner : null}>
+                  <select
+                    id="payout-partner"
+                    value={payoutForm.partner_id}
+                    onChange={(e) => (e.target.value ? handleSelectPayoutPartner(e.target.value) : setPayoutForm(EMPTY_PAYOUT_FORM))}
+                    className={cx(selectCls, payoutSubmitted && payoutErrors.partner && 'border-red-400')}
+                  >
+                    <option value="">Select partner…</option>
+                    {partners.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.partner_code} — {fullName(p)}
+                        {metricsById[p.id]?.approvedUnpaid ? ` (${formatIDR(metricsById[p.id].approvedUnpaid)} ready)` : ''}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+
+                <Field
+                  label="Amount"
+                  htmlFor="payout-amount"
+                  error={payoutSubmitted ? payoutErrors.amount : null}
+                  hint={selectedCommissionIds.length > 0 ? `Calculated from ${selectedCommissionIds.length} selected bookings.` : undefined}
+                >
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[13px] text-[#737373]">Rp</span>
+                    <input
+                      id="payout-amount"
+                      type="number"
+                      inputMode="numeric"
+                      min={0}
+                      placeholder="0"
+                      value={payoutForm.amount}
+                      onChange={(e) => setPayoutForm({ ...payoutForm, amount: e.target.value })}
+                      className={cx(inputCls, 'pl-10 tabular-nums font-medium', payoutSubmitted && payoutErrors.amount && 'border-red-400')}
+                    />
+                  </div>
+                </Field>
+
+                <Field label="Method" htmlFor="payout-method">
+                  <select
+                    id="payout-method"
+                    value={payoutForm.payout_method}
+                    onChange={(e) => setPayoutForm({ ...payoutForm, payout_method: e.target.value })}
+                    className={selectCls}
+                  >
+                    <option value="bank_transfer">Bank transfer</option>
+                    <option value="wise">Wise</option>
+                    <option value="paypal">PayPal</option>
+                    <option value="cash">Cash</option>
+                  </select>
+                </Field>
+
+                <Field label="Notes / transfer reference" htmlFor="payout-notes">
+                  <input
+                    id="payout-notes"
+                    type="text"
+                    placeholder="e.g. BCA ref 88392102"
+                    value={payoutForm.notes}
+                    onChange={(e) => setPayoutForm({ ...payoutForm, notes: e.target.value })}
+                    className={inputCls}
+                  />
+                </Field>
+              </div>
+            </SectionCard>
+
+            {payoutSelectedPartner && (
+              <SectionCard title="Recipient" bodyClassName="px-4 md:px-5 pb-2 pt-2">
+                <dl>
+                  <KeyValue label="Partner">{fullName(payoutSelectedPartner)}</KeyValue>
+                  <KeyValue label="Method"><span className="capitalize">{methodLabel(payoutSelectedPartner.payout_method)}</span></KeyValue>
+                  {payoutSelectedPartner.payout_details?.bank_name ? (
+                    <>
+                      <KeyValue label="Bank">{payoutSelectedPartner.payout_details.bank_name}</KeyValue>
+                      <KeyValue label="Account" mono>{payoutSelectedPartner.payout_details.account_number}</KeyValue>
+                      <KeyValue label="Holder">{payoutSelectedPartner.payout_details.account_holder}</KeyValue>
+                    </>
+                  ) : (
+                    <KeyValue label="Bank account"><span className="text-[#A3A3A3]">Not provided</span></KeyValue>
+                  )}
+                </dl>
+              </SectionCard>
+            )}
+
+            {payoutForm.partner_id && payoutApprovedCommissions.length > 0 && selectedCommissionIds.length === 0 && (
+              <div className="flex gap-2.5 border border-[#E5E5E5] rounded-xl p-3 text-xs text-[#525252]">
+                <Info size={15} className="shrink-0 text-[#737373] mt-0.5" />
+                <span>No bookings selected. When recorded, all approved commissions for this partner will be marked as paid.</span>
+              </div>
+            )}
+          </div>
+
+          {/* Booking selection */}
+          <div className="xl:col-span-8">
+            {!payoutForm.partner_id ? (
+              <div className="border border-[#E5E5E5] rounded-xl">
+                <EmptyState title="Select a partner" description="Their approved bookings and calendar will appear here." />
+              </div>
+            ) : (
+              <SectionCard
+                title="Approved bookings"
+                description="Pick a date to filter, then tick the bookings included in this payout."
+                actions={
+                  <>
+                    <button type="button" onClick={deselectAllApproved} className={cx(btn.base, btn.secondary, btn.xs)}>Clear</button>
+                    <button type="button" onClick={selectAllApproved} className={cx(btn.base, btn.secondary, btn.xs)}>Select all</button>
+                  </>
+                }
+              >
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
+                  {/* Mini calendar */}
+                  <div className="md:col-span-5">
+                    <div className="flex items-center justify-between mb-2">
+                      <button
+                        type="button"
+                        aria-label="Previous month"
+                        onClick={() => { shiftMonth(payoutCalendarYear, payoutCalendarMonth, -1, setPayoutCalendarYear, setPayoutCalendarMonth); setPayoutSelectedDate(null); }}
+                        className={cx(btn.base, btn.secondary, btn.xs, 'w-9 md:w-7 px-0')}
+                      >
+                        <ChevronLeft size={14} />
+                      </button>
+                      <span className="text-[13px] font-semibold text-black">{MONTH_NAMES[payoutCalendarMonth]} {payoutCalendarYear}</span>
+                      <button
+                        type="button"
+                        aria-label="Next month"
+                        onClick={() => { shiftMonth(payoutCalendarYear, payoutCalendarMonth, 1, setPayoutCalendarYear, setPayoutCalendarMonth); setPayoutSelectedDate(null); }}
+                        className={cx(btn.base, btn.secondary, btn.xs, 'w-9 md:w-7 px-0')}
+                      >
+                        <ChevronRight size={14} />
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-7 gap-1 text-center text-[11px] text-[#737373] mb-1">
+                      {DAYS_OF_WEEK.map((d) => <div key={d}>{d}</div>)}
+                    </div>
+                    <div className="grid grid-cols-7 gap-1">
+                      {Array.from({ length: payoutCalendarFirstDayOfWeek }).map((_, i) => <div key={`pe-${i}`} />)}
+                      {Array.from({ length: payoutCalendarDaysInMonth }).map((_, i) => {
+                        const day = i + 1;
+                        const key = `${payoutCalendarYear}-${String(payoutCalendarMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                        const approved = payoutApprovedByDate[key]?.length || 0;
+                        const paid = payoutPaidByDate[key] || 0;
+                        const selected = payoutSelectedDate === key;
+                        return (
+                          <button
+                            key={key}
+                            type="button"
+                            aria-pressed={selected}
+                            aria-label={`${safeFormatDate(key)}: ${approved} approved, ${paid} paid`}
+                            onClick={() => setPayoutSelectedDate(selected ? null : key)}
+                            className={cx(
+                              'h-10 rounded-md border text-xs flex flex-col items-center justify-center gap-0.5 transition-colors',
+                              selected ? 'border-black ring-1 ring-black text-black font-semibold' : approved ? 'border-[#D4D4D4] text-[#171717] hover:border-black' : 'border-transparent text-[#A3A3A3] hover:border-[#E5E5E5]'
+                            )}
+                          >
+                            {day}
+                            <span className="flex gap-0.5 h-1.5">
+                              {approved > 0 && <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />}
+                              {paid > 0 && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <div className="flex items-center gap-3 mt-3 text-[11px] text-[#737373]">
+                      <span className="inline-flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-blue-500" />Approved</span>
+                      <span className="inline-flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />Already paid</span>
+                      {payoutSelectedDate && (
+                        <button type="button" onClick={() => setPayoutSelectedDate(null)} className="ml-auto text-black font-medium hover:underline">
+                          Show all dates
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Checklist */}
+                  <div className="md:col-span-7">
+                    {(() => {
+                      const list = payoutSelectedDate
+                        ? payoutApprovedCommissions.filter((c) => commDateKey(c) === payoutSelectedDate)
+                        : payoutApprovedCommissions;
+                      if (list.length === 0) {
+                        return (
+                          <div className="border border-[#E5E5E5] rounded-lg">
+                            <EmptyState
+                              title={`No approved bookings${payoutSelectedDate ? ' on this date' : ''}`}
+                              description="Only approved commissions can be paid. Approve pending bookings in the partner's calendar first."
+                            />
+                          </div>
+                        );
+                      }
+                      return (
+                        <ul className="border border-[#E5E5E5] rounded-lg divide-y divide-[#F0F0F0] max-h-[420px] overflow-y-auto">
+                          {list.map((c) => {
+                            const checked = selectedCommissionIds.includes(c.id);
+                            return (
+                              <li key={c.id}>
+                                <label className="flex items-center gap-3 px-3 py-3 cursor-pointer hover:bg-[#FAFAFA]">
+                                  <input
+                                    type="checkbox"
+                                    checked={checked}
+                                    onChange={() => toggleCommissionSelection(c.id)}
+                                    className="w-4 h-4 rounded border-[#D4D4D4] accent-black cursor-pointer shrink-0"
+                                  />
+                                  <span className="min-w-0 flex-1">
+                                    <span className="flex items-center gap-2">
+                                      <span className="font-mono text-xs font-medium text-[#171717]">#{c.booking_id}</span>
+                                      <span className="text-xs text-[#737373]">{safeFormatDate(c.booking_date || c.created_at, { day: 'numeric', month: 'short' })}</span>
+                                    </span>
+                                    <span className="block text-xs text-[#737373] truncate">{c.guest_name || 'Guest'} · {c.treatment_name || 'Treatment'}</span>
+                                  </span>
+                                  <span className="text-right shrink-0">
+                                    <span className="block text-[13px] font-medium tabular-nums text-[#171717]">{formatIDR(c.commission_amount)}</span>
+                                    <span className="block text-[11px] tabular-nums text-[#737373]">{c.commission_rate_pct}% of {formatIDR(c.eligible_treatment_amount)}</span>
+                                  </span>
+                                </label>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      );
+                    })()}
+
+                    {payoutPaidCommissions.length > 0 && (
+                      <div className="mt-4">
+                        <button
+                          type="button"
+                          aria-expanded={showPastPaidInPayoutModal}
+                          onClick={() => setShowPastPaidInPayoutModal((v) => !v)}
+                          className="text-xs font-medium text-[#737373] hover:text-black"
+                        >
+                          {showPastPaidInPayoutModal ? 'Hide' : 'Show'} previously paid ({payoutPaidCommissions.length})
+                        </button>
+                        {showPastPaidInPayoutModal && (
+                          <ul className="mt-2 border border-[#E5E5E5] rounded-lg divide-y divide-[#F0F0F0] max-h-48 overflow-y-auto">
+                            {payoutPaidCommissions.map((c) => (
+                              <li key={`paid-${c.id}`} className="flex items-center justify-between gap-2 px-3 py-2 text-xs">
+                                <span className="flex items-center gap-2 min-w-0">
+                                  <span className="font-mono text-[#171717]">#{c.booking_id}</span>
+                                  <span className="text-[#737373]">{safeFormatDate(c.booking_date || c.created_at, { day: 'numeric', month: 'short' })}</span>
+                                  <StatusBadge status="paid" />
+                                </span>
+                                <span className="tabular-nums text-[#171717]">{formatIDR(c.commission_amount)}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </SectionCard>
+            )}
+          </div>
+        </div>
+      </FullScreenModal>
+
+      {/* ======================== PAYOUT BREAKDOWN ========================= */}
+      <FullScreenModal
+        open={!!selectedPayoutDetails}
+        onClose={() => setSelectedPayoutDetails(null)}
+        zIndex="z-[80]"
+        title="Payout details"
+        meta={
+          selectedPayoutDetails && (
+            <>
+              <span className="inline-flex items-center h-6 px-2 rounded-md border border-[#E5E5E5] font-mono text-xs text-[#171717] max-w-[240px] truncate">
+                {selectedPayoutDetails.payout_reference}
+              </span>
+              <StatusBadge status={selectedPayoutDetails.status || 'completed'} />
+            </>
+          )
+        }
+        subtitle={
+          selectedPayoutDetails && (
+            <span>
+              {selectedPayoutDetails.partner_code} · {safeFormatDate(selectedPayoutDetails.created_at)} ·{' '}
+              <span className="capitalize">{methodLabel(selectedPayoutDetails.payout_method)}</span>
+            </span>
+          )
+        }
+        footer={
+          <div className="flex items-center justify-end">
+            <button type="button" onClick={() => setSelectedPayoutDetails(null)} className={cx(btn.base, btn.primary, btn.md)}>
+              Done
+            </button>
+          </div>
+        }
+      >
+        {selectedPayoutDetails &&
+          (() => {
+            const items = getPayoutBookings(selectedPayoutDetails);
+            const volume = items.reduce((s, b) => s + Number(b.eligible_treatment_amount || 0), 0);
+            return (
+              <div className="px-4 md:px-8 py-6 space-y-6 max-w-6xl">
+                <div className="grid grid-cols-2 lg:grid-cols-4 border border-[#E5E5E5] rounded-xl overflow-hidden">
+                  {[
+                    { label: 'Amount', value: formatIDR(selectedPayoutDetails.amount) },
+                    { label: 'Bookings', value: String(items.length) },
+                    { label: 'Treatment volume', value: formatIDR(volume) },
+                    { label: 'Notes', value: selectedPayoutDetails.notes || '—' },
+                  ].map((k, i) => (
+                    <div key={k.label} className={cx('p-4 min-w-0', i % 2 === 1 && 'border-l border-[#E5E5E5]', i >= 2 && 'border-t lg:border-t-0 border-[#E5E5E5]', i === 2 && 'lg:border-l')}>
+                      <div className="text-xs text-[#737373]">{k.label}</div>
+                      <div className={cx('mt-1 text-black truncate', k.label === 'Notes' ? 'text-[13px]' : 'text-lg font-semibold tabular-nums')} title={k.value}>
+                        {k.value}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div>
+                  <h3 className="text-[15px] font-semibold text-black mb-3">Settled bookings</h3>
+                  {tableShell(
+                    items.length === 0 ? (
+                      <EmptyState title="No linked bookings" description={`This payout of ${formatIDR(selectedPayoutDetails.amount)} has no itemized bookings.`} />
+                    ) : (
+                      <>
+                        <div className="hidden md:block overflow-x-auto">
+                          <table className="w-full text-[13px]">
+                            <thead className="border-b border-[#E5E5E5]">
+                              <tr>
+                                <th className={thCls}>Booking</th>
+                                <th className={thCls}>Date</th>
+                                <th className={thCls}>Guest</th>
+                                <th className={thCls}>Treatment</th>
+                                <th className={cx(thCls, 'text-right')}>Eligible</th>
+                                <th className={cx(thCls, 'text-right')}>Rate</th>
+                                <th className={cx(thCls, 'text-right')}>Commission</th>
+                                <th className={thCls}>Status</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {items.map((b) => (
+                                <tr key={b.id} className="border-b border-[#F0F0F0] last:border-0">
+                                  <td className={tdCls}>
+                                    <span className="inline-flex items-center gap-0.5 font-mono text-xs font-medium">
+                                      #{b.booking_id}
+                                      <CopyBtn text={b.booking_id} id={`pbk-${b.id}`} label="Copy booking reference" />
+                                    </span>
+                                  </td>
+                                  <td className={cx(tdCls, 'text-[#737373] whitespace-nowrap')}>
+                                    {safeFormatDate(b.booking_date || b.created_at)} {b.booking_time || ''}
+                                  </td>
+                                  <td className={tdCls}>
+                                    <span className="block truncate max-w-[180px]">{b.guest_name || 'Guest'}</span>
+                                    {b.location && <span className="block text-xs text-[#737373] truncate max-w-[180px]">{b.location}{b.room_number ? ` (${b.room_number})` : ''}</span>}
+                                  </td>
+                                  <td className={cx(tdCls, 'text-[#171717]')}><span className="block truncate max-w-[200px]">{b.treatment_name || 'Spa Treatment'}</span></td>
+                                  <td className={cx(tdCls, 'text-right tabular-nums')}>{formatIDR(b.eligible_treatment_amount)}</td>
+                                  <td className={cx(tdCls, 'text-right tabular-nums text-[#737373]')}>{b.commission_rate_pct}%</td>
+                                  <td className={cx(tdCls, 'text-right tabular-nums font-medium')}>{formatIDR(b.commission_amount)}</td>
+                                  <td className={tdCls}><StatusBadge status={b.status} /></td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                        <ul className="md:hidden divide-y divide-[#F0F0F0]">
+                          {items.map((b) => (
+                            <li key={b.id} className="p-4 flex items-start justify-between gap-3">
+                              <div className="min-w-0">
+                                <span className="block font-mono text-xs font-medium">#{b.booking_id}</span>
+                                <span className="block text-xs text-[#737373] truncate">{b.guest_name || 'Guest'} · {safeFormatDate(b.booking_date || b.created_at)}</span>
+                                <span className="block text-xs text-[#737373] truncate">{b.treatment_name || 'Spa Treatment'}</span>
+                              </div>
+                              <div className="text-right shrink-0">
+                                <span className="block text-[13px] font-semibold tabular-nums">{formatIDR(b.commission_amount)}</span>
+                                <StatusBadge status={b.status} className="mt-1" />
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      </>
+                    )
+                  )}
+                </div>
+              </div>
+            );
+          })()}
+      </FullScreenModal>
+
+      {/* ======================= COMMISSION DRAWER ========================= */}
+      <Drawer
+        open={!!selectedCommission}
+        onClose={() => setSelectedCommissionId(null)}
+        zIndex="z-[85]"
+        title={selectedCommission ? `#${selectedCommission.booking_id}` : ''}
+        meta={selectedCommission && <StatusBadge status={selectedCommission.status} />}
+        footer={
+          selectedCommission && (
+            <div className="flex items-center justify-between gap-2">
+              {(() => {
+                const p = findPartner(selectedCommission.partner_code, selectedCommission.partner_id);
+                return p ? (
+                  <button
+                    type="button"
+                    onClick={() => { setSelectedCommissionId(null); openPartnerModal(p, 'commissions'); }}
+                    className={cx(btn.base, btn.secondary, btn.sm)}
+                  >
+                    Open partner
+                  </button>
+                ) : <span />;
+              })()}
+              <CommissionActions c={selectedCommission} size={btn.sm} />
+            </div>
+          )
+        }
+      >
+        {selectedCommission && (
+          <div className="space-y-6">
+            <div>
+              <div className="text-xs text-[#737373]">Commission</div>
+              <div className="text-2xl font-semibold text-black tabular-nums mt-1">{formatIDR(selectedCommission.commission_amount)}</div>
+              <div className="text-xs text-[#737373] mt-0.5 tabular-nums">
+                {selectedCommission.commission_rate_pct}% of {formatIDR(selectedCommission.eligible_treatment_amount)}
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-[13px] font-semibold text-black mb-1">Booking</h3>
+              <dl>
+                <KeyValue label="Guest">{selectedCommission.guest_name || 'Guest'}</KeyValue>
+                <KeyValue label="Treatment">{selectedCommission.treatment_name || '—'}</KeyValue>
+                <KeyValue label="Date">
+                  {safeFormatDate(selectedCommission.booking_date || selectedCommission.created_at)} {selectedCommission.booking_time || ''}
+                </KeyValue>
+                <KeyValue label="Location">
+                  {selectedCommission.location || '—'}
+                  {selectedCommission.room_number ? ` (${selectedCommission.room_number})` : ''}
+                </KeyValue>
+                <KeyValue label="Booking status"><span className="capitalize">{selectedCommission.booking_status || '—'}</span></KeyValue>
+              </dl>
+            </div>
+
+            <div>
+              <h3 className="text-[13px] font-semibold text-black mb-1">Amounts</h3>
+              <dl>
+                <KeyValue label="Booking amount">{formatIDR(selectedCommission.booking_amount_gross)}</KeyValue>
+                <KeyValue label="Eligible treatment">{formatIDR(selectedCommission.eligible_treatment_amount)}</KeyValue>
+                <KeyValue label="Rate">{selectedCommission.commission_rate_pct}%</KeyValue>
+              </dl>
+            </div>
+
+            <div>
+              <h3 className="text-[13px] font-semibold text-black mb-1">Settlement</h3>
+              <dl>
+                <KeyValue label="Partner">{selectedCommission.partner_code}</KeyValue>
+                <KeyValue label="Approved">{selectedCommission.approved_at ? safeFormatDate(selectedCommission.approved_at) : '—'}</KeyValue>
+                <KeyValue label="Paid">{selectedCommission.paid_at ? safeFormatDate(selectedCommission.paid_at) : '—'}</KeyValue>
+                <KeyValue label="Payout" mono>
+                  {selectedCommission.payout_id && payoutById[selectedCommission.payout_id] ? (
+                    <button
+                      type="button"
+                      onClick={() => setSelectedPayoutDetails(payoutById[selectedCommission.payout_id])}
+                      className="hover:underline text-xs"
+                    >
+                      {payoutById[selectedCommission.payout_id].payout_reference}
+                    </button>
+                  ) : (
+                    '—'
+                  )}
+                </KeyValue>
+              </dl>
+            </div>
+
+            <div>
+              <h3 className="text-[13px] font-semibold text-black mb-2">Verification</h3>
+              <VerificationChecks c={selectedCommission} compact />
+            </div>
+          </div>
+        )}
+      </Drawer>
+
+      {/* ========================== CONFIRMATION ========================== */}
+      <ConfirmDialog
+        open={!!confirmState}
+        loading={actionLoading}
+        title={
+          confirmState?.kind === 'partner-status'
+            ? CONFIRM_COPY[confirmState.verb].title
+            : 'Decline commission'
+        }
+        description={
+          confirmState?.kind === 'partner-status'
+            ? CONFIRM_COPY[confirmState.verb].body(confirmState.name)
+            : confirmState?.kind === 'decline-commission'
+            ? `Commission for booking #${confirmState.ref} will be declined and excluded from payouts.`
+            : ''
+        }
+        confirmLabel={confirmState?.kind === 'partner-status' ? CONFIRM_COPY[confirmState.verb].confirm : 'Decline'}
+        onCancel={() => setConfirmState(null)}
+        onConfirm={async () => {
+          const c = confirmState;
+          if (!c) return;
+          if (c.kind === 'partner-status') await handlePartnerStatus(c.id, c.next);
+          else await handleUpdateCommission(c.id, { status: 'declined' });
+          setConfirmState(null);
+        }}
+      />
+
+      <Toast toast={toast} />
     </div>
   );
 }
