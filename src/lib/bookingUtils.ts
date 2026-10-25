@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase';
-import { recordBookingAffiliation, getAffiliateCookie } from '@/lib/affiliateAttribution';
+import { recordBookingAffiliation, getAffiliateCookie, clearAffiliateCookie } from '@/lib/affiliateAttribution';
 
 export const saveBookingToSupabase = async (
     bookingId: string, 
@@ -66,6 +66,10 @@ export const saveBookingToSupabase = async (
         // Strictly associate affiliate attribution at booking creation time
         if (siteBrandFilter === 'therapick') {
             await recordBookingAffiliation(bookingId, formData, cartItems, totalPrice, siteBrandFilter);
+            // SINGLE-BOOKING ATTRIBUTION ENFORCEMENT:
+            // Once a referral is used for a booking, immediately clear the cookie & session data.
+            // Future bookings from this customer/device without a referral link will be strictly Direct.
+            clearAffiliateCookie();
         }
     } catch (err) {
         console.error('Exception saving booking:', err);

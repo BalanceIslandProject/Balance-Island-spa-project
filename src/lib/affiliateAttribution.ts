@@ -2,7 +2,6 @@ import { supabase } from '@/lib/supabase';
 
 export const AFFILIATE_COOKIE_NAME = 'btp_affiliate_ref';
 export const DEFAULT_COMMISSION_RATE_PCT = 15.00;
-export const DEFAULT_COOKIE_DAYS = 30;
 
 export interface AffiliateCookieData {
   partner_code: string;
@@ -11,12 +10,31 @@ export interface AffiliateCookieData {
 }
 
 /**
- * Reads the affiliate tracking cookie from browser document.cookie
+ * Reads the affiliate tracking data.
+ * STRICT PER-BOOKING LOGIC:
+ * - If referral was already consumed for a booking in this session, returns null.
+ * - Prioritizes active sessionStorage.
+ * - Direct visits without an active referral link session will never inherit stale referrals.
  */
 export function getAffiliateCookie(): AffiliateCookieData | null {
-  if (typeof document === 'undefined') return null;
+  if (typeof window === 'undefined') return null;
 
   try {
+    // 1. If already consumed by a previous booking on this device, reject
+    if (sessionStorage.getItem('btp_affiliate_consumed') === 'true') {
+      return null;
+    }
+
+    // 2. Check active sessionStorage first (scoped strictly to current referred tab)
+    const sessionData = sessionStorage.getItem(AFFILIATE_COOKIE_NAME);
+    if (sessionData) {
+      const parsed = JSON.parse(sessionData) as AffiliateCookieData;
+      if (parsed && parsed.partner_code) {
+        return parsed;
+      }
+    }
+
+    // 3. Fallback to document.cookie (session cookie)
     const match = document.cookie.match(new RegExp('(^|;\\s*)(' + AFFILIATE_COOKIE_NAME + ')=([^;]*)'));
     if (!match || !match[3]) return null;
 
@@ -32,10 +50,12 @@ export function getAffiliateCookie(): AffiliateCookieData | null {
 }
 
 /**
- * Sets the affiliate tracking cookie in the browser
+ * Sets the affiliate tracking session for a referred booking.
+ * Note: Session-only cookie (NO persistent 30-day max-age) and sessionStorage
+ * to ensure that subsequent direct bookings on the same phone will NOT be attributed.
  */
-export function setAffiliateCookie(partnerCode: string, partnerId: string, days: number = DEFAULT_COOKIE_DAYS): void {
-  if (typeof document === 'undefined') return;
+export function setAffiliateCookie(partnerCode: string, partnerId: string): void {
+  if (typeof window === 'undefined') return;
 
   try {
     const payload: AffiliateCookieData = {
@@ -44,20 +64,35 @@ export function setAffiliateCookie(partnerCode: string, partnerId: string, days:
       timestamp: Date.now(),
     };
 
-    const maxAge = days * 24 * 60 * 60;
-    // Set cookie scoped to root path, SameSite=Lax
-    document.cookie = `${AFFILIATE_COOKIE_NAME}=${encodeURIComponent(JSON.stringify(payload))}; path=/; max-age=${maxAge}; SameSite=Lax`;
+    const serialized = JSON.stringify(payload);
+    sessionStorage.setItem(AFFILIATE_COOKIE_NAME, serialized);
+    sessionStorage.removeItem('btp_affiliate_consumed');
+
+    // Set as browser session cookie (no max-age/expires: dies when browser session closes)
+    document.cookie = `${AFFILIATE_COOKIE_NAME}=${encodeURIComponent(serialized)}; path=/; SameSite=Lax`;
   } catch (e) {
     console.error('Error setting affiliate cookie:', e);
   }
 }
 
 /**
- * Clears the affiliate tracking cookie
+ * Clears the affiliate tracking cookie and session data immediately.
+ * Called as soon as a booking is completed so repeat organic visits
+ * from the same tourist or phone are strictly recorded as Direct.
  */
 export function clearAffiliateCookie(): void {
-  if (typeof document === 'undefined') return;
-  document.cookie = `${AFFILIATE_COOKIE_NAME}=; path=/; max-age=0; SameSite=Lax`;
+  if (typeof window === 'undefined') return;
+
+  try {
+    document.cookie = `${AFFILIATE_COOKIE_NAME}=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax`;
+    document.cookie = `${AFFILIATE_COOKIE_NAME}=; path=/; domain=${window.location.hostname}; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax`;
+
+    sessionStorage.removeItem(AFFILIATE_COOKIE_NAME);
+    sessionStorage.setItem('btp_affiliate_consumed', 'true');
+    localStorage.removeItem(AFFILIATE_COOKIE_NAME);
+  } catch (e) {
+    console.error('Error clearing affiliate cookie:', e);
+  }
 }
 
 /**
@@ -224,6 +259,9 @@ export async function recordBookingAffiliation(
         notes: `Auto-attributed for BookTherapick booking #${bookingId}`,
       },
     ]);
+
+    // 5. Consume referral tracking immediately so subsequent direct bookings are 100% Direct
+    clearAffiliateCookie();
 
     return true;
   } catch (err) {

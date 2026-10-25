@@ -13,7 +13,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     let host = 'www.booktherapick.com';
     try {
         const headersList = await headers();
-        host = headersList.get('host') || host;
+        host = headersList.get('x-forwarded-host') || headersList.get('host') || host;
     } catch {
         // fallback
     }
@@ -44,16 +44,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const isNonTherapickNonUbud = !isTherapick && !isUbud;
 
     const pageUrl = isNonTherapickNonUbud ? `${baseUrl}/locations/ubud` : `${baseUrl}/locations/${slug}`;
-    const iconUrl = isTherapick ? '/therapick-logo-2.png' : (isBaliDomain ? '/homespa.png' : '/elexoir.png');
+    const iconUrl = isTherapick ? '/therapick-logo.png' : (isBaliDomain ? '/homespa.png' : '/elexoir.png');
 
     const title = isTherapick
-        ? `Best In-Villa Massage & Mobile Spa in ${locationName}, Bali | Therapick`
+        ? `In-Villa Massage & Mobile Spa in ${locationName}, Bali | Therapick`
         : (isUbud 
             ? `${brandName} | Top-Rated Luxury Mobile Spa & In-Villa Massage in Ubud, Bali`
             : `Home Spa & In-Villa Massage in ${locationName} | ${brandName}`);
 
     const description = isTherapick
-        ? `Book top-rated in-villa massage and mobile spa delivery in ${locationName}, Bali with Therapick. 5-star certified therapists arrive at your private villa or hotel in 45-60 mins. Traditional Balinese, deep tissue, and couples massage.`
+        ? `Book luxury in-villa massage and mobile spa services in ${locationName}, Bali with Therapick. 5-star certified therapists arrive at your private villa or hotel in 45-60 mins. Traditional Balinese, deep tissue, and couples massage.`
         : (isUbud
             ? `Experience 5-star luxury mobile spa and in-villa massage delivered directly to your villa, resort, or private residence anywhere in Ubud, Bali. Certified local therapists serving Ubud Center, Sayan, Penestanan, Kedewatan, and Tegallalang.`
             : `Looking for 5-star home spa and in-villa massage in ${locationName}, Bali? ${brandName} delivers professional certified massage therapists directly to your private villa.`);
@@ -95,15 +95,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         title: title,
         description: description,
         keywords: keywords,
-        icons: {
-            icon: [
-                { url: isTherapick ? '/therapick-favicon.png' : iconUrl, type: 'image/png' },
-                { url: '/favicon.ico', sizes: '32x32' }
-            ],
-            apple: [
-                { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
-            ]
-        },
+        icons: isTherapick
+            ? {
+                icon: [
+                    { url: '/therapick-favicon.png', type: 'image/png' },
+                    { url: '/therapick-favicon.png?v=3', type: 'image/png' },
+                ],
+                shortcut: [{ url: '/therapick-favicon.png', type: 'image/png' }],
+                apple: [{ url: '/therapick-favicon.png', sizes: '180x180', type: 'image/png' }]
+            }
+            : {
+                icon: [{ url: `${iconUrl}?v=2`, type: 'image/png' }],
+                shortcut: [{ url: `${iconUrl}?v=2`, type: 'image/png' }],
+                apple: [{ url: `${iconUrl}?v=2`, sizes: '180x180', type: 'image/png' }]
+            },
         robots: isNonTherapickNonUbud 
             ? { index: false, follow: true } 
             : { index: true, follow: true, googleBot: { index: true, follow: true, 'max-image-preview': 'large' } },

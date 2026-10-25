@@ -163,7 +163,7 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
                         Referral Link
                       </span>
                       <span className="text-[10px] text-[#737373] border border-[#E5E5E5] px-1.5 py-0.5 rounded font-mono">
-                        30d Cookie
+                        Per Booking
                       </span>
                     </div>
                     <button

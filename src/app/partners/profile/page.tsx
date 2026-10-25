@@ -339,7 +339,7 @@ export default function PartnerProfilePage() {
         <div className="mt-4 pt-4 border-t border-[#E5E5E5] flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div className="flex items-center gap-1.5 text-xs font-semibold text-[#737373]">
             <span>Referral Link</span>
-            <span className="text-[10px] text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-md border border-emerald-200 font-semibold uppercase">30-Day Cookie</span>
+            <span className="text-[10px] text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-md border border-emerald-200 font-semibold uppercase">Per-Booking</span>
           </div>
           <button
             type="button"

@@ -7,7 +7,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let host = 'www.booktherapick.com';
   try {
     const headersList = await headers();
-    host = headersList.get('host') || host;
+    host = headersList.get('x-forwarded-host') || headersList.get('host') || host;
   } catch {
     // fallback to default
   }

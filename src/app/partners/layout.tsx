@@ -11,10 +11,11 @@ export const metadata = {
   icons: {
     icon: [
       { url: '/therapick-favicon.png', type: 'image/png' },
-      { url: '/favicon.ico', sizes: '32x32' },
+      { url: '/therapick-favicon.png?v=3', type: 'image/png' },
     ],
+    shortcut: [{ url: '/therapick-favicon.png', type: 'image/png' }],
     apple: [
-      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+      { url: '/therapick-favicon.png', sizes: '180x180', type: 'image/png' },
     ],
   },
 };

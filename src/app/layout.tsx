@@ -26,11 +26,12 @@ const newsreader = Newsreader({
 
 export async function generateViewport(): Promise<Viewport> {
   const headersList = await headers();
-  const host = headersList.get("host") || "www.elexoirhomespaubud.com";
-  const isBaliDomain = (host.includes("homespaubud") || host.includes("ubudhomespa")) && !host.includes("elexoir");
+  const hostHeader = headersList.get("x-forwarded-host") || headersList.get("host") || "";
+  const host = hostHeader.toLowerCase().split(':')[0].trim();
+  const isTherapick = host.includes("booktherapick") || host.includes("therapick");
 
   return {
-    themeColor: "#FFFFFF",
+    themeColor: isTherapick ? "#000000" : "#FFFFFF",
     width: "device-width",
     initialScale: 1,
     maximumScale: 1,
@@ -41,29 +42,32 @@ export async function generateViewport(): Promise<Viewport> {
 
 export async function generateMetadata(): Promise<Metadata> {
   const headersList = await headers();
-  const host = headersList.get("host") || "www.elexoirhomespaubud.com";
+  const hostHeader = headersList.get("x-forwarded-host") || headersList.get("host") || "";
+  const host = hostHeader.toLowerCase().split(':')[0].trim();
+  const isPartnersSubdomain = host.startsWith("partners.");
   const cookieHeader = headersList.get("cookie") || "";
-  const isTherapick = host.includes("booktherapick") || host.includes("therapick") || cookieHeader.includes("dev_brand=therapick");
+  const isTherapick = host.includes("booktherapick") || host.includes("therapick") || isPartnersSubdomain || cookieHeader.includes("dev_brand=therapick");
   const isBaliDomain = ((host.includes("homespaubud") || host.includes("ubudhomespa")) && !host.includes("elexoir")) || cookieHeader.includes("dev_brand=bali");
 
   const name = isTherapick ? "Therapick" : (isBaliDomain ? "Home Spa Ubud" : "Elexoir Home Spa Ubud");
   const url = isTherapick ? "https://www.booktherapick.com" : (isBaliDomain ? "https://www.homespaubud.com" : "https://www.elexoirhomespaubud.com");
   
-  // 1. ADVANCED SEO TITLES & DESCRIPTIONS
+  // 1. PROFESSIONAL, SPECIFIC SEO & GEO TITLES
+  // High-authority title optimized for human elegance, Google SERP pixel limits (under 60 chars), and Bali luxury search intent
   const title = isTherapick 
-    ? "Therapick Bali | #1 On-Demand Mobile Spa & In-Villa Massage Delivery" 
+    ? "Therapick Bali | Luxury In-Villa Massage & Mobile Spa" 
     : (isBaliDomain 
       ? "Home Spa Ubud | 5-Star Luxury In-Villa Massage & Mobile Spa in Ubud, Bali" 
       : "Elexoir Home Spa | Top-Rated Luxury Mobile Spa & Massage in Ubud, Bali");
       
   const description = isTherapick
-    ? "Book Bali's premier 5-star on-demand mobile spa and in-villa massage delivery service. Certified professional massage therapists arrive directly at your private villa or hotel in Seminyak, Canggu, Ubud, Uluwatu, Nusa Dua, Sanur, Jimbaran & Kuta within 45-60 mins. Traditional Balinese, deep tissue, and couples massage."
+    ? "Experience luxury in-villa massage and mobile spa services across Bali with Therapick. Certified professional therapists arrive directly at your private villa or hotel in Seminyak, Canggu, Ubud, Uluwatu, and Sanur. Book traditional Balinese, deep tissue, and couples rituals."
     : (isBaliDomain
       ? "Experience the top-rated mobile spa in Ubud, Bali. Professional 5-star in-villa massages, couples spa rituals, and authentic Balinese healing delivered directly to your private villa or resort anywhere in Ubud. Certified local therapists."
       : "Exclusive 5-star luxury mobile spa in Ubud, Bali. Authentic Balinese in-villa massage, deep tissue therapy, and couples wellness sanctuary delivered to your private villa or resort in Ubud Center, Sayan, Penestanan, Kedewatan, and Tegallalang.");
       
   const faviconUrl = isTherapick ? '/therapick-favicon.png' : (isBaliDomain ? '/homespa.png' : '/elexoir.png');
-  const iconUrl = isTherapick ? '/therapick-logo-2.png' : (isBaliDomain ? '/homespa.png' : '/elexoir.png');
+  const iconUrl = isTherapick ? '/therapick-logo.png' : (isBaliDomain ? '/homespa.png' : '/elexoir.png');
 
   // 2. DOMAIN-ISOLATED TARGET KEYWORDS
   // For Therapick: Island-wide authority on all massage & spa searches across Bali
@@ -175,7 +179,7 @@ export async function generateMetadata(): Promise<Metadata> {
     metadataBase: new URL(url),
     title: {
       default: title,
-      template: isTherapick ? `%s | Therapick Bali Mobile Spa` : `%s | ${name}`
+      template: isTherapick ? `%s | Therapick Bali` : `%s | ${name}`
     },
     description: description,
     keywords: keywords,
@@ -187,20 +191,32 @@ export async function generateMetadata(): Promise<Metadata> {
       address: false,
       telephone: true,
     },
-    icons: {
-      icon: [
-        { url: faviconUrl, type: 'image/png' },
-        { url: '/therapick-favicon.png', type: 'image/png' },
-        { url: '/favicon.ico', sizes: '32x32' }
-      ],
-      shortcut: [
-        { url: faviconUrl, type: 'image/png' }
-      ],
-      apple: [
-        { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
-        { url: faviconUrl, type: 'image/png' }
-      ]
-    },
+    icons: isTherapick
+      ? {
+          icon: [
+            { url: '/therapick-favicon.png', type: 'image/png' },
+            { url: '/therapick-favicon.png?v=3', type: 'image/png' },
+            { url: '/favicon.ico', sizes: '48x48' },
+          ],
+          shortcut: [
+            { url: '/therapick-favicon.png', type: 'image/png' }
+          ],
+          apple: [
+            { url: '/therapick-favicon.png', sizes: '180x180', type: 'image/png' },
+            { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }
+          ]
+        }
+      : {
+          icon: [
+            { url: `${faviconUrl}?v=2`, type: 'image/png' }
+          ],
+          shortcut: [
+            { url: `${faviconUrl}?v=2`, type: 'image/png' }
+          ],
+          apple: [
+            { url: `${faviconUrl}?v=2`, sizes: '180x180', type: 'image/png' }
+          ]
+        },
     openGraph: {
       title: title,
       description: description,
@@ -307,7 +323,7 @@ export default async function RootLayout({
   const cleanHost = host.toLowerCase().split(':')[0].trim();
   const isPartnersSubdomain = cleanHost.startsWith("partners.");
   const cookieHeader = headersList.get("cookie") || "";
-  const isTherapick = host.includes("booktherapick") || host.includes("therapick") || cookieHeader.includes("dev_brand=therapick");
+  const isTherapick = host.includes("booktherapick") || host.includes("therapick") || isPartnersSubdomain || cookieHeader.includes("dev_brand=therapick");
   const isBaliDomain = ((host.includes("homespaubud") || host.includes("ubudhomespa")) && !host.includes("elexoir")) || cookieHeader.includes("dev_brand=bali");
   const brand = isTherapick ? 'therapick' : (isBaliDomain ? 'bali' : 'elexoir');
 
@@ -327,9 +343,19 @@ export default async function RootLayout({
   return (
     <html lang="en" className="antialiased scroll-smooth">
       <head>
-        <link rel="icon" type="image/png" href={faviconUrl} />
-        <link rel="shortcut icon" type="image/png" href={faviconUrl} />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        {isTherapick ? (
+          <>
+            <link rel="icon" type="image/png" href="/therapick-favicon.png" />
+            <link rel="shortcut icon" type="image/png" href="/therapick-favicon.png" />
+            <link rel="apple-touch-icon" href="/therapick-favicon.png" />
+          </>
+        ) : (
+          <>
+            <link rel="icon" type="image/png" href={`${faviconUrl}?v=2`} />
+            <link rel="shortcut icon" type="image/png" href={`${faviconUrl}?v=2`} />
+            <link rel="apple-touch-icon" href={`${faviconUrl}?v=2`} />
+          </>
+        )}
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-9CFBSVYEY9"
           strategy="lazyOnload"
@@ -367,7 +393,7 @@ export default async function RootLayout({
                       {
                         "@type": ["HealthAndBeautyBusiness", "DaySpa", "LocalBusiness"],
                         "@id": `${url}/#spa`,
-                        "name": "Therapick | On-Demand Mobile Spa & In-Villa Massage Bali",
+                        "name": "Therapick Bali | Luxury In-Villa Massage & Mobile Spa",
                         "alternateName": [
                           "BookTherapick",
                           "Therapick Bali",

@@ -15,10 +15,10 @@ export function isBookTherapickHost(host?: string | null): boolean {
   const h = normalizeHost(host);
   if (!h) return false;
   // Local development fallback allows testing, but in production strictly checks therapick
-  if (h === 'localhost' || h === '127.0.0.1') {
+  if (h === 'localhost' || h === '127.0.0.1' || h.endsWith('.localhost')) {
     return true;
   }
-  return h.includes('booktherapick') || h.includes('therapick');
+  return h.includes('booktherapick') || h.includes('therapick') || h.startsWith('partners.');
 }
 
 /**
