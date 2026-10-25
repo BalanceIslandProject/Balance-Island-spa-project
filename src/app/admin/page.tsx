@@ -14,6 +14,7 @@ import { supabase } from '@/lib/supabase';
 import BookingManagement from '@/components/BookingManagement';
 import TherapickBookingManagement from '@/components/TherapickBookingManagement';
 import AffiliateManagement from '@/components/admin/AffiliateManagement';
+import { cx, btn, inputCls, selectCls, thCls, tdCls, StatusBadge, CountPill, EmptyState, SearchInput } from '@/components/admin/affiliate/ui';
 
 // Quick Preset Campaigns for Trip & Spa Deals
 const CAMPAIGN_PRESETS = [
@@ -837,27 +838,27 @@ export default function AdminDashboard() {
     };
 
     return (
-        <div className={`min-h-screen ${activeTab === 'affiliates' || activeTab === 'bookings' ? 'bg-white' : 'bg-[#F8F9FA]'} text-black flex flex-col md:flex-row font-sans selection:bg-black selection:text-white`}>
+        <div className="min-h-screen bg-white text-black flex flex-col md:flex-row font-sans selection:bg-black selection:text-white">
             
-            {/* Desktop Minimalist Black & White Sidebar */}
-            <aside className="hidden md:flex flex-col w-64 bg-white border-r border-black/10 z-20 shrink-0 sticky top-0 h-screen self-start">
-                <div className="p-6 border-b border-black/10 flex flex-col gap-4">
+            {/* Desktop Minimalist Monochrome Sidebar */}
+            <aside className="hidden md:flex flex-col w-64 bg-white border-r border-[#E5E5E5] z-20 shrink-0 sticky top-0 h-screen self-start">
+                <div className="p-5 border-b border-[#E5E5E5] flex flex-col gap-3">
                     <div>
-                        <span className="text-[10px] uppercase font-bold tracking-[0.25em] text-black/50 block">Management</span>
-                        <h1 className="text-base font-bold tracking-tight text-black">Admin Portal</h1>
+                        <span className="text-[10px] uppercase font-semibold tracking-wider text-[#737373] block">Management</span>
+                        <h1 className="text-base font-semibold tracking-tight text-black">Admin Portal</h1>
                     </div>
                     <div>
-                        <label className="text-[10px] font-bold uppercase tracking-widest text-black/50 block mb-1.5">Brand Configured</label>
+                        <label className="text-[10px] font-semibold uppercase tracking-wider text-[#737373] block mb-1.5">Brand Configured</label>
                         <select 
                             id="brandSelect"
                             value={siteBrandFilter}
                             onChange={(e) => setSiteBrandFilter(e.target.value)}
-                            className="w-full bg-black/5 border border-black/10 rounded-lg px-3 py-2 text-xs font-bold text-black focus:outline-none focus:border-black cursor-pointer"
+                            className="w-full bg-white border border-[#E5E5E5] rounded-lg px-2.5 py-1.5 text-xs font-medium text-black focus:outline-none focus:border-black cursor-pointer"
                         >
-                            <option value="elexoir">Elexoir Home Spa</option>
-                            <option value="bali">Home Spa Ubud</option>
                             <option value="therapick">Therapick</option>
                             <option value="central">Central Admin</option>
+                            <option value="elexoir">Elexoir Home Spa</option>
+                            <option value="bali">Home Spa Ubud</option>
                         </select>
                         <div className="grid grid-cols-2 gap-1 mt-1.5">
                             {[
@@ -871,10 +872,10 @@ export default function AdminDashboard() {
                                     type="button"
                                     id={`brand-chip-${b.id}`}
                                     onClick={() => setSiteBrandFilter(b.id)}
-                                    className={`px-2 py-1 rounded-md text-[10px] font-bold transition-all text-center cursor-pointer ${
+                                    className={`px-2 py-1 rounded-md text-[11px] font-medium transition-colors text-center cursor-pointer ${
                                         siteBrandFilter === b.id 
-                                            ? 'bg-black text-white shadow-xs' 
-                                            : 'bg-black/5 text-neutral-600 hover:text-black hover:bg-black/10'
+                                            ? 'bg-black text-white' 
+                                            : 'bg-[#F5F5F5] text-[#525252] hover:text-black hover:bg-[#E5E5E5]'
                                     }`}
                                 >
                                     {b.label}
@@ -903,10 +904,10 @@ export default function AdminDashboard() {
                                 key={tab.id}
                                 type="button"
                                 onClick={() => setActiveTab(tab.id as any)}
-                                className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-xs font-bold tracking-wide transition-all ${
+                                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold tracking-tight transition-colors ${
                                     isActive 
-                                    ? 'bg-black text-white shadow-sm' 
-                                    : 'text-black/70 hover:bg-black/5 hover:text-black'
+                                    ? 'bg-black text-white shadow-xs' 
+                                    : 'text-[#525252] hover:bg-[#F5F5F5] hover:text-black'
                                 }`}
                             >
                                 <Icon size={16} strokeWidth={isActive ? 2.5 : 2} />
@@ -916,11 +917,11 @@ export default function AdminDashboard() {
                     })}
                 </nav>
 
-                <div className="p-4 border-t border-black/10 space-y-2">
+                <div className="p-4 border-t border-[#E5E5E5] space-y-2">
                     <Link
                         href="/"
                         target="_blank"
-                        className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs font-bold border border-black/20 hover:bg-black hover:text-white transition-colors"
+                        className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-medium border border-[#E5E5E5] hover:bg-[#F5F5F5] text-black transition-colors"
                     >
                         View Live Website <ArrowRight size={14} />
                     </Link>
@@ -931,40 +932,38 @@ export default function AdminDashboard() {
             <main className="flex-1 relative overflow-y-auto bg-transparent min-h-screen pb-28 md:pb-12">
                 
                 {/* Sticky Mobile Admin Selector */}
-                <div className="md:hidden sticky top-0 z-40 pt-4 px-4 pb-2 bg-white/95 backdrop-blur-xl border-b border-black/5 mb-2">
-                    <div className="bg-white border border-black/10 rounded-2xl p-2 shadow-sm flex items-center justify-between">
-                        <h2 className="text-[10px] font-bold tracking-widest uppercase text-black pl-2 truncate">Select Admin Dashboard</h2>
+                <div className="md:hidden sticky top-0 z-40 pt-3 px-4 pb-2 bg-white/95 backdrop-blur-xl border-b border-[#E5E5E5] mb-2">
+                    <div className="bg-white border border-[#E5E5E5] rounded-xl p-2 shadow-xs flex items-center justify-between">
+                        <h2 className="text-[11px] font-medium uppercase tracking-wider text-[#737373] pl-2 truncate">Select Admin Dashboard</h2>
                         <div className="relative w-36 shrink-0">
                             <select 
                                 value={siteBrandFilter}
                                 onChange={(e) => setSiteBrandFilter(e.target.value)}
-                                className="w-full bg-black text-white rounded-xl px-3 py-2 text-[10px] font-bold focus:outline-none appearance-none shadow-sm"
+                                className="w-full bg-black text-white rounded-lg px-2.5 py-1.5 text-xs font-semibold focus:outline-none appearance-none"
                             >
-                                <option value="elexoir">Elexoir</option>
-                                <option value="bali">Home Spa Ubud</option>
                                 <option value="therapick">Therapick</option>
                                 <option value="central">Central Admin</option>
+                                <option value="elexoir">Elexoir</option>
+                                <option value="bali">Home Spa Ubud</option>
                             </select>
                             <div className="absolute inset-y-0 right-2 flex items-center pointer-events-none">
-                                <ChevronDown size={12} className="text-white/50" />
+                                <ChevronDown size={12} className="text-white/60" />
                             </div>
                         </div>
                     </div>
                 </div>
 
-
-
                 {/* Mobile Sidebar (Drawer) */}
                 <div id="mobile-sidebar" className="md:hidden fixed inset-0 z-[60] translate-x-full transition-transform duration-300 flex">
                     <div className="flex-1 bg-black/20 backdrop-blur-sm" onClick={() => document.getElementById('mobile-sidebar')?.classList.add('translate-x-full')}></div>
-                    <div className="w-64 bg-white h-full shadow-2xl flex flex-col">
-                        <div className="p-5 border-b border-black/10 flex justify-between items-center bg-black/5">
-                            <span className="text-xs font-bold uppercase tracking-widest text-black">More Options</span>
-                            <button onClick={() => document.getElementById('mobile-sidebar')?.classList.add('translate-x-full')} className="p-2 text-black hover:opacity-50">
+                    <div className="w-64 bg-white h-full shadow-2xl flex flex-col border-l border-[#E5E5E5]">
+                        <div className="p-4 border-b border-[#E5E5E5] flex justify-between items-center bg-[#FAFAFA]">
+                            <span className="text-xs font-semibold uppercase tracking-wider text-black">Menu Options</span>
+                            <button onClick={() => document.getElementById('mobile-sidebar')?.classList.add('translate-x-full')} className="p-1.5 text-[#737373] hover:text-black">
                                 <span className="font-bold text-xl leading-none">&times;</span>
                             </button>
                         </div>
-                        <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+                        <nav className="flex-1 p-3 space-y-1.5 overflow-y-auto">
                             {[
                                 ...(siteBrandFilter === 'central' ? [{ id: 'invoice', icon: Ticket, label: 'Invoices' }] : [
                                     { id: 'campaign', icon: Megaphone, label: 'Campaign Card' },
@@ -975,6 +974,7 @@ export default function AdminDashboard() {
                                 { id: 'calculator', icon: Calculator, label: 'Commission Calc' },
                             ].map((tab) => {
                                 const Icon = tab.icon;
+                                const isActive = activeTab === tab.id;
                                 return (
                                     <button
                                         key={tab.id}
@@ -982,9 +982,11 @@ export default function AdminDashboard() {
                                             setActiveTab(tab.id as any);
                                             document.getElementById('mobile-sidebar')?.classList.add('translate-x-full');
                                         }}
-                                        className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-bold transition-all ${activeTab === tab.id ? 'bg-black text-white shadow-md' : 'text-black/70 bg-black/5 hover:bg-black/10'}`}
+                                        className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium transition-colors ${
+                                            isActive ? 'bg-black text-white' : 'text-[#525252] hover:bg-[#F5F5F5] hover:text-black'
+                                        }`}
                                     >
-                                        <Icon size={18} strokeWidth={activeTab === tab.id ? 2.5 : 2} />
+                                        <Icon size={16} strokeWidth={isActive ? 2.5 : 2} />
                                         {tab.label}
                                     </button>
                                 );
@@ -999,358 +1001,384 @@ export default function AdminDashboard() {
                     : (activeTab === 'list' || activeTab === 'fees' ? 'max-w-6xl' : 'max-w-4xl')
                 }`}>
 
-                                                            {/* CAMPAIGN CARD SETUP TAB */}
+                    {/* CAMPAIGN CARD SETUP TAB */}
                     {activeTab === 'campaign' && (
-                        <div className="w-full flex flex-col lg:flex-row gap-6 lg:gap-8 animate-in fade-in duration-300">
-                            
-                            {/* Left Sidebar: Campaigns List */}
-                            <div className="w-full lg:w-1/3 flex flex-col gap-4">
-                                <div className="flex items-center justify-between">
-                                    <h2 className="text-lg font-bold text-black tracking-tight">Campaigns</h2>
+                        <div className="space-y-6 animate-in fade-in duration-300">
+                            {/* Header */}
+                            <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                <div>
+                                    <h1 className="text-xl md:text-2xl font-semibold tracking-tight text-black">Campaigns</h1>
+                                    <p className="text-[13px] text-[#737373] mt-0.5">Manage promotional campaigns, seasonal discount cards, and eligible spa rituals</p>
+                                </div>
+                                <div className="flex items-center gap-2">
                                     <button
                                         type="button"
                                         onClick={handleNewCampaign}
-                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-black text-white text-[11px] font-bold uppercase tracking-wider hover:bg-black/80 transition-colors"
+                                        className={cx(btn.base, btn.primary, btn.sm)}
                                     >
-                                        <Plus size={14} /> New
+                                        <Plus size={14} /> New Campaign
                                     </button>
                                 </div>
-                                
-                                <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm flex-1">
-                                    {campaigns.length === 0 ? (
-                                        <div className="p-8 text-center text-sm text-gray-400">
-                                            No campaigns found.
+                            </header>
+
+                            {/* Summary metrics */}
+                            <div className="grid grid-cols-2 lg:grid-cols-4 border border-[#E5E5E5] rounded-xl divide-[#E5E5E5] [&>*]:border-[#E5E5E5] overflow-hidden">
+                                <div className="p-4 bg-white">
+                                    <div className="text-xs text-[#737373]">Total campaigns</div>
+                                    <div className="text-lg md:text-xl font-semibold text-black mt-1 tabular-nums">{campaigns.length}</div>
+                                    <div className="text-[11px] text-[#A3A3A3] mt-0.5">Active or draft</div>
+                                </div>
+                                <div className="p-4 bg-white border-l">
+                                    <div className="text-xs text-[#737373]">Published</div>
+                                    <div className="text-lg md:text-xl font-semibold text-black mt-1 tabular-nums">
+                                        {campaigns.filter((c) => c.is_published !== false).length}
+                                    </div>
+                                    <div className="text-[11px] text-[#A3A3A3] mt-0.5">Live on storefront</div>
+                                </div>
+                                <div className="p-4 bg-white border-t lg:border-t-0 lg:border-l">
+                                    <div className="text-xs text-[#737373]">Drafts / Hidden</div>
+                                    <div className="text-lg md:text-xl font-semibold text-black mt-1 tabular-nums">
+                                        {campaigns.filter((c) => c.is_published === false).length}
+                                    </div>
+                                    <div className="text-[11px] text-[#A3A3A3] mt-0.5">Not visible</div>
+                                </div>
+                                <div className="p-4 bg-white border-t lg:border-t-0 border-l">
+                                    <div className="text-xs text-[#737373]">Eligible treatments</div>
+                                    <div className="text-lg md:text-xl font-semibold text-black mt-1 tabular-nums">{treatments.length}</div>
+                                    <div className="text-[11px] text-[#A3A3A3] mt-0.5">Available for packages</div>
+                                </div>
+                            </div>
+
+                            <div className="w-full flex flex-col lg:flex-row gap-6">
+                                {/* Left Sidebar: Campaigns List */}
+                                <div className="w-full lg:w-1/3 flex flex-col gap-4">
+                                    <div className="bg-white border border-[#E5E5E5] rounded-xl overflow-hidden shadow-xs flex-1 flex flex-col">
+                                        <div className="px-4 py-3 border-b border-[#E5E5E5] flex items-center justify-between bg-[#FAFAFA]">
+                                            <span className="text-xs font-semibold uppercase tracking-wider text-[#737373]">Campaign List</span>
+                                            <CountPill>{campaigns.length}</CountPill>
                                         </div>
-                                    ) : (
-                                        <div className="divide-y divide-gray-100 max-h-[calc(100vh-200px)] overflow-y-auto">
-                                            {campaigns.map((camp, idx) => {
-                                                const isCurrentEditing = editingCampaignId === camp.id;
-                                                const isPub = camp.is_published !== false;
-                                                
-                                                return (
-                                                    <div 
-                                                        key={camp.id || idx}
-                                                        className={`p-4 transition-colors cursor-pointer group ${
-                                                            isCurrentEditing 
-                                                            ? 'bg-blue-50/50 border-l-2 border-l-blue-600' 
-                                                            : 'hover:bg-gray-50 border-l-2 border-l-transparent'
-                                                        }`}
-                                                        onClick={() => loadCampaignToForm(camp)}
-                                                    >
-                                                        <div className="flex gap-3">
-                                                            <div className="w-12 h-12 rounded bg-gray-100 overflow-hidden shrink-0 border border-gray-200 relative">
-                                                                {camp.image ? (
-                                                                    <img src={camp.image} alt="" className="w-full h-full object-cover" />
-                                                                ) : (
-                                                                    <div className="w-full h-full flex items-center justify-center text-gray-300">
-                                                                        <Megaphone size={16} />
-                                                                    </div>
-                                                                )}
-                                                                {!isPub && (
-                                                                    <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] flex items-center justify-center">
-                                                                        <span className="text-[8px] font-bold uppercase text-black">Draft</span>
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                            <div className="flex-1 min-w-0">
-                                                                <div className="flex items-center justify-between mb-0.5">
-                                                                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider truncate">
-                                                                        {camp.label || 'PROMO'}
-                                                                    </span>
-                                                                    <span className="text-[10px] font-bold text-gray-400">
-                                                                        #{camp.order ?? (idx + 1)}
-                                                                    </span>
+
+                                        {campaigns.length === 0 ? (
+                                            <div className="p-8 text-center text-xs text-[#737373]">
+                                                No campaigns found.
+                                            </div>
+                                        ) : (
+                                            <div className="divide-y divide-[#F0F0F0] max-h-[calc(100vh-260px)] overflow-y-auto">
+                                                {campaigns.map((camp, idx) => {
+                                                    const isCurrentEditing = editingCampaignId === camp.id;
+                                                    const isPub = camp.is_published !== false;
+                                                    
+                                                    return (
+                                                        <div 
+                                                            key={camp.id || idx}
+                                                            className={`p-3.5 transition-colors cursor-pointer group ${
+                                                                isCurrentEditing 
+                                                                ? 'bg-[#FAFAFA] border-l-2 border-l-black' 
+                                                                : 'hover:bg-[#FAFAFA] border-l-2 border-l-transparent'
+                                                            }`}
+                                                            onClick={() => loadCampaignToForm(camp)}
+                                                        >
+                                                            <div className="flex gap-3">
+                                                                <div className="w-12 h-12 rounded-lg bg-[#F5F5F5] overflow-hidden shrink-0 border border-[#E5E5E5] relative">
+                                                                    {camp.image ? (
+                                                                        <img src={camp.image} alt="" className="w-full h-full object-cover" />
+                                                                    ) : (
+                                                                        <div className="w-full h-full flex items-center justify-center text-[#A3A3A3]">
+                                                                            <Megaphone size={16} />
+                                                                        </div>
+                                                                    )}
+                                                                    {!isPub && (
+                                                                        <div className="absolute inset-0 bg-white/70 backdrop-blur-[1px] flex items-center justify-center">
+                                                                            <span className="text-[9px] font-semibold uppercase text-black">Draft</span>
+                                                                        </div>
+                                                                    )}
                                                                 </div>
-                                                                <h4 className="text-sm font-semibold text-gray-900 truncate">
-                                                                    {camp.title || 'Untitled'}
-                                                                </h4>
-                                                                
-                                                                <div className="mt-2 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                    <div className="flex items-center gap-1">
-                                                                        <button
-                                                                            type="button"
-                                                                            disabled={idx === 0}
-                                                                            onClick={(e) => { e.stopPropagation(); handleMoveCampaign(idx, 'up'); }}
-                                                                            className="p-1 rounded text-gray-400 hover:text-black hover:bg-gray-100 disabled:opacity-30"
-                                                                        >
-                                                                            <ArrowUp size={12} />
-                                                                        </button>
-                                                                        <button
-                                                                            type="button"
-                                                                            disabled={idx === campaigns.length - 1}
-                                                                            onClick={(e) => { e.stopPropagation(); handleMoveCampaign(idx, 'down'); }}
-                                                                            className="p-1 rounded text-gray-400 hover:text-black hover:bg-gray-100 disabled:opacity-30"
-                                                                        >
-                                                                            <ArrowDown size={12} />
-                                                                        </button>
+                                                                <div className="flex-1 min-w-0">
+                                                                    <div className="flex items-center justify-between mb-0.5">
+                                                                        <span className="text-[10px] font-mono text-[#737373] uppercase tracking-wider truncate">
+                                                                            {camp.label || 'PROMO'}
+                                                                        </span>
+                                                                        <span className="text-[10px] font-mono text-[#A3A3A3]">
+                                                                            #{camp.order ?? (idx + 1)}
+                                                                        </span>
                                                                     </div>
-                                                                    <div className="flex items-center gap-2">
-                                                                        <button
-                                                                            type="button"
-                                                                            onClick={(e) => { e.stopPropagation(); handleTogglePublishCampaign(camp); }}
-                                                                            className="text-[10px] font-semibold text-gray-500 hover:text-black"
-                                                                        >
-                                                                            {isPub ? 'Hide' : 'Publish'}
-                                                                        </button>
-                                                                        {camp.id && (
+                                                                    <h4 className="text-xs font-semibold text-black truncate">
+                                                                        {camp.title || 'Untitled'}
+                                                                    </h4>
+                                                                    
+                                                                    <div className="mt-2 flex items-center justify-between opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                        <div className="flex items-center gap-1">
                                                                             <button
                                                                                 type="button"
-                                                                                onClick={(e) => { e.stopPropagation(); handleDeleteCampaign(camp.id!); }}
-                                                                                className="text-gray-400 hover:text-red-600 p-1"
+                                                                                disabled={idx === 0}
+                                                                                onClick={(e) => { e.stopPropagation(); handleMoveCampaign(idx, 'up'); }}
+                                                                                className="p-1 rounded text-[#737373] hover:text-black hover:bg-[#F0F0F0] disabled:opacity-30"
+                                                                                title="Move up"
                                                                             >
-                                                                                <Trash2 size={12} />
+                                                                                <ArrowUp size={12} />
                                                                             </button>
+                                                                            <button
+                                                                                type="button"
+                                                                                disabled={idx === campaigns.length - 1}
+                                                                                onClick={(e) => { e.stopPropagation(); handleMoveCampaign(idx, 'down'); }}
+                                                                                className="p-1 rounded text-[#737373] hover:text-black hover:bg-[#F0F0F0] disabled:opacity-30"
+                                                                                title="Move down"
+                                                                            >
+                                                                                <ArrowDown size={12} />
+                                                                            </button>
+                                                                        </div>
+                                                                        <div className="flex items-center gap-2">
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={(e) => { e.stopPropagation(); handleTogglePublishCampaign(camp); }}
+                                                                                className="text-[11px] font-medium text-[#737373] hover:text-black"
+                                                                            >
+                                                                                {isPub ? 'Hide' : 'Publish'}
+                                                                            </button>
+                                                                            {camp.id && (
+                                                                                <button
+                                                                                    type="button"
+                                                                                    onClick={(e) => { e.stopPropagation(); handleDeleteCampaign(camp.id!); }}
+                                                                                    className="text-[#737373] hover:text-red-600 p-1"
+                                                                                    title="Delete"
+                                                                                >
+                                                                                    <Trash2 size={12} />
+                                                                                </button>
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
+                                        <div className="p-3 bg-[#FAFAFA] border-t border-[#E5E5E5] flex flex-col gap-2">
+                                            <div className="text-[10px] font-semibold uppercase tracking-wider text-[#737373]">Presets</div>
+                                            <div className="flex items-center gap-1.5 overflow-x-auto hide-scrollbar pb-1">
+                                                {CAMPAIGN_PRESETS.map((preset, idx) => (
+                                                    <button
+                                                        key={idx}
+                                                        type="button"
+                                                        onClick={() => { applyCampaignPreset(preset); scrollToCampaignForm(); }}
+                                                        className="px-2.5 py-1 rounded-md text-[11px] font-medium bg-white border border-[#E5E5E5] text-[#171717] hover:border-black whitespace-nowrap shrink-0 transition-colors"
+                                                    >
+                                                        {preset.title}
+                                                    </button>
+                                                ))}
+                                                <button
+                                                    type="button"
+                                                    onClick={handleRestoreDefaultCampaigns}
+                                                    className="px-2.5 py-1 rounded-md text-[11px] font-medium bg-[#F5F5F5] border border-[#E5E5E5] text-[#525252] hover:text-black hover:bg-[#E5E5E5] whitespace-nowrap shrink-0 transition-colors ml-auto"
+                                                >
+                                                    Defaults
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Right Area: Form & Preview */}
+                                <div className="w-full lg:w-2/3 flex flex-col gap-6">
+                                    <div className="bg-white border border-[#E5E5E5] rounded-xl shadow-xs overflow-hidden">
+                                        <div className="px-5 py-3.5 border-b border-[#E5E5E5] flex items-center justify-between bg-white">
+                                            <h3 className="text-sm font-semibold text-black">
+                                                {editingCampaignId ? 'Edit Campaign Details' : 'Create New Campaign'}
+                                            </h3>
+                                            <span className="text-xs text-[#737373]">
+                                                Position #{campaignOrder || (editingCampaignId ? 1 : campaigns.length + 1)}
+                                            </span>
+                                        </div>
+
+                                        <form id="campaign-form" onSubmit={handleSubmit} className="p-5 md:p-6 space-y-5">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                                                
+                                                {/* Left Column in Form */}
+                                                <div className="space-y-4">
+                                                    <div>
+                                                        <label className="block text-xs font-medium text-[#171717] mb-1.5">Headline</label>
+                                                        <input 
+                                                            type="text" required placeholder="e.g. Summer Package" 
+                                                            value={campaignTitle} onChange={e => setCampaignTitle(e.target.value)}
+                                                            className={inputCls}
+                                                        />
+                                                    </div>
+                                                    
+                                                    <div>
+                                                        <label className="block text-xs font-medium text-[#171717] mb-1.5">Badge Label</label>
+                                                        <input 
+                                                            type="text" required placeholder="e.g. 10% OFF" 
+                                                            value={campaignLabel} onChange={e => setCampaignLabel(e.target.value)}
+                                                            className={inputCls}
+                                                        />
+                                                    </div>
+
+                                                    <div>
+                                                        <label className="block text-xs font-medium text-[#171717] mb-1.5">Description</label>
+                                                        <textarea 
+                                                            rows={2} placeholder="Brief details about the promo..." 
+                                                            value={campaignDesc} onChange={e => setCampaignDesc(e.target.value)}
+                                                            className="w-full rounded-lg border border-[#E5E5E5] bg-white px-3 py-2 text-xs text-[#171717] placeholder:text-[#A3A3A3] focus:outline-none focus:border-black focus:ring-1 focus:ring-black resize-none"
+                                                        />
+                                                    </div>
+
+                                                    <div className="grid grid-cols-3 gap-3">
+                                                        <div>
+                                                            <label className="block text-xs font-medium text-[#171717] mb-1.5">Discount %</label>
+                                                            <input 
+                                                                type="number" required min="0" max="100" 
+                                                                value={discountPercentage} onChange={e => setDiscountPercentage(Math.max(0, Math.min(100, Number(e.target.value))))}
+                                                                className={inputCls}
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-xs font-medium text-[#171717] mb-1.5">Start Date</label>
+                                                            <input 
+                                                                type="date"
+                                                                value={campaignStartDate} onChange={e => setCampaignStartDate(e.target.value)}
+                                                                className={inputCls}
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-xs font-medium text-[#171717] mb-1.5">End Date</label>
+                                                            <input 
+                                                                type="date"
+                                                                value={campaignEndDate} onChange={e => setCampaignEndDate(e.target.value)}
+                                                                className={inputCls}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Right Column in Form: Preview & Treatments */}
+                                                <div className="space-y-4">
+                                                    {/* Mini Preview */}
+                                                    <div>
+                                                        <label className="block text-xs font-medium text-[#171717] mb-1.5">Card Preview</label>
+                                                        <div className="relative w-full flex flex-row rounded-xl overflow-hidden shadow-xs group transition-colors duration-300 border border-[#E5E5E5] bg-[#FAFAFA] min-h-[140px]">
+                                                            {/* Left Section */}
+                                                            <div className="flex-1 bg-black text-white p-4 flex flex-col justify-between relative z-10">
+                                                                <div>
+                                                                    <div className="inline-flex items-center text-[10px] font-mono tracking-wide uppercase mb-1 text-white/80">
+                                                                        {campaignLabel || `${discountPercentage}% OFF`}
+                                                                    </div>
+                                                                    <h3 className="text-base font-semibold leading-tight mb-1">
+                                                                        {campaignTitle || 'Campaign Title'}
+                                                                    </h3>
+                                                                    {campaignDesc && (
+                                                                        <p className="text-white/70 text-[10px] line-clamp-2 leading-relaxed">
+                                                                            {campaignDesc}
+                                                                        </p>
+                                                                    )}
+                                                                </div>
+                                                                <div className="mt-2 flex items-center">
+                                                                    <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-white">
+                                                                        <ArrowRight size={10} />
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            
+                                                            {/* Right Section */}
+                                                            <div className="w-[85px] bg-white flex flex-col items-center justify-center py-3 px-2 shrink-0 text-center relative z-10 border-l border-dashed border-[#E5E5E5]">
+                                                                <div className="flex flex-col items-center justify-center gap-1.5">
+                                                                    <div className="flex flex-col items-center">
+                                                                        <div className="text-[8px] font-mono text-[#737373] uppercase tracking-wider mb-0.5">Start</div>
+                                                                        {campaignStartDate ? (
+                                                                            <>
+                                                                                <div className="text-[9px] font-semibold text-black uppercase leading-none">{new Date(campaignStartDate).toLocaleDateString('en-US', { month: 'short' })}</div>
+                                                                                <div className="text-base font-bold text-black leading-none my-0.5 tabular-nums">{new Date(campaignStartDate).getDate()}</div>
+                                                                            </>
+                                                                        ) : (
+                                                                            <div className="text-[10px] font-semibold text-black uppercase">NOW</div>
+                                                                        )}
+                                                                    </div>
+                                                                    
+                                                                    <div className="w-4 h-px bg-[#E5E5E5]"></div>
+
+                                                                    <div className="flex flex-col items-center">
+                                                                        <div className="text-[8px] font-mono text-[#737373] uppercase tracking-wider mb-0.5">End</div>
+                                                                        {campaignEndDate ? (
+                                                                            <>
+                                                                                <div className="text-[9px] font-semibold text-black uppercase leading-none">{new Date(campaignEndDate).toLocaleDateString('en-US', { month: 'short' })}</div>
+                                                                                <div className="text-base font-bold text-black leading-none my-0.5 tabular-nums">{new Date(campaignEndDate).getDate()}</div>
+                                                                            </>
+                                                                        ) : (
+                                                                            <div className="text-[9px] font-semibold text-black uppercase">{campaignDuration.replace('_', ' ')}</div>
                                                                         )}
                                                                     </div>
                                                                 </div>
                                                             </div>
                                                         </div>
                                                     </div>
-                                                );
-                                            })}
-                                        </div>
-                                    )}
-                                    <div className="p-3 bg-gray-50 border-t border-gray-100 flex flex-col gap-2">
-                                        <div className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Templates</div>
-                                        <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar pb-1">
-                                            {CAMPAIGN_PRESETS.map((preset, idx) => (
-                                                <button
-                                                    key={idx}
-                                                    type="button"
-                                                    onClick={() => { applyCampaignPreset(preset); scrollToCampaignForm(); }}
-                                                    className="px-2 py-1 rounded text-[10px] font-semibold bg-white border border-gray-200 text-gray-700 hover:border-gray-400 whitespace-nowrap shrink-0 transition-colors"
-                                                >
-                                                    {preset.title}
-                                                </button>
-                                            ))}
-                                            <button
-                                                type="button"
-                                                onClick={handleRestoreDefaultCampaigns}
-                                                className="px-2 py-1 rounded text-[10px] font-semibold bg-gray-200 border border-transparent text-gray-800 hover:bg-gray-300 whitespace-nowrap shrink-0 transition-colors ml-auto"
-                                            >
-                                                Load Defaults
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
 
-                            {/* Right Area: Form & Preview */}
-                            <div className="w-full lg:w-2/3 flex flex-col gap-6">
-                                
-                                <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-                                    <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
-                                        <h3 className="text-base font-bold text-gray-900">
-                                            {editingCampaignId ? 'Edit Campaign Details' : 'Create New Campaign'}
-                                        </h3>
-                                        <span className="text-xs font-semibold text-gray-500">
-                                            Position #{campaignOrder || (editingCampaignId ? 1 : campaigns.length + 1)}
-                                        </span>
-                                    </div>
-
-                                    <form id="campaign-form" onSubmit={handleSubmit} className="p-6">
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
-                                            
-                                            {/* Left Column in Form */}
-                                            <div className="space-y-4">
-                                                <div>
-                                                    <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5">Headline</label>
-                                                    <input 
-                                                        type="text" required placeholder="e.g. Summer Package" 
-                                                        value={campaignTitle} onChange={e => setCampaignTitle(e.target.value)}
-                                                        className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-black focus:border-black transition-colors"
-                                                    />
-                                                </div>
-                                                
-                                                <div>
-                                                    <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5">Badge Label</label>
-                                                    <input 
-                                                        type="text" required placeholder="e.g. 10% OFF" 
-                                                        value={campaignLabel} onChange={e => setCampaignLabel(e.target.value)}
-                                                        className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-black focus:border-black transition-colors"
-                                                    />
-                                                </div>
-
-                                                <div>
-                                                    <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5">Description</label>
-                                                    <textarea 
-                                                        rows={2} placeholder="Brief details about the promo..." 
-                                                        value={campaignDesc} onChange={e => setCampaignDesc(e.target.value)}
-                                                        className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-black focus:border-black transition-colors resize-none"
-                                                    />
-                                                </div>
-
-                                                <div className="flex gap-4">
-                                                    <div className="flex-1">
-                                                        <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5">Discount %</label>
-                                                        <input 
-                                                            type="number" required min="0" max="100" 
-                                                            value={discountPercentage} onChange={e => setDiscountPercentage(Math.max(0, Math.min(100, Number(e.target.value))))}
-                                                            className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-black focus:border-black transition-colors"
-                                                        />
-                                                    </div>
-                                                    <div className="flex-1">
-                                                        <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5">Start Date</label>
-                                                        <input 
-                                                            type="date"
-                                                            value={campaignStartDate} onChange={e => setCampaignStartDate(e.target.value)}
-                                                            className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-black focus:border-black transition-colors"
-                                                        />
-                                                    </div>
-                                                    <div className="flex-1">
-                                                        <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5">End Date</label>
-                                                        <input 
-                                                            type="date"
-                                                            value={campaignEndDate} onChange={e => setCampaignEndDate(e.target.value)}
-                                                            className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-black focus:border-black transition-colors"
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            {/* Right Column in Form: Preview & Treatments */}
-                                            <div className="space-y-5">
-                                                {/* Mini Preview */}
-                                                <div>
-                                                    <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-1.5">Card Preview</label>
-                                                    <div className="relative w-full flex flex-row rounded-[24px] overflow-hidden shadow-sm group transition-colors duration-300 border border-gray-200 bg-[#FAFAFA] min-h-[160px]">
-                                                        {/* Left Section (Blue) */}
-                                                        <div className="flex-1 bg-[#3b82f6] text-white p-4 flex flex-col justify-between relative z-10">
-                                                            <div>
-                                                                <div className="inline-flex items-center text-[10px] font-bold tracking-wide uppercase mb-2 text-white/90">
-                                                                    {campaignLabel || `${discountPercentage}% OFF`}
-                                                                </div>
-                                                                <h3 className="text-xl font-bold leading-tight mb-1">
-                                                                    {campaignTitle || 'Campaign Title'}
-                                                                </h3>
-                                                                {campaignDesc && (
-                                                                    <p className="text-white/80 text-[10px] line-clamp-2 leading-relaxed">
-                                                                        {campaignDesc}
-                                                                    </p>
-                                                                )}
-                                                            </div>
-                                                            <div className="mt-3 flex items-center">
-                                                                <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center text-white transition-transform group-hover:scale-105">
-                                                                    <ArrowRight size={12} />
-                                                                </div>
+                                                    <div>
+                                                        <div className="flex items-center justify-between mb-1.5">
+                                                            <label className="block text-xs font-medium text-[#171717]">Eligible Treatments</label>
+                                                            <div className="flex gap-2">
+                                                                <button type="button" onClick={selectAllTreatments} className="text-[11px] font-medium text-black hover:underline">Select All</button>
+                                                                <button type="button" onClick={clearAllCampaignTreatments} className="text-[11px] font-medium text-[#737373] hover:underline">Clear</button>
                                                             </div>
                                                         </div>
-                                                        
-                                                        {/* Divider with Cutouts */}
-                                                        <div className="relative w-0 flex flex-col justify-between items-center z-20">
-                                                            {/* Top Cutout */}
-                                                            <div className="absolute top-0 -translate-x-1/2 -translate-y-1/2 w-6 h-6 bg-[#FAFAFA] rounded-full border border-gray-200 shadow-inner"></div>
-                                                            
-                                                            {/* Vertical Dashed Line */}
-                                                            <div className="absolute top-0 bottom-0 -translate-x-1/2 border-l-[3px] border-dotted border-gray-300/70 z-[-1]"></div>
-
-                                                            {/* Bottom Cutout */}
-                                                            <div className="absolute bottom-0 -translate-x-1/2 translate-y-1/2 w-6 h-6 bg-[#FAFAFA] rounded-full border border-gray-200 shadow-inner"></div>
-                                                        </div>
-
-                                                        {/* Right Section (White) */}
-                                                        <div className="w-[80px] bg-white flex flex-col items-center justify-center py-3 px-2 shrink-0 text-center relative z-10">
-                                                            <div className="flex flex-col items-center justify-center gap-2">
-                                                                {/* Start Date */}
-                                                                <div className="flex flex-col items-center">
-                                                                    <div className="text-[7px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Start</div>
-                                                                    {campaignStartDate ? (
-                                                                        <>
-                                                                            <div className="text-[9px] font-bold text-gray-800 uppercase leading-none">{new Date(campaignStartDate).toLocaleDateString('en-US', { month: 'short' })}</div>
-                                                                            <div className="text-lg font-black text-black leading-none my-0.5">{new Date(campaignStartDate).getDate()}</div>
-                                                                            <div className="text-[8px] font-bold text-gray-500 uppercase leading-none">{new Date(campaignStartDate).getFullYear()}</div>
-                                                                        </>
-                                                                    ) : (
-                                                                        <div className="text-[10px] font-bold text-black uppercase">NOW</div>
-                                                                    )}
-                                                                </div>
-                                                                
-                                                                <div className="w-4 h-px bg-gray-200"></div>
-
-                                                                {/* End Date */}
-                                                                <div className="flex flex-col items-center">
-                                                                    <div className="text-[7px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">End</div>
-                                                                    {campaignEndDate ? (
-                                                                        <>
-                                                                            <div className="text-[9px] font-bold text-gray-800 uppercase leading-none">{new Date(campaignEndDate).toLocaleDateString('en-US', { month: 'short' })}</div>
-                                                                            <div className="text-lg font-black text-black leading-none my-0.5">{new Date(campaignEndDate).getDate()}</div>
-                                                                            <div className="text-[8px] font-bold text-gray-500 uppercase leading-none">{new Date(campaignEndDate).getFullYear()}</div>
-                                                                        </>
-                                                                    ) : (
-                                                                        <div className="text-[9px] font-bold text-black uppercase">{campaignDuration.replace('_', ' ')}</div>
-                                                                    )}
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <div>
-                                                    <div className="flex items-center justify-between mb-2">
-                                                        <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider">Eligible Treatments</label>
-                                                        <div className="flex gap-2">
-                                                            <button type="button" onClick={selectAllTreatments} className="text-[10px] font-semibold text-blue-600 hover:underline">Select All</button>
-                                                            <button type="button" onClick={clearAllCampaignTreatments} className="text-[10px] font-semibold text-gray-500 hover:underline">Clear</button>
-                                                        </div>
-                                                    </div>
-                                                    <div className="h-40 overflow-y-auto border border-gray-200 rounded-lg p-2 space-y-1.5 bg-gray-50/30">
-                                                        {treatments.map((t) => {
-                                                            const selectedT = campaignTreatments.find(ct => ct.treatmentId === t.id);
-                                                            return (
-                                                                <div key={t.id} className="bg-white border border-gray-200 p-2 rounded text-xs">
-                                                                    <div className="font-semibold text-gray-800 mb-1.5">{t.title}</div>
-                                                                    <div className="flex flex-wrap gap-1">
-                                                                        {t.options.map(opt => {
-                                                                            const isSelected = selectedT?.durations.includes(opt.duration);
-                                                                            return (
-                                                                                <button
-                                                                                    type="button"
-                                                                                    key={opt.duration}
-                                                                                    onClick={() => toggleCampaignTreatmentDuration(t.id, opt.duration)}
-                                                                                    className={`px-2 py-0.5 rounded border text-[10px] font-medium transition-colors ${
-                                                                                        isSelected ? 'bg-black border-black text-white' : 'bg-gray-50 border-gray-200 text-gray-600 hover:border-gray-400'
-                                                                                    }`}
-                                                                                >
-                                                                                    {opt.duration}m
-                                                                                </button>
-                                                                            );
-                                                                        })}
+                                                        <div className="h-36 overflow-y-auto border border-[#E5E5E5] rounded-lg p-2 space-y-1.5 bg-[#FAFAFA]">
+                                                            {treatments.map((t) => {
+                                                                const selectedT = campaignTreatments.find(ct => ct.treatmentId === t.id);
+                                                                return (
+                                                                    <div key={t.id} className="bg-white border border-[#E5E5E5] p-2 rounded-lg text-xs">
+                                                                        <div className="font-semibold text-xs text-black mb-1">{t.title}</div>
+                                                                        <div className="flex flex-wrap gap-1">
+                                                                            {t.options.map(opt => {
+                                                                                const isSelected = selectedT?.durations.includes(opt.duration);
+                                                                                return (
+                                                                                    <button
+                                                                                        type="button"
+                                                                                        key={opt.duration}
+                                                                                        onClick={() => toggleCampaignTreatmentDuration(t.id, opt.duration)}
+                                                                                        className={`px-2 py-0.5 rounded text-[10px] font-medium transition-colors ${
+                                                                                            isSelected ? 'bg-black border border-black text-white' : 'bg-white border border-[#E5E5E5] text-[#525252] hover:border-black hover:text-black'
+                                                                                        }`}
+                                                                                    >
+                                                                                        {opt.duration}m
+                                                                                    </button>
+                                                                                );
+                                                                            })}
+                                                                        </div>
                                                                     </div>
-                                                                </div>
-                                                            )
-                                                        })}
+                                                                );
+                                                            })}
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
-                                        </div>
 
-                                        <div className="mt-8 pt-5 border-t border-gray-100 flex items-center justify-between">
-                                            {success ? (
-                                                <span className="text-xs font-semibold text-emerald-600 flex items-center gap-1">
-                                                    <CheckCircle size={14} /> Saved successfully
-                                                </span>
-                                            ) : <div/>}
-                                            
-                                            <div className="flex gap-3">
-                                                {editingCampaignId && (
+                                            <div className="pt-4 border-t border-[#E5E5E5] flex items-center justify-between">
+                                                {success ? (
+                                                    <span className="text-xs font-semibold text-emerald-600 flex items-center gap-1">
+                                                        <CheckCircle size={14} /> Saved successfully
+                                                    </span>
+                                                ) : <div/>}
+                                                
+                                                <div className="flex gap-2">
+                                                    {editingCampaignId && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={handleNewCampaign}
+                                                            className={cx(btn.base, btn.secondary, btn.sm)}
+                                                        >
+                                                            Cancel
+                                                        </button>
+                                                    )}
                                                     <button
-                                                        type="button"
-                                                        onClick={handleNewCampaign}
-                                                        className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 text-xs font-bold hover:bg-gray-50 transition-colors"
+                                                        type="submit"
+                                                        disabled={isSubmitting}
+                                                        className={cx(btn.base, btn.primary, btn.md)}
                                                     >
-                                                        Cancel
+                                                        {isSubmitting ? 'Saving...' : (editingCampaignId ? 'Save Changes' : 'Publish Campaign')}
                                                     </button>
-                                                )}
-                                                <button
-                                                    type="submit"
-                                                    disabled={isSubmitting}
-                                                    className="px-6 py-2 rounded-lg bg-black text-white text-xs font-bold shadow-sm hover:bg-black/90 transition-colors disabled:opacity-50"
-                                                >
-                                                    {isSubmitting ? 'Saving...' : (editingCampaignId ? 'Save Changes' : 'Publish Campaign')}
-                                                </button>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </form>
+                                        </form>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1359,114 +1387,168 @@ export default function AdminDashboard() {
                     {/* TREATMENT CREATION TAB */}
                     {/* PROMO CODES TAB */}
                     {activeTab === 'promo' && (
-                        <div className="space-y-6">
-                            <form onSubmit={handlePromoSubmit} className="bg-white border border-black/15 rounded-2xl p-5 md:p-8 shadow-sm">
-                                <h3 className="text-base font-bold uppercase tracking-wider text-black mb-6">Create Promo Code</h3>
+                        <div className="space-y-6 animate-in fade-in duration-300">
+                            {/* Header */}
+                            <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                <div>
+                                    <h1 className="text-xl md:text-2xl font-semibold tracking-tight text-black">Promo Codes</h1>
+                                    <p className="text-[13px] text-[#737373] mt-0.5">Create discount voucher codes and track redemption limits</p>
+                                </div>
+                            </header>
+
+                            {/* Summary metrics */}
+                            <div className="grid grid-cols-2 lg:grid-cols-4 border border-[#E5E5E5] rounded-xl divide-[#E5E5E5] [&>*]:border-[#E5E5E5] overflow-hidden">
+                                <div className="p-4 bg-white">
+                                    <div className="text-xs text-[#737373]">Total codes</div>
+                                    <div className="text-lg md:text-xl font-semibold text-black mt-1 tabular-nums">{promoCodes.length}</div>
+                                    <div className="text-[11px] text-[#A3A3A3] mt-0.5">Vouchers created</div>
+                                </div>
+                                <div className="p-4 bg-white border-l">
+                                    <div className="text-xs text-[#737373]">Active codes</div>
+                                    <div className="text-lg md:text-xl font-semibold text-emerald-600 mt-1 tabular-nums">
+                                        {promoCodes.filter((p) => p.is_active).length}
+                                    </div>
+                                    <div className="text-[11px] text-[#A3A3A3] mt-0.5">Ready for checkout</div>
+                                </div>
+                                <div className="p-4 bg-white border-t lg:border-t-0 lg:border-l">
+                                    <div className="text-xs text-[#737373]">Inactive codes</div>
+                                    <div className="text-lg md:text-xl font-semibold text-black mt-1 tabular-nums">
+                                        {promoCodes.filter((p) => !p.is_active).length}
+                                    </div>
+                                    <div className="text-[11px] text-[#A3A3A3] mt-0.5">Paused vouchers</div>
+                                </div>
+                                <div className="p-4 bg-white border-t lg:border-t-0 border-l">
+                                    <div className="text-xs text-[#737373]">Total redemptions</div>
+                                    <div className="text-lg md:text-xl font-semibold text-black mt-1 tabular-nums">
+                                        {promoCodes.reduce((acc, p) => acc + (p.current_uses || 0), 0)}
+                                    </div>
+                                    <div className="text-[11px] text-[#A3A3A3] mt-0.5">Times redeemed</div>
+                                </div>
+                            </div>
+
+                            {/* Create Promo Code Form */}
+                            <form onSubmit={handlePromoSubmit} className="bg-white border border-[#E5E5E5] rounded-xl p-5 md:p-6 shadow-xs space-y-5">
+                                <div className="border-b border-[#E5E5E5] pb-3">
+                                    <h3 className="text-sm font-semibold text-black">Create Promo Code</h3>
+                                    <p className="text-xs text-[#737373] mt-0.5">Configure voucher code string, discount rate, and usage ceiling</p>
+                                </div>
                                 
                                 {success && (
-                                    <div className="mb-6 p-4 bg-[#F6F3EC] border border-[#E5E0D8] rounded-xl flex items-start gap-3">
-                                        <CheckCircle className="w-5 h-5 text-black shrink-0 mt-0.5" />
-                                        <div>
-                                            <h4 className="text-sm font-bold text-black uppercase tracking-wider mb-1">Success</h4>
-                                            <p className="text-xs text-black/70">Promo code created successfully.</p>
-                                        </div>
+                                    <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg flex items-center gap-2.5 text-emerald-800 text-xs font-medium">
+                                        <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
+                                        <span>Promo code created successfully.</span>
                                     </div>
                                 )}
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                    <div className="space-y-1.5">
-                                        <label className="text-[10px] font-bold uppercase tracking-widest text-black/70 ml-1">Promo Code</label>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                    <div>
+                                        <label className="block text-xs font-medium text-[#171717] mb-1.5">Promo Code</label>
                                         <input 
                                             type="text" required placeholder="e.g. SUMMER20"
                                             value={promoForm.code} onChange={e => setPromoForm({...promoForm, code: e.target.value.toUpperCase()})}
-                                            className="w-full bg-[#FDFBF7] border border-black/10 rounded-xl px-4 py-3.5 text-sm text-black placeholder:text-black/30 focus:outline-none focus:ring-1 focus:ring-black transition-all uppercase"
+                                            className={cx(inputCls, 'uppercase font-mono')}
                                         />
                                     </div>
                                     
-                                    <div className="space-y-1.5">
-                                        <label className="text-[10px] font-bold uppercase tracking-widest text-black/70 ml-1">Discount Type</label>
+                                    <div>
+                                        <label className="block text-xs font-medium text-[#171717] mb-1.5">Discount Type</label>
                                         <select 
                                             value={promoForm.discount_type} onChange={e => setPromoForm({...promoForm, discount_type: e.target.value})}
-                                            className="w-full bg-[#FDFBF7] border border-black/10 rounded-xl px-4 py-3.5 text-sm text-black focus:outline-none focus:ring-1 focus:ring-black transition-all appearance-none"
+                                            className={selectCls}
                                         >
                                             <option value="percentage">Percentage (%)</option>
                                             <option value="fixed">Fixed Amount (IDR)</option>
                                         </select>
                                     </div>
                                     
-                                    <div className="space-y-1.5">
-                                        <label className="text-[10px] font-bold uppercase tracking-widest text-black/70 ml-1">Discount Value</label>
+                                    <div>
+                                        <label className="block text-xs font-medium text-[#171717] mb-1.5">Discount Value</label>
                                         <input 
                                             type="number" required min="0" placeholder="e.g. 20"
                                             value={promoForm.discount_value || ''} onChange={e => setPromoForm({...promoForm, discount_value: parseFloat(e.target.value) || 0})}
-                                            className="w-full bg-[#FDFBF7] border border-black/10 rounded-xl px-4 py-3.5 text-sm text-black placeholder:text-black/30 focus:outline-none focus:ring-1 focus:ring-black transition-all"
+                                            className={inputCls}
                                         />
                                     </div>
 
-                                    <div className="space-y-1.5">
-                                        <label className="text-[10px] font-bold uppercase tracking-widest text-black/70 ml-1">Max Uses (0 = unlimited)</label>
+                                    <div>
+                                        <label className="block text-xs font-medium text-[#171717] mb-1.5">Max Uses (0 = unlimited)</label>
                                         <input 
                                             type="number" required min="0" placeholder="e.g. 100"
                                             value={promoForm.max_uses || ''} onChange={e => setPromoForm({...promoForm, max_uses: parseInt(e.target.value) || 0})}
-                                            className="w-full bg-[#FDFBF7] border border-black/10 rounded-xl px-4 py-3.5 text-sm text-black placeholder:text-black/30 focus:outline-none focus:ring-1 focus:ring-black transition-all"
+                                            className={inputCls}
                                         />
                                     </div>
                                 </div>
                                 
-                                <div className="mt-6 flex justify-end">
+                                <div className="pt-3 border-t border-[#E5E5E5] flex justify-end">
                                     <button
                                         type="submit"
                                         disabled={isPromoFormLoading}
-                                        className="bg-black text-white px-8 py-3.5 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-black/80 transition-all shadow-sm disabled:opacity-50"
+                                        className={cx(btn.base, btn.primary, btn.md)}
                                     >
                                         {isPromoFormLoading ? 'Saving...' : 'Create Promo Code'}
                                     </button>
                                 </div>
                             </form>
 
-                            <div className="bg-white border border-black/15 rounded-2xl overflow-hidden shadow-sm">
-                                <div className="p-5 md:p-6 border-b border-black/10">
-                                    <h3 className="text-base font-bold uppercase tracking-wider text-black">Active Promo Codes</h3>
+                            {/* Active Promo Codes Table */}
+                            <div className="bg-white border border-[#E5E5E5] rounded-xl overflow-hidden shadow-xs">
+                                <div className="px-5 py-3.5 border-b border-[#E5E5E5] flex items-center justify-between bg-[#FAFAFA]">
+                                    <span className="text-xs font-semibold uppercase tracking-wider text-[#737373]">Active Promo Codes</span>
+                                    <CountPill>{promoCodes.length}</CountPill>
                                 </div>
                                 <div className="overflow-x-auto">
-                                    <table className="w-full text-left text-sm">
-                                        <thead className="bg-[#FDFBF7] border-b border-black/10">
+                                    <table className="w-full text-left text-xs">
+                                        <thead className="bg-[#FAFAFA] border-b border-[#E5E5E5]">
                                             <tr>
-                                                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-black/50">Code</th>
-                                                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-black/50">Discount</th>
-                                                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-black/50">Uses</th>
-                                                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-black/50">Status</th>
-                                                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-black/50 text-right">Actions</th>
+                                                <th className={thCls}>Code</th>
+                                                <th className={thCls}>Discount</th>
+                                                <th className={thCls}>Uses</th>
+                                                <th className={thCls}>Status</th>
+                                                <th className={cx(thCls, 'text-right')}>Actions</th>
                                             </tr>
                                         </thead>
-                                        <tbody>
+                                        <tbody className="divide-y divide-[#F0F0F0]">
                                             {promoCodes.map(promo => (
-                                                <tr key={promo.id} className="border-b border-black/5 hover:bg-black/[0.02]">
-                                                    <td className="px-6 py-4 font-bold text-black">{promo.code}</td>
-                                                    <td className="px-6 py-4">
-                                                        {promo.discount_type === 'percentage' ? `${promo.discount_value}%` : `IDR ${promo.discount_value.toLocaleString()}`}
+                                                <tr key={promo.id} className="hover:bg-[#FAFAFA] transition-colors">
+                                                    <td className={tdCls}>
+                                                        <span className="font-mono text-xs font-semibold text-black">{promo.code}</span>
                                                     </td>
-                                                    <td className="px-6 py-4">
-                                                        {promo.current_uses} / {promo.max_uses === 0 ? '∞' : promo.max_uses}
+                                                    <td className={tdCls}>
+                                                        <span className="font-medium text-xs text-black tabular-nums">
+                                                            {promo.discount_type === 'percentage' ? `${promo.discount_value}%` : `IDR ${promo.discount_value.toLocaleString()}`}
+                                                        </span>
                                                     </td>
-                                                    <td className="px-6 py-4">
+                                                    <td className={tdCls}>
+                                                        <span className="text-xs text-[#737373] tabular-nums">
+                                                            {promo.current_uses} / {promo.max_uses === 0 ? '∞' : promo.max_uses}
+                                                        </span>
+                                                    </td>
+                                                    <td className={tdCls}>
                                                         <button 
+                                                            type="button"
                                                             onClick={() => togglePromo(promo.id, promo.is_active)}
-                                                            className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${promo.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}
+                                                            className="cursor-pointer"
+                                                            title="Toggle status"
                                                         >
-                                                            {promo.is_active ? 'Active' : 'Inactive'}
+                                                            <StatusBadge status={promo.is_active ? 'active' : 'inactive'} />
                                                         </button>
                                                     </td>
-                                                    <td className="px-6 py-4 text-right space-x-2">
-                                                        <button onClick={() => deletePromo(promo.id)} className="p-2 text-black/40 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
-                                                            <Trash2 size={16} />
+                                                    <td className={cx(tdCls, 'text-right')}>
+                                                        <button 
+                                                            type="button"
+                                                            onClick={() => deletePromo(promo.id)} 
+                                                            className={cx(btn.base, btn.danger, btn.xs)}
+                                                            title="Delete promo code"
+                                                        >
+                                                            <Trash2 size={13} />
                                                         </button>
                                                     </td>
                                                 </tr>
                                             ))}
                                             {promoCodes.length === 0 && (
                                                 <tr>
-                                                    <td colSpan={5} className="px-6 py-8 text-center text-sm text-black/50 italic">
+                                                    <td colSpan={5} className="py-12 text-center text-xs text-[#737373]">
                                                         No promo codes created yet.
                                                     </td>
                                                 </tr>
@@ -1479,11 +1561,17 @@ export default function AdminDashboard() {
                     )}
 
                     {activeTab === 'treatment' && (
-                        <form id="treatment-form" onSubmit={handleSubmit} className="space-y-6 bg-white border border-black/15 rounded-2xl p-5 md:p-8 shadow-sm">
-                            <div className="flex items-center justify-between border-b border-black/10 pb-4">
-                                <h3 className="text-base font-bold uppercase tracking-wider text-black">
-                                    {editingTreatmentId ? 'Edit Treatment' : 'Add New Spa Treatment'}
-                                </h3>
+                        <div className="space-y-6 animate-in fade-in duration-300">
+                            {/* Page Header */}
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b border-[#E5E5E5]">
+                                <div>
+                                    <h1 className="text-xl md:text-2xl font-semibold tracking-tight text-black">
+                                        {editingTreatmentId ? 'Edit Treatment' : 'Add Spa Treatment'}
+                                    </h1>
+                                    <p className="text-[13px] text-[#737373] mt-0.5">
+                                        {editingTreatmentId ? 'Update treatment details, pricing tiers, and service benefits.' : 'Create a new massage, facial, ritual, or package for the booking system.'}
+                                    </p>
+                                </div>
                                 {editingTreatmentId && (
                                     <button 
                                         type="button" 
@@ -1494,205 +1582,368 @@ export default function AdminDashboard() {
                                             setBenefits(['']);
                                             setPricingOptions([{ duration: '', price: '' }]);
                                         }}
-                                        className="text-xs text-black/60 hover:text-black underline font-bold"
+                                        className={cx(btn.base, btn.secondary, btn.sm)}
                                     >
                                         Cancel Edit
                                     </button>
                                 )}
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="space-y-1.5">
-                                    <label className="text-xs font-bold uppercase tracking-wider text-black/70">Treatment Title</label>
-                                    <input 
-                                        type="text" required placeholder="e.g. Traditional Balinese Massage" 
-                                        value={treatmentTitle} onChange={e => setTreatmentTitle(e.target.value)}
-                                        className="w-full bg-white border border-black/20 rounded-xl px-4 py-3 text-sm text-black placeholder:text-black/40 focus:outline-none focus:border-black"
+                            {/* Treatment Form Card */}
+                            <form id="treatment-form" onSubmit={handleSubmit} className="bg-white border border-[#E5E5E5] rounded-xl p-5 md:p-6 shadow-xs space-y-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="text-xs font-medium text-[#171717] mb-1.5 block">Treatment Title</label>
+                                        <input 
+                                            type="text" required placeholder="e.g. Traditional Balinese Massage" 
+                                            value={treatmentTitle} onChange={e => setTreatmentTitle(e.target.value)}
+                                            className={inputCls}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs font-medium text-[#171717] mb-1.5 block">Category</label>
+                                        <select 
+                                            value={treatmentCategory} onChange={e => setTreatmentCategory(e.target.value)}
+                                            className={selectCls}
+                                        >
+                                            <option value="massage">Massage</option>
+                                            <option value="facial">Facial</option>
+                                            <option value="package">Package</option>
+                                            <option value="ritual">Ritual</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                {/* Duration & Pricing */}
+                                <div className="space-y-3 pt-2 border-t border-[#E5E5E5]">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <h4 className="text-xs font-semibold uppercase tracking-wider text-[#737373]">Duration & Pricing</h4>
+                                            <p className="text-[11px] text-[#A3A3A3] mt-0.5">Define duration options and prices in IDR</p>
+                                        </div>
+                                        <button type="button" onClick={handleAddPricing} className={cx(btn.base, btn.secondary, btn.xs)}>
+                                            <Plus size={13} /> Add Option
+                                        </button>
+                                    </div>
+                                    <div className="space-y-2.5">
+                                        {pricingOptions.map((option, idx) => (
+                                            <div key={idx} className="flex items-center gap-3">
+                                                <div className="w-36 relative">
+                                                    <input 
+                                                        type="number" required placeholder="60" value={option.duration} onChange={(e) => handlePricingChange(idx, 'duration', e.target.value)}
+                                                        className={cx(inputCls, "pr-12")}
+                                                    />
+                                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-[#737373] pointer-events-none">MINS</span>
+                                                </div>
+                                                <div className="flex-1 relative">
+                                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-medium text-[#737373] pointer-events-none">Rp</span>
+                                                    <input 
+                                                        type="text" required placeholder="450,000" value={option.price} onChange={(e) => handlePricingChange(idx, 'price', e.target.value)}
+                                                        className={cx(inputCls, "pl-9")}
+                                                    />
+                                                </div>
+                                                {pricingOptions.length > 1 && (
+                                                    <button type="button" onClick={() => handleRemovePricing(idx)} className={cx(btn.base, btn.secondary, btn.xs, "text-[#737373] hover:text-rose-600")}>
+                                                        <Trash2 size={15} />
+                                                    </button>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Description */}
+                                <div className="pt-2 border-t border-[#E5E5E5]">
+                                    <label className="text-xs font-medium text-[#171717] mb-1.5 block">Description</label>
+                                    <textarea 
+                                        required rows={3} placeholder="Write details about the treatment, technique, and wellness effects..." 
+                                        value={treatmentDesc} onChange={e => setTreatmentDesc(e.target.value)}
+                                        className="w-full bg-white border border-[#E5E5E5] rounded-lg px-3 py-2 text-xs text-black placeholder:text-[#A3A3A3] focus:outline-none focus:border-black transition-colors resize-none"
                                     />
                                 </div>
-                                <div className="space-y-1.5">
-                                    <label className="text-xs font-bold uppercase tracking-wider text-black/70">Category</label>
-                                    <select 
-                                        value={treatmentCategory} onChange={e => setTreatmentCategory(e.target.value)}
-                                        className="w-full bg-white border border-black/20 rounded-xl px-4 py-3 text-sm text-black focus:outline-none focus:border-black"
-                                    >
-                                        <option value="massage">Massage</option>
-                                        <option value="facial">Facial</option>
-                                        <option value="package">Package</option>
-                                        <option value="ritual">Ritual</option>
-                                    </select>
-                                </div>
-                            </div>
 
-                            {/* Duration & Pricing */}
-                            <div className="space-y-3">
-                                <div className="flex items-center justify-between">
-                                    <label className="text-xs font-bold uppercase tracking-wider text-black/70">Duration & Pricing</label>
-                                    <button type="button" onClick={handleAddPricing} className="text-xs font-bold text-black flex items-center gap-1 hover:opacity-70">
-                                        <Plus size={14} /> Add Option
+                                {/* Benefits */}
+                                <div className="space-y-3 pt-2 border-t border-[#E5E5E5]">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <h4 className="text-xs font-semibold uppercase tracking-wider text-[#737373]">Key Benefits</h4>
+                                            <p className="text-[11px] text-[#A3A3A3] mt-0.5">Highlights displayed on the treatment card</p>
+                                        </div>
+                                        <button type="button" onClick={handleAddBenefit} className={cx(btn.base, btn.secondary, btn.xs)}>
+                                            <Plus size={13} /> Add Benefit
+                                        </button>
+                                    </div>
+                                    <div className="space-y-2.5">
+                                        {benefits.map((b, idx) => (
+                                            <div key={idx} className="flex items-center gap-3">
+                                                <input 
+                                                    type="text" required placeholder="e.g. Deep relaxation & stress relief" value={b} onChange={(e) => handleBenefitChange(idx, e.target.value)}
+                                                    className={inputCls}
+                                                />
+                                                {benefits.length > 1 && (
+                                                    <button type="button" onClick={() => handleRemoveBenefit(idx)} className={cx(btn.base, btn.secondary, btn.xs, "text-[#737373] hover:text-rose-600")}>
+                                                        <Trash2 size={15} />
+                                                    </button>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="pt-4 border-t border-[#E5E5E5] flex justify-end">
+                                    <button type="submit" disabled={isSubmitting} className={cx(btn.base, btn.primary, btn.md)}>
+                                        {isSubmitting ? 'Saving...' : editingTreatmentId ? 'Update Treatment' : 'Create Treatment'}
                                     </button>
                                 </div>
-                                {pricingOptions.map((option, idx) => (
-                                    <div key={idx} className="flex items-center gap-3">
-                                        <div className="w-32 relative">
-                                            <input 
-                                                type="number" required placeholder="60" value={option.duration} onChange={(e) => handlePricingChange(idx, 'duration', e.target.value)}
-                                                className="w-full bg-white border border-black/20 rounded-xl px-3 py-2.5 text-sm text-black focus:outline-none focus:border-black"
-                                            />
-                                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-black/50">MINS</span>
-                                        </div>
-                                        <div className="flex-1 relative">
-                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-black/50">Rp</span>
-                                            <input 
-                                                type="text" required placeholder="450,000" value={option.price} onChange={(e) => handlePricingChange(idx, 'price', e.target.value)}
-                                                className="w-full bg-white border border-black/20 rounded-xl pl-9 pr-4 py-2.5 text-sm text-black focus:outline-none focus:border-black"
-                                            />
-                                        </div>
-                                        {pricingOptions.length > 1 && (
-                                            <button type="button" onClick={() => handleRemovePricing(idx)} className="p-2.5 rounded-xl bg-black/5 text-black hover:bg-black/10">
-                                                <Trash2 size={16} />
-                                            </button>
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-
-                            <div className="space-y-1.5">
-                                <label className="text-xs font-bold uppercase tracking-wider text-black/70">Description</label>
-                                <textarea 
-                                    required rows={3} placeholder="Write details about the treatment..." 
-                                    value={treatmentDesc} onChange={e => setTreatmentDesc(e.target.value)}
-                                    className="w-full bg-white border border-black/20 rounded-xl px-4 py-3 text-sm text-black placeholder:text-black/40 focus:outline-none focus:border-black resize-none"
-                                />
-                            </div>
-
-                            {/* Benefits */}
-                            <div className="space-y-3">
-                                <div className="flex items-center justify-between">
-                                    <label className="text-xs font-bold uppercase tracking-wider text-black/70">Key Benefits</label>
-                                    <button type="button" onClick={handleAddBenefit} className="text-xs font-bold text-black flex items-center gap-1 hover:opacity-70">
-                                        <Plus size={14} /> Add Benefit
-                                    </button>
-                                </div>
-                                {benefits.map((b, idx) => (
-                                    <div key={idx} className="flex items-center gap-3">
-                                        <input 
-                                            type="text" required placeholder="e.g. Deep relaxation & stress relief" value={b} onChange={(e) => handleBenefitChange(idx, e.target.value)}
-                                            className="w-full bg-white border border-black/20 rounded-xl px-4 py-2.5 text-sm text-black focus:outline-none focus:border-black"
-                                        />
-                                        {benefits.length > 1 && (
-                                            <button type="button" onClick={() => handleRemoveBenefit(idx)} className="p-2.5 rounded-xl bg-black/5 text-black hover:bg-black/10">
-                                                <Trash2 size={16} />
-                                            </button>
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-
-                            <div className="pt-4 border-t border-black/10 flex justify-end">
-                                <button type="submit" disabled={isSubmitting} className="bg-black text-white px-8 py-3.5 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-black/80">
-                                    {isSubmitting ? 'Saving...' : editingTreatmentId ? 'Update Treatment' : 'Create Treatment'}
-                                </button>
-                            </div>
-                        </form>
+                            </form>
+                        </div>
                     )}
 
                     {/* STORE PRODUCTS TAB */}
                     {activeTab === 'store' && (
-                        <form onSubmit={handleSubmit} className="space-y-6 bg-white border border-black/15 rounded-2xl p-5 md:p-8 shadow-sm">
-                            <h3 className="text-base font-bold uppercase tracking-wider text-black border-b border-black/10 pb-4">
-                                {editingProductId ? 'Edit Product' : 'Add Store Product'}
-                            </h3>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="space-y-1.5">
-                                    <label className="text-xs font-bold uppercase tracking-wider text-black/70">Product Title</label>
-                                    <input 
-                                        type="text" required placeholder="e.g. Organic Coconut Massage Oil" 
-                                        value={productTitle} onChange={e => setProductTitle(e.target.value)}
-                                        className="w-full bg-white border border-black/20 rounded-xl px-4 py-3 text-sm text-black placeholder:text-black/40 focus:outline-none focus:border-black"
-                                    />
-                                </div>
-                                <div className="space-y-1.5">
-                                    <label className="text-xs font-bold uppercase tracking-wider text-black/70">Price (IDR)</label>
-                                    <input 
-                                        type="text" required placeholder="185,000" 
-                                        value={productPrice} onChange={e => setProductPrice(e.target.value)}
-                                        className="w-full bg-white border border-black/20 rounded-xl px-4 py-3 text-sm text-black placeholder:text-black/40 focus:outline-none focus:border-black"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="space-y-1.5">
-                                <label className="text-xs font-bold uppercase tracking-wider text-black/70">Product Description</label>
-                                <textarea 
-                                    required rows={3} placeholder="Product details and benefits..." 
-                                    value={productDesc} onChange={e => setProductDesc(e.target.value)}
-                                    className="w-full bg-white border border-black/20 rounded-xl px-4 py-3 text-sm text-black placeholder:text-black/40 focus:outline-none focus:border-black resize-none"
-                                />
-                            </div>
-
-                            <div className="pt-4 border-t border-black/10 flex justify-end">
-                                <button type="submit" disabled={isSubmitting} className="bg-black text-white px-8 py-3.5 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-black/80">
-                                    {isSubmitting ? 'Saving...' : editingProductId ? 'Update Product' : 'Add Product'}
-                                </button>
-                            </div>
-                        </form>
-                    )}
-
-                    {/* THERAPIST FEES TAB */}
-                    {activeTab === 'fees' && (
-                        <div className="space-y-6">
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 gap-4">
+                        <div className="space-y-6 animate-in fade-in duration-300">
+                            {/* Page Header */}
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b border-[#E5E5E5]">
                                 <div>
-                                    <h3 className="text-lg font-bold uppercase tracking-widest text-black">Therapist Fee Setup</h3>
-                                    <p className="text-xs text-black/60">Set wage payouts per treatment duration.</p>
+                                    <h1 className="text-xl md:text-2xl font-semibold tracking-tight text-black">
+                                        {editingProductId ? 'Edit Store Product' : 'Store Products'}
+                                    </h1>
+                                    <p className="text-[13px] text-[#737373] mt-0.5">
+                                        Manage retail wellness products, massage oils, and spa amenities.
+                                    </p>
                                 </div>
-                                <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-                                    <div className="relative w-full sm:w-64">
-                                        <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                                            <Search className="h-4 w-4 text-black/40" />
-                                        </div>
+                                {editingProductId && (
+                                    <button 
+                                        type="button" 
+                                        onClick={() => {
+                                            setEditingProductId(null);
+                                            setProductTitle('');
+                                            setProductPrice('');
+                                            setProductDesc('');
+                                        }}
+                                        className={cx(btn.base, btn.secondary, btn.sm)}
+                                    >
+                                        Cancel Edit
+                                    </button>
+                                )}
+                            </div>
+
+                            {/* Metrics Strip */}
+                            <div className="grid grid-cols-2 lg:grid-cols-4 border border-[#E5E5E5] rounded-xl divide-y sm:divide-y-0 sm:divide-x divide-[#E5E5E5] bg-white overflow-hidden shadow-xs">
+                                <div className="p-4 sm:p-5">
+                                    <div className="text-[11px] font-semibold uppercase tracking-wider text-[#737373]">Total Products</div>
+                                    <div className="text-xl sm:text-2xl font-semibold tracking-tight text-black mt-1">{products.length}</div>
+                                    <div className="text-[11px] text-[#737373] mt-0.5">In catalog</div>
+                                </div>
+                                <div className="p-4 sm:p-5">
+                                    <div className="text-[11px] font-semibold uppercase tracking-wider text-[#737373]">Brand Scope</div>
+                                    <div className="text-xl sm:text-2xl font-semibold tracking-tight text-black mt-1 capitalize">{siteBrandFilter}</div>
+                                    <div className="text-[11px] text-[#737373] mt-0.5">Active catalogue</div>
+                                </div>
+                                <div className="p-4 sm:p-5">
+                                    <div className="text-[11px] font-semibold uppercase tracking-wider text-[#737373]">Default Stock</div>
+                                    <div className="text-xl sm:text-2xl font-semibold tracking-tight text-black mt-1">10 units</div>
+                                    <div className="text-[11px] text-[#737373] mt-0.5">Per new listing</div>
+                                </div>
+                                <div className="p-4 sm:p-5">
+                                    <div className="text-[11px] font-semibold uppercase tracking-wider text-[#737373]">Mode</div>
+                                    <div className="text-xl sm:text-2xl font-semibold tracking-tight text-black mt-1">{editingProductId ? 'Editing' : 'Create'}</div>
+                                    <div className="text-[11px] text-[#737373] mt-0.5">Product form status</div>
+                                </div>
+                            </div>
+
+                            {/* Product Form Card */}
+                            <form onSubmit={handleSubmit} className="bg-white border border-[#E5E5E5] rounded-xl p-5 md:p-6 shadow-xs space-y-4">
+                                <h3 className="text-xs font-semibold uppercase tracking-wider text-[#737373]">
+                                    {editingProductId ? 'Edit Product Details' : 'Add New Product'}
+                                </h3>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="text-xs font-medium text-[#171717] mb-1.5 block">Product Title</label>
                                         <input 
-                                            type="text" 
-                                            placeholder="Search treatments..." 
-                                            value={feeSearch} 
-                                            onChange={e => setFeeSearch(e.target.value)}
-                                            className="w-full pl-9 pr-4 py-2 bg-white border border-black/15 rounded-xl text-sm focus:outline-none focus:border-black"
+                                            type="text" required placeholder="e.g. Organic Coconut Massage Oil" 
+                                            value={productTitle} onChange={e => setProductTitle(e.target.value)}
+                                            className={inputCls}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs font-medium text-[#171717] mb-1.5 block">Price (IDR)</label>
+                                        <input 
+                                            type="text" required placeholder="185,000" 
+                                            value={productPrice} onChange={e => setProductPrice(e.target.value)}
+                                            className={inputCls}
                                         />
                                     </div>
                                 </div>
+
+                                <div>
+                                    <label className="text-xs font-medium text-[#171717] mb-1.5 block">Product Description</label>
+                                    <textarea 
+                                        required rows={3} placeholder="Product details, botanical ingredients, and benefits..." 
+                                        value={productDesc} onChange={e => setProductDesc(e.target.value)}
+                                        className="w-full bg-white border border-[#E5E5E5] rounded-lg px-3 py-2 text-xs text-black placeholder:text-[#A3A3A3] focus:outline-none focus:border-black transition-colors resize-none"
+                                    />
+                                </div>
+
+                                <div className="pt-4 border-t border-[#E5E5E5] flex justify-end">
+                                    <button type="submit" disabled={isSubmitting} className={cx(btn.base, btn.primary, btn.md)}>
+                                        {isSubmitting ? 'Saving...' : editingProductId ? 'Update Product' : 'Add Product'}
+                                    </button>
+                                </div>
+                            </form>
+
+                            {/* Existing Products Table */}
+                            <div className="border border-[#E5E5E5] rounded-xl overflow-hidden bg-white shadow-xs">
+                                <div className="px-5 py-4 border-b border-[#E5E5E5] flex items-center justify-between">
+                                    <div>
+                                        <h3 className="text-xs font-semibold uppercase tracking-wider text-[#737373]">Product Inventory</h3>
+                                        <p className="text-[11px] text-[#A3A3A3] mt-0.5">All products currently active in the store</p>
+                                    </div>
+                                    <CountPill>{products.length}</CountPill>
+                                </div>
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left text-xs">
+                                        <thead className="bg-[#FAFAFA] border-b border-[#E5E5E5]">
+                                            <tr>
+                                                <th className={thCls}>Product Name</th>
+                                                <th className={thCls}>Price</th>
+                                                <th className={thCls}>Description</th>
+                                                <th className={cx(thCls, "text-right")}>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-[#E5E5E5]">
+                                            {products.length > 0 ? (
+                                                products.map((p) => (
+                                                    <tr key={p.id} className="hover:bg-[#FAFAFA] transition-colors">
+                                                        <td className={cx(tdCls, "font-semibold text-black")}>
+                                                            {p.title}
+                                                        </td>
+                                                        <td className={tdCls}>
+                                                            <span className="font-semibold text-black">
+                                                                Rp {parseInt((p.price || '0').toString().replace(/,/g, '')).toLocaleString()}
+                                                            </span>
+                                                        </td>
+                                                        <td className={cx(tdCls, "text-[#737373] max-w-xs truncate")}>
+                                                            {p.description || '-'}
+                                                        </td>
+                                                        <td className={cx(tdCls, "text-right")}>
+                                                            <div className="flex items-center justify-end gap-2">
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        setEditingProductId(p.id);
+                                                                        setProductTitle(p.title);
+                                                                        setProductPrice(p.price);
+                                                                        setProductDesc(p.description || '');
+                                                                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                                                                    }}
+                                                                    className={cx(btn.base, btn.secondary, btn.xs)}
+                                                                >
+                                                                    <Edit3 size={13} /> Edit
+                                                                </button>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={async () => {
+                                                                        if (confirm(`Delete "${p.title}"?`)) {
+                                                                            await supabase.from('products').delete().eq('id', p.id);
+                                                                            setProducts(prev => prev.filter(x => x.id !== p.id));
+                                                                        }
+                                                                    }}
+                                                                    className={cx(btn.base, btn.danger, btn.xs)}
+                                                                >
+                                                                    <Trash2 size={13} />
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                ))
+                                            ) : (
+                                                <tr>
+                                                    <td colSpan={4} className="py-12 text-center text-xs text-[#737373]">
+                                                        No store products yet. Create one using the form above.
+                                                    </td>
+                                                </tr>
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    )}                    {/* THERAPIST FEES TAB */}
+                    {activeTab === 'fees' && (
+                        <div className="space-y-6 animate-in fade-in duration-300">
+                            {/* Page Header */}
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b border-[#E5E5E5]">
+                                <div>
+                                    <h1 className="text-xl md:text-2xl font-semibold tracking-tight text-black">
+                                        Therapist Fee Setup
+                                    </h1>
+                                    <p className="text-[13px] text-[#737373] mt-0.5">
+                                        Configure wage payouts per treatment duration tier for therapists.
+                                    </p>
+                                </div>
+                                <div className="w-full sm:w-64">
+                                    <SearchInput
+                                        id="fee-search-input"
+                                        value={feeSearch}
+                                        onChange={setFeeSearch}
+                                        placeholder="Search treatments..."
+                                    />
+                                </div>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {/* Metrics Strip */}
+                            <div className="grid grid-cols-2 lg:grid-cols-3 border border-[#E5E5E5] rounded-xl divide-y sm:divide-y-0 sm:divide-x divide-[#E5E5E5] bg-white overflow-hidden shadow-xs">
+                                <div className="p-4 sm:p-5">
+                                    <div className="text-[11px] font-semibold uppercase tracking-wider text-[#737373]">Total Treatments</div>
+                                    <div className="text-xl sm:text-2xl font-semibold tracking-tight text-black mt-1">{treatments.length}</div>
+                                    <div className="text-[11px] text-[#737373] mt-0.5">In current brand catalog</div>
+                                </div>
+                                <div className="p-4 sm:p-5">
+                                    <div className="text-[11px] font-semibold uppercase tracking-wider text-[#737373]">Wage Tiers Set</div>
+                                    <div className="text-xl sm:text-2xl font-semibold tracking-tight text-black mt-1">{therapistFees.length}</div>
+                                    <div className="text-[11px] text-[#737373] mt-0.5">Custom payouts defined</div>
+                                </div>
+                                <div className="p-4 sm:p-5 col-span-2 lg:col-span-1">
+                                    <div className="text-[11px] font-semibold uppercase tracking-wider text-[#737373]">Active Brand</div>
+                                    <div className="text-xl sm:text-2xl font-semibold tracking-tight text-black mt-1 capitalize">{siteBrandFilter}</div>
+                                    <div className="text-[11px] text-[#737373] mt-0.5">Filtered scope</div>
+                                </div>
+                            </div>
+
+                            {/* Treatment Fee Cards Grid */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                                 {treatments.filter(t => t.title.toLowerCase().includes(feeSearch.toLowerCase())).map(t => (
-                                    <div key={t.id} className="bg-white border border-black/15 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
+                                    <div key={t.id} className="bg-white border border-[#E5E5E5] rounded-xl p-5 shadow-xs hover:border-[#D4D4D4] transition-all flex flex-col justify-between">
                                         <div>
-                                            <div className="flex justify-between items-start mb-4">
-                                                <h4 className="font-bold text-black text-base pr-4">{t.title}</h4>
-                                                <span className="text-[9px] uppercase tracking-widest font-bold bg-black/5 px-2 py-1 rounded-md text-black/60 shrink-0">{t.category}</span>
+                                            <div className="flex justify-between items-start gap-2 mb-3">
+                                                <h4 className="font-semibold text-black text-sm">{t.title}</h4>
+                                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-[#F5F5F5] text-[#525252] border border-[#E5E5E5] capitalize shrink-0">
+                                                    {t.category}
+                                                </span>
                                             </div>
                                         </div>
                                         <div className="space-y-4">
-                                            <div className="border border-black/10 rounded-xl overflow-hidden">
+                                            <div className="border border-[#E5E5E5] rounded-lg overflow-hidden bg-white">
                                                 <table className="w-full text-left text-xs">
-                                                    <thead className="bg-black/[0.03]">
+                                                    <thead className="bg-[#FAFAFA] border-b border-[#E5E5E5]">
                                                         <tr>
-                                                            <th className="px-3 py-2 font-bold text-black/50 uppercase tracking-widest text-[9px]">Duration</th>
-                                                            <th className="px-3 py-2 font-bold text-black/50 uppercase tracking-widest text-[9px] text-right">Fee (IDR)</th>
-                                                            <th className="px-3 py-2"></th>
+                                                            <th className={thCls}>Duration</th>
+                                                            <th className={cx(thCls, "text-right")}>Fee (IDR)</th>
+                                                            <th className={cx(thCls, "text-right")}></th>
                                                         </tr>
                                                     </thead>
-                                                    <tbody className="divide-y divide-black/5">
+                                                    <tbody className="divide-y divide-[#E5E5E5]">
                                                         {t.options.map(opt => {
                                                             const isEditing = editingFee?.id === t.id && editingFee?.duration === opt.duration;
                                                             const feeObj = therapistFees.find(f => f.treatment_id === t.id && f.duration === opt.duration);
                                                             const feeValue = feeObj ? parseInt(feeObj.fee.replace(/,/g, '') || '0').toLocaleString('en-US') : '-';
                                                             
                                                             return (
-                                                                <tr key={opt.duration} className="bg-white">
-                                                                    <td className="px-3 py-2.5 font-bold text-black">{opt.duration} mins</td>
-                                                                    <td className="px-3 py-2.5 font-bold text-black text-right">
+                                                                <tr key={opt.duration} className="hover:bg-[#FAFAFA] transition-colors">
+                                                                    <td className={cx(tdCls, "font-medium text-black")}>{opt.duration} mins</td>
+                                                                    <td className={cx(tdCls, "font-semibold text-black text-right")}>
                                                                         {isEditing ? (
                                                                             <input 
                                                                                 type="text"
@@ -1700,53 +1951,55 @@ export default function AdminDashboard() {
                                                                                 placeholder="e.g. 150,000"
                                                                                 value={feeInputs[`${t.id}-${opt.duration}`] || ''}
                                                                                 onChange={e => setFeeInputs({ ...feeInputs, [`${t.id}-${opt.duration}`]: e.target.value })}
-                                                                                className="w-24 bg-white border border-black/20 rounded-lg px-2 py-1 text-xs text-right text-black focus:outline-none focus:border-black"
+                                                                                className={cx(inputCls, "h-7 text-xs text-right py-0.5 px-2 w-24 inline-block")}
                                                                             />
                                                                         ) : (
                                                                             feeValue
                                                                         )}
                                                                     </td>
-                                                                    <td className="px-3 py-2.5 text-right flex items-center justify-end gap-2">
-                                                                        {isEditing ? (
-                                                                            <>
-                                                                                <button
-                                                                                    type="button"
-                                                                                    onClick={() => handleSaveFee(t.id, opt.duration)}
-                                                                                    className="px-2 py-1 rounded-lg bg-black text-white text-[10px] font-bold uppercase hover:bg-black/80"
-                                                                                >
-                                                                                    Save
-                                                                                </button>
-                                                                                <button
-                                                                                    type="button"
-                                                                                    onClick={() => setEditingFee(null)}
-                                                                                    className="text-black/40 hover:text-black font-bold text-[10px] uppercase"
-                                                                                >
-                                                                                    Cancel
-                                                                                </button>
-                                                                            </>
-                                                                        ) : (
-                                                                            <>
-                                                                                <button
-                                                                                    type="button"
-                                                                                    onClick={() => {
-                                                                                        setFeeInputs(prev => ({ ...prev, [`${t.id}-${opt.duration}`]: feeObj ? feeObj.fee : '' }));
-                                                                                        setEditingFee({ id: t.id, duration: opt.duration });
-                                                                                    }}
-                                                                                    className="p-1 text-black/40 hover:text-black transition-colors"
-                                                                                >
-                                                                                    {feeObj ? <Edit3 size={14} /> : <span className="px-2 py-0.5 text-[9px] border border-black/20 rounded uppercase font-bold text-black/60 hover:border-black hover:text-black">Add Fee</span>}
-                                                                                </button>
-                                                                                {feeObj && (
+                                                                    <td className={cx(tdCls, "text-right")}>
+                                                                        <div className="flex items-center justify-end gap-1.5">
+                                                                            {isEditing ? (
+                                                                                <>
                                                                                     <button
                                                                                         type="button"
-                                                                                        onClick={() => handleDeleteFee(t.id, opt.duration)}
-                                                                                        className="p-1 text-red-400 hover:text-red-600 transition-colors"
+                                                                                        onClick={() => handleSaveFee(t.id, opt.duration)}
+                                                                                        className={cx(btn.base, btn.primary, btn.xs)}
                                                                                     >
-                                                                                        <Trash2 size={14} />
+                                                                                        Save
                                                                                     </button>
-                                                                                )}
-                                                                            </>
-                                                                        )}
+                                                                                    <button
+                                                                                        type="button"
+                                                                                        onClick={() => setEditingFee(null)}
+                                                                                        className={cx(btn.base, btn.secondary, btn.xs)}
+                                                                                    >
+                                                                                        Cancel
+                                                                                    </button>
+                                                                                </>
+                                                                            ) : (
+                                                                                <>
+                                                                                    <button
+                                                                                        type="button"
+                                                                                        onClick={() => {
+                                                                                            setFeeInputs(prev => ({ ...prev, [`${t.id}-${opt.duration}`]: feeObj ? feeObj.fee : '' }));
+                                                                                            setEditingFee({ id: t.id, duration: opt.duration });
+                                                                                        }}
+                                                                                        className={cx(btn.base, btn.secondary, btn.xs)}
+                                                                                    >
+                                                                                        {feeObj ? <Edit3 size={13} /> : <span className="text-[10px]">+ Add</span>}
+                                                                                    </button>
+                                                                                    {feeObj && (
+                                                                                        <button
+                                                                                            type="button"
+                                                                                            onClick={() => handleDeleteFee(t.id, opt.duration)}
+                                                                                            className={cx(btn.base, btn.danger, btn.xs)}
+                                                                                        >
+                                                                                            <Trash2 size={13} />
+                                                                                        </button>
+                                                                                    )}
+                                                                                </>
+                                                                            )}
+                                                                        </div>
                                                                     </td>
                                                                 </tr>
                                                             );
@@ -1762,110 +2015,199 @@ export default function AdminDashboard() {
                     )}
 
                     {/* COMMISSION CALCULATOR TAB */}
-                    {activeTab === 'calculator' && (
-                        <div className="space-y-6 bg-white border border-black/15 rounded-2xl p-5 md:p-8 shadow-sm">
-                            <h3 className="text-base font-bold uppercase tracking-wider text-black border-b border-black/10 pb-4">
-                                Commission & Net Profit Calculator
-                            </h3>
-                            
-                            <div className="flex items-center justify-between">
-                                <p className="text-xs text-black/60">Add items to calculate instant wage and commission split.</p>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        if (treatments.length > 0) {
-                                            const firstT = treatments[0];
-                                            setCalculations(prev => [...prev, {
-                                                id: Date.now().toString(),
-                                                treatmentId: firstT.id,
-                                                duration: firstT.options[0]?.duration || '60',
-                                                treatmentsCount: 1,
-                                                therapistsCount: 1,
-                                                showAdvanced: false
-                                            }]);
-                                        }
-                                    }}
-                                    className="px-4 py-2 bg-black text-white text-xs font-bold rounded-xl flex items-center gap-1 hover:bg-black/80"
-                                >
-                                    <Plus size={14} /> Add Row
-                                </button>
-                            </div>
+                    {activeTab === 'calculator' && (() => {
+                        const calcTotals = calculations.reduce((acc, calc) => {
+                            const tr = treatments.find(t => t.id === calc.treatmentId);
+                            const opt = tr?.options.find(o => o.duration === calc.duration);
+                            const priceNum = opt ? parseInt(opt.price.replace(/,/g, '')) : 0;
+                            const feeObj = therapistFees.find(f => f.treatment_id === calc.treatmentId && f.duration === calc.duration);
+                            const feeStr = feeInputs[`${calc.treatmentId}-${calc.duration}`] || (feeObj ? feeObj.fee : '0');
+                            const feeNum = parseInt(feeStr.replace(/,/g, '')) || 0;
+                            const isCouple = tr?.title?.toLowerCase().includes('couple');
+                            const multiplier = isCouple ? 2 : 1;
+                            const totalRevenue = priceNum * calc.treatmentsCount;
+                            const totalWage = feeNum * calc.treatmentsCount * multiplier;
+                            const netMargin = totalRevenue - totalWage;
+                            return {
+                                revenue: acc.revenue + totalRevenue,
+                                wages: acc.wages + totalWage,
+                                net: acc.net + netMargin
+                            };
+                        }, { revenue: 0, wages: 0, net: 0 });
 
-                            {calculations.map((calc, idx) => {
-                                const tr = treatments.find(t => t.id === calc.treatmentId);
-                                const opt = tr?.options.find(o => o.duration === calc.duration);
-                                const priceNum = opt ? parseInt(opt.price.replace(/,/g, '')) : 0;
-                                const feeStr = feeInputs[`${calc.treatmentId}-${calc.duration}`] || '0';
-                                const feeNum = parseInt(feeStr.replace(/,/g, '')) || 0;
-                                const isCouple = tr?.title?.toLowerCase().includes('couple');
-                                const multiplier = isCouple ? 2 : 1;
-                                const totalRevenue = priceNum * calc.treatmentsCount;
-                                const totalWage = feeNum * calc.treatmentsCount * multiplier;
-                                const netMargin = totalRevenue - totalWage;
-
-                                return (
-                                    <div key={calc.id} className="p-4 rounded-xl border border-black/10 bg-black/[0.02] flex flex-col md:flex-row md:items-center justify-between gap-4">
-                                        <div className="flex flex-wrap items-center gap-3">
-                                            <select
-                                                value={calc.treatmentId}
-                                                onChange={e => {
-                                                    const newTId = e.target.value;
-                                                    const newT = treatments.find(t => t.id === newTId);
-                                                    setCalculations(prev => prev.map(c => c.id === calc.id ? { ...c, treatmentId: newTId, duration: newT?.options[0]?.duration || '60' } : c));
-                                                }}
-                                                className="bg-white border border-black/20 rounded-lg px-3 py-2 text-xs text-black"
-                                            >
-                                                {treatments.map(t => <option key={t.id} value={t.id}>{t.title}</option>)}
-                                            </select>
-
-                                            <select
-                                                value={calc.duration}
-                                                onChange={e => setCalculations(prev => prev.map(c => c.id === calc.id ? { ...c, duration: e.target.value } : c))}
-                                                className="bg-white border border-black/20 rounded-lg px-3 py-2 text-xs text-black"
-                                            >
-                                                {tr?.options.map(o => <option key={o.duration} value={o.duration}>{o.duration} Mins</option>)}
-                                            </select>
-
-                                            <div className="flex items-center gap-1 text-xs">
-                                                <span>Qty:</span>
-                                                <input
-                                                    type="number"
-                                                    min="1"
-                                                    value={calc.treatmentsCount}
-                                                    onChange={e => setCalculations(prev => prev.map(c => c.id === calc.id ? { ...c, treatmentsCount: Number(e.target.value) } : c))}
-                                                    className="w-14 bg-white border border-black/20 rounded-lg px-2 py-1.5 text-xs text-black text-center"
-                                                />
-                                            </div>
-                                        </div>
-
-                                        <div className="flex items-center justify-between md:justify-end gap-4">
-                                            <div className="text-right">
-                                                <div className="text-xs font-bold text-black">Rev: Rp {totalRevenue.toLocaleString()}</div>
-                                                <div className="text-[10px] text-black/60">Wage: Rp {totalWage.toLocaleString()} | Net: <strong className="text-black">Rp {netMargin.toLocaleString()}</strong></div>
-                                            </div>
-
-                                            <button
-                                                type="button"
-                                                onClick={() => setCalculations(prev => prev.filter(c => c.id !== calc.id))}
-                                                className="p-2 text-black/40 hover:text-black"
-                                            >
-                                                <Trash2 size={16} />
-                                            </button>
-                                        </div>
+                        return (
+                            <div className="space-y-6 animate-in fade-in duration-300">
+                                {/* Page Header */}
+                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b border-[#E5E5E5]">
+                                    <div>
+                                        <h1 className="text-xl md:text-2xl font-semibold tracking-tight text-black">
+                                            Commission & Profit Calculator
+                                        </h1>
+                                        <p className="text-[13px] text-[#737373] mt-0.5">
+                                            Simulate booking service revenue, therapist fee splits, and net spa margin.
+                                        </p>
                                     </div>
-                                );
-                            })}
-                        </div>
-                    )}
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            if (treatments.length > 0) {
+                                                const firstT = treatments[0];
+                                                setCalculations(prev => [...prev, {
+                                                    id: Date.now().toString(),
+                                                    treatmentId: firstT.id,
+                                                    duration: firstT.options[0]?.duration || '60',
+                                                    treatmentsCount: 1,
+                                                    therapistsCount: 1,
+                                                    showAdvanced: false
+                                                }]);
+                                            }
+                                        }}
+                                        className={cx(btn.base, btn.primary, btn.sm)}
+                                    >
+                                        <Plus size={14} /> Add Row
+                                    </button>
+                                </div>
+
+                                {/* Summary Strip */}
+                                <div className="grid grid-cols-1 sm:grid-cols-3 border border-[#E5E5E5] rounded-xl divide-y sm:divide-y-0 sm:divide-x divide-[#E5E5E5] bg-white overflow-hidden shadow-xs">
+                                    <div className="p-4 sm:p-5">
+                                        <div className="text-[11px] font-semibold uppercase tracking-wider text-[#737373]">Simulated Revenue</div>
+                                        <div className="text-xl sm:text-2xl font-semibold tracking-tight text-black mt-1">
+                                            Rp {calcTotals.revenue.toLocaleString()}
+                                        </div>
+                                        <div className="text-[11px] text-[#737373] mt-0.5">Gross guest billings</div>
+                                    </div>
+                                    <div className="p-4 sm:p-5">
+                                        <div className="text-[11px] font-semibold uppercase tracking-wider text-[#737373]">Therapist Payouts</div>
+                                        <div className="text-xl sm:text-2xl font-semibold tracking-tight text-black mt-1">
+                                            Rp {calcTotals.wages.toLocaleString()}
+                                        </div>
+                                        <div className="text-[11px] text-[#737373] mt-0.5">Calculated therapist wages</div>
+                                    </div>
+                                    <div className="p-4 sm:p-5">
+                                        <div className="text-[11px] font-semibold uppercase tracking-wider text-[#737373]">Net Spa Profit</div>
+                                        <div className="text-xl sm:text-2xl font-semibold tracking-tight text-emerald-600 mt-1">
+                                            Rp {calcTotals.net.toLocaleString()}
+                                        </div>
+                                        <div className="text-[11px] text-[#737373] mt-0.5">Estimated gross margin</div>
+                                    </div>
+                                </div>
+
+                                {/* Calculation Rows Card */}
+                                <div className="bg-white border border-[#E5E5E5] rounded-xl p-5 md:p-6 shadow-xs space-y-4">
+                                    <div className="flex items-center justify-between pb-3 border-b border-[#E5E5E5]">
+                                        <div>
+                                            <h3 className="text-xs font-semibold uppercase tracking-wider text-[#737373]">Calculation Breakdown</h3>
+                                            <p className="text-[11px] text-[#A3A3A3] mt-0.5">Configure treatment, duration, and quantity per item</p>
+                                        </div>
+                                        <CountPill>{calculations.length}</CountPill>
+                                    </div>
+
+                                    {calculations.length > 0 ? (
+                                        <div className="space-y-3">
+                                            {calculations.map((calc) => {
+                                                const tr = treatments.find(t => t.id === calc.treatmentId);
+                                                const opt = tr?.options.find(o => o.duration === calc.duration);
+                                                const priceNum = opt ? parseInt(opt.price.replace(/,/g, '')) : 0;
+                                                const feeObj = therapistFees.find(f => f.treatment_id === calc.treatmentId && f.duration === calc.duration);
+                                                const feeStr = feeInputs[`${calc.treatmentId}-${calc.duration}`] || (feeObj ? feeObj.fee : '0');
+                                                const feeNum = parseInt(feeStr.replace(/,/g, '')) || 0;
+                                                const isCouple = tr?.title?.toLowerCase().includes('couple');
+                                                const multiplier = isCouple ? 2 : 1;
+                                                const totalRevenue = priceNum * calc.treatmentsCount;
+                                                const totalWage = feeNum * calc.treatmentsCount * multiplier;
+                                                const netMargin = totalRevenue - totalWage;
+
+                                                return (
+                                                    <div key={calc.id} className="p-4 rounded-lg border border-[#E5E5E5] bg-[#FAFAFA] flex flex-col md:flex-row md:items-center justify-between gap-4 hover:border-[#D4D4D4] transition-all">
+                                                        <div className="flex flex-wrap items-center gap-3">
+                                                            <select
+                                                                value={calc.treatmentId}
+                                                                onChange={e => {
+                                                                    const newTId = e.target.value;
+                                                                    const newT = treatments.find(t => t.id === newTId);
+                                                                    setCalculations(prev => prev.map(c => c.id === calc.id ? { ...c, treatmentId: newTId, duration: newT?.options[0]?.duration || '60' } : c));
+                                                                }}
+                                                                className={selectCls}
+                                                            >
+                                                                {treatments.map(t => <option key={t.id} value={t.id}>{t.title}</option>)}
+                                                            </select>
+
+                                                            <select
+                                                                value={calc.duration}
+                                                                onChange={e => setCalculations(prev => prev.map(c => c.id === calc.id ? { ...c, duration: e.target.value } : c))}
+                                                                className={selectCls}
+                                                            >
+                                                                {tr?.options.map(o => <option key={o.duration} value={o.duration}>{o.duration} Mins</option>)}
+                                                            </select>
+
+                                                            <div className="flex items-center gap-1.5 text-xs">
+                                                                <span className="text-[#737373] font-medium">Qty:</span>
+                                                                <input
+                                                                    type="number"
+                                                                    min="1"
+                                                                    value={calc.treatmentsCount}
+                                                                    onChange={e => setCalculations(prev => prev.map(c => c.id === calc.id ? { ...c, treatmentsCount: Number(e.target.value) } : c))}
+                                                                    className={cx(inputCls, "w-16 text-center py-1")}
+                                                                />
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="flex items-center justify-between md:justify-end gap-5">
+                                                            <div className="text-right">
+                                                                <div className="text-xs font-semibold text-black">
+                                                                    Revenue: Rp {totalRevenue.toLocaleString()}
+                                                                </div>
+                                                                <div className="text-[11px] text-[#737373] mt-0.5">
+                                                                    Wage: Rp {totalWage.toLocaleString()} &middot; Net: <span className="font-semibold text-emerald-600">Rp {netMargin.toLocaleString()}</span>
+                                                                </div>
+                                                            </div>
+
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setCalculations(prev => prev.filter(c => c.id !== calc.id))}
+                                                                className={cx(btn.base, btn.secondary, btn.xs, "text-[#737373] hover:text-rose-600")}
+                                                            >
+                                                                <Trash2 size={15} />
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    ) : (
+                                        <EmptyState
+                                            title="No calculation rows"
+                                            description="Click '+ Add Row' to simulate service revenue and wage payouts."
+                                        />
+                                    )}
+                                </div>
+                            </div>
+                        );
+                    })()}
 
                     {/* OVERVIEW TAB */}
                     {activeTab === 'list' && (
-                        <div className="space-y-6">
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 gap-4">
-                                <h3 className="text-lg font-bold uppercase tracking-widest text-black">
-                                    Treatment Catalog
-                                </h3>
+                        <div className="space-y-6 animate-in fade-in duration-300">
+                            {/* Page Header */}
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b border-[#E5E5E5]">
+                                <div>
+                                    <h1 className="text-xl md:text-2xl font-semibold tracking-tight text-black">
+                                        Treatment Catalog
+                                    </h1>
+                                    <p className="text-[13px] text-[#737373] mt-0.5">
+                                        Browse, search, edit, or pin spa rituals and pricing packages.
+                                    </p>
+                                </div>
                                 <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                                    <div className="w-full sm:w-64">
+                                        <SearchInput
+                                            id="menu-search-input"
+                                            value={menuSearch}
+                                            onChange={setMenuSearch}
+                                            placeholder="Search treatments..."
+                                        />
+                                    </div>
                                     <button 
                                         onClick={() => {
                                             setEditingTreatmentId(null);
@@ -1875,69 +2217,88 @@ export default function AdminDashboard() {
                                             setPricingOptions([{ duration: '', price: '' }]);
                                             setActiveTab('treatment');
                                         }}
-                                        className="bg-black text-white px-4 py-2 rounded-xl text-[10px] sm:text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 whitespace-nowrap"
+                                        className={cx(btn.base, btn.primary, btn.sm, "whitespace-nowrap")}
                                     >
-                                        <PlusCircle size={16} /> Create Treatment
+                                        <PlusCircle size={15} /> Add Treatment
                                     </button>
-                                    <div className="relative w-full sm:w-64">
-                                        <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                                            <Search className="h-4 w-4 text-black/40" />
-                                        </div>
-                                        <input 
-                                            type="text" 
-                                            placeholder="Search treatments..." 
-                                            value={menuSearch}
-                                            onChange={(e) => setMenuSearch(e.target.value)}
-                                            className="w-full pl-9 pr-4 py-2 bg-white border border-black/15 rounded-xl text-sm focus:outline-none focus:border-black"
-                                        />
-                                    </div>
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {/* Metrics Strip */}
+                            <div className="grid grid-cols-2 lg:grid-cols-4 border border-[#E5E5E5] rounded-xl divide-y sm:divide-y-0 sm:divide-x divide-[#E5E5E5] bg-white overflow-hidden shadow-xs">
+                                <div className="p-4 sm:p-5">
+                                    <div className="text-[11px] font-semibold uppercase tracking-wider text-[#737373]">Total Treatments</div>
+                                    <div className="text-xl sm:text-2xl font-semibold tracking-tight text-black mt-1">{treatments.length}</div>
+                                    <div className="text-[11px] text-[#737373] mt-0.5">In current catalog</div>
+                                </div>
+                                <div className="p-4 sm:p-5">
+                                    <div className="text-[11px] font-semibold uppercase tracking-wider text-[#737373]">Pinned Most Booked</div>
+                                    <div className="text-xl sm:text-2xl font-semibold tracking-tight text-black mt-1">
+                                        {treatments.filter(t => t.is_pinned).length}
+                                    </div>
+                                    <div className="text-[11px] text-[#737373] mt-0.5">Featured on booking menu</div>
+                                </div>
+                                <div className="p-4 sm:p-5">
+                                    <div className="text-[11px] font-semibold uppercase tracking-wider text-[#737373]">Categories</div>
+                                    <div className="text-xl sm:text-2xl font-semibold tracking-tight text-black mt-1">
+                                        {new Set(treatments.map(t => t.category)).size}
+                                    </div>
+                                    <div className="text-[11px] text-[#737373] mt-0.5">Unique ritual types</div>
+                                </div>
+                                <div className="p-4 sm:p-5">
+                                    <div className="text-[11px] font-semibold uppercase tracking-wider text-[#737373]">Brand Scope</div>
+                                    <div className="text-xl sm:text-2xl font-semibold tracking-tight text-black mt-1 capitalize">{siteBrandFilter}</div>
+                                    <div className="text-[11px] text-[#737373] mt-0.5">Active catalogue</div>
+                                </div>
+                            </div>
+
+                            {/* Grid of Treatments */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                                 {treatments.filter(t => t.title.toLowerCase().includes(menuSearch.toLowerCase()) || t.category.toLowerCase().includes(menuSearch.toLowerCase())).map(t => (
-                                    <div key={t.id} className="bg-white border border-black/15 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between">
+                                    <div key={t.id} className="bg-white border border-[#E5E5E5] rounded-xl p-5 shadow-xs hover:border-[#D4D4D4] transition-all flex flex-col justify-between">
                                         <div>
-                                            <div className="flex justify-between items-start mb-2">
-                                                <h4 className="font-bold text-black text-base pr-4">{t.title}</h4>
-                                                <span className="text-[9px] uppercase tracking-widest font-bold bg-black/5 px-2 py-1 rounded-md text-black/60 shrink-0">{t.category}</span>
+                                            <div className="flex justify-between items-start gap-2 mb-2">
+                                                <h4 className="font-semibold text-black text-sm pr-2">{t.title}</h4>
+                                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-[#F5F5F5] text-[#525252] border border-[#E5E5E5] capitalize shrink-0">
+                                                    {t.category}
+                                                </span>
                                             </div>
-                                            <p className="text-xs text-black/60 line-clamp-2 mb-4 leading-relaxed">{t.desc}</p>
+                                            <p className="text-xs text-[#737373] line-clamp-2 mb-4 leading-relaxed">{t.desc}</p>
                                         </div>
                                         <div className="space-y-4">
-                                            <div className="border border-black/10 rounded-xl overflow-hidden">
+                                            <div className="border border-[#E5E5E5] rounded-lg overflow-hidden bg-white">
                                                 <table className="w-full text-left text-xs">
-                                                    <thead className="bg-black/[0.03]">
+                                                    <thead className="bg-[#FAFAFA] border-b border-[#E5E5E5]">
                                                         <tr>
-                                                            <th className="px-3 py-2 font-bold text-black/50 uppercase tracking-widest text-[9px]">Duration</th>
-                                                            <th className="px-3 py-2 font-bold text-black/50 uppercase tracking-widest text-[9px] text-right">Price (IDR)</th>
+                                                            <th className={thCls}>Duration</th>
+                                                            <th className={cx(thCls, "text-right")}>Price (IDR)</th>
                                                         </tr>
                                                     </thead>
-                                                    <tbody className="divide-y divide-black/5">
+                                                    <tbody className="divide-y divide-[#E5E5E5]">
                                                         {t.options.map(o => (
-                                                            <tr key={o.duration} className="bg-white">
-                                                                <td className="px-3 py-2.5 font-bold text-black">{o.duration} mins</td>
-                                                                <td className="px-3 py-2.5 font-bold text-black text-right">{parseInt(o.price.replace(/,/g, '') || '0').toLocaleString('en-US')}</td>
+                                                            <tr key={o.duration} className="hover:bg-[#FAFAFA] transition-colors">
+                                                                <td className={cx(tdCls, "font-medium text-black")}>{o.duration} mins</td>
+                                                                <td className={cx(tdCls, "font-semibold text-black text-right")}>{parseInt(o.price.replace(/,/g, '') || '0').toLocaleString('en-US')}</td>
                                                             </tr>
                                                         ))}
                                                     </tbody>
                                                 </table>
                                             </div>
-                                            <div className="flex gap-2 pt-2 items-center">
+                                            <div className="flex gap-2 pt-1 items-center">
                                                 {siteBrandFilter !== 'central' && (
                                                     <>
                                                         <button
                                                             type="button"
                                                             onClick={() => handleTogglePin(t)}
-                                                            className={`p-2 rounded-xl transition-colors shrink-0 ${
-                                                                t.is_pinned ? 'bg-black text-white shadow-sm' : 'bg-black/5 text-black hover:bg-black/10'
+                                                            className={`p-2 rounded-lg transition-colors shrink-0 ${
+                                                                t.is_pinned ? 'bg-black text-white shadow-xs' : 'bg-white border border-[#E5E5E5] text-black hover:bg-[#F5F5F5]'
                                                             }`}
                                                             title={t.is_pinned ? "Unpin from Most Booked" : "Pin to Most Booked"}
                                                         >
-                                                            <Pin size={14} className={t.is_pinned ? "fill-white" : ""} />
+                                                            <Pin size={13} className={t.is_pinned ? "fill-white" : ""} />
                                                         </button>
                                                         {t.is_pinned && t.pinned_image && (
-                                                            <img src={t.pinned_image} alt="Pinned" className="w-7 h-7 object-cover rounded-lg shrink-0 border border-black/10" />
+                                                            <img src={t.pinned_image} alt="Pinned" className="w-7 h-7 object-cover rounded-lg shrink-0 border border-[#E5E5E5]" />
                                                         )}
                                                     </>
                                                 )}
@@ -1952,9 +2313,9 @@ export default function AdminDashboard() {
                                                         setPricingOptions(t.options && t.options.length > 0 ? t.options : [{ duration: '', price: '' }]);
                                                         setActiveTab('treatment');
                                                     }}
-                                                    className="flex-1 bg-black/5 text-black text-xs font-bold py-2 rounded-xl hover:bg-black/10 transition-colors flex items-center justify-center gap-1"
+                                                    className={cx(btn.base, btn.secondary, btn.xs, "flex-1")}
                                                 >
-                                                    <Edit3 size={14} /> Edit
+                                                    <Edit3 size={13} /> Edit
                                                 </button>
                                                 <button
                                                     type="button"
@@ -1969,9 +2330,9 @@ export default function AdminDashboard() {
                                                             setTreatments(prev => prev.filter(x => x.id !== t.id));
                                                         }
                                                     }}
-                                                    className="px-3 bg-red-500/10 text-red-600 text-xs font-bold rounded-xl hover:bg-red-500/20 transition-colors"
+                                                    className={cx(btn.base, btn.danger, btn.xs)}
                                                 >
-                                                    <Trash2 size={14} />
+                                                    <Trash2 size={13} />
                                                 </button>
                                             </div>
                                         </div>
@@ -1993,11 +2354,13 @@ export default function AdminDashboard() {
 
                     {/* INVOICE TAB (CENTRAL ADMIN ONLY) */}
                     {activeTab === 'invoice' && siteBrandFilter === 'central' && (
-                        <div className="w-full max-w-xl mx-auto mt-10 animate-in fade-in duration-300">
-                            <div className="bg-white border border-black/10 p-8 rounded-2xl shadow-sm text-center">
-                                <FileText size={48} className="mx-auto text-black/20 mb-4" />
-                                <h2 className="text-xl font-bold tracking-tight text-black mb-2">Create Invoice Link</h2>
-                                <p className="text-xs text-black/50 mb-6 font-medium">
+                        <div className="w-full max-w-xl mx-auto mt-6 animate-in fade-in duration-300">
+                            <div className="bg-white border border-[#E5E5E5] p-6 sm:p-8 rounded-xl shadow-xs text-center">
+                                <div className="w-12 h-12 rounded-xl bg-[#FAFAFA] border border-[#E5E5E5] flex items-center justify-center mx-auto mb-4 text-black">
+                                    <FileText size={22} />
+                                </div>
+                                <h2 className="text-xl font-semibold tracking-tight text-black mb-1">Create Invoice Link</h2>
+                                <p className="text-xs text-[#737373] mb-6 leading-relaxed">
                                     Enter the BOOKING ID below to generate a unique invoice link. Once generated, you can copy the link and share it directly with the customer.
                                 </p>
                                 <div className="flex flex-col gap-3">
@@ -2005,7 +2368,7 @@ export default function AdminDashboard() {
                                         id="invoiceIdInput" 
                                         type="text" 
                                         placeholder="e.g. 9X4FA2" 
-                                        className="w-full border border-black/20 focus:border-black p-3 rounded-xl outline-none text-sm font-bold text-center transition-colors uppercase" 
+                                        className={cx(inputCls, "text-center font-bold uppercase tracking-wider py-2.5")}
                                     />
                                     <button 
                                         onClick={async () => {
@@ -2035,26 +2398,26 @@ export default function AdminDashboard() {
                                                 }
                                             }
                                         }} 
-                                        className="w-full bg-black text-white px-6 py-3 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-black/80 transition-colors"
+                                        className={cx(btn.base, btn.primary, btn.md, "w-full")}
                                     >
                                         Generate Invoice Link
                                     </button>
                                     
-                                    <div className="hidden mt-4 p-4 bg-black/5 rounded-xl border border-black/10 text-left">
-                                        <p className="text-[10px] font-bold text-black/50 uppercase tracking-wider mb-2">Generated Link</p>
-                                        <p id="generatedInvoiceUrl" className="text-sm font-medium text-black break-all mb-4 bg-white p-3 rounded-lg border border-black/10"></p>
+                                    <div className="hidden mt-4 p-4 bg-[#FAFAFA] rounded-xl border border-[#E5E5E5] text-left">
+                                        <p className="text-[10px] font-semibold text-[#737373] uppercase tracking-wider mb-2">Generated Link</p>
+                                        <p id="generatedInvoiceUrl" className="text-xs font-mono font-medium text-black break-all mb-4 bg-white p-3 rounded-lg border border-[#E5E5E5]"></p>
                                         <button 
                                             onClick={(e) => {
                                                 const text = document.getElementById('generatedInvoiceUrl')?.innerText;
                                                 if(text) {
                                                     navigator.clipboard.writeText(text);
-                                                    const btn = e.currentTarget;
-                                                    const oldText = btn.innerText;
-                                                    btn.innerText = 'Copied!';
-                                                    setTimeout(() => btn.innerText = oldText, 2000);
+                                                    const btnEl = e.currentTarget;
+                                                    const oldText = btnEl.innerText;
+                                                    btnEl.innerText = 'Copied!';
+                                                    setTimeout(() => btnEl.innerText = oldText, 2000);
                                                 }
-                                            }}
-                                            className="w-full bg-white border border-black/20 text-black px-4 py-3 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-black/5 transition-colors"
+                                            }} 
+                                            className={cx(btn.base, btn.secondary, btn.sm, "w-full")}
                                         >
                                             Copy Link
                                         </button>
@@ -2075,7 +2438,7 @@ export default function AdminDashboard() {
             </main>
 
             {/* Minimalist Mobile Bottom Navigation Bar (Floating Card) */}
-            <div className="md:hidden fixed bottom-6 left-4 right-4 bg-white/95 backdrop-blur-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-black/10 rounded-2xl z-50">
+            <div className="md:hidden fixed bottom-6 left-4 right-4 bg-white/95 backdrop-blur-xl shadow-lg border border-[#E5E5E5] rounded-2xl z-50">
                 <div className="flex items-center justify-between p-1.5 max-w-sm mx-auto">
                     {(siteBrandFilter === 'central' ? [
                         { id: 'invoice', icon: FileText, label: 'Invoice' },
@@ -2107,12 +2470,12 @@ export default function AdminDashboard() {
                                         setActiveTab(tab.id as any);
                                     }
                                 }}
-                                className={`flex flex-col items-center justify-center flex-1 py-2.5 rounded-xl transition-all duration-300 ${
-                                    isActive && tab.id !== 'more' ? 'bg-black text-white shadow-md scale-95' : 'text-black/50 hover:bg-black/5 hover:text-black'
+                                className={`flex flex-col items-center justify-center flex-1 py-2 rounded-xl transition-all duration-200 ${
+                                    isActive && tab.id !== 'more' ? 'bg-black text-white shadow-xs' : 'text-[#737373] hover:text-black hover:bg-[#F5F5F5]'
                                 }`}
                             >
-                                <Icon size={20} strokeWidth={isActive && tab.id !== 'more' ? 2.5 : 2} />
-                                <span className="text-[9px] mt-1 font-bold tracking-widest uppercase">{tab.label}</span>
+                                <Icon size={18} strokeWidth={isActive && tab.id !== 'more' ? 2.5 : 2} />
+                                <span className="text-[9px] mt-1 font-semibold tracking-wider uppercase">{tab.label}</span>
                             </button>
                         );
                     })}

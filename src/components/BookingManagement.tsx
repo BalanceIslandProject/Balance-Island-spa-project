@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Calendar, Plus, Download, Trash2, Edit3, Save, X, ChevronLeft, ChevronRight, Calculator, FileText, CheckCircle2, XCircle } from 'lucide-react';
+import { Calendar, Plus, Download, Trash2, Edit3, Save, X, ChevronLeft, ChevronRight, Calculator, FileText, CheckCircle2, XCircle, RefreshCw } from 'lucide-react';
 import { Treatment, TherapistFee } from '@/context/SpaContext';
+import { cx, btn, inputCls, selectCls, thCls, tdCls, StatusBadge, CountPill, EmptyState } from '@/components/admin/affiliate/ui';
 
 export interface Booking {
   id: string;
@@ -391,75 +392,116 @@ export default function BookingManagement({
   const totalMonthlyRevenue = useMemo(() => filteredMonthBookings.reduce((sum, b) => sum + (b.revenue || 0), 0), [filteredMonthBookings]);
   const totalMonthlyProfit = useMemo(() => filteredMonthBookings.reduce((sum, b) => sum + (b.net_profit || 0), 0), [filteredMonthBookings]);
 
+
   return (
-    <div className="space-y-8 animate-in fade-in duration-300">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <div className="space-y-6 animate-in fade-in duration-300">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2.5 flex-wrap">
-            <h2 className="text-2xl font-bold tracking-tight text-black">Booking Management</h2>
-            <span className="text-[10px] font-bold uppercase tracking-wider bg-black/5 text-black/70 px-2.5 py-0.5 rounded-full border border-black/10">
-              Elexoir &amp; Home Spa Ubud Only
+          <div className="flex items-center gap-2 flex-wrap">
+            <h2 className="text-xl md:text-2xl font-semibold tracking-tight text-black">Booking Management</h2>
+            <span className="inline-flex items-center h-6 px-2 rounded-md border border-[#E5E5E5] text-[11px] font-mono text-[#737373]">
+              Elexoir &amp; Home Spa Ubud
             </span>
           </div>
-          <p className="text-sm text-black/60 mt-0.5">Centralized daily bookings and financial calculator for Elexoir and Home Spa domains</p>
+          <p className="text-[13px] text-[#737373] mt-0.5">Centralized daily bookings and financial calculator for Elexoir and Home Spa domains</p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2">
           {/* Domain Filter Pills */}
-          <div className="flex items-center bg-black/5 p-1 rounded-xl">
-            <button
-              type="button"
-              id="central-filter-all"
-              onClick={() => setDomainFilter('all')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                domainFilter === 'all' ? 'bg-black text-white shadow-xs' : 'text-neutral-600 hover:text-black'
-              }`}
-            >
-              All Central
-            </button>
-            <button
-              type="button"
-              id="central-filter-elexoir"
-              onClick={() => setDomainFilter('elexoir')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                domainFilter === 'elexoir' ? 'bg-black text-white shadow-xs' : 'text-neutral-600 hover:text-black'
-              }`}
-            >
-              Elexoir Home Spa
-            </button>
-            <button
-              type="button"
-              id="central-filter-bali"
-              onClick={() => setDomainFilter('bali')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                domainFilter === 'bali' ? 'bg-black text-white shadow-xs' : 'text-neutral-600 hover:text-black'
-              }`}
-            >
-              Home Spa Ubud
-            </button>
+          <div className="flex items-center gap-1 border border-[#E5E5E5] rounded-lg p-0.5 bg-white">
+            {[
+              { id: 'all', label: 'All Central' },
+              { id: 'elexoir', label: 'Elexoir' },
+              { id: 'bali', label: 'Home Spa Ubud' },
+            ].map((tab) => {
+              const active = domainFilter === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  id={`central-filter-${tab.id}`}
+                  onClick={() => setDomainFilter(tab.id as any)}
+                  className={cx(
+                    'px-2.5 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer',
+                    active ? 'bg-black text-white' : 'text-[#737373] hover:text-black hover:bg-[#F5F5F5]'
+                  )}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
           </div>
 
-          <button onClick={downloadCSV} className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-black/80 transition-colors cursor-pointer">
-            <Download size={16} /> Export CSV
+          <button
+            type="button"
+            onClick={downloadCSV}
+            className={cx(btn.base, btn.primary, btn.sm)}
+          >
+            <Download size={14} /> Export CSV
           </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      {/* Financial Metrics Strip */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 border border-[#E5E5E5] rounded-xl divide-[#E5E5E5] [&>*]:border-[#E5E5E5] overflow-hidden">
+        <div className="p-4 bg-white">
+          <div className="text-xs text-[#737373]">Daily revenue</div>
+          <div className="text-lg md:text-xl font-semibold text-black mt-1 tabular-nums truncate">{formatCurrency(totalDailyRevenue)}</div>
+          <div className="text-[11px] text-[#A3A3A3] mt-0.5">{new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</div>
+        </div>
+        <div className="p-4 bg-white border-l">
+          <div className="text-xs text-[#737373]">Daily profit</div>
+          <div className="text-lg md:text-xl font-semibold text-emerald-600 mt-1 tabular-nums truncate">{formatCurrency(totalDailyProfit)}</div>
+          <div className="text-[11px] text-[#A3A3A3] mt-0.5">Net after fees</div>
+        </div>
+        <div className="p-4 bg-white border-t lg:border-t-0 lg:border-l">
+          <div className="text-xs text-[#737373]">Monthly revenue</div>
+          <div className="text-lg md:text-xl font-semibold text-black mt-1 tabular-nums truncate">{formatCurrency(totalMonthlyRevenue)}</div>
+          <div className="text-[11px] text-[#A3A3A3] mt-0.5">{monthNames[month]} {year}</div>
+        </div>
+        <div className="p-4 bg-white border-t lg:border-t-0 border-l">
+          <div className="text-xs text-[#737373]">Monthly profit</div>
+          <div className="text-lg md:text-xl font-semibold text-emerald-600 mt-1 tabular-nums truncate">{formatCurrency(totalMonthlyProfit)}</div>
+          <div className="text-[11px] text-[#A3A3A3] mt-0.5">Net after fees</div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Col: Calendar */}
-        <div className="lg:col-span-1 space-y-6">
-          <div className="bg-white border border-black/10 rounded-2xl p-6 shadow-sm sticky top-24">
-            <div className="flex items-center justify-between mb-6">
-              <button onClick={handlePrevMonth} className="p-2 hover:bg-black/5 rounded-full transition-colors"><ChevronLeft size={20} /></button>
-              <h3 className="font-bold text-base">{monthNames[month]} {year}</h3>
-              <button onClick={handleNextMonth} className="p-2 hover:bg-black/5 rounded-full transition-colors"><ChevronRight size={20} /></button>
+        <div className="lg:col-span-1 space-y-4">
+          <div className="bg-white border border-[#E5E5E5] rounded-xl p-5 sticky top-24">
+            <div className="flex items-center justify-between mb-4">
+              <button
+                type="button"
+                onClick={handlePrevMonth}
+                className={cx(btn.base, btn.secondary, btn.icon, 'h-8 w-8')}
+                title="Previous month"
+                aria-label="Previous month"
+              >
+                <ChevronLeft size={16} />
+              </button>
+              <h3 className="font-semibold text-sm md:text-base text-black">
+                {monthNames[month]} {year}
+              </h3>
+              <button
+                type="button"
+                onClick={handleNextMonth}
+                className={cx(btn.base, btn.secondary, btn.icon, 'h-8 w-8')}
+                title="Next month"
+                aria-label="Next month"
+              >
+                <ChevronRight size={16} />
+              </button>
             </div>
             <div className="grid grid-cols-7 gap-1 text-center mb-2">
-              {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(d => (
-                <div key={d} className="text-[10px] font-bold text-black/40 uppercase">{d}</div>
+              {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((d) => (
+                <div key={d} className="text-[11px] font-medium text-[#737373]">
+                  {d}
+                </div>
               ))}
             </div>
-            <div className="grid grid-cols-7 gap-y-2 gap-x-1">
+            <div className="grid grid-cols-7 gap-y-1.5 gap-x-1">
               {Array.from({ length: firstDay }).map((_, i) => (
                 <div key={`empty-${i}`} />
               ))}
@@ -469,26 +511,29 @@ export default function BookingManagement({
                 const isoString = toLocalDateString(d);
                 const isSelected = isoString === selectedDate;
                 const isToday = isoString === toLocalDateString(new Date());
-                
-                const bookingsForThisDay = filteredMonthBookings.filter(b => b.booking_date === isoString);
+
+                const bookingsForThisDay = filteredMonthBookings.filter((b) => b.booking_date === isoString);
                 const paxCount = bookingsForThisDay.reduce((sum, b) => sum + b.pax, 0);
 
                 return (
                   <div key={day} className="relative flex justify-center">
                     <button
+                      type="button"
                       onClick={() => selectDate(day)}
-                      className={`
-                        w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all
-                        ${isSelected ? 'bg-black text-white font-bold shadow-md' : 'hover:bg-black/5 text-black/80'}
-                        ${isToday && !isSelected ? 'ring-1 ring-black/20' : ''}
-                      `}
+                      className={cx(
+                        'w-8 h-8 rounded-lg flex items-center justify-center text-xs font-medium transition-colors',
+                        isSelected
+                          ? 'bg-black text-white font-semibold'
+                          : 'text-[#171717] hover:bg-[#F5F5F5]',
+                        isToday && !isSelected && 'border border-black/40'
+                      )}
                     >
                       {day}
                     </button>
                     {paxCount > 0 && (
-                      <div className="absolute -top-1 -right-1 bg-green-500 text-white text-[8px] font-bold w-4 h-4 rounded-full flex items-center justify-center border border-white">
+                      <span className="absolute -top-1 -right-1 bg-black text-white text-[9px] font-semibold h-4 min-w-[16px] px-1 rounded-full flex items-center justify-center border border-white">
                         {paxCount}
-                      </div>
+                      </span>
                     )}
                   </div>
                 );
@@ -498,36 +543,45 @@ export default function BookingManagement({
         </div>
 
         {/* Right Col: Bookings for Selected Date */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-bold">
-              Bookings for {new Date(selectedDate).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
+            <h3 className="text-sm font-semibold text-black">
+              Bookings for {new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
             </h3>
             {!showForm && (
-              <button 
-                onClick={() => { resetForm(); setShowForm(true); }}
-                className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-black/80 transition-colors"
+              <button
+                type="button"
+                onClick={() => {
+                  resetForm();
+                  setShowForm(true);
+                }}
+                className={cx(btn.base, btn.primary, btn.sm)}
               >
-                <Plus size={16} /> Add Booking
+                <Plus size={14} /> Add Booking
               </button>
             )}
           </div>
 
           {showForm && (
-            <div className="bg-white border border-black/10 rounded-2xl p-6 shadow-md relative">
-              <button onClick={() => setShowForm(false)} className="absolute top-4 right-4 p-2 text-black/50 hover:bg-black/5 rounded-full transition-colors cursor-pointer">
-                <X size={20} />
+            <div className="bg-white border border-[#E5E5E5] rounded-xl p-5 md:p-6 shadow-xs relative">
+              <button
+                type="button"
+                onClick={() => setShowForm(false)}
+                className="absolute top-4 right-4 p-1.5 text-[#737373] hover:text-black hover:bg-[#F5F5F5] rounded-lg transition-colors cursor-pointer"
+                aria-label="Close form"
+              >
+                <X size={16} />
               </button>
-              <h4 className="font-bold text-lg mb-6">{isEditing ? 'Edit Booking' : 'New Booking'}</h4>
-              
-              <form onSubmit={handleSave} className="space-y-6">
+              <h4 className="font-semibold text-base text-black mb-5">{isEditing ? 'Edit Booking' : 'New Booking'}</h4>
+
+              <form onSubmit={handleSave} className="space-y-5">
                 {/* Domain Selector for Central Admin */}
-                <div className="bg-black/[0.02] border border-black/5 p-4 rounded-xl">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-black/50 block mb-2">Target Domain / Property</label>
-                  <select 
-                    value={formBrand} 
-                    onChange={e => setFormBrand(e.target.value as 'elexoir' | 'bali')}
-                    className="w-full bg-white border border-black/10 rounded-xl px-4 py-2.5 text-sm font-bold focus:outline-none focus:border-black appearance-none cursor-pointer"
+                <div>
+                  <label className="block text-xs font-medium text-[#171717] mb-1.5">Target Domain / Property</label>
+                  <select
+                    value={formBrand}
+                    onChange={(e) => setFormBrand(e.target.value as 'elexoir' | 'bali')}
+                    className={selectCls}
                   >
                     <option value="elexoir">Elexoir Home Spa (elexoirhomespaubud.com)</option>
                     <option value="bali">Home Spa Ubud (homespaubud.com)</option>
@@ -536,63 +590,111 @@ export default function BookingManagement({
 
                 <div className="space-y-4">
                   {formItems.map((item, index) => (
-                    <div key={item.id} className="relative bg-black/[0.02] border border-black/5 p-4 rounded-xl space-y-4">
+                    <div key={item.id} className="relative bg-[#FAFAFA] border border-[#E5E5E5] p-4 rounded-xl space-y-4">
                       {formItems.length > 1 && !isEditing && (
-                        <button type="button" onClick={() => removeFormItem(index)} className="absolute -top-2 -right-2 bg-red-100 text-red-600 p-1.5 rounded-full hover:bg-red-200 transition-colors shadow-sm">
-                          <Trash2 size={14} />
+                        <button
+                          type="button"
+                          onClick={() => removeFormItem(index)}
+                          className="absolute -top-2 -right-2 bg-white border border-red-200 text-red-600 p-1 rounded-full hover:bg-red-50 transition-colors shadow-xs"
+                          aria-label="Remove item"
+                        >
+                          <Trash2 size={12} />
                         </button>
                       )}
-                      
-                      <div className="grid grid-cols-2 gap-4">
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div>
-                          <label className="text-[10px] font-bold uppercase tracking-widest text-black/50 block mb-2">Select Treatment {index + 1}</label>
-                          <select required value={item.treatment} onChange={e => updateFormItem(index, 'treatment', e.target.value)} className="w-full bg-white border border-black/10 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black appearance-none cursor-pointer">
+                          <label className="block text-xs font-medium text-[#171717] mb-1.5">Select Treatment {index + 1}</label>
+                          <select
+                            required
+                            value={item.treatment}
+                            onChange={(e) => updateFormItem(index, 'treatment', e.target.value)}
+                            className={selectCls}
+                          >
                             <option value="">-- Choose Treatment --</option>
-                            {treatments.map(t => (
-                              <option key={t.id} value={t.title}>{t.title}</option>
+                            {treatments.map((t) => (
+                              <option key={t.id} value={t.title}>
+                                {t.title}
+                              </option>
                             ))}
                             <option value="Custom Treatment">Custom Treatment</option>
                           </select>
                         </div>
-                        
+
                         <div>
-                          <label className="text-[10px] font-bold uppercase tracking-widest text-black/50 block mb-2">Duration</label>
-                          <select required disabled={!item.treatment} value={item.duration} onChange={e => updateFormItem(index, 'duration', e.target.value)} className="w-full bg-white border border-black/10 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black appearance-none cursor-pointer disabled:opacity-50">
+                          <label className="block text-xs font-medium text-[#171717] mb-1.5">Duration</label>
+                          <select
+                            required
+                            disabled={!item.treatment}
+                            value={item.duration}
+                            onChange={(e) => updateFormItem(index, 'duration', e.target.value)}
+                            className={selectCls}
+                          >
                             <option value="">-- Select Duration --</option>
                             {item.treatment === 'Custom Treatment' ? (
                               <option value="Custom">Custom Duration</option>
                             ) : (
-                              treatments.find(t => t.title === item.treatment)?.options?.map(opt => (
-                                <option key={opt.duration} value={opt.duration}>{opt.duration} - {opt.price}</option>
-                              ))
+                              treatments
+                                .find((t) => t.title === item.treatment)
+                                ?.options?.map((opt) => (
+                                  <option key={opt.duration} value={opt.duration}>
+                                    {opt.duration} - {opt.price}
+                                  </option>
+                                ))
                             )}
                           </select>
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <label className="text-[10px] font-bold uppercase tracking-widest text-black/50 block mb-2">Number of Pax</label>
-                          <input type="number" min="1" required value={item.pax} onChange={e => updateFormItem(index, 'pax', parseInt(e.target.value) || 1)} className="w-full bg-white border border-black/10 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black" />
+                          <label className="block text-xs font-medium text-[#171717] mb-1.5">Number of Pax</label>
+                          <input
+                            type="number"
+                            min="1"
+                            required
+                            value={item.pax}
+                            onChange={(e) => updateFormItem(index, 'pax', parseInt(e.target.value) || 1)}
+                            className={inputCls}
+                          />
                         </div>
                         <div>
-                          <label className="text-[10px] font-bold uppercase tracking-widest text-black/50 block mb-2">Number of Therapists</label>
-                          <input type="number" min="1" required value={item.therapists} onChange={e => updateFormItem(index, 'therapists', parseInt(e.target.value) || 1)} className="w-full bg-white border border-black/10 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black" />
+                          <label className="block text-xs font-medium text-[#171717] mb-1.5">Number of Therapists</label>
+                          <input
+                            type="number"
+                            min="1"
+                            required
+                            value={item.therapists}
+                            onChange={(e) => updateFormItem(index, 'therapists', parseInt(e.target.value) || 1)}
+                            className={inputCls}
+                          />
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-black/5">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-3 border-t border-[#E5E5E5]">
                         <div>
-                          <label className="text-[10px] font-bold uppercase tracking-widest text-black/50 block mb-2">Revenue (IDR)</label>
-                          <input type="number" required value={item.revenue} onChange={e => updateFormItem(index, 'revenue', parseInt(e.target.value) || 0)} className="w-full bg-white border border-black/10 rounded-xl px-4 py-3 text-sm font-bold text-black focus:outline-none focus:border-black" />
+                          <label className="block text-xs font-medium text-[#171717] mb-1.5">Revenue (IDR)</label>
+                          <input
+                            type="number"
+                            required
+                            value={item.revenue}
+                            onChange={(e) => updateFormItem(index, 'revenue', parseInt(e.target.value) || 0)}
+                            className={inputCls}
+                          />
                         </div>
                         <div>
-                          <label className="text-[10px] font-bold uppercase tracking-widest text-black/50 block mb-2">Therapist Fee (IDR)</label>
-                          <input type="number" required value={item.fee} onChange={e => updateFormItem(index, 'fee', parseInt(e.target.value) || 0)} className="w-full bg-white border border-black/10 rounded-xl px-4 py-3 text-sm font-bold text-orange-600 focus:outline-none focus:border-black" />
+                          <label className="block text-xs font-medium text-[#171717] mb-1.5">Therapist Fee (IDR)</label>
+                          <input
+                            type="number"
+                            required
+                            value={item.fee}
+                            onChange={(e) => updateFormItem(index, 'fee', parseInt(e.target.value) || 0)}
+                            className={inputCls}
+                          />
                         </div>
                         <div>
-                          <label className="text-[10px] font-bold uppercase tracking-widest text-black/50 block mb-2">Net Profit (IDR)</label>
-                          <div className="w-full bg-green-50 border border-green-200 text-green-700 rounded-xl px-4 py-3 text-sm font-bold">
+                          <label className="block text-xs font-medium text-[#171717] mb-1.5">Net Profit (IDR)</label>
+                          <div className="h-11 md:h-9 rounded-lg border border-[#E5E5E5] bg-white px-3 flex items-center text-xs font-semibold text-emerald-600 tabular-nums">
                             {formatCurrency(item.revenue - item.fee)}
                           </div>
                         </div>
@@ -602,21 +704,27 @@ export default function BookingManagement({
                 </div>
 
                 {!isEditing && (
-                  <button type="button" onClick={addFormItem} className="w-full py-3 border-2 border-dashed border-black/20 text-black/60 rounded-xl text-sm font-bold hover:border-black/40 hover:text-black hover:bg-black/5 transition-all flex items-center justify-center gap-2">
-                    <Plus size={16} /> Add Another Treatment
+                  <button
+                    type="button"
+                    onClick={addFormItem}
+                    className="w-full py-2.5 border border-dashed border-[#D4D4D4] hover:border-black text-[#525252] hover:text-black rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1.5"
+                  >
+                    <Plus size={14} /> Add Another Treatment
                   </button>
                 )}
 
-                <div className="pt-4 border-t border-black/10 flex flex-col md:flex-row justify-between items-center gap-4">
+                <div className="pt-4 border-t border-[#E5E5E5] flex flex-col sm:flex-row justify-between items-center gap-3">
                   {formItems.length > 1 && (
-                    <div className="text-sm">
-                      <span className="font-bold text-black/50">Total Profit: </span>
-                      <span className="font-bold text-green-700 text-lg">{formatCurrency(formItems.reduce((acc, item) => acc + (item.revenue - item.fee), 0))}</span>
+                    <div className="text-xs text-[#737373]">
+                      Total Profit:{' '}
+                      <span className="font-semibold text-emerald-600 text-sm tabular-nums">
+                        {formatCurrency(formItems.reduce((acc, item) => acc + (item.revenue - item.fee), 0))}
+                      </span>
                     </div>
                   )}
-                  <div className="flex-1"></div>
-                  <button type="submit" className="flex items-center gap-2 bg-black text-white px-8 py-3 rounded-xl text-sm font-bold hover:bg-black/80 transition-colors">
-                    <Save size={16} /> Save Booking
+                  <div className="flex-1" />
+                  <button type="submit" className={cx(btn.base, btn.primary, btn.md)}>
+                    <Save size={14} /> Save Booking
                   </button>
                 </div>
               </form>
@@ -624,153 +732,140 @@ export default function BookingManagement({
           )}
 
           {isLoading ? (
-            <div className="flex justify-center py-12"><div className="w-8 h-8 border-4 border-black border-t-transparent rounded-full animate-spin"></div></div>
+            <div className="flex justify-center py-12">
+              <RefreshCw size={20} className="animate-spin text-[#737373]" />
+            </div>
           ) : dailyBookings.length === 0 ? (
-            <div className="bg-black/5 rounded-2xl p-12 flex flex-col items-center justify-center text-center border border-black/5">
-              <Calendar size={48} className="text-black/20 mb-4" />
-              <p className="text-black/50 font-medium">No bookings scheduled for this date.</p>
+            <div className="bg-white border border-[#E5E5E5] rounded-xl p-12 flex flex-col items-center justify-center text-center">
+              <Calendar size={32} className="text-[#A3A3A3] mb-2" />
+              <p className="text-xs font-medium text-black">No bookings scheduled</p>
+              <p className="text-xs text-[#737373] mt-0.5">There are no bookings for this date.</p>
             </div>
           ) : (
-            <div className="space-y-4">
-              {dailyBookings.map(booking => {
+            <div className="space-y-3">
+              {dailyBookings.map((booking) => {
                 let title = booking.treatment_name;
                 let dur = '';
                 const match = title.match(/(.*) \((.*)\)$/);
                 if (match) {
-                    title = match[1];
-                    dur = match[2];
-                    if (dur.includes("mins")) dur = dur.replace("mins", "Minutes");
+                  title = match[1];
+                  dur = match[2];
+                  if (dur.includes('mins')) dur = dur.replace('mins', 'Minutes');
                 }
 
                 return (
-                  <div key={booking.id} className={`bg-white border ${booking.status?.toLowerCase() === 'cancelled' ? 'border-red-200' : 'border-black/10'} rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow relative group overflow-hidden`}>
-                    <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${booking.status?.toLowerCase() === 'cancelled' ? 'bg-red-500' : (booking.status?.toLowerCase() === 'pending' ? 'bg-orange-400' : 'bg-emerald-500')}`}></div>
-                    <div className={`flex flex-col md:flex-row md:items-center justify-between gap-4 ml-2 ${booking.status?.toLowerCase() === 'cancelled' ? 'opacity-50' : ''}`}>
-                      <div className="space-y-2 w-full md:w-1/3">
-                        <div className="flex flex-wrap items-center gap-1.5 mb-1">
-                          <span className="text-[10px] font-bold tracking-wider uppercase bg-black/10 px-2 py-0.5 rounded-full whitespace-nowrap">{booking.pax} Pax</span>
-                          <span className={`text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full whitespace-nowrap ${
-                              booking.status?.toLowerCase() === 'cancelled' ? 'bg-red-100 text-red-700' :
-                              (booking.status?.toLowerCase() === 'pending' ? 'bg-orange-100 text-orange-700' : 'bg-emerald-100 text-emerald-700')
-                          }`}>
-                              {booking.status || 'Confirmed'}
+                  <div
+                    key={booking.id}
+                    className="bg-white border border-[#E5E5E5] rounded-xl p-4 hover:border-[#D4D4D4] transition-all relative group overflow-hidden"
+                  >
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                      <div className="space-y-1.5 flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <span className="text-[11px] font-mono text-[#737373]">
+                            #{booking.reference_number || booking.id.substring(0, 8).toUpperCase()}
                           </span>
-                          {booking.brand === 'bali' ? (
-                            <span className="text-[10px] font-bold tracking-wider uppercase bg-emerald-50 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded-full whitespace-nowrap">Home Spa Ubud</span>
-                          ) : (
-                            <span className="text-[10px] font-bold tracking-wider uppercase bg-stone-100 text-stone-700 border border-stone-200 px-2 py-0.5 rounded-full whitespace-nowrap">Elexoir Home Spa</span>
-                          )}
+                          <CountPill>{booking.pax} Pax</CountPill>
+                          <StatusBadge status={booking.status || 'confirmed'} />
+                          <span className="inline-flex items-center h-5 px-1.5 rounded border border-[#E5E5E5] text-[10px] font-medium text-[#737373]">
+                            {booking.brand === 'bali' ? 'Home Spa Ubud' : 'Elexoir Home Spa'}
+                          </span>
                         </div>
-                        
+
                         {booking.items && booking.items.length > 0 ? (
-                            <div className="flex flex-col gap-2">
-                                {booking.items.map((it: any, idx: number) => (
-                                    <div key={idx}>
-                                        <p className="font-bold text-sm leading-snug">{it.title} {it.guests > 1 ? `(x${it.guests})` : ''}</p>
-                                        <p className="text-[10px] text-black/50 font-bold uppercase tracking-wider mt-0.5">Duration: {it.duration}</p>
-                                    </div>
-                                ))}
-                            </div>
+                          <div className="space-y-1 mt-1">
+                            {booking.items.map((it: any, idx: number) => (
+                              <div key={idx}>
+                                <p className="font-semibold text-xs text-black">
+                                  {it.title} {it.guests > 1 ? `(x${it.guests})` : ''}
+                                </p>
+                                <p className="text-[11px] text-[#737373]">Duration: {it.duration}</p>
+                              </div>
+                            ))}
+                          </div>
                         ) : (
-                            <div>
-                                <p className="font-bold text-sm leading-snug">{title}</p>
-                                {dur && <p className="text-[10px] text-black/50 font-bold uppercase tracking-wider mt-0.5">Duration: {dur}</p>}
-                            </div>
+                          <div className="mt-1">
+                            <p className="font-semibold text-xs text-black">{title}</p>
+                            {dur && <p className="text-[11px] text-[#737373]">Duration: {dur}</p>}
+                          </div>
                         )}
                       </div>
-                      
-                      <div className="flex-1 grid grid-cols-3 gap-2 text-center bg-black/5 rounded-xl p-3">
+
+                      <div className="grid grid-cols-3 gap-3 text-center bg-[#FAFAFA] border border-[#E5E5E5] rounded-lg p-2.5 sm:w-72 shrink-0">
                         <div>
-                          <span className="block text-[9px] uppercase font-bold text-black/50 mb-1">Revenue</span>
-                          <span className="font-bold text-xs">{formatCurrency(booking.revenue)}</span>
+                          <span className="block text-[10px] text-[#737373]">Revenue</span>
+                          <span className="font-semibold text-xs text-black tabular-nums">{formatCurrency(booking.revenue)}</span>
                         </div>
                         <div>
-                          <span className="block text-[9px] uppercase font-bold text-black/50 mb-1">Fees ({booking.therapists_count} {booking.therapists_count > 1 ? 'Therapists' : 'Therapist'})</span>
-                          <span className="font-bold text-xs text-orange-600">{formatCurrency(booking.therapist_fee_total)}</span>
+                          <span className="block text-[10px] text-[#737373]">Wage</span>
+                          <span className="font-semibold text-xs text-black tabular-nums">{formatCurrency(booking.therapist_fee_total)}</span>
                         </div>
                         <div>
-                          <span className="block text-[9px] uppercase font-bold text-black/50 mb-1">Profit</span>
-                          <span className="font-bold text-xs text-green-700">{formatCurrency(booking.net_profit)}</span>
+                          <span className="block text-[10px] text-[#737373]">Profit</span>
+                          <span className="font-semibold text-xs text-emerald-600 tabular-nums">{formatCurrency(booking.net_profit)}</span>
                         </div>
                       </div>
-                      
-                      <div className="flex flex-wrap md:flex-col gap-2 justify-end opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
-                        <div className="flex gap-2">
-                            {booking.status?.toLowerCase() !== 'confirmed' && (
-                                <button 
-                                onClick={() => handleStatusChange(booking.id, 'Confirmed')}
-                                className="p-2 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors text-emerald-600"
-                                title="Mark as Confirmed"
-                                >
-                                <CheckCircle2 size={16} />
-                                </button>
-                            )}
-                            {booking.status?.toLowerCase() !== 'cancelled' && (
-                                <button 
-                                onClick={() => handleStatusChange(booking.id, 'Cancelled')}
-                                className="p-2 bg-orange-50 hover:bg-orange-100 rounded-lg transition-colors text-orange-600"
-                                title="Mark as Cancelled"
-                                >
-                                <XCircle size={16} />
-                                </button>
-                            )}
-                        </div>
-                        <div className="flex gap-2">
-                            {booking.reference_number && (
-                                <button 
-                                onClick={() => {
-                                    let domain = window.location.origin;
-                                    if (booking.brand === 'bali') {
-                                        domain = 'https://www.homespaubud.com';
-                                    } else if (booking.brand === 'therapick') {
-                                        domain = 'https://www.booktherapick.com';
-                                    } else if (booking.brand === 'elexoir') {
-                                        domain = 'https://www.elexoirhomespaubud.com';
-                                    }
-                                    window.open(`${domain}/invoice/${booking.reference_number}`, '_blank');
-                                }}
-                                className="p-2 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors text-blue-600"
-                                title="View Invoice"
-                                >
-                                <FileText size={16} />
-                                </button>
-                            )}
-                            <button 
+
+                      <div className="flex items-center gap-1.5 shrink-0 justify-end">
+                        {booking.reference_number && (
+                          <button
+                            type="button"
                             onClick={() => {
-                                // Parse out the duration if it was saved like "Title (duration)"
-                                let editTitle = booking.treatment_name;
-                                let editDur = '';
-                                const editMatch = editTitle.match(/(.*) \((.*)\)$/);
-                                if (editMatch) {
-                                    editTitle = editMatch[1];
-                                    editDur = editMatch[2];
-                                }
-                                
-                                setFormItems([{
+                              let domain = window.location.origin;
+                              if (booking.brand === 'bali') {
+                                domain = 'https://www.homespaubud.com';
+                              } else if (booking.brand === 'therapick') {
+                                domain = 'https://www.booktherapick.com';
+                              } else if (booking.brand === 'elexoir') {
+                                domain = 'https://www.elexoirhomespaubud.com';
+                              }
+                              window.open(`${domain}/invoice/${booking.reference_number}`, '_blank');
+                            }}
+                            className={cx(btn.base, btn.secondary, btn.xs)}
+                            title="View Invoice"
+                          >
+                            <FileText size={13} />
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            let editTitle = booking.treatment_name;
+                            let editDur = '';
+                            const editMatch = editTitle.match(/(.*) \((.*)\)$/);
+                            if (editMatch) {
+                              editTitle = editMatch[1];
+                              editDur = editMatch[2];
+                            }
+
+                            setFormItems([
+                              {
                                 id: Math.random().toString(36).substring(2, 9),
                                 treatment: editTitle,
                                 duration: editDur,
                                 pax: booking.pax,
                                 therapists: booking.therapists_count,
                                 revenue: booking.revenue,
-                                fee: booking.therapist_fee_total
-                                }]);
-                                setFormBrand(booking.brand === 'bali' ? 'bali' : 'elexoir');
-                                setIsEditing(booking.id);
-                                setShowForm(true);
-                                window.scrollTo({ top: 0, behavior: 'smooth' });
-                            }}
-                            className="p-2 bg-black/5 hover:bg-black/10 rounded-lg transition-colors text-black"
-                            >
-                            <Edit3 size={16} />
-                            </button>
-                            <button 
-                            onClick={() => handleDelete(booking.id)}
-                            className="p-2 bg-red-50 hover:bg-red-100 rounded-lg transition-colors text-red-600"
-                            >
-                            <Trash2 size={16} />
-                            </button>
-                        </div>
+                                fee: booking.therapist_fee_total,
+                              },
+                            ]);
+                            setFormBrand(booking.brand === 'bali' ? 'bali' : 'elexoir');
+                            setIsEditing(booking.id);
+                            setShowForm(true);
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                          }}
+                          className={cx(btn.base, btn.secondary, btn.xs)}
+                          title="Edit"
+                        >
+                          <Edit3 size={13} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(booking.id)}
+                          className={cx(btn.base, btn.danger, btn.xs)}
+                          title="Delete"
+                        >
+                          <Trash2 size={13} />
+                        </button>
                       </div>
                     </div>
                   </div>
