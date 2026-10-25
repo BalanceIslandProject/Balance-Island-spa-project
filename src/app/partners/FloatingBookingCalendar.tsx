@@ -31,6 +31,7 @@ export interface CalendarBooking {
   treatment_name?: string;
   booking_status?: 'Pending' | 'Confirmed' | 'Ongoing' | 'Completed' | 'Cancelled' | string;
   payment_status?: 'paid' | 'unpaid' | string;
+  payment_method?: string;
   payment_verified?: boolean;
   service_completed?: boolean;
   gross_amount: number;
@@ -608,7 +609,7 @@ export default function FloatingBookingCalendar({
                     {/* 1. Payment status label (Paid / Unpaid) */}
                     {isPaid ? (
                       <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/90 shadow-2xs">
-                        Paid
+                        {b.payment_method === 'cash' ? 'Paid (Cash)' : b.payment_method === 'online' ? 'Paid (Online)' : 'Paid'}
                       </span>
                     ) : (
                       <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200/90 shadow-2xs">
@@ -616,7 +617,7 @@ export default function FloatingBookingCalendar({
                       </span>
                     )}
 
-                    {/* 2. Treatment status label: Ongoing Treatment / Finish Treatment / Cancelled / Pending */}
+                    {/* 2. Treatment status label: Ongoing Treatment / Finish Treatment / Cancelled / Awaiting Treatment */}
                     {isCancelled ? (
                       <span className="text-[10px] font-extrabold uppercase tracking-wider text-rose-700 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200/90 shadow-2xs">
                         Cancelled
@@ -630,9 +631,13 @@ export default function FloatingBookingCalendar({
                       <span className="text-[10px] font-extrabold uppercase tracking-wider text-teal-800 bg-teal-50 px-2 py-0.5 rounded-full border border-teal-200/90 shadow-2xs">
                         Finish Treatment
                       </span>
+                    ) : b.booking_status === 'Confirmed' ? (
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-blue-800 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200/90 shadow-2xs">
+                        Confirmed
+                      </span>
                     ) : (
                       <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200/90 shadow-2xs">
-                        Pending
+                        Awaiting Treatment
                       </span>
                     )}
 

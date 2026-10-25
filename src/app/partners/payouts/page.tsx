@@ -1,8 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { ArrowLeft, Wallet, CheckCircle2, Clock, X, Copy, Check, Calendar, ExternalLink } from 'lucide-react';
+import { Wallet, CheckCircle2, Clock, X, Copy, Check, Calendar, ExternalLink } from 'lucide-react';
 
 export default function PartnerPayoutsPage() {
   const [payouts, setPayouts] = useState<any[]>([]);
@@ -42,26 +41,10 @@ export default function PartnerPayoutsPage() {
   };
 
   return (
-    <div className="space-y-5 w-full font-sans pb-12">
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white border border-[#E5E5E5] rounded-xl p-4 sm:p-5">
-        <div className="space-y-0.5">
-          <Link 
-            href="/partners/dashboard" 
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#737373] hover:text-black transition-colors"
-          >
-            <ArrowLeft size={13} />
-            <span>Back to Dashboard</span>
-          </Link>
-          <h1 className="text-xl sm:text-2xl font-bold text-black tracking-tight">
-            Payout History
-          </h1>
-          <p className="text-xs text-[#737373]">
-            Official disbursement receipts and itemized booking settlement records.
-          </p>
-        </div>
-
-        <div className="inline-flex items-center gap-1.5 bg-[#F5F5F5] text-black border border-[#E5E5E5] px-3 py-1.5 rounded-lg text-xs font-semibold self-start sm:self-auto">
+    <div className="space-y-4 w-full font-sans pb-12">
+      {/* CRM Toolbar */}
+      <div className="flex items-center justify-between gap-3">
+        <div className="inline-flex items-center gap-1.5 bg-white text-black border border-[#E5E5E5] px-3 py-1.5 rounded-lg text-xs font-semibold shadow-xs">
           <span>No Minimum Withdrawal</span>
         </div>
       </div>

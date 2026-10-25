@@ -22,8 +22,6 @@ import {
   Clock,
   RefreshCw,
   CheckSquare,
-  Square,
-  XSquare,
   Copy,
   Check,
   User,
@@ -302,9 +300,9 @@ export default function TherapickBookingManagement({
         const effectiveTherapistsCount = Number(b.therapists_count || 0) > 0 ? Number(b.therapists_count) : therapistsCount;
 
         // Smart profit detection:
-        // Revenue minus therapist fees minus approved affiliate commission
+        // Revenue minus therapist fees minus approved or paid affiliate commission
         let autoCalculatedProfit = Math.max(0, Number(b.revenue || 0) - effectiveTherapistFee);
-        if (c && c.status === 'approved' && Number(c.commission_amount || 0) > 0) {
+        if (c && (c.status === 'approved' || c.status === 'paid') && Number(c.commission_amount || 0) > 0) {
           autoCalculatedProfit = Math.max(0, Number(b.revenue || 0) - effectiveTherapistFee - Number(c.commission_amount || 0));
         }
 
@@ -440,73 +438,21 @@ export default function TherapickBookingManagement({
     fetchMonthBookings();
   };
 
-  // Dedicated Password-Protected Undo for Ongoing Treatment and Finish Treatment (Completed)
-  const handleUndoStatus = async (booking: Booking, statusToUndo: 'Ongoing' | 'Completed') => {
-    const label = statusToUndo === 'Ongoing' ? 'Ongoing Treatment' : 'Finish Treatment';
-    const pin = prompt(`Enter secret admin password to undo ${label}:`);
-    if (!pin) return;
-    if (pin !== (process.env.NEXT_PUBLIC_DELETE_PIN || SECRET_ADMIN_PASSWORD)) {
-      alert('Incorrect password. Action cannot be undone.');
-      return;
-    }
-
-    let targetStatus = 'Pending';
-    if (statusToUndo === 'Completed') {
-      const wantOngoing = confirm('Click OK to revert to Ongoing Treatment, or Cancel to revert to Pending.');
-      targetStatus = wantOngoing ? 'Ongoing' : 'Pending';
-    }
-
-    let updates: any = { status: targetStatus };
-    await supabase.from('bookings').update(updates).eq('id', booking.id);
-
-    const ref = booking.reference_number || booking.id;
-    if (ref) {
-      if (statusToUndo === 'Completed' && targetStatus !== 'Completed') {
-        await supabase
-          .from('affiliate_commissions')
-          .update({
-            service_completed: false,
-            updated_at: new Date().toISOString(),
-          })
-          .ilike('booking_id', ref);
-      }
-    }
-
-    fetchMonthBookings();
-  };
-
-  // Change Treatment Status (Confirmed, Ongoing, Completed / Finish Treatment, Cancelled)
+  // Change Treatment Status (Cancel / Reinstate)
   const handleStatusChange = async (id: string, newStatus: string) => {
     const booking = monthBookings.find(b => b.id === id);
     if (!booking) return;
-
-    const currentStatus = (booking.status || 'Pending').toLowerCase();
-    const isCurrentlyLocked = currentStatus === 'ongoing' || currentStatus === 'completed';
-
-    // If currently Ongoing or Completed, ANY revert or cancel requires the secret admin password 022320!
-    // Exception: Progressing forward from Ongoing -> Completed is normal forward progression
-    if (isCurrentlyLocked) {
-      const isProgressingOngoingToCompleted = (currentStatus === 'ongoing' && (newStatus === 'Completed' || newStatus === 'finish'));
-      if (!isProgressingOngoingToCompleted) {
-        const pin = prompt(`Booking #${booking.reference_number || booking.id} is marked as ${booking.status}. Enter secret admin password to change/undo status:`);
-        if (pin !== (process.env.NEXT_PUBLIC_DELETE_PIN || SECRET_ADMIN_PASSWORD)) {
-          alert('Incorrect password. Action cancelled.');
-          return;
-        }
-      }
-    }
 
     if (!confirm(`Are you sure you want to mark this booking as ${newStatus}?`)) return;
 
     let updates: any = { status: newStatus };
 
-    // Calculate and add therapist fee base on therapist_fees database (couple = 2 therapists)
     if (newStatus === 'Ongoing' || newStatus === 'Completed' || newStatus === 'Confirmed' || newStatus === 'CONFIRMED') {
       const { totalFee, therapistsCount } = calculateBookingTherapistFee(booking, treatments, allTherapistFees);
       if (totalFee > 0) {
         updates.therapist_fee_total = totalFee;
         updates.therapists_count = therapistsCount;
-        const isCommApproved = booking?.commission?.status === 'approved';
+        const isCommApproved = booking?.commission?.status === 'approved' || booking?.commission?.status === 'paid';
         const commAmount = isCommApproved ? Number(booking.commission.commission_amount || 0) : 0;
         updates.net_profit = Math.max(0, (booking.revenue || 0) - totalFee - commAmount);
       }
@@ -518,7 +464,6 @@ export default function TherapickBookingManagement({
     const ref = booking?.reference_number || booking?.id;
     if (ref) {
       if (newStatus === 'Cancelled') {
-        // If treatment cancel, partner sees cancel label and commission cancelled
         await supabase
           .from('affiliate_commissions')
           .update({
@@ -527,16 +472,7 @@ export default function TherapickBookingManagement({
             updated_at: new Date().toISOString(),
           })
           .ilike('booking_id', ref);
-      } else if (newStatus === 'Completed') {
-        // Treatment finished
-        await supabase
-          .from('affiliate_commissions')
-          .update({
-            service_completed: true,
-            updated_at: new Date().toISOString(),
-          })
-          .ilike('booking_id', ref);
-      } else if (newStatus === 'Confirmed' || newStatus === 'Ongoing' || newStatus === 'Pending') {
+      } else if (newStatus === 'Confirmed' || newStatus === 'Pending') {
         if (booking?.commission?.status === 'cancelled') {
           await supabase
             .from('affiliate_commissions')
@@ -546,79 +482,9 @@ export default function TherapickBookingManagement({
               updated_at: new Date().toISOString(),
             })
             .ilike('booking_id', ref);
-        } else if (currentStatus === 'completed') {
-          await supabase
-            .from('affiliate_commissions')
-            .update({
-              service_completed: false,
-              updated_at: new Date().toISOString(),
-            })
-            .ilike('booking_id', ref);
         }
       }
     }
-
-    fetchMonthBookings();
-  };
-
-  // Toggle Payment: Paid <-> Unpaid
-  const handleTogglePayment = async (booking: Booking) => {
-    const isPaid = booking.payment_status === 'paid' || booking.commission?.payment_verified;
-    const nextStatus = isPaid ? 'unpaid' : 'paid';
-
-    await supabase.from('bookings').update({ payment_status: nextStatus }).eq('id', booking.id);
-
-    const ref = booking.reference_number || booking.id;
-    if (ref) {
-      await supabase
-        .from('affiliate_commissions')
-        .update({
-          payment_verified: nextStatus === 'paid',
-          updated_at: new Date().toISOString(),
-        })
-        .ilike('booking_id', ref);
-    }
-
-    fetchMonthBookings();
-  };
-
-  // Manual Commission Approval: Admin executes the job when treatment is done
-  // Add therapist fee base on therapist_fees database, couple package = 2 therapists
-  const handleApproveCommission = async (booking: Booking) => {
-    const ref = booking.reference_number || booking.id;
-    if (!ref) return;
-
-    if (!confirm(`Approve affiliate commission for #${ref}? The commission will immediately become approved and withdrawable for the partner, and therapist fee base on the database will automatically be recorded.`)) {
-      return;
-    }
-
-    // Calculate therapist fee base on therapist_fees database (couple = 2 therapists)
-    const { totalFee, therapistsCount } = calculateBookingTherapistFee(booking, treatments, allTherapistFees);
-    const finalTherapistFee = totalFee > 0 ? totalFee : Number(booking.therapist_fee_total || 0);
-    const finalTherapistsCount = therapistsCount > 0 ? therapistsCount : Number(booking.therapists_count || booking.pax || 1);
-    const commAmount = Number(booking.commission?.commission_amount || 0);
-    const rev = Number(booking.revenue || 0);
-    const autoCalculatedProfit = Math.max(0, rev - finalTherapistFee - commAmount);
-
-    await supabase
-      .from('affiliate_commissions')
-      .update({
-        status: 'approved',
-        service_completed: true,
-        approved_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      })
-      .ilike('booking_id', ref);
-
-    // Smart logic: Automatically recalculate and store therapist fee and profit in bookings table
-    await supabase
-      .from('bookings')
-      .update({
-        therapist_fee_total: finalTherapistFee,
-        therapists_count: finalTherapistsCount,
-        net_profit: autoCalculatedProfit,
-      })
-      .eq('id', booking.id);
 
     fetchMonthBookings();
   };
@@ -742,15 +608,47 @@ export default function TherapickBookingManagement({
     window.URL.revokeObjectURL(url);
   };
 
-  const totalDailyRevenue = useMemo(() => dailyBookings.reduce((sum, b) => sum + (b.revenue || 0), 0), [dailyBookings]);
-  const totalDailyProfit = useMemo(() => dailyBookings.reduce((sum, b) => sum + (b.net_profit || 0), 0), [dailyBookings]);
-  const totalDailyFees = useMemo(() => dailyBookings.reduce((sum, b) => sum + (b.therapist_fee_total || 0), 0), [dailyBookings]);
-  const totalDailyPax = useMemo(() => dailyBookings.reduce((sum, b) => sum + (b.pax || 0), 0), [dailyBookings]);
+  const totalDailyRevenue = useMemo(
+    () => dailyBookings.filter(b => b.status?.toLowerCase() !== 'cancelled').reduce((sum, b) => sum + (b.revenue || 0), 0),
+    [dailyBookings]
+  );
+  const totalDailyProfit = useMemo(
+    () => dailyBookings.filter(b => b.status?.toLowerCase() !== 'cancelled').reduce((sum, b) => sum + (b.net_profit || 0), 0),
+    [dailyBookings]
+  );
+  const totalDailyCommission = useMemo(
+    () => dailyBookings
+      .filter(b => b.status?.toLowerCase() !== 'cancelled')
+      .reduce((sum, b) => {
+        const c = b.commission;
+        if (c && (c.status === 'approved' || c.status === 'paid')) {
+          return sum + Number(c.commission_amount || 0);
+        }
+        return sum;
+      }, 0),
+    [dailyBookings]
+  );
 
-  const totalMonthlyRevenue = useMemo(() => monthBookings.reduce((sum, b) => sum + (b.revenue || 0), 0), [monthBookings]);
-  const totalMonthlyProfit = useMemo(() => monthBookings.reduce((sum, b) => sum + (b.net_profit || 0), 0), [monthBookings]);
-  const totalMonthlyFees = useMemo(() => monthBookings.reduce((sum, b) => sum + (b.therapist_fee_total || 0), 0), [monthBookings]);
-  const totalMonthlyPax = useMemo(() => monthBookings.reduce((sum, b) => sum + (b.pax || 0), 0), [monthBookings]);
+  const totalMonthlyRevenue = useMemo(
+    () => monthBookings.filter(b => b.status?.toLowerCase() !== 'cancelled').reduce((sum, b) => sum + (b.revenue || 0), 0),
+    [monthBookings]
+  );
+  const totalMonthlyProfit = useMemo(
+    () => monthBookings.filter(b => b.status?.toLowerCase() !== 'cancelled').reduce((sum, b) => sum + (b.net_profit || 0), 0),
+    [monthBookings]
+  );
+  const totalMonthlyCommission = useMemo(
+    () => monthBookings
+      .filter(b => b.status?.toLowerCase() !== 'cancelled')
+      .reduce((sum, b) => {
+        const c = b.commission;
+        if (c && (c.status === 'approved' || c.status === 'paid')) {
+          return sum + Number(c.commission_amount || 0);
+        }
+        return sum;
+      }, 0),
+    [monthBookings]
+  );
 
   return (
     <div className="space-y-6">
@@ -786,37 +684,51 @@ export default function TherapickBookingManagement({
         </div>
       </div>
 
-      {/* 4-KPI Metric Strip */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+      {/* Financial Metrics Strip: Daily & Monthly (Revenue, Profit, Commission Paid) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+        {/* Daily Financials */}
         <div className="bg-white border border-[#E5E5E5] rounded-xl p-4 md:p-5">
-          <div className="text-xs text-[#737373] font-medium">Daily bookings</div>
-          <div className="text-2xl font-semibold text-black mt-1 tabular-nums">{dailyBookings.length}</div>
-          <div className="text-xs text-[#737373] mt-1 truncate">
-            {totalDailyPax} pax · {new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+          <div className="flex items-center justify-between pb-2.5 mb-3 border-b border-[#F0F0F0]">
+            <span className="text-xs font-semibold text-[#737373] uppercase tracking-wider">
+              Daily Financials · <span className="text-black font-semibold">{new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+            </span>
+          </div>
+          <div className="grid grid-cols-3 gap-2 sm:gap-4">
+            <div>
+              <div className="text-xs text-[#737373] font-medium truncate">Daily revenue</div>
+              <div className="text-xl sm:text-2xl font-semibold text-black mt-1 tabular-nums">{formatCurrency(totalDailyRevenue)}</div>
+            </div>
+            <div>
+              <div className="text-xs text-[#737373] font-medium truncate">Daily profit</div>
+              <div className="text-xl sm:text-2xl font-semibold text-emerald-600 mt-1 tabular-nums">{formatCurrency(totalDailyProfit)}</div>
+            </div>
+            <div>
+              <div className="text-xs text-[#737373] font-medium truncate">Commission paid</div>
+              <div className="text-xl sm:text-2xl font-semibold text-indigo-600 mt-1 tabular-nums">{formatCurrency(totalDailyCommission)}</div>
+            </div>
           </div>
         </div>
 
+        {/* Monthly Financials */}
         <div className="bg-white border border-[#E5E5E5] rounded-xl p-4 md:p-5">
-          <div className="text-xs text-[#737373] font-medium">Daily revenue</div>
-          <div className="text-2xl font-semibold text-black mt-1 tabular-nums">{formatCurrency(totalDailyRevenue)}</div>
-          <div className="text-xs text-emerald-600 mt-1 truncate">
-            Net profit: {formatCurrency(totalDailyProfit)}
+          <div className="flex items-center justify-between pb-2.5 mb-3 border-b border-[#F0F0F0]">
+            <span className="text-xs font-semibold text-[#737373] uppercase tracking-wider">
+              Monthly Financials · <span className="text-black font-semibold">{monthNames[month]} {year}</span>
+            </span>
           </div>
-        </div>
-
-        <div className="bg-white border border-[#E5E5E5] rounded-xl p-4 md:p-5">
-          <div className="text-xs text-[#737373] font-medium">Monthly bookings</div>
-          <div className="text-2xl font-semibold text-black mt-1 tabular-nums">{monthBookings.length}</div>
-          <div className="text-xs text-[#737373] mt-1 truncate">
-            {totalMonthlyPax} pax · {monthNames[month]} {year}
-          </div>
-        </div>
-
-        <div className="bg-white border border-[#E5E5E5] rounded-xl p-4 md:p-5">
-          <div className="text-xs text-[#737373] font-medium">Monthly revenue</div>
-          <div className="text-2xl font-semibold text-black mt-1 tabular-nums">{formatCurrency(totalMonthlyRevenue)}</div>
-          <div className="text-xs text-emerald-600 mt-1 truncate">
-            Net profit: {formatCurrency(totalMonthlyProfit)}
+          <div className="grid grid-cols-3 gap-2 sm:gap-4">
+            <div>
+              <div className="text-xs text-[#737373] font-medium truncate">Monthly revenue</div>
+              <div className="text-xl sm:text-2xl font-semibold text-black mt-1 tabular-nums">{formatCurrency(totalMonthlyRevenue)}</div>
+            </div>
+            <div>
+              <div className="text-xs text-[#737373] font-medium truncate">Monthly profit</div>
+              <div className="text-xl sm:text-2xl font-semibold text-emerald-600 mt-1 tabular-nums">{formatCurrency(totalMonthlyProfit)}</div>
+            </div>
+            <div>
+              <div className="text-xs text-[#737373] font-medium truncate">Commission paid</div>
+              <div className="text-xl sm:text-2xl font-semibold text-indigo-600 mt-1 tabular-nums">{formatCurrency(totalMonthlyCommission)}</div>
+            </div>
           </div>
         </div>
       </div>
@@ -868,14 +780,23 @@ export default function TherapickBookingManagement({
                 const isSelected = isoString === selectedDate;
                 const isToday = isoString === toLocalDateString(new Date());
                 
-                const bookingsForThisDay = monthBookings.filter((b) => b.booking_date === isoString);
+                const bookingsForThisDay = monthBookings.filter((b) => b.booking_date === isoString && b.status?.toLowerCase() !== 'cancelled');
                 const paxCount = bookingsForThisDay.reduce((sum, b) => sum + b.pax, 0);
+                const dayRev = bookingsForThisDay.reduce((sum, b) => sum + (b.revenue || 0), 0);
+                const dayProfit = bookingsForThisDay.reduce((sum, b) => sum + (b.net_profit || 0), 0);
+                const dayComm = bookingsForThisDay.reduce((sum, b) => {
+                  const c = b.commission;
+                  return (c && (c.status === 'approved' || c.status === 'paid')) ? sum + Number(c.commission_amount || 0) : sum;
+                }, 0);
 
                 return (
                   <div key={day} className="relative flex justify-center">
                     <button
                       type="button"
                       onClick={() => selectDate(day)}
+                      title={bookingsForThisDay.length > 0 
+                        ? `${isoString} · ${bookingsForThisDay.length} bookings (${paxCount} pax)\nRevenue: ${formatCurrency(dayRev)}\nProfit: ${formatCurrency(dayProfit)}\nCommission: ${formatCurrency(dayComm)}`
+                        : isoString}
                       className={cx(
                         'h-9 w-full rounded-lg flex items-center justify-center text-xs transition-all relative font-medium',
                         isSelected
@@ -892,13 +813,38 @@ export default function TherapickBookingManagement({
                             'absolute top-1 right-1 w-1.5 h-1.5 rounded-full',
                             isSelected ? 'bg-emerald-400' : 'bg-emerald-600'
                           )}
-                          title={`${bookingsForThisDay.length} bookings (${paxCount} pax)`}
                         />
                       )}
                     </button>
                   </div>
                 );
               })}
+            </div>
+
+            {/* Selected Date Financial Summary under Calendar */}
+            <div className="mt-4 pt-3.5 border-t border-[#F0F0F0] space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-semibold text-black">
+                  {new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} Financials
+                </span>
+                <span className="text-[11px] text-[#737373]">
+                  {dailyBookings.length} {dailyBookings.length === 1 ? 'booking' : 'bookings'}
+                </span>
+              </div>
+              <div className="grid grid-cols-3 gap-1.5 text-center bg-[#FAFAFA] rounded-lg p-2.5 border border-[#E5E5E5]">
+                <div>
+                  <div className="text-[10px] text-[#737373] font-medium uppercase truncate">Revenue</div>
+                  <div className="text-xs font-semibold text-black mt-0.5 tabular-nums truncate">{formatCurrency(totalDailyRevenue)}</div>
+                </div>
+                <div>
+                  <div className="text-[10px] text-[#737373] font-medium uppercase truncate">Profit</div>
+                  <div className="text-xs font-semibold text-emerald-600 mt-0.5 tabular-nums truncate">{formatCurrency(totalDailyProfit)}</div>
+                </div>
+                <div>
+                  <div className="text-[10px] text-[#737373] font-medium uppercase truncate">Commission</div>
+                  <div className="text-xs font-semibold text-indigo-600 mt-0.5 tabular-nums truncate">{formatCurrency(totalDailyCommission)}</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -1384,121 +1330,9 @@ export default function TherapickBookingManagement({
                       )}
                     </div>
 
-                    {selectedBooking.commission.status !== 'approved' && selectedBooking.commission.status !== 'cancelled' && (
-                      <button
-                        type="button"
-                        onClick={() => handleApproveCommission(selectedBooking)}
-                        className={cx(btn.base, btn.primary, btn.xs)}
-                        title="Approve Commission Manually"
-                      >
-                        <CheckSquare size={12} />
-                        <span>Approve commission</span>
-                      </button>
-                    )}
                   </div>
                 </div>
               )}
-
-              {/* Operational Checklist Actions */}
-              <div className="space-y-2 pt-2 border-t border-[#E5E5E5]">
-                <span className="text-xs font-semibold uppercase tracking-wider text-[#737373] block">
-                  Workflow Checklist Actions
-                </span>
-                <div className="flex flex-wrap items-center gap-2">
-                  {/* Paid / Unpaid */}
-                  <button
-                    type="button"
-                    onClick={() => handleTogglePayment(selectedBooking)}
-                    className={cx(
-                      btn.base,
-                      btn.sm,
-                      (selectedBooking.payment_status === 'paid' || selectedBooking.commission?.payment_verified)
-                        ? 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100'
-                        : 'bg-amber-50 text-amber-900 border-amber-200 hover:bg-amber-100'
-                    )}
-                  >
-                    {(selectedBooking.payment_status === 'paid' || selectedBooking.commission?.payment_verified) ? (
-                      <CheckSquare size={14} className="text-emerald-700 shrink-0" />
-                    ) : (
-                      <Square size={14} className="text-amber-700 shrink-0" />
-                    )}
-                    <span>{(selectedBooking.payment_status === 'paid' || selectedBooking.commission?.payment_verified) ? 'Paid' : 'Unpaid'}</span>
-                  </button>
-
-                  {/* Ongoing Treatment */}
-                  {selectedBooking.status?.toLowerCase() !== 'cancelled' && (
-                    selectedBooking.status?.toLowerCase() === 'ongoing' ? (
-                      <button
-                        type="button"
-                        onClick={() => handleUndoStatus(selectedBooking, 'Ongoing')}
-                        className={cx(btn.base, btn.sm, 'bg-indigo-50 text-indigo-900 border-indigo-200 hover:bg-indigo-100')}
-                        title="Ongoing Treatment is active. Undo requires secret admin password (022320)"
-                      >
-                        <CheckSquare size={14} className="text-indigo-700 shrink-0" />
-                        <span className="flex items-center gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-pulse" />
-                          Ongoing Treatment
-                        </span>
-                        <Lock size={12} className="text-indigo-600 ml-0.5" />
-                      </button>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => handleStatusChange(selectedBooking.id, 'Ongoing')}
-                        className={cx(btn.base, btn.secondary, btn.sm)}
-                      >
-                        <Square size={14} className="text-[#737373] shrink-0" />
-                        <span>Ongoing Treatment</span>
-                      </button>
-                    )
-                  )}
-
-                  {/* Finish Treatment */}
-                  {selectedBooking.status?.toLowerCase() !== 'cancelled' && (
-                    selectedBooking.status?.toLowerCase() === 'completed' ? (
-                      <button
-                        type="button"
-                        onClick={() => handleUndoStatus(selectedBooking, 'Completed')}
-                        className={cx(btn.base, btn.sm, 'bg-teal-50 text-teal-900 border-teal-200 hover:bg-teal-100')}
-                        title="Finish Treatment is marked. Undo requires secret admin password (022320)"
-                      >
-                        <CheckSquare size={14} className="text-teal-700 shrink-0" />
-                        <span>Finish Treatment</span>
-                        <Lock size={12} className="text-teal-600 ml-0.5" />
-                      </button>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => handleStatusChange(selectedBooking.id, 'Completed')}
-                        className={cx(btn.base, btn.secondary, btn.sm)}
-                      >
-                        <Square size={14} className="text-[#737373] shrink-0" />
-                        <span>Finish Treatment</span>
-                      </button>
-                    )
-                  )}
-
-                  {/* Cancel / Reinstate */}
-                  <button
-                    type="button"
-                    onClick={() => handleStatusChange(selectedBooking.id, selectedBooking.status?.toLowerCase() === 'cancelled' ? (selectedBooking.commission ? 'Pending' : 'Confirmed') : 'Cancelled')}
-                    className={cx(
-                      btn.base,
-                      btn.sm,
-                      selectedBooking.status?.toLowerCase() === 'cancelled'
-                        ? 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100'
-                        : 'text-[#737373] hover:text-red-600 hover:bg-red-50/50'
-                    )}
-                  >
-                    {selectedBooking.status?.toLowerCase() === 'cancelled' ? (
-                      <XSquare size={14} className="text-red-700 shrink-0" />
-                    ) : (
-                      <XCircle size={14} className="text-[#737373] shrink-0" />
-                    )}
-                    <span>{selectedBooking.status?.toLowerCase() === 'cancelled' ? 'Cancelled' : 'Cancel'}</span>
-                  </button>
-                </div>
-              </div>
             </div>
 
             {/* Modal Footer / Actions */}
@@ -1556,6 +1390,31 @@ export default function TherapickBookingManagement({
                 >
                   <Edit3 size={14} />
                   <span>Edit</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleStatusChange(selectedBooking.id, selectedBooking.status?.toLowerCase() === 'cancelled' ? (selectedBooking.commission ? 'Pending' : 'Confirmed') : 'Cancelled')}
+                  className={cx(
+                    btn.base,
+                    btn.secondary,
+                    btn.sm,
+                    selectedBooking.status?.toLowerCase() === 'cancelled'
+                      ? 'text-emerald-700 hover:border-emerald-300'
+                      : 'text-amber-700 hover:border-amber-300'
+                  )}
+                >
+                  {selectedBooking.status?.toLowerCase() === 'cancelled' ? (
+                    <>
+                      <CheckCircle2 size={14} />
+                      <span>Reinstate</span>
+                    </>
+                  ) : (
+                    <>
+                      <XCircle size={14} />
+                      <span>Cancel</span>
+                    </>
+                  )}
                 </button>
 
                 <button

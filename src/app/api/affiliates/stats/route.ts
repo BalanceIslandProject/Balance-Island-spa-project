@@ -78,6 +78,17 @@ export async function GET(req: NextRequest) {
       if (isCancelled) displayBookingStatus = 'Cancelled';
       else if (isCompleted) displayBookingStatus = 'Completed';
       else if (isOngoing) displayBookingStatus = 'Ongoing';
+      else if (isConfirmed) displayBookingStatus = 'Confirmed';
+
+      // Detect payment method (cash / online)
+      let paymentMethod = '';
+      if (comm.notes) {
+        if (/cash/i.test(comm.notes)) paymentMethod = 'cash';
+        else if (/online/i.test(comm.notes)) paymentMethod = 'online';
+      }
+      if (!paymentMethod && matched.payment_method) {
+        paymentMethod = String(matched.payment_method).toLowerCase();
+      }
 
       // Couple massage pricing logic:
       // If couple treatment was multiplied by guests, ensure treatment amount does NOT exceed gross booking amount
@@ -107,6 +118,7 @@ export async function GET(req: NextRequest) {
         treatment_name: matched.treatment_name || 'Mobile Spa Treatment',
         booking_status: displayBookingStatus,
         payment_status: isPaid ? 'paid' : 'unpaid',
+        payment_method: paymentMethod,
         payment_verified: isPaid,
         service_completed: isCompleted,
         gross_amount: grossAmount,

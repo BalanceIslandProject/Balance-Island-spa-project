@@ -32,6 +32,7 @@ export const saveBookingToSupabase = async (
             therapist_fee_total: 0,
             net_profit: totalPrice, // until fee is added
             status: 'Pending',
+            payment_status: 'unpaid',
             items: JSON.parse(itemsJson),
             brand: siteBrandFilter
         };

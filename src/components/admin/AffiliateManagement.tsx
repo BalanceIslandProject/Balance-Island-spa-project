@@ -747,52 +747,175 @@ export default function AffiliateManagement() {
     </button>
   );
 
-  const VerificationChecks = ({ c, compact }: { c: any; compact?: boolean }) => (
-    <div className={cx('flex', compact ? 'flex-col gap-1' : 'flex-wrap gap-4')}>
-      <label className="inline-flex items-center gap-2 cursor-pointer text-xs text-[#171717]">
-        <input
-          type="checkbox"
-          checked={!!c.payment_verified}
-          disabled={actionLoading}
-          onChange={(e) => handleUpdateCommission(c.id, { payment_verified: e.target.checked })}
-          className="w-4 h-4 rounded border-[#D4D4D4] accent-black cursor-pointer"
-        />
-        Payment received
-      </label>
-      <label className="inline-flex items-center gap-2 cursor-pointer text-xs text-[#171717]">
-        <input
-          type="checkbox"
-          checked={!!c.service_completed}
-          disabled={actionLoading}
-          onChange={(e) => handleUpdateCommission(c.id, { service_completed: e.target.checked })}
-          className="w-4 h-4 rounded border-[#D4D4D4] accent-black cursor-pointer"
-        />
-        Service done
-      </label>
-    </div>
-  );
+  const VerificationChecks = ({ c, compact }: { c: any; compact?: boolean }) => {
+    const isCash = Boolean(c.payment_verified && (c.notes || '').toLowerCase().includes('cash'));
+    const isOnline = Boolean(c.payment_verified && (c.notes || '').toLowerCase().includes('online'));
+    const isPaid = Boolean(c.payment_verified);
 
-  const CommissionActions = ({ c, size = btn.xs }: { c: any; size?: string }) =>
-    c.status === 'pending' ? (
-      <div className="flex items-center justify-end gap-1.5">
+    const bStatus = (c.booking_status || '').toLowerCase();
+    const isOngoing = bStatus === 'ongoing';
+    const isFinished = Boolean(c.service_completed) || bStatus === 'completed';
+
+    const handlePay = (method: 'cash' | 'online') => {
+      const currentMethod = isCash ? 'cash' : isOnline ? 'online' : null;
+      if (currentMethod === method) {
+        // Toggle off back to unpaid
+        handleUpdateCommission(c.id, { payment_verified: false, notes: 'Unpaid' });
+      } else {
+        handleUpdateCommission(c.id, { payment_verified: true, notes: `Paid via ${method === 'cash' ? 'Cash' : 'Online'}` });
+      }
+    };
+
+    const handleOngoing = () => {
+      handleUpdateCommission(c.id, { booking_status: 'Ongoing' });
+    };
+
+    const handleFinish = () => {
+      handleUpdateCommission(c.id, { service_completed: true, booking_status: 'Completed' });
+    };
+
+    const handleResetService = () => {
+      handleUpdateCommission(c.id, { service_completed: false, booking_status: 'Pending' });
+    };
+
+    return (
+      <div className={cx('flex flex-col gap-2', compact ? 'text-xs' : 'text-xs pt-1')}>
+        {/* Step 1: Payment Method (Cash or Online) */}
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className="text-[10px] font-semibold text-[#737373] uppercase tracking-wider min-w-[50px]">Payment:</span>
+          <div className="inline-flex items-center gap-1">
+            <button
+              type="button"
+              disabled={actionLoading}
+              onClick={() => handlePay('cash')}
+              className={cx(
+                'h-6 px-2.5 rounded-md text-[11px] font-medium border transition-all cursor-pointer inline-flex items-center gap-1',
+                isCash
+                  ? 'bg-emerald-600 text-white border-emerald-600 shadow-2xs font-semibold'
+                  : 'bg-white text-[#525252] border-[#D4D4D4] hover:border-black hover:text-black'
+              )}
+            >
+              {isCash && <span>✓</span>}
+              Cash
+            </button>
+            <button
+              type="button"
+              disabled={actionLoading}
+              onClick={() => handlePay('online')}
+              className={cx(
+                'h-6 px-2.5 rounded-md text-[11px] font-medium border transition-all cursor-pointer inline-flex items-center gap-1',
+                isOnline
+                  ? 'bg-blue-600 text-white border-blue-600 shadow-2xs font-semibold'
+                  : 'bg-white text-[#525252] border-[#D4D4D4] hover:border-black hover:text-black'
+              )}
+            >
+              {isOnline && <span>✓</span>}
+              Online
+            </button>
+          </div>
+          {!isPaid && (
+            <span className="text-[10px] text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
+              Unpaid
+            </span>
+          )}
+        </div>
+
+        {/* Step 2: Treatment Status (Ongoing -> Finish) */}
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className="text-[10px] font-semibold text-[#737373] uppercase tracking-wider min-w-[50px]">Service:</span>
+          {isFinished ? (
+            <div className="inline-flex items-center gap-1.5">
+              <span className="inline-flex items-center gap-1 h-6 px-2 rounded-md border border-teal-200 bg-teal-50 text-[11px] font-semibold text-teal-700">
+                <span className="w-1.5 h-1.5 rounded-full bg-teal-500" />
+                Finished
+              </span>
+              <button
+                type="button"
+                disabled={actionLoading}
+                onClick={handleResetService}
+                className="text-[10px] text-[#A3A3A3] hover:text-black underline cursor-pointer"
+                title="Reset back to Awaiting"
+              >
+                Reset
+              </button>
+            </div>
+          ) : isOngoing ? (
+            <div className="inline-flex items-center gap-1.5">
+              <span className="inline-flex items-center gap-1 h-6 px-2 rounded-md border border-indigo-200 bg-indigo-50 text-[11px] font-semibold text-indigo-700">
+                <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+                Ongoing
+              </span>
+              <button
+                type="button"
+                disabled={actionLoading}
+                onClick={handleFinish}
+                className="h-6 px-2.5 rounded-md text-[11px] font-semibold bg-black text-white hover:bg-[#262626] transition-colors cursor-pointer inline-flex items-center gap-1 shadow-2xs"
+              >
+                Click to Finish
+              </button>
+            </div>
+          ) : (
+            <div className="inline-flex items-center gap-1.5">
+              <span className="inline-flex items-center gap-1 h-6 px-2 rounded-md border border-amber-200 bg-amber-50 text-[11px] font-medium text-amber-800">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                Awaiting
+              </span>
+              <button
+                type="button"
+                disabled={actionLoading}
+                onClick={handleOngoing}
+                className="h-6 px-2.5 rounded-md text-[11px] font-medium bg-white text-black border border-[#D4D4D4] hover:border-black transition-colors cursor-pointer inline-flex items-center gap-1"
+              >
+                Mark Ongoing
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const CommissionActions = ({ c, size = btn.xs }: { c: any; size?: string }) => {
+    if (c.status !== 'pending') return null;
+
+    const bStatus = (c.booking_status || '').toLowerCase();
+    const isFinished = Boolean(c.service_completed) || bStatus === 'completed';
+
+    return (
+      <div className="flex items-center justify-end gap-1.5 pt-1">
         <button
           type="button"
           disabled={actionLoading}
           onClick={() => setConfirmState({ kind: 'decline-commission', id: c.id, ref: c.booking_id })}
           className={cx(btn.base, btn.secondary, size)}
+          title="Decline commission (e.g. guest cancelled)"
         >
           Decline
         </button>
-        <button
-          type="button"
-          disabled={actionLoading}
-          onClick={() => handleUpdateCommission(c.id, { status: 'approved' })}
-          className={cx(btn.base, btn.primary, size)}
-        >
-          Approve
-        </button>
+
+        {isFinished ? (
+          <button
+            type="button"
+            disabled={actionLoading}
+            onClick={() => handleUpdateCommission(c.id, { status: 'approved' })}
+            className={cx(btn.base, btn.primary, size, 'bg-emerald-700 hover:bg-emerald-800 border-emerald-700 text-white font-semibold')}
+            title="Approve commission now that service is finished"
+          >
+            Approve Commission
+          </button>
+        ) : (
+          <button
+            type="button"
+            disabled
+            className={cx(btn.base, size, 'bg-[#F5F5F5] text-[#A3A3A3] border border-[#E5E5E5] cursor-not-allowed opacity-70')}
+            title="Finish treatment first before approving commission"
+          >
+            Approve (Wait for Finish)
+          </button>
+        )}
       </div>
-    ) : null;
+    );
+  };
 
   const tableShell = (children: React.ReactNode) => (
     <div className="bg-white border border-[#E5E5E5] rounded-xl overflow-hidden">{children}</div>

@@ -333,77 +333,50 @@ export default function PartnerCalendarPage() {
   return (
     <div className="w-full max-w-[1600px] mx-auto space-y-4 lg:space-y-3.5 pb-16 lg:pb-0 font-sans antialiased text-black lg:h-[calc(100vh-5rem)] lg:flex lg:flex-col lg:overflow-hidden">
       
-      {/* ─────────────────────────────────────────────────────────────
-          1. TOP EXECUTIVE BAR: Title & Live Status
-         ───────────────────────────────────────────────────────────── */}
-      <div className="flex flex-col gap-3 pb-2 border-b border-[#E5E5E5] shrink-0">
-        {/* Row 1: Back link + Title on left, Live Schedule badge on right */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 w-full">
-          <div>
-            <Link 
-              href="/partners/dashboard" 
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#737373] hover:text-black transition-colors mb-1"
-            >
-              <ChevronLeft size={13} />
-              <span>Back to Dashboard</span>
-            </Link>
-            <h1 className="text-xl sm:text-2xl font-bold text-black tracking-tight">
-              Booking Calendar
-            </h1>
-            <p className="hidden sm:block text-xs text-[#737373] mt-0.5">
-              Interactive appointment calendar for scheduled treatments and commission attribution.
-            </p>
+      {/* Mobile Top Calendar Controls (hidden on desktop where controls are integrated into the calendar card) */}
+      <div className="flex lg:hidden items-center justify-between w-full gap-2 pb-2 border-b border-[#E5E5E5] shrink-0">
+        <div className="inline-flex items-center bg-white border border-[#E5E5E5] rounded-lg p-0.5">
+          <button
+            type="button"
+            onClick={goToPrev}
+            className="p-1.5 hover:bg-[#F5F5F5] rounded-md transition-colors cursor-pointer text-[#737373] hover:text-black"
+            title="Previous"
+          >
+            <ChevronLeft size={16} />
+          </button>
+          <div className="px-2 sm:px-3 text-xs font-bold text-black min-w-[105px] sm:min-w-[130px] text-center">
+            {MONTH_NAMES[currentMonth]} {currentYear}
           </div>
-          <span className="text-xs font-semibold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200 self-start sm:self-auto">
-            Live Schedule
-          </span>
+          <button
+            type="button"
+            onClick={goToNext}
+            className="p-1.5 hover:bg-[#F5F5F5] rounded-md transition-colors cursor-pointer text-[#737373] hover:text-black"
+            title="Next"
+          >
+            <ChevronRight size={16} />
+          </button>
         </div>
 
-        {/* Row 2: October 2026 Navigator on Left, Month/Week Toggle on Right (Mobile only) */}
-        <div className="flex lg:hidden items-center justify-between w-full gap-2 pt-1">
-          <div className="inline-flex items-center bg-white border border-[#E5E5E5] rounded-lg p-0.5">
+        <div className="flex items-center gap-2">
+          <div className="inline-flex p-0.5 rounded-lg bg-[#F5F5F5] border border-[#E5E5E5] text-xs">
             <button
               type="button"
-              onClick={goToPrev}
-              className="p-1.5 hover:bg-[#F5F5F5] rounded-md transition-colors cursor-pointer text-[#737373] hover:text-black"
-              title="Previous"
+              onClick={() => setViewMode('month')}
+              className={`px-3 py-1 rounded-md font-semibold transition-all cursor-pointer ${
+                viewMode === 'month' ? 'bg-black text-white shadow-xs' : 'text-[#737373] hover:text-black'
+              }`}
             >
-              <ChevronLeft size={16} />
+              Month
             </button>
-            <div className="px-2 sm:px-3 text-xs font-bold text-black min-w-[105px] sm:min-w-[130px] text-center">
-              {MONTH_NAMES[currentMonth]} {currentYear}
-            </div>
             <button
               type="button"
-              onClick={goToNext}
-              className="p-1.5 hover:bg-[#F5F5F5] rounded-md transition-colors cursor-pointer text-[#737373] hover:text-black"
-              title="Next"
+              onClick={() => setViewMode('week')}
+              className={`px-3 py-1 rounded-md font-semibold transition-all cursor-pointer ${
+                viewMode === 'week' ? 'bg-black text-white shadow-xs' : 'text-[#737373] hover:text-black'
+              }`}
             >
-              <ChevronRight size={16} />
+              Week
             </button>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <div className="inline-flex p-0.5 rounded-lg bg-[#F5F5F5] border border-[#E5E5E5] text-xs">
-              <button
-                type="button"
-                onClick={() => setViewMode('month')}
-                className={`px-3 py-1 rounded-md font-semibold transition-all cursor-pointer ${
-                  viewMode === 'month' ? 'bg-black text-white shadow-xs' : 'text-[#737373] hover:text-black'
-                }`}
-              >
-                Month
-              </button>
-              <button
-                type="button"
-                onClick={() => setViewMode('week')}
-                className={`px-3 py-1 rounded-md font-semibold transition-all cursor-pointer ${
-                  viewMode === 'week' ? 'bg-black text-white shadow-xs' : 'text-[#737373] hover:text-black'
-                }`}
-              >
-                Week
-              </button>
-            </div>
           </div>
         </div>
       </div>
@@ -854,7 +827,7 @@ export default function PartnerCalendarPage() {
                       <div className="flex flex-wrap items-center gap-1.5">
                         {isPaid ? (
                           <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
-                            Paid
+                            {b.payment_method === 'cash' ? 'Paid (Cash)' : b.payment_method === 'online' ? 'Paid (Online)' : 'Paid'}
                           </span>
                         ) : (
                           <span className="text-[10px] font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
@@ -875,9 +848,13 @@ export default function PartnerCalendarPage() {
                           <span className="text-[10px] font-semibold text-teal-700 bg-teal-50 px-2 py-0.5 rounded-md border border-teal-200">
                             Finish
                           </span>
-                        ) : (
+                        ) : b.booking_status === 'Confirmed' ? (
                           <span className="text-[10px] font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200">
                             Confirmed
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-semibold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                            Awaiting Treatment
                           </span>
                         )}
 

@@ -84,6 +84,8 @@ const AMBER = { cls: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amb
 const BLUE = { cls: 'bg-blue-50 text-blue-700 border-blue-200', dot: 'bg-blue-500' };
 const GRAY = { cls: 'bg-white text-[#525252] border-[#D4D4D4]', dot: 'bg-[#A3A3A3]' };
 const RED = { cls: 'bg-red-50 text-red-700 border-red-200', dot: 'bg-red-500' };
+const TEAL = { cls: 'bg-teal-50 text-teal-700 border-teal-200', dot: 'bg-teal-500' };
+const INDIGO = { cls: 'bg-indigo-50 text-indigo-700 border-indigo-200', dot: 'bg-indigo-500 animate-pulse' };
 
 const STATUS_MAP: Record<string, { label: string; cls: string; dot: string }> = {
   active: { label: 'Active', ...GREEN },
@@ -92,6 +94,9 @@ const STATUS_MAP: Record<string, { label: string; cls: string; dot: string }> = 
   approved: { label: 'Approved', ...BLUE },
   processing: { label: 'Processing', ...BLUE },
   pending: { label: 'Pending', ...AMBER },
+  ongoing: { label: 'Ongoing', ...INDIGO },
+  finished: { label: 'Finished', ...TEAL },
+  'awaiting treatment': { label: 'Awaiting Treatment', ...AMBER },
   suspended: { label: 'Suspended', ...GRAY },
   inactive: { label: 'Inactive', ...GRAY },
   cancelled: { label: 'Cancelled', ...GRAY },

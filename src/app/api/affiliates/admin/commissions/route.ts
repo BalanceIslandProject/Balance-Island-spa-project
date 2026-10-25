@@ -79,7 +79,7 @@ export async function GET(req: NextRequest) {
             location: b.location || '',
             room_number: b.room_number || '',
             treatment_name: b.treatment_name || 'Spa Treatment',
-            booking_status: b.status || 'Confirmed',
+            booking_status: b.status || (c.service_completed ? 'Completed' : 'Pending'),
           };
         });
       }
@@ -98,7 +98,7 @@ export async function PATCH(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { id, status, payment_verified, service_completed, notes } = body;
+    const { id, status, payment_verified, service_completed, booking_status, notes } = body;
 
     if (!id) {
       return NextResponse.json({ success: false, message: 'Commission ID required' }, { status: 400 });
@@ -129,7 +129,38 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ success: false, message: error.message }, { status: 400 });
     }
 
-    return NextResponse.json({ success: true, commission: updated });
+    // Sync to linked booking in 'bookings' table
+    if (updated?.booking_id) {
+      const bookingUpdates: any = {};
+      if (booking_status) {
+        bookingUpdates.status = booking_status;
+      } else if (service_completed === true) {
+        bookingUpdates.status = 'Completed';
+      } else if (service_completed === false && booking_status === undefined) {
+        bookingUpdates.status = 'Pending';
+      } else if (status === 'declined' || status === 'cancelled') {
+        bookingUpdates.status = 'Cancelled';
+      }
+
+      if (payment_verified !== undefined) {
+        bookingUpdates.payment_status = payment_verified ? 'paid' : 'unpaid';
+      }
+
+      if (Object.keys(bookingUpdates).length > 0) {
+        await supabase
+          .from('bookings')
+          .update(bookingUpdates)
+          .ilike('reference_number', updated.booking_id);
+      }
+    }
+
+    return NextResponse.json({ 
+      success: true, 
+      commission: {
+        ...updated,
+        booking_status: booking_status || (updated.service_completed ? 'Completed' : 'Pending'),
+      } 
+    });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message }, { status: 500 });
   }

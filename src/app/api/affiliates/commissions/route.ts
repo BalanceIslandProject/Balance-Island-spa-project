@@ -44,7 +44,7 @@ export async function GET(req: NextRequest) {
     const enriched = commList.map((c: any) => {
       const bKey = String(c.booking_id || '').toUpperCase();
       const b = bookingsMap.get(bKey);
-      const bookingStatus = b?.status || (c.status === 'cancelled' ? 'Cancelled' : 'Confirmed');
+      const bookingStatus = b?.status || (c.status === 'cancelled' ? 'Cancelled' : c.service_completed ? 'Completed' : 'Pending');
       const isPaid = c.payment_verified || b?.payment_status === 'paid';
 
       // Couple price safety cap

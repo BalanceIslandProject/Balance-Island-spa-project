@@ -221,42 +221,6 @@ Please verify and process the payout to my registered details. Thank you!`;
 
   return (
     <div className="w-full font-sans antialiased text-[#171717] space-y-6">
-      
-      {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-xl md:text-2xl font-semibold tracking-tight text-black">
-              Partner Dashboard
-            </h1>
-            {partnerCode && (
-              <span className="inline-flex items-center h-6 px-2 rounded-md border border-[#E5E5E5] text-[11px] font-mono text-[#737373]">
-                #{partnerCode}
-              </span>
-            )}
-            <span className="inline-flex items-center gap-1.5 h-6 px-2 rounded-md border border-emerald-200 bg-emerald-50 text-[11px] font-medium text-emerald-700 capitalize">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-              {profile?.status || 'Active'}
-            </span>
-          </div>
-          <p className="text-[13px] text-[#737373] mt-0.5">
-            Real-time referral performance, guest appointments, and commission disbursements
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {hasApprovedBalance && (
-            <button
-              type="button"
-              onClick={handleWithdrawWhatsApp}
-              className="inline-flex items-center justify-center gap-1.5 h-9 px-4 rounded-lg bg-black text-white text-[13px] font-medium hover:bg-[#262626] transition-colors cursor-pointer"
-            >
-              Withdraw {formatIDR(approvedBalance)}
-            </button>
-          )}
-        </div>
-      </div>
-
       {/* Application Status Alert Banner (only if pending) */}
       {profile?.status === 'pending' && (
         <div className="p-4 border border-amber-200 rounded-xl bg-amber-50 text-xs text-amber-900 flex items-start gap-2.5">
@@ -464,7 +428,7 @@ Please verify and process the payout to my registered details. Thank you!`;
 
                           {isPaid ? (
                             <span className="text-[10px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                              Paid
+                              {b.payment_method === 'cash' ? 'Paid (Cash)' : b.payment_method === 'online' ? 'Paid (Online)' : 'Paid'}
                             </span>
                           ) : (
                             <span className="text-[10px] font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
@@ -485,9 +449,13 @@ Please verify and process the payout to my registered details. Thank you!`;
                             <span className="text-[10px] font-medium text-teal-700 bg-teal-50 px-2 py-0.5 rounded border border-teal-200">
                               Finish Treatment
                             </span>
+                          ) : b.booking_status === 'Confirmed' ? (
+                            <span className="text-[10px] font-medium text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                              Confirmed
+                            </span>
                           ) : (
-                            <span className="text-[10px] font-medium text-[#737373] bg-white px-2 py-0.5 rounded border border-[#E5E5E5]">
-                              Pending
+                            <span className="text-[10px] font-medium text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                              Awaiting Treatment
                             </span>
                           )}
 

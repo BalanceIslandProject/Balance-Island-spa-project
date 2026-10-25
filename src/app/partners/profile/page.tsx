@@ -1,10 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { 
-  ArrowLeft, 
   User, 
   ShieldCheck, 
   Building2, 
@@ -241,29 +239,6 @@ export default function PartnerProfilePage() {
 
   return (
     <div className="w-full max-w-3xl mx-auto space-y-5 pb-12 font-sans">
-      
-      {/* Top App Header / Back Bar */}
-      <div className="flex items-center justify-between pt-1">
-        <Link 
-          href="/partners/dashboard" 
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-[#E5E5E5] text-xs font-semibold text-[#737373] hover:text-black hover:bg-[#F5F5F5] transition-all"
-        >
-          <ArrowLeft size={13} />
-          <span>Back to Dashboard</span>
-        </Link>
-
-        {/* Mobile Header Quick Log Out */}
-        <button
-          type="button"
-          onClick={handleLogout}
-          disabled={loggingOut}
-          className="md:hidden inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-50 border border-red-200 text-xs font-semibold text-red-600 transition-all cursor-pointer"
-        >
-          <LogOut size={12} />
-          <span>{loggingOut ? 'Signing out...' : 'Log Out'}</span>
-        </button>
-      </div>
-
       {/* Hero Profile Identity Card */}
       <div className="bg-white border border-[#E5E5E5] rounded-xl p-5 sm:p-6 relative overflow-hidden">
         {/* Hidden device-local file input */}

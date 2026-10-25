@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { 
   ExternalLink, 
-  ArrowLeft, 
   Receipt, 
   CalendarDays, 
   X, 
@@ -151,29 +150,33 @@ export default function PartnerCommissionsPage() {
 
   return (
     <div className="space-y-5 w-full pb-12 font-sans">
-      {/* Header & Filter Controls Card */}
+      {/* Filter Controls Toolbar Card */}
       <div className="bg-white border border-[#E5E5E5] rounded-xl p-4 sm:p-5 space-y-4">
         
-        {/* Top Title & Quick Actions */}
+        {/* CRM Filter Controls: Status Tabs on Left, Date Filter on Right */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="space-y-0.5">
-            <Link 
-              href="/partners/dashboard" 
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#737373] hover:text-black transition-colors"
-            >
-              <ArrowLeft size={13} />
-              <span>Back to Dashboard</span>
-            </Link>
-            <h1 className="text-xl sm:text-2xl font-bold text-black tracking-tight">
-              Commission Ledger
-            </h1>
-            <p className="text-xs text-[#737373]">
-              Track attributed revenue, payout eligibility, and invoice details.
-            </p>
+          {/* Status Filter Tabs */}
+          <div className="w-full sm:w-auto overflow-x-auto no-scrollbar">
+            <div className="inline-flex items-center gap-1 p-1 rounded-lg bg-[#F5F5F5] border border-[#E5E5E5] text-xs min-w-max">
+              {['all', 'approved', 'pending', 'paid', 'cancelled'].map((s) => (
+                <button
+                  type="button"
+                  key={s}
+                  onClick={() => setFilterStatus(s)}
+                  className={`px-3 py-1.5 rounded-md capitalize font-semibold transition-all whitespace-nowrap cursor-pointer text-xs ${
+                    filterStatus === s
+                      ? 'bg-black text-white shadow-xs'
+                      : 'text-[#737373] hover:text-black'
+                  }`}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Calendar Toggle Button */}
-          <div className="flex items-center gap-2 self-start sm:self-auto">
+          <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
             <button
               type="button"
               onClick={() => setShowCalendarFilter(!showCalendarFilter)}
@@ -206,26 +209,6 @@ export default function PartnerCommissionsPage() {
                 <RotateCcw size={13} />
               </button>
             )}
-          </div>
-        </div>
-
-        {/* Status Filter Tabs */}
-        <div className="w-full overflow-x-auto no-scrollbar pt-1">
-          <div className="inline-flex items-center gap-1 p-1 rounded-lg bg-[#F5F5F5] border border-[#E5E5E5] text-xs min-w-max">
-            {['all', 'approved', 'pending', 'paid', 'cancelled'].map((s) => (
-              <button
-                type="button"
-                key={s}
-                onClick={() => setFilterStatus(s)}
-                className={`px-3 py-1.5 rounded-md capitalize font-semibold transition-all whitespace-nowrap cursor-pointer text-xs ${
-                  filterStatus === s
-                    ? 'bg-black text-white shadow-xs'
-                    : 'text-[#737373] hover:text-black'
-                }`}
-              >
-                {s}
-              </button>
-            ))}
           </div>
         </div>
 
@@ -441,9 +424,13 @@ export default function PartnerCommissionsPage() {
                         <span className="text-[10px] font-semibold text-teal-700 bg-teal-50 px-2 py-0.5 rounded-md border border-teal-200 whitespace-nowrap">
                           Finish
                         </span>
-                      ) : (
+                      ) : item.booking_status === 'Confirmed' ? (
                         <span className="text-[10px] font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200 whitespace-nowrap">
                           Confirmed
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-semibold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200 whitespace-nowrap">
+                          Awaiting Treatment
                         </span>
                       )}
                     </div>
@@ -567,9 +554,13 @@ export default function PartnerCommissionsPage() {
                             <span className="text-[10px] font-semibold text-teal-700 bg-teal-50 px-2 py-0.5 rounded-md border border-teal-200">
                               Finish
                             </span>
-                          ) : (
+                          ) : item.booking_status === 'Confirmed' ? (
                             <span className="text-[10px] font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200">
                               Confirmed
+                            </span>
+                          ) : (
+                            <span className="text-[10px] font-semibold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                              Awaiting Treatment
                             </span>
                           )}
                         </td>

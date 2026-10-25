@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ExternalLink, Calendar, User, ArrowLeft, Users, Clock } from 'lucide-react';
+import { ExternalLink, Calendar, User, Users, Clock } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
 export default function PartnerReferralsPage() {
@@ -58,26 +58,10 @@ export default function PartnerReferralsPage() {
   }, []);
 
   return (
-    <div className="space-y-5 w-full font-sans antialiased pb-12">
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white border border-[#E5E5E5] rounded-xl p-4 sm:p-5">
-        <div className="space-y-0.5">
-          <Link 
-            href="/partners/dashboard" 
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#737373] hover:text-black transition-colors"
-          >
-            <ArrowLeft size={13} />
-            <span>Back to Dashboard</span>
-          </Link>
-          <h1 className="text-xl sm:text-2xl font-bold text-black tracking-tight">
-            Referred Bookings
-          </h1>
-          <p className="text-xs text-[#737373]">
-            All guest appointments attributed to your unique referral code.
-          </p>
-        </div>
-
-        <div className="inline-flex items-center gap-2 bg-[#F5F5F5] px-3 py-1.5 rounded-lg border border-[#E5E5E5] self-start sm:self-auto text-xs font-mono font-bold text-black">
+    <div className="space-y-4 w-full font-sans antialiased pb-12">
+      {/* CRM Toolbar */}
+      <div className="flex items-center justify-between gap-3">
+        <div className="inline-flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-[#E5E5E5] text-xs font-mono font-semibold text-black">
           <Users size={14} className="text-[#737373]" />
           <span>{referrals.length} {referrals.length === 1 ? 'Booking' : 'Bookings'}</span>
         </div>
@@ -161,9 +145,13 @@ export default function PartnerReferralsPage() {
                         <span className="text-[10px] font-semibold text-teal-700 bg-teal-50 px-2 py-0.5 rounded-md border border-teal-200 whitespace-nowrap">
                           Finish
                         </span>
-                      ) : (
+                      ) : item.booking_status === 'Confirmed' ? (
                         <span className="text-[10px] font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200 whitespace-nowrap">
                           Confirmed
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-semibold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200 whitespace-nowrap">
+                          Awaiting Treatment
                         </span>
                       )}
                     </div>
@@ -262,9 +250,13 @@ export default function PartnerReferralsPage() {
                             <span className="text-[10px] font-semibold text-teal-700 bg-teal-50 px-2 py-0.5 rounded-md border border-teal-200">
                               Finish
                             </span>
-                          ) : (
+                          ) : item.booking_status === 'Confirmed' ? (
                             <span className="text-[10px] font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200">
                               Confirmed
+                            </span>
+                          ) : (
+                            <span className="text-[10px] font-semibold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                              Awaiting Treatment
                             </span>
                           )}
                         </td>

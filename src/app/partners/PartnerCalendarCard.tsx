@@ -555,7 +555,7 @@ export default function PartnerCalendarCard({ bookings = [], className = '' }: P
                     {/* Payment Status */}
                     {isPaid ? (
                       <span className="text-[10px] font-semibold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
-                        Paid
+                        {b.payment_method === 'cash' ? 'Paid (Cash)' : b.payment_method === 'online' ? 'Paid (Online)' : 'Paid'}
                       </span>
                     ) : (
                       <span className="text-[10px] font-semibold uppercase tracking-wider text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
@@ -577,9 +577,13 @@ export default function PartnerCalendarCard({ bookings = [], className = '' }: P
                       <span className="text-[10px] font-semibold uppercase tracking-wider text-teal-700 bg-teal-50 px-2 py-0.5 rounded-md border border-teal-200">
                         Finish
                       </span>
-                    ) : (
+                    ) : b.booking_status === 'Confirmed' ? (
                       <span className="text-[10px] font-semibold uppercase tracking-wider text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200">
                         Confirmed
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-semibold uppercase tracking-wider text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                        Awaiting Treatment
                       </span>
                     )}
 
