@@ -16,6 +16,16 @@ const GoogleReviewsLogo = () => (
   </div>
 );
 
+const TripadvisorLogo = () => (
+  <div className="flex items-center">
+    <img 
+      src="/tripadvisor-logo.svg" 
+      alt="Tripadvisor" 
+      className="h-6 sm:h-6.5 md:h-7 w-auto object-contain" 
+    />
+  </div>
+);
+
 export default function Footer() {
   const pathname = usePathname();
   const [isPartnersSubdomain, setIsPartnersSubdomain] = useState(false);
@@ -46,17 +56,29 @@ export default function Footer() {
             <div className="flex flex-col gap-3">
               <span className="text-xs font-bold uppercase tracking-widest text-text-muted">Find us on</span>
               
-              <a href="https://share.google/7evzKgW2VdC2C9QWY" target="_blank" rel="noopener noreferrer" className="domain-ubud-only inline-flex hover:opacity-80 transition-opacity">
-                <GoogleReviewsLogo />
-              </a>
-              
-              <a href="https://share.google/mA7g8NkNuB37g8WHs" target="_blank" rel="noopener noreferrer" className="domain-bali-only inline-flex hover:opacity-80 transition-opacity">
-                <GoogleReviewsLogo />
-              </a>
-              
-              <a href="https://share.google/LRhEtZHpMLBAg9ySs" target="_blank" rel="noopener noreferrer" className="domain-therapick-only inline-flex hover:opacity-80 transition-opacity">
-                <GoogleReviewsLogo />
-              </a>
+              <div className="flex items-center gap-6 sm:gap-8 flex-wrap">
+                <a href="https://share.google/7evzKgW2VdC2C9QWY" target="_blank" rel="noopener noreferrer" className="domain-ubud-only inline-flex items-center hover:opacity-80 transition-opacity">
+                  <GoogleReviewsLogo />
+                </a>
+                
+                <a href="https://share.google/mA7g8NkNuB37g8WHs" target="_blank" rel="noopener noreferrer" className="domain-bali-only inline-flex items-center hover:opacity-80 transition-opacity">
+                  <GoogleReviewsLogo />
+                </a>
+                
+                <a href="https://share.google/LRhEtZHpMLBAg9ySs" target="_blank" rel="noopener noreferrer" className="domain-therapick-only inline-flex items-center hover:opacity-80 transition-opacity">
+                  <GoogleReviewsLogo />
+                </a>
+
+                <a 
+                  href="https://www.tripadvisor.com/Attraction_Review-g297701-d34704669-Reviews-Therapick_Island_Relaxation_Delivered-Ubud_Gianyar_Regency_Bali.html" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="inline-flex items-center hover:opacity-80 transition-opacity"
+                  title="Find Therapick on Tripadvisor"
+                >
+                  <TripadvisorLogo />
+                </a>
+              </div>
             </div>
           </div>
 
