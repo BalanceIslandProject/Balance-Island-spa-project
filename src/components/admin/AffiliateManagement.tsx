@@ -1004,7 +1004,7 @@ export default function AffiliateManagement() {
   const todayKey = localTodayKey();
 
   return (
-    <div className="bg-white text-[#171717] space-y-6">
+    <div className="bg-white text-[#171717] space-y-6 pb-28 md:pb-0">
       {/* Page header */}
       <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
         <div>
@@ -1039,11 +1039,11 @@ export default function AffiliateManagement() {
         ].map((m, i) => (
           <div
             key={m.label}
-            className={cx('p-4 bg-white', i % 2 === 1 && 'border-l', i >= 2 && 'border-t lg:border-t-0', i === 2 && 'lg:border-l')}
+            className={cx('p-4 bg-white min-w-0', i % 2 === 1 && 'border-l', i >= 2 && 'border-t lg:border-t-0', i === 2 && 'lg:border-l')}
           >
-            <div className="text-xs text-[#737373]">{m.label}</div>
-            <div className="text-lg md:text-xl font-semibold text-black mt-1 tabular-nums truncate">{loading ? '—' : m.value}</div>
-            <div className="text-[11px] text-[#A3A3A3] mt-0.5">{m.hint}</div>
+            <div className="text-xs text-[#737373] truncate">{m.label}</div>
+            <div className="text-lg md:text-xl font-semibold text-black mt-1 tabular-nums truncate" title={loading ? '—' : m.value}>{loading ? '—' : m.value}</div>
+            <div className="text-[11px] text-[#A3A3A3] mt-0.5 truncate">{m.hint}</div>
           </div>
         ))}
       </div>
@@ -1213,18 +1213,18 @@ export default function AffiliateManagement() {
                             </button>
                             <StatusBadge status={p.status} />
                           </div>
-                          <dl className="grid grid-cols-3 gap-3 text-xs">
-                            <div>
-                              <dt className="text-[#737373]">Commission</dt>
-                              <dd className="font-medium tabular-nums text-[#171717] mt-0.5">{formatIDR(m.totalEarned)}</dd>
+                          <dl className="grid grid-cols-3 gap-2 text-xs">
+                            <div className="min-w-0">
+                              <dt className="text-[#737373] truncate">Commission</dt>
+                              <dd className="font-medium tabular-nums text-[#171717] mt-0.5 truncate" title={formatIDR(m.totalEarned)}>{formatIDR(m.totalEarned)}</dd>
                             </div>
-                            <div>
-                              <dt className="text-[#737373]">Paid out</dt>
-                              <dd className="font-medium tabular-nums text-[#171717] mt-0.5">{formatIDR(m.totalPaidOut)}</dd>
+                            <div className="min-w-0">
+                              <dt className="text-[#737373] truncate">Paid out</dt>
+                              <dd className="font-medium tabular-nums text-[#171717] mt-0.5 truncate" title={formatIDR(m.totalPaidOut)}>{formatIDR(m.totalPaidOut)}</dd>
                             </div>
-                            <div>
-                              <dt className="text-[#737373]">Bookings</dt>
-                              <dd className="font-medium tabular-nums text-[#171717] mt-0.5 flex items-center gap-1.5">
+                            <div className="min-w-0">
+                              <dt className="text-[#737373] truncate">Bookings</dt>
+                              <dd className="font-medium tabular-nums text-[#171717] mt-0.5 flex items-center gap-1.5 truncate">
                                 {m.bookingsCount}
                                 <NewIndicator count={m.pendingCount} />
                               </dd>
@@ -2066,51 +2066,49 @@ export default function AffiliateManagement() {
                                   </div>
                                 </div>
 
-                                {/* Location (if available) */}
-                                {b.location && (
-                                  <div className="text-[11px] text-[#525252] pt-1.5 border-t border-[#EAEAEA] truncate">
-                                    <span className="text-[10px] uppercase font-semibold text-[#8C8C8C] block leading-none mb-0.5">Location</span>
-                                    <span className="truncate block" title={b.location}>{b.location}</span>
+                                {/* Location & Customer WhatsApp row */}
+                                <div className="grid grid-cols-2 gap-2 pt-1.5 border-t border-[#EAEAEA]">
+                                  {/* Location */}
+                                  <div className="min-w-0">
+                                    <span className="text-[10px] uppercase font-semibold text-[#8C8C8C] block leading-none">Location</span>
+                                    <span className="truncate block text-xs text-[#262626] font-medium mt-0.5" title={b.location || '—'}>
+                                      {b.location || '—'}
+                                    </span>
                                   </div>
-                                )}
-                              </div>
 
-                              {/* 4. Customer WhatsApp (Highlighted Tracking & Quick Contact, NO ICONS) */}
-                              <div className="p-2.5 rounded-lg bg-emerald-50/70 border border-emerald-200/90 flex items-center justify-between gap-2">
-                                <div className="min-w-0">
-                                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 block leading-none">
-                                    Customer WhatsApp
-                                  </span>
-                                  <span className="text-xs font-mono font-semibold text-neutral-900 truncate block mt-0.5">
-                                    {b.guest_whatsapp || 'No WhatsApp provided'}
-                                  </span>
+                                  {/* WhatsApp */}
+                                  <div className="min-w-0">
+                                    <span className="text-[10px] uppercase font-semibold text-[#8C8C8C] block leading-none">WhatsApp</span>
+                                    {b.guest_whatsapp ? (
+                                      <div className="flex items-center gap-1.5 mt-0.5">
+                                        <span className="text-xs font-mono font-medium text-[#171717] truncate" title={b.guest_whatsapp}>
+                                          {b.guest_whatsapp}
+                                        </span>
+                                        <button
+                                          type="button"
+                                          onClick={() => handleCopyText(b.guest_whatsapp, `wa-${b.id}`)}
+                                          className="text-[10px] font-medium text-[#737373] hover:text-black hover:underline cursor-pointer shrink-0"
+                                          title="Copy WhatsApp"
+                                        >
+                                          {copiedId === `wa-${b.id}` ? 'Copied' : 'Copy'}
+                                        </button>
+                                        <a
+                                          href={`https://wa.me/${formatWaLink(b.guest_whatsapp)}`}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="text-[10px] font-semibold text-emerald-700 hover:text-emerald-800 hover:underline shrink-0"
+                                          title="Chat WhatsApp"
+                                        >
+                                          Chat
+                                        </a>
+                                      </div>
+                                    ) : (
+                                      <span className="text-[#A3A3A3] italic block text-xs mt-0.5">—</span>
+                                    )}
+                                  </div>
                                 </div>
-
-                                {b.guest_whatsapp ? (
-                                  <div className="flex items-center gap-1.5 shrink-0">
-                                    <button
-                                      type="button"
-                                      onClick={() => handleCopyText(b.guest_whatsapp, `wa-${b.id}`)}
-                                      className="h-6 px-2 rounded-md bg-white text-[#404040] border border-emerald-300 hover:border-emerald-600 hover:text-emerald-800 text-[11px] font-medium transition-all inline-flex items-center cursor-pointer shadow-2xs"
-                                      title="Copy Customer WhatsApp"
-                                      aria-label="Copy WhatsApp Number"
-                                    >
-                                      {copiedId === `wa-${b.id}` ? 'Copied' : 'Copy'}
-                                    </button>
-                                    <a
-                                      href={`https://wa.me/${formatWaLink(b.guest_whatsapp)}`}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="h-6 px-2.5 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-medium transition-colors inline-flex items-center cursor-pointer shadow-2xs"
-                                      title="Open WhatsApp Chat"
-                                    >
-                                      Chat
-                                    </a>
-                                  </div>
-                                ) : (
-                                  <span className="text-[11px] text-[#A3A3A3] italic">Unavailable</span>
-                                )}
                               </div>
+
 
                               {/* 5. Verification Checks & Actions */}
                               <div className="pt-2 border-t border-[#F0F0F0] space-y-2">

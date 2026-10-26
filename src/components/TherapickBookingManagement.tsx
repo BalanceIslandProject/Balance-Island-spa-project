@@ -728,7 +728,7 @@ export default function TherapickBookingManagement({
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-28 md:pb-0">
       {/* Top Action Toolbar (Title removed, keeping Refresh and Export CSV in clean position) */}
       <div className="flex items-center justify-end gap-2">
         <button
@@ -760,17 +760,23 @@ export default function TherapickBookingManagement({
             </span>
           </div>
           <div className="grid grid-cols-3 gap-2 sm:gap-4">
-            <div>
-              <div className="text-xs text-[#737373] font-medium truncate">Daily revenue</div>
-              <div className="text-xl sm:text-2xl font-semibold text-black mt-1 tabular-nums">{formatCurrency(totalDailyRevenue)}</div>
+            <div className="min-w-0">
+              <div className="text-[11px] sm:text-xs text-[#737373] font-medium truncate">Daily revenue</div>
+              <div className="text-sm sm:text-lg md:text-xl font-bold text-black mt-1 tabular-nums truncate" title={formatCurrency(totalDailyRevenue)}>
+                {formatCurrency(totalDailyRevenue)}
+              </div>
             </div>
-            <div>
-              <div className="text-xs text-[#737373] font-medium truncate">Daily profit</div>
-              <div className="text-xl sm:text-2xl font-semibold text-emerald-600 mt-1 tabular-nums">{formatCurrency(totalDailyProfit)}</div>
+            <div className="min-w-0">
+              <div className="text-[11px] sm:text-xs text-[#737373] font-medium truncate">Daily profit</div>
+              <div className="text-sm sm:text-lg md:text-xl font-bold text-emerald-600 mt-1 tabular-nums truncate" title={formatCurrency(totalDailyProfit)}>
+                {formatCurrency(totalDailyProfit)}
+              </div>
             </div>
-            <div>
-              <div className="text-xs text-[#737373] font-medium truncate">Commission paid</div>
-              <div className="text-xl sm:text-2xl font-semibold text-indigo-600 mt-1 tabular-nums">{formatCurrency(totalDailyCommission)}</div>
+            <div className="min-w-0">
+              <div className="text-[11px] sm:text-xs text-[#737373] font-medium truncate">Commission paid</div>
+              <div className="text-sm sm:text-lg md:text-xl font-bold text-indigo-600 mt-1 tabular-nums truncate" title={formatCurrency(totalDailyCommission)}>
+                {formatCurrency(totalDailyCommission)}
+              </div>
             </div>
           </div>
         </div>
@@ -783,17 +789,23 @@ export default function TherapickBookingManagement({
             </span>
           </div>
           <div className="grid grid-cols-3 gap-2 sm:gap-4">
-            <div>
-              <div className="text-xs text-[#737373] font-medium truncate">Monthly revenue</div>
-              <div className="text-xl sm:text-2xl font-semibold text-black mt-1 tabular-nums">{formatCurrency(totalMonthlyRevenue)}</div>
+            <div className="min-w-0">
+              <div className="text-[11px] sm:text-xs text-[#737373] font-medium truncate">Monthly revenue</div>
+              <div className="text-sm sm:text-lg md:text-xl font-bold text-black mt-1 tabular-nums truncate" title={formatCurrency(totalMonthlyRevenue)}>
+                {formatCurrency(totalMonthlyRevenue)}
+              </div>
             </div>
-            <div>
-              <div className="text-xs text-[#737373] font-medium truncate">Monthly profit</div>
-              <div className="text-xl sm:text-2xl font-semibold text-emerald-600 mt-1 tabular-nums">{formatCurrency(totalMonthlyProfit)}</div>
+            <div className="min-w-0">
+              <div className="text-[11px] sm:text-xs text-[#737373] font-medium truncate">Monthly profit</div>
+              <div className="text-sm sm:text-lg md:text-xl font-bold text-emerald-600 mt-1 tabular-nums truncate" title={formatCurrency(totalMonthlyProfit)}>
+                {formatCurrency(totalMonthlyProfit)}
+              </div>
             </div>
-            <div>
-              <div className="text-xs text-[#737373] font-medium truncate">Commission paid</div>
-              <div className="text-xl sm:text-2xl font-semibold text-indigo-600 mt-1 tabular-nums">{formatCurrency(totalMonthlyCommission)}</div>
+            <div className="min-w-0">
+              <div className="text-[11px] sm:text-xs text-[#737373] font-medium truncate">Commission paid</div>
+              <div className="text-sm sm:text-lg md:text-xl font-bold text-indigo-600 mt-1 tabular-nums truncate" title={formatCurrency(totalMonthlyCommission)}>
+                {formatCurrency(totalMonthlyCommission)}
+              </div>
             </div>
           </div>
         </div>
@@ -898,17 +910,17 @@ export default function TherapickBookingManagement({
                 </span>
               </div>
               <div className="grid grid-cols-3 gap-1.5 text-center bg-[#FAFAFA] rounded-lg p-2.5 border border-[#E5E5E5]">
-                <div>
+                <div className="min-w-0">
                   <div className="text-[10px] text-[#737373] font-medium uppercase truncate">Revenue</div>
-                  <div className="text-xs font-semibold text-black mt-0.5 tabular-nums truncate">{formatCurrency(totalDailyRevenue)}</div>
+                  <div className="text-xs font-semibold text-black mt-0.5 tabular-nums truncate" title={formatCurrency(totalDailyRevenue)}>{formatCurrency(totalDailyRevenue)}</div>
                 </div>
-                <div>
+                <div className="min-w-0">
                   <div className="text-[10px] text-[#737373] font-medium uppercase truncate">Profit</div>
-                  <div className="text-xs font-semibold text-emerald-600 mt-0.5 tabular-nums truncate">{formatCurrency(totalDailyProfit)}</div>
+                  <div className="text-xs font-semibold text-emerald-600 mt-0.5 tabular-nums truncate" title={formatCurrency(totalDailyProfit)}>{formatCurrency(totalDailyProfit)}</div>
                 </div>
-                <div>
+                <div className="min-w-0">
                   <div className="text-[10px] text-[#737373] font-medium uppercase truncate">Commission</div>
-                  <div className="text-xs font-semibold text-indigo-600 mt-0.5 tabular-nums truncate">{formatCurrency(totalDailyCommission)}</div>
+                  <div className="text-xs font-semibold text-indigo-600 mt-0.5 tabular-nums truncate" title={formatCurrency(totalDailyCommission)}>{formatCurrency(totalDailyCommission)}</div>
                 </div>
               </div>
             </div>
@@ -1193,9 +1205,14 @@ export default function TherapickBookingManagement({
 
                         {/* 4. Attribution Badge */}
                         {booking.commission ? (
-                          <span className="text-[10px] font-mono font-medium text-black bg-white px-1.5 py-0.5 rounded border border-[#E5E5E5]">
-                            #{booking.commission.partner_code}
-                          </span>
+                          <div className="inline-flex items-center gap-1">
+                            <span className="text-[10px] font-mono font-medium text-black bg-white px-1.5 py-0.5 rounded border border-[#E5E5E5]">
+                              #{booking.commission.partner_code}
+                            </span>
+                            <span className="text-[10px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200 px-1.5 py-0.5 rounded tabular-nums">
+                              +{formatCurrency(booking.commission.commission_amount || 0)}
+                            </span>
+                          </div>
                         ) : (
                           <span className="text-[10px] font-medium text-[#737373] bg-[#FAFAFA] px-1.5 py-0.5 rounded border border-[#E5E5E5]">
                             Direct

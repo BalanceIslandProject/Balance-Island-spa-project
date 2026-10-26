@@ -929,7 +929,7 @@ export default function AdminDashboard() {
             </aside>
 
             {/* Main Content Area */}
-            <main className="flex-1 relative overflow-y-auto bg-transparent min-h-screen pb-28 md:pb-12">
+            <main className="flex-1 relative overflow-y-auto bg-transparent min-h-screen pb-36 md:pb-12">
                 
                 {/* Sticky Mobile Admin Selector */}
                 <div className="md:hidden sticky top-0 z-40 pt-3 px-4 pb-2 bg-white/95 backdrop-blur-xl border-b border-[#E5E5E5] mb-2">

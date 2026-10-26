@@ -813,12 +813,6 @@ export default function RitualsDetails() {
                                                                 <span className="text-sm text-primary font-medium line-clamp-1">{formData.room}</span>
                                                             </div>
                                                         )}
-                                                        {formData.whatsapp && (
-                                                            <div>
-                                                                <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-text-muted mb-1">WhatsApp</span>
-                                                                <span className="text-sm text-primary font-medium line-clamp-1">{formData.whatsapp}</span>
-                                                            </div>
-                                                        )}
                                                     </div>
                                                 </div>
                                             </div>
