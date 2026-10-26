@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, Search, Heart, Cloud, Sparkles, Droplet, User, Flame, Clock, ArrowRight, X, ShoppingBag, Plus, Minus, MessageCircle, ChevronLeft, ChevronDown, Bitcoin, CheckCircle2, Copy, Calendar, MapPin, Tag, DoorOpen, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { saveBookingToSupabase } from '@/lib/bookingUtils';
+import { getAffiliateCookie } from '@/lib/affiliateAttribution';
+import { calculateCartTotal, getItemMultiplier } from '@/lib/pricingUtils';
 import { useCart } from '@/context/CartContext';
 import { useSpa } from '@/context/SpaContext';
 import SeoExpandedContent from '@/components/SeoExpandedContent';
@@ -27,7 +29,7 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
     const { saveDraft, confirmBooking } = useCart();
     const bookingIdRef = React.useRef<string>(Math.random().toString(36).substring(2, 8).toUpperCase());
 
-    const { treatments, campaign, products, isLoaded } = useSpa();
+    const { treatments, campaign, products, isLoaded, siteBrandFilter } = useSpa();
 
     const [activeCategory, setActiveCategory] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
@@ -106,7 +108,7 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
         setIsProcessing(true);
         
         try {
-            const totalPrice = cartItems.reduce((acc, item) => acc + (item.price * item.guests), 0);
+            const totalPrice = calculateCartTotal(cartItems).total;
             
             const treatmentsListStr = cartItems.map(item => `${item.title} (${item.duration} MINS)`).join(', ');
 
@@ -174,12 +176,24 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                 status: 'confirmed',
                 items: cartItems.map(i => ({ title: i.title, duration: i.duration, guests: i.guests, price: i.price })),
                 customerDetails: { name: formData.name, date: formData.date, time: formData.time, location: formData.location, room: formData.room || '' },
-                totalPrice: typeof totalPrice !== 'undefined' ? totalPrice : cartItems.reduce((sum, item) => sum + (item.price * item.guests), 0)
+                totalPrice: typeof totalPrice !== 'undefined' ? totalPrice : calculateCartTotal(cartItems).total
             };
             const invoiceUrl = window.location.origin + '/invoice/' + bookingIdRef.current;
     
     
-            const finalMessage = baseMessage + '\n\n*BOOKING ID :* ' + bookingIdRef.current;
+            // Save to Supabase before opening WhatsApp
+            const activeBrand = siteBrandFilter || 'therapick';
+            const saveRes = await saveBookingToSupabase(
+                bookingIdRef.current,
+                formData,
+                cartItems,
+                typeof totalPrice !== 'undefined' ? totalPrice : calculateCartTotal(cartItems).total,
+                activeBrand
+            );
+
+            const activeAffiliateCode = (saveRes && saveRes.affiliateCode) || (activeBrand === 'therapick' ? getAffiliateCookie()?.partner_code : null);
+            const refCodeText = activeAffiliateCode ? `\n*REF CODE :* ${activeAffiliateCode.toUpperCase()}` : '';
+            const finalMessage = baseMessage + '\n\n*BOOKING ID :* ' + bookingIdRef.current + refCodeText;
             
             saveDraft({
                 id: bookingIdRef.current,
@@ -187,17 +201,8 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                 status: 'confirmed',
                 items: cartItems,
                 customerDetails: formData,
-                totalPrice: typeof totalPrice !== 'undefined' ? totalPrice : cartItems.reduce((sum, item) => sum + (item.price * item.guests), 0)
+                totalPrice: typeof totalPrice !== 'undefined' ? totalPrice : calculateCartTotal(cartItems).total
             });
-
-            // Save to Supabase
-            await saveBookingToSupabase(
-                bookingIdRef.current,
-                formData,
-                cartItems,
-                typeof totalPrice !== 'undefined' ? totalPrice : cartItems.reduce((sum, item) => sum + (item.price * item.guests), 0),
-                'elexoir' // Or we can use siteBrandFilter if available, but for location it is elexoir
-            );
     
             const waUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent(finalMessage)}`;
             if (newWindow) {
@@ -529,7 +534,7 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                             Sanctuary for the Soul
                         </h3>
                         <p className="text-text-muted leading-relaxed mb-8 font-light">
-                            Born from the ancient healing traditions of Bali, Elexoir Home Spa was created with a singular vision: to bring unparalleled luxury and profound relaxation directly to your sanctuary. We believe that true wellness requires an environment where you feel completely at ease—your own home or villa.
+                            Born from the ancient healing traditions of Bali, {siteBrandFilter === 'therapick' ? 'Therapick' : siteBrandFilter === 'bali' ? 'Home Spa Ubud' : 'Elexoir Home Spa'} was created with a singular vision: to bring unparalleled luxury and profound relaxation directly to your sanctuary. We believe that true wellness requires an environment where you feel completely at ease—your own home or villa in {locationName}.
                         </p>
                         <button className="text-primary text-xs font-bold uppercase tracking-widest flex items-center gap-2 hover:opacity-70 transition-opacity">
                             Discover Our Story <ArrowRight size={16} />
@@ -778,7 +783,7 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                             status: 'draft',
                                             items: cartItems,
                                             customerDetails: formData,
-                                            totalPrice: cartItems.reduce((sum, item) => sum + (item.price * item.guests), 0)
+                                            totalPrice: calculateCartTotal(cartItems).total
                                         });
                                     }
                                     setIsBookingModalOpen(false);

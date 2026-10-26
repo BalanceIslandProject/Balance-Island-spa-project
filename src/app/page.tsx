@@ -12,6 +12,8 @@ import { createSlug } from '@/utils/slugify';
 
 const SeoExpandedContent = dynamic(() => import('@/components/SeoExpandedContent'));
 import { saveBookingToSupabase } from '@/lib/bookingUtils';
+import { getAffiliateCookie } from '@/lib/affiliateAttribution';
+import { calculateCartTotal, getItemMultiplier } from '@/lib/pricingUtils';
 
 const ServiceAreas = dynamic(() => import('@/components/ServiceAreas'));
 const FaqSection = dynamic(() => import('@/components/FaqSection'));
@@ -276,7 +278,7 @@ export default function Home() {
                 }
             }
 
-            const rawHost = typeof window !== 'undefined' ? window.location.hostname : 'elexoirhomespaubud.com';
+            const rawHost = typeof window !== 'undefined' ? window.location.hostname : 'booktherapick.com';
             const cleanHost = rawHost.replace(/^https?:\/\//, '').replace(/\/$/, '');
             const websiteSource = cleanHost.startsWith('www.') ? cleanHost : `www.${cleanHost}`;
 
@@ -295,12 +297,23 @@ export default function Home() {
                 status: 'confirmed',
                 items: cartItems.map(i => ({ title: i.title, duration: i.duration, guests: i.guests, price: i.price })),
                 customerDetails: { name: formData.name, date: formData.date, time: formData.time, location: formData.location, room: formData.room || '' },
-                totalPrice: typeof totalPrice !== 'undefined' ? totalPrice : cartItems.reduce((sum, item) => sum + (item.price * item.guests), 0)
+                totalPrice: typeof totalPrice !== 'undefined' ? totalPrice : calculateCartTotal(cartItems, appliedPromo).total
             };
             const invoiceUrl = window.location.origin + '/invoice/' + bookingIdRef.current;
     
     
-            const finalMessage = baseMessage + '\n\n*BOOKING ID :* ' + bookingIdRef.current;
+            // Save to Supabase before opening WhatsApp
+            const saveRes = await saveBookingToSupabase(
+                bookingIdRef.current,
+                formData,
+                cartItems,
+                typeof totalPrice !== 'undefined' ? totalPrice : calculateCartTotal(cartItems, appliedPromo).total,
+                siteBrandFilter
+            );
+
+            const activeAffiliateCode = (saveRes && saveRes.affiliateCode) || (siteBrandFilter === 'therapick' ? getAffiliateCookie()?.partner_code : null);
+            const refCodeText = activeAffiliateCode ? `\n*REF CODE :* ${activeAffiliateCode.toUpperCase()}` : '';
+            const finalMessage = baseMessage + '\n\n*BOOKING ID :* ' + bookingIdRef.current + refCodeText;
             
             saveDraft({
                 id: bookingIdRef.current,
@@ -308,17 +321,8 @@ export default function Home() {
                 status: 'confirmed',
                 items: cartItems,
                 customerDetails: formData,
-                totalPrice: typeof totalPrice !== 'undefined' ? totalPrice : cartItems.reduce((sum, item) => sum + (item.price * item.guests), 0)
+                totalPrice: typeof totalPrice !== 'undefined' ? totalPrice : calculateCartTotal(cartItems, appliedPromo).total
             });
-
-            // Save to Supabase
-            await saveBookingToSupabase(
-                bookingIdRef.current,
-                formData,
-                cartItems,
-                typeof totalPrice !== 'undefined' ? totalPrice : cartItems.reduce((sum, item) => sum + (item.price * item.guests), 0),
-                siteBrandFilter
-            );
     
             const waUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent(finalMessage)}`;
             if (newWindow) {
@@ -845,7 +849,7 @@ export default function Home() {
 
                                             {/* Text Info */}
                                             <div className="flex flex-col flex-grow px-2 md:px-3 pt-3 pb-2">
-                                                <p className="text-gray-400 text-[11px] font-medium mb-1 line-clamp-1">{product.category || 'Elexoir'}</p>
+                                                <p className="text-gray-400 text-[11px] font-medium mb-1 line-clamp-1">{product.category || (siteBrandFilter === 'therapick' ? 'Therapick' : siteBrandFilter === 'bali' ? 'Home Spa' : 'Elexoir')}</p>
                                                 <h4 className="font-bold text-gray-900 text-sm line-clamp-1 mb-4">{product.title}</h4>
 
                                                 {/* Price and Add Button */}
@@ -1174,7 +1178,7 @@ export default function Home() {
                                             status: 'draft',
                                             items: cartItems,
                                             customerDetails: formData,
-                                            totalPrice: cartItems.reduce((sum, item) => sum + (item.price * item.guests), 0)
+                                            totalPrice: calculateCartTotal(cartItems, appliedPromo).total
                                         });
                                     }
                                     setIsBookingModalOpen(false);

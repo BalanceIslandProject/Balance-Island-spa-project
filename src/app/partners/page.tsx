@@ -65,7 +65,7 @@ export default function PartnerProgramOverviewPage() {
 
           <div className="p-3.5 rounded-xl bg-neutral-50 border border-neutral-200/60 space-y-1">
             <span className="text-[11px] font-bold text-neutral-900 uppercase tracking-wide block">
-              30-Day Attribution
+              7-Day Attribution
             </span>
             <p className="text-[11px] text-neutral-500 leading-relaxed">
               Custom QR tent cards and smart referral links automatically attribute guest bookings.
@@ -150,7 +150,7 @@ export default function PartnerProgramOverviewPage() {
           <div className="p-5 border border-neutral-200/80 rounded-2xl bg-white shadow-2xs space-y-1.5">
             <h3 className="text-sm font-bold text-neutral-950">Content Creators & Guides</h3>
             <p className="text-xs text-neutral-500 leading-relaxed">
-              Feature Therapick in your Bali itinerary guides, links in bio, or travel recommendations with automatic 30-day tracking.
+              Feature Therapick in your Bali itinerary guides, links in bio, or travel recommendations with automatic 7-day tracking.
             </p>
           </div>
         </div>

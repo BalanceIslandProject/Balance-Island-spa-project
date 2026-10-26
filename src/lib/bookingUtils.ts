@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase';
-import { recordBookingAffiliation, getAffiliateCookie, clearAffiliateCookie } from '@/lib/affiliateAttribution';
+import { recordBookingAffiliation, getAffiliateCookie } from '@/lib/affiliateAttribution';
 
 export const saveBookingToSupabase = async (
     bookingId: string, 
@@ -14,10 +14,11 @@ export const saveBookingToSupabase = async (
         const maxPax = cartItems.reduce((max, item) => Math.max(max, item.guests), 1);
 
         // Determine booking source (Affiliate Partner Code or Direct)
-        const affiliateCookie = getAffiliateCookie();
-        const affiliateCode = (siteBrandFilter === 'therapick' && affiliateCookie?.partner_code) 
+        const affiliateCookie = (siteBrandFilter === 'therapick') ? getAffiliateCookie() : null;
+        const affiliateCode = affiliateCookie?.partner_code 
             ? affiliateCookie.partner_code.toUpperCase() 
             : null;
+        const affiliateId = affiliateCookie?.partner_id || null;
         const source = affiliateCode ? affiliateCode : 'Direct';
         
         // Base payload compatible with core bookings schema
@@ -50,6 +51,7 @@ export const saveBookingToSupabase = async (
             payment_method: 'Cash',
             source: source,
             affiliate_code: affiliateCode,
+            affiliate_id: affiliateId,
             treatment_status_updated_at: new Date().toISOString(),
             payment_status_updated_at: new Date().toISOString(),
         };
@@ -60,18 +62,18 @@ export const saveBookingToSupabase = async (
             const { error: baseError } = await supabase.from('bookings').insert([basePayload]);
             if (baseError) {
                 console.error('Failed to save booking to Supabase:', baseError);
+                return { success: false, error: baseError, affiliateCode };
             }
         }
 
         // Strictly associate affiliate attribution at booking creation time
-        if (siteBrandFilter === 'therapick') {
+        if (siteBrandFilter === 'therapick' && affiliateCode) {
             await recordBookingAffiliation(bookingId, formData, cartItems, totalPrice, siteBrandFilter);
-            // SINGLE-BOOKING ATTRIBUTION ENFORCEMENT:
-            // Once a referral is used for a booking, immediately clear the cookie & session data.
-            // Future bookings from this customer/device without a referral link will be strictly Direct.
-            clearAffiliateCookie();
         }
+
+        return { success: true, affiliateCode };
     } catch (err) {
         console.error('Exception saving booking:', err);
+        return { success: false, error: err };
     }
 };

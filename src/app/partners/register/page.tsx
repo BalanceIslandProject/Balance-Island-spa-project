@@ -468,7 +468,7 @@ export default function PartnerRegisterPage() {
                 className="w-4 h-4 rounded mt-0.5 accent-black cursor-pointer"
               />
               <span className="text-xs text-[#737373] leading-relaxed">
-                I agree to the <Link href="/terms" className="underline text-black font-semibold">Partner Terms</Link> and understand commissions are automatically attributed on completed & verified wellness rituals.
+                I agree to the <Link href="/partners/terms" className="underline text-black font-semibold">Partner Policy & Agreement</Link> and understand commissions are automatically attributed on completed & verified wellness rituals.
               </span>
             </label>
           </div>

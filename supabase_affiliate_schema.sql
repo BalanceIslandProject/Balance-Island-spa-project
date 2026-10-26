@@ -7,7 +7,7 @@
 CREATE TABLE IF NOT EXISTS public.affiliate_program_settings (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     default_commission_rate_pct NUMERIC(5, 2) NOT NULL DEFAULT 15.00,
-    cookie_duration_days INTEGER NOT NULL DEFAULT 30,
+    cookie_duration_days INTEGER NOT NULL DEFAULT 7,
     attribution_model VARCHAR(50) NOT NULL DEFAULT 'last_touch', -- 'last_touch' | 'first_touch'
     auto_approve_partners BOOLEAN NOT NULL DEFAULT FALSE,
     is_program_active BOOLEAN NOT NULL DEFAULT TRUE,
@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS public.affiliate_program_settings (
 
 -- Seed initial settings if table is empty
 INSERT INTO public.affiliate_program_settings (id, default_commission_rate_pct, cookie_duration_days, attribution_model, auto_approve_partners, is_program_active)
-SELECT gen_random_uuid(), 15.00, 30, 'last_touch', FALSE, TRUE
+SELECT gen_random_uuid(), 15.00, 7, 'last_touch', FALSE, TRUE
 WHERE NOT EXISTS (SELECT 1 FROM public.affiliate_program_settings);
 
 -- 2. AFFILIATE PARTNERS

@@ -19,11 +19,19 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
     : (isBali ? 'https://www.homespaubud.com' : 'https://www.elexoirhomespaubud.com');
 
   return {
-    rules: {
-      userAgent: '*',
-      allow: '/',
-      disallow: ['/admin/', '/api/'],
-    },
+    rules: [
+      {
+        userAgent: '*',
+        allow: '/',
+        disallow: ['/admin/', '/api/'],
+      },
+      // Explicitly allow leading Generative Engine Optimization (GEO) & AI search agents
+      {
+        userAgent: ['GPTBot', 'ChatGPT-User', 'Google-Extended', 'PerplexityBot', 'ClaudeBot', 'Applebot-Extended'],
+        allow: '/',
+        disallow: ['/admin/', '/api/'],
+      }
+    ],
     sitemap: `${baseUrl}/sitemap.xml`,
   };
 }

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { setAffiliateCookie, clearAffiliateCookie } from '@/lib/affiliateAttribution';
+import { setAffiliateCookie, getAffiliateCookie } from '@/lib/affiliateAttribution';
 
 interface AffiliateTrackerProps {
   brand: string;
@@ -18,23 +18,23 @@ export default function AffiliateTracker({ brand }: AffiliateTrackerProps) {
     if (brand !== 'therapick') return;
     if (trackedRef.current) return;
 
-    const refCode = searchParams?.get('ref');
+    const refParam = searchParams?.get('ref');
 
-    // If customer visits directly WITHOUT a referral link:
-    if (!refCode) {
-      // Check if they are currently inside an active ongoing referral session
-      const hasActiveSession = typeof window !== 'undefined' && sessionStorage.getItem('btp_affiliate_ref');
-      // If no active session, immediately purge any legacy persistent cookies from this device/phone
-      if (!hasActiveSession) {
-        clearAffiliateCookie();
-      }
+    // DIRECT VISITS / PAGE REFRESHES:
+    // Must preserve any active 7-day affiliate attribution!
+    // Do NOT clear or reset the active referral or its original click expiration.
+    if (!refParam) {
+      // Passively check expiration (will purge only if past 7 days)
+      getAffiliateCookie();
       return;
     }
 
-    trackedRef.current = true;
-    const cleanCode = refCode.trim().toUpperCase();
+    const cleanCode = refParam.trim().toUpperCase();
+    if (!cleanCode) return;
 
-    // Call server endpoint to record click and get partner info
+    trackedRef.current = true;
+
+    // Validate partner against Supabase database via server endpoint
     fetch('/api/affiliates/clicks', {
       method: 'POST',
       headers: {
@@ -48,8 +48,14 @@ export default function AffiliateTracker({ brand }: AffiliateTrackerProps) {
     })
       .then((res) => res.json())
       .then((data) => {
-        if (data.success && data.partner_id) {
+        // Only set/replace referral attribution if partner is valid and active in database
+        if (data.success && data.partner_id && data.partner_code) {
+          // Last-touch model: replaces prior partner and resets 7-day timer from this touch
           setAffiliateCookie(data.partner_code, data.partner_id);
+        } else {
+          // If the partner is invalid, suspended, or inactive:
+          // REJECT it and DO NOT overwrite or delete the existing valid referral!
+          console.warn('Rejected invalid or inactive affiliate referral code:', cleanCode);
         }
       })
       .catch((err) => {

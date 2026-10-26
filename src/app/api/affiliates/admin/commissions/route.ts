@@ -148,13 +148,60 @@ export async function PATCH(req: NextRequest) {
       updates.status = status;
     }
 
+    // 2b. Admin Attribution Override with Audit Trail:
+    // Strictly permission-protected administrative reassignment of an attribution
+    if (body.override_partner_code || body.reassign_partner_code) {
+      const targetPartnerCode = String(body.override_partner_code || body.reassign_partner_code).trim().toUpperCase();
+      const { data: newPartner, error: partnerErr } = await supabase
+        .from('affiliate_partners')
+        .select('id, partner_code, commission_rate_pct, status')
+        .eq('partner_code', targetPartnerCode)
+        .single();
+
+      if (partnerErr || !newPartner) {
+        return NextResponse.json({ success: false, message: `Target partner code '${targetPartnerCode}' not found.` }, { status: 404 });
+      }
+
+      const prevPartner = currentComm.partner_code || 'None';
+      const newRatePct = Number(newPartner.commission_rate_pct || 15);
+      const eligibleAmount = Number(currentComm.eligible_treatment_amount || currentComm.booking_amount_gross || 0);
+      const newCommissionAmount = Math.round((eligibleAmount * newRatePct) / 100);
+
+      updates.partner_id = newPartner.id;
+      updates.partner_code = newPartner.partner_code;
+      updates.commission_rate_pct = newRatePct;
+      updates.commission_amount = newCommissionAmount;
+      const auditLog = `[Attribution Override: Reassigned from ${prevPartner} to ${newPartner.partner_code} by Admin on ${new Date().toISOString()}. Reason: ${body.override_reason || 'Manual administrative correction'}]`;
+      updates.notes = updates.notes ? `${updates.notes} | ${auditLog}` : auditLog;
+
+      // Update linked affiliate_attributions
+      await supabase
+        .from('affiliate_attributions')
+        .update({
+          partner_id: newPartner.id,
+          partner_code: newPartner.partner_code,
+        })
+        .ilike('booking_id', currentComm.booking_id);
+
+      // Update linked bookings
+      await supabase
+        .from('bookings')
+        .update({
+          affiliate_id: newPartner.id,
+          affiliate_code: newPartner.partner_code,
+          source: newPartner.partner_code,
+          updated_at: new Date().toISOString(),
+        })
+        .ilike('reference_number', currentComm.booking_id);
+    }
+
     if (payment_verified !== undefined) updates.payment_verified = Boolean(payment_verified);
     if (service_completed !== undefined) {
       updates.service_completed = Boolean(service_completed);
     } else if (treatment_status === 'In Progress' || booking_status === 'Ongoing') {
       updates.service_completed = false;
     }
-    if (notes !== undefined) updates.notes = notes;
+    if (notes !== undefined && !body.override_partner_code && !body.reassign_partner_code) updates.notes = notes;
 
     const { data: updated, error } = await supabase
       .from('affiliate_commissions')

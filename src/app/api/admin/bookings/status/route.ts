@@ -137,11 +137,19 @@ export async function PATCH(req: NextRequest) {
     }
 
     // 5. Connect to Existing Affiliate Commission System (if booking has an affiliated partner)
-    const bookingRef = (booking.reference_number || booking.id).toUpperCase();
+    const possibleIds = Array.from(new Set([
+      booking.reference_number,
+      booking.id,
+      booking.reference_number?.toUpperCase(),
+      booking.id?.toUpperCase(),
+      booking.reference_number?.toLowerCase(),
+      booking.id?.toLowerCase(),
+    ].filter(Boolean)));
+
     const { data: commissions } = await supabase
       .from('affiliate_commissions')
       .select('*')
-      .eq('booking_id', bookingRef)
+      .in('booking_id', possibleIds)
       .limit(1);
 
     let updatedCommission: any = null;
@@ -154,33 +162,38 @@ export async function PATCH(req: NextRequest) {
 
       // Treatment completion linkage:
       // When treatment status becomes 'Finished', mark service_completed = true
-      // Does NOT automatically mark payment as paid!
+      let nextServiceCompleted = Boolean(comm.service_completed);
       if (treatment_status) {
-        commUpdates.service_completed = treatment_status === 'Finished';
+        nextServiceCompleted = treatment_status === 'Finished';
+        commUpdates.service_completed = nextServiceCompleted;
       }
 
       // Payment verification linkage:
       // When payment status becomes 'Paid', mark payment_verified = true
-      // Does NOT automatically mark treatment as Finished!
+      let nextPaymentVerified = Boolean(comm.payment_verified);
       if (payment_status) {
-        const isPaid = payment_status === 'Paid';
-        commUpdates.payment_verified = isPaid;
-        if (isPaid && payment_method) {
+        nextPaymentVerified = payment_status === 'Paid';
+        commUpdates.payment_verified = nextPaymentVerified;
+        if (nextPaymentVerified && payment_method) {
           commUpdates.notes = `Paid via ${payment_method}`;
-        } else if (!isPaid) {
+        } else if (!nextPaymentVerified) {
           commUpdates.notes = payment_status;
         }
       }
 
-      // Cancellation linkage:
-      // If booking is Cancelled or Refunded, mark commission cancelled
+      // Lifecycle status transitions:
+      // - If booking cancelled or refunded, cancel commission (unless already paid out)
+      // - Commission is eligible for payout (approved) ONLY when BOTH treatment completed AND payment verified
+      // - Inquiries, ongoing treatments, or unverified payments remain pending
       if (booking_status === 'Cancelled' || payment_status === 'Refunded') {
         if (comm.status !== 'paid') {
           commUpdates.status = 'cancelled';
         }
-      } else if (booking_status === 'Confirmed' || booking_status === 'Approved' || booking_status === 'Pending') {
-        if (comm.status === 'cancelled') {
-          // Reinstate back to pending review
+      } else if (comm.status !== 'paid' && comm.status !== 'processing') {
+        if (nextServiceCompleted && nextPaymentVerified) {
+          commUpdates.status = 'approved';
+          commUpdates.approved_at = nowIso;
+        } else {
           commUpdates.status = 'pending';
         }
       }

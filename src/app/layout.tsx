@@ -401,10 +401,27 @@ export default async function RootLayout({
                           "Therapick Massage Delivery",
                           "Therapick In Villa Massage"
                         ],
+                        "legalName": "PT BALANCE ISLAND INDONESIA",
                         "url": url,
                         "logo": `${url}${iconUrl}`,
                         "image": `${url}${iconUrl}`,
+                        "sameAs": [
+                          "https://www.tripadvisor.com/Attraction_Review-g297701-d34704669-Reviews-Therapick_Island_Relaxation_Delivered-Ubud_Gianyar_Regency_Bali.html",
+                          "https://share.google/LRhEtZHpMLBAg9ySs",
+                          "https://partners.booktherapick.com"
+                        ],
+                        "disambiguatingDescription": "Therapick Bali (booktherapick.com) is an on-demand luxury mobile spa and in-villa massage delivery business operating across Bali, Indonesia by PT Balance Island Indonesia. It is not affiliated with the US directory therapick.com.",
                         "description": "Bali's leading on-demand mobile spa and in-villa massage delivery platform. Certified 5-star therapists arrive at your private villa or hotel across Seminyak, Canggu, Ubud, Uluwatu, Nusa Dua, Sanur, Jimbaran & Kuta within 45-60 mins.",
+                        "knowsAbout": [
+                          "In-Villa Massage Bali",
+                          "Mobile Spa Bali",
+                          "Traditional Balinese Massage",
+                          "Couples Massage Bali",
+                          "Deep Tissue Massage",
+                          "Four Hands Massage",
+                          "Foot Reflexology",
+                          "Hotel Spa Delivery Bali"
+                        ],
                         "telephone": "+6282266554600",
                         "email": "concierge@booktherapick.com",
                         "priceRange": "$$",

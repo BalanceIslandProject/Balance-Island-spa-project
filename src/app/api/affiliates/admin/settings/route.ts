@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
       success: true,
       settings: settings || {
         default_commission_rate_pct: 15.00,
-        cookie_duration_days: 30,
+        cookie_duration_days: 7,
         attribution_model: 'last_touch',
         auto_approve_partners: false,
         is_program_active: true,
@@ -50,7 +50,7 @@ export async function PUT(req: NextRequest) {
 
     const updates = {
       default_commission_rate_pct: Number(default_commission_rate_pct) || 15.00,
-      cookie_duration_days: Number(cookie_duration_days) || 30,
+      cookie_duration_days: Number(cookie_duration_days) || 7,
       attribution_model: attribution_model || 'last_touch',
       auto_approve_partners: Boolean(auto_approve_partners),
       is_program_active: Boolean(is_program_active),

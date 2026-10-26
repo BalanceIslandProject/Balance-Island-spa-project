@@ -68,7 +68,7 @@ export default function AffiliateManagement() {
   const [payouts, setPayouts] = useState<any[]>([]);
   const [settings, setSettings] = useState<any>({
     default_commission_rate_pct: 15.0,
-    cookie_duration_days: 30,
+    cookie_duration_days: 7,
     attribution_model: 'last_touch',
     auto_approve_partners: false,
     is_program_active: true,

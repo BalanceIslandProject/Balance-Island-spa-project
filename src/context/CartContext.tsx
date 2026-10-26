@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { getItemMultiplier } from '@/lib/pricingUtils';
 
 export type CartItem = {
     id: string;
@@ -57,7 +58,22 @@ export function CartProvider({ children }: { children: ReactNode }) {
         const saved = localStorage.getItem('spa_booking_history');
         if (saved) {
             try {
-                setHistory(JSON.parse(saved));
+                const parsed: BookingHistory[] = JSON.parse(saved);
+                // Sanitize prices: recalculate any draft or confirmed bookings where couple packages were incorrectly doubled
+                const sanitized = parsed.map(booking => {
+                    if (booking.items && booking.items.length > 0) {
+                        const correctedTotal = booking.items.reduce((acc, item) => {
+                            const mult = getItemMultiplier(item.title, item.guests);
+                            return acc + (Number(item.price) || 0) * mult;
+                        }, 0);
+                        return {
+                            ...booking,
+                            totalPrice: correctedTotal
+                        };
+                    }
+                    return booking;
+                });
+                setHistory(sanitized);
             } catch (e) {
                 console.error('Failed to parse booking history', e);
             }
@@ -71,14 +87,24 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }, [history, isLoaded]);
 
     const saveDraft = (booking: BookingHistory) => {
+        // Ensure booking totalPrice uses correct multiplier for couple treatments
+        const correctedTotal = (booking.items && booking.items.length > 0)
+            ? booking.items.reduce((acc, item) => {
+                const mult = getItemMultiplier(item.title, item.guests);
+                return acc + (Number(item.price) || 0) * mult;
+            }, 0)
+            : booking.totalPrice;
+
+        const sanitizedBooking = { ...booking, totalPrice: correctedTotal };
+
         setHistory(prev => {
-            const existing = prev.findIndex(h => h.id === booking.id);
+            const existing = prev.findIndex(h => h.id === sanitizedBooking.id);
             if (existing >= 0) {
                 const newHistory = [...prev];
-                newHistory[existing] = booking;
+                newHistory[existing] = sanitizedBooking;
                 return newHistory;
             }
-            return [booking, ...prev];
+            return [sanitizedBooking, ...prev];
         });
     };
 

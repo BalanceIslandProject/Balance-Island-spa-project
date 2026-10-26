@@ -6,6 +6,7 @@ import { Store, Menu, X, ShoppingBag, CheckCircle2, Clock, User } from 'lucide-r
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
+import { isCoupleTreatment, getBookingDisplayPrice } from '@/lib/pricingUtils';
 
 export default function TopNav() {
     const pathname = usePathname();
@@ -294,7 +295,9 @@ export default function TopNav() {
                                                                     </span>
                                                                     {item.guests > 1 && (
                                                                         <span className="text-[9px] font-semibold text-gray-400">
-                                                                            • {item.guests} Guests
+                                                                            • {isCoupleTreatment(item.title)
+                                                                                ? (item.guests === 2 ? '2 Guests (1 Couple)' : `${item.guests} Guests (${Math.round(item.guests / 2)} Couples)`)
+                                                                                : `${item.guests} Guests`}
                                                                         </span>
                                                                     )}
                                                                 </div>
@@ -330,7 +333,7 @@ export default function TopNav() {
                                                     IDR
                                                 </span>
                                                 <span className="text-xs sm:text-[13px] font-extrabold text-gray-900 leading-tight">
-                                                    {(booking.totalPrice || 0).toLocaleString('en-US')}
+                                                    {getBookingDisplayPrice(booking).toLocaleString('en-US')}
                                                 </span>
                                             </div>
 

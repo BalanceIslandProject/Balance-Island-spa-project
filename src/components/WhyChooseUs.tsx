@@ -3,8 +3,11 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles, Droplets, Home, Clock, HeartHandshake, ShieldCheck } from 'lucide-react';
+import { useSpa } from '@/context/SpaContext';
 
 export default function WhyChooseUs() {
+  const { siteBrandFilter } = useSpa();
+  const brandLabel = siteBrandFilter === 'therapick' ? 'Therapick Standard' : siteBrandFilter === 'bali' ? 'Our Standard' : 'Elexoir Standard';
   const reasons = [
     { 
       icon: Sparkles,
@@ -71,9 +74,7 @@ export default function WhyChooseUs() {
       <div className="py-10 px-5 sm:px-8 md:py-16 md:px-12 rounded-[28px] md:rounded-[40px] bg-white/60 backdrop-blur-md border border-border/50 shadow-[0_8px_30px_rgb(0,0,0,0.03)]">
         <motion.div variants={itemVariants} className="text-center mb-10 md:mb-16">
           <span className="text-[10px] font-bold uppercase tracking-widest text-primary/80 mb-2 md:mb-3 block">
-            <span className="domain-ubud-only">Elexoir Standard</span>
-            <span className="domain-bali-only">Our Standard</span>
-            <span className="domain-therapick-only">Therapick Standard</span>
+            {brandLabel}
           </span>
           <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl text-primary leading-tight">Why Choose Our Mobile Spa</h2>
         </motion.div>

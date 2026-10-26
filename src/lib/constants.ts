@@ -198,7 +198,7 @@ export const TESTIMONIALS: Testimonial[] = [
   { id: 6, name: "Amanda L.", text: "Very hygienic and professional. They brought everything including fresh sheets and music. Felt like a 5-star hotel.", rating: 5 },
   { id: 7, name: "David K.", text: "Fast response and great service. The hot stone massage was exactly what I needed to relax.", rating: 5 },
   { id: 8, name: "Sophie W.", text: "The facial acupressure added to my massage was a game changer. I felt totally relieved of stress!", rating: 5 },
-  { id: 9, name: "James P.", text: "Reliable and on time. Hard to find good mobile massage in Uluwatu but Elexoir delivered perfectly.", rating: 5 },
+  { id: 9, name: "James P.", text: "Reliable and on time. Hard to find good mobile massage in Uluwatu but Therapick delivered perfectly.", rating: 5 },
   { id: 10, name: "Rebecca H.", text: " booked a late night massage at 9pm. So grateful they offer evening appointments. Will book again!", rating: 5 },
 ];
 

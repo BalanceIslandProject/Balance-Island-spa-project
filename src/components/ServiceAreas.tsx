@@ -2,8 +2,12 @@
 import React from 'react';
 import Link from 'next/link';
 import { MapPin, ArrowUpRight } from 'lucide-react';
+import { useSpa } from '@/context/SpaContext';
 
 export default function ServiceAreas({ hideHeader = false }: { hideHeader?: boolean }) {
+  const { siteBrandFilter } = useSpa();
+  const brand = siteBrandFilter || 'therapick';
+
   const areas = [
     { name: "Ubud", slug: "ubud", desc: "Premium mobile spa in the cultural heart of Bali." },
     { name: "Canggu", slug: "canggu", desc: "Luxury home massage for the vibrant coastal lifestyle." },
@@ -22,23 +26,27 @@ export default function ServiceAreas({ hideHeader = false }: { hideHeader?: bool
           <div className="max-w-2xl">
             <span className="text-[10px] font-bold uppercase tracking-widest text-primary/80 mb-2 md:mb-3 block">Service Areas</span>
             <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl text-primary leading-tight mb-3 md:mb-4">We Come to Your Sanctuary</h2>
-            <p className="text-xs sm:text-sm text-text-muted leading-relaxed font-light domain-ubud-only">
-              Elexoir Home Spa provides luxury mobile massage and wellness services directly to private villas, estates, and hotels across Bali's most prestigious locations.
-            </p>
-            <p className="text-xs sm:text-sm text-text-muted leading-relaxed font-light domain-bali-only">
-              We provide luxury mobile massage and wellness services directly to private villas, estates, and hotels across Bali's most prestigious locations.
-            </p>
-            <p className="text-xs sm:text-sm text-text-muted leading-relaxed font-light domain-therapick-only">
-              Therapick delivers 5-star luxury mobile spa and in-villa massage services directly to private villas, estates, and hotels across Ubud, Canggu, Seminyak, Uluwatu, and all of Bali.
-            </p>
+            {brand === 'therapick' ? (
+              <p className="text-xs sm:text-sm text-text-muted leading-relaxed font-light">
+                Therapick delivers 5-star luxury mobile spa and in-villa massage services directly to private villas, estates, and hotels across Ubud, Canggu, Seminyak, Uluwatu, and all of Bali.
+              </p>
+            ) : brand === 'bali' ? (
+              <p className="text-xs sm:text-sm text-text-muted leading-relaxed font-light">
+                We provide luxury mobile massage and wellness services directly to private villas, estates, and hotels across Bali's most prestigious locations.
+              </p>
+            ) : (
+              <p className="text-xs sm:text-sm text-text-muted leading-relaxed font-light">
+                Elexoir Home Spa provides luxury mobile massage and wellness services directly to private villas, estates, and hotels across Bali's most prestigious locations.
+              </p>
+            )}
           </div>
         </div>
       )}
 
-      {/* Responsive Grid Cards with Staggered Scroll Animation */}
+      {/* Responsive Grid Cards linking to dedicated SEO & GEO Location pages */}
       <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 -mx-6 px-6 md:mx-0 md:px-0 scroll-reveal-stagger">
         {areas.map((area, idx) => (
-          <Link href={`/explore?location=${encodeURIComponent(area.name)}`} key={idx} className="group block outline-none">
+          <Link href={`/locations/${area.slug}`} key={idx} className="group block outline-none">
             <div className="bg-white/80 backdrop-blur-sm border border-border/50 rounded-[16px] md:rounded-3xl p-4 md:p-8 transition-all duration-300 hover:shadow-[0_12px_30px_rgb(0,0,0,0.06)] hover:border-primary/30 hover:-translate-y-1 h-full flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between mb-2 md:mb-4">

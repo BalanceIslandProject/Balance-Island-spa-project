@@ -2,15 +2,18 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Minus } from 'lucide-react';
+import { useSpa } from '@/context/SpaContext';
 
 export default function FaqSection() {
   const [openIdx, setOpenIdx] = useState<number | null>(null);
   const [showAll, setShowAll] = useState(false);
+  const { siteBrandFilter } = useSpa();
+  const brandName = siteBrandFilter === 'therapick' ? 'Therapick' : siteBrandFilter === 'bali' ? 'Home Spa Ubud' : 'Elexoir Home Spa';
 
   const faqs = [
     {
       q: "What is the best home spa in Bali?",
-      a: "We are highly rated as one of the best luxury mobile spas in Bali. We specialize in bringing 5-star professional spa treatments, premium organic oils, and certified therapists directly to your private villa or hotel across the island."
+      a: `We are highly rated as one of the best luxury mobile spas in Bali. ${brandName} specializes in bringing 5-star professional spa treatments, premium organic oils, and certified therapists directly to your private villa or hotel across the island.`
     },
     {
       q: "Do you provide massage services in Canggu and Seminyak?",
@@ -18,7 +21,9 @@ export default function FaqSection() {
     },
     {
       q: "Is in-villa massage available in Ubud?",
-      a: "Absolutely! Ubud is our home base. Whether you are staying in a jungle resort or a private villa in the cultural heart of Bali, our mobile spa service delivers profound relaxation with authentic Balinese techniques."
+      a: siteBrandFilter === 'therapick'
+        ? "Absolutely! Therapick delivers 5-star mobile massage directly to private villas and hotels across Ubud, Canggu, Seminyak, Uluwatu, Sanur, Nusa Dua, and all of Bali."
+        : `Absolutely! Ubud is our sanctuary. Whether you are staying in a jungle resort or a private villa in Ubud, our mobile spa service delivers profound relaxation with authentic Balinese techniques.`
     },
     {
       q: "Do you offer couples massage?",
@@ -46,11 +51,11 @@ export default function FaqSection() {
     },
     {
       q: "Do I need to provide anything for the home spa session?",
-      a: "Not at all. Elexoir Home Spa provides everything needed for a luxurious spa experience, including a professional massage bed, fresh high-quality linens, premium oils, and relaxing music. You only need to provide the space."
+      a: `Not at all. ${brandName} provides everything needed for a luxurious spa experience, including a professional massage bed, fresh high-quality linens, premium oils, and relaxing music. You only need to provide the space.`
     },
     {
       q: "Are your massage therapists certified?",
-      a: "Yes, every therapist at Elexoir Home Spa is rigorously trained, fully certified, and possesses years of experience in 5-star luxury hotels and premium spa environments across Bali."
+      a: `Yes, every therapist at ${brandName} is rigorously trained, fully certified, and possesses years of experience in 5-star luxury hotels and premium spa environments across Bali.`
     },
     {
       q: "Can I book a massage for my large group or retreat?",

@@ -5,7 +5,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, Share, MapPin, Clock, Calendar, Sparkles, Plus, Minus, X, MessageCircle, Heart, Bitcoin, ArrowRight, User, Tag, DoorOpen, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { saveBookingToSupabase } from '@/lib/bookingUtils';
+import { getAffiliateCookie } from '@/lib/affiliateAttribution';
 import { useCart } from '@/context/CartContext';
+import { calculateCartTotal, getItemMultiplier } from '@/lib/pricingUtils';
 import { useParams } from 'next/navigation';
 import { useSpa } from '@/context/SpaContext';
 import { supabase } from '@/lib/supabase';
@@ -146,12 +148,24 @@ export default function RitualsDetails() {
                 status: 'confirmed',
                 items: cartItems.map(i => ({ title: i.title, duration: i.duration, guests: i.guests, price: i.price })),
                 customerDetails: { name: formData.name, date: formData.date, time: formData.time, location: formData.location, room: formData.room || '' },
-                totalPrice: typeof totalPrice !== 'undefined' ? totalPrice : cartItems.reduce((sum, item) => sum + (item.price * item.guests), 0)
+                totalPrice: typeof totalPrice !== 'undefined' ? totalPrice : calculateCartTotal(cartItems, appliedPromo).total
             };
             const invoiceUrl = window.location.origin + '/invoice/' + bookingIdRef.current;
     
     
-            const finalMessage = baseMessage + '\n\n*BOOKING ID :* ' + bookingIdRef.current;
+            // Save to Supabase before opening WhatsApp
+            const activeBrand = treatment?.brand || siteBrandFilter || 'therapick';
+            const saveRes = await saveBookingToSupabase(
+                bookingIdRef.current,
+                formData,
+                cartItems,
+                typeof totalPrice !== 'undefined' ? totalPrice : calculateCartTotal(cartItems, appliedPromo).total,
+                activeBrand
+            );
+
+            const activeAffiliateCode = (saveRes && saveRes.affiliateCode) || (activeBrand === 'therapick' ? getAffiliateCookie()?.partner_code : null);
+            const refCodeText = activeAffiliateCode ? `\n*REF CODE :* ${activeAffiliateCode.toUpperCase()}` : '';
+            const finalMessage = baseMessage + '\n\n*BOOKING ID :* ' + bookingIdRef.current + refCodeText;
             
             saveDraft({
                 id: bookingIdRef.current,
@@ -159,17 +173,8 @@ export default function RitualsDetails() {
                 status: 'confirmed',
                 items: cartItems,
                 customerDetails: formData,
-                totalPrice: typeof totalPrice !== 'undefined' ? totalPrice : cartItems.reduce((sum, item) => sum + (item.price * item.guests), 0)
+                totalPrice: typeof totalPrice !== 'undefined' ? totalPrice : calculateCartTotal(cartItems, appliedPromo).total
             });
-
-            // Save to Supabase
-            await saveBookingToSupabase(
-                bookingIdRef.current,
-                formData,
-                cartItems,
-                typeof totalPrice !== 'undefined' ? totalPrice : cartItems.reduce((sum, item) => sum + (item.price * item.guests), 0),
-                treatment?.brand || 'elexoir'
-            );
     
             const waUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent(finalMessage)}`;
             if (newWindow) {
@@ -483,7 +488,7 @@ export default function RitualsDetails() {
                                             status: 'draft',
                                             items: cartItems,
                                             customerDetails: formData,
-                                            totalPrice: cartItems.reduce((sum, item) => sum + (item.price * item.guests), 0)
+                                            totalPrice: calculateCartTotal(cartItems, appliedPromo).total
                                         });
                                     }
                                     setIsModalOpen(false);

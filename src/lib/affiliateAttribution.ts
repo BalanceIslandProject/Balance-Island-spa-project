@@ -2,94 +2,123 @@ import { supabase } from '@/lib/supabase';
 
 export const AFFILIATE_COOKIE_NAME = 'btp_affiliate_ref';
 export const DEFAULT_COMMISSION_RATE_PCT = 15.00;
+export const SEVEN_DAYS_SECONDS = 7 * 24 * 60 * 60; // 604,800 seconds (7 days)
+export const SEVEN_DAYS_MS = SEVEN_DAYS_SECONDS * 1000; // 604,800,000 milliseconds
 
 export interface AffiliateCookieData {
   partner_code: string;
   partner_id: string;
   timestamp: number;
+  expires_at: number;
 }
 
 /**
- * Reads the affiliate tracking data.
- * STRICT PER-BOOKING LOGIC:
- * - If referral was already consumed for a booking in this session, returns null.
- * - Prioritizes active sessionStorage.
- * - Direct visits without an active referral link session will never inherit stale referrals.
+ * Reads the active affiliate tracking data under the 7-day attribution model:
+ * - Checks 1st-party cookie first, with localStorage fallback.
+ * - Enforces 7-day window from the most recent eligible referral touch.
+ * - Direct visits and page refreshes do NOT clear or reset active referrals.
+ * - Returns null if referral has expired or is invalid.
  */
 export function getAffiliateCookie(): AffiliateCookieData | null {
   if (typeof window === 'undefined') return null;
 
   try {
-    // 1. If already consumed by a previous booking on this device, reject
-    if (sessionStorage.getItem('btp_affiliate_consumed') === 'true') {
+    let rawData: string | null = null;
+
+    // 1. Check document.cookie
+    const match = document.cookie.match(new RegExp('(^|;\\s*)(' + AFFILIATE_COOKIE_NAME + ')=([^;]*)'));
+    if (match && match[3]) {
+      rawData = decodeURIComponent(match[3]);
+    }
+
+    // 2. Fallback to localStorage (ensures client resilience if cookies are restricted)
+    if (!rawData) {
+      rawData = localStorage.getItem(AFFILIATE_COOKIE_NAME);
+    }
+
+    if (!rawData) return null;
+
+    const parsed = JSON.parse(rawData) as AffiliateCookieData;
+    if (!parsed || !parsed.partner_code) {
       return null;
     }
 
-    // 2. Check active sessionStorage first (scoped strictly to current referred tab)
-    const sessionData = sessionStorage.getItem(AFFILIATE_COOKIE_NAME);
-    if (sessionData) {
-      const parsed = JSON.parse(sessionData) as AffiliateCookieData;
-      if (parsed && parsed.partner_code) {
-        return parsed;
-      }
+    const now = Date.now();
+    const expiresAt = parsed.expires_at || (parsed.timestamp ? parsed.timestamp + SEVEN_DAYS_MS : 0);
+
+    // 3. Strict 7-Day Window Enforcement:
+    // If the 7-day window has expired, clear the stored referral and return null
+    if (!expiresAt || now > expiresAt || (parsed.timestamp && (now - parsed.timestamp) > SEVEN_DAYS_MS)) {
+      clearAffiliateCookie();
+      return null;
     }
 
-    // 3. Fallback to document.cookie (session cookie)
-    const match = document.cookie.match(new RegExp('(^|;\\s*)(' + AFFILIATE_COOKIE_NAME + ')=([^;]*)'));
-    if (!match || !match[3]) return null;
-
-    const decoded = decodeURIComponent(match[3]);
-    const parsed = JSON.parse(decoded) as AffiliateCookieData;
-    if (parsed && parsed.partner_code) {
-      return parsed;
-    }
+    return {
+      partner_code: parsed.partner_code.toUpperCase().trim(),
+      partner_id: parsed.partner_id || '',
+      timestamp: parsed.timestamp || now,
+      expires_at: expiresAt,
+    };
   } catch (e) {
-    console.error('Error parsing affiliate cookie:', e);
+    console.error('Error reading affiliate tracking cookie:', e);
+    return null;
   }
-  return null;
 }
 
 /**
- * Sets the affiliate tracking session for a referred booking.
- * Note: Session-only cookie (NO persistent 30-day max-age) and sessionStorage
- * to ensure that subsequent direct bookings on the same phone will NOT be attributed.
+ * Sets the affiliate tracking session for a valid referred partner:
+ * - Cookie duration: 7 days (604,800 seconds) from this referral touch.
+ * - Security: SameSite=Lax, Path=/, and Secure on HTTPS.
+ * - Stores timestamp and explicit expires_at.
+ * - Last-touch attribution: Overwrites any prior partner referral for future bookings.
  */
-export function setAffiliateCookie(partnerCode: string, partnerId: string): void {
+export function setAffiliateCookie(partnerCode: string, partnerId: string, clickTimestamp?: number): void {
   if (typeof window === 'undefined') return;
 
   try {
+    const cleanCode = partnerCode.toUpperCase().trim();
+    const now = typeof clickTimestamp === 'number' && clickTimestamp > 0 ? clickTimestamp : Date.now();
+    const expiresAt = now + SEVEN_DAYS_MS;
+
     const payload: AffiliateCookieData = {
-      partner_code: partnerCode.toUpperCase(),
+      partner_code: cleanCode,
       partner_id: partnerId,
-      timestamp: Date.now(),
+      timestamp: now,
+      expires_at: expiresAt,
     };
 
     const serialized = JSON.stringify(payload);
-    sessionStorage.setItem(AFFILIATE_COOKIE_NAME, serialized);
-    sessionStorage.removeItem('btp_affiliate_consumed');
+    const expiresUtc = new Date(expiresAt).toUTCString();
+    const isSecure = window.location.protocol === 'https:';
 
-    // Set as browser session cookie (no max-age/expires: dies when browser session closes)
-    document.cookie = `${AFFILIATE_COOKIE_NAME}=${encodeURIComponent(serialized)}; path=/; SameSite=Lax`;
+    // 1. Write first-party cookie with 7-day max-age and UTC expiration
+    document.cookie = `${AFFILIATE_COOKIE_NAME}=${encodeURIComponent(serialized)}; path=/; max-age=${SEVEN_DAYS_SECONDS}; expires=${expiresUtc}; SameSite=Lax${isSecure ? '; Secure' : ''}`;
+
+    // 2. Persist to localStorage and sessionStorage as resilient client backup
+    localStorage.setItem(AFFILIATE_COOKIE_NAME, serialized);
+    sessionStorage.setItem(AFFILIATE_COOKIE_NAME, serialized);
   } catch (e) {
-    console.error('Error setting affiliate cookie:', e);
+    console.error('Error setting affiliate tracking cookie:', e);
   }
 }
 
 /**
- * Clears the affiliate tracking cookie and session data immediately.
- * Called as soon as a booking is completed so repeat organic visits
- * from the same tourist or phone are strictly recorded as Direct.
+ * Clears the affiliate tracking cookie and client storage.
+ * Only invoked when a 7-day attribution window expires or upon explicit reset.
  */
 export function clearAffiliateCookie(): void {
   if (typeof window === 'undefined') return;
 
   try {
-    document.cookie = `${AFFILIATE_COOKIE_NAME}=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax`;
-    document.cookie = `${AFFILIATE_COOKIE_NAME}=; path=/; domain=${window.location.hostname}; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax`;
+    const isSecure = window.location.protocol === 'https:';
+    document.cookie = `${AFFILIATE_COOKIE_NAME}=; path=/; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax${isSecure ? '; Secure' : ''}`;
+    
+    if (window.location.hostname) {
+      document.cookie = `${AFFILIATE_COOKIE_NAME}=; path=/; domain=${window.location.hostname}; max-age=0; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax${isSecure ? '; Secure' : ''}`;
+    }
 
-    sessionStorage.removeItem(AFFILIATE_COOKIE_NAME);
-    sessionStorage.setItem('btp_affiliate_consumed', 'true');
     localStorage.removeItem(AFFILIATE_COOKIE_NAME);
+    sessionStorage.removeItem(AFFILIATE_COOKIE_NAME);
   } catch (e) {
     console.error('Error clearing affiliate cookie:', e);
   }
@@ -260,9 +289,21 @@ export async function recordBookingAffiliation(
       },
     ]);
 
-    // 5. Consume referral tracking immediately so subsequent direct bookings are 100% Direct
-    clearAffiliateCookie();
+    // 5. Synchronize bookings table with validated affiliate ID & code
+    try {
+      await supabase
+        .from('bookings')
+        .update({
+          affiliate_id: partner.id,
+          affiliate_code: partner.partner_code,
+          source: partner.partner_code,
+        })
+        .or(`id.eq.${bookingId},reference_number.eq.${bookingId}`);
+    } catch (syncErr) {
+      console.warn('Non-fatal: failed to backfill affiliate_id on bookings row:', syncErr);
+    }
 
+    // Retain 7-day cookie for subsequent bookings within attribution window
     return true;
   } catch (err) {
     console.error('Error recording affiliate attribution:', err);

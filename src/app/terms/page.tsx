@@ -50,6 +50,15 @@ export default function TermsOfServicePage() {
             yourself irrevocably consent that the courts of Indonesia shall have exclusive jurisdiction to resolve any dispute 
             which may arise in connection with these terms.
           </p>
+
+          <h2 className="text-xl font-bold text-primary mt-8 mb-4">6. Partner Referral Program</h2>
+          <p>
+            If you are an approved hotel, villa, concierge, tour guide, driver, or affiliate participating in our referral network, 
+            your participation, commission eligibility, 7-day attribution window, and payout terms are governed by the official{' '}
+            <a href="/partners/terms" className="text-primary font-semibold underline">
+              Therapick Partner Program Policy & Agreement
+            </a>.
+          </p>
         </div>
       </div>
     </div>
