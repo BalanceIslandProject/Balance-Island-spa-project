@@ -118,15 +118,13 @@ export default function TopNav() {
 
                 {/* Navbar Right Actions: Partner Button, Cart & Dropdown Toggle */}
                 <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 z-10">
-                    {/* Strictly shown ONLY on BookTherapick domain: PARTNERS button on navbar */}
-                    <a
-                        href={partnerPortalUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                    {/* Primary Booking CTA on navbar: exact same size and styling as previous partner button */}
+                    <Link
+                        href="/explore"
                         className="domain-therapick-only px-3.5 sm:px-4 py-1.5 rounded-full text-[10px] sm:text-[11px] md:text-xs font-bold tracking-[0.08em] uppercase transition-all duration-200 whitespace-nowrap bg-black text-white hover:bg-neutral-800 active:scale-95 shadow-xs border border-black/10"
                     >
-                        PARTNERS
-                    </a>
+                        BOOK NOW
+                    </Link>
 
                     {/* Cart Drawer Trigger with Red Indicator Dot matching screenshot */}
                     <button 
@@ -162,16 +160,7 @@ export default function TopNav() {
                             transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
                             className="absolute top-full right-0 left-0 sm:left-auto sm:w-76 mt-2 p-3 sm:p-3.5 bg-white border border-black/[0.08] shadow-[0_20px_60px_rgba(0,0,0,0.16)] rounded-2xl sm:rounded-3xl flex flex-col gap-1 z-50 overflow-hidden"
                         >
-                            {/* Primary Booking CTA */}
-                            <Link
-                                href="/explore"
-                                onClick={() => setIsOpen(false)}
-                                className="flex items-center justify-center w-full py-2.5 px-4 mb-1.5 bg-primary text-white hover:bg-black rounded-xl text-xs font-bold tracking-[0.1em] uppercase transition-all shadow-sm active:scale-[0.98]"
-                            >
-                                Book Now
-                            </Link>
 
-                            <div className="h-px bg-black/[0.06] mb-1 -mx-1" />
 
                             {/* Dropdown Navigation Links */}
                             <div className="flex flex-col gap-0.5">
@@ -202,10 +191,9 @@ export default function TopNav() {
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     onClick={() => setIsOpen(false)}
-                                    className="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold tracking-wider transition-colors text-white bg-black hover:bg-neutral-800 shadow-sm"
+                                    className="flex items-center justify-center w-full px-3.5 py-2.5 rounded-xl text-xs font-bold tracking-wider transition-colors text-white bg-black hover:bg-neutral-800 shadow-sm uppercase"
                                 >
-                                    <span className="uppercase">PARTNER PORTAL</span>
-                                    <span className="text-[9px] font-sans font-bold tracking-wide text-neutral-300 bg-white/20 px-2 py-0.5 rounded-full uppercase">Affiliates</span>
+                                    PARTNER PORTAL
                                 </a>
                             </div>
                         </motion.div>
