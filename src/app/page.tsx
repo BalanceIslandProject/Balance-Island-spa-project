@@ -43,6 +43,7 @@ export default function Home() {
     const campaignCarouselRef = useRef<HTMLDivElement>(null);
     const [showStory, setShowStory] = useState(false);
     const domain = siteBrandFilter === 'bali' ? 'bali' : 'ubud';
+    const isTherapick = siteBrandFilter === 'therapick' || (typeof window !== 'undefined' && (window.location.hostname.includes('therapick') || window.location.hostname.includes('booktherapick')));
 
     const activeCampaigns = sortCampaigns(
         (campaigns && campaigns.length > 0)
@@ -112,7 +113,7 @@ export default function Home() {
         return { date, time };
     };
 
-    const [formData, setFormData] = useState({ name: '', location: '', room: '', ...getInitialDateTime() });
+    const [formData, setFormData] = useState({ name: '', location: '', room: '', whatsapp: '', ...getInitialDateTime() });
 
     // Restore booking from CartContext action or query param
     useEffect(() => {
@@ -131,6 +132,7 @@ export default function Home() {
                     name: booking.customerDetails?.name || '',
                     location: '',
                     room: '',
+                    whatsapp: booking.customerDetails?.whatsapp || '',
                     ...getInitialDateTime()
                 });
             } else if (booking.customerDetails) {
@@ -140,6 +142,7 @@ export default function Home() {
                     name: booking.customerDetails.name || '',
                     location: booking.customerDetails.location || '',
                     room: booking.customerDetails.room || '',
+                    whatsapp: booking.customerDetails.whatsapp || '',
                     date: booking.customerDetails.date || getInitialDateTime().date,
                     time: booking.customerDetails.time || getInitialDateTime().time
                 });
@@ -193,8 +196,8 @@ export default function Home() {
     const handleCampaignBooking = async (e: React.FormEvent,) => {
         e.preventDefault();
 
-        if (!formData.name || !formData.date || !formData.time || !formData.location) {
-            alert('Please fill in all required fields (Name, Date, Time, Location).');
+        if (!formData.name || !formData.date || !formData.time || !formData.location || (isTherapick && !formData.whatsapp)) {
+            alert(`Please fill in all required fields (Name, Date, Time, Location${isTherapick ? ', WhatsApp Number' : ''}).`);
             return;
         }
 
@@ -295,7 +298,7 @@ export default function Home() {
                 date: new Date().toISOString(),
                 status: 'confirmed',
                 items: cartItems.map(i => ({ title: i.title, duration: i.duration, guests: i.guests, price: i.price })),
-                customerDetails: { name: formData.name, date: formData.date, time: formData.time, location: formData.location, room: formData.room || '' },
+                customerDetails: { name: formData.name, date: formData.date, time: formData.time, location: formData.location, room: formData.room || '', whatsapp: formData.whatsapp || '' },
                 totalPrice: typeof totalPrice !== 'undefined' ? totalPrice : calculateCartTotal(cartItems, appliedPromo).total
             };
             const invoiceUrl = window.location.origin + '/invoice/' + bookingIdRef.current;
@@ -1421,6 +1424,17 @@ export default function Home() {
                                                 />
                                             </div>
 
+                                            {isTherapick && (
+                                            <div className="space-y-1.5 w-full">
+                                                <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1">WhatsApp Number</label>
+                                                <input
+                                                    type="tel" required placeholder="e.g. +62 812 3456 7890"
+                                                    value={formData.whatsapp || ''} onChange={e => setFormData({ ...formData, whatsapp: e.target.value })}
+                                                    className="w-full bg-white border border-border/80 rounded-xl px-4 py-3.5 text-sm text-primary placeholder:text-text-muted/50 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                                                />
+                                            </div>
+                                            )}
+
                                             <div className="space-y-1.5 pt-2 w-full">
                                                 <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1"><Tag className="w-3.5 h-3.5"/> Promo Code</label>
                                                 <div className="flex gap-2 w-full">
@@ -1482,8 +1496,8 @@ export default function Home() {
                                                     <button
                                                         type="button"
                                                         onClick={() => {
-                                                            if (!formData.name || !formData.date || !formData.time || !formData.location) {
-                                                                alert('Please fill in all required fields (Name, Date, Time, Location).');
+                                                            if (!formData.name || !formData.date || !formData.time || !formData.location || (isTherapick && !formData.whatsapp)) {
+                                                                alert(`Please fill in all required fields (Name, Date, Time, Location${isTherapick ? ', WhatsApp Number' : ''}).`);
                                                                 return;
                                                             }
                                                             setIsReviewingBooking(true);
@@ -1525,6 +1539,12 @@ export default function Home() {
                                                             <div>
                                                                 <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-text-muted mb-1"><DoorOpen className="w-3 h-3"/> Room</span>
                                                                 <span className="text-sm text-primary font-medium line-clamp-1">{formData.room}</span>
+                                                            </div>
+                                                        )}
+                                                        {formData.whatsapp && (
+                                                            <div>
+                                                                <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-text-muted mb-1">WhatsApp</span>
+                                                                <span className="text-sm text-primary font-medium line-clamp-1">{formData.whatsapp}</span>
                                                             </div>
                                                         )}
                                                     </div>

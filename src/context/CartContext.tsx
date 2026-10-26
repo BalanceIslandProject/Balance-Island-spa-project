@@ -27,6 +27,7 @@ export type BookingHistory = {
         time: string;
         location: string;
         room: string;
+        whatsapp?: string;
     };
     totalPrice: number;
 };

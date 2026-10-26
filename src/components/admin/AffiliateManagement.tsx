@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { ChevronLeft, ChevronRight, Check, Copy, Plus, RefreshCw, ArrowUpRight, Info, DoorClosed, MapPin, MessageCircle, User, Calendar, Clock, Sparkles } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Check, Copy, Plus, RefreshCw, ArrowUpRight, Info, DoorClosed, MapPin } from 'lucide-react';
 import {
   cx,
   btn,
@@ -1995,15 +1995,11 @@ export default function AffiliateManagement() {
                                   <button
                                     type="button"
                                     onClick={() => handleCopyText(b.booking_id, `bid-${b.id}`)}
-                                    className="h-6 w-6 rounded-md hover:bg-[#F5F5F5] text-[#737373] hover:text-black flex items-center justify-center transition-colors cursor-pointer shrink-0"
+                                    className="h-6 px-1.5 rounded-md hover:bg-[#F5F5F5] text-[#737373] hover:text-black text-[11px] font-medium transition-colors cursor-pointer shrink-0 border border-[#E5E5E5] bg-white"
                                     title="Copy Booking ID"
                                     aria-label="Copy Booking ID"
                                   >
-                                    {copiedId === `bid-${b.id}` ? (
-                                      <Check size={13} className="text-emerald-600" />
-                                    ) : (
-                                      <Copy size={13} />
-                                    )}
+                                    {copiedId === `bid-${b.id}` ? 'Copied' : 'Copy'}
                                   </button>
                                 </div>
                                 <div className="flex items-center gap-2 shrink-0">
@@ -2014,14 +2010,11 @@ export default function AffiliateManagement() {
                                 </div>
                               </div>
 
-                              {/* 2. Hero: Treatment Name */}
+                              {/* 2. Hero: Treatment Name (Clean, bold, NO AI ICONS) */}
                               <div className="flex items-center justify-between gap-2 pb-0.5">
-                                <div className="flex items-center gap-1.5 min-w-0">
-                                  <Sparkles size={14} className="text-amber-500 shrink-0" />
-                                  <span className="font-bold text-xs uppercase tracking-wide text-[#171717] truncate" title={b.treatment_name || 'Spa Treatment'}>
-                                    {b.treatment_name || 'Spa Ritual Treatment'}
-                                  </span>
-                                </div>
+                                <span className="font-bold text-xs uppercase tracking-wide text-[#171717] truncate" title={b.treatment_name || 'Spa Treatment'}>
+                                  {b.treatment_name || 'Spa Ritual Treatment'}
+                                </span>
                                 <button
                                   type="button"
                                   onClick={() => setSelectedCommissionId(b.id)}
@@ -2031,115 +2024,87 @@ export default function AffiliateManagement() {
                                 </button>
                               </div>
 
-                              {/* 3. Core Booking Attributes: Customer, Room, Date, Time */}
+                              {/* 3. Core Booking Attributes: Customer, Room, Date, Time (NO ICONS) */}
                               <div className="bg-[#F9F9F9] rounded-lg p-2.5 border border-[#EBEBEB] space-y-2 text-xs">
                                 <div className="grid grid-cols-2 gap-2">
                                   {/* Customer Name */}
-                                  <div className="flex items-center gap-1.5 min-w-0">
-                                    <User size={13} className="text-[#8C8C8C] shrink-0" />
-                                    <div className="min-w-0">
-                                      <span className="text-[10px] uppercase font-semibold text-[#8C8C8C] block leading-none">Customer</span>
-                                      <span className="font-semibold text-[#171717] truncate block text-xs mt-0.5" title={b.guest_name || 'Guest'}>
-                                        {b.guest_name || 'Guest'}
-                                      </span>
-                                    </div>
+                                  <div className="min-w-0">
+                                    <span className="text-[10px] uppercase font-semibold text-[#8C8C8C] block leading-none">Customer</span>
+                                    <span className="font-semibold text-[#171717] truncate block text-xs mt-0.5" title={b.guest_name || 'Guest'}>
+                                      {b.guest_name || 'Guest'}
+                                    </span>
                                   </div>
 
                                   {/* Room Number */}
-                                  <div className="flex items-center gap-1.5 min-w-0">
-                                    <DoorClosed size={13} className="text-indigo-600 shrink-0" />
-                                    <div className="min-w-0">
-                                      <span className="text-[10px] uppercase font-semibold text-[#8C8C8C] block leading-none">Room Number</span>
-                                      {b.room_number ? (
-                                        <span className="inline-block font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-1.5 py-0.2 rounded text-[11px] mt-0.5 truncate">
-                                          Room {b.room_number}
-                                        </span>
-                                      ) : (
-                                        <span className="text-[#A3A3A3] italic block text-xs mt-0.5">—</span>
-                                      )}
-                                    </div>
+                                  <div className="min-w-0">
+                                    <span className="text-[10px] uppercase font-semibold text-[#8C8C8C] block leading-none">Room Number</span>
+                                    {b.room_number ? (
+                                      <span className="inline-block font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-1.5 py-0.2 rounded text-[11px] mt-0.5 truncate">
+                                        Room {b.room_number}
+                                      </span>
+                                    ) : (
+                                      <span className="text-[#A3A3A3] italic block text-xs mt-0.5">—</span>
+                                    )}
                                   </div>
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-2 pt-1.5 border-t border-[#EAEAEA]">
                                   {/* Date */}
-                                  <div className="flex items-center gap-1.5 min-w-0">
-                                    <Calendar size={13} className="text-[#8C8C8C] shrink-0" />
-                                    <div className="min-w-0">
-                                      <span className="text-[10px] uppercase font-semibold text-[#8C8C8C] block leading-none">Date</span>
-                                      <span className="font-medium text-[#262626] truncate block text-xs mt-0.5">
-                                        {safeFormatDate(b.booking_date || b.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}
-                                      </span>
-                                    </div>
+                                  <div className="min-w-0">
+                                    <span className="text-[10px] uppercase font-semibold text-[#8C8C8C] block leading-none">Date</span>
+                                    <span className="font-medium text-[#262626] truncate block text-xs mt-0.5">
+                                      {safeFormatDate(b.booking_date || b.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}
+                                    </span>
                                   </div>
 
                                   {/* Time */}
-                                  <div className="flex items-center gap-1.5 min-w-0">
-                                    <Clock size={13} className="text-[#8C8C8C] shrink-0" />
-                                    <div className="min-w-0">
-                                      <span className="text-[10px] uppercase font-semibold text-[#8C8C8C] block leading-none">Time</span>
-                                      <span className="font-bold text-[#171717] truncate block text-xs mt-0.5">
-                                        {b.booking_time ? `${b.booking_time} WITA` : '—'}
-                                      </span>
-                                    </div>
+                                  <div className="min-w-0">
+                                    <span className="text-[10px] uppercase font-semibold text-[#8C8C8C] block leading-none">Time</span>
+                                    <span className="font-bold text-[#171717] truncate block text-xs mt-0.5">
+                                      {b.booking_time ? `${b.booking_time} WITA` : '—'}
+                                    </span>
                                   </div>
                                 </div>
 
                                 {/* Location (if available) */}
                                 {b.location && (
-                                  <div className="flex items-center gap-1.5 text-[11px] text-[#525252] pt-1.5 border-t border-[#EAEAEA] truncate">
-                                    <MapPin size={12} className="text-[#8C8C8C] shrink-0" />
-                                    <span className="truncate" title={b.location}>{b.location}</span>
+                                  <div className="text-[11px] text-[#525252] pt-1.5 border-t border-[#EAEAEA] truncate">
+                                    <span className="text-[10px] uppercase font-semibold text-[#8C8C8C] block leading-none mb-0.5">Location</span>
+                                    <span className="truncate block" title={b.location}>{b.location}</span>
                                   </div>
                                 )}
                               </div>
 
-                              {/* 4. Customer WhatsApp (Highlighted Tracking & Quick Contact) */}
+                              {/* 4. Customer WhatsApp (Highlighted Tracking & Quick Contact, NO ICONS) */}
                               <div className="p-2.5 rounded-lg bg-emerald-50/70 border border-emerald-200/90 flex items-center justify-between gap-2">
-                                <div className="flex items-center gap-2 min-w-0">
-                                  <div className="w-6 h-6 rounded-md bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-2xs">
-                                    <MessageCircle size={13} />
-                                  </div>
-                                  <div className="min-w-0">
-                                    <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 block leading-none">
-                                      Customer WhatsApp
-                                    </span>
-                                    <span className="text-xs font-mono font-semibold text-neutral-900 truncate block mt-0.5">
-                                      {b.guest_whatsapp || 'No WhatsApp provided'}
-                                    </span>
-                                  </div>
+                                <div className="min-w-0">
+                                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 block leading-none">
+                                    Customer WhatsApp
+                                  </span>
+                                  <span className="text-xs font-mono font-semibold text-neutral-900 truncate block mt-0.5">
+                                    {b.guest_whatsapp || 'No WhatsApp provided'}
+                                  </span>
                                 </div>
 
                                 {b.guest_whatsapp ? (
-                                  <div className="flex items-center gap-1 shrink-0">
+                                  <div className="flex items-center gap-1.5 shrink-0">
                                     <button
                                       type="button"
                                       onClick={() => handleCopyText(b.guest_whatsapp, `wa-${b.id}`)}
-                                      className="h-6 px-2 rounded-md bg-white text-[#404040] border border-emerald-300 hover:border-emerald-600 hover:text-emerald-800 text-[11px] font-medium transition-all inline-flex items-center gap-1 cursor-pointer shadow-2xs"
+                                      className="h-6 px-2 rounded-md bg-white text-[#404040] border border-emerald-300 hover:border-emerald-600 hover:text-emerald-800 text-[11px] font-medium transition-all inline-flex items-center cursor-pointer shadow-2xs"
                                       title="Copy Customer WhatsApp"
                                       aria-label="Copy WhatsApp Number"
                                     >
-                                      {copiedId === `wa-${b.id}` ? (
-                                        <>
-                                          <Check size={12} className="text-emerald-600" />
-                                          <span className="text-[10px] text-emerald-700 font-semibold">Copied</span>
-                                        </>
-                                      ) : (
-                                        <>
-                                          <Copy size={12} className="text-[#737373]" />
-                                          <span className="text-[10px]">Copy</span>
-                                        </>
-                                      )}
+                                      {copiedId === `wa-${b.id}` ? 'Copied' : 'Copy'}
                                     </button>
                                     <a
                                       href={`https://wa.me/${formatWaLink(b.guest_whatsapp)}`}
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      className="h-6 px-2.5 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-medium transition-colors inline-flex items-center gap-1 cursor-pointer shadow-2xs"
+                                      className="h-6 px-2.5 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-medium transition-colors inline-flex items-center cursor-pointer shadow-2xs"
                                       title="Open WhatsApp Chat"
                                     >
-                                      <span>Chat</span>
-                                      <ArrowUpRight size={12} />
+                                      Chat
                                     </a>
                                   </div>
                                 ) : (
@@ -2810,15 +2775,11 @@ export default function AffiliateManagement() {
               <button
                 type="button"
                 onClick={() => handleCopyText(selectedCommission.booking_id, `bid-drawer-${selectedCommission.id}`)}
-                className="h-6 w-6 rounded hover:bg-neutral-100 flex items-center justify-center text-neutral-500 hover:text-black cursor-pointer"
+                className="h-6 px-1.5 rounded-md bg-white hover:bg-neutral-100 text-[#737373] hover:text-black text-[11px] font-medium border border-neutral-300 cursor-pointer"
                 title="Copy Booking ID"
                 aria-label="Copy Booking ID"
               >
-                {copiedId === `bid-drawer-${selectedCommission.id}` ? (
-                  <Check size={13} className="text-emerald-600" />
-                ) : (
-                  <Copy size={13} />
-                )}
+                {copiedId === `bid-drawer-${selectedCommission.id}` ? 'Copied' : 'Copy'}
               </button>
             </div>
           ) : ''
@@ -2879,25 +2840,19 @@ export default function AffiliateManagement() {
                       <button
                         type="button"
                         onClick={() => handleCopyText(selectedCommission.guest_whatsapp, `wa-drawer-${selectedCommission.id}`)}
-                        className="h-6 px-1.5 rounded bg-white text-[#404040] border border-[#D4D4D4] hover:border-black text-[11px] inline-flex items-center gap-1 cursor-pointer"
+                        className="h-6 px-1.5 rounded bg-white text-[#404040] border border-[#D4D4D4] hover:border-black text-[11px] inline-flex items-center cursor-pointer"
                         title="Copy Customer WhatsApp"
                       >
-                        {copiedId === `wa-drawer-${selectedCommission.id}` ? (
-                          <Check size={12} className="text-emerald-600" />
-                        ) : (
-                          <Copy size={12} />
-                        )}
-                        <span>{copiedId === `wa-drawer-${selectedCommission.id}` ? 'Copied' : 'Copy'}</span>
+                        {copiedId === `wa-drawer-${selectedCommission.id}` ? 'Copied' : 'Copy'}
                       </button>
                       <a
                         href={`https://wa.me/${formatWaLink(selectedCommission.guest_whatsapp)}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="h-6 px-2 rounded bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-medium inline-flex items-center gap-1 cursor-pointer shadow-2xs"
+                        className="h-6 px-2 rounded bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-medium inline-flex items-center cursor-pointer shadow-2xs"
                         title="Open WhatsApp chat"
                       >
-                        <span>Chat</span>
-                        <ArrowUpRight size={12} />
+                        Chat
                       </a>
                     </div>
                   ) : (
