@@ -568,11 +568,7 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                 <span>Back</span>
                             </button>
 
-                            <div className="flex items-center gap-2">
-                                <span className="inline-flex items-center px-3 py-1 rounded-full bg-[#3b82f6] text-white text-[10px] font-bold tracking-widest uppercase shadow-sm">
-                                    {(campaign?.label?.replace(/\s*-?\d+%\s*(off)?/gi, '').trim()) || 'SPECIAL OFFER'}
-                                </span>
-                            </div>
+                            <div />
 
                             <button
                                 onClick={() => setIsCampaignModalOpen(false)}
@@ -612,12 +608,16 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
 
                             {/* Treatment Selection Grid */}
                             <div className="pb-10">
-                                <div className="flex items-center justify-between mb-4 px-1">
-                                    <h3 className="text-xs font-bold uppercase tracking-wider text-gray-800">
+                                <div className="flex items-center justify-between gap-3 mb-4 px-1">
+                                    <h3 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-gray-800">
                                         {Number(campaign?.discountPercentage) > 0
                                             ? 'Select Treatment to Activate Discount'
                                             : 'Select Treatment'}
                                     </h3>
+                                    <div className="shrink-0 whitespace-nowrap inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50/90 border border-blue-200/80 text-[#1d4ed8] text-[11px] font-bold shadow-xs">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-[#2563eb]"></span>
+                                        <span>{campaign?.selectedTreatments?.length || 0} Available</span>
+                                    </div>
                                 </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -695,42 +695,41 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                                     </div>
 
                                                     {/* Right Section (White Ticket Stub) */}
-                                                    <div className="w-[100px] sm:w-[110px] md:w-[130px] bg-white flex flex-col items-center justify-between py-4 px-2 shrink-0 text-center relative z-10">
+                                                    <div className="w-[110px] sm:w-[120px] md:w-[135px] bg-white flex flex-col items-center justify-between py-4 px-2.5 shrink-0 text-center relative z-10">
                                                         <div className="flex flex-col items-center justify-center w-full my-auto">
-                                                            <div className="text-[8px] md:text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">
-                                                                {discount > 0 ? 'Discount' : 'Rate'}
-                                                            </div>
+                                                            {/* Discount Section */}
                                                             {discount > 0 ? (
-                                                                <div className="text-xs md:text-sm font-black text-[#2563eb] leading-tight mb-1">
-                                                                    -{discount}%
+                                                                <div className="flex flex-col items-center">
+                                                                    <span className="text-[8px] md:text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">
+                                                                        Discount
+                                                                    </span>
+                                                                    <span className="text-xs md:text-sm font-black text-[#2563eb] leading-tight">
+                                                                        -{discount}%
+                                                                    </span>
                                                                 </div>
                                                             ) : (
-                                                                <div className="text-[10px] md:text-xs font-bold text-gray-700 leading-tight mb-1">
-                                                                    STANDARD
-                                                                </div>
+                                                                <span className="text-[9px] md:text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                                                                    Special Rate
+                                                                </span>
                                                             )}
 
-                                                            <div className="w-6 h-px bg-gray-200 my-1.5"></div>
+                                                            <div className="w-7 h-px bg-gray-200 my-2"></div>
 
-                                                            <div className="text-[8px] md:text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">
-                                                                Price
-                                                            </div>
+                                                            {/* Price Section with IDR first */}
                                                             {discount > 0 && (
-                                                                <div className="text-[10px] md:text-[11px] font-medium text-gray-400 line-through leading-none mb-0.5">
-                                                                    {originalPriceNum.toLocaleString('en-US')}
+                                                                <div className="text-[10px] md:text-[11px] font-medium text-gray-400 line-through leading-none mb-1 whitespace-nowrap">
+                                                                    IDR {originalPriceNum.toLocaleString('en-US')}
                                                                 </div>
                                                             )}
-                                                            <div className="text-xs sm:text-sm md:text-base font-black text-black leading-none my-0.5">
-                                                                {discount > 0
+                                                            <div className="text-xs sm:text-[13px] md:text-sm font-black text-black leading-tight tracking-tight whitespace-nowrap">
+                                                                IDR {discount > 0
                                                                     ? `${discountedPriceNum.toLocaleString('en-US')}`
                                                                     : `${originalPriceNum.toLocaleString('en-US')}`}
                                                             </div>
-                                                            <div className="text-[8px] md:text-[9px] font-bold text-gray-400 uppercase tracking-wider mt-0.5">
-                                                                IDR
-                                                            </div>
                                                         </div>
 
-                                                        <div className="w-full mt-2">
+                                                        {/* Book Button */}
+                                                        <div className="w-full mt-2.5">
                                                             <button
                                                                 type="button"
                                                                 onClick={(e) => {
