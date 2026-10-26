@@ -27,7 +27,7 @@ const CATEGORIES = [
 
 
 export default function Home() {
-    const { saveDraft, confirmBooking, history } = useCart();
+    const { saveDraft, confirmBooking, history, restoreAction, clearRestoreAction } = useCart();
     const bookingIdRef = React.useRef<string>(Math.random().toString(36).substring(2, 8).toUpperCase());
 
     const { treatments, campaign, campaigns, products, isLoaded, siteBrandFilter } = useSpa();
@@ -113,22 +113,54 @@ export default function Home() {
 
     const [formData, setFormData] = useState({ name: '', location: '', room: '', ...getInitialDateTime() });
 
-    // Restore booking from query param
+    // Restore booking from CartContext action or query param
     useEffect(() => {
-        if (typeof window !== 'undefined') {
+        const handleRestore = (bookingId: string, mode?: string) => {
+            const booking = history.find(h => h.id === bookingId);
+            if (!booking) return;
+
+            if (booking.items && booking.items.length > 0) {
+                setCartItems(booking.items);
+            }
+
+            if (mode === 'bookAgain' || booking.status === 'confirmed') {
+                // Book Again: Record their name automatically, reset date & time, require villa / hotel name
+                bookingIdRef.current = Math.random().toString(36).substring(2, 8).toUpperCase();
+                setFormData({
+                    name: booking.customerDetails?.name || '',
+                    location: '',
+                    room: '',
+                    ...getInitialDateTime()
+                });
+            } else if (booking.customerDetails) {
+                // Continue Draft: keep draft details
+                bookingIdRef.current = booking.id;
+                setFormData({
+                    name: booking.customerDetails.name || '',
+                    location: booking.customerDetails.location || '',
+                    room: booking.customerDetails.room || '',
+                    date: booking.customerDetails.date || getInitialDateTime().date,
+                    time: booking.customerDetails.time || getInitialDateTime().time
+                });
+            }
+
+            setIsReviewingBooking(false);
+            setIsBookingModalOpen(true);
+        };
+
+        if (restoreAction) {
+            handleRestore(restoreAction.bookingId, restoreAction.mode);
+            clearRestoreAction();
+        } else if (typeof window !== 'undefined') {
             const searchParams = new URLSearchParams(window.location.search);
             const restoreId = searchParams.get('restoreBooking');
+            const mode = searchParams.get('mode') || undefined;
             if (restoreId && history.length > 0) {
-                const booking = history.find(h => h.id === restoreId);
-                if (booking) {
-                    setCartItems(booking.items);
-                    setIsBookingModalOpen(true);
-                    // Clean up URL
-                    window.history.replaceState({}, document.title, window.location.pathname);
-                }
+                handleRestore(restoreId, mode);
+                window.history.replaceState({}, document.title, window.location.pathname);
             }
         }
-    }, [history]);
+    }, [restoreAction, history]);
 
     const filteredAndSortedTreatments = React.useMemo(() => {
         let result = treatments.filter(t => {

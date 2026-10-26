@@ -30,17 +30,28 @@ export type BookingHistory = {
     totalPrice: number;
 };
 
+export type RestoreBookingAction = {
+    bookingId: string;
+    mode: 'draft' | 'bookAgain';
+    timestamp: number;
+};
+
 interface CartContextType {
     history: BookingHistory[];
     saveDraft: (booking: BookingHistory) => void;
     confirmBooking: (bookingId: string) => void;
     removeHistory: (bookingId: string) => void;
+    restoreAction: RestoreBookingAction | null;
+    triggerRestoreBooking: (bookingId: string, mode: 'draft' | 'bookAgain') => void;
+    clearRestoreAction: () => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: ReactNode }) {
     const [history, setHistory] = useState<BookingHistory[]>([]);
+    const [isLoaded, setIsLoaded] = useState(false);
+    const [restoreAction, setRestoreAction] = useState<RestoreBookingAction | null>(null);
 
     useEffect(() => {
         const saved = localStorage.getItem('spa_booking_history');
@@ -51,11 +62,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
                 console.error('Failed to parse booking history', e);
             }
         }
+        setIsLoaded(true);
     }, []);
 
     useEffect(() => {
+        if (!isLoaded) return;
         localStorage.setItem('spa_booking_history', JSON.stringify(history));
-    }, [history]);
+    }, [history, isLoaded]);
 
     const saveDraft = (booking: BookingHistory) => {
         setHistory(prev => {
@@ -77,8 +90,24 @@ export function CartProvider({ children }: { children: ReactNode }) {
         setHistory(prev => prev.filter(h => h.id !== bookingId));
     };
 
+    const triggerRestoreBooking = (bookingId: string, mode: 'draft' | 'bookAgain') => {
+        setRestoreAction({ bookingId, mode, timestamp: Date.now() });
+    };
+
+    const clearRestoreAction = () => {
+        setRestoreAction(null);
+    };
+
     return (
-        <CartContext.Provider value={{ history, saveDraft, confirmBooking, removeHistory }}>
+        <CartContext.Provider value={{
+            history,
+            saveDraft,
+            confirmBooking,
+            removeHistory,
+            restoreAction,
+            triggerRestoreBooking,
+            clearRestoreAction
+        }}>
             {children}
         </CartContext.Provider>
     );
