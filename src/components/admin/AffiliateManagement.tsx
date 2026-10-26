@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { ChevronLeft, ChevronRight, Check, Copy, Plus, RefreshCw, ArrowUpRight, Info, DoorClosed, MapPin } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Check, Copy, Plus, RefreshCw, ArrowUpRight, Info, DoorClosed, MapPin, MessageCircle, User, Calendar, Clock, Sparkles } from 'lucide-react';
 import {
   cx,
   btn,
@@ -51,6 +51,15 @@ const EMPTY_PAYOUT_FORM = { partner_id: '', amount: '', payout_method: 'bank_tra
 const fullName = (p: any) => `${p?.first_name || ''} ${p?.last_name || ''}`.trim() || 'Unnamed partner';
 const commDateKey = (c: any) => toDateKey(c.booking_date || c.created_at);
 const methodLabel = (m?: string) => (m ? m.replace(/_/g, ' ') : 'Bank transfer');
+
+const formatWaLink = (phone?: string) => {
+  if (!phone) return '';
+  let clean = phone.replace(/[^0-9]/g, '');
+  if (clean.startsWith('0')) {
+    clean = '62' + clean.slice(1);
+  }
+  return clean;
+};
 
 const CONFIRM_COPY = {
   approve: { title: 'Approve partner', confirm: 'Approve', body: (n: string) => `${n} will be activated and their referral code will start tracking bookings.` },
@@ -1966,26 +1975,185 @@ export default function AffiliateManagement() {
                       const list = partnerSelectedDate ? partnerBookingsByDate[partnerSelectedDate] || [] : partnerMonthBookings;
                       if (list.length === 0) return <EmptyState title="No bookings" description="Nothing scheduled for this period." />;
                       return (
-                        <ul className="lg:flex-1 lg:min-h-0 overflow-y-auto divide-y divide-[#F0F0F0]">
+                        <ul className="lg:flex-1 lg:min-h-0 overflow-y-auto p-3 space-y-3 bg-[#FAFAFA]/60">
                           {list.map((b) => (
-                            <li key={b.id} className="p-4 space-y-2.5">
-                              <div className="flex items-start justify-between gap-2">
-                                <button type="button" onClick={() => setSelectedCommissionId(b.id)} className="text-left min-w-0 group">
-                                  <span className="block font-mono text-xs font-medium text-[#171717] group-hover:underline">#{b.booking_id}</span>
-                                  <span className="block text-[13px] text-[#171717] truncate">{b.guest_name || 'Guest'}</span>
-                                  <span className="block text-xs text-[#737373] truncate">
-                                    {safeFormatDate(b.booking_date || b.created_at, { day: 'numeric', month: 'short' })} {b.booking_time || ''}
-                                    {b.location ? ` · ${b.location}` : ''}
+                            <li
+                              key={b.id}
+                              className="bg-white rounded-xl border border-[#E5E5E5] p-3.5 shadow-2xs space-y-3 transition-all hover:border-[#D4D4D4] hover:shadow-xs"
+                            >
+                              {/* 1. Top Bar: Booking ID + Quick Copy & Status Badge + Commission */}
+                              <div className="flex items-center justify-between gap-2">
+                                <div className="flex items-center gap-1.5 min-w-0">
+                                  <button
+                                    type="button"
+                                    onClick={() => setSelectedCommissionId(b.id)}
+                                    className="font-mono text-xs font-bold text-black bg-[#F5F5F5] hover:bg-[#EBEBEB] px-2 py-0.5 rounded border border-[#E0E0E0] transition-colors truncate"
+                                    title="View full booking details"
+                                  >
+                                    #{b.booking_id}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleCopyText(b.booking_id, `bid-${b.id}`)}
+                                    className="h-6 w-6 rounded-md hover:bg-[#F5F5F5] text-[#737373] hover:text-black flex items-center justify-center transition-colors cursor-pointer shrink-0"
+                                    title="Copy Booking ID"
+                                    aria-label="Copy Booking ID"
+                                  >
+                                    {copiedId === `bid-${b.id}` ? (
+                                      <Check size={13} className="text-emerald-600" />
+                                    ) : (
+                                      <Copy size={13} />
+                                    )}
+                                  </button>
+                                </div>
+                                <div className="flex items-center gap-2 shrink-0">
+                                  <span className="font-semibold text-xs tabular-nums text-[#171717] bg-[#FAFAFA] px-2 py-0.5 rounded border border-[#E5E5E5]">
+                                    {formatIDR(b.commission_amount)}
                                   </span>
+                                  <StatusBadge status={b.status} />
+                                </div>
+                              </div>
+
+                              {/* 2. Hero: Treatment Name */}
+                              <div className="flex items-center justify-between gap-2 pb-0.5">
+                                <div className="flex items-center gap-1.5 min-w-0">
+                                  <Sparkles size={14} className="text-amber-500 shrink-0" />
+                                  <span className="font-bold text-xs uppercase tracking-wide text-[#171717] truncate" title={b.treatment_name || 'Spa Treatment'}>
+                                    {b.treatment_name || 'Spa Ritual Treatment'}
+                                  </span>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedCommissionId(b.id)}
+                                  className="text-[11px] text-[#737373] hover:text-black hover:underline shrink-0 font-medium"
+                                >
+                                  Details →
                                 </button>
-                                <StatusBadge status={b.status} />
                               </div>
-                              <div className="flex items-end justify-between text-xs">
-                                <span className="text-[#737373] truncate pr-2">{b.treatment_name || 'Treatment'}</span>
-                                <span className="font-medium tabular-nums text-[#171717] whitespace-nowrap">{formatIDR(b.commission_amount)}</span>
+
+                              {/* 3. Core Booking Attributes: Customer, Room, Date, Time */}
+                              <div className="bg-[#F9F9F9] rounded-lg p-2.5 border border-[#EBEBEB] space-y-2 text-xs">
+                                <div className="grid grid-cols-2 gap-2">
+                                  {/* Customer Name */}
+                                  <div className="flex items-center gap-1.5 min-w-0">
+                                    <User size={13} className="text-[#8C8C8C] shrink-0" />
+                                    <div className="min-w-0">
+                                      <span className="text-[10px] uppercase font-semibold text-[#8C8C8C] block leading-none">Customer</span>
+                                      <span className="font-semibold text-[#171717] truncate block text-xs mt-0.5" title={b.guest_name || 'Guest'}>
+                                        {b.guest_name || 'Guest'}
+                                      </span>
+                                    </div>
+                                  </div>
+
+                                  {/* Room Number */}
+                                  <div className="flex items-center gap-1.5 min-w-0">
+                                    <DoorClosed size={13} className="text-indigo-600 shrink-0" />
+                                    <div className="min-w-0">
+                                      <span className="text-[10px] uppercase font-semibold text-[#8C8C8C] block leading-none">Room Number</span>
+                                      {b.room_number ? (
+                                        <span className="inline-block font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-1.5 py-0.2 rounded text-[11px] mt-0.5 truncate">
+                                          Room {b.room_number}
+                                        </span>
+                                      ) : (
+                                        <span className="text-[#A3A3A3] italic block text-xs mt-0.5">—</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-2 pt-1.5 border-t border-[#EAEAEA]">
+                                  {/* Date */}
+                                  <div className="flex items-center gap-1.5 min-w-0">
+                                    <Calendar size={13} className="text-[#8C8C8C] shrink-0" />
+                                    <div className="min-w-0">
+                                      <span className="text-[10px] uppercase font-semibold text-[#8C8C8C] block leading-none">Date</span>
+                                      <span className="font-medium text-[#262626] truncate block text-xs mt-0.5">
+                                        {safeFormatDate(b.booking_date || b.created_at, { day: 'numeric', month: 'short', year: 'numeric' })}
+                                      </span>
+                                    </div>
+                                  </div>
+
+                                  {/* Time */}
+                                  <div className="flex items-center gap-1.5 min-w-0">
+                                    <Clock size={13} className="text-[#8C8C8C] shrink-0" />
+                                    <div className="min-w-0">
+                                      <span className="text-[10px] uppercase font-semibold text-[#8C8C8C] block leading-none">Time</span>
+                                      <span className="font-bold text-[#171717] truncate block text-xs mt-0.5">
+                                        {b.booking_time ? `${b.booking_time} WITA` : '—'}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Location (if available) */}
+                                {b.location && (
+                                  <div className="flex items-center gap-1.5 text-[11px] text-[#525252] pt-1.5 border-t border-[#EAEAEA] truncate">
+                                    <MapPin size={12} className="text-[#8C8C8C] shrink-0" />
+                                    <span className="truncate" title={b.location}>{b.location}</span>
+                                  </div>
+                                )}
                               </div>
-                              <VerificationChecks c={b} />
-                              <CommissionActions c={b} />
+
+                              {/* 4. Customer WhatsApp (Highlighted Tracking & Quick Contact) */}
+                              <div className="p-2.5 rounded-lg bg-emerald-50/70 border border-emerald-200/90 flex items-center justify-between gap-2">
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <div className="w-6 h-6 rounded-md bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-2xs">
+                                    <MessageCircle size={13} />
+                                  </div>
+                                  <div className="min-w-0">
+                                    <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 block leading-none">
+                                      Customer WhatsApp
+                                    </span>
+                                    <span className="text-xs font-mono font-semibold text-neutral-900 truncate block mt-0.5">
+                                      {b.guest_whatsapp || 'No WhatsApp provided'}
+                                    </span>
+                                  </div>
+                                </div>
+
+                                {b.guest_whatsapp ? (
+                                  <div className="flex items-center gap-1 shrink-0">
+                                    <button
+                                      type="button"
+                                      onClick={() => handleCopyText(b.guest_whatsapp, `wa-${b.id}`)}
+                                      className="h-6 px-2 rounded-md bg-white text-[#404040] border border-emerald-300 hover:border-emerald-600 hover:text-emerald-800 text-[11px] font-medium transition-all inline-flex items-center gap-1 cursor-pointer shadow-2xs"
+                                      title="Copy Customer WhatsApp"
+                                      aria-label="Copy WhatsApp Number"
+                                    >
+                                      {copiedId === `wa-${b.id}` ? (
+                                        <>
+                                          <Check size={12} className="text-emerald-600" />
+                                          <span className="text-[10px] text-emerald-700 font-semibold">Copied</span>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <Copy size={12} className="text-[#737373]" />
+                                          <span className="text-[10px]">Copy</span>
+                                        </>
+                                      )}
+                                    </button>
+                                    <a
+                                      href={`https://wa.me/${formatWaLink(b.guest_whatsapp)}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="h-6 px-2.5 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-medium transition-colors inline-flex items-center gap-1 cursor-pointer shadow-2xs"
+                                      title="Open WhatsApp Chat"
+                                    >
+                                      <span>Chat</span>
+                                      <ArrowUpRight size={12} />
+                                    </a>
+                                  </div>
+                                ) : (
+                                  <span className="text-[11px] text-[#A3A3A3] italic">Unavailable</span>
+                                )}
+                              </div>
+
+                              {/* 5. Verification Checks & Actions */}
+                              <div className="pt-2 border-t border-[#F0F0F0] space-y-2">
+                                <VerificationChecks c={b} />
+                                <div className="flex items-center justify-end pt-1">
+                                  <CommissionActions c={b} />
+                                </div>
+                              </div>
                             </li>
                           ))}
                         </ul>
@@ -2635,7 +2803,26 @@ export default function AffiliateManagement() {
         open={!!selectedCommission}
         onClose={() => setSelectedCommissionId(null)}
         zIndex="z-[85]"
-        title={selectedCommission ? `#${selectedCommission.booking_id}` : ''}
+        title={
+          selectedCommission ? (
+            <div className="flex items-center gap-2">
+              <span className="font-mono">#{selectedCommission.booking_id}</span>
+              <button
+                type="button"
+                onClick={() => handleCopyText(selectedCommission.booking_id, `bid-drawer-${selectedCommission.id}`)}
+                className="h-6 w-6 rounded hover:bg-neutral-100 flex items-center justify-center text-neutral-500 hover:text-black cursor-pointer"
+                title="Copy Booking ID"
+                aria-label="Copy Booking ID"
+              >
+                {copiedId === `bid-drawer-${selectedCommission.id}` ? (
+                  <Check size={13} className="text-emerald-600" />
+                ) : (
+                  <Copy size={13} />
+                )}
+              </button>
+            </div>
+          ) : ''
+        }
         meta={selectedCommission && <StatusBadge status={selectedCommission.status} />}
         footer={
           selectedCommission && (
@@ -2668,16 +2855,57 @@ export default function AffiliateManagement() {
             </div>
 
             <div>
-              <h3 className="text-[13px] font-semibold text-black mb-1">Booking</h3>
+              <h3 className="text-[13px] font-semibold text-black mb-1">Booking Details</h3>
               <dl>
-                <KeyValue label="Guest">{selectedCommission.guest_name || 'Guest'}</KeyValue>
                 <KeyValue label="Treatment">{selectedCommission.treatment_name || '—'}</KeyValue>
+                <KeyValue label="Customer">{selectedCommission.guest_name || 'Guest'}</KeyValue>
+                <KeyValue label="Room Number">
+                  {selectedCommission.room_number ? (
+                    <span className="inline-block font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded text-xs">
+                      Room {selectedCommission.room_number}
+                    </span>
+                  ) : (
+                    '—'
+                  )}
+                </KeyValue>
+                <KeyValue label="Time">{selectedCommission.booking_time ? `${selectedCommission.booking_time} WITA` : '—'}</KeyValue>
                 <KeyValue label="Date">
-                  {safeFormatDate(selectedCommission.booking_date || selectedCommission.created_at)} {selectedCommission.booking_time || ''}
+                  {safeFormatDate(selectedCommission.booking_date || selectedCommission.created_at, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
+                </KeyValue>
+                <KeyValue label="Customer WhatsApp">
+                  {selectedCommission.guest_whatsapp ? (
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="font-mono text-xs font-semibold text-neutral-900">{selectedCommission.guest_whatsapp}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleCopyText(selectedCommission.guest_whatsapp, `wa-drawer-${selectedCommission.id}`)}
+                        className="h-6 px-1.5 rounded bg-white text-[#404040] border border-[#D4D4D4] hover:border-black text-[11px] inline-flex items-center gap-1 cursor-pointer"
+                        title="Copy Customer WhatsApp"
+                      >
+                        {copiedId === `wa-drawer-${selectedCommission.id}` ? (
+                          <Check size={12} className="text-emerald-600" />
+                        ) : (
+                          <Copy size={12} />
+                        )}
+                        <span>{copiedId === `wa-drawer-${selectedCommission.id}` ? 'Copied' : 'Copy'}</span>
+                      </button>
+                      <a
+                        href={`https://wa.me/${formatWaLink(selectedCommission.guest_whatsapp)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="h-6 px-2 rounded bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-medium inline-flex items-center gap-1 cursor-pointer shadow-2xs"
+                        title="Open WhatsApp chat"
+                      >
+                        <span>Chat</span>
+                        <ArrowUpRight size={12} />
+                      </a>
+                    </div>
+                  ) : (
+                    '—'
+                  )}
                 </KeyValue>
                 <KeyValue label="Location">
                   {selectedCommission.location || '—'}
-                  {selectedCommission.room_number ? ` (${selectedCommission.room_number})` : ''}
                 </KeyValue>
                 <KeyValue label="Booking status"><span className="capitalize">{selectedCommission.booking_status || '—'}</span></KeyValue>
               </dl>

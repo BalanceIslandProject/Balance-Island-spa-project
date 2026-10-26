@@ -33,25 +33,28 @@ export async function GET(req: NextRequest) {
     if (enrichedCommissions.length > 0) {
       const bookingIds = Array.from(new Set(enrichedCommissions.map((c) => c.booking_id).filter(Boolean)));
       if (bookingIds.length > 0) {
-        const [bookingsRes, attributionsRes] = await Promise.all([
-          supabase
-            .from('bookings')
-            .select('*')
-            .in('reference_number', bookingIds),
-          supabase
-            .from('affiliate_attributions')
-            .select('booking_id, customer_name, customer_phone')
-            .in('booking_id', bookingIds),
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        const uuidIds = bookingIds.filter((id) => uuidRegex.test(id));
+
+        const [bookingsResByRef, bookingsResById, attributionsRes] = await Promise.all([
+          supabase.from('bookings').select('*').in('reference_number', bookingIds),
+          uuidIds.length > 0 ? supabase.from('bookings').select('*').in('id', uuidIds) : Promise.resolve({ data: [] } as any),
+          supabase.from('affiliate_attributions').select('booking_id, customer_name, customer_phone').in('booking_id', bookingIds),
         ]);
 
+        const allBookings = [...(bookingsResByRef.data || []), ...(bookingsResById.data || [])];
+
         const bookingMap: Record<string, any> = {};
-        if (bookingsRes.data) {
-          for (const b of bookingsRes.data) {
-            if (b.reference_number) {
-              bookingMap[b.reference_number] = b;
-              bookingMap[b.reference_number.toUpperCase()] = b;
-              bookingMap[b.reference_number.toLowerCase()] = b;
-            }
+        for (const b of allBookings) {
+          if (b.reference_number) {
+            bookingMap[b.reference_number] = b;
+            bookingMap[b.reference_number.toUpperCase()] = b;
+            bookingMap[b.reference_number.toLowerCase()] = b;
+          }
+          if (b.id) {
+            bookingMap[b.id] = b;
+            bookingMap[b.id.toUpperCase()] = b;
+            bookingMap[b.id.toLowerCase()] = b;
           }
         }
 
@@ -75,9 +78,9 @@ export async function GET(req: NextRequest) {
             booking_date: b.booking_date || (c.created_at ? c.created_at.split('T')[0] : ''),
             booking_time: b.time || '',
             guest_name: b.guest_name || a.customer_name || 'Guest',
-            guest_whatsapp: b.guest_whatsapp || a.customer_phone || '',
+            guest_whatsapp: b.guest_whatsapp || b.whatsapp || b.phone || a.customer_phone || '',
             location: b.location || '',
-            room_number: b.room_number || '',
+            room_number: b.room_number || b.room || '',
             treatment_name: b.treatment_name || 'Spa Treatment',
             booking_status: b.status || (c.service_completed ? 'Completed' : 'Pending'),
             treatment_status: b.treatment_status || (c.service_completed ? 'Finished' : 'Scheduled'),
