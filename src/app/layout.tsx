@@ -522,13 +522,6 @@ export default async function RootLayout({
                               }
                             }
                           ]
-                        },
-                        "aggregateRating": {
-                          "@type": "AggregateRating",
-                          "ratingValue": "5.0",
-                          "reviewCount": "348",
-                          "bestRating": "5",
-                          "worstRating": "1"
                         }
                       },
                       {
@@ -676,13 +669,6 @@ export default async function RootLayout({
                               }
                             }
                           ]
-                        },
-                        "aggregateRating": {
-                          "@type": "AggregateRating",
-                          "ratingValue": "5.0",
-                          "reviewCount": "194",
-                          "bestRating": "5",
-                          "worstRating": "1"
                         }
                       },
                       {

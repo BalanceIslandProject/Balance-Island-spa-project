@@ -227,14 +227,7 @@ export default async function LocationPage({ params }: Props) {
                 "opens": "08:00",
                 "closes": "23:30"
             }
-        ],
-        "aggregateRating": {
-            "@type": "AggregateRating",
-            "ratingValue": "5.0",
-            "reviewCount": "194",
-            "bestRating": "5",
-            "worstRating": "1"
-        }
+        ]
     };
 
     return (
