@@ -117,17 +117,17 @@ function ExploreContent() {
                     </div>
 
                     {/* Categories Row */}
-                    <div className="flex overflow-x-auto gap-4 no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 pt-2 pb-1">
+                    <div className="flex overflow-x-auto gap-2.5 no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 pt-2 pb-1">
                         {CATEGORIES.map((cat) => {
                             const isActive = activeCategory === cat.id;
                             return (
                                 <button
                                     key={cat.id}
                                     onClick={() => setActiveCategory(cat.id)}
-                                    className={`flex items-center justify-center px-4 py-2 rounded-full whitespace-nowrap transition-colors border shrink-0 ${
+                                    className={`flex items-center justify-center px-4 py-2 rounded-[20px] whitespace-nowrap transition-all duration-300 shrink-0 ${
                                         isActive 
-                                            ? 'bg-gray-900 text-white border-gray-900 shadow-sm' 
-                                            : 'bg-transparent text-gray-500 border-transparent hover:border-gray-200 hover:text-gray-900'
+                                            ? 'bg-[#1D1D1F] text-white border border-black shadow-[0_4px_16px_rgba(0,0,0,0.18)] scale-[1.02]' 
+                                            : 'bg-white text-gray-700 border border-gray-200/90 shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:border-gray-400 hover:shadow-md hover:bg-gray-50 active:scale-95'
                                     }`}
                                 >
                                     <span className={`text-[13px] ${isActive ? 'font-bold' : 'font-medium'}`}>{cat.label}</span>

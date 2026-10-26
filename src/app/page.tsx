@@ -381,23 +381,35 @@ export default function Home() {
 
                     {/* Search Bar (Mobile Only - Above Campaign) */}
                     <div className="md:hidden relative w-full mb-6 z-20">
-                        <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none h-[54px]">
-                            <Search className="h-5 w-5 text-text-muted" />
+                        <div className="w-full bg-white rounded-[24px] border border-gray-200/90 shadow-[0_4px_20px_rgba(0,0,0,0.06)] hover:shadow-[0_8px_25px_rgba(0,0,0,0.09)] transition-all duration-300 flex items-center p-1.5 pl-3.5 focus-within:border-black focus-within:ring-2 focus-within:ring-black/5">
+                            <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-500 mr-2 shrink-0">
+                                <Search className="h-4 w-4 text-gray-700" />
+                            </div>
+                            <input
+                                type="text"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                placeholder="Search your favourite treatment..."
+                                className="w-full bg-transparent border-none text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-0 p-0 h-[44px]"
+                            />
+                            {searchQuery && (
+                                <button
+                                    type="button"
+                                    onClick={() => setSearchQuery('')}
+                                    className="p-1.5 text-gray-400 hover:text-black mr-1 transition-colors"
+                                    title="Clear search"
+                                >
+                                    <X size={15} />
+                                </button>
+                            )}
+                            <button
+                                onClick={() => setIsPriceFilterOpen(!isPriceFilterOpen)}
+                                title="Filter by price"
+                                className={`w-10 h-10 rounded-[18px] flex items-center justify-center transition-all shrink-0 ${isPriceFilterOpen ? 'bg-black text-white shadow-md' : 'bg-gray-100/90 text-gray-700 hover:bg-black hover:text-white'}`}
+                            >
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                            </button>
                         </div>
-                        <input
-                            type="text"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder="Search your favourite treatment..."
-                            className="w-full bg-white/70 backdrop-blur-md border border-white/50 rounded-2xl h-[54px] pl-11 pr-12 text-sm text-primary shadow-soft focus:outline-none focus:ring-2 focus:ring-secondary/50 placeholder:text-text-muted"
-                        />
-                        <button
-                            onClick={() => setIsPriceFilterOpen(!isPriceFilterOpen)}
-                            title="Filter by price"
-                            className={`absolute top-2 right-2 w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${isPriceFilterOpen ? 'bg-primary text-white shadow-md' : 'bg-secondary/30 text-primary hover:bg-secondary/50'}`}
-                        >
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-                        </button>
 
                         <AnimatePresence>
                             {isPriceFilterOpen && (
@@ -405,11 +417,11 @@ export default function Home() {
                                     initial={{ opacity: 0, y: -10 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, y: -10 }}
-                                    className="absolute top-full right-0 mt-3 w-64 md:w-72 bg-white/95 backdrop-blur-xl border border-white/50 rounded-2xl p-5 shadow-[0_20px_40px_rgb(0,0,0,0.12)] z-30"
+                                    className="absolute top-full right-0 mt-3 w-64 md:w-72 bg-white rounded-[24px] border border-gray-200 p-5 shadow-[0_20px_40px_rgb(0,0,0,0.12)] z-30"
                                 >
                                     <div className="flex items-center justify-between mb-4">
-                                        <span className="text-[10px] font-bold uppercase tracking-widest text-primary/80">Max Price</span>
-                                        <span className="text-sm font-serif text-primary font-medium">IDR {maxPrice.toLocaleString('en-US')}</span>
+                                        <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Max Price</span>
+                                        <span className="text-sm font-semibold text-gray-900">IDR {maxPrice.toLocaleString('en-US')}</span>
                                     </div>
                                     <input
                                         type="range"
@@ -418,9 +430,9 @@ export default function Home() {
                                         step="50000"
                                         value={maxPrice}
                                         onChange={(e) => setMaxPrice(parseInt(e.target.value))}
-                                        className="w-full accent-primary h-1.5 bg-secondary rounded-lg appearance-none cursor-pointer"
+                                        className="w-full accent-black h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                                     />
-                                    <div className="flex justify-between text-[10px] text-text-muted mt-2 font-medium tracking-wider">
+                                    <div className="flex justify-between text-[10px] text-gray-400 mt-2 font-medium tracking-wider">
                                         <span>150k</span>
                                         <span>1.5m</span>
                                     </div>
@@ -626,23 +638,23 @@ export default function Home() {
                         <div className="max-w-full overflow-hidden w-full">
                             <div className="flex items-center justify-between mb-4 w-full md:pr-0">
                                 <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wider">Popular Category</h3>
-                                <Link href="/explore" className="inline-flex items-center justify-center bg-white border border-border/80 text-primary px-4 py-2 rounded-full text-[11px] font-bold tracking-wide hover:bg-white hover:shadow-sm transition-all whitespace-nowrap ml-2">
+                                <Link href="/explore" className="inline-flex items-center justify-center bg-white border border-gray-200 text-gray-800 px-4 py-2 rounded-full text-[11px] font-bold tracking-wide hover:bg-gray-50 hover:shadow-sm transition-all whitespace-nowrap ml-2 shadow-sm">
                                     View All Treatments
                                 </Link>
                             </div>
-                            <div className="flex overflow-x-auto pb-4 -mx-6 px-6 md:mx-0 md:px-0 gap-3 no-scrollbar">
+                            <div className="flex overflow-x-auto pb-4 -mx-6 px-6 md:mx-0 md:px-0 gap-2.5 no-scrollbar">
                                 {CATEGORIES.map((cat) => {
                                     const isActive = activeCategory === cat.id;
                                     return (
                                         <button
                                             key={cat.id}
                                             onClick={() => setActiveCategory(cat.id)}
-                                            className={`flex items-center justify-center px-6 py-3 rounded-full whitespace-nowrap transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${isActive
-                                                ? 'bg-primary text-white shadow-[0_8px_20px_rgb(0,0,0,0.12)] scale-[1.02] border border-primary'
-                                                : 'bg-white/40 backdrop-blur-md text-primary border border-white/60 hover:bg-white/80 hover:scale-[1.02]'
+                                            className={`flex items-center justify-center gap-2 px-5 py-2.5 rounded-[20px] whitespace-nowrap transition-all duration-300 font-medium ${isActive
+                                                ? 'bg-[#1D1D1F] text-white shadow-[0_4px_16px_rgba(0,0,0,0.18)] scale-[1.02] border border-black font-semibold'
+                                                : 'bg-white text-gray-700 border border-gray-200/90 shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:border-gray-400 hover:shadow-md hover:bg-gray-50 active:scale-95'
                                                 }`}
                                         >
-                                            <span className="text-sm font-semibold tracking-wide">{cat.label}</span>
+                                            <span className="text-xs sm:text-sm tracking-wide">{cat.label}</span>
                                         </button>
                                     );
                                 })}
@@ -651,23 +663,35 @@ export default function Home() {
 
                         {/* Search Bar (Desktop Only - Next to Categories) */}
                         <div className="hidden md:block relative w-full md:w-80 shrink-0 md:mb-4">
-                            <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none h-[54px]">
-                                <Search className="h-5 w-5 text-text-muted" />
+                            <div className="w-full bg-white rounded-[24px] border border-gray-200/90 shadow-[0_4px_20px_rgba(0,0,0,0.06)] hover:shadow-[0_8px_25px_rgba(0,0,0,0.09)] transition-all duration-300 flex items-center p-1.5 pl-3.5 focus-within:border-black focus-within:ring-2 focus-within:ring-black/5">
+                                <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-500 mr-2 shrink-0">
+                                    <Search className="h-4 w-4 text-gray-700" />
+                                </div>
+                                <input
+                                    type="text"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    placeholder="Search your favourite treatment..."
+                                    className="w-full bg-transparent border-none text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-0 p-0 h-[44px]"
+                                />
+                                {searchQuery && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setSearchQuery('')}
+                                        className="p-1.5 text-gray-400 hover:text-black mr-1 transition-colors"
+                                        title="Clear search"
+                                    >
+                                        <X size={15} />
+                                    </button>
+                                )}
+                                <button
+                                    onClick={() => setIsPriceFilterOpen(!isPriceFilterOpen)}
+                                    title="Filter by price"
+                                    className={`w-10 h-10 rounded-[18px] flex items-center justify-center transition-all shrink-0 ${isPriceFilterOpen ? 'bg-black text-white shadow-md' : 'bg-gray-100/90 text-gray-700 hover:bg-black hover:text-white'}`}
+                                >
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                                </button>
                             </div>
-                            <input
-                                type="text"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                placeholder="Search your favourite treatment..."
-                                className="w-full bg-white/70 backdrop-blur-md border border-white/50 rounded-2xl h-[54px] pl-12 pr-12 text-sm text-primary shadow-soft focus:outline-none focus:ring-2 focus:ring-secondary/50 placeholder:text-text-muted"
-                            />
-                            <button
-                                onClick={() => setIsPriceFilterOpen(!isPriceFilterOpen)}
-                                title="Filter by price"
-                                className={`absolute top-2 right-2 w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${isPriceFilterOpen ? 'bg-primary text-white shadow-md' : 'bg-secondary/30 text-primary hover:bg-secondary/50'}`}
-                            >
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-                            </button>
 
                             {/* Price Filter Dropdown */}
                             <AnimatePresence>
@@ -676,11 +700,11 @@ export default function Home() {
                                         initial={{ opacity: 0, y: -10 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         exit={{ opacity: 0, y: -10 }}
-                                        className="absolute top-full right-0 mt-3 w-64 md:w-72 bg-white/95 backdrop-blur-xl border border-white/50 rounded-2xl p-5 shadow-[0_20px_40px_rgb(0,0,0,0.12)] z-30"
+                                        className="absolute top-full right-0 mt-3 w-64 md:w-72 bg-white rounded-[24px] border border-gray-200 p-5 shadow-[0_20px_40px_rgb(0,0,0,0.12)] z-30"
                                     >
                                         <div className="flex items-center justify-between mb-4">
-                                            <span className="text-[10px] font-bold uppercase tracking-widest text-primary/80">Max Price</span>
-                                            <span className="text-sm font-serif text-primary font-medium">Rp {maxPrice.toLocaleString('en-US')}</span>
+                                            <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Max Price</span>
+                                            <span className="text-sm font-semibold text-gray-900">IDR {maxPrice.toLocaleString('en-US')}</span>
                                         </div>
                                         <input
                                             type="range"
@@ -689,9 +713,9 @@ export default function Home() {
                                             step="50000"
                                             value={maxPrice}
                                             onChange={(e) => setMaxPrice(parseInt(e.target.value))}
-                                            className="w-full accent-primary h-1.5 bg-secondary rounded-lg appearance-none cursor-pointer"
+                                            className="w-full accent-black h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                                         />
-                                        <div className="flex justify-between text-[10px] text-text-muted mt-2 font-medium tracking-wider">
+                                        <div className="flex justify-between text-[10px] text-gray-400 mt-2 font-medium tracking-wider">
                                             <span>150k</span>
                                             <span>1.5m</span>
                                         </div>
@@ -812,228 +836,291 @@ export default function Home() {
                 <AnimatePresence>
                     {isCampaignModalOpen && selectedCampaignModal && (
                         <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="fixed inset-0 z-[100] flex items-end md:items-center justify-center bg-black/60 backdrop-blur-md overflow-x-hidden max-w-[100vw]"
+                            initial={{ opacity: 0, y: 30 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 30 }}
+                            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                            className="fixed inset-0 z-[100] w-full h-[100dvh] bg-[#F8F9FA] flex flex-col overflow-hidden text-black font-sans"
                         >
-                            <motion.div
-                                initial={{ opacity: 0, y: 100 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: 100 }}
-                                className="bg-white w-full h-[90dvh] md:h-auto md:max-h-[85vh] md:max-w-3xl md:rounded-[32px] rounded-t-[32px] shadow-2xl relative overflow-hidden flex flex-col border border-black/10 text-black font-sans"
-                            >
-                                {/* Modal Header */}
-                                <div className="p-5 md:p-7 border-b border-black/10 bg-white shrink-0">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-md bg-black text-white text-[9px] font-bold tracking-widest uppercase">
-                                                {selectedCampaignModal.label || 'EXCLUSIVE OFFER'}
-                                            </span>
-                                        </div>
-                                        <button
-                                            onClick={() => {
-                                                setIsCampaignModalOpen(false);
-                                                setSelectedCampaignModal(null);
-                                            }}
-                                            className="w-9 h-9 rounded-full bg-black/5 flex items-center justify-center text-black hover:bg-black hover:text-white transition-colors"
-                                        >
-                                            <X size={18} />
-                                        </button>
-                                    </div>
-                                    <h2 className="font-serif text-xl md:text-2xl font-bold text-black mt-1">{selectedCampaignModal.title}</h2>
-                                    {selectedCampaignModal.description && (
-                                        <p className="text-xs md:text-sm text-black/70 mt-1.5 leading-relaxed font-light">
-                                            {selectedCampaignModal.description}
-                                        </p>
-                                    )}
+                            {/* Modal Top Bar */}
+                            <div className="shrink-0 bg-white/95 backdrop-blur-md border-b border-gray-200/90 px-4 sm:px-6 py-3.5 flex items-center justify-between shadow-sm z-30">
+                                <button
+                                    onClick={() => {
+                                        setIsCampaignModalOpen(false);
+                                        setSelectedCampaignModal(null);
+                                    }}
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-100 hover:bg-black hover:text-white text-gray-800 text-xs font-bold transition-all shadow-sm group"
+                                >
+                                    <ChevronLeft size={16} className="group-hover:-translate-x-0.5 transition-transform" />
+                                    <span>Back</span>
+                                </button>
+
+                                <div className="flex items-center gap-2">
+                                    <span className="inline-flex items-center px-3 py-1 rounded-full bg-[#3b82f6] text-white text-[10px] font-bold tracking-widest uppercase shadow-sm">
+                                        {(selectedCampaignModal.label?.replace(/\s*-?\d+%\s*(off)?/gi, '').trim()) || 'SPECIAL OFFER'}
+                                    </span>
                                 </div>
 
-                                {/* Modal Content (Campaign Treatments) */}
-                                <div className="p-5 md:p-7 overflow-y-auto bg-white space-y-6">
+                                <button
+                                    onClick={() => {
+                                        setIsCampaignModalOpen(false);
+                                        setSelectedCampaignModal(null);
+                                    }}
+                                    className="w-9 h-9 rounded-full bg-gray-100 hover:bg-black hover:text-white text-gray-700 flex items-center justify-center transition-all shadow-sm"
+                                    aria-label="Close"
+                                >
+                                    <X size={18} />
+                                </button>
+                            </div>
 
-                                    {/* Travel Benefit / Tour Voucher Banner */}
-                                    <div>
-                                        <div className="mb-3">
-                                            <span className="text-xs font-bold uppercase tracking-wider text-black">
-                                                {Number(selectedCampaignModal.discountPercentage) > 0
-                                                    ? 'Select Treatment to Activate Discount'
-                                                    : 'Select Treatment'}
-                                            </span>
+                            {/* Modal Scrollable Content */}
+                            <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6 md:p-8 space-y-6 max-w-4xl mx-auto w-full">
+                                {/* Campaign Hero Banner */}
+                                <div className="bg-gradient-to-br from-white via-white to-blue-50/40 rounded-[28px] border border-gray-200/90 p-5 sm:p-7 shadow-sm relative overflow-hidden">
+                                    <div className="relative z-10">
+                                        <div className="text-[10px] font-bold text-[#3b82f6] uppercase tracking-widest mb-1.5">
+                                            Exclusive Campaign Offer
                                         </div>
+                                        <h2 className="font-serif text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight mb-2">
+                                            {selectedCampaignModal.title}
+                                        </h2>
+                                        {selectedCampaignModal.description && (
+                                            <p className="text-xs sm:text-sm text-gray-600 leading-relaxed font-light max-w-2xl">
+                                                {selectedCampaignModal.description}
+                                            </p>
+                                        )}
+                                        <div className="mt-4 flex items-center gap-3 text-[11px] font-semibold text-gray-500 flex-wrap">
+                                            {selectedCampaignModal.endDate && (
+                                                <span className="inline-flex items-center gap-1.5 bg-gray-100/80 px-3 py-1 rounded-full text-gray-700">
+                                                    <Clock size={13} className="text-gray-500" />
+                                                    Valid until {new Date(selectedCampaignModal.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
 
-                                        {(() => {
-                                            type UniqueTreatmentItem = {
-                                                treatment: Treatment;
-                                                allowedOptions: { duration: string; price: string }[];
-                                            };
-                                            const uniqueTreatmentItems: UniqueTreatmentItem[] = [];
-                                            const discount = Number(selectedCampaignModal.discountPercentage) || 0;
-                                            const hasSpaDiscount = discount > 0;
+                                {(() => {
+                                    type UniqueTreatmentItem = {
+                                        treatment: Treatment;
+                                        allowedOptions: { duration: string; price: string }[];
+                                    };
+                                    const uniqueTreatmentItems: UniqueTreatmentItem[] = [];
+                                    const discount = Number(selectedCampaignModal.discountPercentage) || 0;
+                                    const hasSpaDiscount = discount > 0;
 
-                                            if (selectedCampaignModal.selectedTreatments && selectedCampaignModal.selectedTreatments.length > 0) {
-                                                selectedCampaignModal.selectedTreatments.forEach(ct => {
-                                                    const treatment = treatments.find(t =>
-                                                        String(t.id).trim().toLowerCase() === String(ct.treatmentId).trim().toLowerCase() ||
-                                                        t.title.trim().toLowerCase() === String(ct.treatmentId).trim().toLowerCase()
-                                                    );
-                                                    if (!treatment) return;
+                                    if (selectedCampaignModal.selectedTreatments && selectedCampaignModal.selectedTreatments.length > 0) {
+                                        selectedCampaignModal.selectedTreatments.forEach(ct => {
+                                            const treatment = treatments.find(t =>
+                                                String(t.id).trim().toLowerCase() === String(ct.treatmentId).trim().toLowerCase() ||
+                                                t.title.trim().toLowerCase() === String(ct.treatmentId).trim().toLowerCase()
+                                            );
+                                            if (!treatment) return;
 
-                                                    const allowedOptions = (ct.durations && ct.durations.length > 0)
-                                                        ? treatment.options.filter(o =>
-                                                            ct.durations.some(d =>
-                                                                d.replace(/MINS/gi, '').trim() === o.duration.replace(/MINS/gi, '').trim() ||
-                                                                d.trim() === o.duration.trim()
-                                                            )
-                                                        )
-                                                        : treatment.options;
+                                            const allowedOptions = (ct.durations && ct.durations.length > 0)
+                                                ? treatment.options.filter(o =>
+                                                    ct.durations.some(d =>
+                                                        d.replace(/MINS/gi, '').trim() === o.duration.replace(/MINS/gi, '').trim() ||
+                                                        d.trim() === o.duration.trim()
+                                                    )
+                                                )
+                                                : treatment.options;
 
-                                                    if (allowedOptions.length > 0) {
-                                                        uniqueTreatmentItems.push({
-                                                            treatment,
-                                                            allowedOptions
-                                                        });
-                                                    }
+                                            if (allowedOptions.length > 0) {
+                                                uniqueTreatmentItems.push({
+                                                    treatment,
+                                                    allowedOptions
                                                 });
                                             }
+                                        });
+                                    }
 
-                                            // Fallback if no specific treatments were selected or matched: show all treatments
-                                            if (uniqueTreatmentItems.length === 0) {
-                                                treatments.forEach(treatment => {
-                                                    if (treatment.options && treatment.options.length > 0) {
-                                                        uniqueTreatmentItems.push({
-                                                            treatment,
-                                                            allowedOptions: treatment.options
-                                                        });
-                                                    }
+                                    // Fallback if no specific treatments were selected or matched: show all treatments
+                                    if (uniqueTreatmentItems.length === 0) {
+                                        treatments.forEach(treatment => {
+                                            if (treatment.options && treatment.options.length > 0) {
+                                                uniqueTreatmentItems.push({
+                                                    treatment,
+                                                    allowedOptions: treatment.options
                                                 });
                                             }
+                                        });
+                                    }
 
-                                            return (
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                    {uniqueTreatmentItems.map(({ treatment, allowedOptions }) => {
-                                                        const currentDuration = selectedCampaignDurations[treatment.id] || allowedOptions[0]?.duration;
-                                                        const activeOption = allowedOptions.find(o =>
-                                                            o.duration === currentDuration ||
-                                                            o.duration.replace(/MINS/gi, '').trim() === String(currentDuration).replace(/MINS/gi, '').trim()
-                                                        ) || allowedOptions[0];
+                                    return (
+                                        <div className="pb-10">
+                                            <div className="flex items-center justify-between mb-4 px-1">
+                                                <h3 className="text-xs font-bold uppercase tracking-wider text-gray-800">
+                                                    {Number(selectedCampaignModal.discountPercentage) > 0
+                                                        ? 'Select Treatment to Activate Discount'
+                                                        : 'Select Treatment'}
+                                                </h3>
+                                                <span className="text-[11px] font-bold text-gray-500 bg-white px-2.5 py-0.5 rounded-full border border-gray-200 shadow-xs">
+                                                    {uniqueTreatmentItems.length} Available
+                                                </span>
+                                            </div>
 
-                                                        const originalPriceNum = parseInt(String(activeOption.price).replace(/[^0-9]/g, '') || '0', 10);
-                                                        const discountedPriceNum = hasSpaDiscount
-                                                            ? Math.round(originalPriceNum * (1 - (discount / 100)))
-                                                            : originalPriceNum;
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                {uniqueTreatmentItems.map(({ treatment, allowedOptions }) => {
+                                                    const currentDuration = selectedCampaignDurations[treatment.id] || allowedOptions[0]?.duration;
+                                                    const activeOption = allowedOptions.find(o =>
+                                                        o.duration === currentDuration ||
+                                                        o.duration.replace(/MINS/gi, '').trim() === String(currentDuration).replace(/MINS/gi, '').trim()
+                                                    ) || allowedOptions[0];
 
-                                                        const isCouple = ['couple', 'honeymoon'].some(k => treatment.title.toLowerCase().includes(k));
-                                                        const handleBookTreatment = () => {
-                                                            setCartItems([{
-                                                                id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
-                                                                treatmentId: treatment.id,
-                                                                campaignTitle: selectedCampaignModal.title,
-                                                                title: treatment.title,
-                                                                duration: activeOption.duration,
-                                                                price: discountedPriceNum,
-                                                                guests: isCouple ? 2 : 1,
-                                                                isCampaign: true,
-                                                                discountPercentage: discount
-                                                            }]);
-                                                            setIsCampaignModalOpen(false);
-                                                            setIsBookingModalOpen(true);
-                                                        };
+                                                    const originalPriceNum = parseInt(String(activeOption.price).replace(/[^0-9]/g, '') || '0', 10);
+                                                    const discountedPriceNum = hasSpaDiscount
+                                                        ? Math.round(originalPriceNum * (1 - (discount / 100)))
+                                                        : originalPriceNum;
 
-                                                        return (
-                                                            <div
-                                                                key={treatment.id}
-                                                                className="p-5 rounded-2xl border border-black/15 hover:border-black bg-white hover:bg-black/[0.01] shadow-sm transition-all duration-300 flex flex-col justify-between cursor-pointer group"
-                                                                onClick={handleBookTreatment}
-                                                            >
+                                                    const isCouple = ['couple', 'honeymoon'].some(k => treatment.title.toLowerCase().includes(k));
+                                                    const handleBookTreatment = () => {
+                                                        setCartItems([{
+                                                            id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
+                                                            treatmentId: treatment.id,
+                                                            campaignTitle: selectedCampaignModal.title,
+                                                            title: treatment.title,
+                                                            duration: activeOption.duration,
+                                                            price: discountedPriceNum,
+                                                            guests: isCouple ? 2 : 1,
+                                                            isCampaign: true,
+                                                            discountPercentage: discount
+                                                        }]);
+                                                        setIsCampaignModalOpen(false);
+                                                        setIsBookingModalOpen(true);
+                                                    };
+
+                                                    return (
+                                                        <div
+                                                            key={treatment.id}
+                                                            onClick={handleBookTreatment}
+                                                            className="relative w-full flex flex-row rounded-[24px] overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-200/90 bg-[#FAFAFA] min-h-[175px] md:min-h-[195px] cursor-pointer group active:scale-[0.99]"
+                                                        >
+                                                            {/* Left Section (Blue) */}
+                                                            <div className="flex-1 bg-[#3b82f6] text-white p-4 sm:p-5 md:p-6 flex flex-col justify-between relative z-10">
                                                                 <div>
-                                                                    <div className="flex items-center justify-between mb-2">
-                                                                        <span className="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded bg-black/5 text-black border border-black/10">
+                                                                    {/* Badges Row */}
+                                                                    <div className="flex items-center gap-2 mb-2 flex-wrap">
+                                                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-black/35 backdrop-blur-sm text-white text-[9px] md:text-[10px] font-bold tracking-widest uppercase border border-white/15">
                                                                             {treatment.category}
                                                                         </span>
-                                                                        {hasSpaDiscount ? (
-                                                                            <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-black text-white">
-                                                                                -{discount}%
-                                                                            </span>
-                                                                        ) : (
-                                                                            <span className="text-[9px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded bg-black/5 text-black/60 border border-black/10">
-                                                                                Standard Rate
-                                                                            </span>
-                                                                        )}
                                                                     </div>
-                                                                    <h4 className="text-base font-bold text-black mb-1">{treatment.title}</h4>
-                                                                    <p className="text-xs text-black/60 line-clamp-2 mb-4 font-light leading-relaxed">{treatment.desc}</p>
+
+                                                                    {/* Treatment Title */}
+                                                                    <h4 className="text-base sm:text-lg md:text-xl font-bold leading-tight mb-1.5 text-white tracking-tight">
+                                                                        {treatment.title}
+                                                                    </h4>
+
+                                                                    {/* Treatment Description */}
+                                                                    {treatment.desc && (
+                                                                        <p className="text-white/80 text-xs md:text-sm line-clamp-2 leading-relaxed max-w-[95%] font-light">
+                                                                            {treatment.desc}
+                                                                        </p>
+                                                                    )}
                                                                 </div>
 
-                                                                <div className="pt-3 border-t border-black/10 flex items-end justify-between gap-3">
-                                                                    <div className="flex-1 min-w-0">
-                                                                        {/* Duration Selection Dropdown */}
-                                                                        <div
-                                                                            className="flex items-center gap-1.5 mb-2"
-                                                                            onClick={(e) => e.stopPropagation()}
+                                                                {/* Bottom Row */}
+                                                                <div className="mt-3 pt-3 border-t border-white/20 flex items-center gap-2">
+                                                                    {/* Duration Dropdown Pill */}
+                                                                    <div
+                                                                        className="relative inline-flex items-center"
+                                                                        onClick={(e) => e.stopPropagation()}
+                                                                    >
+                                                                        <Clock className="w-3.5 h-3.5 text-white/90 absolute left-2.5 pointer-events-none" />
+                                                                        <select
+                                                                            value={activeOption.duration}
+                                                                            onChange={(e) => {
+                                                                                setSelectedCampaignDurations(prev => ({
+                                                                                    ...prev,
+                                                                                    [treatment.id]: e.target.value
+                                                                                }));
+                                                                            }}
+                                                                            className="appearance-none bg-white/20 hover:bg-white/30 text-[11px] font-bold text-white uppercase tracking-wider pl-7 pr-6 py-1.5 rounded-xl border border-white/30 cursor-pointer focus:outline-none backdrop-blur-sm transition-all"
                                                                         >
-                                                                            <div className="relative inline-flex items-center">
-                                                                                <Clock className="w-3.5 h-3.5 text-black/60 absolute left-2 pointer-events-none" />
-                                                                                <select
-                                                                                    value={activeOption.duration}
-                                                                                    onChange={(e) => {
-                                                                                        setSelectedCampaignDurations(prev => ({
-                                                                                            ...prev,
-                                                                                            [treatment.id]: e.target.value
-                                                                                        }));
-                                                                                    }}
-                                                                                    className="appearance-none bg-black/5 hover:bg-black/10 focus:bg-white text-[11px] font-bold text-black uppercase tracking-wider pl-7 pr-6 py-1.5 rounded-lg border border-black/15 cursor-pointer focus:outline-none focus:ring-1 focus:ring-black transition-all"
-                                                                                >
-                                                                                    {allowedOptions.map(opt => (
-                                                                                        <option key={opt.duration} value={opt.duration} className="text-black bg-white font-semibold">
-                                                                                            {opt.duration.toUpperCase().includes('MIN') ? opt.duration : `${opt.duration} MINS`}
-                                                                                        </option>
-                                                                                    ))}
-                                                                                </select>
-                                                                                <ChevronDown size={12} className="absolute right-2 pointer-events-none text-black/60" />
-                                                                            </div>
-                                                                        </div>
-
-                                                                        {/* Dynamic Price Display */}
-                                                                        <div className="flex items-center gap-2 flex-wrap">
-                                                                            {hasSpaDiscount ? (
-                                                                                <>
-                                                                                    <span className="text-[11px] text-black/40 line-through font-medium">
-                                                                                        IDR {originalPriceNum.toLocaleString('en-US')}
-                                                                                    </span>
-                                                                                    <span className="text-base font-bold text-black">
-                                                                                        IDR {discountedPriceNum.toLocaleString('en-US')}
-                                                                                    </span>
-                                                                                </>
-                                                                            ) : (
-                                                                                <span className="text-base font-bold text-black">
-                                                                                    IDR {originalPriceNum.toLocaleString('en-US')}
-                                                                                </span>
-                                                                            )}
-                                                                        </div>
+                                                                            {allowedOptions.map(opt => (
+                                                                                <option key={opt.duration} value={opt.duration} className="text-black bg-white font-semibold">
+                                                                                    {opt.duration.toUpperCase().includes('MIN') ? opt.duration : `${opt.duration} MINS`}
+                                                                                </option>
+                                                                            ))}
+                                                                        </select>
+                                                                        <ChevronDown size={12} className="absolute right-2 pointer-events-none text-white/80" />
                                                                     </div>
+                                                                </div>
+                                                            </div>
 
+                                                            {/* Divider with Cutouts */}
+                                                            <div className="relative w-0 flex flex-col justify-between items-center z-20">
+                                                                {/* Top Cutout */}
+                                                                <div className="absolute top-0 -translate-x-1/2 -translate-y-1/2 w-6 h-6 md:w-8 md:h-8 bg-[#F8F9FA] rounded-full border border-gray-200 shadow-inner"></div>
+
+                                                                {/* Vertical Dashed Line */}
+                                                                <div className="absolute top-0 bottom-0 -translate-x-1/2 border-l-[3px] border-dotted border-gray-300/70 z-[-1]"></div>
+
+                                                                {/* Bottom Cutout */}
+                                                                <div className="absolute bottom-0 -translate-x-1/2 translate-y-1/2 w-6 h-6 md:w-8 md:h-8 bg-[#F8F9FA] rounded-full border border-gray-200 shadow-inner"></div>
+                                                            </div>
+
+                                                            {/* Right Section (White Ticket Stub) */}
+                                                            <div className="w-[100px] sm:w-[110px] md:w-[130px] bg-white flex flex-col items-center justify-between py-4 px-2 shrink-0 text-center relative z-10">
+                                                                <div className="flex flex-col items-center justify-center w-full my-auto">
+                                                                    {/* Discount / Rate label */}
+                                                                    <div className="text-[8px] md:text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">
+                                                                        {hasSpaDiscount ? 'Discount' : 'Rate'}
+                                                                    </div>
+                                                                    {hasSpaDiscount ? (
+                                                                        <div className="text-xs md:text-sm font-black text-[#2563eb] leading-tight mb-1">
+                                                                            -{discount}%
+                                                                        </div>
+                                                                    ) : (
+                                                                        <div className="text-[10px] md:text-xs font-bold text-gray-700 leading-tight mb-1">
+                                                                            STANDARD
+                                                                        </div>
+                                                                    )}
+
+                                                                    <div className="w-6 h-px bg-gray-200 my-1.5"></div>
+
+                                                                    {/* Price Section */}
+                                                                    <div className="text-[8px] md:text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">
+                                                                        Price
+                                                                    </div>
+                                                                    {hasSpaDiscount && (
+                                                                        <div className="text-[10px] md:text-[11px] font-medium text-gray-400 line-through leading-none mb-0.5">
+                                                                            {originalPriceNum.toLocaleString('en-US')}
+                                                                        </div>
+                                                                    )}
+                                                                    <div className="text-xs sm:text-sm md:text-base font-black text-black leading-none my-0.5">
+                                                                        {hasSpaDiscount
+                                                                            ? `${discountedPriceNum.toLocaleString('en-US')}`
+                                                                            : `${originalPriceNum.toLocaleString('en-US')}`}
+                                                                    </div>
+                                                                    <div className="text-[8px] md:text-[9px] font-bold text-gray-400 uppercase tracking-wider mt-0.5">
+                                                                        IDR
+                                                                    </div>
+                                                                </div>
+
+                                                                {/* Book Button */}
+                                                                <div className="w-full mt-2">
                                                                     <button
                                                                         type="button"
                                                                         onClick={(e) => {
                                                                             e.stopPropagation();
                                                                             handleBookTreatment();
                                                                         }}
-                                                                        className="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center group-hover:scale-110 transition-transform shadow-md shrink-0"
-                                                                        aria-label="Book Treatment"
+                                                                        className="w-full py-1.5 px-1 bg-black hover:bg-neutral-800 text-white rounded-full text-[9px] md:text-[10px] font-bold tracking-wider uppercase transition-colors shadow-sm flex items-center justify-center gap-1 active:scale-95"
                                                                     >
-                                                                        <ArrowRight size={16} />
+                                                                        <span>BOOK</span>
+                                                                        <ArrowRight size={10} strokeWidth={2.5} />
                                                                     </button>
                                                                 </div>
                                                             </div>
-                                                        );
-                                                    })}
-                                                </div>
-                                            );
-                                        })()}
-                                    </div>
-                                </div>
-                            </motion.div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    );
+                                })()}
+                            </div>
                         </motion.div>
                     )}
                 </AnimatePresence>

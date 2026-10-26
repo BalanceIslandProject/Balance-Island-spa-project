@@ -2,7 +2,7 @@
 
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, Search, Heart, Cloud, Sparkles, Droplet, User, Flame, Clock, ArrowRight, X, ShoppingBag, Plus, Minus, MessageCircle, ChevronLeft, Bitcoin, CheckCircle2, Copy, Calendar, MapPin, Tag, DoorOpen, Trash2 } from 'lucide-react';
+import { Bell, Search, Heart, Cloud, Sparkles, Droplet, User, Flame, Clock, ArrowRight, X, ShoppingBag, Plus, Minus, MessageCircle, ChevronLeft, ChevronDown, Bitcoin, CheckCircle2, Copy, Calendar, MapPin, Tag, DoorOpen, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { saveBookingToSupabase } from '@/lib/bookingUtils';
 import { useCart } from '@/context/CartContext';
@@ -324,22 +324,27 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
 
                 {/* Search & Categories Row */}
                 <div className="mb-6 flex flex-col md:flex-row md:items-end justify-start gap-6 md:gap-4 relative z-20">
-                    <div className="max-w-full overflow-hidden">
-                        <h3 className="text-xs font-semibold text-text-muted mb-3 uppercase tracking-wider">Popular Category</h3>
-                        <div className="flex overflow-x-auto pb-4 -mx-6 px-6 md:mx-0 md:px-0 gap-3 no-scrollbar">
+                    <div className="max-w-full overflow-hidden w-full">
+                        <div className="flex items-center justify-between mb-4 w-full md:pr-0">
+                            <h3 className="text-xs font-semibold text-text-muted uppercase tracking-wider">Popular Category</h3>
+                            <Link href="/explore" className="inline-flex items-center justify-center bg-white border border-gray-200 text-gray-800 px-4 py-2 rounded-full text-[11px] font-bold tracking-wide hover:bg-gray-50 hover:shadow-sm transition-all whitespace-nowrap ml-2 shadow-sm">
+                                View All Treatments
+                            </Link>
+                        </div>
+                        <div className="flex overflow-x-auto pb-4 -mx-6 px-6 md:mx-0 md:px-0 gap-2.5 no-scrollbar">
                             {CATEGORIES.map((cat) => {
                                 const isActive = activeCategory === cat.id;
                                 return (
                                     <button
                                         key={cat.id}
                                         onClick={() => setActiveCategory(cat.id)}
-                                        className={`flex items-center justify-center px-6 py-3 rounded-full whitespace-nowrap transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+                                        className={`flex items-center justify-center gap-2 px-5 py-2.5 rounded-[20px] whitespace-nowrap transition-all duration-300 font-medium ${
                                             isActive 
-                                                ? 'bg-primary text-white shadow-[0_8px_20px_rgb(0,0,0,0.12)] scale-[1.02] border border-primary' 
-                                                : 'bg-white/40 backdrop-blur-md text-primary border border-white/60 hover:bg-white/80 hover:scale-[1.02]'
+                                                ? 'bg-[#1D1D1F] text-white shadow-[0_4px_16px_rgba(0,0,0,0.18)] scale-[1.02] border border-black font-semibold' 
+                                                : 'bg-white text-gray-700 border border-gray-200/90 shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:border-gray-400 hover:shadow-md hover:bg-gray-50 active:scale-95'
                                         }`}
                                     >
-                                        <span className="text-sm font-semibold tracking-wide">{cat.label}</span>
+                                        <span className="text-xs sm:text-sm tracking-wide">{cat.label}</span>
                                     </button>
                                 );
                             })}
@@ -348,23 +353,35 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
 
                     {/* Search Bar */}
                     <div className="relative w-full md:w-80 shrink-0 md:mb-4">
-                        <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none h-[54px]">
-                            <Search className="h-5 w-5 text-text-muted" />
+                        <div className="w-full bg-white rounded-[24px] border border-gray-200/90 shadow-[0_4px_20px_rgba(0,0,0,0.06)] hover:shadow-[0_8px_25px_rgba(0,0,0,0.09)] transition-all duration-300 flex items-center p-1.5 pl-3.5 focus-within:border-black focus-within:ring-2 focus-within:ring-black/5">
+                            <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-500 mr-2 shrink-0">
+                                <Search className="h-4 w-4 text-gray-700" />
+                            </div>
+                            <input 
+                                type="text" 
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                placeholder="Search your favourite treatment..." 
+                                className="w-full bg-transparent border-none text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-0 p-0 h-[44px]"
+                            />
+                            {searchQuery && (
+                                <button
+                                    type="button"
+                                    onClick={() => setSearchQuery('')}
+                                    className="p-1.5 text-gray-400 hover:text-black mr-1 transition-colors"
+                                    title="Clear search"
+                                >
+                                    <X size={15} />
+                                </button>
+                            )}
+                            <button 
+                                onClick={() => setIsPriceFilterOpen(!isPriceFilterOpen)}
+                                title="Filter by price"
+                                className={`w-10 h-10 rounded-[18px] flex items-center justify-center transition-all shrink-0 ${isPriceFilterOpen ? 'bg-black text-white shadow-md' : 'bg-gray-100/90 text-gray-700 hover:bg-black hover:text-white'}`}
+                            >
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                            </button>
                         </div>
-                        <input 
-                            type="text" 
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder="Search your favourite treatment..." 
-                            className="w-full bg-white/70 backdrop-blur-md border border-white/50 rounded-2xl h-[54px] pl-12 pr-12 text-sm text-primary shadow-soft focus:outline-none focus:ring-2 focus:ring-secondary/50 placeholder:text-text-muted"
-                        />
-                        <button 
-                            onClick={() => setIsPriceFilterOpen(!isPriceFilterOpen)}
-                            title="Filter by price"
-                            className={`absolute top-2 right-2 w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${isPriceFilterOpen ? 'bg-primary text-white shadow-md' : 'bg-secondary/30 text-primary hover:bg-secondary/50'}`}
-                        >
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-                        </button>
 
                         {/* Price Filter Dropdown */}
                         <AnimatePresence>
@@ -373,22 +390,22 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                     initial={{ opacity: 0, y: -10 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, y: -10 }}
-                                    className="absolute top-full right-0 mt-3 w-64 md:w-72 bg-white/95 backdrop-blur-xl border border-white/50 rounded-2xl p-5 shadow-[0_20px_40px_rgb(0,0,0,0.12)] z-30"
+                                    className="absolute top-full right-0 mt-3 w-64 md:w-72 bg-white rounded-[24px] border border-gray-200 p-5 shadow-[0_20px_40px_rgb(0,0,0,0.12)] z-30"
                                 >
                                     <div className="flex items-center justify-between mb-4">
-                                        <span className="text-[10px] font-bold uppercase tracking-widest text-primary/80">Max Price</span>
-                                        <span className="text-sm font-serif text-primary font-medium">Rp {maxPrice.toLocaleString('en-US')}</span>
+                                        <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Max Price</span>
+                                        <span className="text-sm font-semibold text-gray-900">IDR {maxPrice.toLocaleString('en-US')}</span>
                                     </div>
                                     <input 
                                         type="range" 
                                         min="150000" 
                                         max="1500000" 
-                                        step="50000"
-                                        value={maxPrice}
+                                        step="50000" 
+                                        value={maxPrice} 
                                         onChange={(e) => setMaxPrice(parseInt(e.target.value))}
-                                        className="w-full accent-primary h-1.5 bg-secondary rounded-lg appearance-none cursor-pointer"
+                                        className="w-full accent-black h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                                     />
-                                    <div className="flex justify-between text-[10px] text-text-muted mt-2 font-medium tracking-wider">
+                                    <div className="flex justify-between text-[10px] text-gray-400 mt-2 font-medium tracking-wider">
                                         <span>150k</span>
                                         <span>1.5m</span>
                                     </div>
@@ -532,48 +549,91 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
             </div>
 
             {/* Campaign Modal */}
-            {isCampaignModalOpen && (
-                <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center bg-black/40 backdrop-blur-sm">
-                    <motion.div 
-                        initial={{ opacity: 0, y: 100 }}
+            <AnimatePresence>
+                {isCampaignModalOpen && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 100 }}
-                        className="bg-white w-full h-[90dvh] md:h-auto md:max-h-[85vh] md:max-w-3xl md:rounded-[40px] rounded-t-[40px] shadow-2xl relative overflow-hidden flex flex-col"
+                        exit={{ opacity: 0, y: 30 }}
+                        transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                        className="fixed inset-0 z-[100] w-full h-[100dvh] bg-[#F8F9FA] flex flex-col overflow-hidden text-black font-sans"
                     >
-                        {/* Modal Header */}
-                        <div className="p-6 md:p-8 flex items-center justify-between border-b border-border/50 bg-white shrink-0">
-                            <div>
-                                <div className="inline-flex items-center px-3 py-1 rounded-full bg-primary/10 text-[9px] font-bold tracking-widest uppercase text-primary mb-2">
-                                    {campaign?.title}
-                                </div>
-                                <h2 className="font-serif text-2xl text-primary">{campaign?.label}</h2>
-                            </div>
-                            <button 
+                        {/* Modal Top Bar */}
+                        <div className="shrink-0 bg-white/95 backdrop-blur-md border-b border-gray-200/90 px-4 sm:px-6 py-3.5 flex items-center justify-between shadow-sm z-30">
+                            <button
                                 onClick={() => setIsCampaignModalOpen(false)}
-                                className="w-10 h-10 rounded-full bg-surface flex items-center justify-center text-primary hover:bg-border transition-colors"
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-100 hover:bg-black hover:text-white text-gray-800 text-xs font-bold transition-all shadow-sm group"
                             >
-                                <X size={20} />
+                                <ChevronLeft size={16} className="group-hover:-translate-x-0.5 transition-transform" />
+                                <span>Back</span>
+                            </button>
+
+                            <div className="flex items-center gap-2">
+                                <span className="inline-flex items-center px-3 py-1 rounded-full bg-[#3b82f6] text-white text-[10px] font-bold tracking-widest uppercase shadow-sm">
+                                    {(campaign?.label?.replace(/\s*-?\d+%\s*(off)?/gi, '').trim()) || 'SPECIAL OFFER'}
+                                </span>
+                            </div>
+
+                            <button
+                                onClick={() => setIsCampaignModalOpen(false)}
+                                className="w-9 h-9 rounded-full bg-gray-100 hover:bg-black hover:text-white text-gray-700 flex items-center justify-center transition-all shadow-sm"
+                                aria-label="Close"
+                            >
+                                <X size={18} />
                             </button>
                         </div>
-                        
-                        {/* Modal Content (Campaign Treatments) */}
-                        <div className="p-6 md:p-8 overflow-y-auto bg-white">
-                            <p className="text-sm text-text-muted mb-6">{campaign?.description}</p>
-                            
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {campaign?.selectedTreatments.flatMap(ct => {
-                                    const treatment = treatments.find(t => t.id === ct.treatmentId);
-                                    if (!treatment) return [];
-                                    
-                                    return ct.durations.map(duration => {
-                                        const option = treatment.options.find(o => o.duration === duration);
-                                        if (!option) return null;
-                                        
-                                        const originalPriceNum = parseInt(option.price.replace(/,/g, ''));
-                                        const discountedPriceNum = originalPriceNum * (1 - (campaign.discountPercentage / 100));
-                                        
-                                        return (
-                                            <div key={`${treatment.id}-${duration}`} className="block group outline-none cursor-pointer" onClick={() => {
+
+                        {/* Modal Scrollable Content */}
+                        <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6 md:p-8 space-y-6 max-w-4xl mx-auto w-full">
+                            {/* Campaign Hero Banner */}
+                            <div className="bg-gradient-to-br from-white via-white to-blue-50/40 rounded-[28px] border border-gray-200/90 p-5 sm:p-7 shadow-sm relative overflow-hidden">
+                                <div className="relative z-10">
+                                    <div className="text-[10px] font-bold text-[#3b82f6] uppercase tracking-widest mb-1.5">
+                                        Exclusive Campaign Offer
+                                    </div>
+                                    <h2 className="font-serif text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight mb-2">
+                                        {campaign?.title}
+                                    </h2>
+                                    {campaign?.description && (
+                                        <p className="text-xs sm:text-sm text-gray-600 leading-relaxed font-light max-w-2xl">
+                                            {campaign.description}
+                                        </p>
+                                    )}
+                                    <div className="mt-4 flex items-center gap-3 text-[11px] font-semibold text-gray-500 flex-wrap">
+                                        {campaign?.endDate && (
+                                            <span className="inline-flex items-center gap-1.5 bg-gray-100/80 px-3 py-1 rounded-full text-gray-700">
+                                                <Clock size={13} className="text-gray-500" />
+                                                Valid until {new Date(campaign.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Treatment Selection Grid */}
+                            <div className="pb-10">
+                                <div className="flex items-center justify-between mb-4 px-1">
+                                    <h3 className="text-xs font-bold uppercase tracking-wider text-gray-800">
+                                        {Number(campaign?.discountPercentage) > 0
+                                            ? 'Select Treatment to Activate Discount'
+                                            : 'Select Treatment'}
+                                    </h3>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {campaign?.selectedTreatments.flatMap(ct => {
+                                        const treatment = treatments.find(t => t.id === ct.treatmentId);
+                                        if (!treatment) return [];
+
+                                        return ct.durations.map(duration => {
+                                            const option = treatment.options.find(o => o.duration === duration);
+                                            if (!option) return null;
+
+                                            const originalPriceNum = parseInt(option.price.replace(/,/g, ''));
+                                            const discount = campaign.discountPercentage || 0;
+                                            const discountedPriceNum = originalPriceNum * (1 - (discount / 100));
+
+                                            const handleBookTreatment = () => {
                                                 setCartItems([{
                                                     id: Date.now().toString(),
                                                     treatmentId: treatment.id,
@@ -585,42 +645,115 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                                     isCampaign: true,
                                                     discountPercentage: campaign.discountPercentage
                                                 }]);
+                                                setIsCampaignModalOpen(false);
                                                 setIsBookingModalOpen(true);
-                                            }}>
-                                                <div className="rounded-[32px] p-6 bg-white border border-border/40 shadow-sm hover:shadow-md transition-all duration-500 flex flex-col h-full relative overflow-hidden group-hover:-translate-y-1">
-                                                    <div className="mb-4 flex items-start justify-between">
-                                                        <div className="bg-primary/5 border border-primary/10 text-primary px-3 py-1.5 rounded-full text-[9px] font-bold tracking-widest uppercase shadow-sm">
-                                                            {treatment.category}
+                                            };
+
+                                            return (
+                                                <div
+                                                    key={`${treatment.id}-${duration}`}
+                                                    onClick={handleBookTreatment}
+                                                    className="relative w-full flex flex-row rounded-[24px] overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-200/90 bg-[#FAFAFA] min-h-[175px] md:min-h-[195px] cursor-pointer group active:scale-[0.99]"
+                                                >
+                                                    {/* Left Section (Blue) */}
+                                                    <div className="flex-1 bg-[#3b82f6] text-white p-4 sm:p-5 md:p-6 flex flex-col justify-between relative z-10">
+                                                        <div>
+                                                            {/* Badges Row */}
+                                                            <div className="flex items-center gap-2 mb-2 flex-wrap">
+                                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-black/35 backdrop-blur-sm text-white text-[9px] md:text-[10px] font-bold tracking-widest uppercase border border-white/15">
+                                                                    {treatment.category}
+                                                                </span>
+                                                            </div>
+
+                                                            {/* Treatment Title */}
+                                                            <h4 className="text-base sm:text-lg md:text-xl font-bold leading-tight mb-1.5 text-white tracking-tight">
+                                                                {treatment.title}
+                                                            </h4>
+
+                                                            {/* Treatment Description */}
+                                                            {treatment.desc && (
+                                                                <p className="text-white/80 text-xs md:text-sm line-clamp-2 leading-relaxed max-w-[95%] font-light">
+                                                                    {treatment.desc}
+                                                                </p>
+                                                            )}
                                                         </div>
-                                                        <div className="bg-primary text-white px-2 py-1 rounded-md text-[9px] font-bold uppercase tracking-widest shadow-sm">
-                                                            -{campaign.discountPercentage}%
+
+                                                        {/* Bottom Row */}
+                                                        <div className="mt-3 pt-3 border-t border-white/20 flex items-center gap-2">
+                                                            <div className="inline-flex items-center gap-1.5 text-white text-[11px] font-bold uppercase tracking-wider bg-white/20 px-3 py-1.5 rounded-xl border border-white/30 backdrop-blur-sm">
+                                                                <Clock className="w-3.5 h-3.5 text-white/90" />
+                                                                <span>{duration.toUpperCase().includes('MIN') ? duration : `${duration} MINS`}</span>
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                    <h4 className="font-serif text-xl font-medium text-primary mb-2 leading-tight">{treatment.title}</h4>
-                                                    <p className="text-xs text-text-muted leading-relaxed font-light mb-6 flex-grow">{treatment.desc}</p>
-                                                    
-                                                    <div className="mt-auto pt-4 border-t border-border/50">
-                                                        <div className="flex items-center gap-1.5 text-[9px] font-bold text-text-muted mb-2.5 uppercase tracking-widest"><Clock className="w-3.5 h-3.5" /> {duration} MINS</div>
-                                                        <div className="flex items-end justify-between">
-                                                            <div>
-                                                                <span className="text-[10px] text-text-muted line-through mr-2">Rp {option.price}</span>
-                                                                <span className="font-serif text-lg text-primary">Rp {discountedPriceNum.toLocaleString('en-US')}</span>
+
+                                                    {/* Divider with Cutouts */}
+                                                    <div className="relative w-0 flex flex-col justify-between items-center z-20">
+                                                        <div className="absolute top-0 -translate-x-1/2 -translate-y-1/2 w-6 h-6 md:w-8 md:h-8 bg-[#F8F9FA] rounded-full border border-gray-200 shadow-inner"></div>
+                                                        <div className="absolute top-0 bottom-0 -translate-x-1/2 border-l-[3px] border-dotted border-gray-300/70 z-[-1]"></div>
+                                                        <div className="absolute bottom-0 -translate-x-1/2 translate-y-1/2 w-6 h-6 md:w-8 md:h-8 bg-[#F8F9FA] rounded-full border border-gray-200 shadow-inner"></div>
+                                                    </div>
+
+                                                    {/* Right Section (White Ticket Stub) */}
+                                                    <div className="w-[100px] sm:w-[110px] md:w-[130px] bg-white flex flex-col items-center justify-between py-4 px-2 shrink-0 text-center relative z-10">
+                                                        <div className="flex flex-col items-center justify-center w-full my-auto">
+                                                            <div className="text-[8px] md:text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">
+                                                                {discount > 0 ? 'Discount' : 'Rate'}
                                                             </div>
-                                                            <button className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                                                                <ArrowRight size={16} />
+                                                            {discount > 0 ? (
+                                                                <div className="text-xs md:text-sm font-black text-[#2563eb] leading-tight mb-1">
+                                                                    -{discount}%
+                                                                </div>
+                                                            ) : (
+                                                                <div className="text-[10px] md:text-xs font-bold text-gray-700 leading-tight mb-1">
+                                                                    STANDARD
+                                                                </div>
+                                                            )}
+
+                                                            <div className="w-6 h-px bg-gray-200 my-1.5"></div>
+
+                                                            <div className="text-[8px] md:text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">
+                                                                Price
+                                                            </div>
+                                                            {discount > 0 && (
+                                                                <div className="text-[10px] md:text-[11px] font-medium text-gray-400 line-through leading-none mb-0.5">
+                                                                    {originalPriceNum.toLocaleString('en-US')}
+                                                                </div>
+                                                            )}
+                                                            <div className="text-xs sm:text-sm md:text-base font-black text-black leading-none my-0.5">
+                                                                {discount > 0
+                                                                    ? `${discountedPriceNum.toLocaleString('en-US')}`
+                                                                    : `${originalPriceNum.toLocaleString('en-US')}`}
+                                                            </div>
+                                                            <div className="text-[8px] md:text-[9px] font-bold text-gray-400 uppercase tracking-wider mt-0.5">
+                                                                IDR
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="w-full mt-2">
+                                                            <button
+                                                                type="button"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleBookTreatment();
+                                                                }}
+                                                                className="w-full py-1.5 px-1 bg-black hover:bg-neutral-800 text-white rounded-full text-[9px] md:text-[10px] font-bold tracking-wider uppercase transition-colors shadow-sm flex items-center justify-center gap-1 active:scale-95"
+                                                            >
+                                                                <span>BOOK</span>
+                                                                <ArrowRight size={10} strokeWidth={2.5} />
                                                             </button>
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        );
-                                    });
-                                })}
+                                            );
+                                        });
+                                    })}
+                                </div>
                             </div>
                         </div>
                     </motion.div>
-                </div>
-            )}
+                )}
+            </AnimatePresence>
 
             {/* Complete Booking Modal */}
             <AnimatePresence>
