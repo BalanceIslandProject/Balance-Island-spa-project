@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, Share, MapPin, Clock, Calendar, Sparkles, Plus, Minus, X, MessageCircle, Heart, Bitcoin, ArrowRight, User, Tag, DoorOpen, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { saveBookingToSupabase } from '@/lib/bookingUtils';
-import { getAffiliateCookie } from '@/lib/affiliateAttribution';
 import { useCart } from '@/context/CartContext';
 import { calculateCartTotal, getItemMultiplier } from '@/lib/pricingUtils';
 import { useParams } from 'next/navigation';
@@ -155,7 +154,7 @@ export default function RitualsDetails() {
     
             // Save to Supabase before opening WhatsApp
             const activeBrand = treatment?.brand || siteBrandFilter || 'therapick';
-            const saveRes = await saveBookingToSupabase(
+            await saveBookingToSupabase(
                 bookingIdRef.current,
                 formData,
                 cartItems,
@@ -163,9 +162,7 @@ export default function RitualsDetails() {
                 activeBrand
             );
 
-            const activeAffiliateCode = (saveRes && saveRes.affiliateCode) || (activeBrand === 'therapick' ? getAffiliateCookie()?.partner_code : null);
-            const refCodeText = activeAffiliateCode ? `\n*REF CODE :* ${activeAffiliateCode.toUpperCase()}` : '';
-            const finalMessage = baseMessage + '\n\n*BOOKING ID :* ' + bookingIdRef.current + refCodeText;
+            const finalMessage = baseMessage + '\n\n*BOOKING ID :* ' + bookingIdRef.current;
             
             saveDraft({
                 id: bookingIdRef.current,

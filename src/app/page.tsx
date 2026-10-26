@@ -12,7 +12,6 @@ import { createSlug } from '@/utils/slugify';
 
 const SeoExpandedContent = dynamic(() => import('@/components/SeoExpandedContent'));
 import { saveBookingToSupabase } from '@/lib/bookingUtils';
-import { getAffiliateCookie } from '@/lib/affiliateAttribution';
 import { calculateCartTotal, getItemMultiplier } from '@/lib/pricingUtils';
 
 const ServiceAreas = dynamic(() => import('@/components/ServiceAreas'));
@@ -303,7 +302,7 @@ export default function Home() {
     
     
             // Save to Supabase before opening WhatsApp
-            const saveRes = await saveBookingToSupabase(
+            await saveBookingToSupabase(
                 bookingIdRef.current,
                 formData,
                 cartItems,
@@ -311,9 +310,7 @@ export default function Home() {
                 siteBrandFilter
             );
 
-            const activeAffiliateCode = (saveRes && saveRes.affiliateCode) || (siteBrandFilter === 'therapick' ? getAffiliateCookie()?.partner_code : null);
-            const refCodeText = activeAffiliateCode ? `\n*REF CODE :* ${activeAffiliateCode.toUpperCase()}` : '';
-            const finalMessage = baseMessage + '\n\n*BOOKING ID :* ' + bookingIdRef.current + refCodeText;
+            const finalMessage = baseMessage + '\n\n*BOOKING ID :* ' + bookingIdRef.current;
             
             saveDraft({
                 id: bookingIdRef.current,

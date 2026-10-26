@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, Search, Heart, Cloud, Sparkles, Droplet, User, Flame, Clock, ArrowRight, X, ShoppingBag, Plus, Minus, MessageCircle, ChevronLeft, ChevronDown, Bitcoin, CheckCircle2, Copy, Calendar, MapPin, Tag, DoorOpen, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { saveBookingToSupabase } from '@/lib/bookingUtils';
-import { getAffiliateCookie } from '@/lib/affiliateAttribution';
 import { calculateCartTotal, getItemMultiplier } from '@/lib/pricingUtils';
 import { useCart } from '@/context/CartContext';
 import { useSpa } from '@/context/SpaContext';
@@ -183,7 +182,7 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
     
             // Save to Supabase before opening WhatsApp
             const activeBrand = siteBrandFilter || 'therapick';
-            const saveRes = await saveBookingToSupabase(
+            await saveBookingToSupabase(
                 bookingIdRef.current,
                 formData,
                 cartItems,
@@ -191,9 +190,7 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                 activeBrand
             );
 
-            const activeAffiliateCode = (saveRes && saveRes.affiliateCode) || (activeBrand === 'therapick' ? getAffiliateCookie()?.partner_code : null);
-            const refCodeText = activeAffiliateCode ? `\n*REF CODE :* ${activeAffiliateCode.toUpperCase()}` : '';
-            const finalMessage = baseMessage + '\n\n*BOOKING ID :* ' + bookingIdRef.current + refCodeText;
+            const finalMessage = baseMessage + '\n\n*BOOKING ID :* ' + bookingIdRef.current;
             
             saveDraft({
                 id: bookingIdRef.current,
