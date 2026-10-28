@@ -5,8 +5,13 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Eye, EyeOff, ArrowRight, AlertCircle, Lock } from 'lucide-react';
 
+import { SignIn } from '@clerk/nextjs';
+
 export default function PartnerLoginPage() {
   const router = useRouter();
+
+  const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || '';
+  const isClerkAvailable = Boolean(publishableKey && (publishableKey.startsWith('pk_test_') || publishableKey.startsWith('pk_live_')));
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -44,7 +49,17 @@ export default function PartnerLoginPage() {
 
   return (
     <div className="max-w-md mx-auto py-8 sm:py-16 px-4">
-      <div className="bg-white border border-[#E5E5E5] rounded-xl p-6 sm:p-8 space-y-5">
+      {isClerkAvailable ? (
+        <div className="flex flex-col items-center space-y-4">
+          <SignIn
+            path="/partners/login"
+            routing="path"
+            signUpUrl="/onboarding"
+            fallbackRedirectUrl="/partners/dashboard"
+          />
+        </div>
+      ) : (
+        <div className="bg-white border border-[#E5E5E5] rounded-xl p-6 sm:p-8 space-y-5">
         
         {/* Brand Logo & Header */}
         <div className="text-center space-y-2 pb-4 border-b border-[#E5E5E5]">
@@ -135,6 +150,7 @@ export default function PartnerLoginPage() {
         </div>
 
       </div>
+      )}
     </div>
   );
 }

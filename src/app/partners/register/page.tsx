@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { 
@@ -21,6 +21,15 @@ import {
 
 export default function PartnerRegisterPage() {
   const router = useRouter();
+
+  const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || '';
+  const isClerkAvailable = Boolean(publishableKey && (publishableKey.startsWith('pk_test_') || publishableKey.startsWith('pk_live_')));
+
+  useEffect(() => {
+    if (isClerkAvailable) {
+      router.replace('/onboarding');
+    }
+  }, [isClerkAvailable, router]);
 
   const [formData, setFormData] = useState({
     first_name: '',
