@@ -156,11 +156,11 @@ export const calculateBookingTherapistFee = (
 };
 
 export default function TherapickBookingManagement({ 
-  treatments, 
-  therapistFees 
+  treatments = [], 
+  therapistFees = [] 
 }: { 
-  treatments: Treatment[], 
-  therapistFees: TherapistFee[] 
+  treatments?: Treatment[], 
+  therapistFees?: TherapistFee[] 
 }) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<string>(toLocalDateString(new Date()));

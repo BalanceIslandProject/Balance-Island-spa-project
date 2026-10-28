@@ -67,6 +67,7 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
 
   const authNavItems = [
     { href: '/partners/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { href: '/partners/bookings', label: 'Bookings', icon: CalendarDays },
     { href: '/partners/referrals', label: 'Referrals', icon: Users },
     { href: '/partners/commissions', label: 'Commissions', icon: Receipt },
     { href: '/partners/payouts', label: 'Payouts', icon: Wallet },

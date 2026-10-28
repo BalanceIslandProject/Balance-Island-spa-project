@@ -2,8 +2,13 @@ import { supabase } from '@/lib/supabase';
 
 export const AFFILIATE_COOKIE_NAME = 'btp_affiliate_ref';
 export const DEFAULT_COMMISSION_RATE_PCT = 15.00;
-export const SEVEN_DAYS_SECONDS = 7 * 24 * 60 * 60; // 604,800 seconds (7 days)
-export const SEVEN_DAYS_MS = SEVEN_DAYS_SECONDS * 1000; // 604,800,000 milliseconds
+export const THIRTY_DAYS_SECONDS = 30 * 24 * 60 * 60; // 2,592,000 seconds (30 days)
+export const THIRTY_DAYS_MS = THIRTY_DAYS_SECONDS * 1000; // 2,592,000,000 milliseconds
+export const ATTRIBUTION_WINDOW_SECONDS = THIRTY_DAYS_SECONDS;
+export const ATTRIBUTION_WINDOW_MS = THIRTY_DAYS_MS;
+// Backward-compatibility aliases
+export const SEVEN_DAYS_SECONDS = THIRTY_DAYS_SECONDS;
+export const SEVEN_DAYS_MS = THIRTY_DAYS_MS;
 
 export interface AffiliateCookieData {
   partner_code: string;
@@ -13,9 +18,9 @@ export interface AffiliateCookieData {
 }
 
 /**
- * Reads the active affiliate tracking data under the 7-day attribution model:
+ * Reads the active affiliate tracking data under the 30-day attribution model:
  * - Checks 1st-party cookie first, with localStorage fallback.
- * - Enforces 7-day window from the most recent eligible referral touch.
+ * - Enforces 30-day window from the most recent eligible referral touch.
  * - Direct visits and page refreshes do NOT clear or reset active referrals.
  * - Returns null if referral has expired or is invalid.
  */
@@ -44,11 +49,11 @@ export function getAffiliateCookie(): AffiliateCookieData | null {
     }
 
     const now = Date.now();
-    const expiresAt = parsed.expires_at || (parsed.timestamp ? parsed.timestamp + SEVEN_DAYS_MS : 0);
+    const expiresAt = parsed.expires_at || (parsed.timestamp ? parsed.timestamp + ATTRIBUTION_WINDOW_MS : 0);
 
-    // 3. Strict 7-Day Window Enforcement:
-    // If the 7-day window has expired, clear the stored referral and return null
-    if (!expiresAt || now > expiresAt || (parsed.timestamp && (now - parsed.timestamp) > SEVEN_DAYS_MS)) {
+    // 3. Strict 30-Day Window Enforcement:
+    // If the 30-day window has expired, clear the stored referral and return null
+    if (!expiresAt || now > expiresAt || (parsed.timestamp && (now - parsed.timestamp) > ATTRIBUTION_WINDOW_MS)) {
       clearAffiliateCookie();
       return null;
     }
@@ -67,7 +72,7 @@ export function getAffiliateCookie(): AffiliateCookieData | null {
 
 /**
  * Sets the affiliate tracking session for a valid referred partner:
- * - Cookie duration: 7 days (604,800 seconds) from this referral touch.
+ * - Cookie duration: 30 days (2,592,000 seconds) from this referral touch.
  * - Security: SameSite=Lax, Path=/, and Secure on HTTPS.
  * - Stores timestamp and explicit expires_at.
  * - Last-touch attribution: Overwrites any prior partner referral for future bookings.
@@ -78,7 +83,7 @@ export function setAffiliateCookie(partnerCode: string, partnerId: string, click
   try {
     const cleanCode = partnerCode.toUpperCase().trim();
     const now = typeof clickTimestamp === 'number' && clickTimestamp > 0 ? clickTimestamp : Date.now();
-    const expiresAt = now + SEVEN_DAYS_MS;
+    const expiresAt = now + ATTRIBUTION_WINDOW_MS;
 
     const payload: AffiliateCookieData = {
       partner_code: cleanCode,
@@ -91,8 +96,8 @@ export function setAffiliateCookie(partnerCode: string, partnerId: string, click
     const expiresUtc = new Date(expiresAt).toUTCString();
     const isSecure = window.location.protocol === 'https:';
 
-    // 1. Write first-party cookie with 7-day max-age and UTC expiration
-    document.cookie = `${AFFILIATE_COOKIE_NAME}=${encodeURIComponent(serialized)}; path=/; max-age=${SEVEN_DAYS_SECONDS}; expires=${expiresUtc}; SameSite=Lax${isSecure ? '; Secure' : ''}`;
+    // 1. Write first-party cookie with 30-day max-age and UTC expiration
+    document.cookie = `${AFFILIATE_COOKIE_NAME}=${encodeURIComponent(serialized)}; path=/; max-age=${ATTRIBUTION_WINDOW_SECONDS}; expires=${expiresUtc}; SameSite=Lax${isSecure ? '; Secure' : ''}`;
 
     // 2. Persist to localStorage and sessionStorage as resilient client backup
     localStorage.setItem(AFFILIATE_COOKIE_NAME, serialized);
@@ -223,7 +228,7 @@ export async function recordBookingAffiliation(
       .eq('partner_code', cookieData.partner_code.toUpperCase())
       .single();
 
-    if (partnerError || !partner || partner.status !== 'active') {
+    if (partnerError || !partner || (partner.status !== 'active' && partner.status !== 'approved')) {
       return false;
     }
 
@@ -265,6 +270,8 @@ export async function recordBookingAffiliation(
           customer_phone: formData.phone || formData.whatsapp || null,
           first_touch_at: firstTouchAt,
           last_touch_at: new Date().toISOString(),
+          attribution_method: 'referral_link',
+          attribution_status: 'active',
         },
       ]);
     }
@@ -281,7 +288,9 @@ export async function recordBookingAffiliation(
         tip_amount: calculation.tipAmount,
         discount_amount: calculation.discountAmount,
         commission_rate_pct: calculation.commissionRatePct,
+        commission_rate_snapshot: calculation.commissionRatePct,
         commission_amount: calculation.commissionAmount,
+        currency: 'IDR',
         status: 'pending',
         payment_verified: false,
         service_completed: false,

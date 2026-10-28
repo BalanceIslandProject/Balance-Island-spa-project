@@ -273,6 +273,29 @@ export async function PATCH(req: NextRequest) {
     const finalBookingStatus = targetStatus || booking_status || (updated.service_completed ? 'Completed' : 'Pending');
     const finalTreatmentStatus = treatment_status || (updated.service_completed ? 'Finished' : (finalBookingStatus === 'Ongoing' ? 'In Progress' : 'Scheduled'));
 
+    // Record audit log for commission modification
+    try {
+      await supabase.from('partner_audit_logs').insert([
+        {
+          actor_id: 'admin',
+          actor_type: 'admin',
+          action: status ? `commission_${status}` : 'commission_updated',
+          target_type: 'commission',
+          target_id: id,
+          metadata: {
+            booking_id: updated.booking_id,
+            partner_id: updated.partner_id,
+            commission_amount: updated.commission_amount,
+            status: updated.status,
+            payment_verified: updated.payment_verified,
+            service_completed: updated.service_completed,
+          },
+        },
+      ]);
+    } catch (auditErr) {
+      // Non-fatal
+    }
+
     return NextResponse.json({ 
       success: true, 
       commission: {

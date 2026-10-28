@@ -21,15 +21,37 @@ export async function POST(req: NextRequest) {
 
     const normalizedCode = partnerCode.toUpperCase().trim();
 
-    // Verify partner is active
-    const { data: partner, error: partnerErr } = await supabase
+    // Verify partner is active or approved
+    let partnerId = '';
+    let resolvedCode = normalizedCode;
+
+    const { data: partner } = await supabase
       .from('affiliate_partners')
       .select('id, partner_code, status')
       .eq('partner_code', normalizedCode)
-      .eq('status', 'active')
-      .single();
+      .in('status', ['active', 'approved'])
+      .maybeSingle();
 
-    if (partnerErr || !partner) {
+    if (partner) {
+      partnerId = partner.id;
+      resolvedCode = partner.partner_code;
+    } else {
+      // Check partner_referrals table if referral code was generated separately
+      const { data: refRow } = await supabase
+        .from('partner_referrals')
+        .select('partner_id, referral_code, is_active, affiliate_partners(id, partner_code, status)')
+        .eq('referral_code', normalizedCode)
+        .eq('is_active', true)
+        .maybeSingle();
+
+      const linkedPartner: any = refRow?.affiliate_partners;
+      if (refRow && linkedPartner && (linkedPartner.status === 'active' || linkedPartner.status === 'approved')) {
+        partnerId = linkedPartner.id;
+        resolvedCode = refRow.referral_code;
+      }
+    }
+
+    if (!partnerId) {
       return NextResponse.json({ success: false, message: 'Partner not active' }, { status: 404 });
     }
 
@@ -41,8 +63,8 @@ export async function POST(req: NextRequest) {
     // Record click asynchronously
     await supabase.from('affiliate_clicks').insert([
       {
-        partner_id: partner.id,
-        partner_code: partner.partner_code,
+        partner_id: partnerId,
+        partner_code: resolvedCode,
         visitor_ip_hash: ipHash,
         user_agent: userAgent.substring(0, 255),
         referrer_url: String(referrer).substring(0, 500),
@@ -52,8 +74,8 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      partner_id: partner.id,
-      partner_code: partner.partner_code,
+      partner_id: partnerId,
+      partner_code: resolvedCode,
     });
   } catch (err: any) {
     console.error('Error handling affiliate click:', err);

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { isBookTherapickHost } from '@/lib/domainIsolation';
-import { getPartnerSession } from '@/lib/partnerAuth';
+import { getPartnerSession, isPartnerApproved } from '@/lib/partnerAuth';
 
 export async function GET(req: NextRequest) {
   try {
@@ -14,6 +14,13 @@ export async function GET(req: NextRequest) {
     const session = await getPartnerSession();
     if (!session) {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
+    }
+
+    if (!isPartnerApproved(session)) {
+      return NextResponse.json(
+        { success: false, message: `Partner account is ${session.status}. Only approved partners can access metrics.` },
+        { status: 403 }
+      );
     }
 
     const partnerId = session.id;

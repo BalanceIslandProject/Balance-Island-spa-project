@@ -31,13 +31,27 @@ export function proxy(request: NextRequest) {
             : `/partners${path === '/' ? '' : path}`;
 
         // Authentication enforcement for protected partner workspace paths
-        const publicPartnerPaths = ['/partners', '/partners/login', '/partners/register'];
-        const isPublicPath = publicPartnerPaths.includes(targetPath);
+        const publicPartnerPaths = [
+            '/partners',
+            '/partners/login',
+            '/partners/register',
+            '/sign-in',
+            '/sign-up',
+            '/onboarding',
+            '/pending-approval',
+            '/application-status',
+            '/privacy',
+            '/terms'
+        ];
+        const isPublicPath = publicPartnerPaths.some(p => targetPath === p || targetPath.startsWith(p));
 
         if (!isPublicPath) {
-            const partnerCookie = request.cookies.get('partner_session');
-            if (!partnerCookie || !partnerCookie.value) {
-                const loginPath = path.startsWith('/partners') ? '/partners/login' : '/login';
+            const hasSession = Boolean(
+                request.cookies.get('partner_session')?.value || 
+                request.cookies.get('__session')?.value
+            );
+            if (!hasSession) {
+                const loginPath = path.startsWith('/partners') ? '/partners/login' : '/sign-in';
                 return NextResponse.redirect(new URL(loginPath, request.url));
             }
         }
@@ -54,21 +68,43 @@ export function proxy(request: NextRequest) {
     // The affiliate program exists exclusively for www.booktherapick.com and partners.booktherapick.com.
     // Reject any attempt to access /partners or affiliate endpoints on other domains with 404.
     // Note: /api/affiliates/admin/* is used by the authenticated admin dashboard across all brand domains.
-    const isPartnerPath = path.startsWith('/partners') || (path.startsWith('/api/affiliates') && !path.startsWith('/api/affiliates/admin'));
+    const isPartnerPath = 
+        path.startsWith('/partners') || 
+        path.startsWith('/partner') || 
+        path.startsWith('/onboarding') || 
+        path.startsWith('/pending-approval') || 
+        path.startsWith('/application-status') || 
+        path.startsWith('/api/partner') || 
+        (path.startsWith('/api/affiliates') && !path.startsWith('/api/affiliates/admin'));
+
     if (isPartnerPath) {
         if (!isBookTherapickHost(host)) {
             return new NextResponse(null, { status: 404, statusText: 'Not Found' });
         }
     }
 
-    // 3. PARTNER PORTAL AUTHENTICATION (when accessed on main domain /partners/...):
-    if (path.startsWith('/partners')) {
-        const publicPartnerPaths = ['/partners', '/partners/login', '/partners/register'];
-        const isPublicPartnerPath = publicPartnerPaths.includes(path);
+    // 3. PARTNER PORTAL AUTHENTICATION (when accessed on main domain /partners/... or /partner/...):
+    if (path.startsWith('/partners') || path.startsWith('/partner')) {
+        const publicPartnerPaths = [
+            '/partners',
+            '/partners/login',
+            '/partners/register',
+            '/partner/login',
+            '/partner/register',
+            '/sign-in',
+            '/sign-up',
+            '/onboarding',
+            '/pending-approval',
+            '/application-status'
+        ];
+        const isPublicPartnerPath = publicPartnerPaths.some(p => path === p || path.startsWith(p));
 
         if (!isPublicPartnerPath) {
-            const partnerCookie = request.cookies.get('partner_session');
-            if (!partnerCookie || !partnerCookie.value) {
+            const hasSession = Boolean(
+                request.cookies.get('partner_session')?.value || 
+                request.cookies.get('__session')?.value
+            );
+            if (!hasSession) {
                 const loginUrl = new URL('/partners/login', request.url);
                 return NextResponse.redirect(loginUrl);
             }

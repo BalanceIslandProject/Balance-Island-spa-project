@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
 
     const { data: partner, error } = await supabase
       .from('affiliate_partners')
-      .select('id, partner_code, first_name, last_name, business_name, email, phone, whatsapp, partner_type, status, commission_rate_pct, payout_method, payout_details, created_at')
+      .select('id, partner_code, first_name, last_name, business_name, email, phone, whatsapp, partner_type, status, commission_rate_pct, payout_method, payout_details, business_website, clerk_user_id, created_at')
       .eq('id', session.id)
       .single();
 

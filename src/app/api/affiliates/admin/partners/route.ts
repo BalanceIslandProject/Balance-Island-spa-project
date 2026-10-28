@@ -48,11 +48,18 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ success: false, message: 'Partner ID required' }, { status: 400 });
     }
 
+    const nowIso = new Date().toISOString();
     const updates: any = {
-      updated_at: new Date().toISOString(),
+      updated_at: nowIso,
     };
 
-    if (status !== undefined) updates.status = status;
+    if (status !== undefined) {
+      updates.status = status;
+      if (status === 'active' || status === 'approved') {
+        updates.approved_at = nowIso;
+        updates.approved_by = 'admin';
+      }
+    }
     if (commission_rate_pct !== undefined) updates.commission_rate_pct = Number(commission_rate_pct);
     if (notes !== undefined) updates.notes = notes;
 
@@ -60,11 +67,45 @@ export async function PATCH(req: NextRequest) {
       .from('affiliate_partners')
       .update(updates)
       .eq('id', id)
-      .select('id, partner_code, first_name, last_name, business_name, email, phone, whatsapp, partner_type, status, commission_rate_pct, notes')
+      .select('id, partner_code, first_name, last_name, business_name, email, phone, whatsapp, partner_type, status, commission_rate_pct, notes, approved_at, approved_by')
       .single();
 
     if (error) {
       return NextResponse.json({ success: false, message: error.message }, { status: 400 });
+    }
+
+    // Sync partner_referrals status if table exists
+    if (status !== undefined) {
+      const isRefActive = status === 'active' || status === 'approved';
+      try {
+        await supabase
+          .from('partner_referrals')
+          .update({ is_active: isRefActive, ...(isRefActive ? {} : { deactivated_at: nowIso }) })
+          .eq('partner_id', id);
+      } catch (refErr) {
+        // Non-fatal
+      }
+    }
+
+    // Record audit log
+    try {
+      await supabase.from('partner_audit_logs').insert([
+        {
+          actor_id: 'admin',
+          actor_type: 'admin',
+          action: status ? `partner_${status}` : 'partner_rate_adjusted',
+          target_type: 'partner',
+          target_id: id,
+          metadata: {
+            status,
+            commission_rate_pct,
+            notes,
+            partner_code: updated?.partner_code,
+          },
+        },
+      ]);
+    } catch (auditErr) {
+      // Non-fatal
     }
 
     return NextResponse.json({ success: true, partner: updated });

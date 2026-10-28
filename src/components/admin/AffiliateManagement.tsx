@@ -69,7 +69,7 @@ const CONFIRM_COPY = {
   reactivate: { title: 'Reactivate partner', confirm: 'Reactivate', body: (n: string) => `${n} will be set back to active.` },
 };
 
-export default function AffiliateManagement() {
+export default function AffiliateManagement({ initialSubTab = 'partners' }: { initialSubTab?: SubTab }) {
   /* ---------------------------------------------------------------- */
   /* Data                                                              */
   /* ---------------------------------------------------------------- */
@@ -78,7 +78,7 @@ export default function AffiliateManagement() {
   const [payouts, setPayouts] = useState<any[]>([]);
   const [settings, setSettings] = useState<any>({
     default_commission_rate_pct: 15.0,
-    cookie_duration_days: 7,
+    cookie_duration_days: 30,
     attribution_model: 'last_touch',
     auto_approve_partners: false,
     is_program_active: true,
@@ -91,7 +91,14 @@ export default function AffiliateManagement() {
   /* ---------------------------------------------------------------- */
   /* View state                                                        */
   /* ---------------------------------------------------------------- */
-  const [subTab, setSubTab] = useState<SubTab>('partners');
+  const [subTab, setSubTab] = useState<SubTab>(initialSubTab);
+
+  useEffect(() => {
+    if (initialSubTab) {
+      setSubTab(initialSubTab);
+    }
+  }, [initialSubTab]);
+
   const [partnerStatusFilter, setPartnerStatusFilter] = useState('all');
   const [partnerSort, setPartnerSort] = useState('activity');
   const [searchQuery, setSearchQuery] = useState('');
