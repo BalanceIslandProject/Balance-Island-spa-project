@@ -53,7 +53,8 @@ export function proxy(request: NextRequest) {
     // 2. DOMAIN ISOLATION ENFORCEMENT:
     // The affiliate program exists exclusively for www.booktherapick.com and partners.booktherapick.com.
     // Reject any attempt to access /partners or affiliate endpoints on other domains with 404.
-    const isPartnerPath = path.startsWith('/partners') || path.startsWith('/api/affiliates');
+    // Note: /api/affiliates/admin/* is used by the authenticated admin dashboard across all brand domains.
+    const isPartnerPath = path.startsWith('/partners') || (path.startsWith('/api/affiliates') && !path.startsWith('/api/affiliates/admin'));
     if (isPartnerPath) {
         if (!isBookTherapickHost(host)) {
             return new NextResponse(null, { status: 404, statusText: 'Not Found' });
@@ -74,14 +75,17 @@ export function proxy(request: NextRequest) {
         }
     }
 
-    // 4. ADMIN ROUTES:
-    if (path.startsWith('/admin')) {
+    // 4. ADMIN ROUTES & ADMIN AFFILIATE API ROUTES:
+    if (path.startsWith('/admin') || path.startsWith('/api/affiliates/admin')) {
         if (path === '/admin/login') {
             return NextResponse.next();
         }
 
         const authCookie = request.cookies.get('admin_auth');
         if (!authCookie || authCookie.value !== 'authenticated') {
+            if (path.startsWith('/api/')) {
+                return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
+            }
             const loginUrl = new URL('/admin/login', request.url);
             return NextResponse.redirect(loginUrl);
         }

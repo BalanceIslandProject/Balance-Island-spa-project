@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { ChevronLeft, ChevronRight, Check, Copy, Plus, RefreshCw, ArrowUpRight, Info, DoorClosed, MapPin } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Check, Copy, Plus, RefreshCw, ArrowUpRight, Info, DoorClosed, MapPin, Trash2 } from 'lucide-react';
 import {
   cx,
   btn,
@@ -41,6 +41,7 @@ type PartnerTab = 'overview' | 'bookings' | 'commissions' | 'payouts' | 'history
 
 type ConfirmState =
   | { kind: 'partner-status'; id: string; name: string; next: 'active' | 'suspended' | 'rejected'; verb: 'approve' | 'reject' | 'suspend' | 'reactivate' }
+  | { kind: 'partner-delete'; id: string; name: string }
   | { kind: 'decline-commission'; id: string; ref: string }
   | { kind: 'cancel-booking'; id: string; ref: string }
   | null;
@@ -211,6 +212,32 @@ export default function AffiliateManagement() {
     } catch (e) {
       console.error(e);
       showToast('Network error while updating status', 'error');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDeletePartner = async (id: string) => {
+    try {
+      setActionLoading(true);
+      const res = await fetch(`/api/affiliates/admin/partners?id=${id}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (data.success) {
+        setPartners((prev) => prev.filter((p) => p.id !== id));
+        setCommissions((prev) => prev.filter((c) => c.partner_id !== id));
+        setPayouts((prev) => prev.filter((py) => py.partner_id !== id));
+        if (selectedPartnerId === id) {
+          setSelectedPartnerId(null);
+        }
+        showToast('Partner removed successfully');
+      } else {
+        showToast(data.message || 'Could not remove partner', 'error');
+      }
+    } catch (e) {
+      console.error(e);
+      showToast('Network error while removing partner', 'error');
     } finally {
       setActionLoading(false);
     }
@@ -705,28 +732,53 @@ export default function AffiliateManagement() {
       next: verb === 'suspend' ? 'suspended' : verb === 'reject' ? 'rejected' : 'active',
     });
 
+  const askDelete = (p: any) =>
+    setConfirmState({
+      kind: 'partner-delete',
+      id: p.id,
+      name: fullName(p),
+    });
+
   const renderStatusActions = (p: any, size: string = btn.sm) => (
     <>
       {p.status === 'pending' && (
         <>
-          <button type="button" disabled={actionLoading} onClick={() => askStatus(p, 'reject')} className={cx(btn.base, btn.secondary, size)}>
+          <button type="button" disabled={actionLoading} onClick={(e) => { e.stopPropagation(); askStatus(p, 'reject'); }} className={cx(btn.base, btn.secondary, size)}>
             Reject
           </button>
-          <button type="button" disabled={actionLoading} onClick={() => askStatus(p, 'approve')} className={cx(btn.base, btn.primary, size)}>
+          <button type="button" disabled={actionLoading} onClick={(e) => { e.stopPropagation(); askStatus(p, 'approve'); }} className={cx(btn.base, btn.primary, size)}>
             Approve
           </button>
         </>
       )}
       {p.status === 'active' && (
-        <button type="button" disabled={actionLoading} onClick={() => askStatus(p, 'suspend')} className={cx(btn.base, btn.secondary, size)}>
+        <button type="button" disabled={actionLoading} onClick={(e) => { e.stopPropagation(); askStatus(p, 'suspend'); }} className={cx(btn.base, btn.secondary, size)}>
           Suspend
         </button>
       )}
       {(p.status === 'suspended' || p.status === 'rejected') && (
-        <button type="button" disabled={actionLoading} onClick={() => askStatus(p, 'reactivate')} className={cx(btn.base, btn.primary, size)}>
+        <button type="button" disabled={actionLoading} onClick={(e) => { e.stopPropagation(); askStatus(p, 'reactivate'); }} className={cx(btn.base, btn.primary, size)}>
           Reactivate
         </button>
       )}
+      <button
+        type="button"
+        disabled={actionLoading}
+        onClick={(e) => {
+          e.stopPropagation();
+          askDelete(p);
+        }}
+        className={cx(
+          btn.base,
+          btn.secondary,
+          size,
+          '!text-rose-600 hover:!bg-rose-50 hover:!border-rose-200 inline-flex items-center gap-1'
+        )}
+        title="Remove partner permanently"
+      >
+        <Trash2 size={size === btn.xs ? 11 : 13} className="shrink-0" />
+        <span>Delete</span>
+      </button>
     </>
   );
 
@@ -2910,6 +2962,8 @@ export default function AffiliateManagement() {
         title={
           confirmState?.kind === 'partner-status'
             ? CONFIRM_COPY[confirmState.verb].title
+            : confirmState?.kind === 'partner-delete'
+            ? 'Remove partner permanently'
             : confirmState?.kind === 'cancel-booking'
             ? 'Cancel booking'
             : 'Decline commission'
@@ -2917,6 +2971,8 @@ export default function AffiliateManagement() {
         description={
           confirmState?.kind === 'partner-status'
             ? CONFIRM_COPY[confirmState.verb].body(confirmState.name)
+            : confirmState?.kind === 'partner-delete'
+            ? `Are you sure you want to permanently remove "${confirmState.name}"? All associated partner data will be deleted. This action cannot be undone.`
             : confirmState?.kind === 'cancel-booking'
             ? `Booking #${confirmState.ref} will be marked as Cancelled and the commission will be voided.`
             : confirmState?.kind === 'decline-commission'
@@ -2926,17 +2982,27 @@ export default function AffiliateManagement() {
         confirmLabel={
           confirmState?.kind === 'partner-status'
             ? CONFIRM_COPY[confirmState.verb].confirm
+            : confirmState?.kind === 'partner-delete'
+            ? 'Delete Partner'
             : confirmState?.kind === 'cancel-booking'
             ? 'Cancel Booking'
             : 'Decline'
         }
-        tone={confirmState?.kind === 'cancel-booking' || confirmState?.kind === 'decline-commission' ? 'danger' : 'default'}
+        tone={
+          confirmState?.kind === 'cancel-booking' ||
+          confirmState?.kind === 'decline-commission' ||
+          confirmState?.kind === 'partner-delete'
+            ? 'danger'
+            : 'default'
+        }
         onCancel={() => setConfirmState(null)}
         onConfirm={async () => {
           const c = confirmState;
           if (!c) return;
           if (c.kind === 'partner-status') {
             await handlePartnerStatus(c.id, c.next);
+          } else if (c.kind === 'partner-delete') {
+            await handleDeletePartner(c.id);
           } else if (c.kind === 'cancel-booking') {
             await handleUpdateCommission(c.id, { status: 'cancelled', booking_status: 'Cancelled' });
           } else {
