@@ -273,14 +273,15 @@ import { supabase } from "@/lib/supabase";
 import { unstable_cache } from "next/cache";
 
 // Cache SSR data for 120 seconds to avoid hitting Supabase on every request
-const getSpaData = unstable_cache(
-  async (brand: string) => {
-    let treatments: any[] = [];
-    let products: any[] = [];
-    let campaigns: any[] = [];
-    let therapists: any[] = [];
+const getSpaData = (brand: string) =>
+  unstable_cache(
+    async () => {
+      let treatments: any[] = [];
+      let products: any[] = [];
+      let campaigns: any[] = [];
+      let therapists: any[] = [];
 
-    try {
+      try {
         let [treatmentsRes, productsRes, campaignsRes, therapistsRes] = await Promise.all([
           supabase.from('treatments').select('*').eq('is_published', true).eq('brand', brand).order('created_at', { ascending: false }),
           supabase.from('products').select('*').eq('is_published', true).eq('brand', brand).order('created_at', { ascending: false }),
@@ -288,30 +289,30 @@ const getSpaData = unstable_cache(
           supabase.from('therapists').select('*').eq('is_active', true).eq('brand', brand).order('created_at', { ascending: false })
         ]);
 
-      if (brand !== 'elexoir' && (!treatmentsRes.data || treatmentsRes.data.length === 0)) {
-        const fallbackRes = await Promise.all([
-          supabase.from('treatments').select('*').eq('is_published', true).eq('brand', 'elexoir').order('created_at', { ascending: false }),
-          supabase.from('products').select('*').eq('is_published', true).eq('brand', 'elexoir').order('created_at', { ascending: false }),
-          supabase.from('therapists').select('*').eq('is_active', true).eq('brand', 'elexoir').order('created_at', { ascending: false })
-        ]);
-        treatmentsRes = fallbackRes[0];
-        productsRes = fallbackRes[1];
-        therapistsRes = fallbackRes[2];
+        if (brand !== 'elexoir' && (!treatmentsRes.data || treatmentsRes.data.length === 0)) {
+          const fallbackRes = await Promise.all([
+            supabase.from('treatments').select('*').eq('is_published', true).eq('brand', 'elexoir').order('created_at', { ascending: false }),
+            supabase.from('products').select('*').eq('is_published', true).eq('brand', 'elexoir').order('created_at', { ascending: false }),
+            supabase.from('therapists').select('*').eq('is_active', true).eq('brand', 'elexoir').order('created_at', { ascending: false })
+          ]);
+          treatmentsRes = fallbackRes[0];
+          productsRes = fallbackRes[1];
+          therapistsRes = fallbackRes[2];
+        }
+
+        treatments = treatmentsRes.data || [];
+        products = productsRes.data || [];
+        campaigns = campaignsRes.data || [];
+        therapists = therapistsRes.data || [];
+      } catch (error) {
+        console.error("SSR error fetching spa data:", error);
       }
 
-      treatments = treatmentsRes.data || [];
-      products = productsRes.data || [];
-      campaigns = campaignsRes.data || [];
-      therapists = therapistsRes.data || [];
-    } catch (error) {
-      console.error("SSR error fetching spa data:", error);
-    }
-
-    return { treatments, products, campaigns, therapists };
-  },
-  ['spa-data'],
-  { revalidate: 120, tags: ['spa-data'] }
-);
+      return { treatments, products, campaigns, therapists };
+    },
+    ['spa-data', brand],
+    { revalidate: 120, tags: ['spa-data', `spa-data-${brand}`] }
+  )();
 
 export default async function RootLayout({
   children,

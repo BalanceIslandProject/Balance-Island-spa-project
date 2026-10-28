@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, Share, MapPin, Clock, Calendar, Sparkles, Plus, Minus, X, MessageCircle, Heart, Bitcoin, ArrowRight, User, Tag, DoorOpen, Trash2 } from 'lucide-react';
 import Link from 'next/link';
@@ -8,7 +8,7 @@ import { saveBookingToSupabase } from '@/lib/bookingUtils';
 import { useCart } from '@/context/CartContext';
 import { calculateCartTotal, getItemMultiplier } from '@/lib/pricingUtils';
 import { useParams } from 'next/navigation';
-import { useSpa } from '@/context/SpaContext';
+import { useSpa, Treatment } from '@/context/SpaContext';
 import { supabase } from '@/lib/supabase';
 import { createSlug } from '@/utils/slugify';
 
@@ -19,7 +19,43 @@ export default function RitualsDetails() {
     const params = useParams();
     const id = params?.id as string;
     const { treatments, siteBrandFilter } = useSpa();
-    const treatment = treatments.find(t => t.id === id || createSlug(t.title) === id);
+    const contextTreatment = treatments.find(t => t.id === id || createSlug(t.title) === id);
+    const [fetchedTreatment, setFetchedTreatment] = useState<Treatment | null>(null);
+    const [fetchFailed, setFetchFailed] = useState(false);
+
+    // Direct Supabase fallback if treatment is not yet in context or arrived via direct URL/slug
+    useEffect(() => {
+        if (contextTreatment || fetchedTreatment || fetchFailed) return;
+        let isMounted = true;
+        async function fetchSingleTreatment() {
+            try {
+                const { data } = await supabase
+                    .from('treatments')
+                    .select('*')
+                    .eq('is_published', true);
+                if (data && data.length > 0) {
+                    const found = data.find(
+                        (t: any) => t.id === id || createSlug(t.title) === id
+                    );
+                    if (isMounted) {
+                        if (found) {
+                            setFetchedTreatment(found);
+                        } else {
+                            setFetchFailed(true);
+                        }
+                    }
+                } else if (isMounted) {
+                    setFetchFailed(true);
+                }
+            } catch (err) {
+                if (isMounted) setFetchFailed(true);
+            }
+        }
+        fetchSingleTreatment();
+        return () => { isMounted = false; };
+    }, [id, contextTreatment, fetchedTreatment, fetchFailed]);
+
+    const treatment = contextTreatment || fetchedTreatment;
 
     const [selectedOptionIdx, setSelectedOptionIdx] = useState(0);
     const [cartItems, setCartItems] = useState<{
@@ -56,7 +92,71 @@ export default function RitualsDetails() {
     const isTherapick = siteBrandFilter === 'therapick' || (typeof window !== 'undefined' && (window.location.hostname.includes('therapick') || window.location.hostname.includes('booktherapick')));
 
     if (!treatment) {
-        return <div className="min-h-screen bg-background flex items-center justify-center font-serif text-2xl text-primary">Loading...</div>;
+        if (fetchFailed) {
+            return (
+                <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6 text-center pt-24 pb-16">
+                    <div className="max-w-md w-full bg-white/70 backdrop-blur-xl border border-black/5 rounded-[32px] p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+                        <span className="text-[10px] font-bold tracking-widest uppercase text-primary/60 mb-2 block">
+                            Treatment Not Found
+                        </span>
+                        <h2 className="font-serif text-2xl md:text-3xl text-primary mb-3">
+                            Looking for Relaxation?
+                        </h2>
+                        <p className="text-xs md:text-sm text-text-muted font-light mb-6 leading-relaxed">
+                            This ritual may have been updated or moved. Discover our complete menu of 5-star mobile spa treatments.
+                        </p>
+                        <Link
+                            href="/explore"
+                            className="inline-flex items-center justify-center gap-2 w-full py-3.5 px-6 rounded-full bg-primary text-white text-xs font-bold uppercase tracking-widest hover:bg-black transition-all active:scale-95 shadow-sm"
+                        >
+                            Explore All Treatments
+                        </Link>
+                    </div>
+                </div>
+            );
+        }
+
+        // Luxury Skeleton UI — absolutely NO "Loading..." text!
+        return (
+            <div className="min-h-screen bg-background pt-24 md:pt-36 pb-20 px-6 max-w-7xl mx-auto animate-pulse">
+                {/* Back / Action skeleton */}
+                <div className="flex items-center justify-between mb-8 max-w-3xl mx-auto">
+                    <div className="w-12 h-12 rounded-full bg-black/5" />
+                    <div className="w-12 h-12 rounded-full bg-black/5" />
+                </div>
+                {/* Category & Title skeleton */}
+                <div className="mb-8 max-w-3xl mx-auto">
+                    <div className="w-24 h-6 rounded-full bg-black/5 mb-4" />
+                    <div className="w-3/4 max-w-md h-10 md:h-14 rounded-2xl bg-black/5 mb-3" />
+                    <div className="w-1/2 max-w-xs h-6 rounded-xl bg-black/5" />
+                </div>
+                {/* Bento Grid skeleton */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10 max-w-3xl mx-auto">
+                    <div className="bg-white/40 border border-black/5 rounded-[32px] p-6 h-44 flex flex-col justify-between">
+                        <div className="w-32 h-4 rounded-full bg-black/5" />
+                        <div className="flex gap-2">
+                            <div className="flex-1 h-12 rounded-2xl bg-black/5" />
+                            <div className="flex-1 h-12 rounded-2xl bg-black/5" />
+                            <div className="flex-1 h-12 rounded-2xl bg-black/5" />
+                        </div>
+                    </div>
+                    <div className="rounded-[32px] p-6 h-44 bg-gradient-to-br from-[#1C1F1D] to-[#2A2E2C] flex flex-col justify-between">
+                        <div className="w-24 h-4 rounded-full bg-white/10" />
+                        <div className="w-48 h-8 rounded-xl bg-white/10" />
+                        <div className="w-full h-12 rounded-2xl bg-white/20" />
+                    </div>
+                </div>
+                {/* About Box skeleton */}
+                <div className="bg-white/50 border border-white/60 p-6 md:p-8 rounded-[32px] shadow-sm max-w-3xl mx-auto">
+                    <div className="w-36 h-4 rounded-full bg-black/5 mb-6" />
+                    <div className="space-y-3 mb-6">
+                        <div className="w-full h-4 rounded bg-black/5" />
+                        <div className="w-5/6 h-4 rounded bg-black/5" />
+                        <div className="w-4/6 h-4 rounded bg-black/5" />
+                    </div>
+                </div>
+            </div>
+        );
     }
 
     const selectedOption = treatment.options[selectedOptionIdx] || treatment.options[0];
@@ -314,7 +414,7 @@ export default function RitualsDetails() {
                             </div>
                         </div>
                         <div className="flex flex-wrap gap-2">
-                            {treatment.options.map((opt, idx) => {
+                            {treatment.options.map((opt: any, idx: number) => {
                                 const isActive = selectedOptionIdx === idx;
                                 return (
                                     <button 
@@ -539,7 +639,7 @@ export default function RitualsDetails() {
                                                                 <p className="text-xs text-text-muted leading-relaxed">{t.desc}</p>
                                                                 <div className="space-y-2">
                                                                     <div className="text-[10px] font-bold uppercase tracking-widest text-primary/80 mb-2">Select Duration</div>
-                                                                    {t.options.map((opt, idx) => (
+                                                                    {t.options.map((opt: any, idx: number) => (
                                                                         <button
                                                                             key={idx}
                                                                             onClick={(e) => {
