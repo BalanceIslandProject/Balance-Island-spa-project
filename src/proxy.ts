@@ -21,49 +21,30 @@ export function proxy(request: NextRequest) {
             return NextResponse.next();
         }
 
-        // Dedicated root-level routes for the partner portal that should NOT be rewritten to /partners/...
-        const rootPortalPaths = [
-            '/sign-in',
-            '/sign-up',
-            '/onboarding',
-            '/pending-approval',
-            '/application-status'
-        ];
-        const isRootPortalPath = rootPortalPaths.some(p => path === p || path.startsWith(p + '/'));
-
         // Map root / or any subpath to /partners/...
         // e.g. / -> /partners
         //      /dashboard -> /partners/dashboard
         //      /login -> /partners/login
+        //      /register -> /partners/register
         //      /partners/dashboard -> /partners/dashboard (unchanged)
-        const targetPath = isRootPortalPath
-            ? path
-            : (path.startsWith('/partners') 
-                ? path 
-                : `/partners${path === '/' ? '' : path}`);
+        const targetPath = path.startsWith('/partners') 
+            ? path 
+            : `/partners${path === '/' ? '' : path}`;
 
         // Authentication enforcement for protected partner workspace paths
         const publicPartnerPaths = [
             '/partners',
             '/partners/login',
             '/partners/register',
-            '/sign-in',
-            '/sign-up',
-            '/onboarding',
-            '/pending-approval',
-            '/application-status',
-            '/privacy',
-            '/terms'
+            '/partners/terms',
+            '/partners/privacy'
         ];
         const isPublicPath = publicPartnerPaths.some(p => targetPath === p || targetPath.startsWith(p));
 
         if (!isPublicPath) {
-            const hasSession = Boolean(
-                request.cookies.get('partner_session')?.value || 
-                request.cookies.get('__session')?.value
-            );
+            const hasSession = Boolean(request.cookies.get('partner_session')?.value);
             if (!hasSession) {
-                const loginPath = path.startsWith('/partners') ? '/partners/login' : '/sign-in';
+                const loginPath = path.startsWith('/partners') ? '/partners/login' : '/login';
                 return NextResponse.redirect(new URL(loginPath, request.url));
             }
         }
@@ -82,11 +63,6 @@ export function proxy(request: NextRequest) {
     // Note: /api/affiliates/admin/* is used by the authenticated admin dashboard across all brand domains.
     const isPartnerPath = 
         path.startsWith('/partners') || 
-        path.startsWith('/partner') || 
-        path.startsWith('/onboarding') || 
-        path.startsWith('/pending-approval') || 
-        path.startsWith('/application-status') || 
-        path.startsWith('/api/partner') || 
         (path.startsWith('/api/affiliates') && !path.startsWith('/api/affiliates/admin'));
 
     if (isPartnerPath) {
@@ -95,27 +71,19 @@ export function proxy(request: NextRequest) {
         }
     }
 
-    // 3. PARTNER PORTAL AUTHENTICATION (when accessed on main domain /partners/... or /partner/...):
-    if (path.startsWith('/partners') || path.startsWith('/partner')) {
+    // 3. PARTNER PORTAL AUTHENTICATION (when accessed on main domain /partners/...):
+    if (path.startsWith('/partners')) {
         const publicPartnerPaths = [
             '/partners',
             '/partners/login',
             '/partners/register',
-            '/partner/login',
-            '/partner/register',
-            '/sign-in',
-            '/sign-up',
-            '/onboarding',
-            '/pending-approval',
-            '/application-status'
+            '/partners/terms',
+            '/partners/privacy'
         ];
         const isPublicPartnerPath = publicPartnerPaths.some(p => path === p || path.startsWith(p));
 
         if (!isPublicPartnerPath) {
-            const hasSession = Boolean(
-                request.cookies.get('partner_session')?.value || 
-                request.cookies.get('__session')?.value
-            );
+            const hasSession = Boolean(request.cookies.get('partner_session')?.value);
             if (!hasSession) {
                 const loginUrl = new URL('/partners/login', request.url);
                 return NextResponse.redirect(loginUrl);

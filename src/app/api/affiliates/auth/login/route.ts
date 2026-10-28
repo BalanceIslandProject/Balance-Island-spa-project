@@ -5,7 +5,7 @@ import { verifyPassword, createSessionToken } from '@/lib/partnerAuth';
 
 export async function POST(req: NextRequest) {
   try {
-    const host = req.headers.get('host') || '';
+    const host = req.headers.get('x-forwarded-host') || req.headers.get('host') || '';
 
     // Strictly BookTherapick only
     if (!isBookTherapickHost(host)) {

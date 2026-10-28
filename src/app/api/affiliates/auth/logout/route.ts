@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 
 export async function POST(request: NextRequest) {
-  const host = request.headers.get('host') || '';
+  const host = request.headers.get('x-forwarded-host') || request.headers.get('host') || '';
   const isProd = process.env.NODE_ENV === 'production';
   const isTherapickDomain = host.includes('booktherapick.com');
 

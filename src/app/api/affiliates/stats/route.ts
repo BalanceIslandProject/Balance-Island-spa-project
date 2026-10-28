@@ -5,7 +5,7 @@ import { getPartnerSession, isPartnerApproved } from '@/lib/partnerAuth';
 
 export async function GET(req: NextRequest) {
   try {
-    const host = req.headers.get('host') || '';
+    const host = req.headers.get('x-forwarded-host') || req.headers.get('host') || '';
 
     if (!isBookTherapickHost(host)) {
       return new NextResponse(null, { status: 404, statusText: 'Not Found' });

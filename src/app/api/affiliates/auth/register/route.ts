@@ -13,7 +13,7 @@ function formatPartnerCode(code: string): string {
 
 export async function POST(req: NextRequest) {
   try {
-    const host = req.headers.get('host') || '';
+    const host = req.headers.get('x-forwarded-host') || req.headers.get('host') || '';
 
     // Reject non-BookTherapick requests
     if (!isBookTherapickHost(host)) {

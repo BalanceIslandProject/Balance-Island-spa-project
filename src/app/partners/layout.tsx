@@ -4,7 +4,6 @@ import { notFound } from 'next/navigation';
 import { isBookTherapickHost } from '@/lib/domainIsolation';
 import { getPartnerSession } from '@/lib/partnerAuth';
 import PartnerNav from './PartnerNav';
-import PartnerAuthProvider from '@/components/partner/PartnerAuthProvider';
 
 export const metadata = {
   title: 'Partner Program | BookTherapick Bali',
@@ -38,16 +37,14 @@ export default async function PartnersLayout({
   const session = await getPartnerSession();
 
   return (
-    <PartnerAuthProvider>
-      <div className="min-h-screen md:h-screen md:overflow-hidden bg-white text-[#171717] flex flex-col md:flex-row font-sans selection:bg-black selection:text-white antialiased relative">
-        <PartnerNav session={session} />
-        <main className="flex-1 min-w-0 w-full h-full md:h-screen md:overflow-y-auto px-4 sm:px-6 md:px-8 lg:px-10 py-4 sm:py-6 md:py-8 pb-24 md:pb-12 overscroll-contain">
-          <div className="w-full">
-            {children}
-          </div>
-        </main>
-      </div>
-    </PartnerAuthProvider>
+    <div className="min-h-screen md:h-screen md:overflow-hidden bg-white text-[#171717] flex flex-col md:flex-row font-sans selection:bg-black selection:text-white antialiased relative">
+      <PartnerNav session={session} />
+      <main className="flex-1 min-w-0 w-full h-full md:h-screen md:overflow-y-auto px-4 sm:px-6 md:px-8 lg:px-10 py-4 sm:py-6 md:py-8 pb-24 md:pb-12 overscroll-contain">
+        <div className="w-full">
+          {children}
+        </div>
+      </main>
+    </div>
   );
 }
 
