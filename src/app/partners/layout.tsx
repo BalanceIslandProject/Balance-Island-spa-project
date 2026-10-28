@@ -27,7 +27,7 @@ export default async function PartnersLayout({
   children: React.ReactNode;
 }) {
   const headersList = await headers();
-  const host = headersList.get('host') || '';
+  const host = headersList.get('x-forwarded-host') || headersList.get('host') || '';
 
   // STRICT DOMAIN ISOLATION:
   // Reject access on any non-BookTherapick host

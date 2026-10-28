@@ -4,11 +4,11 @@ import { isBookTherapickHost } from '@/lib/domainIsolation';
 
 export function proxy(request: NextRequest) {
     const path = request.nextUrl.pathname;
-    const host = request.headers.get('host') || '';
+    const host = request.headers.get('x-forwarded-host') || request.headers.get('host') || '';
 
     // Normalize host
     const cleanHost = host.toLowerCase().split(':')[0].trim();
-    const isPartnersSubdomain = cleanHost.startsWith('partners.');
+    const isPartnersSubdomain = cleanHost.startsWith('partners.') || cleanHost.startsWith('partner.');
 
     // 1. SUBDOMAIN ROUTING FOR PARTNERS PORTAL (partners.booktherapick.com / partners.localhost)
     if (isPartnersSubdomain) {
@@ -21,14 +21,26 @@ export function proxy(request: NextRequest) {
             return NextResponse.next();
         }
 
+        // Dedicated root-level routes for the partner portal that should NOT be rewritten to /partners/...
+        const rootPortalPaths = [
+            '/sign-in',
+            '/sign-up',
+            '/onboarding',
+            '/pending-approval',
+            '/application-status'
+        ];
+        const isRootPortalPath = rootPortalPaths.some(p => path === p || path.startsWith(p + '/'));
+
         // Map root / or any subpath to /partners/...
         // e.g. / -> /partners
         //      /dashboard -> /partners/dashboard
         //      /login -> /partners/login
         //      /partners/dashboard -> /partners/dashboard (unchanged)
-        const targetPath = path.startsWith('/partners') 
-            ? path 
-            : `/partners${path === '/' ? '' : path}`;
+        const targetPath = isRootPortalPath
+            ? path
+            : (path.startsWith('/partners') 
+                ? path 
+                : `/partners${path === '/' ? '' : path}`);
 
         // Authentication enforcement for protected partner workspace paths
         const publicPartnerPaths = [
