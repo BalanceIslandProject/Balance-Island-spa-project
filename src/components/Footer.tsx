@@ -46,6 +46,13 @@ export default function Footer() {
         <div className="flex flex-col items-start max-w-2xl">
           
           <div className="mb-8">
+            <Link href="/" className="domain-therapick-only inline-block mb-5 outline-none group">
+              <img 
+                src="/therapick-logo-2.png" 
+                alt="Therapick" 
+                className="h-7 sm:h-8 md:h-9 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
+              />
+            </Link>
             <h2 className="text-sm sm:text-base md:text-lg font-serif text-primary tracking-wide mb-6 whitespace-nowrap">
               A brand of PT BALANCE ISLAND INDONESIA
             </h2>
