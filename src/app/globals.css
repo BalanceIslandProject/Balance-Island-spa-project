@@ -19,33 +19,12 @@
   --font-serif: var(--font-newsreader), "Newsreader", Georgia, serif;
 }
 
-body[data-domain="bali"] {
+body[data-domain="bali"],
+body[data-domain="therapick"] {
   --color-background: #FFFFFF;
   --color-secondary: #F3F4F6; /* Light gray */
   --color-accent: #E5E7EB; /* Gray for cards */
   --color-highlight: #F9FAFB; /* Off-white */
-}
-
-body[data-domain="therapick"] {
-  --color-paper-white: #fafafa;
-  --color-pure-white: #ffffff;
-  --color-hairline: #ebebeb;
-  --color-ash: #c9c9c9;
-  --color-smoke: #a8a8a8;
-  --color-graphite: #8f8f8f;
-  --color-slate: #7d7d7d;
-  --color-stone: #666666;
-  --color-charcoal: #4d4d4d;
-  --color-obsidian: #171717;
-  --color-carbon: #000000;
-  --color-terminal-green: #297a3a;
-  --color-background: #fafafa;
-  --color-surface: #ffffff;
-  --color-border: #ebebeb;
-  --color-text: #171717;
-  --color-text-muted: #666666;
-  background-color: #fafafa;
-  color: #171717;
 }
 
 html, body {

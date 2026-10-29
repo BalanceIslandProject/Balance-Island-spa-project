@@ -163,7 +163,7 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
             if (isTherapick) {
                 const tableChoice = massageTableCount > 0 
                     ? `${massageTableCount} Portable Table${massageTableCount > 1 ? 's' : ''} (+IDR ${(massageTableCount * 100000).toLocaleString('en-US')})` 
-                    : 'Villa Bed / Floor Mat Setup (IDR 0)';
+                    : 'Standard Setup (No Portable Table)';
 
                 const treatmentsList = cartItems.map((item, idx) => {
                     const isCouple = ['couple', 'honeymoon'].some(k => item.title.toLowerCase().includes(k));
@@ -1116,16 +1116,6 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                                         </button>
                                                     </div>
                                                 </div>
-
-                                                {/* Massage on Your Bed Option info */}
-                                                <div className="p-3.5 rounded-xl bg-stone-50/50 border border-border/60">
-                                                    <div className="font-bold text-xs text-primary mb-1">
-                                                        Massage on Your Bed (Complimentary)
-                                                    </div>
-                                                    <p className="text-[11px] text-stone-600 leading-relaxed">
-                                                        If you prefer not to add a portable table, your therapist will set up comfortably on your villa bed or mattress. The therapist will bring an ergonomic face cradle, clean sanitized towels, and protective spa linens for your complete comfort and neck support.
-                                                    </p>
-                                                </div>
                                             </div>
 
                                             {/* Promo Code Input - Displayed on this section only */}
@@ -1339,7 +1329,7 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                                         <span className="font-medium text-primary">
                                                             {massageTableCount > 0 
                                                                 ? `${massageTableCount} Portable Table${massageTableCount > 1 ? 's' : ''} (+IDR ${(massageTableCount * 100000).toLocaleString('en-US')})` 
-                                                                : 'Villa Bed / Floor Mat Setup (IDR 0)'
+                                                                : 'Standard Setup (No Portable Table)'
                                                             }
                                                         </span>
                                                     </div>
@@ -2019,12 +2009,12 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                     </div>
                                 </div>
 
-                                <div className={`p-3.5 ${isTherapick ? 'rounded-[6px] bg-[#fafafa] border border-[#ebebeb]' : 'rounded-2xl bg-stone-50 border border-border/70'} flex items-start gap-3`}>
-                                    <div className={`w-8 h-8 ${isTherapick ? 'rounded-[6px] bg-white border border-[#ebebeb] text-[#171717]' : 'rounded-xl bg-white border border-border/80 text-primary'} flex items-center justify-center shrink-0 mt-0.5`}>
+                                <div className="p-3.5 rounded-2xl bg-stone-50 border border-border/70 flex items-start gap-3">
+                                    <div className="w-8 h-8 rounded-xl bg-white border border-border/80 flex items-center justify-center shrink-0 text-primary mt-0.5">
                                         <Tag className="w-4 h-4" />
                                     </div>
                                     <div>
-                                        <h4 className={isTherapick ? "font-mono text-[11px] uppercase tracking-[0.071em] text-[#171717] font-semibold mb-1" : "font-bold text-xs text-primary uppercase tracking-wider mb-1"}>
+                                        <h4 className="font-bold text-xs text-primary uppercase tracking-wider mb-1">
                                             100% Direct Therapist Surcharge
                                         </h4>
                                         <p className="text-[11px] text-stone-600 leading-relaxed">
@@ -2035,11 +2025,11 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                             </div>
 
                             {/* Modal Footer */}
-                            <div className={`pt-3 border-t ${isTherapick ? 'border-[#ebebeb]' : 'border-border/60'}`}>
+                            <div className="pt-3 border-t border-border/60">
                                 <button
                                     type="button"
                                     onClick={() => setShowTableFeeModal(false)}
-                                    className={isTherapick ? "w-full bg-[#171717] hover:bg-black text-white py-3 rounded-[6px] text-xs font-mono uppercase tracking-[0.071em] transition-colors shadow-xs" : "w-full bg-black hover:bg-neutral-800 text-white py-3 rounded-xl text-xs font-bold uppercase tracking-widest transition-all shadow-sm"}
+                                    className="w-full bg-black hover:bg-neutral-800 text-white py-3 rounded-xl text-xs font-bold uppercase tracking-widest transition-all shadow-sm"
                                 >
                                     Understood
                                 </button>

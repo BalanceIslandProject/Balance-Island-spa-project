@@ -269,7 +269,7 @@ export default function RitualsDetails() {
             if (isTherapick) {
                 const tableChoice = massageTableCount > 0 
                     ? `${massageTableCount} Portable Table${massageTableCount > 1 ? 's' : ''} (+IDR ${(massageTableCount * 100000).toLocaleString('en-US')})` 
-                    : 'Villa Bed / Floor Mat Setup (IDR 0)';
+                    : 'Standard Setup (No Portable Table)';
 
                 const treatmentsList = cartItems.map((item, idx) => {
                     const isCouple = ['couple', 'honeymoon'].some(k => item.title.toLowerCase().includes(k));
@@ -642,7 +642,8 @@ export default function RitualsDetails() {
                         <motion.div 
                             initial={{ opacity: 0, scale: 0.9, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
-                            className={`bg-white w-full max-w-full sm:max-w-lg h-[100dvh] sm:h-auto sm:max-h-[90vh] sm:my-auto ${isTherapick ? 'sm:rounded-[6px] border border-[#ebebeb] shadow-[0_0_0_1px_rgba(0,0,0,0.08)]' : 'sm:rounded-[28px] shadow-2xl'} rounded-none p-5 sm:p-7 md:p-8 relative flex flex-col box-border overflow-y-auto overflow-x-hidden no-scrollbar`}
+                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            className="bg-white w-full max-w-full sm:max-w-lg h-[100dvh] sm:h-auto sm:max-h-[90vh] sm:my-auto sm:rounded-[28px] rounded-none p-5 sm:p-7 md:p-8 shadow-2xl relative flex flex-col box-border overflow-y-auto overflow-x-hidden no-scrollbar"
                         >
                             <button 
                                 onClick={() => {
@@ -749,9 +750,8 @@ export default function RitualsDetails() {
                                     {therapickStep === 'selection' && (
                                         <>
                                             <div className="mb-5 pr-8 relative">
-                                                <span className="font-mono text-[11px] uppercase tracking-[0.071em] text-[#666666] block mb-1">Step 01 / Selection</span>
-                                                <h2 className="text-xl sm:text-2xl font-sans font-medium text-[#171717] tracking-tight">Your Spa Selection</h2>
-                                                <p className="text-xs text-[#666666] mt-0.5">Review treatments and choose your massage setup.</p>
+                                                <h2 className="font-serif text-2xl sm:text-3xl text-primary font-medium tracking-tight mb-1">YOUR SPA SELECTION</h2>
+                                                <p className="text-xs text-text-muted">Review treatments and choose your massage setup.</p>
                                             </div>
 
                                             {/* Cart Items List */}
@@ -760,12 +760,12 @@ export default function RitualsDetails() {
                                                     const addonsTotal = (item.addons || []).reduce((s: number, a: any) => s + (Number(a.price) || 0), 0);
                                                     const singlePrice = item.price + addonsTotal;
                                                     return (
-                                                    <div key={item.id} className="bg-white border border-[#ebebeb] rounded-[6px] p-4 sm:p-5 relative shadow-[0_0_0_1px_rgba(0,0,0,0.02)]">
+                                                    <div key={item.id} className="bg-white border border-border/80 rounded-2xl p-4 sm:p-5 shadow-sm relative">
                                                         <div className="flex items-start justify-between mb-3 pr-6">
                                                             <div>
-                                                                <h3 className="font-medium text-sm text-[#171717] leading-tight">{item.title}</h3>
-                                                                <p className="text-xs text-[#666666] flex items-center gap-1 mt-1 mb-1 font-mono">
-                                                                    <Clock className="w-3 h-3 text-[#888888]" /> {item.duration} Mins
+                                                                <h3 className="font-bold text-sm text-primary leading-tight">{item.title}</h3>
+                                                                <p className="text-xs text-text-muted flex items-center gap-1 mt-1 mb-1">
+                                                                    <Clock className="w-3 h-3" /> {item.duration} Mins
                                                                 </p>
 
                                                                 {/* Selected Add-ons displayed directly below massage title */}
@@ -774,7 +774,7 @@ export default function RitualsDetails() {
                                                                         {item.addons.map((addon: any) => (
                                                                             <span 
                                                                                 key={addon.id}
-                                                                                className="inline-flex items-center gap-1 bg-[#fafafa] text-[#171717] border border-[#ebebeb] text-[10px] font-mono px-2 py-0.5 rounded-[6px]"
+                                                                                className="inline-flex items-center gap-1 bg-stone-100 text-stone-800 border border-stone-200 text-[10px] font-medium px-2 py-0.5 rounded-full"
                                                                             >
                                                                                 <span>+ {addon.title} (+IDR {Number(addon.price).toLocaleString('en-US')})</span>
                                                                                 <button
@@ -797,27 +797,27 @@ export default function RitualsDetails() {
                                                                     </div>
                                                                 )}
                                                             </div>
-                                                            <span className="font-mono tabular-nums text-[#171717] font-semibold text-right flex flex-col shrink-0 text-sm">
+                                                            <span className="font-serif text-primary font-medium text-right flex flex-col shrink-0">
                                                                 IDR {singlePrice.toLocaleString('en-US')}
-                                                                <span className="text-[10px] font-mono text-[#888888] font-normal uppercase tracking-[0.071em]">
+                                                                <span className="text-[10px] font-sans text-text-muted font-normal uppercase tracking-wider">
                                                                     {['couple', 'honeymoon'].some(k => item.title.toLowerCase().includes(k)) ? 'For 2 Persons' : 'Per Person'}
                                                                 </span>
                                                             </span>
                                                         </div>
 
                                                         {/* Add-on on left side, Guests Title and counter on right side */}
-                                                        <div className="flex items-center justify-between pt-2.5 pb-1 border-t border-[#ebebeb]">
+                                                        <div className="flex items-center justify-between pt-2.5 pb-1 border-t border-border/50">
                                                             <div>
                                                                 <button
                                                                     type="button"
                                                                     onClick={() => setSelectedAddonItem(item)}
-                                                                    className="text-[10px] font-mono uppercase tracking-[0.071em] text-[#171717] border border-[#ebebeb] hover:border-[#171717] px-3 py-1.5 rounded-[6px] transition-all flex items-center gap-1.5 bg-[#fafafa] hover:bg-white"
+                                                                    className="text-[10px] font-bold uppercase tracking-wider text-primary border border-border/80 hover:border-primary px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 bg-stone-50 hover:bg-stone-100 shadow-2xs"
                                                                 >
                                                                     <Plus className="w-3 h-3" /> Add-on
                                                                 </button>
                                                             </div>
                                                             <div className="flex items-center gap-2.5">
-                                                                <span className="text-[10px] font-mono uppercase tracking-[0.071em] text-[#666666]">Guests</span>
+                                                                <span className="text-[10px] font-bold uppercase tracking-widest text-primary/80">Guests</span>
                                                                 <button
                                                                     type="button"
                                                                     onClick={() => {
@@ -828,12 +828,12 @@ export default function RitualsDetails() {
                                                                             setTherapickStep('selection');
                                                                         }
                                                                     }}
-                                                                    className="w-7 h-7 rounded-[6px] bg-white border border-[#ebebeb] flex items-center justify-center text-[#666666] hover:text-red-500 hover:border-red-200 transition-colors"
+                                                                    className="w-7 h-7 rounded-full bg-white border border-border flex items-center justify-center text-text-muted hover:text-red-500 hover:border-red-200 transition-colors shadow-2xs"
                                                                     title="Remove treatment"
                                                                 >
                                                                     <Trash2 className="w-3.5 h-3.5" />
                                                                 </button>
-                                                                <div className="w-px h-4 bg-[#ebebeb]"></div>
+                                                                <div className="w-px h-4 bg-border/60"></div>
                                                                 <div className="flex items-center gap-2">
                                                                     <button
                                                                         type="button"
@@ -843,11 +843,11 @@ export default function RitualsDetails() {
                                                                             const step = isCouple ? 2 : 1;
                                                                             return { ...i, guests: Math.max(step, i.guests - step) };
                                                                         }))}
-                                                                        className="w-7 h-7 rounded-[6px] bg-white border border-[#ebebeb] flex items-center justify-center text-[#171717] hover:bg-[#fafafa] transition-colors"
+                                                                        className="w-7 h-7 rounded-full bg-white border border-border flex items-center justify-center text-primary hover:bg-border transition-colors shadow-2xs"
                                                                     >
                                                                         <Minus className="w-3 h-3" />
                                                                     </button>
-                                                                    <span className="font-mono font-medium text-xs text-[#171717] w-4 text-center tabular-nums">{item.guests}</span>
+                                                                    <span className="font-bold text-sm text-primary w-4 text-center tabular-nums">{item.guests}</span>
                                                                     <button
                                                                         type="button"
                                                                         onClick={() => setCartItems(cartItems.map(i => {
@@ -856,7 +856,7 @@ export default function RitualsDetails() {
                                                                             const step = isCouple ? 2 : 1;
                                                                             return { ...i, guests: i.guests + step };
                                                                         }))}
-                                                                        className="w-7 h-7 rounded-[6px] bg-white border border-[#ebebeb] flex items-center justify-center text-[#171717] hover:bg-[#fafafa] transition-colors"
+                                                                        className="w-7 h-7 rounded-full bg-white border border-border flex items-center justify-center text-primary hover:bg-border transition-colors shadow-2xs"
                                                                     >
                                                                         <Plus className="w-3 h-3" />
                                                                     </button>
@@ -872,36 +872,36 @@ export default function RitualsDetails() {
                                             <button
                                                 type="button"
                                                 onClick={() => setIsSelectingMore(true)}
-                                                className="w-full bg-white text-[#171717] border border-[#ebebeb] hover:border-[#171717] px-6 py-3 rounded-[6px] text-xs font-mono uppercase tracking-[0.071em] transition-colors mb-4"
+                                                className="w-full bg-white text-primary border border-border/80 px-6 py-3.5 rounded-xl text-xs font-bold shadow-sm hover:bg-white transition-colors mb-4 tracking-widest uppercase"
                                             >
                                                 + Add Another Treatment
                                             </button>
 
                                             {/* Massage Table Setup with - and + counter & Professional Explanation */}
-                                            <div className="bg-white border border-[#ebebeb] rounded-[6px] p-4 sm:p-5 shadow-[0_0_0_1px_rgba(0,0,0,0.02)] mb-4">
+                                            <div className="bg-white border border-border/80 rounded-2xl p-4 sm:p-5 shadow-xs mb-4">
                                                 <div className="flex items-start justify-between mb-3.5">
                                                     <div>
-                                                        <h4 className="text-xs font-mono uppercase tracking-[0.071em] text-[#171717] font-semibold">Massage Table Setup</h4>
-                                                        <p className="text-[11px] text-[#666666] mt-0.5">
+                                                        <h4 className="text-xs font-bold text-primary uppercase tracking-wider">Massage Table Setup</h4>
+                                                        <p className="text-[11px] text-text-muted mt-0.5">
                                                             Select your preferred massage setup at your villa or hotel
                                                         </p>
                                                     </div>
                                                     <button
                                                         type="button"
                                                         onClick={() => setShowTableFeeModal(true)}
-                                                        className="text-[10px] font-mono uppercase tracking-[0.071em] text-[#666666] hover:text-[#171717] transition-colors flex items-center gap-1 bg-[#fafafa] border border-[#ebebeb] px-2.5 py-1 rounded-[6px] shrink-0"
+                                                        className="text-[10px] font-semibold text-primary/80 hover:text-primary transition-colors flex items-center gap-1 bg-stone-100 hover:bg-stone-200/80 px-2.5 py-1 rounded-full shrink-0"
                                                         title="Read why there is an additional fee"
                                                     >
-                                                        <Info className="w-3 h-3 text-[#888888]" />
+                                                        <Info className="w-3 h-3 text-primary/70" />
                                                         <span>Why a fee?</span>
                                                     </button>
                                                 </div>
 
                                                 {/* Table Counter Row - displays ONLY "IDR 100,000 PER TABLE" */}
-                                                <div className="flex items-center justify-between p-3.5 rounded-[6px] bg-[#fafafa] border border-[#ebebeb] mb-3">
+                                                <div className="flex items-center justify-between p-3.5 rounded-xl bg-stone-50/70 border border-border/60 mb-3">
                                                     <div>
-                                                        <div className="font-medium text-xs text-[#171717]">Bring Portable Table</div>
-                                                        <div className="text-[11px] font-mono text-[#666666] mt-0.5">
+                                                        <div className="font-bold text-xs text-primary">Bring Portable Table</div>
+                                                        <div className="text-[11px] text-text-muted mt-0.5 font-medium">
                                                             IDR 100,000 PER TABLE
                                                         </div>
                                                     </div>
@@ -911,72 +911,62 @@ export default function RitualsDetails() {
                                                             type="button"
                                                             onClick={() => setMassageTableCount(Math.max(0, massageTableCount - 1))}
                                                             disabled={massageTableCount <= 0}
-                                                            className="w-8 h-8 rounded-[6px] bg-white border border-[#ebebeb] flex items-center justify-center text-[#171717] hover:bg-[#fafafa] disabled:opacity-40 transition-colors"
+                                                            className="w-8 h-8 rounded-full bg-white border border-border/80 flex items-center justify-center text-primary hover:bg-stone-100 disabled:opacity-40 transition-colors shadow-2xs"
                                                         >
                                                             <Minus className="w-3.5 h-3.5" />
                                                         </button>
-                                                        <span className="font-mono font-medium text-xs text-[#171717] w-5 text-center tabular-nums">
+                                                        <span className="font-bold text-sm text-primary w-5 text-center tabular-nums">
                                                             {massageTableCount}
                                                         </span>
                                                         <button
                                                             type="button"
                                                             onClick={() => setMassageTableCount(massageTableCount + 1)}
-                                                            className="w-8 h-8 rounded-[6px] bg-white border border-[#ebebeb] flex items-center justify-center text-[#171717] hover:bg-[#fafafa] transition-colors"
+                                                            className="w-8 h-8 rounded-full bg-white border border-border/80 flex items-center justify-center text-primary hover:bg-stone-100 transition-colors shadow-2xs"
                                                         >
                                                             <Plus className="w-3.5 h-3.5" />
                                                         </button>
                                                     </div>
                                                 </div>
-
-                                                {/* Massage on Your Bed Option info */}
-                                                <div className="p-3.5 rounded-[6px] bg-[#fafafa] border border-[#ebebeb]">
-                                                    <div className="font-medium text-xs text-[#171717] mb-1">
-                                                        Massage on Your Bed (Complimentary)
-                                                    </div>
-                                                    <p className="text-[11px] text-[#666666] leading-relaxed">
-                                                        If you prefer not to add a portable table, your therapist will set up comfortably on your villa bed or mattress. The therapist will bring an ergonomic face cradle, clean sanitized towels, and protective spa linens for your complete comfort and neck support.
-                                                    </p>
-                                                </div>
                                             </div>
 
                                             {/* Promo Code Input - Displayed on this section only */}
-                                            <div className="bg-white border border-[#ebebeb] rounded-[6px] p-4 shadow-[0_0_0_1px_rgba(0,0,0,0.02)] mb-5">
-                                                <label className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.071em] text-[#666666] mb-2">
-                                                    <Tag className="w-3.5 h-3.5 text-[#888888]"/> Promo Code (Optional)
+                                            <div className="bg-white border border-border/80 rounded-2xl p-4 shadow-xs mb-5">
+                                                <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/80 mb-2">
+                                                    <Tag className="w-3.5 h-3.5"/> Promo Code (Optional)
                                                 </label>
                                                 <div className="flex gap-2 w-full">
                                                     <input 
                                                         type="text" placeholder="ENTER CODE"
                                                         value={promoCodeInput} onChange={e => setPromoCodeInput(e.target.value.toUpperCase())}
                                                         disabled={!!appliedPromo || isPromoLoading}
-                                                        className="w-full bg-[#fafafa] border border-[#ebebeb] rounded-[6px] px-3.5 py-2 text-xs font-mono text-[#171717] placeholder:text-[#888888] focus:outline-none focus:border-[#171717] transition-all uppercase tracking-wider"
+                                                        className="w-full bg-stone-50/60 border border-border/80 rounded-xl px-4 py-2.5 text-xs text-primary placeholder:text-text-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all uppercase tracking-wider font-medium"
                                                     />
                                                     {appliedPromo ? (
-                                                        <button type="button" onClick={handleRemovePromo} className="px-3.5 bg-red-50 text-red-600 border border-red-200 rounded-[6px] text-xs font-mono uppercase tracking-[0.071em] hover:bg-red-100 transition-colors whitespace-nowrap">
+                                                        <button type="button" onClick={handleRemovePromo} className="px-4 bg-red-50 text-red-600 border border-red-200 rounded-xl text-xs font-bold hover:bg-red-100 transition-colors uppercase tracking-wider whitespace-nowrap">
                                                             Remove
                                                         </button>
                                                     ) : (
-                                                        <button type="button" onClick={handleApplyPromo} disabled={!promoCodeInput.trim() || isPromoLoading} className="px-4 bg-[#171717] hover:bg-black text-white rounded-[6px] text-xs font-mono uppercase tracking-[0.071em] transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap">
+                                                        <button type="button" onClick={handleApplyPromo} disabled={!promoCodeInput.trim() || isPromoLoading} className="px-5 bg-primary text-white rounded-xl text-xs font-bold hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wider whitespace-nowrap">
                                                             {isPromoLoading ? 'Applying...' : 'Apply'}
                                                         </button>
                                                     )}
                                                 </div>
-                                                {promoError && <p className="text-xs text-red-500 mt-1.5 font-mono">{promoError}</p>}
-                                                {promoSuccess && <p className="text-xs text-[#297a3a] mt-1.5 font-mono">{promoSuccess}</p>}
+                                                {promoError && <p className="text-xs text-red-500 mt-1.5 ml-1">{promoError}</p>}
+                                                {promoSuccess && <p className="text-xs text-emerald-600 mt-1.5 ml-1">{promoSuccess}</p>}
                                             </div>
 
                                             {/* Price & Continue */}
-                                            <div className="pt-4 border-t border-[#ebebeb]">
+                                            <div className="pt-4 border-t border-border/50">
                                                 <div className="flex items-end justify-between mb-5">
-                                                    <span className="text-xs font-mono uppercase tracking-[0.071em] text-[#666666]">Total Price</span>
-                                                    <span className="text-xl font-mono tabular-nums text-[#171717] font-semibold">
+                                                    <span className="text-xs font-bold text-primary uppercase tracking-widest">Total Price</span>
+                                                    <span className="text-2xl font-serif text-primary font-medium">
                                                         IDR {calculateCartTotal(cartItems, appliedPromo, massageTableCount * 100000).total.toLocaleString('en-US')}
                                                     </span>
                                                 </div>
                                                 <button
                                                     type="button"
                                                     onClick={() => setTherapickStep('details')}
-                                                    className="w-full bg-[#171717] hover:bg-black text-white px-6 py-3.5 rounded-[6px] text-xs font-mono uppercase tracking-[0.071em] flex items-center justify-center gap-2 transition-all shadow-xs"
+                                                    className="w-full bg-black hover:bg-neutral-800 text-white px-6 py-4 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:scale-[1.01] transition-all shadow-md uppercase tracking-widest"
                                                 >
                                                     <span>Continue to Guest Details</span>
                                                     <ArrowRight className="w-4 h-4" />
@@ -991,13 +981,12 @@ export default function RitualsDetails() {
                                                 <button
                                                     type="button"
                                                     onClick={() => setTherapickStep('selection')}
-                                                    className="inline-flex items-center gap-1 text-xs font-mono uppercase tracking-[0.071em] text-[#666666] hover:text-[#171717] mb-2"
+                                                    className="inline-flex items-center gap-1 text-xs font-bold text-text-muted hover:text-primary uppercase tracking-wider mb-2"
                                                 >
                                                     <ChevronLeft className="w-4 h-4" /> Back to Treatments
                                                 </button>
-                                                <span className="font-mono text-[11px] uppercase tracking-[0.071em] text-[#666666] block mb-1">Step 02 / Guest Logistics</span>
-                                                <h2 className="text-xl sm:text-2xl font-sans font-medium text-[#171717] tracking-tight">Guest Details</h2>
-                                                <p className="text-xs text-[#666666] mt-0.5">Enter your villa location and schedule for our therapists.</p>
+                                                <h2 className="font-serif text-2xl sm:text-3xl text-primary font-medium tracking-tight mb-1">GUEST DETAILS</h2>
+                                                <p className="text-xs text-text-muted">Enter your villa location and schedule for our therapists.</p>
                                             </div>
 
                                             <form className="space-y-4 pb-2" onSubmit={(e) => {
@@ -1009,82 +998,82 @@ export default function RitualsDetails() {
                                                 setTherapickStep('review');
                                             }}>
                                                 <div className="space-y-1.5 w-full">
-                                                    <label className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.071em] text-[#666666]">
-                                                        <User className="w-3.5 h-3.5 text-[#888888]"/> Guest Name
+                                                    <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1">
+                                                        <User className="w-3.5 h-3.5"/> Guest Name
                                                     </label>
                                                     <input 
                                                         type="text" required placeholder="John Doe"
                                                         value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })}
-                                                        className="w-full bg-[#fafafa] border border-[#ebebeb] focus:bg-white rounded-[6px] px-3.5 py-2.5 text-xs text-[#171717] placeholder:text-[#888888] focus:outline-none focus:border-[#171717] transition-all"
+                                                        className="w-full bg-white border border-border/80 rounded-xl px-4 py-3.5 text-sm text-primary placeholder:text-text-muted/50 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
                                                     />
                                                 </div>
 
                                                 <div className="flex flex-row gap-4 w-full">
                                                     <div className="space-y-1.5 flex-1 min-w-0">
-                                                        <label className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.071em] text-[#666666]">
-                                                            <Calendar className="w-3.5 h-3.5 text-[#888888]"/> Date
+                                                        <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1">
+                                                            <Calendar className="w-3.5 h-3.5"/> Date
                                                         </label>
                                                         <input 
                                                             type="date" required 
                                                             value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })}
-                                                            className="w-full min-w-0 appearance-none bg-[#fafafa] border border-[#ebebeb] focus:bg-white rounded-[6px] px-3.5 py-2.5 text-xs text-[#171717] placeholder:text-[#888888] focus:outline-none focus:border-[#171717] transition-all font-mono"
+                                                            className="w-full min-w-0 appearance-none bg-white border border-border/80 rounded-xl px-4 py-3.5 text-sm text-primary placeholder:text-text-muted/50 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
                                                         />
                                                     </div>
                                                     <div className="space-y-1.5 flex-1 min-w-0">
-                                                        <label className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.071em] text-[#666666]">
-                                                            <Clock className="w-3.5 h-3.5 text-[#888888]"/> Time
+                                                        <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1">
+                                                            <Clock className="w-3.5 h-3.5"/> Time
                                                         </label>
                                                         <input 
                                                             type="time" required 
                                                             value={formData.time} onChange={e => setFormData({ ...formData, time: e.target.value })}
-                                                            className="w-full min-w-0 appearance-none bg-[#fafafa] border border-[#ebebeb] focus:bg-white rounded-[6px] px-3.5 py-2.5 text-xs text-[#171717] placeholder:text-[#888888] focus:outline-none focus:border-[#171717] transition-all font-mono"
+                                                            className="w-full min-w-0 appearance-none bg-white border border-border/80 rounded-xl px-4 py-3.5 text-sm text-primary placeholder:text-text-muted/50 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
                                                         />
                                                     </div>
                                                 </div>
 
                                                 <div className="space-y-1.5 w-full">
-                                                    <label className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.071em] text-[#666666]">
-                                                        <MapPin className="w-3.5 h-3.5 text-[#888888]"/> Villa / Hotel Name
+                                                    <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1">
+                                                        <MapPin className="w-3.5 h-3.5"/> Villa / Hotel Name
                                                     </label>
                                                     <input 
                                                         type="text" required placeholder="e.g. Four Seasons Sayan"
                                                         value={formData.location} onChange={e => setFormData({ ...formData, location: e.target.value })}
-                                                        className="w-full bg-[#fafafa] border border-[#ebebeb] focus:bg-white rounded-[6px] px-3.5 py-2.5 text-xs text-[#171717] placeholder:text-[#888888] focus:outline-none focus:border-[#171717] transition-all"
+                                                        className="w-full bg-white border border-border/80 rounded-xl px-4 py-3.5 text-sm text-primary placeholder:text-text-muted/50 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
                                                     />
                                                 </div>
 
                                                 <div className="space-y-1.5 w-full">
-                                                    <label className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.071em] text-[#666666]">
-                                                        <DoorOpen className="w-3.5 h-3.5 text-[#888888]"/> Room Number (Optional)
+                                                    <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1">
+                                                        <DoorOpen className="w-3.5 h-3.5"/> Room Number (Optional)
                                                     </label>
                                                     <input 
                                                         type="text" placeholder="e.g. Villa 12"
                                                         value={formData.room} onChange={e => setFormData({ ...formData, room: e.target.value })}
-                                                        className="w-full bg-[#fafafa] border border-[#ebebeb] focus:bg-white rounded-[6px] px-3.5 py-2.5 text-xs text-[#171717] placeholder:text-[#888888] focus:outline-none focus:border-[#171717] transition-all"
+                                                        className="w-full bg-white border border-border/80 rounded-xl px-4 py-3.5 text-sm text-primary placeholder:text-text-muted/50 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
                                                     />
                                                 </div>
 
                                                 <div className="space-y-1.5 w-full">
-                                                    <label className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-[0.071em] text-[#666666]">
-                                                        <MessageCircle className="w-3.5 h-3.5 text-[#888888]"/> WhatsApp Number
+                                                    <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1">
+                                                        <MessageCircle className="w-3.5 h-3.5"/> WhatsApp Number
                                                     </label>
                                                     <input 
                                                         type="tel" required placeholder="e.g. +62 812 3456 7890"
                                                         value={formData.whatsapp} onChange={e => setFormData({ ...formData, whatsapp: e.target.value })}
-                                                        className="w-full bg-[#fafafa] border border-[#ebebeb] focus:bg-white rounded-[6px] px-3.5 py-2.5 text-xs font-mono text-[#171717] placeholder:text-[#888888] focus:outline-none focus:border-[#171717] transition-all"
+                                                        className="w-full bg-white border border-border/80 rounded-xl px-4 py-3.5 text-sm text-primary placeholder:text-text-muted/50 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
                                                     />
                                                 </div>
 
-                                                <div className="pt-4 border-t border-[#ebebeb]">
+                                                <div className="pt-4 border-t border-border/50">
                                                     <div className="flex items-end justify-between mb-5">
-                                                        <span className="text-xs font-mono uppercase tracking-[0.071em] text-[#666666]">Total Price</span>
-                                                        <span className="text-xl font-mono tabular-nums text-[#171717] font-semibold">
+                                                        <span className="text-xs font-bold text-primary uppercase tracking-widest">Total Price</span>
+                                                        <span className="text-2xl font-serif text-primary font-medium">
                                                             IDR {calculateCartTotal(cartItems, appliedPromo, massageTableCount * 100000).total.toLocaleString('en-US')}
                                                         </span>
                                                     </div>
                                                     <button 
                                                         type="submit"
-                                                        className="w-full bg-[#171717] hover:bg-black text-white px-6 py-3.5 rounded-[6px] text-xs font-mono uppercase tracking-[0.071em] flex items-center justify-center gap-2 transition-all shadow-xs"
+                                                        className="w-full bg-black hover:bg-neutral-800 text-white px-6 py-4 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:scale-[1.01] transition-all shadow-md uppercase tracking-widest"
                                                     >
                                                         <span>Review Booking</span>
                                                         <ArrowRight className="w-4 h-4" />
@@ -1100,67 +1089,66 @@ export default function RitualsDetails() {
                                                 <button
                                                     type="button"
                                                     onClick={() => setTherapickStep('details')}
-                                                    className="inline-flex items-center gap-1 text-xs font-mono uppercase tracking-[0.071em] text-[#666666] hover:text-[#171717] mb-2"
+                                                    className="inline-flex items-center gap-1 text-xs font-bold text-text-muted hover:text-primary uppercase tracking-wider mb-2"
                                                 >
                                                     <ChevronLeft className="w-4 h-4" /> Edit Details
                                                 </button>
-                                                <span className="font-mono text-[11px] uppercase tracking-[0.071em] text-[#666666] block mb-1">Step 03 / Confirmation</span>
-                                                <h2 className="text-xl sm:text-2xl font-sans font-medium text-[#171717] tracking-tight">Review Booking</h2>
-                                                <p className="text-xs text-[#666666] mt-0.5">Please verify your booking details below.</p>
+                                                <h2 className="font-serif text-2xl sm:text-3xl text-primary font-medium tracking-tight mb-1">REVIEW BOOKING</h2>
+                                                <p className="text-xs text-text-muted">Please verify your booking details below.</p>
                                             </div>
 
                                             <div className="space-y-4 pb-2">
                                                 {/* Guest Details Summary */}
-                                                <div className="bg-white border border-[#ebebeb] rounded-[6px] p-4 sm:p-5 shadow-[0_0_0_1px_rgba(0,0,0,0.02)] space-y-3">
-                                                    <h4 className="text-xs font-mono uppercase tracking-[0.071em] text-[#171717] font-semibold border-b border-[#ebebeb] pb-2">Guest Logistics</h4>
+                                                <div className="bg-white border border-border/80 rounded-2xl p-4 sm:p-5 shadow-xs space-y-3">
+                                                    <h4 className="text-xs font-bold text-primary uppercase tracking-wider border-b border-border/40 pb-2">Guest Logistics</h4>
                                                     <div className="grid grid-cols-2 gap-3 text-xs">
                                                         <div>
-                                                            <span className="text-[10px] font-mono uppercase tracking-[0.071em] text-[#666666] block">Guest Name</span>
-                                                            <span className="font-medium text-[#171717]">{formData.name}</span>
+                                                            <span className="text-[10px] font-bold uppercase tracking-wider text-text-muted block">Guest Name</span>
+                                                            <span className="font-medium text-primary">{formData.name}</span>
                                                         </div>
                                                         <div>
-                                                            <span className="text-[10px] font-mono uppercase tracking-[0.071em] text-[#666666] block">WhatsApp</span>
-                                                            <span className="font-mono text-[#171717]">{formData.whatsapp}</span>
+                                                            <span className="text-[10px] font-bold uppercase tracking-wider text-text-muted block">WhatsApp</span>
+                                                            <span className="font-medium text-primary">{formData.whatsapp}</span>
                                                         </div>
                                                         <div>
-                                                            <span className="text-[10px] font-mono uppercase tracking-[0.071em] text-[#666666] block">Date & Time</span>
-                                                            <span className="font-mono text-[#171717]">{formData.date} at {formData.time}</span>
+                                                            <span className="text-[10px] font-bold uppercase tracking-wider text-text-muted block">Date & Time</span>
+                                                            <span className="font-medium text-primary">{formData.date} at {formData.time}</span>
                                                         </div>
                                                         <div>
-                                                            <span className="text-[10px] font-mono uppercase tracking-[0.071em] text-[#666666] block">Villa / Location</span>
-                                                            <span className="font-medium text-[#171717]">{formData.location} {formData.room ? `(${formData.room})` : ''}</span>
+                                                            <span className="text-[10px] font-bold uppercase tracking-wider text-text-muted block">Villa / Location</span>
+                                                            <span className="font-medium text-primary">{formData.location} {formData.room ? `(${formData.room})` : ''}</span>
                                                         </div>
                                                     </div>
                                                 </div>
 
                                                 {/* Setup Preference Summary */}
-                                                <div className="bg-white border border-[#ebebeb] rounded-[6px] p-4 shadow-[0_0_0_1px_rgba(0,0,0,0.02)] flex items-center justify-between text-xs">
+                                                <div className="bg-white border border-border/80 rounded-2xl p-4 shadow-xs flex items-center justify-between text-xs">
                                                     <div>
-                                                        <span className="text-[10px] font-mono uppercase tracking-[0.071em] text-[#666666] block">Massage Setup</span>
-                                                        <span className="font-medium text-[#171717]">
+                                                        <span className="text-[10px] font-bold uppercase tracking-wider text-text-muted block">Massage Setup</span>
+                                                        <span className="font-medium text-primary">
                                                             {massageTableCount > 0 
                                                                 ? `${massageTableCount} Portable Table${massageTableCount > 1 ? 's' : ''} (+IDR ${(massageTableCount * 100000).toLocaleString('en-US')})` 
-                                                                : 'Villa Bed / Floor Mat Setup (IDR 0)'
+                                                                : 'Standard Setup (No Portable Table)'
                                                             }
                                                         </span>
                                                     </div>
                                                     <button 
                                                         type="button" 
                                                         onClick={() => setTherapickStep('selection')}
-                                                        className="text-[10px] font-mono uppercase tracking-[0.071em] text-[#666666] hover:text-[#171717] underline"
+                                                        className="text-[10px] font-bold uppercase tracking-wider text-text-muted hover:text-primary underline"
                                                     >
                                                         Change
                                                     </button>
                                                 </div>
 
                                                 {/* Treatments Summary */}
-                                                <div className="bg-white border border-[#ebebeb] rounded-[6px] p-4 shadow-[0_0_0_1px_rgba(0,0,0,0.02)] space-y-2.5">
-                                                    <div className="flex items-center justify-between border-b border-[#ebebeb] pb-2">
-                                                        <h4 className="text-xs font-mono uppercase tracking-[0.071em] text-[#171717] font-semibold">Treatments ({cartItems.length})</h4>
+                                                <div className="bg-white border border-border/80 rounded-2xl p-4 shadow-xs space-y-2.5">
+                                                    <div className="flex items-center justify-between border-b border-border/40 pb-2">
+                                                        <h4 className="text-xs font-bold text-primary uppercase tracking-wider">Treatments ({cartItems.length})</h4>
                                                         <button 
                                                             type="button" 
                                                             onClick={() => setTherapickStep('selection')}
-                                                            className="text-[10px] font-mono uppercase tracking-[0.071em] text-[#666666] hover:text-[#171717] underline"
+                                                            className="text-[10px] font-bold uppercase tracking-wider text-text-muted hover:text-primary underline"
                                                         >
                                                             Modify
                                                         </button>
@@ -1171,18 +1159,18 @@ export default function RitualsDetails() {
                                                         const mult = isCouple ? (item.guests / 2) : item.guests;
                                                         const totalItem = (item.price + addonsTotal) * mult;
                                                         return (
-                                                            <div key={idx} className="text-xs border-b border-[#ebebeb] last:border-b-0 pb-2">
-                                                                <div className="flex items-center justify-between font-medium text-[#171717]">
+                                                            <div key={idx} className="text-xs border-b border-border/20 last:border-b-0 pb-2">
+                                                                <div className="flex items-center justify-between font-semibold text-primary">
                                                                     <span>{item.title}</span>
-                                                                    <span className="font-mono tabular-nums">IDR {totalItem.toLocaleString('en-US')}</span>
+                                                                    <span>IDR {totalItem.toLocaleString('en-US')}</span>
                                                                 </div>
-                                                                <div className="text-[11px] text-[#666666] flex items-center gap-2 mt-0.5 font-mono">
+                                                                <div className="text-[11px] text-text-muted flex items-center gap-2 mt-0.5">
                                                                     <span>{item.duration} Mins</span>
                                                                     <span>•</span>
                                                                     <span>{item.guests} Guest{item.guests > 1 ? 's' : ''}</span>
                                                                 </div>
                                                                 {item.addons && item.addons.length > 0 && (
-                                                                    <div className="text-[10px] text-[#666666] mt-1 font-mono">
+                                                                    <div className="text-[10px] text-text-muted mt-1">
                                                                         Add-ons: {item.addons.map((a: any) => a.title).join(', ')}
                                                                     </div>
                                                                 )}
@@ -1192,26 +1180,26 @@ export default function RitualsDetails() {
                                                 </div>
 
                                                 {/* Pricing Summary */}
-                                                <div className="pt-3 border-t border-[#ebebeb]">
+                                                <div className="pt-3 border-t border-border/50">
                                                     {appliedPromo && (
                                                         <div className="flex items-center justify-between mb-2 text-xs">
-                                                            <span className="text-[#666666] uppercase font-mono tracking-[0.071em]">Subtotal</span>
-                                                            <span className="font-mono tabular-nums text-[#888888] line-through">
+                                                            <span className="text-text-muted uppercase tracking-widest font-bold">Subtotal</span>
+                                                            <span className="font-serif text-text-muted line-through">
                                                                 IDR {calculateCartTotal(cartItems).subtotal.toLocaleString('en-US')}
                                                             </span>
                                                         </div>
                                                     )}
                                                     {massageTableCount > 0 && (
                                                         <div className="flex items-center justify-between mb-2 text-xs">
-                                                            <span className="text-[#666666] uppercase font-mono tracking-[0.071em]">Portable Table Fee ({massageTableCount}x)</span>
-                                                            <span className="font-mono tabular-nums text-[#171717]">
+                                                            <span className="text-text-muted uppercase tracking-widest font-bold">Portable Table Fee ({massageTableCount}x)</span>
+                                                            <span className="font-serif text-primary">
                                                                 +IDR {(massageTableCount * 100000).toLocaleString('en-US')}
                                                             </span>
                                                         </div>
                                                     )}
                                                     <div className="flex items-end justify-between mb-5">
-                                                        <span className="text-xs font-mono uppercase tracking-[0.071em] text-[#666666]">Total Price</span>
-                                                        <span className="text-xl font-mono tabular-nums text-[#171717] font-semibold">
+                                                        <span className="text-xs font-bold text-primary uppercase tracking-widest">Total Price</span>
+                                                        <span className="text-2xl font-serif text-primary font-medium">
                                                             IDR {calculateCartTotal(cartItems, appliedPromo, massageTableCount * 100000).total.toLocaleString('en-US')}
                                                         </span>
                                                     </div>
@@ -1220,7 +1208,7 @@ export default function RitualsDetails() {
                                                         type="button"
                                                         onClick={() => handleBooking()}
                                                         disabled={isProcessing}
-                                                        className="w-full bg-[#171717] hover:bg-black text-white px-6 py-3.5 rounded-[6px] text-xs font-mono uppercase tracking-[0.071em] flex items-center justify-center gap-2 transition-all shadow-xs disabled:opacity-70"
+                                                        className="w-full bg-black hover:bg-neutral-800 text-white px-6 py-4 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:scale-[1.01] transition-all duration-200 shadow-[0_8px_24px_rgb(0,0,0,0.15)] uppercase tracking-widest disabled:opacity-70"
                                                     >
                                                         <MessageCircle className="w-4 h-4 text-emerald-400 fill-emerald-400" />
                                                         <span>{isProcessing ? 'PROCESSING...' : 'CONFIRM ON WHATSAPP'}</span>
@@ -1745,22 +1733,22 @@ export default function RitualsDetails() {
                             initial={{ opacity: 0, scale: 0.95, y: 15 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 15 }}
-                            className={`relative bg-white ${isTherapick ? 'rounded-[6px] border border-[#ebebeb] shadow-[0_0_0_1px_rgba(0,0,0,0.08)]' : 'rounded-3xl border border-border/80 shadow-2xl'} p-5 sm:p-6 max-w-md w-full max-h-[85vh] flex flex-col z-10`}
+                            className="relative bg-white rounded-3xl p-5 sm:p-6 shadow-2xl max-w-md w-full max-h-[85vh] flex flex-col z-10 border border-border/80"
                         >
                             {/* Modal Header */}
-                            <div className={`flex items-start justify-between pb-3.5 border-b ${isTherapick ? 'border-[#ebebeb]' : 'border-border/60'}`}>
+                            <div className="flex items-start justify-between pb-3.5 border-b border-border/60">
                                 <div>
-                                    <span className={isTherapick ? "text-[10px] font-mono tracking-[0.071em] text-[#666666] uppercase block mb-1" : "text-[9px] font-bold tracking-widest text-primary/60 uppercase block mb-1"}>
+                                    <span className="text-[9px] font-bold tracking-widest text-primary/60 uppercase block mb-1">
                                         Equipment & Transport Logistics
                                     </span>
-                                    <h3 className={isTherapick ? "font-sans text-lg font-medium text-[#171717] tracking-tight" : "font-serif text-lg sm:text-xl font-medium text-primary"}>
+                                    <h3 className="font-serif text-lg sm:text-xl font-medium text-primary">
                                         Why Is There a Table Fee?
                                     </h3>
                                 </div>
                                 <button
                                     type="button"
                                     onClick={() => setShowTableFeeModal(false)}
-                                    className={isTherapick ? "w-8 h-8 rounded-[6px] bg-[#fafafa] hover:bg-[#ebebeb] text-[#171717] border border-[#ebebeb] flex items-center justify-center transition-colors shrink-0" : "w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-600 hover:text-primary flex items-center justify-center transition-colors shrink-0"}
+                                    className="w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-600 hover:text-primary flex items-center justify-center transition-colors shrink-0"
                                 >
                                     <X className="w-4 h-4" />
                                 </button>
@@ -1768,12 +1756,12 @@ export default function RitualsDetails() {
 
                             {/* Modal Body */}
                             <div className="py-4 overflow-y-auto space-y-3 flex-1 no-scrollbar text-xs">
-                                <div className={`p-3.5 ${isTherapick ? 'rounded-[6px] bg-[#fafafa] border border-[#ebebeb]' : 'rounded-2xl bg-stone-50 border border-border/70'} flex items-start gap-3`}>
-                                    <div className={`w-8 h-8 ${isTherapick ? 'rounded-[6px] bg-white border border-[#ebebeb] text-[#171717]' : 'rounded-xl bg-white border border-border/80 text-primary'} flex items-center justify-center shrink-0 mt-0.5`}>
+                                <div className="p-3.5 rounded-2xl bg-stone-50 border border-border/70 flex items-start gap-3">
+                                    <div className="w-8 h-8 rounded-xl bg-white border border-border/80 flex items-center justify-center shrink-0 text-primary mt-0.5">
                                         <Sparkles className="w-4 h-4" />
                                     </div>
                                     <div>
-                                        <h4 className={isTherapick ? "font-mono text-[11px] uppercase tracking-[0.071em] text-[#171717] font-semibold mb-1" : "font-bold text-xs text-primary uppercase tracking-wider mb-1"}>
+                                        <h4 className="font-bold text-xs text-primary uppercase tracking-wider mb-1">
                                             Heavy Commercial Equipment
                                         </h4>
                                         <p className="text-[11px] text-stone-600 leading-relaxed">
@@ -1782,12 +1770,12 @@ export default function RitualsDetails() {
                                     </div>
                                 </div>
 
-                                <div className={`p-3.5 ${isTherapick ? 'rounded-[6px] bg-[#fafafa] border border-[#ebebeb]' : 'rounded-2xl bg-stone-50 border border-border/70'} flex items-start gap-3`}>
-                                    <div className={`w-8 h-8 ${isTherapick ? 'rounded-[6px] bg-white border border-[#ebebeb] text-[#171717]' : 'rounded-xl bg-white border border-border/80 text-primary'} flex items-center justify-center shrink-0 mt-0.5`}>
+                                <div className="p-3.5 rounded-2xl bg-stone-50 border border-border/70 flex items-start gap-3">
+                                    <div className="w-8 h-8 rounded-xl bg-white border border-border/80 flex items-center justify-center shrink-0 text-primary mt-0.5">
                                         <Clock className="w-4 h-4" />
                                     </div>
                                     <div>
-                                        <h4 className={isTherapick ? "font-mono text-[11px] uppercase tracking-[0.071em] text-[#171717] font-semibold mb-1" : "font-bold text-xs text-primary uppercase tracking-wider mb-1"}>
+                                        <h4 className="font-bold text-xs text-primary uppercase tracking-wider mb-1">
                                             Independent Scooter Transport
                                         </h4>
                                         <p className="text-[11px] text-stone-600 leading-relaxed">
@@ -1796,12 +1784,12 @@ export default function RitualsDetails() {
                                     </div>
                                 </div>
 
-                                <div className={`p-3.5 ${isTherapick ? 'rounded-[6px] bg-[#fafafa] border border-[#ebebeb]' : 'rounded-2xl bg-stone-50 border border-border/70'} flex items-start gap-3`}>
-                                    <div className={`w-8 h-8 ${isTherapick ? 'rounded-[6px] bg-white border border-[#ebebeb] text-[#171717]' : 'rounded-xl bg-white border border-border/80 text-primary'} flex items-center justify-center shrink-0 mt-0.5`}>
+                                <div className="p-3.5 rounded-2xl bg-stone-50 border border-border/70 flex items-start gap-3">
+                                    <div className="w-8 h-8 rounded-xl bg-white border border-border/80 flex items-center justify-center shrink-0 text-primary mt-0.5">
                                         <Tag className="w-4 h-4" />
                                     </div>
                                     <div>
-                                        <h4 className={isTherapick ? "font-mono text-[11px] uppercase tracking-[0.071em] text-[#171717] font-semibold mb-1" : "font-bold text-xs text-primary uppercase tracking-wider mb-1"}>
+                                        <h4 className="font-bold text-xs text-primary uppercase tracking-wider mb-1">
                                             100% Direct Therapist Surcharge
                                         </h4>
                                         <p className="text-[11px] text-stone-600 leading-relaxed">
@@ -1812,11 +1800,11 @@ export default function RitualsDetails() {
                             </div>
 
                             {/* Modal Footer */}
-                            <div className={`pt-3 border-t ${isTherapick ? 'border-[#ebebeb]' : 'border-border/60'}`}>
+                            <div className="pt-3 border-t border-border/60">
                                 <button
                                     type="button"
                                     onClick={() => setShowTableFeeModal(false)}
-                                    className={isTherapick ? "w-full bg-[#171717] hover:bg-black text-white py-3 rounded-[6px] text-xs font-mono uppercase tracking-[0.071em] transition-colors shadow-xs" : "w-full bg-black hover:bg-neutral-800 text-white py-3 rounded-xl text-xs font-bold uppercase tracking-widest transition-all shadow-sm"}
+                                    className="w-full bg-black hover:bg-neutral-800 text-white py-3 rounded-xl text-xs font-bold uppercase tracking-widest transition-all shadow-sm"
                                 >
                                     Understood
                                 </button>
