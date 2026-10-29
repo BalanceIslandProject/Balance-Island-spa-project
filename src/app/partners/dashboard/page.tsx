@@ -232,17 +232,17 @@ Please verify and process the payout to my registered details. Thank you!`;
             fetchData();
           }}
           disabled={loading}
-          className="inline-flex items-center justify-center gap-1.5 h-9 w-9 rounded-lg border border-[#E5E5E5] bg-white text-black hover:bg-[#F5F5F5] transition-colors cursor-pointer"
+          className="inline-flex items-center justify-center gap-1.5 h-8 w-8 rounded-[6px] border border-[#ebebeb] bg-white text-[#171717] hover:bg-[#fafafa] transition-colors cursor-pointer"
           title="Refresh dashboard"
           aria-label="Refresh dashboard"
         >
-          <RefreshCw size={15} className={loading ? 'animate-spin' : ''} />
+          <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
         </button>
       </div>
       {/* Application Status Alert Banner (only if pending) */}
       {profile?.status === 'pending' && (
-        <div className="p-4 border border-amber-200 rounded-xl bg-amber-50 text-xs text-amber-900 flex items-start gap-2.5">
-          <AlertCircle size={16} className="text-amber-700 shrink-0 mt-0.5" />
+        <div className="p-4 border border-[#ebebeb] rounded-[6px] bg-[#fafafa] text-xs text-[#171717] flex items-start gap-2.5">
+          <AlertCircle size={16} className="text-[#666666] shrink-0 mt-0.5" />
           <div className="leading-relaxed">
             Application under review. You can already share your referral link and QR code — all attributed bookings are recorded automatically.
           </div>
@@ -252,27 +252,27 @@ Please verify and process the payout to my registered details. Thank you!`;
       {/* 4-KPI Metric Strip */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
         {/* 1. Approved Balance */}
-        <div className="bg-white border border-[#E5E5E5] rounded-xl p-4 md:p-5 flex flex-col justify-between">
+        <div className="bg-white border border-[#ebebeb] rounded-[6px] p-4 md:p-5 flex flex-col justify-between shadow-[0_0_0_1px_rgba(0,0,0,0.02)]">
           <div>
             <div className="flex items-center justify-between">
-              <span className="text-xs text-[#737373] font-medium">Approved balance</span>
+              <span className="font-mono text-[11px] uppercase tracking-[0.071em] text-[#666666]">Approved balance</span>
               {hasApprovedBalance && (
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" title="Ready to withdraw" />
+                <span className="w-1.5 h-1.5 rounded-full bg-[#297a3a]" title="Ready to withdraw" />
               )}
             </div>
-            <div className="text-2xl font-semibold text-black mt-1 font-mono tabular-nums">
+            <div className="text-2xl font-mono font-medium text-[#171717] mt-1 tabular-nums tracking-tight">
               {formatIDR(approvedBalance)}
             </div>
           </div>
-          <div className="mt-3 pt-3 border-t border-[#E5E5E5]">
+          <div className="mt-3 pt-3 border-t border-[#ebebeb]">
             <button
               type="button"
               onClick={handleWithdrawWhatsApp}
               disabled={!hasApprovedBalance}
-              className={`w-full h-8 px-3 rounded-lg text-xs font-medium transition-colors cursor-pointer flex items-center justify-center ${
+              className={`w-full h-8 px-3 rounded-[6px] font-mono text-[11px] uppercase tracking-[0.071em] transition-colors cursor-pointer flex items-center justify-center ${
                 hasApprovedBalance
-                  ? 'bg-black text-white hover:bg-[#262626]'
-                  : 'bg-white text-[#A3A3A3] border border-[#E5E5E5] cursor-not-allowed'
+                  ? 'bg-[#171717] text-white hover:bg-black'
+                  : 'bg-[#fafafa] text-[#8f8f8f] border border-[#ebebeb] cursor-not-allowed'
               }`}
             >
               {hasApprovedBalance ? 'Withdraw via WhatsApp' : 'No Balance to Withdraw'}
@@ -281,40 +281,40 @@ Please verify and process the payout to my registered details. Thank you!`;
         </div>
 
         {/* 2. Paid Out */}
-        <div className="bg-white border border-[#E5E5E5] rounded-xl p-4 md:p-5">
+        <div className="bg-white border border-[#ebebeb] rounded-[6px] p-4 md:p-5 shadow-[0_0_0_1px_rgba(0,0,0,0.02)]">
           <div className="flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
-            <span className="text-xs text-[#737373] font-medium">Paid out</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-[#297a3a] shrink-0" />
+            <span className="font-mono text-[11px] uppercase tracking-[0.071em] text-[#666666]">Paid out</span>
           </div>
-          <div className="text-2xl font-semibold text-black mt-1 font-mono tabular-nums">
+          <div className="text-2xl font-mono font-medium text-[#171717] mt-1 tabular-nums tracking-tight">
             {formatIDR(stats?.paidCommission || 0)}
           </div>
-          <div className="text-xs text-[#737373] mt-1 truncate">
+          <div className="text-xs text-[#666666] mt-1 truncate">
             Disbursed to registered bank account
           </div>
         </div>
 
         {/* 3. Pending */}
-        <div className="bg-white border border-[#E5E5E5] rounded-xl p-4 md:p-5">
+        <div className="bg-white border border-[#ebebeb] rounded-[6px] p-4 md:p-5 shadow-[0_0_0_1px_rgba(0,0,0,0.02)]">
           <div className="flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
-            <span className="text-xs text-[#737373] font-medium">Pending commission</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-[#8f8f8f] shrink-0" />
+            <span className="font-mono text-[11px] uppercase tracking-[0.071em] text-[#666666]">Pending commission</span>
           </div>
-          <div className="text-2xl font-semibold text-black mt-1 font-mono tabular-nums">
+          <div className="text-2xl font-mono font-medium text-[#171717] mt-1 tabular-nums tracking-tight">
             {formatIDR(stats?.pendingCommission || 0)}
           </div>
-          <div className="text-xs text-[#737373] mt-1 truncate">
+          <div className="text-xs text-[#666666] mt-1 truncate">
             Awaiting treatment completion
           </div>
         </div>
 
         {/* 4. Total Attributed Bookings */}
-        <div className="bg-white border border-[#E5E5E5] rounded-xl p-4 md:p-5">
-          <div className="text-xs text-[#737373] font-medium">Total bookings</div>
-          <div className="text-2xl font-semibold text-black mt-1 font-mono tabular-nums">
+        <div className="bg-white border border-[#ebebeb] rounded-[6px] p-4 md:p-5 shadow-[0_0_0_1px_rgba(0,0,0,0.02)]">
+          <div className="font-mono text-[11px] uppercase tracking-[0.071em] text-[#666666]">Total bookings</div>
+          <div className="text-2xl font-mono font-medium text-[#171717] mt-1 tabular-nums tracking-tight">
             {calendarBookings.length}
           </div>
-          <div className="text-xs text-[#737373] mt-1 truncate">
+          <div className="text-xs text-[#666666] mt-1 truncate">
             Commission rate: {profile?.commission_rate_pct || 10}%
           </div>
         </div>
@@ -327,24 +327,24 @@ Please verify and process the payout to my registered details. Thank you!`;
         <div className="lg:col-span-7 space-y-6">
           
           {/* Promote to Guests Card */}
-          <div className="bg-white border border-[#E5E5E5] rounded-xl p-5 space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-[#E5E5E5]">
+          <div className="bg-white border border-[#ebebeb] rounded-[6px] p-5 space-y-4 shadow-[0_0_0_1px_rgba(0,0,0,0.02)]">
+            <div className="flex items-center justify-between pb-3 border-b border-[#ebebeb]">
               <div>
-                <h3 className="font-semibold text-black text-[15px] tracking-tight">
+                <h3 className="font-normal text-[#171717] text-base tracking-[-0.03em]">
                   Promote to Guests
                 </h3>
-                <p className="text-xs text-[#737373] mt-0.5">
+                <p className="text-xs text-[#666666] mt-0.5">
                   Instant booking attribution & tracking for villas, drivers, and travel hosts
                 </p>
               </div>
-              <span className="inline-flex items-center h-6 px-2 rounded-md border border-[#E5E5E5] text-[11px] font-mono text-[#737373]">
+              <span className="inline-flex items-center h-5 px-2 rounded-[4px] border border-[#ebebeb] bg-[#fafafa] text-[10px] font-mono uppercase tracking-[0.071em] text-[#666666]">
                 Active Attribution
               </span>
             </div>
 
             {/* QR Code Presentation */}
-            <div className="flex flex-col sm:flex-row items-center gap-5 p-4 rounded-xl border border-[#E5E5E5] bg-white">
-              <div className="p-3 bg-white rounded-lg border border-[#E5E5E5] shrink-0">
+            <div className="flex flex-col sm:flex-row items-center gap-5 p-4 rounded-[6px] border border-[#ebebeb] bg-[#fafafa]">
+              <div className="p-3 bg-white rounded-[6px] border border-[#ebebeb] shrink-0">
                 <img
                   src={qrCodeUrl}
                   alt="Partner QR code"
@@ -353,22 +353,22 @@ Please verify and process the payout to my registered details. Thank you!`;
               </div>
               <div className="space-y-2 text-center sm:text-left flex-1 min-w-0">
                 <div>
-                  <span className="text-[11px] font-medium uppercase tracking-wider text-[#737373] block">
+                  <span className="font-mono text-[11px] uppercase tracking-[0.071em] text-[#666666] block">
                     Instant Scan
                   </span>
-                  <h4 className="text-sm font-semibold text-black">
+                  <h4 className="text-sm font-medium text-[#171717] tracking-[-0.02em]">
                     Official Partner QR Code
                   </h4>
-                  <p className="text-xs text-[#737373] leading-relaxed mt-0.5">
+                  <p className="text-xs text-[#666666] leading-relaxed mt-0.5">
                     Guests scan this code with their smartphone camera to browse treatments and book directly with your attribution.
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={handleDownloadQr}
-                  className="inline-flex items-center justify-center gap-2 h-9 px-4 rounded-lg bg-black text-white text-xs font-medium hover:bg-[#262626] transition-colors cursor-pointer w-full sm:w-auto"
+                  className="inline-flex items-center justify-center gap-2 h-8 px-4 rounded-[6px] bg-[#171717] text-white font-mono text-[11px] uppercase tracking-[0.071em] hover:bg-black transition-colors cursor-pointer w-full sm:w-auto"
                 >
-                  <Download size={14} />
+                  <Download size={13} />
                   <span>Download QR Code</span>
                 </button>
               </div>
@@ -377,19 +377,19 @@ Please verify and process the payout to my registered details. Thank you!`;
             {/* Referral Link Box */}
             <div className="space-y-1.5 pt-1">
               <div className="flex items-center justify-between text-xs">
-                <span className="font-medium text-[#171717]">Your Referral Link</span>
-                <span className="text-[11px] text-[#737373]">Per-booking attribution</span>
+                <span className="font-mono text-[11px] uppercase tracking-[0.071em] text-[#666666]">Your Referral Link</span>
+                <span className="font-mono text-[10px] text-[#8f8f8f]">Per-booking attribution</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="flex-1 bg-white border border-[#E5E5E5] rounded-lg px-3 py-2 text-xs font-mono text-black select-all truncate">
+                <div className="flex-1 bg-white border border-[#ebebeb] rounded-[6px] px-3 py-2 text-xs font-mono text-[#171717] select-all truncate">
                   {referralLink}
                 </div>
                 <button
                   type="button"
                   onClick={handleCopyLink}
-                  className="h-9 px-4 rounded-lg bg-black text-white text-xs font-medium hover:bg-[#262626] transition-colors flex items-center gap-1.5 shrink-0 cursor-pointer"
+                  className="h-8 px-4 rounded-[6px] bg-[#171717] text-white font-mono text-[11px] uppercase tracking-[0.071em] hover:bg-black transition-colors flex items-center gap-1.5 shrink-0 cursor-pointer"
                 >
-                  {copiedLink ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
+                  {copiedLink ? <Check size={13} className="text-[#297a3a]" /> : <Copy size={13} />}
                   <span>{copiedLink ? 'Copied' : 'Copy'}</span>
                 </button>
               </div>
@@ -397,19 +397,19 @@ Please verify and process the payout to my registered details. Thank you!`;
           </div>
 
           {/* Recent Referrals Stream */}
-          <div className="bg-white border border-[#E5E5E5] rounded-xl p-5 space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-[#E5E5E5]">
+          <div className="bg-white border border-[#ebebeb] rounded-[6px] p-5 space-y-4 shadow-[0_0_0_1px_rgba(0,0,0,0.02)]">
+            <div className="flex items-center justify-between pb-3 border-b border-[#ebebeb]">
               <div className="flex items-center gap-2">
-                <h3 className="font-semibold text-black text-[15px] tracking-tight">
+                <h3 className="font-normal text-[#171717] text-base tracking-[-0.03em]">
                   Recent Referrals
                 </h3>
-                <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded border border-[#E5E5E5] text-[11px] font-mono text-[#737373]">
+                <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-[4px] border border-[#ebebeb] bg-[#fafafa] text-[10px] font-mono text-[#666666]">
                   {recentReferrals.length}
                 </span>
               </div>
               <Link
                 href="/partners/referrals"
-                className="text-xs font-medium text-[#737373] hover:text-black flex items-center gap-0.5 transition-colors"
+                className="font-mono text-[11px] uppercase tracking-[0.071em] text-[#666666] hover:text-[#171717] flex items-center gap-0.5 transition-colors"
               >
                 <span>All Referrals</span>
                 <ChevronRight size={13} />
@@ -417,14 +417,14 @@ Please verify and process the payout to my registered details. Thank you!`;
             </div>
 
             {recentReferrals.length === 0 ? (
-              <div className="py-10 text-center rounded-xl bg-white border border-dashed border-[#E5E5E5] p-4 space-y-1.5">
-                <p className="text-xs font-medium text-black">No referred bookings yet</p>
-                <p className="text-[11px] text-[#737373] max-w-sm mx-auto">
+              <div className="py-10 text-center rounded-[6px] bg-[#fafafa] border border-dashed border-[#ebebeb] p-4 space-y-1.5">
+                <p className="text-xs font-medium text-[#171717]">No referred bookings yet</p>
+                <p className="text-[11px] text-[#666666] max-w-sm mx-auto">
                   Display your QR code or share your link with villa guests to receive your first commission.
                 </p>
               </div>
             ) : (
-              <div className="divide-y divide-[#E5E5E5]">
+              <div className="divide-y divide-[#ebebeb]">
                 {recentReferrals.map((b) => {
                   const isApproved = b.commission_status === 'approved';
                   const isCancelled = b.commission_status === 'cancelled' || b.booking_status === 'Cancelled';
@@ -437,67 +437,67 @@ Please verify and process the payout to my registered details. Thank you!`;
                           <button
                             type="button"
                             onClick={() => handleCopyBooking(b.booking_id)}
-                            className="font-mono text-xs text-black bg-white px-2 py-0.5 rounded border border-[#E5E5E5] hover:border-black transition-colors inline-flex items-center gap-1 cursor-pointer"
+                            className="font-mono text-xs text-[#171717] bg-[#fafafa] px-2 py-0.5 rounded-[4px] border border-[#ebebeb] hover:border-[#171717] transition-colors inline-flex items-center gap-1 cursor-pointer"
                             title="Copy booking ID"
                           >
                             <span>#{b.booking_id}</span>
-                            {copiedBookingId === b.booking_id ? <Check size={11} className="text-emerald-600" /> : <Copy size={11} className="text-[#A3A3A3]" />}
+                            {copiedBookingId === b.booking_id ? <Check size={11} className="text-[#297a3a]" /> : <Copy size={11} className="text-[#8f8f8f]" />}
                           </button>
 
                           {isPaid ? (
-                            <span className="text-[10px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                            <span className="font-mono text-[10px] text-[#297a3a] bg-[#fafafa] px-2 py-0.5 rounded-[4px] border border-[#ebebeb]">
                               {b.payment_method === 'cash' ? 'Paid (Cash)' : b.payment_method === 'online' ? 'Paid (Online)' : 'Paid'}
                             </span>
                           ) : (
-                            <span className="text-[10px] font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                            <span className="font-mono text-[10px] text-[#666666] bg-[#fafafa] px-2 py-0.5 rounded-[4px] border border-[#ebebeb]">
                               Unpaid
                             </span>
                           )}
 
                           {isCancelled ? (
-                            <span className="text-[10px] font-medium text-[#737373] bg-white px-2 py-0.5 rounded border border-[#E5E5E5]">
+                            <span className="font-mono text-[10px] text-[#8f8f8f] bg-white px-2 py-0.5 rounded-[4px] border border-[#ebebeb]">
                               Cancelled
                             </span>
                           ) : b.booking_status === 'Ongoing' || b.treatment_status === 'Ongoing' || b.treatment_status === 'In Progress' ? (
-                            <span className="text-[10px] font-medium text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200 flex items-center gap-1">
-                              <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+                            <span className="font-mono text-[10px] text-[#171717] bg-[#fafafa] px-2 py-0.5 rounded-[4px] border border-[#ebebeb] flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#171717] animate-pulse" />
                               Ongoing Treatment
                             </span>
                           ) : b.booking_status === 'Completed' || b.treatment_status === 'Finish' || b.treatment_status === 'Finished' || b.service_completed ? (
-                            <span className="text-[10px] font-medium text-teal-700 bg-teal-50 px-2 py-0.5 rounded border border-teal-200">
+                            <span className="font-mono text-[10px] text-[#297a3a] bg-[#fafafa] px-2 py-0.5 rounded-[4px] border border-[#ebebeb]">
                               Finish Treatment
                             </span>
                           ) : b.booking_status === 'Confirmed' ? (
-                            <span className="text-[10px] font-medium text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                            <span className="font-mono text-[10px] text-[#171717] bg-[#fafafa] px-2 py-0.5 rounded-[4px] border border-[#ebebeb]">
                               Confirmed
                             </span>
                           ) : (
-                            <span className="text-[10px] font-medium text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                            <span className="font-mono text-[10px] text-[#666666] bg-[#fafafa] px-2 py-0.5 rounded-[4px] border border-[#ebebeb]">
                               Awaiting Treatment
                             </span>
                           )}
 
                           {b.commission_status === 'paid' ? (
-                            <span className="text-[10px] font-medium text-white bg-black px-2 py-0.5 rounded border border-black inline-flex items-center gap-1">
+                            <span className="font-mono text-[10px] text-white bg-[#171717] px-2 py-0.5 rounded-[4px] border border-[#171717] inline-flex items-center gap-1">
                               ✓ Paid Out
                             </span>
                           ) : isApproved ? (
-                            <span className="text-[10px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                            <span className="font-mono text-[10px] text-[#297a3a] bg-[#fafafa] px-2 py-0.5 rounded-[4px] border border-[#ebebeb]">
                               Approved
                             </span>
                           ) : null}
                         </div>
 
-                        <p className="text-xs text-[#737373] truncate font-medium">
+                        <p className="text-xs text-[#4d4d4d] truncate font-normal">
                           {b.guest_name} • {b.treatment_name || 'Spa Ritual'}
                         </p>
                       </div>
 
                       <div className="text-left sm:text-right shrink-0">
-                        <span className={`text-xs font-mono font-medium tabular-nums block ${isCancelled ? 'line-through text-[#A3A3A3]' : 'text-emerald-600'}`}>
+                        <span className={`text-xs font-mono font-medium tabular-nums block ${isCancelled ? 'line-through text-[#8f8f8f]' : 'text-[#297a3a]'}`}>
                           {isCancelled ? 'IDR 0' : `+${formatIDR(b.commission_amount)}`}
                         </span>
-                        <span className="text-[10px] text-[#737373]">
+                        <span className="font-mono text-[10px] text-[#8f8f8f]">
                           {safeFormatDate(b.date, { day: 'numeric', month: 'short' })}
                         </span>
                       </div>

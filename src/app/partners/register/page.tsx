@@ -134,40 +134,40 @@ export default function PartnerRegisterPage() {
             <img
               src="/therapick-logo-2.png"
               alt="Therapick"
-              className="h-7 w-auto max-w-[150px] object-contain mix-blend-multiply"
+              className="h-7 w-auto max-w-[150px] object-contain"
             />
           </div>
 
-          <div className="w-12 h-12 bg-[#F5F5F5] rounded-full flex items-center justify-center mx-auto text-black border border-[#E5E5E5]">
-            <Clock size={22} />
+          <div className="w-12 h-12 bg-[#fafafa] rounded-[6px] flex items-center justify-center mx-auto text-[#171717] border border-[#ebebeb]">
+            <Clock size={20} />
           </div>
 
           <div className="space-y-1">
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-[#737373] bg-[#FAFAFA] px-2.5 py-0.5 rounded-full border border-[#E5E5E5] inline-block">
+            <span className="font-mono text-[10px] uppercase tracking-[0.071em] text-[#666666] bg-[#fafafa] px-2.5 py-0.5 rounded-[4px] border border-[#ebebeb] inline-block">
               Pending Admin Review
             </span>
-            <h2 className="text-xl font-semibold text-black tracking-tight pt-1">
+            <h2 className="text-xl font-normal text-[#171717] tracking-[-0.03em] pt-1">
               Application Submitted
             </h2>
-            <p className="text-xs text-[#737373] leading-relaxed max-w-sm mx-auto">
+            <p className="text-xs text-[#666666] leading-relaxed max-w-sm mx-auto">
               Thank you for applying to the Therapick Partner Program. Your account has been registered and is currently under review by our operations team.
             </p>
           </div>
 
           {submittedPartnerCode && (
-            <div className="bg-white border border-[#E5E5E5] rounded-xl p-4 text-xs">
-              <span className="text-[#737373] block text-[10px] uppercase font-semibold tracking-wider mb-1">
+            <div className="bg-[#fafafa] border border-[#ebebeb] rounded-[6px] p-4 text-xs">
+              <span className="text-[#666666] block font-mono text-[10px] uppercase tracking-[0.071em] mb-1">
                 Assigned Partner Code
               </span>
-              <span className="font-mono font-bold text-black text-base tracking-wider">
+              <span className="font-mono font-medium text-[#171717] text-base tracking-wider">
                 #{submittedPartnerCode}
               </span>
             </div>
           )}
 
-          <div className="p-4 rounded-xl bg-[#FAFAFA] border border-[#E5E5E5] text-xs text-[#737373] text-left space-y-1.5">
-            <p className="font-semibold text-black">What happens next?</p>
-            <p className="text-[#737373] leading-relaxed text-xs">
+          <div className="p-4 rounded-[6px] bg-[#fafafa] border border-[#ebebeb] text-xs text-[#666666] text-left space-y-1.5">
+            <p className="font-medium text-[#171717]">What happens next?</p>
+            <p className="text-[#666666] leading-relaxed text-xs">
               We verify all partner applications within 24 hours. Once activated, you can log in with your email and password to access your custom QR code, booking tracking, and payouts.
             </p>
           </div>
@@ -175,14 +175,14 @@ export default function PartnerRegisterPage() {
           <div className="pt-2 flex flex-col gap-2">
             <Link
               href="/partners/login"
-              className="w-full py-2.5 rounded-lg bg-black hover:bg-[#262626] text-white font-medium text-xs tracking-wide transition-colors flex items-center justify-center gap-2"
+              className="w-full py-2.5 rounded-[6px] bg-[#171717] hover:bg-black text-white font-mono text-[11px] uppercase tracking-[0.071em] transition-colors flex items-center justify-center gap-2"
             >
               <span>Go to Partner Login</span>
               <ArrowRight size={13} />
             </Link>
             <Link
               href="/partners"
-              className="w-full py-2.5 rounded-lg border border-[#E5E5E5] text-black hover:bg-[#F5F5F5] font-medium text-xs transition-colors text-center"
+              className="w-full py-2.5 rounded-[6px] border border-[#ebebeb] text-[#171717] hover:bg-[#fafafa] font-mono text-[11px] uppercase tracking-[0.071em] transition-colors text-center"
             >
               Return to Partner Overview
             </Link>
@@ -194,29 +194,29 @@ export default function PartnerRegisterPage() {
 
   return (
     <div className="max-w-xl mx-auto py-6 sm:py-10 px-4">
-      <div className="bg-white border border-[#E5E5E5] rounded-xl p-5 sm:p-8 space-y-6">
+      <div className="bg-white border border-[#ebebeb] rounded-[6px] p-5 sm:p-8 space-y-6 shadow-[0_0_0_1px_rgba(0,0,0,0.04)]">
         
         {/* Header */}
-        <div className="space-y-2 pb-4 border-b border-[#E5E5E5] text-center">
+        <div className="space-y-2 pb-4 border-b border-[#ebebeb] text-center">
           <div className="flex justify-center items-center">
             <img
               src="/therapick-logo-2.png"
               alt="Therapick"
-              className="h-7 w-auto max-w-[150px] object-contain mix-blend-multiply"
+              className="h-7 w-auto max-w-[150px] object-contain"
             />
           </div>
           <div className="space-y-1">
-            <h1 className="text-xl font-semibold text-black tracking-tight">
+            <h1 className="text-xl font-normal text-[#171717] tracking-[-0.03em]">
               Join the Therapick Partner Network
             </h1>
-            <p className="text-xs text-[#737373] max-w-sm mx-auto">
+            <p className="text-xs text-[#666666] max-w-sm mx-auto">
               Earn commissions on referred mobile spa bookings across Bali
             </p>
           </div>
         </div>
 
         {errorMsg && (
-          <div className="p-3.5 rounded-lg border border-red-200 bg-red-50 text-red-700 text-xs font-medium flex items-start gap-2">
+          <div className="p-3.5 rounded-[6px] border border-red-200 bg-red-50 text-red-700 text-xs font-normal flex items-start gap-2">
             <AlertCircle size={15} className="shrink-0 mt-0.5" />
             <span>{errorMsg}</span>
           </div>
@@ -226,16 +226,16 @@ export default function PartnerRegisterPage() {
           
           {/* Section 1: Partner Profile */}
           <div className="space-y-3.5">
-            <div className="flex items-center gap-2 border-b border-[#E5E5E5] pb-2">
-              <User size={14} className="text-black" />
-              <h2 className="text-xs font-semibold uppercase tracking-wider text-black">
+            <div className="flex items-center gap-2 border-b border-[#ebebeb] pb-2">
+              <User size={14} className="text-[#171717]" />
+              <h2 className="font-mono text-[11px] uppercase tracking-[0.071em] text-[#171717]">
                 1. Partner & Business Profile
               </h2>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-black mb-1">First Name *</label>
+                <label className="block font-mono text-[10px] uppercase tracking-[0.071em] text-[#666666] mb-1">First Name *</label>
                 <input
                   type="text"
                   name="first_name"
@@ -243,25 +243,25 @@ export default function PartnerRegisterPage() {
                   value={formData.first_name}
                   onChange={handleChange}
                   placeholder="First name"
-                  className="w-full px-3 py-2 rounded-lg border border-[#E5E5E5] text-xs text-black bg-white focus:outline-none focus:border-black transition-colors"
+                  className="w-full px-3 py-2 rounded-[6px] border border-[#ebebeb] text-xs text-[#171717] bg-white focus:outline-none focus:border-[#171717] transition-colors"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-black mb-1">Last Name</label>
+                <label className="block font-mono text-[10px] uppercase tracking-[0.071em] text-[#666666] mb-1">Last Name</label>
                 <input
                   type="text"
                   name="last_name"
                   value={formData.last_name}
                   onChange={handleChange}
                   placeholder="Last name"
-                  className="w-full px-3 py-2 rounded-lg border border-[#E5E5E5] text-xs text-black bg-white focus:outline-none focus:border-black transition-colors"
+                  className="w-full px-3 py-2 rounded-[6px] border border-[#ebebeb] text-xs text-[#171717] bg-white focus:outline-none focus:border-[#171717] transition-colors"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-black mb-1">
+              <label className="block font-mono text-[10px] uppercase tracking-[0.071em] text-[#666666] mb-1">
                 Villa, Hotel, or Business Name
               </label>
               <input
@@ -270,18 +270,18 @@ export default function PartnerRegisterPage() {
                 value={formData.business_name}
                 onChange={handleChange}
                 placeholder="e.g. Villa Mandala Ubud"
-                className="w-full px-3 py-2 rounded-lg border border-[#E5E5E5] text-xs text-black bg-white focus:outline-none focus:border-black transition-colors"
+                className="w-full px-3 py-2 rounded-[6px] border border-[#ebebeb] text-xs text-[#171717] bg-white focus:outline-none focus:border-[#171717] transition-colors"
               />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-black mb-1">Partner Type</label>
+                <label className="block font-mono text-[10px] uppercase tracking-[0.071em] text-[#666666] mb-1">Partner Type</label>
                 <select
                   name="partner_type"
                   value={formData.partner_type}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 rounded-lg border border-[#E5E5E5] text-xs text-black bg-white focus:outline-none focus:border-black transition-colors cursor-pointer"
+                  className="w-full px-3 py-2 rounded-[6px] border border-[#ebebeb] text-xs text-[#171717] bg-white focus:outline-none focus:border-[#171717] transition-colors cursor-pointer"
                 >
                   <option value="hotel_villa">Villa or Hotel Host</option>
                   <option value="tour_driver">Tour Driver / Guide</option>
@@ -293,14 +293,14 @@ export default function PartnerRegisterPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-black mb-1">Custom Promo Code (Optional)</label>
+                <label className="block font-mono text-[10px] uppercase tracking-[0.071em] text-[#666666] mb-1">Custom Promo Code (Optional)</label>
                 <input
                   type="text"
                   name="custom_code"
                   value={formData.custom_code}
                   onChange={handleChange}
                   placeholder="e.g. MANDALA"
-                  className="w-full px-3 py-2 rounded-lg border border-[#E5E5E5] text-xs uppercase font-mono text-black bg-white focus:outline-none focus:border-black transition-colors placeholder:normal-case"
+                  className="w-full px-3 py-2 rounded-[6px] border border-[#ebebeb] text-xs uppercase font-mono text-[#171717] bg-white focus:outline-none focus:border-[#171717] transition-colors placeholder:normal-case"
                 />
               </div>
             </div>
@@ -308,15 +308,15 @@ export default function PartnerRegisterPage() {
 
           {/* Section 2: Account & WhatsApp */}
           <div className="space-y-3.5">
-            <div className="flex items-center gap-2 border-b border-[#E5E5E5] pb-2">
-              <ShieldCheck size={14} className="text-black" />
-              <h2 className="text-xs font-semibold uppercase tracking-wider text-black">
+            <div className="flex items-center gap-2 border-b border-[#ebebeb] pb-2">
+              <ShieldCheck size={14} className="text-[#171717]" />
+              <h2 className="font-mono text-[11px] uppercase tracking-[0.071em] text-[#171717]">
                 2. Account & WhatsApp Contact
               </h2>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-black mb-1">Email Address *</label>
+              <label className="block font-mono text-[10px] uppercase tracking-[0.071em] text-[#666666] mb-1">Email Address *</label>
               <input
                 type="email"
                 name="email"
@@ -325,19 +325,19 @@ export default function PartnerRegisterPage() {
                 value={formData.email}
                 onChange={handleChange}
                 placeholder="you@example.com"
-                className="w-full px-3 py-2 rounded-lg border border-[#E5E5E5] text-xs text-black bg-white focus:outline-none focus:border-black transition-colors"
+                className="w-full px-3 py-2 rounded-[6px] border border-[#ebebeb] text-xs text-[#171717] bg-white focus:outline-none focus:border-[#171717] transition-colors"
               />
             </div>
 
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="text-xs font-semibold text-black">
+                <label className="font-mono text-[10px] uppercase tracking-[0.071em] text-[#666666]">
                   WhatsApp Number *
                 </label>
-                <span className="text-[10px] text-[#737373] font-medium">With country code</span>
+                <span className="font-mono text-[10px] text-[#8f8f8f]">With country code</span>
               </div>
               <div className="relative">
-                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[#737373] pointer-events-none">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[#666666] pointer-events-none">
                   <MessageCircle size={15} />
                 </div>
                 <input
@@ -348,10 +348,10 @@ export default function PartnerRegisterPage() {
                   value={formData.whatsapp}
                   onChange={handleChange}
                   placeholder="+62 812 3456 7890"
-                  className="w-full pl-9 pr-3 py-2 rounded-lg border border-[#E5E5E5] text-xs font-medium text-black bg-white focus:outline-none focus:border-black transition-colors"
+                  className="w-full pl-9 pr-3 py-2 rounded-[6px] border border-[#ebebeb] text-xs font-mono text-[#171717] bg-white focus:outline-none focus:border-[#171717] transition-colors"
                 />
               </div>
-              <p className="text-[11px] text-[#737373] mt-1 leading-relaxed">
+              <p className="text-[11px] text-[#666666] mt-1 leading-relaxed">
                 Include country code (e.g. +62 for Indonesia). Used exclusively for booking attribution alerts & partner support.
               </p>
             </div>
@@ -359,7 +359,7 @@ export default function PartnerRegisterPage() {
             {/* Passwords */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
               <div>
-                <label className="block text-xs font-semibold text-black mb-1">Password *</label>
+                <label className="block font-mono text-[10px] uppercase tracking-[0.071em] text-[#666666] mb-1">Password *</label>
                 <div className="relative">
                   <input
                     type={showPassword ? 'text' : 'password'}
@@ -368,12 +368,12 @@ export default function PartnerRegisterPage() {
                     value={formData.password}
                     onChange={handleChange}
                     placeholder="Min. 6 characters"
-                    className="w-full px-3 py-2 pr-9 rounded-lg border border-[#E5E5E5] text-xs text-black bg-white focus:outline-none focus:border-black transition-colors"
+                    className="w-full px-3 py-2 pr-9 rounded-[6px] border border-[#ebebeb] text-xs text-[#171717] bg-white focus:outline-none focus:border-[#171717] transition-colors"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#737373] hover:text-black p-1 transition-colors"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#666666] hover:text-[#171717] p-1 transition-colors"
                     aria-label={showPassword ? 'Hide password' : 'Show password'}
                   >
                     {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
@@ -382,7 +382,7 @@ export default function PartnerRegisterPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-black mb-1">Confirm Password *</label>
+                <label className="block font-mono text-[10px] uppercase tracking-[0.071em] text-[#666666] mb-1">Confirm Password *</label>
                 <div className="relative">
                   <input
                     type={showConfirmPassword ? 'text' : 'password'}
@@ -391,12 +391,12 @@ export default function PartnerRegisterPage() {
                     value={formData.confirm_password}
                     onChange={handleChange}
                     placeholder="Repeat password"
-                    className="w-full px-3 py-2 pr-9 rounded-lg border border-[#E5E5E5] text-xs text-black bg-white focus:outline-none focus:border-black transition-colors"
+                    className="w-full px-3 py-2 pr-9 rounded-[6px] border border-[#ebebeb] text-xs text-[#171717] bg-white focus:outline-none focus:border-[#171717] transition-colors"
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#737373] hover:text-black p-1 transition-colors"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#666666] hover:text-[#171717] p-1 transition-colors"
                     aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
                   >
                     {showConfirmPassword ? <EyeOff size={15} /> : <Eye size={15} />}
@@ -408,51 +408,51 @@ export default function PartnerRegisterPage() {
 
           {/* Section 3: Bank Transfer Payout Destination */}
           <div className="space-y-3.5">
-            <div className="flex items-center gap-2 border-b border-[#E5E5E5] pb-2">
-              <Landmark size={14} className="text-black" />
-              <h2 className="text-xs font-semibold uppercase tracking-wider text-black">
+            <div className="flex items-center gap-2 border-b border-[#ebebeb] pb-2">
+              <Landmark size={14} className="text-[#171717]" />
+              <h2 className="font-mono text-[11px] uppercase tracking-[0.071em] text-[#171717]">
                 3. Bank Transfer Payout Destination
               </h2>
             </div>
-            <p className="text-[11px] text-[#737373]">
+            <p className="text-[11px] text-[#666666]">
               Where you receive your weekly or monthly partner commissions via direct Indonesian bank transfer.
             </p>
 
             {/* Direct Bank Transfer Inputs */}
-            <div className="space-y-3 p-4 rounded-xl border border-[#E5E5E5] bg-[#FAFAFA]">
+            <div className="space-y-3 p-4 rounded-[6px] border border-[#ebebeb] bg-[#fafafa]">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[11px] font-semibold text-black mb-1">Bank Name</label>
+                  <label className="block font-mono text-[10px] uppercase tracking-[0.071em] text-[#666666] mb-1">Bank Name</label>
                   <input
                     type="text"
                     name="bank_name"
                     value={formData.bank_name}
                     onChange={handleChange}
                     placeholder="e.g. BCA, Mandiri, BRI, BNI"
-                    className="w-full px-3 py-2 rounded-lg border border-[#E5E5E5] text-xs bg-white text-black focus:outline-none focus:border-black"
+                    className="w-full px-3 py-2 rounded-[6px] border border-[#ebebeb] text-xs bg-white text-[#171717] focus:outline-none focus:border-[#171717]"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-semibold text-black mb-1">Account Number</label>
+                  <label className="block font-mono text-[10px] uppercase tracking-[0.071em] text-[#666666] mb-1">Account Number</label>
                   <input
                     type="text"
                     name="account_number"
                     value={formData.account_number}
                     onChange={handleChange}
                     placeholder="e.g. 1234567890"
-                    className="w-full px-3 py-2 rounded-lg border border-[#E5E5E5] text-xs bg-white text-black font-mono focus:outline-none focus:border-black"
+                    className="w-full px-3 py-2 rounded-[6px] border border-[#ebebeb] text-xs bg-white text-[#171717] font-mono focus:outline-none focus:border-[#171717]"
                   />
                 </div>
               </div>
               <div>
-                <label className="block text-[11px] font-semibold text-black mb-1">Account Holder Full Name</label>
+                <label className="block font-mono text-[10px] uppercase tracking-[0.071em] text-[#666666] mb-1">Account Holder Full Name</label>
                 <input
                   type="text"
                   name="account_holder"
                   value={formData.account_holder}
                   onChange={handleChange}
                   placeholder="As registered in your bank passbook"
-                  className="w-full px-3 py-2 rounded-lg border border-[#E5E5E5] text-xs bg-white text-black focus:outline-none focus:border-black"
+                  className="w-full px-3 py-2 rounded-[6px] border border-[#ebebeb] text-xs bg-white text-[#171717] focus:outline-none focus:border-[#171717]"
                 />
               </div>
             </div>
@@ -465,10 +465,10 @@ export default function PartnerRegisterPage() {
                 type="checkbox"
                 checked={agreeTerms}
                 onChange={(e) => setAgreeTerms(e.target.checked)}
-                className="w-4 h-4 rounded mt-0.5 accent-black cursor-pointer"
+                className="w-4 h-4 rounded-[3px] mt-0.5 accent-[#171717] cursor-pointer"
               />
-              <span className="text-xs text-[#737373] leading-relaxed">
-                I agree to the <Link href="/partners/terms" className="underline text-black font-semibold">Partner Policy & Agreement</Link> and understand commissions are automatically attributed on completed & verified wellness rituals.
+              <span className="text-xs text-[#666666] leading-relaxed">
+                I agree to the <Link href="/partners/terms" className="underline text-[#171717] font-medium">Partner Policy & Agreement</Link> and understand commissions are automatically attributed on completed & verified wellness rituals.
               </span>
             </label>
           </div>
@@ -478,17 +478,17 @@ export default function PartnerRegisterPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 rounded-lg bg-black hover:bg-[#262626] text-white font-medium text-xs tracking-wide transition-colors disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full py-2.5 rounded-[6px] bg-[#171717] hover:bg-black text-white font-mono text-[11px] uppercase tracking-[0.071em] transition-colors disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
             >
               <span>{loading ? 'Submitting Application...' : 'Submit Partner Application'}</span>
               {!loading && <ArrowRight size={13} />}
             </button>
           </div>
 
-          <div className="text-center pt-2 border-t border-[#E5E5E5]">
-            <span className="text-xs text-[#737373]">
+          <div className="text-center pt-2 border-t border-[#ebebeb]">
+            <span className="text-xs text-[#666666]">
               Already registered?{' '}
-              <Link href="/partners/login" className="font-semibold text-black hover:underline">
+              <Link href="/partners/login" className="font-medium text-[#171717] hover:underline">
                 Log in here
               </Link>
             </span>

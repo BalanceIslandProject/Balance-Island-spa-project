@@ -95,22 +95,22 @@ function InvoicePage() {
 
   if (!booking) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 bg-[#FAFAFA] font-sans text-[#171717]">
-        <div className="bg-white p-6 sm:p-8 rounded-2xl max-w-sm w-full text-center border border-[#E5E5E5] shadow-xs space-y-4">
-          <div className="w-12 h-12 bg-[#F5F5F5] rounded-full flex items-center justify-center mx-auto text-[#737373]">
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 bg-[#fafafa] font-sans text-[#171717]">
+        <div className="bg-white p-6 sm:p-8 rounded-[6px] max-w-sm w-full text-center border border-[#ebebeb] shadow-[0_0_0_1px_rgba(0,0,0,0.04)] space-y-4">
+          <div className="w-12 h-12 bg-[#fafafa] rounded-[6px] flex items-center justify-center mx-auto text-[#666666] border border-[#ebebeb]">
             <FileText size={22} />
           </div>
           <div>
-            <h2 className="font-serif text-xl text-black font-medium tracking-tight mb-1">
+            <h2 className="font-sans text-lg text-[#171717] font-medium tracking-tight mb-1">
               Invoice Unavailable
             </h2>
-            <p className="text-[#737373] text-xs leading-relaxed">
+            <p className="text-[#666666] text-xs leading-relaxed">
               This invoice is stored securely on the device where it was created. If you are viewing this inside an in-app browser like WhatsApp, please tap (•••) and select <strong>&quot;Open in Safari / Chrome&quot;</strong>.
             </p>
           </div>
           <button
             onClick={() => router.push('/')}
-            className="w-full h-11 bg-black text-white hover:bg-[#262626] rounded-xl font-medium text-xs tracking-wide transition-colors"
+            className="w-full h-10 bg-[#171717] text-white hover:bg-black rounded-[6px] font-mono text-xs uppercase tracking-[0.071em] transition-colors"
           >
             Return to Therapick
           </button>
@@ -123,22 +123,22 @@ function InvoicePage() {
   const isPending = booking.status?.toLowerCase() === 'pending';
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] pt-12 sm:pt-20 pb-20 px-4 sm:px-6 font-sans text-[#171717] antialiased">
+    <div className="min-h-screen bg-[#fafafa] pt-12 sm:pt-20 pb-20 px-4 sm:px-6 font-sans text-[#171717] antialiased">
       <style
         dangerouslySetInnerHTML={{
           __html: `footer, .floating-nav, #floating-nav, .mobile-nav { display: none !important; }`,
         }}
       />
 
-      <div className="max-w-lg mx-auto bg-white rounded-2xl overflow-hidden border border-[#E5E5E5] shadow-xs relative">
+      <div className="max-w-lg mx-auto bg-white rounded-[6px] overflow-hidden border border-[#ebebeb] shadow-[0_0_0_1px_rgba(0,0,0,0.04)] relative">
         
         {/* Subtle Brand Accent Bar */}
-        <div className="h-1 bg-black w-full" />
+        <div className="h-1 bg-[#171717] w-full" />
 
         <div className="p-5 sm:p-8 space-y-6">
           
           {/* Header Status & Reference */}
-          <div className="flex flex-col items-center justify-center text-center pb-6 border-b border-[#E5E5E5] space-y-3">
+          <div className="flex flex-col items-center justify-center text-center pb-6 border-b border-[#ebebeb] space-y-3">
             <div className="flex items-center justify-center">
               <img
                 src="/therapick-logo-2.png"
@@ -152,10 +152,10 @@ function InvoicePage() {
                 status={booking.status || 'confirmed'}
                 label={isCancelled ? 'Booking Cancelled' : isPending ? 'Pending Confirmation' : 'Booking Confirmed'}
               />
-              <h1 className="font-serif text-2xl sm:text-3xl text-black font-medium tracking-tight pt-1">
+              <h1 className="font-sans text-xl sm:text-2xl text-[#171717] font-medium tracking-tight pt-1">
                 {isCancelled ? 'Booking Cancelled' : isPending ? 'Appointment Pending' : 'Booking Confirmation'}
               </h1>
-              <p className="text-xs text-[#737373] max-w-xs mx-auto">
+              <p className="text-xs text-[#666666] max-w-xs mx-auto">
                 {isCancelled
                   ? 'Your appointment has been cancelled.'
                   : isPending
@@ -164,56 +164,56 @@ function InvoicePage() {
               </p>
             </div>
 
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-[#F5F5F5] border border-[#E5E5E5] text-xs font-mono text-black">
-              <span className="text-[#737373]">Ref:</span>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-[6px] bg-[#fafafa] border border-[#ebebeb] text-xs font-mono text-[#171717]">
+              <span className="text-[#888888]">Ref:</span>
               <span className="font-semibold">{booking.id.toUpperCase().substring(0, 10)}</span>
             </div>
           </div>
 
           {/* Service Provider Legal Info */}
           <div className="text-center space-y-0.5">
-            <span className="text-[10px] font-medium uppercase tracking-widest text-[#737373] block">
+            <span className="text-[10px] font-mono uppercase tracking-[0.071em] text-[#888888] block">
               Service Provider
             </span>
-            <p className="font-serif text-sm font-medium text-black">
+            <p className="font-sans text-sm font-medium text-[#171717]">
               PT BALANCE ISLAND INDONESIA
             </p>
-            <p className="text-[11px] text-[#A3A3A3]">Therapick Mobile Spa Bali</p>
+            <p className="text-[11px] text-[#888888] font-mono">Therapick Mobile Spa Bali</p>
           </div>
 
           {/* Guest Details Summary Card */}
-          <div className="bg-[#FAFAFA] rounded-xl p-4 sm:p-5 border border-[#E5E5E5] space-y-3">
-            <div className="flex items-center justify-between border-b border-[#E5E5E5] pb-2">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-black">
+          <div className="bg-[#fafafa] rounded-[6px] p-4 sm:p-5 border border-[#ebebeb] space-y-3">
+            <div className="flex items-center justify-between border-b border-[#ebebeb] pb-2">
+              <span className="text-[11px] font-mono uppercase tracking-[0.071em] text-[#171717] font-semibold">
                 Guest Logistics
               </span>
-              <span className="text-[10px] text-[#737373] font-mono">In-Villa Delivery</span>
+              <span className="text-[10px] text-[#888888] font-mono">In-Villa Delivery</span>
             </div>
 
             <div className="grid grid-cols-2 gap-3.5 text-xs">
               <div className="space-y-0.5">
-                <span className="flex items-center gap-1 text-[10px] text-[#737373] uppercase tracking-wide">
+                <span className="flex items-center gap-1 text-[10px] font-mono text-[#888888] uppercase tracking-[0.071em]">
                   <User size={12} /> Guest Name
                 </span>
-                <span className="font-medium text-black block truncate" title={booking.customerDetails.name}>
+                <span className="font-medium text-[#171717] block truncate" title={booking.customerDetails.name}>
                   {booking.customerDetails.name || 'Valued Guest'}
                 </span>
               </div>
 
               <div className="space-y-0.5">
-                <span className="flex items-center gap-1 text-[10px] text-[#737373] uppercase tracking-wide">
+                <span className="flex items-center gap-1 text-[10px] font-mono text-[#888888] uppercase tracking-[0.071em]">
                   <Calendar size={12} /> Schedule
                 </span>
-                <span className="font-medium text-black block">
+                <span className="font-mono text-[#171717] block">
                   {booking.customerDetails.date} • {booking.customerDetails.time}
                 </span>
               </div>
 
-              <div className="col-span-2 space-y-0.5 pt-1 border-t border-[#E5E5E5]">
-                <span className="flex items-center gap-1 text-[10px] text-[#737373] uppercase tracking-wide">
+              <div className="col-span-2 space-y-0.5 pt-1 border-t border-[#ebebeb]">
+                <span className="flex items-center gap-1 text-[10px] font-mono text-[#888888] uppercase tracking-[0.071em]">
                   <MapPin size={12} /> Villa / Hotel Location
                 </span>
-                <span className="font-medium text-black block leading-relaxed">
+                <span className="font-medium text-[#171717] block leading-relaxed">
                   {booking.customerDetails.location}
                   {booking.customerDetails.room && ` (${booking.customerDetails.room})`}
                 </span>
@@ -223,14 +223,14 @@ function InvoicePage() {
 
           {/* Treatments Breakdown */}
           <div className="space-y-3">
-            <div className="flex items-center justify-between border-b border-[#E5E5E5] pb-2">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-black">
+            <div className="flex items-center justify-between border-b border-[#ebebeb] pb-2">
+              <span className="text-[11px] font-mono uppercase tracking-[0.071em] text-[#171717] font-semibold">
                 Treatments Selected
               </span>
-              <span className="text-[11px] font-mono text-[#737373]">{booking.items.length} items</span>
+              <span className="text-[11px] font-mono text-[#888888]">{booking.items.length} items</span>
             </div>
 
-            <div className="divide-y divide-[#E5E5E5]">
+            <div className="divide-y divide-[#ebebeb]">
               {booking.items.map((item) => {
                 const isCouple = ['couple', 'honeymoon'].some((k) =>
                   item.title.toLowerCase().includes(k)
@@ -241,13 +241,13 @@ function InvoicePage() {
                 return (
                   <div key={item.id} className="py-2.5 first:pt-0 last:pb-0 flex justify-between items-start gap-3">
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs font-semibold text-black leading-snug truncate">{item.title}</p>
-                      <p className="text-[11px] text-[#737373] mt-0.5">
+                      <p className="text-xs font-medium text-[#171717] leading-snug truncate">{item.title}</p>
+                      <p className="text-[11px] font-mono text-[#666666] mt-0.5">
                         {item.guests} {item.guests > 1 ? 'Guests' : 'Guest'} • {item.duration} Mins
                       </p>
                     </div>
                     <div className="text-right shrink-0">
-                      <p className="text-xs font-mono font-medium text-black">
+                      <p className="text-xs font-mono tabular-nums font-semibold text-[#171717]">
                         IDR {lineTotal.toLocaleString('en-US')}
                       </p>
                     </div>
@@ -258,11 +258,11 @@ function InvoicePage() {
           </div>
 
           {/* Total Summary */}
-          <div className="flex justify-between items-baseline pt-4 border-t border-[#E5E5E5]">
-            <span className="text-xs font-semibold uppercase tracking-wider text-black">
+          <div className="flex justify-between items-baseline pt-4 border-t border-[#ebebeb]">
+            <span className="text-xs font-mono uppercase tracking-[0.071em] text-[#666666]">
               Total Amount
             </span>
-            <span className="text-xl font-mono font-semibold text-black">
+            <span className="text-xl font-mono tabular-nums font-semibold text-[#171717]">
               IDR {booking.totalPrice.toLocaleString('en-US')}
             </span>
           </div>
@@ -272,14 +272,14 @@ function InvoicePage() {
             <button
               type="button"
               onClick={() => window.print()}
-              className="w-full h-11 flex items-center justify-center gap-2 bg-white text-black border border-[#E5E5E5] hover:bg-[#F5F5F5] rounded-xl text-xs font-semibold tracking-wide transition-colors cursor-pointer"
+              className="w-full h-10 flex items-center justify-center gap-2 bg-white text-[#171717] border border-[#ebebeb] hover:bg-[#fafafa] rounded-[6px] text-xs font-mono uppercase tracking-[0.071em] transition-colors cursor-pointer"
             >
               <Download size={14} />
               <span>Download / Print Receipt</span>
             </button>
             <Link
               href="/"
-              className="w-full h-10 flex items-center justify-center gap-1.5 text-[#737373] hover:text-black transition-colors text-xs font-medium"
+              className="w-full h-10 flex items-center justify-center gap-1.5 text-[#666666] hover:text-[#171717] transition-colors text-xs font-mono uppercase tracking-[0.071em]"
             >
               <ChevronLeft size={14} />
               <span>Return to BookTherapick.com</span>

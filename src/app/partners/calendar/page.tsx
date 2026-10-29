@@ -335,23 +335,23 @@ export default function PartnerCalendarPage() {
     <div className="w-full max-w-[1600px] mx-auto space-y-4 lg:space-y-3.5 pb-16 lg:pb-0 font-sans antialiased text-black lg:h-[calc(100vh-5rem)] lg:flex lg:flex-col lg:overflow-hidden">
       
       {/* Mobile Top Calendar Controls (hidden on desktop where controls are integrated into the calendar card) */}
-      <div className="flex lg:hidden items-center justify-between w-full gap-2 pb-2 border-b border-[#E5E5E5] shrink-0">
-        <div className="inline-flex items-center bg-white border border-[#E5E5E5] rounded-lg p-0.5">
+      <div className="flex lg:hidden items-center justify-between w-full gap-2 pb-2 border-b border-[#ebebeb] shrink-0">
+        <div className="inline-flex items-center bg-white border border-[#ebebeb] rounded-[6px] p-0.5">
           <button
             type="button"
             onClick={goToPrev}
-            className="p-1.5 hover:bg-[#F5F5F5] rounded-md transition-colors cursor-pointer text-[#737373] hover:text-black"
+            className="p-1.5 hover:bg-[#fafafa] rounded-[4px] transition-colors cursor-pointer text-[#666666] hover:text-[#171717]"
             title="Previous"
           >
             <ChevronLeft size={16} />
           </button>
-          <div className="px-2 sm:px-3 text-xs font-bold text-black min-w-[105px] sm:min-w-[130px] text-center">
+          <div className="px-2 sm:px-3 text-xs font-semibold text-[#171717] min-w-[105px] sm:min-w-[130px] text-center">
             {MONTH_NAMES[currentMonth]} {currentYear}
           </div>
           <button
             type="button"
             onClick={goToNext}
-            className="p-1.5 hover:bg-[#F5F5F5] rounded-md transition-colors cursor-pointer text-[#737373] hover:text-black"
+            className="p-1.5 hover:bg-[#fafafa] rounded-[4px] transition-colors cursor-pointer text-[#666666] hover:text-[#171717]"
             title="Next"
           >
             <ChevronRight size={16} />
@@ -359,12 +359,12 @@ export default function PartnerCalendarPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="inline-flex p-0.5 rounded-lg bg-[#F5F5F5] border border-[#E5E5E5] text-xs">
+          <div className="inline-flex p-0.5 rounded-[6px] bg-[#fafafa] border border-[#ebebeb] text-xs">
             <button
               type="button"
               onClick={() => setViewMode('month')}
-              className={`px-3 py-1 rounded-md font-semibold transition-all cursor-pointer ${
-                viewMode === 'month' ? 'bg-black text-white shadow-xs' : 'text-[#737373] hover:text-black'
+              className={`px-3 py-1 rounded-[4px] font-medium transition-all cursor-pointer ${
+                viewMode === 'month' ? 'bg-[#171717] text-white shadow-xs' : 'text-[#666666] hover:text-[#171717]'
               }`}
             >
               Month
@@ -372,8 +372,8 @@ export default function PartnerCalendarPage() {
             <button
               type="button"
               onClick={() => setViewMode('week')}
-              className={`px-3 py-1 rounded-md font-semibold transition-all cursor-pointer ${
-                viewMode === 'week' ? 'bg-black text-white shadow-xs' : 'text-[#737373] hover:text-black'
+              className={`px-3 py-1 rounded-[4px] font-medium transition-all cursor-pointer ${
+                viewMode === 'week' ? 'bg-[#171717] text-white shadow-xs' : 'text-[#666666] hover:text-[#171717]'
               }`}
             >
               Week
@@ -386,7 +386,7 @@ export default function PartnerCalendarPage() {
               loadData();
             }}
             disabled={loading}
-            className="p-1.5 text-black hover:bg-[#F5F5F5] rounded-lg transition-colors cursor-pointer border border-[#E5E5E5]"
+            className="p-1.5 text-[#171717] hover:bg-[#fafafa] rounded-[6px] transition-colors cursor-pointer border border-[#ebebeb]"
             title="Refresh calendar"
           >
             <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
@@ -399,63 +399,63 @@ export default function PartnerCalendarPage() {
          ───────────────────────────────────────────────────────────── */}
       <div className="hidden lg:grid grid-cols-2 md:grid-cols-4 gap-3 shrink-0">
         {/* Total Appointments */}
-        <div className="bg-white border border-[#E5E5E5] rounded-xl p-3.5 space-y-0.5">
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-[#737373] block">
+        <div className="bg-white border border-[#ebebeb] rounded-[6px] p-3.5 space-y-0.5 shadow-[0_0_0_1px_rgba(0,0,0,0.04)]">
+          <span className="font-mono text-[10px] font-medium uppercase tracking-[0.071em] text-[#666666] block">
             Appointments
           </span>
-          <div className="text-xl sm:text-2xl font-bold text-black font-mono">
+          <div className="text-xl sm:text-2xl font-bold text-[#171717] font-mono">
             {monthStats.count}
           </div>
-          <p className="text-[10px] text-[#737373] truncate">Scheduled this month</p>
+          <p className="font-mono text-[10px] text-[#666666] truncate">Scheduled this month</p>
         </div>
 
         {/* Total Commission */}
-        <div className="bg-white border border-[#E5E5E5] rounded-xl p-3.5 space-y-0.5">
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-[#737373] block">
+        <div className="bg-white border border-[#ebebeb] rounded-[6px] p-3.5 space-y-0.5 shadow-[0_0_0_1px_rgba(0,0,0,0.04)]">
+          <span className="font-mono text-[10px] font-medium uppercase tracking-[0.071em] text-[#666666] block">
             Month Total
           </span>
-          <div className="text-xl sm:text-2xl font-bold text-black font-mono tabular-nums truncate">
+          <div className="text-xl sm:text-2xl font-bold text-[#171717] font-mono tabular-nums truncate">
             {formatIDR(monthStats.totalCommission)}
           </div>
-          <p className="text-[10px] text-[#737373] truncate">All active commissions</p>
+          <p className="font-mono text-[10px] text-[#666666] truncate">All active commissions</p>
         </div>
 
         {/* Approved Commission */}
-        <div className="bg-white border border-[#E5E5E5] rounded-xl p-3.5 space-y-0.5">
+        <div className="bg-white border border-[#ebebeb] rounded-[6px] p-3.5 space-y-0.5 shadow-[0_0_0_1px_rgba(0,0,0,0.04)]">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-[#737373] block">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#297a3a] shrink-0" />
+              <span className="font-mono text-[10px] font-medium uppercase tracking-[0.071em] text-[#666666] block">
                 Approved
               </span>
             </div>
-            <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 rounded-md">
+            <span className="font-mono text-[10px] font-medium text-[#297a3a] bg-[#297a3a]/10 border border-[#297a3a]/20 px-1.5 py-0.2 rounded-[4px]">
               Ready
             </span>
           </div>
-          <div className="text-xl sm:text-2xl font-bold text-emerald-700 font-mono tabular-nums truncate">
+          <div className="text-xl sm:text-2xl font-bold text-[#297a3a] font-mono tabular-nums truncate">
             {formatIDR(monthStats.approvedCommission)}
           </div>
-          <p className="text-[10px] text-[#737373] truncate">Ready for bank transfer</p>
+          <p className="font-mono text-[10px] text-[#666666] truncate">Ready for bank transfer</p>
         </div>
 
         {/* Pending Commission */}
-        <div className="bg-white border border-[#E5E5E5] rounded-xl p-3.5 space-y-0.5">
+        <div className="bg-white border border-[#ebebeb] rounded-[6px] p-3.5 space-y-0.5 shadow-[0_0_0_1px_rgba(0,0,0,0.04)]">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-[#737373] block">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
+              <span className="font-mono text-[10px] font-medium uppercase tracking-[0.071em] text-[#666666] block">
                 Pending
               </span>
             </div>
-            <span className="text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.2 rounded-md">
+            <span className="font-mono text-[10px] font-medium text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.2 rounded-[4px]">
               Treatment
             </span>
           </div>
           <div className="text-xl sm:text-2xl font-bold text-amber-700 font-mono tabular-nums truncate">
             {formatIDR(monthStats.pendingCommission)}
           </div>
-          <p className="text-[10px] text-[#737373] truncate">Awaiting treatment completion</p>
+          <p className="font-mono text-[10px] text-[#666666] truncate">Awaiting treatment completion</p>
         </div>
       </div>
 
@@ -465,27 +465,27 @@ export default function PartnerCalendarPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start lg:items-stretch lg:flex-1 lg:min-h-0">
         
         {/* ──────── CALENDAR GRID AREA (LEFT / CENTER: 7 COLS) ──────── */}
-        <div className="lg:col-span-7 bg-white border border-[#E5E5E5] rounded-xl p-4 sm:p-5 space-y-3 lg:h-full lg:flex lg:flex-col lg:justify-between lg:overflow-hidden">
+        <div className="lg:col-span-7 bg-white border border-[#ebebeb] rounded-[6px] p-4 sm:p-5 space-y-3 lg:h-full lg:flex lg:flex-col lg:justify-between lg:overflow-hidden shadow-[0_0_0_1px_rgba(0,0,0,0.04)]">
           
           {/* DESKTOP CALENDAR HEADER: < October 2026 > Navigator on Left, Today & Month/Week on Right */}
-          <div className="hidden lg:flex items-center justify-between gap-3 pb-2.5 border-b border-[#E5E5E5] shrink-0">
+          <div className="hidden lg:flex items-center justify-between gap-3 pb-2.5 border-b border-[#ebebeb] shrink-0">
             {/* Month pagination: < October 2026 > */}
-            <div className="inline-flex items-center bg-white border border-[#E5E5E5] rounded-lg p-0.5">
+            <div className="inline-flex items-center bg-white border border-[#ebebeb] rounded-[6px] p-0.5">
               <button
                 type="button"
                 onClick={goToPrev}
-                className="p-1.5 hover:bg-[#F5F5F5] rounded-md transition-colors cursor-pointer text-[#737373] hover:text-black"
+                className="p-1.5 hover:bg-[#fafafa] rounded-[4px] transition-colors cursor-pointer text-[#666666] hover:text-[#171717]"
                 title="Previous"
               >
                 <ChevronLeft size={16} />
               </button>
-              <div className="px-3 text-xs font-bold text-black min-w-[115px] text-center">
+              <div className="px-3 text-xs font-semibold text-[#171717] min-w-[115px] text-center">
                 {MONTH_NAMES[currentMonth]} {currentYear}
               </div>
               <button
                 type="button"
                 onClick={goToNext}
-                className="p-1.5 hover:bg-[#F5F5F5] rounded-md transition-colors cursor-pointer text-[#737373] hover:text-black"
+                className="p-1.5 hover:bg-[#fafafa] rounded-[4px] transition-colors cursor-pointer text-[#666666] hover:text-[#171717]"
                 title="Next"
               >
                 <ChevronRight size={16} />
@@ -496,8 +496,8 @@ export default function PartnerCalendarPage() {
             <div className="flex items-center gap-2">
               {selectedDate && (
                 <div className="flex items-center gap-2 text-xs mr-1">
-                  <span className="text-[#737373] font-medium">
-                    Showing: <strong className="text-black">{safeFormatDate(selectedDate, { day: 'numeric', month: 'short' })}</strong>
+                  <span className="text-[#666666] font-medium">
+                    Showing: <strong className="text-[#171717]">{safeFormatDate(selectedDate, { day: 'numeric', month: 'short' })}</strong>
                   </span>
                   <button
                     type="button"
@@ -505,7 +505,7 @@ export default function PartnerCalendarPage() {
                       setSelectedDate(null);
                       setViewMode('month');
                     }}
-                    className="text-black hover:underline font-semibold text-xs cursor-pointer"
+                    className="text-[#171717] hover:underline font-semibold text-xs cursor-pointer"
                   >
                     Clear Selection
                   </button>
@@ -519,7 +519,7 @@ export default function PartnerCalendarPage() {
                   loadData();
                 }}
                 disabled={loading}
-                className="p-1.5 text-black hover:bg-[#F5F5F5] rounded-lg transition-colors cursor-pointer border border-[#E5E5E5]"
+                className="p-1.5 text-[#171717] hover:bg-[#fafafa] rounded-[6px] transition-colors cursor-pointer border border-[#ebebeb]"
                 title="Refresh calendar"
               >
                 <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
@@ -528,17 +528,17 @@ export default function PartnerCalendarPage() {
               <button
                 type="button"
                 onClick={goToToday}
-                className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-white border border-[#E5E5E5] text-black hover:bg-[#F5F5F5] transition-colors cursor-pointer"
+                className="px-3 py-1.5 text-xs font-medium rounded-[6px] bg-white border border-[#ebebeb] text-[#171717] hover:bg-[#fafafa] transition-colors cursor-pointer"
               >
                 Today
               </button>
 
-              <div className="inline-flex p-0.5 rounded-lg bg-[#F5F5F5] border border-[#E5E5E5] text-xs">
+              <div className="inline-flex p-0.5 rounded-[6px] bg-[#fafafa] border border-[#ebebeb] text-xs">
                 <button
                   type="button"
                   onClick={() => setViewMode('month')}
-                  className={`px-3 py-1 rounded-md font-semibold transition-all cursor-pointer ${
-                    viewMode === 'month' ? 'bg-black text-white shadow-xs' : 'text-[#737373] hover:text-black'
+                  className={`px-3 py-1 rounded-[4px] font-medium transition-all cursor-pointer ${
+                    viewMode === 'month' ? 'bg-[#171717] text-white shadow-xs' : 'text-[#666666] hover:text-[#171717]'
                   }`}
                 >
                   Month
@@ -546,8 +546,8 @@ export default function PartnerCalendarPage() {
                 <button
                   type="button"
                   onClick={() => setViewMode('week')}
-                  className={`px-3 py-1 rounded-md font-semibold transition-all cursor-pointer ${
-                    viewMode === 'week' ? 'bg-black text-white shadow-xs' : 'text-[#737373] hover:text-black'
+                  className={`px-3 py-1 rounded-[4px] font-medium transition-all cursor-pointer ${
+                    viewMode === 'week' ? 'bg-[#171717] text-white shadow-xs' : 'text-[#666666] hover:text-[#171717]'
                   }`}
                 >
                   Week
@@ -564,8 +564,8 @@ export default function PartnerCalendarPage() {
                 {DAYS_OF_WEEK.map((d, i) => (
                   <div
                     key={d}
-                    className={`py-1 text-[11px] font-semibold uppercase tracking-wider ${
-                      i === 0 ? 'text-red-500' : 'text-[#737373]'
+                    className={`py-1 font-mono text-[11px] font-medium uppercase tracking-[0.071em] ${
+                      i === 0 ? 'text-red-500' : 'text-[#666666]'
                     }`}
                   >
                     {d}
@@ -577,7 +577,7 @@ export default function PartnerCalendarPage() {
               <div className="grid grid-cols-7 gap-1 sm:gap-1.5 flex-1 min-h-0">
                 {/* Empty leading cells */}
                 {Array.from({ length: firstDayIndex }).map((_, i) => (
-                  <div key={`empty-${i}`} className="min-h-[46px] sm:min-h-[50px] lg:min-h-0 lg:h-[50px] xl:h-[54px] rounded-lg bg-[#FAFAFA]" />
+                  <div key={`empty-${i}`} className="min-h-[46px] sm:min-h-[50px] lg:min-h-0 lg:h-[50px] xl:h-[54px] rounded-[6px] bg-[#fafafa]" />
                 ))}
 
                 {/* Actual Month Days */}
@@ -601,14 +601,14 @@ export default function PartnerCalendarPage() {
                       key={dateString}
                       type="button"
                       onClick={() => handleDateClick(dateString)}
-                      className={`min-h-[46px] sm:min-h-[50px] lg:min-h-0 lg:h-[50px] xl:h-[54px] p-1.5 sm:p-2 rounded-lg flex flex-col justify-between text-left transition-all cursor-pointer border relative group ${
+                      className={`min-h-[46px] sm:min-h-[50px] lg:min-h-0 lg:h-[50px] xl:h-[54px] p-1.5 sm:p-2 rounded-[6px] flex flex-col justify-between text-left transition-all cursor-pointer border relative group ${
                         isSelected
-                          ? 'bg-black text-white border-black shadow-sm z-10'
+                          ? 'bg-[#171717] text-white border-[#171717] shadow-sm z-10'
                           : isToday
-                          ? 'bg-[#FAFAFA] border-black text-black'
+                          ? 'bg-[#fafafa] border-[#171717] text-[#171717]'
                           : hasBookings
-                          ? 'bg-[#F2FBF7] border-emerald-200 hover:border-emerald-400 text-black'
-                          : 'bg-white border-[#E5E5E5] hover:bg-[#F9FAFB] text-black'
+                          ? 'bg-[#297a3a]/5 border-[#297a3a]/30 hover:border-[#297a3a] text-[#171717]'
+                          : 'bg-white border-[#ebebeb] hover:bg-[#fafafa] text-[#171717]'
                       }`}
                     >
                       {/* Top Row: Date Number & Number of Bookings */}
@@ -618,8 +618,8 @@ export default function PartnerCalendarPage() {
                             isSelected
                               ? 'text-white'
                               : isToday
-                              ? 'text-black underline underline-offset-2'
-                              : 'text-black'
+                              ? 'text-[#171717] underline underline-offset-2'
+                              : 'text-[#171717]'
                           }`}
                         >
                           {dayNum}
@@ -627,10 +627,10 @@ export default function PartnerCalendarPage() {
 
                         {hasBookings && (
                           <span
-                            className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-md leading-none shrink-0 ${
+                            className={`text-[9px] font-mono font-medium px-1.5 py-0.5 rounded-[4px] leading-none shrink-0 ${
                               isSelected
                                 ? 'bg-white/20 text-white'
-                                : 'bg-emerald-100 text-emerald-900 border border-emerald-200'
+                                : 'bg-[#297a3a]/15 text-[#297a3a] border border-[#297a3a]/25'
                             }`}
                             title={`${dayBookings.length} bookings`}
                           >
@@ -645,7 +645,7 @@ export default function PartnerCalendarPage() {
                           {hasApproved && (
                             <span
                               className={`w-1.5 h-1.5 rounded-full ${
-                                isSelected ? 'bg-emerald-300' : 'bg-emerald-500'
+                                isSelected ? 'bg-emerald-300' : 'bg-[#297a3a]'
                               }`}
                               title="Approved Booking"
                             />
@@ -659,7 +659,7 @@ export default function PartnerCalendarPage() {
                             />
                           )}
                           {!hasApproved && !hasPending && hasCancelled && (
-                            <span className="w-1.5 h-1.5 rounded-full bg-[#737373]" title="Cancelled" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#666666]" title="Cancelled" />
                           )}
                         </div>
                       )}
@@ -678,17 +678,17 @@ export default function PartnerCalendarPage() {
                     key={w.dateString}
                     type="button"
                     onClick={() => setSelectedDate(w.dateString)}
-                    className={`p-2 rounded-lg border text-left transition-all cursor-pointer min-h-[50px] sm:min-h-[90px] lg:min-h-0 lg:h-[80px] xl:h-[90px] flex flex-col justify-between ${
+                    className={`p-2 rounded-[6px] border text-left transition-all cursor-pointer min-h-[50px] sm:min-h-[90px] lg:min-h-0 lg:h-[80px] xl:h-[90px] flex flex-col justify-between ${
                       isSelected
-                        ? 'bg-black text-white border-black shadow-sm'
+                        ? 'bg-[#171717] text-white border-[#171717] shadow-sm'
                         : w.isToday
-                        ? 'bg-[#FAFAFA] border-black text-black'
+                        ? 'bg-[#fafafa] border-[#171717] text-[#171717]'
                         : w.dayBookings.length > 0
-                        ? 'bg-[#F2FBF7] border-emerald-200 text-black'
-                        : 'bg-white border-[#E5E5E5] hover:bg-[#F9FAFB] text-black'
+                        ? 'bg-[#297a3a]/5 border-[#297a3a]/30 text-[#171717]'
+                        : 'bg-white border-[#ebebeb] hover:bg-[#fafafa] text-[#171717]'
                     }`}
                   >
-                    <div className="text-[10px] uppercase font-semibold tracking-wider opacity-70">
+                    <div className="font-mono text-[10px] uppercase font-medium tracking-[0.071em] opacity-70">
                       {w.dayName}
                     </div>
                     <div className="text-sm sm:text-base font-bold mt-0.5">{w.dayNum}</div>
@@ -696,20 +696,20 @@ export default function PartnerCalendarPage() {
                       {w.dayBookings.length > 0 ? (
                         <div className="flex items-center gap-1">
                           {w.dayBookings.some((b) => b.commission_status === 'approved') && (
-                            <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-emerald-300' : 'bg-emerald-600'}`} />
+                            <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-emerald-300' : 'bg-[#297a3a]'}`} />
                           )}
                           {w.dayBookings.some((b) => b.commission_status === 'pending') && (
                             <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-amber-300' : 'bg-amber-500'}`} />
                           )}
                           {!w.dayBookings.some((b) => b.commission_status === 'approved' || b.commission_status === 'pending') && (
-                            <span className="w-1.5 h-1.5 rounded-full bg-[#737373]" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#666666]" />
                           )}
-                          <span className="text-xs font-semibold">
+                          <span className="font-mono text-xs font-semibold">
                             {w.dayBookings.length}
                           </span>
                         </div>
                       ) : (
-                        <span className="text-[#737373]/60 font-normal">0</span>
+                        <span className="font-mono text-[#a8a8a8] font-normal">0</span>
                       )}
                     </div>
                   </button>
@@ -719,52 +719,51 @@ export default function PartnerCalendarPage() {
           )}
 
           {/* Calendar Legend */}
-          <div className="flex flex-wrap items-center justify-between gap-2 pt-2.5 border-t border-[#E5E5E5] text-xs shrink-0">
-            <div className="flex items-center gap-4 text-xs text-[#737373] font-medium">
-              <span className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-500" />
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-2.5 border-t border-[#ebebeb] text-xs shrink-0">
+            <div className="flex items-center gap-4 text-xs text-[#666666] font-medium">
+              <span className="flex items-center gap-1.5 font-mono text-[11px]">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#297a3a]" />
                 <span>Approved</span>
               </span>
-              <span className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-amber-500" />
+              <span className="flex items-center gap-1.5 font-mono text-[11px]">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
                 <span>Pending</span>
               </span>
-              <span className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-[#737373]" />
+              <span className="flex items-center gap-1.5 font-mono text-[11px]">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#666666]" />
                 <span>Cancelled</span>
               </span>
             </div>
-            <div className="text-xs text-[#737373] hidden sm:block">
+            <div className="font-mono text-[11px] text-[#666666] hidden sm:block">
               Click any date to inspect appointment details
             </div>
           </div>
-
         </div>
 
         {/* ──────── APPOINTMENT DETAILS INSPECTOR (RIGHT: 5 COLS) ──────── */}
-        <div className="lg:col-span-5 bg-white border border-[#E5E5E5] rounded-xl p-4 sm:p-5 space-y-3.5 lg:h-full lg:flex lg:flex-col lg:overflow-hidden">
+        <div className="lg:col-span-5 bg-white border border-[#ebebeb] rounded-[6px] p-4 sm:p-5 space-y-3.5 lg:h-full lg:flex lg:flex-col lg:overflow-hidden shadow-[0_0_0_1px_rgba(0,0,0,0.04)]">
           {/* Executive Header on Desktop:
               Side-by-side Approved and Pending cards */}
           {(selectedDate ? selectedDayStats.count > 0 : true) && (
-            <div className="hidden lg:grid grid-cols-2 gap-2.5 text-xs pb-3 border-b border-[#E5E5E5] shrink-0">
+            <div className="hidden lg:grid grid-cols-2 gap-2.5 text-xs pb-3 border-b border-[#ebebeb] shrink-0">
               {/* Approved Card */}
-              <div className="flex items-center justify-between gap-2 bg-white text-black px-3.5 py-2.5 rounded-lg border border-[#E5E5E5] font-semibold">
+              <div className="flex items-center justify-between gap-2 bg-white text-[#171717] px-3.5 py-2.5 rounded-[6px] border border-[#ebebeb] font-semibold">
                 <div className="flex items-center gap-1.5 shrink-0">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-                  <span className="text-[#737373] font-medium text-xs">Approved</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#297a3a] shrink-0" />
+                  <span className="font-mono text-[11px] text-[#666666] font-medium">Approved</span>
                 </div>
-                <span className="font-mono font-bold text-black text-xs sm:text-sm tabular-nums whitespace-nowrap shrink-0">
+                <span className="font-mono font-bold text-[#171717] text-xs sm:text-sm tabular-nums whitespace-nowrap shrink-0">
                   {formatIDR(selectedDate ? selectedDayStats.approvedCommission : monthStats.approvedCommission)}
                 </span>
               </div>
 
               {/* Pending Card */}
-              <div className="flex items-center justify-between gap-2 bg-white text-black px-3.5 py-2.5 rounded-lg border border-[#E5E5E5] font-semibold">
+              <div className="flex items-center justify-between gap-2 bg-white text-[#171717] px-3.5 py-2.5 rounded-[6px] border border-[#ebebeb] font-semibold">
                 <div className="flex items-center gap-1.5 shrink-0">
-                  <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
-                  <span className="text-[#737373] font-medium text-xs">Pending</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
+                  <span className="font-mono text-[11px] text-[#666666] font-medium">Pending</span>
                 </div>
-                <span className="font-mono font-bold text-black text-xs sm:text-sm tabular-nums whitespace-nowrap shrink-0">
+                <span className="font-mono font-bold text-[#171717] text-xs sm:text-sm tabular-nums whitespace-nowrap shrink-0">
                   {formatIDR(selectedDate ? selectedDayStats.pendingCommission : monthStats.pendingCommission)}
                 </span>
               </div>
@@ -772,22 +771,22 @@ export default function PartnerCalendarPage() {
           )}
 
           {/* Mobile Header: Big Title with Total Bookings & Commission */}
-          <div className="lg:hidden pb-3 border-b border-[#E5E5E5] space-y-2.5 shrink-0">
+          <div className="lg:hidden pb-3 border-b border-[#ebebeb] space-y-2.5 shrink-0">
             <div className="flex items-center justify-between gap-3 pt-0.5">
               <div>
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-[#737373] block">
+                <span className="font-mono text-[10px] font-medium uppercase tracking-[0.071em] text-[#666666] block">
                   Total Bookings
                 </span>
-                <div className="text-xl font-bold text-black font-mono mt-0.5">
-                  {selectedDayStats.count} <span className="text-xs font-semibold font-sans text-[#737373]">{selectedDayStats.count === 1 ? 'Booking' : 'Bookings'}</span>
+                <div className="text-xl font-bold text-[#171717] font-mono mt-0.5">
+                  {selectedDayStats.count} <span className="text-xs font-semibold font-sans text-[#666666]">{selectedDayStats.count === 1 ? 'Booking' : 'Bookings'}</span>
                 </div>
               </div>
 
               <div className="text-right">
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-emerald-700 block">
+                <span className="font-mono text-[10px] font-medium uppercase tracking-[0.071em] text-[#297a3a] block">
                   Commission
                 </span>
-                <div className="text-xl font-bold text-emerald-700 font-mono tabular-nums mt-0.5">
+                <div className="text-xl font-bold text-[#297a3a] font-mono tabular-nums mt-0.5">
                   +{formatIDR(selectedDayStats.totalCommission)}
                 </div>
               </div>
@@ -795,16 +794,16 @@ export default function PartnerCalendarPage() {
 
             {selectedDayStats.count > 0 && (
               <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
-                <div className="inline-flex items-center gap-1.5 bg-white text-black px-2.5 py-1 rounded-md border border-[#E5E5E5] font-semibold">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
-                  <span className="text-[#737373] font-medium">Approved:</span>
-                  <span className="font-mono font-bold text-black">{formatIDR(selectedDayStats.approvedCommission)}</span>
+                <div className="inline-flex items-center gap-1.5 bg-white text-[#171717] px-2.5 py-1 rounded-[4px] border border-[#ebebeb] font-semibold">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#297a3a] shrink-0" />
+                  <span className="text-[#666666] font-medium">Approved:</span>
+                  <span className="font-mono font-bold text-[#171717]">{formatIDR(selectedDayStats.approvedCommission)}</span>
                 </div>
 
-                <div className="inline-flex items-center gap-1.5 bg-white text-black px-2.5 py-1 rounded-md border border-[#E5E5E5] font-semibold">
-                  <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
-                  <span className="text-[#737373] font-medium">Pending:</span>
-                  <span className="font-mono font-bold text-black">{formatIDR(selectedDayStats.pendingCommission)}</span>
+                <div className="inline-flex items-center gap-1.5 bg-white text-[#171717] px-2.5 py-1 rounded-[4px] border border-[#ebebeb] font-semibold">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
+                  <span className="text-[#666666] font-medium">Pending:</span>
+                  <span className="font-mono font-bold text-[#171717]">{formatIDR(selectedDayStats.pendingCommission)}</span>
                 </div>
               </div>
             )}
@@ -817,10 +816,10 @@ export default function PartnerCalendarPage() {
                 key={mode}
                 type="button"
                 onClick={() => setStatusFilter(mode)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold capitalize whitespace-nowrap transition-all cursor-pointer border ${
+                className={`px-3 py-1.5 rounded-[6px] text-xs font-medium capitalize whitespace-nowrap transition-all cursor-pointer border ${
                   statusFilter === mode
-                    ? 'bg-black text-white border-black shadow-xs'
-                    : 'bg-white text-[#737373] border-[#E5E5E5] hover:text-black hover:border-black'
+                    ? 'bg-[#171717] text-white border-[#171717] shadow-xs'
+                    : 'bg-white text-[#666666] border-[#ebebeb] hover:text-[#171717] hover:border-[#171717]'
                 }`}
               >
                 {mode}
@@ -829,10 +828,10 @@ export default function PartnerCalendarPage() {
           </div>
 
           {selectedDayBookings.length === 0 ? (
-            <div className="py-12 text-center rounded-xl bg-[#FAFAFA] border border-[#E5E5E5] p-5 space-y-2 shrink-0">
-              <CalendarIcon size={24} className="mx-auto text-[#737373]/40 mb-1" />
-              <p className="text-xs font-bold text-black">No bookings for this date</p>
-              <p className="text-xs text-[#737373] leading-relaxed max-w-xs mx-auto">
+            <div className="py-12 text-center rounded-[6px] bg-[#fafafa] border border-[#ebebeb] p-5 space-y-2 shrink-0">
+              <CalendarIcon size={24} className="mx-auto text-[#a8a8a8] mb-1" />
+              <p className="text-xs font-bold text-[#171717]">No bookings for this date</p>
+              <p className="text-xs text-[#666666] leading-relaxed max-w-xs mx-auto">
                 Select dates highlighted with dots on the calendar grid to inspect guest details and commission breakdown.
               </p>
             </div>
@@ -846,57 +845,57 @@ export default function PartnerCalendarPage() {
                 return (
                   <div
                     key={b.id || b.booking_id}
-                    className="p-4 rounded-xl bg-white border border-[#E5E5E5] space-y-3 hover:border-black/30 transition-colors"
+                    className="p-4 rounded-[6px] bg-white border border-[#ebebeb] space-y-3 hover:border-[#171717]/40 transition-colors shadow-[0_0_0_1px_rgba(0,0,0,0.02)]"
                   >
                     {/* Header: Status Pills & Action */}
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div className="flex flex-wrap items-center gap-1.5">
                         {isPaid ? (
-                          <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                          <span className="font-mono text-[10px] font-medium text-[#297a3a] bg-[#297a3a]/10 px-2 py-0.5 rounded-[4px] border border-[#297a3a]/20">
                             {b.payment_method === 'cash' ? 'Paid (Cash)' : b.payment_method === 'online' ? 'Paid (Online)' : 'Paid'}
                           </span>
                         ) : (
-                          <span className="text-[10px] font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                          <span className="font-mono text-[10px] font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded-[4px] border border-amber-200">
                             Unpaid
                           </span>
                         )}
 
                         {isCancelled ? (
-                          <span className="text-[10px] font-semibold text-red-600 bg-red-50 px-2 py-0.5 rounded-md border border-red-200">
+                          <span className="font-mono text-[10px] font-medium text-red-600 bg-red-50 px-2 py-0.5 rounded-[4px] border border-red-200">
                             Cancelled
                           </span>
                         ) : b.booking_status === 'Ongoing' || b.treatment_status === 'Ongoing' || b.treatment_status === 'In Progress' ? (
-                          <span className="text-[10px] font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-200 flex items-center gap-1">
+                          <span className="font-mono text-[10px] font-medium text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-[4px] border border-indigo-200 flex items-center gap-1">
                             <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
                             Ongoing
                           </span>
                         ) : b.booking_status === 'Completed' || b.treatment_status === 'Finish' || b.treatment_status === 'Finished' || b.service_completed ? (
-                          <span className="text-[10px] font-semibold text-teal-700 bg-teal-50 px-2 py-0.5 rounded-md border border-teal-200">
+                          <span className="font-mono text-[10px] font-medium text-[#297a3a] bg-[#297a3a]/10 px-2 py-0.5 rounded-[4px] border border-[#297a3a]/20">
                             Finish
                           </span>
                         ) : b.booking_status === 'Confirmed' ? (
-                          <span className="text-[10px] font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200">
+                          <span className="font-mono text-[10px] font-medium text-blue-700 bg-blue-50 px-2 py-0.5 rounded-[4px] border border-blue-200">
                             Confirmed
                           </span>
                         ) : (
-                          <span className="text-[10px] font-semibold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                          <span className="font-mono text-[10px] font-medium text-amber-800 bg-amber-50 px-2 py-0.5 rounded-[4px] border border-amber-200">
                             Awaiting Treatment
                           </span>
                         )}
 
                         {b.commission_status === 'paid' ? (
-                          <span className="text-[10px] font-semibold text-white bg-black px-2 py-0.5 rounded-md inline-flex items-center gap-1">
+                          <span className="font-mono text-[10px] font-medium text-white bg-[#171717] px-2 py-0.5 rounded-[4px] inline-flex items-center gap-1">
                             ✓ Paid Out
                           </span>
                         ) : isApproved ? (
-                          <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                          <span className="font-mono text-[10px] font-medium text-[#297a3a] bg-[#297a3a]/10 px-2 py-0.5 rounded-[4px] border border-[#297a3a]/20">
                             Approved
                           </span>
                         ) : null}
                       </div>
 
                       <div className="text-right">
-                        <span className={`text-xs font-mono font-bold ${isCancelled ? 'line-through text-[#737373]' : 'text-emerald-700'}`}>
+                        <span className={`text-xs font-mono font-bold tabular-nums ${isCancelled ? 'line-through text-[#8f8f8f]' : 'text-[#297a3a]'}`}>
                           {isCancelled ? 'IDR 0' : `+${formatIDR(b.commission_amount)}`}
                         </span>
                       </div>
@@ -904,8 +903,8 @@ export default function PartnerCalendarPage() {
 
                     {/* Customer Name, View Treatment Details Link, Invoice Code */}
                     <div className="space-y-1.5 pt-1">
-                      <div className="font-semibold text-sm text-black flex items-center gap-1.5">
-                        <User size={14} className="text-[#737373] shrink-0" />
+                      <div className="font-medium text-sm text-[#171717] flex items-center gap-1.5">
+                        <User size={14} className="text-[#666666] shrink-0" />
                         <span className="truncate">{b.guest_name || 'Guest Booking'}</span>
                       </div>
 
@@ -914,61 +913,61 @@ export default function PartnerCalendarPage() {
                         <Link
                           href={`/invoice/${b.booking_id}`}
                           target="_blank"
-                          className="group inline-flex items-center gap-1.5 text-xs font-semibold text-black hover:underline py-0.5 cursor-pointer"
+                          className="group inline-flex items-center gap-1.5 text-xs font-medium text-[#171717] hover:underline py-0.5 cursor-pointer"
                           title="View treatment details in invoice"
                         >
-                          <FileText size={13} className="text-[#737373] shrink-0" />
+                          <FileText size={13} className="text-[#666666] shrink-0" />
                           <span>View Treatment Details</span>
-                          <ExternalLink size={11} className="text-[#737373] shrink-0" />
+                          <ExternalLink size={11} className="text-[#666666] shrink-0" />
                         </Link>
                       </div>
 
                       {/* Invoice Code below View Treatment Details */}
-                      <div className="flex items-center gap-1.5 text-[#737373] text-xs font-medium pt-0.5">
-                        <span className="text-[10px] font-semibold uppercase tracking-wider text-[#737373]">
+                      <div className="flex items-center gap-1.5 text-[#666666] text-xs font-medium pt-0.5">
+                        <span className="font-mono text-[10px] font-medium uppercase tracking-[0.071em] text-[#666666]">
                           Invoice:
                         </span>
-                        <span className="font-mono text-xs font-bold text-black bg-[#F5F5F5] px-2 py-0.5 rounded border border-[#E5E5E5]">
+                        <span className="font-mono text-xs font-bold text-[#171717] bg-[#fafafa] px-2 py-0.5 rounded-[4px] border border-[#ebebeb]">
                           #{b.booking_id}
                         </span>
                         <button
                           type="button"
                           onClick={() => handleCopy(b.booking_id)}
-                          className="text-[#737373] hover:text-black transition-colors p-1 rounded hover:bg-[#F5F5F5] cursor-pointer"
+                          className="text-[#666666] hover:text-[#171717] transition-colors p-1 rounded hover:bg-[#fafafa] cursor-pointer"
                           title="Copy invoice code"
                         >
-                          {copiedId === b.booking_id ? <Check size={12} className="text-emerald-700" /> : <Copy size={12} />}
+                          {copiedId === b.booking_id ? <Check size={12} className="text-[#297a3a]" /> : <Copy size={12} />}
                         </button>
                       </div>
                     </div>
 
                     {/* Schedule & Place */}
-                    <div className="bg-[#FAFAFA] rounded-lg p-2.5 border border-[#E5E5E5] text-xs space-y-1.5">
+                    <div className="bg-[#fafafa] rounded-[6px] p-2.5 border border-[#ebebeb] text-xs space-y-1.5">
                       <div className="grid grid-cols-2 gap-2">
-                        <div className="flex items-center gap-1.5 text-black truncate">
-                          <CalendarIcon size={12} className="text-[#737373] shrink-0" />
-                          <span className="font-medium text-xs text-black truncate">
+                        <div className="flex items-center gap-1.5 text-[#171717] truncate">
+                          <CalendarIcon size={12} className="text-[#666666] shrink-0" />
+                          <span className="font-mono text-xs text-[#171717] truncate">
                             {safeFormatDate(b.date, { day: 'numeric', month: 'short' })}
                           </span>
                         </div>
-                        <div className="flex items-center gap-1.5 text-black justify-end truncate">
-                          <Clock size={12} className="text-[#737373] shrink-0" />
-                          <span className="font-medium text-xs text-black truncate">
+                        <div className="flex items-center gap-1.5 text-[#171717] justify-end truncate">
+                          <Clock size={12} className="text-[#666666] shrink-0" />
+                          <span className="font-mono text-xs text-[#171717] truncate">
                             {b.time || 'Flexible'}
                           </span>
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-2 pt-1 border-t border-[#E5E5E5]">
-                        <div className="flex items-center gap-1.5 text-black truncate">
-                          <MapPin size={12} className="text-[#737373] shrink-0" />
-                          <span className="text-xs text-black font-medium truncate" title={b.location}>
+                      <div className="grid grid-cols-2 gap-2 pt-1 border-t border-[#ebebeb]">
+                        <div className="flex items-center gap-1.5 text-[#171717] truncate">
+                          <MapPin size={12} className="text-[#666666] shrink-0" />
+                          <span className="text-xs text-[#171717] font-medium truncate" title={b.location}>
                             {b.location || 'Villa / Hotel'}
                           </span>
                         </div>
-                        <div className="flex items-center gap-1.5 text-black justify-end truncate">
-                          <DoorOpen size={12} className="text-[#737373] shrink-0" />
-                          <span className="text-xs font-semibold text-black truncate">
+                        <div className="flex items-center gap-1.5 text-[#171717] justify-end truncate">
+                          <DoorOpen size={12} className="text-[#666666] shrink-0" />
+                          <span className="text-xs font-medium text-[#171717] truncate">
                             {b.room_number ? `Room ${b.room_number}` : '-'}
                           </span>
                         </div>
@@ -976,16 +975,16 @@ export default function PartnerCalendarPage() {
                     </div>
 
                     {/* Bottom: Treatment Amount vs Earned Commission */}
-                    <div className="pt-2 border-t border-[#E5E5E5] flex items-center justify-between text-xs">
+                    <div className="pt-2 border-t border-[#ebebeb] flex items-center justify-between text-xs">
                       <div>
-                        <span className="text-[10px] uppercase font-semibold text-[#737373] block">Treatment</span>
-                        <span className="font-mono font-bold text-xs text-black">
+                        <span className="font-mono text-[10px] uppercase font-medium text-[#666666] block">Treatment</span>
+                        <span className="font-mono font-bold text-xs text-[#171717] tabular-nums">
                           {formatIDR(b.treatment_amount || b.gross_amount)}
                         </span>
                       </div>
                       <div className="text-right">
-                        <span className="text-[10px] uppercase font-semibold text-emerald-700 block">Earned ({b.commission_rate_pct}%)</span>
-                        <span className="font-mono font-bold text-xs text-emerald-700">
+                        <span className="font-mono text-[10px] uppercase font-medium text-[#297a3a] block">Earned ({b.commission_rate_pct}%)</span>
+                        <span className="font-mono font-bold text-xs text-[#297a3a] tabular-nums">
                           +{formatIDR(b.commission_amount)}
                         </span>
                       </div>

@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Eye, EyeOff, ArrowRight, AlertCircle, Lock } from 'lucide-react';
+import { Eye, EyeOff, ArrowRight, AlertCircle } from 'lucide-react';
 
 export default function PartnerLoginPage() {
   const router = useRouter();
@@ -44,29 +44,29 @@ export default function PartnerLoginPage() {
 
   return (
     <div className="max-w-md mx-auto py-8 sm:py-16 px-4">
-      <div className="bg-white border border-[#E5E5E5] rounded-xl p-6 sm:p-8 space-y-5">
+      <div className="bg-white border border-[#ebebeb] rounded-[6px] p-6 sm:p-8 space-y-5 shadow-[0_0_0_1px_rgba(0,0,0,0.04)]">
         
         {/* Brand Logo & Header */}
-        <div className="text-center space-y-2 pb-4 border-b border-[#E5E5E5]">
+        <div className="text-center space-y-2 pb-4 border-b border-[#ebebeb]">
           <div className="flex justify-center items-center">
             <img
               src="/therapick-logo-2.png"
               alt="Therapick"
-              className="h-7 w-auto max-w-[150px] object-contain mix-blend-multiply"
+              className="h-7 w-auto max-w-[150px] object-contain"
             />
           </div>
           <div className="space-y-0.5">
-            <h1 className="text-xl font-semibold text-black tracking-tight">
+            <h1 className="text-xl font-normal text-[#171717] tracking-[-0.03em]">
               Partner Portal Login
             </h1>
-            <p className="text-xs text-[#737373]">
+            <p className="text-xs text-[#666666]">
               Access your referral link, bookings, and commission payouts
             </p>
           </div>
         </div>
 
         {errorMsg && (
-          <div className="p-3.5 rounded-lg border border-red-200 bg-red-50 text-red-700 text-xs leading-relaxed font-medium flex items-start gap-2">
+          <div className="p-3.5 rounded-[6px] border border-red-200 bg-red-50 text-red-700 text-xs leading-relaxed font-normal flex items-start gap-2">
             <AlertCircle size={15} className="shrink-0 mt-0.5" />
             <span>{errorMsg}</span>
           </div>
@@ -74,7 +74,7 @@ export default function PartnerLoginPage() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-black mb-1">
+            <label className="block font-mono text-[11px] uppercase tracking-[0.071em] text-[#666666] mb-1">
               Email Address
             </label>
             <input
@@ -83,13 +83,13 @@ export default function PartnerLoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="name@example.com"
-              className="w-full px-3 py-2 rounded-lg border border-[#E5E5E5] text-xs text-black bg-white focus:outline-none focus:border-black transition-colors"
+              className="w-full px-3 py-2 rounded-[6px] border border-[#ebebeb] text-xs text-[#171717] bg-white focus:outline-none focus:border-[#171717] transition-colors"
             />
           </div>
 
           <div>
             <div className="flex items-center justify-between mb-1">
-              <label className="block text-xs font-semibold text-black">
+              <label className="block font-mono text-[11px] uppercase tracking-[0.071em] text-[#666666]">
                 Password
               </label>
             </div>
@@ -100,12 +100,12 @@ export default function PartnerLoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter your password"
-                className="w-full px-3 py-2 pr-10 rounded-lg border border-[#E5E5E5] text-xs text-black bg-white focus:outline-none focus:border-black transition-colors"
+                className="w-full px-3 py-2 pr-10 rounded-[6px] border border-[#ebebeb] text-xs text-[#171717] bg-white focus:outline-none focus:border-[#171717] transition-colors"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#737373] hover:text-black transition-colors p-1"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#666666] hover:text-[#171717] transition-colors p-1"
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
                 {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
@@ -117,7 +117,7 @@ export default function PartnerLoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 rounded-lg bg-black hover:bg-[#262626] text-white font-medium text-xs tracking-wide transition-colors disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full py-2.5 rounded-[6px] bg-[#171717] hover:bg-black text-white font-mono text-[11px] uppercase tracking-[0.071em] transition-colors disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
             >
               <span>{loading ? 'Signing In...' : 'Sign In'}</span>
               <ArrowRight size={13} />
@@ -125,10 +125,10 @@ export default function PartnerLoginPage() {
           </div>
         </form>
 
-        <div className="text-center pt-3 border-t border-[#E5E5E5]">
-          <p className="text-xs text-[#737373]">
+        <div className="text-center pt-3 border-t border-[#ebebeb]">
+          <p className="text-xs text-[#666666]">
             Don't have a partner account?{' '}
-            <Link href="/partners/register" className="font-semibold text-black hover:underline">
+            <Link href="/partners/register" className="font-medium text-[#171717] hover:underline">
               Apply to Join
             </Link>
           </p>

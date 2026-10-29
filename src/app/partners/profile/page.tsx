@@ -238,9 +238,9 @@ export default function PartnerProfilePage() {
   const initials = `${formData.first_name?.[0] || partner?.first_name?.[0] || 'P'}${formData.last_name?.[0] || partner?.last_name?.[0] || ''}`.toUpperCase();
 
   return (
-    <div className="w-full max-w-3xl mx-auto space-y-5 pb-12 font-sans">
+    <div className="w-full max-w-3xl mx-auto space-y-4 pb-12 font-sans">
       {/* Hero Profile Identity Card */}
-      <div className="bg-white border border-[#E5E5E5] rounded-xl p-5 sm:p-6 relative overflow-hidden">
+      <div className="bg-white border border-[#ebebeb] rounded-[6px] p-5 sm:p-6 relative overflow-hidden shadow-[0_0_0_1px_rgba(0,0,0,0.04)]">
         {/* Hidden device-local file input */}
         <input
           ref={fileInputRef}
@@ -258,7 +258,7 @@ export default function PartnerProfilePage() {
             <div className="relative shrink-0">
               <div 
                 onClick={() => fileInputRef.current?.click()}
-                className="w-18 h-18 sm:w-20 sm:h-20 rounded-xl bg-black text-white font-bold text-xl sm:text-2xl flex items-center justify-center border border-[#E5E5E5] cursor-pointer overflow-hidden group relative transition-transform"
+                className="w-18 h-18 sm:w-20 sm:h-20 rounded-[6px] bg-[#171717] text-white font-bold text-xl sm:text-2xl flex items-center justify-center border border-[#ebebeb] cursor-pointer overflow-hidden group relative transition-transform"
                 title="Tap to change profile photo"
               >
                 {localAvatar ? (
@@ -281,29 +281,29 @@ export default function PartnerProfilePage() {
             {/* Partner Details */}
             <div className="space-y-1.5 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-base sm:text-lg font-bold text-black tracking-tight truncate">
+                <h1 className="text-base sm:text-lg font-bold text-[#171717] tracking-tight truncate">
                   {formData.first_name || 'Partner'} {formData.last_name || ''}
                 </h1>
-                <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 uppercase tracking-wide">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="inline-flex items-center gap-1 font-mono text-[10px] font-medium text-[#297a3a] bg-[#297a3a]/10 px-2 py-0.5 rounded-[4px] border border-[#297a3a]/20 uppercase tracking-[0.071em]">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#297a3a] animate-pulse" />
                   {partner?.status || 'Active'}
                 </span>
               </div>
 
               {/* Company / Business Name */}
-              <div className="flex items-center gap-1.5 text-xs text-[#737373] truncate font-medium">
-                <Building2 size={13} className="text-[#737373] shrink-0" />
+              <div className="flex items-center gap-1.5 text-xs text-[#666666] truncate font-medium">
+                <Building2 size={13} className="text-[#666666] shrink-0" />
                 <span className="truncate">{formData.business_name || 'Hospitality Partner'}</span>
               </div>
 
               {/* Commission Rate */}
               <div className="pt-0.5 pb-0.5">
-                <span className="inline-flex items-center text-[10px] sm:text-[11px] font-semibold text-black bg-[#F5F5F5] px-2.5 py-0.5 rounded-md border border-[#E5E5E5] uppercase tracking-wider">
+                <span className="inline-flex items-center font-mono text-[10px] sm:text-[11px] font-medium text-[#171717] bg-[#fafafa] px-2.5 py-0.5 rounded-[4px] border border-[#ebebeb] uppercase tracking-[0.071em]">
                   {partner?.commission_rate_pct || 10}% Commission
                 </span>
               </div>
 
-              <div className="text-xs text-[#737373] font-mono truncate">
+              <div className="text-xs text-[#666666] font-mono truncate">
                 {partner?.email}
               </div>
 
@@ -312,14 +312,14 @@ export default function PartnerProfilePage() {
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="inline-flex items-center gap-1 text-xs font-semibold text-black hover:underline cursor-pointer transition-colors"
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-[#171717] hover:underline cursor-pointer transition-colors"
                 >
-                  <Camera size={12} className="text-[#737373]" />
+                  <Camera size={12} className="text-[#666666]" />
                   <span>{localAvatar ? 'Change Photo' : 'Upload Photo'}</span>
                 </button>
                 {localAvatar && (
                   <>
-                    <span className="text-[#E5E5E5]">•</span>
+                    <span className="text-[#ebebeb]">•</span>
                     <button
                       type="button"
                       onClick={handleRemoveAvatar}
@@ -336,23 +336,23 @@ export default function PartnerProfilePage() {
         </div>
 
         {/* One-Tap Referral Link Bar */}
-        <div className="mt-4 pt-4 border-t border-[#E5E5E5] flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <div className="flex items-center gap-1.5 text-xs font-semibold text-[#737373]">
+        <div className="mt-4 pt-4 border-t border-[#ebebeb] flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5 font-mono text-xs text-[#666666]">
             <span>Referral Link</span>
-            <span className="text-[10px] text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-md border border-emerald-200 font-semibold uppercase">Per-Booking</span>
+            <span className="font-mono text-[10px] text-[#297a3a] bg-[#297a3a]/10 px-1.5 py-0.5 rounded-[4px] border border-[#297a3a]/20 font-medium uppercase tracking-[0.071em]">Per-Booking</span>
           </div>
           <button
             type="button"
             onClick={handleCopyLink}
-            className="w-full sm:w-auto flex items-center justify-between sm:justify-start gap-2 px-3 py-1.5 rounded-lg bg-[#FAFAFA] hover:bg-[#F5F5F5] border border-[#E5E5E5] text-xs font-mono text-black transition-all cursor-pointer"
+            className="w-full sm:w-auto flex items-center justify-between sm:justify-start gap-2 px-3 py-1.5 rounded-[6px] bg-[#fafafa] hover:bg-[#ebebeb] border border-[#ebebeb] text-xs font-mono text-[#171717] transition-all cursor-pointer"
           >
             <span className="truncate">?ref={partner?.partner_code}</span>
             {copiedLink ? (
-              <span className="text-[10px] font-sans font-semibold text-emerald-700 flex items-center gap-1">
+              <span className="font-mono text-[10px] font-medium text-[#297a3a] flex items-center gap-1">
                 <Check size={12} /> Copied!
               </span>
             ) : (
-              <span className="text-[10px] font-sans font-semibold text-[#737373] flex items-center gap-1">
+              <span className="font-mono text-[10px] font-medium text-[#666666] flex items-center gap-1">
                 <Copy size={12} /> Copy Full Link
               </span>
             )}
@@ -363,14 +363,14 @@ export default function PartnerProfilePage() {
       {/* Status Notifications */}
       {statusMsg && (
         <div
-          className={`p-4 rounded-xl border text-xs flex items-center gap-3 animate-in fade-in-50 duration-200 ${
+          className={`p-4 rounded-[6px] border text-xs flex items-center gap-3 animate-in fade-in-50 duration-200 ${
             statusMsg.type === 'success'
-              ? 'border-emerald-200 bg-emerald-50 text-emerald-950'
+              ? 'border-[#297a3a]/20 bg-[#297a3a]/10 text-[#297a3a]'
               : 'border-red-200 bg-red-50 text-red-950'
           }`}
         >
           {statusMsg.type === 'success' ? (
-            <CheckCircle2 size={16} className="text-emerald-700 shrink-0" />
+            <CheckCircle2 size={16} className="text-[#297a3a] shrink-0" />
           ) : (
             <AlertCircle size={16} className="text-red-600 shrink-0" />
           )}
@@ -379,17 +379,17 @@ export default function PartnerProfilePage() {
       )}
 
       {/* Main Form */}
-      <form onSubmit={handleSave} className="space-y-5">
+      <form onSubmit={handleSave} className="space-y-4">
         
         {/* Section 1: Contact Information */}
-        <div className="bg-white border border-[#E5E5E5] rounded-xl p-5 sm:p-6 space-y-4">
-          <div className="flex items-start gap-2.5 border-b border-[#E5E5E5] pb-3">
-            <User size={18} className="text-black shrink-0 mt-0.5" />
+        <div className="bg-white border border-[#ebebeb] rounded-[6px] p-5 sm:p-6 space-y-4 shadow-[0_0_0_1px_rgba(0,0,0,0.04)]">
+          <div className="flex items-start gap-2.5 border-b border-[#ebebeb] pb-3">
+            <User size={18} className="text-[#171717] shrink-0 mt-0.5" />
             <div>
-              <h2 className="text-xs sm:text-sm font-bold text-black uppercase tracking-wider">
+              <h2 className="font-mono text-xs sm:text-sm font-medium text-[#171717] uppercase tracking-[0.071em]">
                 Contact Information
               </h2>
-              <p className="text-xs text-[#737373]">
+              <p className="text-xs text-[#666666]">
                 Your identity and primary hospitality business details
               </p>
             </div>
@@ -397,7 +397,7 @@ export default function PartnerProfilePage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <div>
-              <label className="block text-[11px] font-semibold text-[#737373] uppercase tracking-wider mb-1.5">
+              <label className="block font-mono text-[11px] font-medium text-[#666666] uppercase tracking-[0.071em] mb-1.5">
                 First Name
               </label>
               <input
@@ -406,12 +406,12 @@ export default function PartnerProfilePage() {
                 value={formData.first_name}
                 onChange={handleChange}
                 placeholder="First name"
-                className="w-full px-3.5 py-2.5 rounded-lg border border-[#E5E5E5] text-xs font-medium text-black bg-white focus:outline-none focus:border-black transition-colors"
+                className="w-full px-3.5 py-2.5 rounded-[6px] border border-[#ebebeb] text-xs font-medium text-[#171717] bg-white focus:outline-none focus:border-[#171717] transition-colors"
               />
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold text-[#737373] uppercase tracking-wider mb-1.5">
+              <label className="block font-mono text-[11px] font-medium text-[#666666] uppercase tracking-[0.071em] mb-1.5">
                 Last Name
               </label>
               <input
@@ -420,14 +420,14 @@ export default function PartnerProfilePage() {
                 value={formData.last_name}
                 onChange={handleChange}
                 placeholder="Last name"
-                className="w-full px-3.5 py-2.5 rounded-lg border border-[#E5E5E5] text-xs font-medium text-black bg-white focus:outline-none focus:border-black transition-colors"
+                className="w-full px-3.5 py-2.5 rounded-[6px] border border-[#ebebeb] text-xs font-medium text-[#171717] bg-white focus:outline-none focus:border-[#171717] transition-colors"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-[11px] font-semibold text-[#737373] uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-              <Building2 size={13} className="text-[#737373]" />
+            <label className="block font-mono text-[11px] font-medium text-[#666666] uppercase tracking-[0.071em] mb-1.5 flex items-center gap-1.5">
+              <Building2 size={13} className="text-[#666666]" />
               Villa, Hotel, or Business Name
             </label>
             <input
@@ -436,14 +436,14 @@ export default function PartnerProfilePage() {
               value={formData.business_name}
               onChange={handleChange}
               placeholder="e.g. Villa Mandala Ubud or Luxury Tours Bali"
-              className="w-full px-3.5 py-2.5 rounded-lg border border-[#E5E5E5] text-xs font-medium text-black bg-white focus:outline-none focus:border-black transition-colors"
+              className="w-full px-3.5 py-2.5 rounded-[6px] border border-[#ebebeb] text-xs font-medium text-[#171717] bg-white focus:outline-none focus:border-[#171717] transition-colors"
             />
           </div>
 
           {/* WhatsApp ONLY */}
           <div>
-            <label className="block text-[11px] font-semibold text-[#737373] uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-              <MessageCircle size={13} className="text-[#737373]" />
+            <label className="block font-mono text-[11px] font-medium text-[#666666] uppercase tracking-[0.071em] mb-1.5 flex items-center gap-1.5">
+              <MessageCircle size={13} className="text-[#666666]" />
               WhatsApp Number
             </label>
             <input
@@ -452,36 +452,36 @@ export default function PartnerProfilePage() {
               value={formData.whatsapp}
               onChange={handleChange}
               placeholder="+62 812 3456 7890"
-              className="w-full px-3.5 py-2.5 rounded-lg border border-[#E5E5E5] text-xs font-medium text-black bg-white focus:outline-none focus:border-black transition-colors"
+              className="w-full px-3.5 py-2.5 rounded-[6px] border border-[#ebebeb] text-xs font-medium text-[#171717] bg-white focus:outline-none focus:border-[#171717] transition-colors"
             />
-            <p className="text-xs text-[#737373] mt-1">
+            <p className="text-xs text-[#666666] mt-1">
               Used for guest booking notifications & partner support. Include country code (e.g. +62).
             </p>
           </div>
         </div>
 
         {/* Section 2: Bank Transfer Payout Destination */}
-        <div className="bg-white border border-[#E5E5E5] rounded-xl p-5 sm:p-6 space-y-4">
-          <div className="flex items-start gap-2.5 border-b border-[#E5E5E5] pb-3">
-            <Landmark size={18} className="text-black shrink-0 mt-0.5" />
+        <div className="bg-white border border-[#ebebeb] rounded-[6px] p-5 sm:p-6 space-y-4 shadow-[0_0_0_1px_rgba(0,0,0,0.04)]">
+          <div className="flex items-start gap-2.5 border-b border-[#ebebeb] pb-3">
+            <Landmark size={18} className="text-[#171717] shrink-0 mt-0.5" />
             <div>
-              <h2 className="text-xs sm:text-sm font-bold text-black uppercase tracking-wider">
+              <h2 className="font-mono text-xs sm:text-sm font-medium text-[#171717] uppercase tracking-[0.071em]">
                 Bank Transfer Payout Destination
               </h2>
-              <p className="text-xs text-[#737373]">
+              <p className="text-xs text-[#666666]">
                 Where you receive your weekly or monthly partner commissions via direct Indonesian bank transfer
               </p>
             </div>
           </div>
 
-          <div className="space-y-3.5 p-4 rounded-xl bg-[#FAFAFA] border border-[#E5E5E5]">
+          <div className="space-y-3.5 p-4 rounded-[6px] bg-[#fafafa] border border-[#ebebeb]">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               <div>
-                <label className="block text-[11px] font-semibold text-[#737373] uppercase tracking-wider mb-1.5">
+                <label className="block font-mono text-[11px] font-medium text-[#666666] uppercase tracking-[0.071em] mb-1.5">
                   Bank Name
                 </label>
                 <div className="relative">
-                  <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#737373] pointer-events-none">
+                  <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#666666] pointer-events-none">
                     <Landmark size={14} />
                   </div>
                   <input
@@ -490,7 +490,7 @@ export default function PartnerProfilePage() {
                     value={formData.bank_name}
                     onChange={handleChange}
                     placeholder="BCA, Mandiri, BNI, BRI, etc."
-                    className="w-full pl-9 pr-3.5 py-2.5 rounded-lg border border-[#E5E5E5] text-xs font-semibold text-black bg-white focus:outline-none focus:border-black"
+                    className="w-full pl-9 pr-3.5 py-2.5 rounded-[6px] border border-[#ebebeb] text-xs font-semibold text-[#171717] bg-white focus:outline-none focus:border-[#171717]"
                   />
                 </div>
                 {/* One-Tap Indonesian Bank Quick Selectors */}
@@ -500,10 +500,10 @@ export default function PartnerProfilePage() {
                       type="button"
                       key={bank}
                       onClick={() => setFormData((prev) => ({ ...prev, bank_name: bank }))}
-                      className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer border ${
+                      className={`px-2.5 py-1 rounded-[6px] text-xs font-medium transition-all cursor-pointer border ${
                         formData.bank_name?.toUpperCase() === bank
-                          ? 'bg-black text-white border-black'
-                          : 'bg-white border-[#E5E5E5] text-[#737373] hover:text-black hover:border-black'
+                          ? 'bg-[#171717] text-white border-[#171717]'
+                          : 'bg-white border-[#ebebeb] text-[#666666] hover:text-[#171717] hover:border-[#171717]'
                       }`}
                     >
                       {bank}
@@ -513,7 +513,7 @@ export default function PartnerProfilePage() {
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold text-[#737373] uppercase tracking-wider mb-1.5">
+                <label className="block font-mono text-[11px] font-medium text-[#666666] uppercase tracking-[0.071em] mb-1.5">
                   Account Number
                 </label>
                 <input
@@ -522,13 +522,13 @@ export default function PartnerProfilePage() {
                   value={formData.account_number}
                   onChange={handleChange}
                   placeholder="e.g. 1234567890"
-                  className="w-full px-3.5 py-2.5 rounded-lg border border-[#E5E5E5] text-xs font-mono font-medium text-black bg-white focus:outline-none focus:border-black"
+                  className="w-full px-3.5 py-2.5 rounded-[6px] border border-[#ebebeb] text-xs font-mono font-medium text-[#171717] bg-white focus:outline-none focus:border-[#171717]"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold text-[#737373] uppercase tracking-wider mb-1.5">
+              <label className="block font-mono text-[11px] font-medium text-[#666666] uppercase tracking-[0.071em] mb-1.5">
                 Account Holder Full Name
               </label>
               <input
@@ -537,7 +537,7 @@ export default function PartnerProfilePage() {
                 value={formData.account_holder}
                 onChange={handleChange}
                 placeholder="Exact name registered in your bank account"
-                className="w-full px-3.5 py-2.5 rounded-lg border border-[#E5E5E5] text-xs font-medium text-black bg-white focus:outline-none focus:border-black"
+                className="w-full px-3.5 py-2.5 rounded-[6px] border border-[#ebebeb] text-xs font-medium text-[#171717] bg-white focus:outline-none focus:border-[#171717]"
               />
             </div>
           </div>
@@ -548,7 +548,7 @@ export default function PartnerProfilePage() {
           <button
             type="submit"
             disabled={saving}
-            className="w-full py-3 px-4 rounded-lg bg-black hover:bg-neutral-800 text-white font-semibold text-xs tracking-wider uppercase transition-colors disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
+            className="w-full py-3 px-4 rounded-[6px] bg-[#171717] hover:bg-[#262626] text-white font-mono font-medium text-xs tracking-[0.071em] uppercase transition-colors disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
           >
             {saving ? (
               <>
@@ -563,10 +563,10 @@ export default function PartnerProfilePage() {
       </form>
 
       {/* Section 3: App Actions & Security */}
-      <div className="bg-white border border-[#E5E5E5] rounded-xl p-5 sm:p-6 space-y-4">
-        <div className="flex items-center gap-2 border-b border-[#E5E5E5] pb-3">
-          <ShieldCheck size={16} className="text-[#737373]" />
-          <h2 className="text-xs font-bold uppercase tracking-wider text-black">
+      <div className="bg-white border border-[#ebebeb] rounded-[6px] p-5 sm:p-6 space-y-4 shadow-[0_0_0_1px_rgba(0,0,0,0.04)]">
+        <div className="flex items-center gap-2 border-b border-[#ebebeb] pb-3">
+          <ShieldCheck size={16} className="text-[#666666]" />
+          <h2 className="font-mono text-xs font-medium uppercase tracking-[0.071em] text-[#171717]">
             Account Security & Actions
           </h2>
         </div>
@@ -577,25 +577,25 @@ export default function PartnerProfilePage() {
             href="https://wa.me/6285174119423"
             target="_blank"
             rel="noreferrer"
-            className="w-full flex items-center p-3.5 rounded-lg bg-[#FAFAFA] hover:bg-[#F5F5F5] border border-[#E5E5E5] text-xs font-semibold text-black transition-colors"
+            className="w-full flex items-center p-3.5 rounded-[6px] bg-[#fafafa] hover:bg-[#ebebeb] border border-[#ebebeb] text-xs font-semibold text-[#171717] transition-colors"
           >
             <div className="flex items-center gap-2.5 w-full">
-              <div className="w-8 h-8 rounded-lg bg-[#F5F5F5] text-black flex items-center justify-center shrink-0 border border-[#E5E5E5]">
+              <div className="w-8 h-8 rounded-[6px] bg-[#fafafa] text-[#171717] flex items-center justify-center shrink-0 border border-[#ebebeb]">
                 <MessageCircle size={15} />
               </div>
               <div className="text-left">
-                <span className="font-semibold text-black block">WhatsApp Partner Support</span>
-                <span className="text-xs text-[#737373]">Need help updating bank info or tracking?</span>
+                <span className="font-semibold text-[#171717] block">WhatsApp Partner Support</span>
+                <span className="text-xs text-[#666666]">Need help updating bank info or tracking?</span>
               </div>
             </div>
           </a>
 
-          {/* Prominent Red Sign Out Button */}
+          {/* Sign Out Button */}
           <button
             type="button"
             onClick={handleLogout}
             disabled={loggingOut}
-            className="w-full py-3 px-4 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 font-semibold text-xs tracking-wider uppercase border border-red-200 transition-colors flex items-center justify-center gap-2 cursor-pointer"
+            className="w-full py-3 px-4 rounded-[6px] bg-red-50 hover:bg-red-100 text-red-600 font-mono font-medium text-xs tracking-[0.071em] uppercase border border-red-200 transition-colors flex items-center justify-center gap-2 cursor-pointer"
           >
             {loggingOut ? (
               <>
@@ -612,8 +612,8 @@ export default function PartnerProfilePage() {
         </div>
 
         <div className="pt-2 text-center">
-          <p className="text-xs text-[#737373] flex items-center justify-center gap-1.5 font-medium">
-            <Lock size={12} className="text-[#737373]" />
+          <p className="font-mono text-xs text-[#666666] flex items-center justify-center gap-1.5">
+            <Lock size={12} className="text-[#666666]" />
             <span>End-to-end encrypted session • partners.booktherapick.com</span>
           </p>
         </div>

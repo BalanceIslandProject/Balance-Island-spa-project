@@ -78,12 +78,12 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
     <>
       {/* ========================================================
           1. DESKTOP PERMANENT SIDEBAR (hidden on mobile, md:flex)
-          Clean minimalist SaaS CRM design language
+          Vercel Light Minimalist Design Language
          ======================================================== */}
-      <aside className="hidden md:flex flex-col w-64 lg:w-72 bg-white border-r border-[#E5E5E5] sticky top-0 h-screen shrink-0 z-30 self-start">
+      <aside className="hidden md:flex flex-col w-64 lg:w-72 bg-white border-r border-[#ebebeb] sticky top-0 h-screen shrink-0 z-30 self-start shadow-[0_0_0_1px_rgba(0,0,0,0.02)]">
         
         {/* Brand & Partner Identification */}
-        <div className="p-5 border-b border-[#E5E5E5] flex items-center justify-between shrink-0">
+        <div className="p-5 border-b border-[#ebebeb] flex items-center justify-between shrink-0">
           <Link 
             href={session ? '/partners/dashboard' : '/partners'} 
             className="flex items-center gap-2.5 group transition-opacity hover:opacity-90"
@@ -93,7 +93,7 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
               alt="Therapick"
               className="h-7 w-auto max-w-[150px] object-contain"
             />
-            <span className="inline-flex items-center h-6 px-2 rounded-md border border-[#E5E5E5] text-[11px] font-mono text-[#737373]">
+            <span className="inline-flex items-center h-5 px-2 rounded-[6px] border border-[#ebebeb] bg-[#fafafa] text-[10px] font-mono uppercase tracking-[0.071em] text-[#666666]">
               Partner
             </span>
           </Link>
@@ -103,11 +103,11 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
               router.refresh();
               window.location.reload();
             }}
-            className="p-1.5 text-[#737373] hover:text-black hover:bg-[#F5F5F5] rounded-lg transition-colors cursor-pointer border border-[#E5E5E5]"
+            className="p-1.5 text-[#666666] hover:text-[#171717] hover:bg-[#fafafa] rounded-[6px] transition-colors cursor-pointer border border-[#ebebeb]"
             title="Refresh partner portal"
             aria-label="Refresh"
           >
-            <RefreshCw size={14} />
+            <RefreshCw size={13} />
           </button>
         </div>
 
@@ -115,7 +115,7 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
         <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
           {session ? (
             <>
-              <div className="px-3 pt-2 pb-1.5 text-[11px] font-medium uppercase tracking-wider text-[#737373]">
+              <div className="px-3 pt-2 pb-1.5 font-mono text-[11px] font-normal uppercase tracking-[0.071em] text-[#666666]">
                 Workspace
               </div>
               
@@ -126,13 +126,13 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-[13px] font-medium transition-colors ${
+                    className={`flex items-center gap-3 px-3.5 py-2 rounded-[6px] text-[13px] font-normal transition-colors ${
                       isActive
-                        ? 'bg-black text-white'
-                        : 'text-[#737373] hover:text-black hover:bg-[#F5F5F5]'
+                        ? 'bg-[#171717] text-white shadow-xs'
+                        : 'text-[#4d4d4d] hover:text-[#171717] hover:bg-[#fafafa]'
                     }`}
                   >
-                    <Icon size={16} strokeWidth={isActive ? 2.2 : 1.8} className={isActive ? 'text-white' : 'text-[#737373]'} />
+                    <Icon size={15} strokeWidth={isActive ? 2 : 1.75} className={isActive ? 'text-white' : 'text-[#666666]'} />
                     <span>{item.label}</span>
                   </Link>
                 );
@@ -141,40 +141,40 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
               {/* Interactive Calendar View Link in Sidebar */}
               <Link
                 href="/partners/calendar"
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg text-[13px] font-medium transition-colors ${
+                className={`w-full flex items-center justify-between px-3.5 py-2 rounded-[6px] text-[13px] font-normal transition-colors ${
                   pathname === '/partners/calendar'
-                    ? 'bg-black text-white'
-                    : 'text-[#737373] hover:text-black hover:bg-[#F5F5F5]'
+                    ? 'bg-[#171717] text-white shadow-xs'
+                    : 'text-[#4d4d4d] hover:text-[#171717] hover:bg-[#fafafa]'
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <CalendarDays size={16} strokeWidth={pathname === '/partners/calendar' ? 2.2 : 1.8} className={pathname === '/partners/calendar' ? 'text-white' : 'text-[#737373]'} />
+                  <CalendarDays size={15} strokeWidth={pathname === '/partners/calendar' ? 2 : 1.75} className={pathname === '/partners/calendar' ? 'text-white' : 'text-[#666666]'} />
                   <span>Calendar View</span>
                 </div>
-                <span className={`w-2 h-2 rounded-full ${pathname === '/partners/calendar' ? 'bg-emerald-400' : 'bg-emerald-500'}`} />
+                <span className={`w-2 h-2 rounded-full ${pathname === '/partners/calendar' ? 'bg-[#297a3a]' : 'bg-[#297a3a]'}`} />
               </Link>
 
               {/* Quick Link Card in Sidebar */}
               {session.partner_code && (
-                <div className="mt-4 pt-4 border-t border-[#E5E5E5] px-1">
-                  <div className="p-3.5 rounded-xl bg-white border border-[#E5E5E5] space-y-2">
+                <div className="mt-4 pt-4 border-t border-[#ebebeb] px-1">
+                  <div className="p-3.5 rounded-[6px] bg-[#fafafa] border border-[#ebebeb] space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-medium uppercase tracking-wider text-[#737373] flex items-center gap-1.5">
-                        <Share2 size={12} />
+                      <span className="font-mono text-[10px] uppercase tracking-[0.071em] text-[#666666] flex items-center gap-1.5">
+                        <Share2 size={11} />
                         Referral Link
                       </span>
-                      <span className="text-[10px] text-[#737373] border border-[#E5E5E5] px-1.5 py-0.5 rounded font-mono">
+                      <span className="text-[10px] text-[#666666] border border-[#ebebeb] bg-white px-1.5 py-0.5 rounded-[4px] font-mono">
                         Per Booking
                       </span>
                     </div>
                     <button
                       type="button"
                       onClick={handleCopyLink}
-                      className="w-full text-left py-2 px-2.5 rounded-lg bg-white border border-[#E5E5E5] text-black text-[12px] font-mono truncate flex items-center justify-between gap-1 hover:border-black transition-colors cursor-pointer"
+                      className="w-full text-left py-2 px-2.5 rounded-[6px] bg-white border border-[#ebebeb] text-[#171717] text-[12px] font-mono truncate flex items-center justify-between gap-1 hover:border-[#171717] transition-colors cursor-pointer"
                       title="Click to copy full referral link"
                     >
                       <span className="truncate">?ref={session.partner_code}</span>
-                      {copiedLink ? <Check size={13} className="text-emerald-600 shrink-0" /> : <Copy size={13} className="text-[#A3A3A3] shrink-0" />}
+                      {copiedLink ? <Check size={13} className="text-[#297a3a] shrink-0" /> : <Copy size={13} className="text-[#8f8f8f] shrink-0" />}
                     </button>
                   </div>
                 </div>
@@ -182,40 +182,40 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
             </>
           ) : (
             <>
-              <div className="px-3 pt-2 pb-1.5 text-[11px] font-medium uppercase tracking-wider text-[#737373]">
+              <div className="px-3 pt-2 pb-1.5 font-mono text-[11px] uppercase tracking-[0.071em] text-[#666666]">
                 Menu
               </div>
               <Link
                 href="/partners"
-                className={`flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-[13px] font-medium transition-colors ${
+                className={`flex items-center gap-3 px-3.5 py-2 rounded-[6px] text-[13px] font-normal transition-colors ${
                   pathname === '/partners'
-                    ? 'bg-black text-white'
-                    : 'text-[#737373] hover:text-black hover:bg-[#F5F5F5]'
+                    ? 'bg-[#171717] text-white shadow-xs'
+                    : 'text-[#4d4d4d] hover:text-[#171717] hover:bg-[#fafafa]'
                 }`}
               >
-                <LayoutDashboard size={16} />
+                <LayoutDashboard size={15} />
                 <span>Program Overview</span>
               </Link>
               <Link
                 href="/partners/login"
-                className={`flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-[13px] font-medium transition-colors ${
+                className={`flex items-center gap-3 px-3.5 py-2 rounded-[6px] text-[13px] font-normal transition-colors ${
                   pathname === '/partners/login'
-                    ? 'bg-black text-white'
-                    : 'text-[#737373] hover:text-black hover:bg-[#F5F5F5]'
+                    ? 'bg-[#171717] text-white shadow-xs'
+                    : 'text-[#4d4d4d] hover:text-[#171717] hover:bg-[#fafafa]'
                 }`}
               >
-                <User size={16} />
+                <User size={15} />
                 <span>Partner Log In</span>
               </Link>
               <Link
                 href="/partners/register"
-                className={`flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-[13px] font-medium transition-colors ${
+                className={`flex items-center gap-3 px-3.5 py-2 rounded-[6px] text-[13px] font-normal transition-colors ${
                   pathname === '/partners/register'
-                    ? 'bg-black text-white'
-                    : 'text-[#737373] hover:text-black hover:bg-[#F5F5F5]'
+                    ? 'bg-[#171717] text-white shadow-xs'
+                    : 'text-[#4d4d4d] hover:text-[#171717] hover:bg-[#fafafa]'
                 }`}
               >
-                <Users size={16} />
+                <Users size={15} />
                 <span>Become a Partner</span>
               </Link>
             </>
@@ -223,12 +223,12 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
         </nav>
 
         {/* Sidebar Footer */}
-        <div className="p-4 border-t border-[#E5E5E5] space-y-1.5 shrink-0">
+        <div className="p-4 border-t border-[#ebebeb] space-y-1.5 shrink-0">
           <a
             href="https://www.booktherapick.com"
             target="_blank"
             rel="noreferrer"
-            className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-[13px] font-medium text-[#737373] hover:text-black hover:bg-[#F5F5F5] transition-colors"
+            className="w-full flex items-center justify-between px-3 py-2 rounded-[6px] text-[13px] text-[#4d4d4d] hover:text-[#171717] hover:bg-[#fafafa] transition-colors"
           >
             <span>Visit Live Site</span>
             <ExternalLink size={13} />
@@ -237,10 +237,10 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
             href="https://wa.me/6285174119423"
             target="_blank"
             rel="noreferrer"
-            className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-[13px] font-medium text-[#737373] hover:text-black hover:bg-[#F5F5F5] transition-colors"
+            className="w-full flex items-center justify-between px-3 py-2 rounded-[6px] text-[13px] text-[#4d4d4d] hover:text-[#171717] hover:bg-[#fafafa] transition-colors"
           >
             <span>WhatsApp Support</span>
-            <span className="text-[10px] text-emerald-700 font-medium bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">Help</span>
+            <span className="font-mono text-[10px] text-[#297a3a] bg-[#fafafa] px-1.5 py-0.5 rounded-[4px] border border-[#ebebeb]">Help</span>
           </a>
 
           {session && (
@@ -248,7 +248,7 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
               type="button"
               onClick={handleLogout}
               disabled={loggingOut}
-              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium text-red-600 hover:bg-red-50 transition-colors text-left pt-2 border-t border-[#E5E5E5] cursor-pointer"
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-[6px] text-[13px] text-red-600 hover:bg-red-50 transition-colors text-left pt-2 border-t border-[#ebebeb] cursor-pointer"
             >
               <LogOut size={14} />
               <span>{loggingOut ? 'Signing out...' : 'Sign Out'}</span>
@@ -260,7 +260,7 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
       {/* ========================================================
           2. MOBILE STICKY HEADER (hidden on desktop, md:hidden)
          ======================================================== */}
-      <header className={`md:hidden sticky top-0 z-40 bg-white border-b border-[#E5E5E5] transition-all ${
+      <header className={`md:hidden sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-[#ebebeb] transition-all ${
         pathname === '/partners/calendar' ? 'hidden' : ''
       }`}>
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
@@ -276,7 +276,7 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
                 alt="Therapick"
                 className="h-6 w-auto max-w-[130px] object-contain"
               />
-              <span className="inline-flex items-center h-5 px-1.5 rounded border border-[#E5E5E5] text-[10px] font-mono text-[#737373]">
+              <span className="inline-flex items-center h-5 px-1.5 rounded-[4px] border border-[#ebebeb] bg-[#fafafa] text-[10px] font-mono uppercase tracking-[0.071em] text-[#666666]">
                 Partner
               </span>
             </Link>
@@ -289,19 +289,19 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
                   router.refresh();
                   window.location.reload();
                 }}
-                className="p-1.5 text-black hover:bg-[#F5F5F5] rounded-lg transition-colors cursor-pointer border border-[#E5E5E5]"
+                className="p-1.5 text-[#666666] hover:text-[#171717] hover:bg-[#fafafa] rounded-[6px] transition-colors cursor-pointer border border-[#ebebeb]"
                 aria-label="Refresh page"
                 title="Refresh"
               >
-                <RefreshCw size={16} />
+                <RefreshCw size={15} />
               </button>
               <button
                 type="button"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="p-1.5 text-black hover:bg-[#F5F5F5] rounded-lg transition-colors cursor-pointer border border-[#E5E5E5]"
+                className="p-1.5 text-[#171717] hover:bg-[#fafafa] rounded-[6px] transition-colors cursor-pointer border border-[#ebebeb]"
                 aria-label="Toggle menu"
               >
-                {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
+                {mobileMenuOpen ? <X size={17} /> : <Menu size={17} />}
               </button>
             </div>
 
@@ -310,19 +310,19 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
 
         {/* Mobile Top Menu Drawer */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-t border-[#E5E5E5] bg-white px-4 py-4 space-y-3 shadow-lg animate-in slide-in-from-top-1 duration-150">
+          <div className="md:hidden border-t border-[#ebebeb] bg-white px-4 py-4 space-y-3 shadow-[0_4px_12px_rgba(0,0,0,0.05)] animate-in slide-in-from-top-1 duration-150">
             {session ? (
               <>
-                <div className="pb-3 border-b border-[#E5E5E5] flex items-center justify-between">
+                <div className="pb-3 border-b border-[#ebebeb] flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-black text-white text-xs font-semibold flex items-center justify-center uppercase">
+                    <div className="w-8 h-8 rounded-[6px] bg-[#171717] text-white text-xs font-mono flex items-center justify-center uppercase">
                       {session.first_name?.[0] || 'P'}
                     </div>
                     <div>
-                      <span className="text-[13px] font-semibold text-black block">
+                      <span className="text-[13px] font-medium text-[#171717] block">
                         {session.first_name}
                       </span>
-                      <span className="text-[11px] text-[#737373] font-mono">
+                      <span className="text-[11px] text-[#666666] font-mono">
                         Partner #{session.partner_code}
                       </span>
                     </div>
@@ -331,7 +331,7 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
                     type="button"
                     onClick={handleLogout}
                     disabled={loggingOut}
-                    className="text-xs text-black font-medium px-3 py-1.5 rounded-lg border border-[#E5E5E5] hover:bg-[#F5F5F5] transition-colors"
+                    className="text-xs text-[#171717] font-mono uppercase tracking-[0.071em] px-3 py-1.5 rounded-[6px] border border-[#ebebeb] hover:bg-[#fafafa] transition-colors"
                   >
                     {loggingOut ? 'Signing out...' : 'Log out'}
                   </button>
@@ -346,10 +346,10 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
                         key={item.href}
                         href={item.href}
                         onClick={() => setMobileMenuOpen(false)}
-                        className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
+                        className={`flex items-center gap-2 px-3 py-2 rounded-[6px] text-xs font-normal transition-colors ${
                           isActive 
-                            ? 'bg-black text-white' 
-                            : 'text-[#171717] hover:bg-[#F5F5F5] border border-[#E5E5E5]'
+                            ? 'bg-[#171717] text-white' 
+                            : 'text-[#171717] hover:bg-[#fafafa] border border-[#ebebeb]'
                         }`}
                       >
                         <Icon size={14} />
@@ -363,19 +363,19 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
                       setMobileMenuOpen(false);
                       handleOpenCalendar();
                     }}
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-[#171717] border border-[#E5E5E5] hover:bg-[#F5F5F5] text-left"
+                    className="flex items-center gap-2 px-3 py-2 rounded-[6px] text-xs font-normal text-[#171717] border border-[#ebebeb] hover:bg-[#fafafa] text-left"
                   >
-                    <CalendarDays size={14} className="text-[#737373]" />
+                    <CalendarDays size={14} className="text-[#666666]" />
                     <span>Calendar</span>
                   </button>
                 </div>
 
-                <div className="pt-2 border-t border-[#E5E5E5] flex items-center justify-between text-xs text-[#737373]">
+                <div className="pt-2 border-t border-[#ebebeb] flex items-center justify-between text-xs text-[#666666]">
                   <a
                     href="https://www.booktherapick.com"
                     target="_blank"
                     rel="noreferrer"
-                    className="flex items-center gap-1 hover:text-black font-medium"
+                    className="flex items-center gap-1 hover:text-[#171717] font-normal"
                   >
                     <span>Visit BookTherapick</span>
                     <ExternalLink size={11} />
@@ -384,7 +384,7 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
                     href="https://wa.me/6285174119423"
                     target="_blank"
                     rel="noreferrer"
-                    className="hover:text-black font-medium"
+                    className="hover:text-[#171717] font-normal"
                   >
                     WhatsApp Support
                   </a>
@@ -395,21 +395,21 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
                 <Link
                   href="/partners"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="block text-xs font-medium text-black py-2"
+                  className="block text-xs font-normal text-[#171717] py-2"
                 >
                   Program Overview
                 </Link>
                 <Link
                   href="/partners/login"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="block text-xs font-medium text-center text-black border border-[#E5E5E5] py-2.5 rounded-lg hover:bg-[#F5F5F5]"
+                  className="block text-xs font-mono uppercase tracking-[0.071em] text-center text-[#171717] border border-[#ebebeb] py-2.5 rounded-[6px] hover:bg-[#fafafa]"
                 >
                   Partner Log In
                 </Link>
                 <Link
                   href="/partners/register"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="block text-xs font-medium text-center text-white bg-black py-2.5 rounded-lg hover:bg-[#262626]"
+                  className="block text-xs font-mono uppercase tracking-[0.071em] text-center text-white bg-[#171717] py-2.5 rounded-[6px] hover:bg-black"
                 >
                   Join Therapick Partner Network
                 </Link>
@@ -425,75 +425,75 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
       {session && (
         <nav 
           aria-label="Mobile bottom navigation"
-          className="fixed bottom-0 inset-x-0 z-40 bg-white border-t border-[#E5E5E5] px-2 py-1 md:hidden pb-[max(0.6rem,env(safe-area-inset-bottom))] shadow-xs"
+          className="fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-md border-t border-[#ebebeb] px-2 py-1 md:hidden pb-[max(0.6rem,env(safe-area-inset-bottom))] shadow-xs"
         >
           <div className="grid grid-cols-5 items-center">
             {/* 1. Dashboard */}
             <Link
               href="/partners/dashboard"
-              className={`flex flex-col items-center justify-center min-h-[46px] py-1 rounded-lg transition-colors ${
+              className={`flex flex-col items-center justify-center min-h-[46px] py-1 rounded-[6px] transition-colors ${
                 pathname === '/partners/dashboard'
-                  ? 'text-black font-semibold'
-                  : 'text-[#737373] hover:text-black font-medium'
+                  ? 'text-[#171717] font-medium'
+                  : 'text-[#666666] hover:text-[#171717]'
               }`}
             >
-              <LayoutDashboard size={18} strokeWidth={pathname === '/partners/dashboard' ? 2.2 : 1.8} />
-              <span className="text-[10px] mt-0.5 tracking-tight">Overview</span>
+              <LayoutDashboard size={17} strokeWidth={pathname === '/partners/dashboard' ? 2 : 1.75} />
+              <span className="text-[10px] mt-0.5 tracking-tight font-mono">Overview</span>
             </Link>
 
             {/* 2. Payouts */}
             <Link
               href="/partners/payouts"
-              className={`flex flex-col items-center justify-center min-h-[46px] py-1 rounded-lg transition-colors ${
+              className={`flex flex-col items-center justify-center min-h-[46px] py-1 rounded-[6px] transition-colors ${
                 pathname === '/partners/payouts'
-                  ? 'text-black font-semibold'
-                  : 'text-[#737373] hover:text-black font-medium'
+                  ? 'text-[#171717] font-medium'
+                  : 'text-[#666666] hover:text-[#171717]'
               }`}
             >
-              <Wallet size={18} strokeWidth={pathname === '/partners/payouts' ? 2.2 : 1.8} />
-              <span className="text-[10px] mt-0.5 tracking-tight">Payouts</span>
+              <Wallet size={17} strokeWidth={pathname === '/partners/payouts' ? 2 : 1.75} />
+              <span className="text-[10px] mt-0.5 tracking-tight font-mono">Payouts</span>
             </Link>
 
             {/* 3. Calendar (Center Highlight Tab) */}
             <Link
               href="/partners/calendar"
               className={`flex flex-col items-center justify-center min-h-[46px] py-1 transition-all ${
-                pathname === '/partners/calendar' ? 'text-black font-semibold' : 'text-[#737373] hover:text-black'
+                pathname === '/partners/calendar' ? 'text-[#171717] font-medium' : 'text-[#666666] hover:text-[#171717]'
               }`}
             >
-              <div className={`relative p-1 rounded-lg border transition-colors ${
-                pathname === '/partners/calendar' ? 'bg-black text-white border-black' : 'bg-white border-[#E5E5E5] text-black'
+              <div className={`relative p-1 rounded-[6px] border transition-colors ${
+                pathname === '/partners/calendar' ? 'bg-[#171717] text-white border-[#171717]' : 'bg-white border-[#ebebeb] text-[#171717]'
               }`}>
-                <CalendarDays size={16} strokeWidth={2} />
-                <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 ring-1 ring-white" />
+                <CalendarDays size={15} strokeWidth={1.8} />
+                <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-[#297a3a] ring-1 ring-white" />
               </div>
-              <span className="text-[10px] mt-0.5 font-semibold tracking-tight">Calendar</span>
+              <span className="text-[10px] mt-0.5 font-mono tracking-tight">Calendar</span>
             </Link>
 
             {/* 4. Ledger (Commissions) */}
             <Link
               href="/partners/commissions"
-              className={`flex flex-col items-center justify-center min-h-[46px] py-1 rounded-lg transition-colors ${
+              className={`flex flex-col items-center justify-center min-h-[46px] py-1 rounded-[6px] transition-colors ${
                 pathname === '/partners/commissions'
-                  ? 'text-black font-semibold'
-                  : 'text-[#737373] hover:text-black font-medium'
+                  ? 'text-[#171717] font-medium'
+                  : 'text-[#666666] hover:text-[#171717]'
               }`}
             >
-              <Receipt size={18} strokeWidth={pathname === '/partners/commissions' ? 2.2 : 1.8} />
-              <span className="text-[10px] mt-0.5 tracking-tight">Ledger</span>
+              <Receipt size={17} strokeWidth={pathname === '/partners/commissions' ? 2 : 1.75} />
+              <span className="text-[10px] mt-0.5 tracking-tight font-mono">Ledger</span>
             </Link>
 
             {/* 5. Profile */}
             <Link
               href="/partners/profile"
-              className={`flex flex-col items-center justify-center min-h-[46px] py-1 rounded-lg transition-colors ${
+              className={`flex flex-col items-center justify-center min-h-[46px] py-1 rounded-[6px] transition-colors ${
                 pathname === '/partners/profile'
-                  ? 'text-black font-semibold'
-                  : 'text-[#737373] hover:text-black font-medium'
+                  ? 'text-[#171717] font-medium'
+                  : 'text-[#666666] hover:text-[#171717]'
               }`}
             >
-              <User size={18} strokeWidth={pathname === '/partners/profile' ? 2.2 : 1.8} />
-              <span className="text-[10px] mt-0.5 tracking-tight">Profile</span>
+              <User size={17} strokeWidth={pathname === '/partners/profile' ? 2 : 1.75} />
+              <span className="text-[10px] mt-0.5 tracking-tight font-mono">Profile</span>
             </Link>
           </div>
         </nav>

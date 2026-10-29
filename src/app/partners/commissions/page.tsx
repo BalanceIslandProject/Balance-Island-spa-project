@@ -150,24 +150,24 @@ export default function PartnerCommissionsPage() {
   const hasDateFilter = Boolean(startDate || endDate);
 
   return (
-    <div className="space-y-5 w-full pb-12 font-sans">
+    <div className="space-y-4 w-full pb-12 font-sans">
       {/* Filter Controls Toolbar Card */}
-      <div className="bg-white border border-[#E5E5E5] rounded-xl p-4 sm:p-5 space-y-4">
+      <div className="bg-white border border-[#ebebeb] rounded-[6px] p-4 sm:p-5 space-y-4 shadow-[0_0_0_1px_rgba(0,0,0,0.04)]">
         
         {/* CRM Filter Controls: Status Tabs on Left, Date Filter on Right */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           {/* Status Filter Tabs */}
           <div className="w-full sm:w-auto overflow-x-auto no-scrollbar">
-            <div className="inline-flex items-center gap-1 p-1 rounded-lg bg-[#F5F5F5] border border-[#E5E5E5] text-xs min-w-max">
+            <div className="inline-flex items-center gap-1 p-1 rounded-[6px] bg-[#fafafa] border border-[#ebebeb] text-xs min-w-max">
               {['all', 'approved', 'pending', 'paid', 'cancelled'].map((s) => (
                 <button
                   type="button"
                   key={s}
                   onClick={() => setFilterStatus(s)}
-                  className={`px-3 py-1.5 rounded-md capitalize font-semibold transition-all whitespace-nowrap cursor-pointer text-xs ${
+                  className={`px-3 py-1 rounded-[4px] capitalize font-medium transition-all whitespace-nowrap cursor-pointer text-xs ${
                     filterStatus === s
-                      ? 'bg-black text-white shadow-xs'
-                      : 'text-[#737373] hover:text-black'
+                      ? 'bg-[#171717] text-white shadow-xs'
+                      : 'text-[#666666] hover:text-[#171717]'
                   }`}
                 >
                   {s}
@@ -181,10 +181,10 @@ export default function PartnerCommissionsPage() {
             <button
               type="button"
               onClick={() => setShowCalendarFilter(!showCalendarFilter)}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all cursor-pointer ${
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] border text-xs font-medium transition-all cursor-pointer ${
                 hasDateFilter || showCalendarFilter
-                  ? 'bg-black text-white border-black'
-                  : 'bg-white text-black border-[#E5E5E5] hover:bg-[#F5F5F5]'
+                  ? 'bg-[#171717] text-white border-[#171717]'
+                  : 'bg-white text-[#171717] border-[#ebebeb] hover:bg-[#fafafa]'
               }`}
             >
               <CalendarDays size={13} />
@@ -207,7 +207,7 @@ export default function PartnerCommissionsPage() {
                 loadCommissions();
               }}
               disabled={loading}
-              className="p-1.5 text-black hover:bg-[#F5F5F5] rounded-lg transition-colors cursor-pointer border border-[#E5E5E5]"
+              className="p-1.5 text-[#171717] hover:bg-[#fafafa] rounded-[6px] transition-colors cursor-pointer border border-[#ebebeb]"
               title="Refresh commissions"
               aria-label="Refresh"
             >
@@ -218,7 +218,7 @@ export default function PartnerCommissionsPage() {
               <button
                 type="button"
                 onClick={handleResetDate}
-                className="p-1.5 rounded-lg bg-[#F5F5F5] hover:bg-[#E5E5E5] text-[#737373] hover:text-black border border-[#E5E5E5] transition-colors cursor-pointer"
+                className="p-1.5 rounded-[6px] bg-[#fafafa] hover:bg-[#ebebeb] text-[#666666] hover:text-[#171717] border border-[#ebebeb] transition-colors cursor-pointer"
                 title="Reset Date Filter"
               >
                 <RotateCcw size={13} />
@@ -229,17 +229,17 @@ export default function PartnerCommissionsPage() {
 
         {/* Expandable Calendar Date Filter Panel */}
         {showCalendarFilter && (
-          <div className="p-4 rounded-xl bg-[#FAFAFA] border border-[#E5E5E5] space-y-3 animate-in fade-in-50 duration-200">
+          <div className="p-4 rounded-[6px] bg-[#fafafa] border border-[#ebebeb] space-y-3 animate-in fade-in-50 duration-200">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wider text-[#737373] flex items-center gap-1.5">
-                <CalendarIcon size={13} className="text-[#737373]" />
+              <span className="font-mono text-[11px] font-medium uppercase tracking-[0.071em] text-[#666666] flex items-center gap-1.5">
+                <CalendarIcon size={13} className="text-[#666666]" />
                 <span>Track Commissions by Date</span>
               </span>
               {hasDateFilter && (
                 <button
                   type="button"
                   onClick={handleResetDate}
-                  className="text-xs font-semibold text-[#737373] hover:text-black flex items-center gap-1 cursor-pointer"
+                  className="font-mono text-[11px] uppercase tracking-[0.071em] text-[#666666] hover:text-[#171717] flex items-center gap-1 cursor-pointer"
                 >
                   <X size={12} />
                   <span>Clear Dates</span>
@@ -253,10 +253,10 @@ export default function PartnerCommissionsPage() {
                 <button
                   type="button"
                   onClick={handleResetDate}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer border ${
+                  className={`px-3 py-1.5 rounded-[6px] text-xs font-medium transition-all cursor-pointer border ${
                     !hasDateFilter
-                      ? 'bg-black text-white border-black'
-                      : 'bg-white text-[#737373] border-[#E5E5E5] hover:text-black hover:border-black'
+                      ? 'bg-[#171717] text-white border-[#171717]'
+                      : 'bg-white text-[#666666] border-[#ebebeb] hover:text-[#171717] hover:border-[#171717]'
                   }`}
                 >
                   All Time
@@ -264,10 +264,10 @@ export default function PartnerCommissionsPage() {
                 <button
                   type="button"
                   onClick={handleSetThisMonth}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer border ${
+                  className={`px-3 py-1.5 rounded-[6px] text-xs font-medium transition-all cursor-pointer border ${
                     activeDatePreset === 'this_month' && hasDateFilter
-                      ? 'bg-black text-white border-black'
-                      : 'bg-white text-[#737373] border-[#E5E5E5] hover:text-black hover:border-black'
+                      ? 'bg-[#171717] text-white border-[#171717]'
+                      : 'bg-white text-[#666666] border-[#ebebeb] hover:text-[#171717] hover:border-[#171717]'
                   }`}
                 >
                   This Month
@@ -275,10 +275,10 @@ export default function PartnerCommissionsPage() {
                 <button
                   type="button"
                   onClick={handleSetLastMonth}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer border ${
+                  className={`px-3 py-1.5 rounded-[6px] text-xs font-medium transition-all cursor-pointer border ${
                     activeDatePreset === 'last_month' && hasDateFilter
-                      ? 'bg-black text-white border-black'
-                      : 'bg-white text-[#737373] border-[#E5E5E5] hover:text-black hover:border-black'
+                      ? 'bg-[#171717] text-white border-[#171717]'
+                      : 'bg-white text-[#666666] border-[#ebebeb] hover:text-[#171717] hover:border-[#171717]'
                   }`}
                 >
                   Last Month
@@ -286,10 +286,10 @@ export default function PartnerCommissionsPage() {
                 <button
                   type="button"
                   onClick={handleSetLast30Days}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer border ${
+                  className={`px-3 py-1.5 rounded-[6px] text-xs font-medium transition-all cursor-pointer border ${
                     activeDatePreset === 'last_30_days' && hasDateFilter
-                      ? 'bg-black text-white border-black'
-                      : 'bg-white text-[#737373] border-[#E5E5E5] hover:text-black hover:border-black'
+                      ? 'bg-[#171717] text-white border-[#171717]'
+                      : 'bg-white text-[#666666] border-[#ebebeb] hover:text-[#171717] hover:border-[#171717]'
                   }`}
                 >
                   Last 30 Days
@@ -300,7 +300,7 @@ export default function PartnerCommissionsPage() {
             {/* From & To Custom Inputs */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
               <div>
-                <label className="block text-[11px] font-semibold text-[#737373] uppercase tracking-wider mb-1">
+                <label className="block font-mono text-[11px] font-medium text-[#666666] uppercase tracking-[0.071em] mb-1">
                   From Date
                 </label>
                 <input
@@ -310,12 +310,12 @@ export default function PartnerCommissionsPage() {
                     setStartDate(e.target.value);
                     setActiveDatePreset('custom');
                   }}
-                  className="w-full px-3 py-2 rounded-lg border border-[#E5E5E5] text-xs font-medium text-black bg-white focus:outline-none focus:border-black"
+                  className="w-full px-3 py-2 rounded-[6px] border border-[#ebebeb] text-xs font-medium text-[#171717] bg-white focus:outline-none focus:border-[#171717]"
                 />
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold text-[#737373] uppercase tracking-wider mb-1">
+                <label className="block font-mono text-[11px] font-medium text-[#666666] uppercase tracking-[0.071em] mb-1">
                   To Date
                 </label>
                 <input
@@ -325,7 +325,7 @@ export default function PartnerCommissionsPage() {
                     setEndDate(e.target.value);
                     setActiveDatePreset('custom');
                   }}
-                  className="w-full px-3 py-2 rounded-lg border border-[#E5E5E5] text-xs font-medium text-black bg-white focus:outline-none focus:border-black"
+                  className="w-full px-3 py-2 rounded-[6px] border border-[#ebebeb] text-xs font-medium text-[#171717] bg-white focus:outline-none focus:border-[#171717]"
                 />
               </div>
             </div>
@@ -335,56 +335,56 @@ export default function PartnerCommissionsPage() {
 
       {/* Summary Metrics Row */}
       <div className="grid grid-cols-2 gap-3 sm:gap-4">
-        <div className="p-4 rounded-xl bg-white border border-[#E5E5E5] space-y-1">
+        <div className="p-4 rounded-[6px] bg-white border border-[#ebebeb] space-y-1 shadow-[0_0_0_1px_rgba(0,0,0,0.04)]">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#737373]">
+            <span className="font-mono text-[11px] font-medium uppercase tracking-[0.071em] text-[#666666]">
               Filtered Records
             </span>
             {hasDateFilter && (
-              <span className="text-[10px] font-semibold bg-[#F5F5F5] text-black px-1.5 py-0.5 rounded border border-[#E5E5E5]">
+              <span className="font-mono text-[10px] font-medium bg-[#fafafa] text-[#171717] px-1.5 py-0.5 rounded-[4px] border border-[#ebebeb]">
                 Custom Date
               </span>
             )}
           </div>
-          <div className="text-xl sm:text-2xl font-bold text-black font-mono tabular-nums">
+          <div className="text-xl sm:text-2xl font-bold text-[#171717] font-mono tabular-nums">
             {filtered.length}
           </div>
         </div>
 
-        <div className="p-4 rounded-xl bg-white border border-[#E5E5E5] space-y-1">
+        <div className="p-4 rounded-[6px] bg-white border border-[#ebebeb] space-y-1 shadow-[0_0_0_1px_rgba(0,0,0,0.04)]">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#737373]">
+            <span className="font-mono text-[11px] font-medium uppercase tracking-[0.071em] text-[#666666]">
               Filtered Earnings
             </span>
-            <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+            <span className="font-mono text-[10px] font-medium text-[#297a3a] bg-[#297a3a]/10 px-2 py-0.5 rounded-[4px] border border-[#297a3a]/20">
               Attributed
             </span>
           </div>
-          <div className="text-xl sm:text-2xl font-bold text-emerald-700 font-mono tabular-nums">
+          <div className="text-xl sm:text-2xl font-bold text-[#297a3a] font-mono tabular-nums">
             {formatIDR(totalFilteredCommission)}
           </div>
         </div>
       </div>
 
       {/* Main Ledger Table / Cards */}
-      <div className="border border-[#E5E5E5] rounded-xl bg-white overflow-hidden">
+      <div className="border border-[#ebebeb] rounded-[6px] bg-white overflow-hidden shadow-[0_0_0_1px_rgba(0,0,0,0.04)]">
         {loading ? (
           <div className="p-16 text-center space-y-3">
-            <div className="w-6 h-6 border-2 border-black border-t-transparent rounded-full animate-spin mx-auto" />
-            <div className="text-xs text-[#737373] font-medium">Loading ledger records...</div>
+            <div className="w-5 h-5 border-2 border-[#171717] border-t-transparent rounded-full animate-spin mx-auto" />
+            <div className="font-mono text-xs text-[#666666]">Loading ledger records...</div>
           </div>
         ) : filtered.length === 0 ? (
           <div className="p-12 text-center space-y-2">
-            <Receipt size={24} className="mx-auto text-[#737373]/40" />
-            <p className="text-sm font-semibold text-black">No commission records found.</p>
-            <p className="text-xs text-[#737373] max-w-sm mx-auto">
+            <Receipt size={24} className="mx-auto text-[#a8a8a8]" />
+            <p className="text-sm font-semibold text-[#171717]">No commission records found.</p>
+            <p className="text-xs text-[#666666] max-w-sm mx-auto">
               Any commissions matching the selected status and calendar date filter will appear here.
             </p>
           </div>
         ) : (
           <>
             {/* Mobile Card View (< 640px) */}
-            <div className="block sm:hidden divide-y divide-[#E5E5E5]">
+            <div className="block sm:hidden divide-y divide-[#ebebeb]">
               {filtered.map((item) => {
                 const isPaid = item.payment_status === 'paid' || item.payment_verified;
                 const isApproved = item.status === 'approved';
@@ -394,23 +394,23 @@ export default function PartnerCommissionsPage() {
                   <div key={item.id} className="p-4 space-y-2.5">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div className="flex items-center gap-1.5">
-                        <span className="font-mono font-bold text-xs text-black bg-[#F5F5F5] px-2 py-0.5 rounded border border-[#E5E5E5]">
+                        <span className="font-mono font-medium text-xs text-[#171717] bg-[#fafafa] px-2 py-0.5 rounded-[4px] border border-[#ebebeb]">
                           #{item.booking_id}
                         </span>
 
                         {/* Payment Label: Paid / Unpaid */}
                         {isPaid ? (
-                          <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                          <span className="font-mono text-[10px] font-medium text-[#297a3a] bg-[#297a3a]/10 px-2 py-0.5 rounded-[4px] border border-[#297a3a]/20">
                             Paid
                           </span>
                         ) : (
-                          <span className="text-[10px] font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                          <span className="font-mono text-[10px] font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded-[4px] border border-amber-200">
                             Unpaid
                           </span>
                         )}
                       </div>
 
-                      <span className="text-xs text-[#737373]">
+                      <span className="font-mono text-xs text-[#666666]">
                         {new Date(item.created_at).toLocaleDateString('en-GB', {
                           day: 'numeric',
                           month: 'short',
@@ -421,65 +421,65 @@ export default function PartnerCommissionsPage() {
 
                     {/* Treatment Name & Status */}
                     <div className="flex items-center justify-between text-xs gap-2">
-                      <p className="text-black truncate font-medium">
+                      <p className="text-[#171717] truncate font-medium">
                         {item.guest_name} • {item.treatment_name || 'Spa Treatment'}
                       </p>
 
                       {/* Treatment Status Label */}
                       {isCancelled ? (
-                        <span className="text-[10px] font-semibold text-red-600 bg-red-50 px-2 py-0.5 rounded-md border border-red-200 whitespace-nowrap">
+                        <span className="font-mono text-[10px] font-medium text-red-600 bg-red-50 px-2 py-0.5 rounded-[4px] border border-red-200 whitespace-nowrap">
                           Cancelled
                         </span>
                       ) : item.booking_status === 'Ongoing' || item.treatment_status === 'Ongoing' ? (
-                        <span className="text-[10px] font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-200 flex items-center gap-1 whitespace-nowrap">
+                        <span className="font-mono text-[10px] font-medium text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-[4px] border border-indigo-200 flex items-center gap-1 whitespace-nowrap">
                           <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
                           Ongoing
                         </span>
                       ) : item.booking_status === 'Completed' || item.treatment_status === 'Finish' || item.service_completed ? (
-                        <span className="text-[10px] font-semibold text-teal-700 bg-teal-50 px-2 py-0.5 rounded-md border border-teal-200 whitespace-nowrap">
+                        <span className="font-mono text-[10px] font-medium text-[#297a3a] bg-[#297a3a]/10 px-2 py-0.5 rounded-[4px] border border-[#297a3a]/20 whitespace-nowrap">
                           Finish
                         </span>
                       ) : item.booking_status === 'Confirmed' ? (
-                        <span className="text-[10px] font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200 whitespace-nowrap">
+                        <span className="font-mono text-[10px] font-medium text-blue-700 bg-blue-50 px-2 py-0.5 rounded-[4px] border border-blue-200 whitespace-nowrap">
                           Confirmed
                         </span>
                       ) : (
-                        <span className="text-[10px] font-semibold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200 whitespace-nowrap">
+                        <span className="font-mono text-[10px] font-medium text-amber-800 bg-amber-50 px-2 py-0.5 rounded-[4px] border border-amber-200 whitespace-nowrap">
                           Awaiting Treatment
                         </span>
                       )}
                     </div>
 
-                    <div className="flex items-center justify-between text-xs pt-1 border-t border-[#E5E5E5]">
+                    <div className="flex items-center justify-between text-xs pt-1 border-t border-[#ebebeb]">
                       <div>
-                        <span className="text-[10px] text-[#737373] uppercase font-semibold block">Treatment Net</span>
-                        <span className="font-semibold text-black font-mono tabular-nums">{formatIDR(item.eligible_treatment_amount)}</span>
+                        <span className="font-mono text-[10px] text-[#666666] uppercase block">Treatment Net</span>
+                        <span className="font-semibold text-[#171717] font-mono tabular-nums">{formatIDR(item.eligible_treatment_amount)}</span>
                       </div>
 
                       <div className="text-right">
-                        <span className="text-[10px] text-emerald-700 uppercase font-semibold block">Commission ({item.commission_rate_pct}%)</span>
-                        <span className={`text-xs font-bold font-mono tabular-nums ${isCancelled ? 'line-through text-[#737373]' : 'text-emerald-700'}`}>
+                        <span className="font-mono text-[10px] text-[#297a3a] uppercase block">Commission ({item.commission_rate_pct}%)</span>
+                        <span className={`text-xs font-bold font-mono tabular-nums ${isCancelled ? 'line-through text-[#8f8f8f]' : 'text-[#297a3a]'}`}>
                           {isCancelled ? 'IDR 0' : `+${formatIDR(item.commission_amount)}`}
                         </span>
                       </div>
                     </div>
 
-                    <div className="pt-2 border-t border-[#E5E5E5] flex items-center justify-between">
+                    <div className="pt-2 border-t border-[#ebebeb] flex items-center justify-between">
                       {/* Commission Status */}
                       {isCancelled ? (
-                        <span className="text-[10px] font-semibold text-[#737373] bg-[#F5F5F5] px-2 py-0.5 rounded-md border border-[#E5E5E5]">
+                        <span className="font-mono text-[10px] font-medium text-[#666666] bg-[#fafafa] px-2 py-0.5 rounded-[4px] border border-[#ebebeb]">
                           Cancelled
                         </span>
                       ) : item.status === 'paid' ? (
-                        <span className="text-[10px] font-semibold text-white bg-black px-2 py-0.5 rounded-md inline-flex items-center gap-1">
+                        <span className="font-mono text-[10px] font-medium text-white bg-[#171717] px-2 py-0.5 rounded-[4px] inline-flex items-center gap-1">
                           ✓ Paid Out
                         </span>
                       ) : isApproved ? (
-                        <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                        <span className="font-mono text-[10px] font-medium text-[#297a3a] bg-[#297a3a]/10 px-2 py-0.5 rounded-[4px] border border-[#297a3a]/20">
                           Approved
                         </span>
                       ) : (
-                        <span className="text-[10px] font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                        <span className="font-mono text-[10px] font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded-[4px] border border-amber-200">
                           Pending
                         </span>
                       )}
@@ -487,10 +487,10 @@ export default function PartnerCommissionsPage() {
                       <Link
                         href={`/invoice/${item.booking_id}`}
                         target="_blank"
-                        className="inline-flex items-center gap-1 font-semibold text-xs text-black hover:underline"
+                        className="inline-flex items-center gap-1 font-semibold text-xs text-[#171717] hover:underline"
                       >
                         <span>Invoice</span>
-                        <ExternalLink size={11} className="text-[#737373]" />
+                        <ExternalLink size={11} className="text-[#666666]" />
                       </Link>
                     </div>
                   </div>
@@ -501,7 +501,7 @@ export default function PartnerCommissionsPage() {
             {/* Desktop Table View (>= 640px) */}
             <div className="hidden sm:block overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-[#FAFAFA] border-b border-[#E5E5E5] text-[11px] font-semibold uppercase tracking-wider text-[#737373]">
+                <thead className="bg-[#fafafa] border-b border-[#ebebeb] font-mono text-[11px] font-medium uppercase tracking-[0.071em] text-[#666666]">
                   <tr>
                     <th className="py-3 px-4">Date</th>
                     <th className="py-3 px-4">Booking Ref</th>
@@ -514,15 +514,15 @@ export default function PartnerCommissionsPage() {
                     <th className="py-3 px-4 text-right">Invoice</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#E5E5E5]">
+                <tbody className="divide-y divide-[#ebebeb]">
                   {filtered.map((item) => {
                     const isPaid = item.payment_status === 'paid' || item.payment_verified;
                     const isApproved = item.status === 'approved';
                     const isCancelled = item.status === 'cancelled' || item.booking_status === 'Cancelled';
 
                     return (
-                      <tr key={item.id} className="hover:bg-[#F9FAFB] transition-colors">
-                        <td className="py-3.5 px-4 text-[#737373]">
+                      <tr key={item.id} className="hover:bg-[#fafafa] transition-colors">
+                        <td className="py-3.5 px-4 font-mono text-[#666666]">
                           {new Date(item.created_at).toLocaleDateString('en-GB', {
                             day: 'numeric',
                             month: 'short',
@@ -533,75 +533,75 @@ export default function PartnerCommissionsPage() {
                           <Link
                             href={`/invoice/${item.booking_id}`}
                             target="_blank"
-                            className="inline-flex items-center gap-1 font-mono font-bold text-black hover:underline group"
+                            className="inline-flex items-center gap-1 font-mono font-bold text-[#171717] hover:underline group"
                             title="View treatment & invoice details"
                           >
                             <span>#{item.booking_id}</span>
-                            <ExternalLink size={10} className="text-[#737373] group-hover:text-black transition-colors" />
+                            <ExternalLink size={10} className="text-[#8f8f8f] group-hover:text-[#171717] transition-colors" />
                           </Link>
                         </td>
                         <td className="py-3.5 px-4">
-                          <div className="font-semibold text-black">{item.guest_name}</div>
-                          <div className="text-[11px] text-[#737373] truncate max-w-[160px]">{item.treatment_name || 'Spa Treatment'}</div>
+                          <div className="font-medium text-[#171717]">{item.guest_name}</div>
+                          <div className="text-[11px] text-[#666666] truncate max-w-[160px]">{item.treatment_name || 'Spa Treatment'}</div>
                         </td>
                         <td className="py-3.5 px-4">
                           {isPaid ? (
-                            <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                            <span className="font-mono text-[10px] font-medium text-[#297a3a] bg-[#297a3a]/10 px-2 py-0.5 rounded-[4px] border border-[#297a3a]/20">
                               Paid
                             </span>
                           ) : (
-                            <span className="text-[10px] font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                            <span className="font-mono text-[10px] font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded-[4px] border border-amber-200">
                               Unpaid
                             </span>
                           )}
                         </td>
                         <td className="py-3.5 px-4">
                           {isCancelled ? (
-                            <span className="text-[10px] font-semibold text-red-600 bg-red-50 px-2 py-0.5 rounded-md border border-red-200">
+                            <span className="font-mono text-[10px] font-medium text-red-600 bg-red-50 px-2 py-0.5 rounded-[4px] border border-red-200">
                               Cancelled
                             </span>
                           ) : item.booking_status === 'Ongoing' || item.treatment_status === 'Ongoing' ? (
-                            <span className="text-[10px] font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-200 flex items-center gap-1">
+                            <span className="font-mono text-[10px] font-medium text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-[4px] border border-indigo-200 flex items-center gap-1">
                               <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
                               Ongoing
                             </span>
                           ) : item.booking_status === 'Completed' || item.treatment_status === 'Finish' || item.service_completed ? (
-                            <span className="text-[10px] font-semibold text-teal-700 bg-teal-50 px-2 py-0.5 rounded-md border border-teal-200">
+                            <span className="font-mono text-[10px] font-medium text-[#297a3a] bg-[#297a3a]/10 px-2 py-0.5 rounded-[4px] border border-[#297a3a]/20">
                               Finish
                             </span>
                           ) : item.booking_status === 'Confirmed' ? (
-                            <span className="text-[10px] font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200">
+                            <span className="font-mono text-[10px] font-medium text-blue-700 bg-blue-50 px-2 py-0.5 rounded-[4px] border border-blue-200">
                               Confirmed
                             </span>
                           ) : (
-                            <span className="text-[10px] font-semibold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                            <span className="font-mono text-[10px] font-medium text-amber-800 bg-amber-50 px-2 py-0.5 rounded-[4px] border border-amber-200">
                               Awaiting Treatment
                             </span>
                           )}
                         </td>
-                        <td className="py-3.5 px-4 font-medium text-black font-mono tabular-nums">
+                        <td className="py-3.5 px-4 font-medium text-[#171717] font-mono tabular-nums">
                           {formatIDR(item.eligible_treatment_amount)}
                         </td>
                         <td className="py-3.5 px-4 font-bold font-mono tabular-nums">
-                          <span className={isCancelled ? 'line-through text-[#737373]' : 'text-emerald-700'}>
+                          <span className={isCancelled ? 'line-through text-[#8f8f8f]' : 'text-[#297a3a]'}>
                             {isCancelled ? 'IDR 0' : `+${formatIDR(item.commission_amount)}`}
                           </span>
                         </td>
                         <td className="py-3.5 px-4">
                           {isCancelled ? (
-                            <span className="text-[10px] font-semibold text-[#737373] bg-[#F5F5F5] px-2 py-0.5 rounded-md border border-[#E5E5E5]">
+                            <span className="font-mono text-[10px] font-medium text-[#666666] bg-[#fafafa] px-2 py-0.5 rounded-[4px] border border-[#ebebeb]">
                               Cancelled
                             </span>
                           ) : item.status === 'paid' ? (
-                            <span className="text-[10px] font-semibold text-white bg-black px-2 py-0.5 rounded-md inline-flex items-center gap-1">
+                            <span className="font-mono text-[10px] font-medium text-white bg-[#171717] px-2 py-0.5 rounded-[4px] inline-flex items-center gap-1">
                               ✓ Paid Out
                             </span>
                           ) : isApproved ? (
-                            <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                            <span className="font-mono text-[10px] font-medium text-[#297a3a] bg-[#297a3a]/10 px-2 py-0.5 rounded-[4px] border border-[#297a3a]/20">
                               Approved
                             </span>
                           ) : (
-                            <span className="text-[10px] font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                            <span className="font-mono text-[10px] font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded-[4px] border border-amber-200">
                               Pending
                             </span>
                           )}
@@ -610,10 +610,10 @@ export default function PartnerCommissionsPage() {
                           <Link
                             href={`/invoice/${item.booking_id}`}
                             target="_blank"
-                            className="text-black font-semibold hover:underline inline-flex items-center gap-1"
+                            className="text-[#171717] font-medium hover:underline inline-flex items-center gap-1"
                           >
                             <span>Invoice</span>
-                            <ExternalLink size={10} className="text-[#737373]" />
+                            <ExternalLink size={10} className="text-[#666666]" />
                           </Link>
                         </td>
                       </tr>

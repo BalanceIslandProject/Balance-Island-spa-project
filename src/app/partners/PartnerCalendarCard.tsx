@@ -232,22 +232,22 @@ export default function PartnerCalendarCard({ bookings = [], className = '' }: P
   }, [displayedBookings]);
 
   return (
-    <div className={`bg-white border border-[#E5E5E5] rounded-xl overflow-hidden flex flex-col font-sans transition-all ${className}`}>
+    <div className={`bg-white border border-[#ebebeb] rounded-[6px] overflow-hidden flex flex-col font-sans transition-all shadow-[0_0_0_1px_rgba(0,0,0,0.04)] ${className}`}>
       
       {/* ─── 1. Header ─── */}
-      <div className="p-4 sm:p-5 border-b border-[#E5E5E5] bg-white space-y-3.5">
+      <div className="p-4 sm:p-5 border-b border-[#ebebeb] bg-white space-y-3.5">
         
         {/* Row 1: Month/Year Title + Navigation Controls */}
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5 min-w-0">
-            <span className="p-2 rounded-lg bg-[#F5F5F5] border border-[#E5E5E5] text-black shrink-0">
+            <span className="p-2 rounded-[6px] bg-[#fafafa] border border-[#ebebeb] text-[#171717] shrink-0">
               <CalendarDays size={18} />
             </span>
             <div className="min-w-0">
-              <h3 className="text-base sm:text-lg font-bold text-black tracking-tight truncate">
+              <h3 className="text-base sm:text-lg font-bold text-[#171717] tracking-tight truncate">
                 {MONTH_NAMES[currentMonth]} {currentYear}
               </h3>
-              <p className="text-xs text-[#737373] hidden sm:block">
+              <p className="font-mono text-xs text-[#666666] hidden sm:block">
                 Appointments & Bookings Schedule
               </p>
             </div>
@@ -258,16 +258,16 @@ export default function PartnerCalendarCard({ bookings = [], className = '' }: P
             <button
               type="button"
               onClick={goToToday}
-              className="px-2.5 py-1 text-xs font-semibold rounded-lg border border-[#E5E5E5] bg-white text-black hover:bg-[#F5F5F5] transition-colors cursor-pointer"
+              className="px-2.5 py-1 text-xs font-medium rounded-[6px] border border-[#ebebeb] bg-white text-[#171717] hover:bg-[#fafafa] transition-colors cursor-pointer"
               title="Jump to today"
             >
               Today
             </button>
-            <div className="flex items-center border border-[#E5E5E5] rounded-lg overflow-hidden bg-white">
+            <div className="flex items-center border border-[#ebebeb] rounded-[6px] overflow-hidden bg-white">
               <button
                 type="button"
                 onClick={goToPrevMonth}
-                className="p-1.5 hover:bg-[#F5F5F5] text-[#737373] hover:text-black transition-colors cursor-pointer"
+                className="p-1.5 hover:bg-[#fafafa] text-[#666666] hover:text-[#171717] transition-colors cursor-pointer"
                 aria-label="Previous month"
               >
                 <ChevronLeft size={16} />
@@ -275,7 +275,7 @@ export default function PartnerCalendarCard({ bookings = [], className = '' }: P
               <button
                 type="button"
                 onClick={goToNextMonth}
-                className="p-1.5 hover:bg-[#F5F5F5] text-[#737373] hover:text-black transition-colors border-l border-[#E5E5E5] cursor-pointer"
+                className="p-1.5 hover:bg-[#fafafa] text-[#666666] hover:text-[#171717] transition-colors border-l border-[#ebebeb] cursor-pointer"
                 aria-label="Next month"
               >
                 <ChevronRight size={16} />
@@ -285,17 +285,17 @@ export default function PartnerCalendarCard({ bookings = [], className = '' }: P
         </div>
 
         {/* Row 2: Month Booking Counter Badge & Month Commission Total */}
-        <div className="flex items-center justify-between gap-2 pt-1 border-t border-[#E5E5E5]">
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#F5F5F5] border border-[#E5E5E5] shrink-0">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-black whitespace-nowrap">
+        <div className="flex items-center justify-between gap-2 pt-1 border-t border-[#ebebeb]">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[4px] bg-[#fafafa] border border-[#ebebeb] shrink-0">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#297a3a] shrink-0" />
+            <span className="font-mono text-[10px] font-medium uppercase tracking-[0.071em] text-[#171717] whitespace-nowrap">
               TOTAL: {monthStats.count} {monthStats.count === 1 ? 'BOOKING' : 'BOOKINGS'}
             </span>
           </div>
 
           <div className="text-right flex items-baseline gap-1.5 shrink-0">
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-[#737373]">Month Total:</span>
-            <span className="text-sm sm:text-base font-bold text-emerald-700 font-mono tabular-nums">
+            <span className="font-mono text-[10px] uppercase tracking-[0.071em] text-[#666666]">Month Total:</span>
+            <span className="text-sm sm:text-base font-bold text-[#297a3a] font-mono tabular-nums">
               {formatIDR(monthStats.totalCommission)}
             </span>
           </div>
@@ -303,14 +303,14 @@ export default function PartnerCalendarCard({ bookings = [], className = '' }: P
 
         {/* Row 3: Segmented View Toggle (Month / Week) & Clear Filter */}
         <div className="flex items-center justify-between gap-2 pt-0.5">
-          <div className="inline-flex p-0.5 rounded-lg bg-[#F5F5F5] border border-[#E5E5E5] text-xs">
+          <div className="inline-flex p-0.5 rounded-[6px] bg-[#fafafa] border border-[#ebebeb] text-xs">
             <button
               type="button"
               onClick={() => setViewMode('month')}
-              className={`px-3 py-1 rounded-md font-semibold transition-all cursor-pointer ${
+              className={`px-3 py-1 rounded-[4px] font-medium transition-all cursor-pointer ${
                 viewMode === 'month'
-                  ? 'bg-black text-white shadow-xs'
-                  : 'text-[#737373] hover:text-black'
+                  ? 'bg-[#171717] text-white shadow-xs'
+                  : 'text-[#666666] hover:text-[#171717]'
               }`}
             >
               Month View
@@ -318,10 +318,10 @@ export default function PartnerCalendarCard({ bookings = [], className = '' }: P
             <button
               type="button"
               onClick={() => setViewMode('week')}
-              className={`px-3 py-1 rounded-md font-semibold transition-all cursor-pointer ${
+              className={`px-3 py-1 rounded-[4px] font-medium transition-all cursor-pointer ${
                 viewMode === 'week'
-                  ? 'bg-black text-white shadow-xs'
-                  : 'text-[#737373] hover:text-black'
+                  ? 'bg-[#171717] text-white shadow-xs'
+                  : 'text-[#666666] hover:text-[#171717]'
               }`}
             >
               Week View
@@ -332,7 +332,7 @@ export default function PartnerCalendarCard({ bookings = [], className = '' }: P
             <button
               type="button"
               onClick={() => setSelectedDate(null)}
-              className="text-xs font-semibold text-black hover:underline px-2 py-1 cursor-pointer"
+              className="font-mono text-xs font-medium text-[#171717] hover:underline px-2 py-1 cursor-pointer"
             >
               Clear Date Filter
             </button>
@@ -342,16 +342,16 @@ export default function PartnerCalendarCard({ bookings = [], className = '' }: P
       </div>
 
       {/* ─── 2. Interactive Calendar Grid Area ─── */}
-      <div className="p-4 sm:p-5 border-b border-[#E5E5E5] bg-[#FAFAFA]">
+      <div className="p-4 sm:p-5 border-b border-[#ebebeb] bg-[#fafafa]">
         {viewMode === 'month' ? (
           /* Month Calendar Grid */
-          <div className="bg-white rounded-xl border border-[#E5E5E5] p-3 sm:p-4">
+          <div className="bg-white rounded-[6px] border border-[#ebebeb] p-3 sm:p-4 shadow-[0_0_0_1px_rgba(0,0,0,0.02)]">
             {/* Day of Week Headers */}
             <div className="grid grid-cols-7 gap-1 text-center mb-1.5">
               {DAYS_OF_WEEK.map((d, i) => (
                 <div 
                   key={d} 
-                  className={`text-[11px] font-semibold tracking-wider py-1 ${i === 0 ? 'text-red-500' : 'text-[#737373]'}`}
+                  className={`font-mono text-[11px] font-medium uppercase tracking-[0.071em] py-1 ${i === 0 ? 'text-red-500' : 'text-[#666666]'}`}
                 >
                   {d}
                 </div>
@@ -361,7 +361,7 @@ export default function PartnerCalendarCard({ bookings = [], className = '' }: P
             {/* Days Grid */}
             <div className="grid grid-cols-7 gap-1 text-center">
               {Array.from({ length: firstDayIndex }).map((_, i) => (
-                <div key={`empty-${i}`} className="h-9 sm:h-10 rounded-lg" />
+                <div key={`empty-${i}`} className="h-9 sm:h-10 rounded-[6px]" />
               ))}
 
               {Array.from({ length: daysInMonth }).map((_, i) => {
@@ -390,25 +390,25 @@ export default function PartnerCalendarCard({ bookings = [], className = '' }: P
                         setSelectedDate(dateString);
                       }
                     }}
-                    className={`min-h-[42px] sm:min-h-[46px] rounded-lg flex flex-col justify-between p-1.5 transition-all relative cursor-pointer border ${
+                    className={`min-h-[42px] sm:min-h-[46px] rounded-[6px] flex flex-col justify-between p-1.5 transition-all relative cursor-pointer border ${
                       isSelected
-                        ? 'bg-black text-white border-black shadow-sm z-10'
+                        ? 'bg-[#171717] text-white border-[#171717] shadow-sm z-10'
                         : isToday
-                        ? 'bg-[#FAFAFA] border-black text-black'
+                        ? 'bg-[#fafafa] border-[#171717] text-[#171717]'
                         : hasBookings
-                        ? 'bg-[#F2FBF7] border-emerald-200 hover:border-emerald-400 text-black'
-                        : 'bg-white border-[#E5E5E5] hover:bg-[#F9FAFB] text-black'
+                        ? 'bg-[#297a3a]/5 border-[#297a3a]/30 hover:border-[#297a3a] text-[#171717]'
+                        : 'bg-white border-[#ebebeb] hover:bg-[#fafafa] text-[#171717]'
                     }`}
                   >
                     {/* Top Row: Date Number on Left, Booking count badge in TOP-RIGHT CORNER */}
                     <div className="flex items-start justify-between w-full leading-none">
-                      <span className={`text-xs ${isSelected ? 'font-bold text-white' : 'font-semibold text-black'}`}>
+                      <span className={`text-xs ${isSelected ? 'font-bold text-white' : 'font-semibold text-[#171717]'}`}>
                         {dayNum}
                       </span>
 
                       {hasBookings && (
-                        <span className={`text-[8px] sm:text-[9px] font-mono font-bold px-1 rounded-md leading-tight shrink-0 ${
-                          isSelected ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-900 border border-emerald-200'
+                        <span className={`text-[8px] sm:text-[9px] font-mono font-medium px-1 rounded-[4px] leading-tight shrink-0 ${
+                          isSelected ? 'bg-white/20 text-white' : 'bg-[#297a3a]/15 text-[#297a3a] border border-[#297a3a]/25'
                         }`}>
                           {dayBookings.length}
                         </span>
@@ -419,13 +419,13 @@ export default function PartnerCalendarCard({ bookings = [], className = '' }: P
                     {hasBookings && (
                       <div className="flex items-center gap-0.5 mt-auto pt-0.5">
                         {hasApproved && (
-                          <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-emerald-300' : 'bg-emerald-500'}`} />
+                          <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-emerald-300' : 'bg-[#297a3a]'}`} />
                         )}
                         {hasPending && (
                           <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-amber-300' : 'bg-amber-500'}`} />
                         )}
                         {!hasApproved && !hasPending && hasCancelled && (
-                          <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-[#737373]' : 'bg-[#E5E5E5]'}`} />
+                          <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-[#666666]' : 'bg-[#ebebeb]'}`} />
                         )}
                       </div>
                     )}
@@ -435,10 +435,10 @@ export default function PartnerCalendarCard({ bookings = [], className = '' }: P
             </div>
 
             {/* Legend */}
-            <div className="flex items-center justify-between pt-2.5 mt-2.5 border-t border-[#E5E5E5] text-xs">
-              <div className="flex items-center gap-3 text-xs text-[#737373] font-medium">
+            <div className="flex items-center justify-between pt-2.5 mt-2.5 border-t border-[#ebebeb] text-xs">
+              <div className="flex items-center gap-3 font-mono text-[11px] text-[#666666] font-medium">
                 <span className="flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#297a3a]" />
                   <span>Approved</span>
                 </span>
                 <span className="flex items-center gap-1">
@@ -446,12 +446,12 @@ export default function PartnerCalendarCard({ bookings = [], className = '' }: P
                   <span>Pending</span>
                 </span>
               </div>
-              <span className="text-[10px] text-[#737373]">Click date to filter</span>
+              <span className="font-mono text-[10px] text-[#666666]">Click date to filter</span>
             </div>
           </div>
         ) : (
           /* Week Calendar Strip */
-          <div className="bg-white rounded-xl border border-[#E5E5E5] p-2.5 sm:p-3 space-y-2">
+          <div className="bg-white rounded-[6px] border border-[#ebebeb] p-2.5 sm:p-3 space-y-2 shadow-[0_0_0_1px_rgba(0,0,0,0.02)]">
             <div className="grid grid-cols-7 gap-1.5 text-center">
               {weekDays.map((d) => (
                 <button
@@ -464,26 +464,26 @@ export default function PartnerCalendarCard({ bookings = [], className = '' }: P
                       setSelectedDate(d.dateString);
                     }
                   }}
-                  className={`h-14 rounded-lg flex flex-col items-center justify-between py-1.5 px-0.5 transition-all relative cursor-pointer border ${
+                  className={`h-14 rounded-[6px] flex flex-col items-center justify-between py-1.5 px-0.5 transition-all relative cursor-pointer border ${
                     d.isSelected
-                      ? 'bg-black text-white border-black shadow-sm z-10'
+                      ? 'bg-[#171717] text-white border-[#171717] shadow-sm z-10'
                       : d.isToday
-                      ? 'bg-[#FAFAFA] border-black text-black'
+                      ? 'bg-[#fafafa] border-[#171717] text-[#171717]'
                       : d.hasBookings
-                      ? 'bg-[#F2FBF7] border-emerald-200 text-black'
-                      : 'bg-white border-[#E5E5E5] hover:bg-[#F9FAFB] text-black'
+                      ? 'bg-[#297a3a]/5 border-[#297a3a]/30 text-[#171717]'
+                      : 'bg-white border-[#ebebeb] hover:bg-[#fafafa] text-[#171717]'
                   }`}
                 >
-                  <span className={`text-[10px] uppercase font-semibold tracking-wider ${d.isSelected ? 'text-white/70' : 'text-[#737373]'}`}>
+                  <span className={`font-mono text-[10px] uppercase font-medium tracking-[0.071em] ${d.isSelected ? 'text-white/70' : 'text-[#666666]'}`}>
                     {d.dayName}
                   </span>
-                  <span className={`text-sm font-bold ${d.isSelected ? 'text-white' : 'text-black'}`}>
+                  <span className={`text-sm font-bold ${d.isSelected ? 'text-white' : 'text-[#171717]'}`}>
                     {d.dayNum}
                   </span>
 
                   <div className="flex items-center gap-0.5 h-1.5">
                     {d.hasApproved && (
-                      <span className={`w-1.5 h-1.5 rounded-full ${d.isSelected ? 'bg-emerald-300' : 'bg-emerald-500'}`} />
+                      <span className={`w-1.5 h-1.5 rounded-full ${d.isSelected ? 'bg-emerald-300' : 'bg-[#297a3a]'}`} />
                     )}
                     {d.hasPending && (
                       <span className={`w-1.5 h-1.5 rounded-full ${d.isSelected ? 'bg-amber-300' : 'bg-amber-500'}`} />
@@ -501,16 +501,16 @@ export default function PartnerCalendarCard({ bookings = [], className = '' }: P
       <div className="p-4 sm:p-5 space-y-3 flex-1 flex flex-col min-h-0 bg-white">
         
         {/* Status Filter Tabs */}
-        <div className="flex items-center gap-1 bg-[#F5F5F5] p-1 rounded-lg border border-[#E5E5E5] text-xs w-full shrink-0">
+        <div className="flex items-center gap-1 bg-[#fafafa] p-1 rounded-[6px] border border-[#ebebeb] text-xs w-full shrink-0">
           {(['all', 'approved', 'pending', 'cancelled'] as const).map((s) => (
             <button
               type="button"
               key={s}
               onClick={() => setStatusFilter(s)}
-              className={`flex-1 py-1.5 px-1.5 rounded-md capitalize font-semibold text-xs transition-all cursor-pointer text-center ${
+              className={`flex-1 py-1.5 px-1.5 rounded-[4px] capitalize font-medium text-xs transition-all cursor-pointer text-center ${
                 statusFilter === s
-                  ? 'bg-black text-white shadow-xs'
-                  : 'text-[#737373] hover:text-black'
+                  ? 'bg-[#171717] text-white shadow-xs'
+                  : 'text-[#666666] hover:text-[#171717]'
               }`}
             >
               {s}
@@ -521,14 +521,14 @@ export default function PartnerCalendarCard({ bookings = [], className = '' }: P
         {/* Scrollable Bookings Stream */}
         <div className="max-h-[460px] overflow-y-auto space-y-3 pr-1 overscroll-contain">
           {displayedBookings.length === 0 ? (
-            <div className="py-10 px-4 text-center rounded-xl border border-[#E5E5E5] bg-[#FAFAFA] space-y-2">
-              <CalendarIcon size={24} className="mx-auto text-[#737373]/40" />
-              <p className="text-xs font-semibold text-black">
+            <div className="py-10 px-4 text-center rounded-[6px] border border-[#ebebeb] bg-[#fafafa] space-y-2">
+              <CalendarIcon size={24} className="mx-auto text-[#a8a8a8]" />
+              <p className="text-xs font-semibold text-[#171717]">
                 {selectedDate 
                   ? 'No referred appointments for this day.' 
                   : `No appointments found for ${MONTH_NAMES[currentMonth]} ${currentYear}.`}
               </p>
-              <p className="text-xs text-[#737373] max-w-xs mx-auto leading-relaxed">
+              <p className="text-xs text-[#666666] max-w-xs mx-auto leading-relaxed">
                 Referred bookings from your QR code or referral link appear here automatically.
               </p>
             </div>
@@ -544,45 +544,45 @@ export default function PartnerCalendarCard({ bookings = [], className = '' }: P
               return (
                 <div
                   key={itemKey}
-                  className={`p-3.5 sm:p-4 rounded-xl border transition-all space-y-2.5 ${
+                  className={`p-3.5 sm:p-4 rounded-[6px] border transition-all space-y-2.5 ${
                     isCancelled 
-                      ? 'border-[#E5E5E5] bg-[#FAFAFA] opacity-80' 
-                      : 'border-[#E5E5E5] bg-white hover:border-black/30'
+                      ? 'border-[#ebebeb] bg-[#fafafa] opacity-80' 
+                      : 'border-[#ebebeb] bg-white hover:border-[#171717]/30 shadow-[0_0_0_1px_rgba(0,0,0,0.02)]'
                   }`}
                 >
                   {/* Top Status Badges */}
-                  <div className="flex items-center gap-1.5 flex-wrap pb-2 border-b border-[#E5E5E5]">
+                  <div className="flex items-center gap-1.5 flex-wrap pb-2 border-b border-[#ebebeb]">
                     {/* Payment Status */}
                     {isPaid ? (
-                      <span className="text-[10px] font-semibold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                      <span className="font-mono text-[10px] font-medium uppercase tracking-[0.071em] text-[#297a3a] bg-[#297a3a]/10 px-2 py-0.5 rounded-[4px] border border-[#297a3a]/20">
                         {b.payment_method === 'cash' ? 'Paid (Cash)' : b.payment_method === 'online' ? 'Paid (Online)' : 'Paid'}
                       </span>
                     ) : (
-                      <span className="text-[10px] font-semibold uppercase tracking-wider text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                      <span className="font-mono text-[10px] font-medium uppercase tracking-[0.071em] text-amber-700 bg-amber-50 px-2 py-0.5 rounded-[4px] border border-amber-200">
                         Unpaid
                       </span>
                     )}
 
                     {/* Treatment Status */}
                     {isCancelled ? (
-                      <span className="text-[10px] font-semibold uppercase tracking-wider text-red-600 bg-red-50 px-2 py-0.5 rounded-md border border-red-200">
+                      <span className="font-mono text-[10px] font-medium uppercase tracking-[0.071em] text-red-600 bg-red-50 px-2 py-0.5 rounded-[4px] border border-red-200">
                         Cancelled
                       </span>
                     ) : b.booking_status === 'Ongoing' || b.treatment_status === 'Ongoing' || b.treatment_status === 'In Progress' ? (
-                      <span className="text-[10px] font-semibold uppercase tracking-wider text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-200 flex items-center gap-1">
+                      <span className="font-mono text-[10px] font-medium uppercase tracking-[0.071em] text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-[4px] border border-indigo-200 flex items-center gap-1">
                         <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
                         Ongoing
                       </span>
                     ) : b.booking_status === 'Completed' || b.treatment_status === 'Finish' || b.treatment_status === 'Finished' || b.service_completed ? (
-                      <span className="text-[10px] font-semibold uppercase tracking-wider text-teal-700 bg-teal-50 px-2 py-0.5 rounded-md border border-teal-200">
+                      <span className="font-mono text-[10px] font-medium uppercase tracking-[0.071em] text-[#297a3a] bg-[#297a3a]/10 px-2 py-0.5 rounded-[4px] border border-[#297a3a]/20">
                         Finish
                       </span>
                     ) : b.booking_status === 'Confirmed' ? (
-                      <span className="text-[10px] font-semibold uppercase tracking-wider text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200">
+                      <span className="font-mono text-[10px] font-medium uppercase tracking-[0.071em] text-blue-700 bg-blue-50 px-2 py-0.5 rounded-[4px] border border-blue-200">
                         Confirmed
                       </span>
                     ) : (
-                      <span className="text-[10px] font-semibold uppercase tracking-wider text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                      <span className="font-mono text-[10px] font-medium uppercase tracking-[0.071em] text-amber-800 bg-amber-50 px-2 py-0.5 rounded-[4px] border border-amber-200">
                         Awaiting Treatment
                       </span>
                     )}
@@ -591,19 +591,19 @@ export default function PartnerCalendarCard({ bookings = [], className = '' }: P
                     {!isCancelled && (
                       <>
                         {isApproved && (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                          <span className="inline-flex items-center gap-1 font-mono text-[10px] font-medium uppercase tracking-[0.071em] text-[#297a3a] bg-[#297a3a]/10 px-2 py-0.5 rounded-[4px] border border-[#297a3a]/20">
                             <CheckCircle2 size={11} />
                             Approved
                           </span>
                         )}
                         {isPendingCommission && (b.booking_status === 'Ongoing' || b.booking_status === 'Completed') && (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                          <span className="inline-flex items-center gap-1 font-mono text-[10px] font-medium uppercase tracking-[0.071em] text-amber-700 bg-amber-50 px-2 py-0.5 rounded-[4px] border border-amber-200">
                             <Clock size={11} />
                             Pending
                           </span>
                         )}
                         {isPaidCommission && (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-white bg-black px-2 py-0.5 rounded-md">
+                          <span className="inline-flex items-center gap-1 font-mono text-[10px] font-medium uppercase tracking-[0.071em] text-white bg-[#171717] px-2 py-0.5 rounded-[4px]">
                             ✓ Paid Out
                           </span>
                         )}
@@ -613,8 +613,8 @@ export default function PartnerCalendarCard({ bookings = [], className = '' }: P
 
                   {/* Customer Name, View Details Link & Invoice Code */}
                   <div className="space-y-1 pt-0.5">
-                    <div className="font-semibold text-sm text-black flex items-center gap-1.5">
-                      <User size={14} className="text-[#737373] shrink-0" />
+                    <div className="font-semibold text-sm text-[#171717] flex items-center gap-1.5">
+                      <User size={14} className="text-[#666666] shrink-0" />
                       <span className="truncate">{b.guest_name || 'Guest Booking'}</span>
                     </div>
 
@@ -623,67 +623,67 @@ export default function PartnerCalendarCard({ bookings = [], className = '' }: P
                       <Link
                         href={`/invoice/${b.booking_id}`}
                         target="_blank"
-                        className="group inline-flex items-center gap-1.5 text-xs font-semibold text-black hover:underline py-0.5 cursor-pointer"
+                        className="group inline-flex items-center gap-1.5 text-xs font-semibold text-[#171717] hover:underline py-0.5 cursor-pointer"
                         title="View treatment details in invoice"
                       >
-                        <FileText size={13} className="text-[#737373] shrink-0" />
+                        <FileText size={13} className="text-[#666666] shrink-0" />
                         <span>View Treatment Details</span>
-                        <ExternalLink size={11} className="text-[#737373] shrink-0" />
+                        <ExternalLink size={11} className="text-[#666666] shrink-0" />
                       </Link>
                     </div>
 
                     {/* Invoice ID with copy */}
-                    <div className="flex items-center gap-1.5 text-[#737373] text-xs font-medium pt-0.5">
-                      <span className="text-[10px] font-semibold uppercase tracking-wider text-[#737373]">
+                    <div className="flex items-center gap-1.5 text-[#666666] text-xs font-medium pt-0.5">
+                      <span className="font-mono text-[10px] uppercase font-medium tracking-[0.071em] text-[#666666]">
                         Invoice:
                       </span>
-                      <span className="font-mono text-xs font-bold text-black bg-[#F5F5F5] px-2 py-0.5 rounded border border-[#E5E5E5]">
+                      <span className="font-mono text-xs font-bold text-[#171717] bg-[#fafafa] px-2 py-0.5 rounded-[4px] border border-[#ebebeb]">
                         #{b.booking_id}
                       </span>
                       <button
                         type="button"
                         onClick={() => handleCopy(b.booking_id)}
-                        className="text-[#737373] hover:text-black transition-colors p-1 rounded hover:bg-[#F5F5F5] cursor-pointer"
+                        className="text-[#666666] hover:text-[#171717] transition-colors p-1 rounded hover:bg-[#fafafa] cursor-pointer"
                         title="Copy invoice ID"
                       >
-                        {copiedId === b.booking_id ? <Check size={12} className="text-emerald-700" /> : <Copy size={12} />}
+                        {copiedId === b.booking_id ? <Check size={12} className="text-[#297a3a]" /> : <Copy size={12} />}
                       </button>
                     </div>
                   </div>
 
                   {/* Schedule & Place Box */}
-                  <div className="bg-[#FAFAFA] rounded-lg p-2.5 border border-[#E5E5E5] text-xs space-y-1.5">
+                  <div className="bg-[#fafafa] rounded-[6px] p-2.5 border border-[#ebebeb] text-xs space-y-1.5">
                     <div className="grid grid-cols-2 gap-2">
-                      <div className="flex items-center gap-1.5 text-black min-w-0">
-                        <CalendarIcon size={12} className="text-[#737373] shrink-0" />
-                        <span className="text-[10px] font-semibold uppercase text-[#737373] shrink-0">Date:</span>
-                        <span className="font-semibold text-xs text-black truncate">
+                      <div className="flex items-center gap-1.5 text-[#171717] min-w-0">
+                        <CalendarIcon size={12} className="text-[#666666] shrink-0" />
+                        <span className="font-mono text-[10px] uppercase text-[#666666] shrink-0">Date:</span>
+                        <span className="font-mono text-xs text-[#171717] truncate">
                           {safeFormatDate(b.date, { day: 'numeric', month: 'short' })}
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-1.5 text-black min-w-0 sm:justify-end">
-                        <Clock size={12} className="text-[#737373] shrink-0" />
-                        <span className="text-[10px] font-semibold uppercase text-[#737373] shrink-0">Time:</span>
-                        <span className="font-semibold text-xs text-black truncate">
+                      <div className="flex items-center gap-1.5 text-[#171717] min-w-0 sm:justify-end">
+                        <Clock size={12} className="text-[#666666] shrink-0" />
+                        <span className="font-mono text-[10px] uppercase text-[#666666] shrink-0">Time:</span>
+                        <span className="font-mono text-xs text-[#171717] truncate">
                           {b.time || 'Flexible'}
                         </span>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2 pt-1 border-t border-[#E5E5E5]">
-                      <div className="flex items-center gap-1.5 text-black min-w-0">
-                        <MapPin size={12} className="text-[#737373] shrink-0" />
-                        <span className="text-[10px] font-semibold uppercase text-[#737373] shrink-0">Place:</span>
-                        <span className="text-xs text-black font-medium truncate" title={b.location}>
+                    <div className="grid grid-cols-2 gap-2 pt-1 border-t border-[#ebebeb]">
+                      <div className="flex items-center gap-1.5 text-[#171717] min-w-0">
+                        <MapPin size={12} className="text-[#666666] shrink-0" />
+                        <span className="font-mono text-[10px] uppercase text-[#666666] shrink-0">Place:</span>
+                        <span className="text-xs text-[#171717] font-medium truncate" title={b.location}>
                           {b.location || 'Villa / Hotel'}
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-1.5 text-black min-w-0 sm:justify-end">
-                        <DoorOpen size={12} className="text-[#737373] shrink-0" />
-                        <span className="text-[10px] font-semibold uppercase text-[#737373] shrink-0">Room:</span>
-                        <span className="text-xs font-semibold text-black truncate">
+                      <div className="flex items-center gap-1.5 text-[#171717] min-w-0 sm:justify-end">
+                        <DoorOpen size={12} className="text-[#666666] shrink-0" />
+                        <span className="font-mono text-[10px] uppercase text-[#666666] shrink-0">Room:</span>
+                        <span className="text-xs font-medium text-[#171717] truncate">
                           {b.room_number ? b.room_number : '-'}
                         </span>
                       </div>
@@ -691,26 +691,26 @@ export default function PartnerCalendarCard({ bookings = [], className = '' }: P
                   </div>
 
                   {/* Financials Row: Treatment Price & Earned Commission */}
-                  <div className="pt-2 border-t border-[#E5E5E5] flex items-center justify-between gap-2 text-xs">
+                  <div className="pt-2 border-t border-[#ebebeb] flex items-center justify-between gap-2 text-xs">
                     <div className="flex flex-col">
-                      <span className="text-[10px] text-[#737373] uppercase font-semibold tracking-wider">Treatment</span>
-                      <span className="text-xs font-bold text-black font-mono tabular-nums">
+                      <span className="font-mono text-[10px] text-[#666666] uppercase tracking-[0.071em]">Treatment</span>
+                      <span className="text-xs font-bold text-[#171717] font-mono tabular-nums">
                         {formatIDR(b.treatment_amount || b.gross_amount)}
                       </span>
                     </div>
 
                     <div className="flex flex-col text-right">
-                      <span className="text-[10px] text-emerald-700 uppercase font-semibold tracking-wider">Earned</span>
+                      <span className="font-mono text-[10px] text-[#297a3a] uppercase tracking-[0.071em]">Earned</span>
                       {isCancelled ? (
                         <span className="text-xs font-bold text-red-600 font-mono tabular-nums">
                           IDR 0
                         </span>
                       ) : (
                         <div className="flex items-baseline justify-end gap-1">
-                          <span className="text-xs font-bold text-emerald-700 font-mono tabular-nums">
+                          <span className="text-xs font-bold text-[#297a3a] font-mono tabular-nums">
                             +{formatIDR(b.commission_amount)}
                           </span>
-                          <span className="text-[10px] text-[#737373] font-medium">({b.commission_rate_pct}%)</span>
+                          <span className="font-mono text-[10px] text-[#666666]">({b.commission_rate_pct}%)</span>
                         </div>
                       )}
                     </div>
@@ -725,13 +725,13 @@ export default function PartnerCalendarCard({ bookings = [], className = '' }: P
       </div>
 
       {/* ─── 4. Footer ─── */}
-      <div className="px-5 py-3.5 border-t border-[#E5E5E5] bg-[#FAFAFA] flex items-center justify-between text-xs shrink-0">
-        <span className="text-[#737373] font-semibold uppercase tracking-wider text-xs">
+      <div className="px-5 py-3.5 border-t border-[#ebebeb] bg-[#fafafa] flex items-center justify-between text-xs shrink-0">
+        <span className="font-mono text-[#666666] font-medium uppercase tracking-[0.071em] text-xs">
           {displayedBookings.length} {displayedBookings.length === 1 ? 'APPOINTMENT' : 'APPOINTMENTS'}
         </span>
         <div className="flex items-center gap-1.5 font-mono tabular-nums">
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-[#737373]">TOTAL:</span>
-          <span className="font-bold text-black text-sm">
+          <span className="font-mono text-[10px] uppercase tracking-[0.071em] text-[#666666]">TOTAL:</span>
+          <span className="font-bold text-[#171717] text-sm">
             {formatIDR(displayedCommissionTotal)}
           </span>
         </div>

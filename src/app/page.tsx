@@ -1199,7 +1199,7 @@ export default function Home() {
                                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                                className="bg-white w-full max-w-full sm:max-w-lg h-[100dvh] sm:h-auto sm:max-h-[90vh] sm:my-auto sm:rounded-[28px] rounded-none p-5 sm:p-7 md:p-8 shadow-2xl relative flex flex-col box-border overflow-y-auto overflow-x-hidden no-scrollbar"
+                                className={`bg-white w-full max-w-full sm:max-w-lg h-[100dvh] sm:h-auto sm:max-h-[90vh] sm:my-auto p-5 sm:p-7 md:p-8 relative flex flex-col box-border overflow-y-auto overflow-x-hidden no-scrollbar ${isTherapick ? 'sm:rounded-[6px] border border-[#ebebeb] shadow-[0_0_0_1px_rgba(0,0,0,0.08)]' : 'sm:rounded-[28px] rounded-none shadow-2xl'}`}
                             >
                                 <button
                                     onClick={() => {
@@ -1215,7 +1215,7 @@ export default function Home() {
                                         }
                                         setIsBookingModalOpen(false);
                                     }}
-                                    className="absolute top-5 right-5 sm:top-6 sm:right-6 w-8 h-8 rounded-full bg-neutral-100 hover:bg-neutral-200 flex items-center justify-center text-neutral-500 hover:text-neutral-900 transition-colors z-10"
+                                    className={`absolute top-5 right-5 sm:top-6 sm:right-6 w-8 h-8 flex items-center justify-center transition-colors z-10 ${isTherapick ? 'rounded-[6px] bg-[#fafafa] hover:bg-[#ebebeb] text-[#666666] hover:text-[#171717] border border-[#ebebeb]' : 'rounded-full bg-neutral-100 hover:bg-neutral-200 text-neutral-500 hover:text-neutral-900'}`}
                                 >
                                     <X className="w-4 h-4" />
                                 </button>
@@ -1303,17 +1303,17 @@ export default function Home() {
                                     </div>
                                 ) : isTherapick ? (
                                     /* =================== THERAPICK BOOKING FLOW (booktherapick.com) =================== */
-                                    <div className="animate-in fade-in slide-in-from-left-4 duration-300 flex flex-col max-h-[85vh] sm:max-h-[70vh] overflow-y-auto overflow-x-hidden no-scrollbar pb-4 pr-1">
+                                    <div className="animate-in fade-in slide-in-from-left-4 duration-300 flex flex-col max-h-[85vh] sm:max-h-[70vh] overflow-y-auto overflow-x-hidden no-scrollbar pr-1">
                                         {therapickStep === 'selection' && (
                                             <>
                                                 <div className="mb-5 pr-8 relative">
-                                                    <span className="text-[10px] font-semibold tracking-wider text-neutral-400 uppercase block mb-1">
+                                                    <span className="font-mono text-[11px] uppercase tracking-[0.071em] text-[#171717] block mb-1">
                                                         Step 1 of 3
                                                     </span>
-                                                    <h2 className="font-serif text-2xl sm:text-[26px] text-neutral-900 font-medium tracking-tight mb-1">
+                                                    <h2 className="font-sans text-2xl sm:text-[28px] text-[#171717] font-medium tracking-[-0.05em] leading-tight mb-1">
                                                         Your Spa Selection
                                                     </h2>
-                                                    <p className="text-xs text-neutral-500">
+                                                    <p className="text-xs text-[#4d4d4d]">
                                                         Review treatments and choose your massage setup.
                                                     </p>
                                                 </div>
@@ -1324,24 +1324,24 @@ export default function Home() {
                                                         const addonsTotal = (item.addons || []).reduce((s: number, a: any) => s + (Number(a.price) || 0), 0);
                                                         const singlePrice = item.price + addonsTotal;
                                                         return (
-                                                            <div key={item.id} className="bg-white border border-neutral-200 rounded-2xl p-4 sm:p-5 shadow-xs relative">
+                                                            <div key={item.id} className="bg-white border border-[#ebebeb] rounded-[6px] p-4 sm:p-5 shadow-[0_0_0_1px_rgba(0,0,0,0.04)] relative">
                                                                 <div className="flex items-start justify-between mb-3 pr-2">
                                                                     <div className="pr-3">
                                                                         {item.isCampaign && (
                                                                             <div className="flex flex-wrap items-center gap-1.5 mb-2">
-                                                                                <span className="bg-neutral-900 text-white px-2.5 py-0.5 rounded-full text-[9px] font-semibold uppercase tracking-wider">
+                                                                                <span className="bg-[#171717] text-white px-2.5 py-0.5 rounded-[4px] font-mono text-[9px] uppercase tracking-[0.071em]">
                                                                                     {item.campaignTitle}
                                                                                 </span>
                                                                                 {item.tripOffer ? (
-                                                                                    <span className="bg-neutral-100 text-neutral-600 border border-neutral-200 px-2 py-0.5 rounded-full text-[9px] font-medium tracking-wide">
+                                                                                    <span className="bg-[#fafafa] text-[#4d4d4d] border border-[#ebebeb] px-2 py-0.5 rounded-[4px] font-mono text-[9px]">
                                                                                         {item.tripOffer}
                                                                                     </span>
                                                                                 ) : null}
                                                                             </div>
                                                                         )}
-                                                                        <h3 className="font-serif text-base sm:text-lg font-medium text-neutral-900 leading-snug">{item.title}</h3>
-                                                                        <p className="text-xs text-neutral-500 flex items-center gap-1.5 mt-1 font-sans">
-                                                                            <Clock className="w-3.5 h-3.5 text-neutral-400" /> {item.duration} Mins
+                                                                        <h3 className="font-sans font-medium text-base text-[#171717] tracking-[-0.03em] leading-snug">{item.title}</h3>
+                                                                        <p className="font-mono text-[11px] text-[#666666] tracking-[0.071em] uppercase flex items-center gap-1.5 mt-1">
+                                                                            <Clock className="w-3.5 h-3.5 text-[#a8a8a8]" /> {item.duration} Mins
                                                                         </p>
 
                                                                         {/* Selected Add-ons displayed directly below massage title */}
@@ -1350,7 +1350,7 @@ export default function Home() {
                                                                                 {item.addons.map((addon: any) => (
                                                                                     <span
                                                                                         key={addon.id}
-                                                                                        className="inline-flex items-center gap-1 bg-neutral-100 text-neutral-800 border border-neutral-200 text-[10px] font-medium px-2 py-0.5 rounded-md"
+                                                                                        className="inline-flex items-center gap-1 bg-[#fafafa] text-[#171717] border border-[#ebebeb] font-mono text-[10px] px-2 py-0.5 rounded-[4px]"
                                                                                     >
                                                                                         <span>+ {addon.title} (+IDR {Number(addon.price).toLocaleString('en-US')})</span>
                                                                                         <button
@@ -1373,27 +1373,27 @@ export default function Home() {
                                                                             </div>
                                                                         )}
                                                                     </div>
-                                                                    <span className="font-serif text-neutral-900 font-medium text-right flex flex-col shrink-0">
+                                                                    <span className="font-mono text-[#171717] font-medium text-right flex flex-col shrink-0 tabular-nums">
                                                                         IDR {singlePrice.toLocaleString('en-US')}
-                                                                        <span className="text-[10px] font-sans text-neutral-400 font-normal uppercase tracking-wider mt-0.5">
+                                                                        <span className="text-[10px] font-mono text-[#666666] font-normal uppercase tracking-[0.071em] mt-0.5">
                                                                             {['couple', 'honeymoon'].some(k => item.title.toLowerCase().includes(k)) ? 'For 2 Persons' : 'Per Person'}
                                                                         </span>
                                                                     </span>
                                                                 </div>
 
                                                                 {/* Add-on on left side, Guests Title and counter on right side */}
-                                                                <div className="flex items-center justify-between pt-3 mt-1 border-t border-neutral-100">
+                                                                <div className="flex items-center justify-between pt-3 mt-1 border-t border-[#ebebeb]">
                                                                     <div>
                                                                         <button
                                                                             type="button"
                                                                             onClick={() => setSelectedAddonItem(item)}
-                                                                            className="h-7 px-2.5 rounded-full text-[11px] font-medium text-neutral-700 bg-neutral-100 hover:bg-neutral-200 active:scale-95 transition-all flex items-center gap-1"
+                                                                            className="h-7 px-2.5 rounded-[6px] text-xs font-mono text-[#4d4d4d] border border-[#ebebeb] hover:border-[#171717] hover:text-[#171717] active:scale-95 transition-all flex items-center gap-1 bg-white"
                                                                         >
-                                                                            <Plus className="w-3 h-3 text-neutral-500" /> Add-on
+                                                                            <Plus className="w-3 h-3 text-[#a8a8a8]" /> Add-on
                                                                         </button>
                                                                     </div>
                                                                     <div className="flex items-center gap-2">
-                                                                        <span className="text-[10px] font-semibold uppercase tracking-wider text-neutral-400">Guests</span>
+                                                                        <span className="font-mono text-[10px] uppercase tracking-[0.071em] text-[#666666]">Guests</span>
                                                                         <button
                                                                             type="button"
                                                                             onClick={() => {
@@ -1404,13 +1404,13 @@ export default function Home() {
                                                                                     setTherapickStep('selection');
                                                                                 }
                                                                             }}
-                                                                            className="w-7 h-7 rounded-full bg-neutral-100 hover:bg-neutral-200 text-neutral-400 hover:text-red-500 transition-colors flex items-center justify-center active:scale-95"
+                                                                            className="w-7 h-7 rounded-[6px] bg-[#fafafa] hover:bg-red-50 text-[#666666] hover:text-red-600 border border-[#ebebeb] transition-colors flex items-center justify-center active:scale-95"
                                                                             title="Remove treatment"
                                                                         >
                                                                             <Trash2 className="w-3.5 h-3.5" />
                                                                         </button>
-                                                                        <div className="w-px h-3.5 bg-neutral-200"></div>
-                                                                        <div className="flex items-center gap-1.5 bg-neutral-100 rounded-full p-0.5">
+                                                                        <div className="w-px h-3.5 bg-[#ebebeb]"></div>
+                                                                        <div className="flex items-center gap-1 bg-[#fafafa] border border-[#ebebeb] rounded-[6px] p-0.5">
                                                                             <button
                                                                                 type="button"
                                                                                 onClick={() => setCartItems(cartItems.map(i => {
@@ -1419,11 +1419,11 @@ export default function Home() {
                                                                                     const step = isCouple ? 2 : 1;
                                                                                     return { ...i, guests: Math.max(step, i.guests - step) };
                                                                                 }))}
-                                                                                className="w-6 h-6 rounded-full bg-white hover:bg-neutral-50 text-neutral-900 shadow-2xs flex items-center justify-center transition-colors active:scale-95"
+                                                                                className="w-6 h-6 rounded-[4px] bg-white border border-[#ebebeb] hover:bg-[#fafafa] text-[#171717] flex items-center justify-center transition-colors active:scale-95"
                                                                             >
                                                                                 <Minus className="w-3 h-3" />
                                                                             </button>
-                                                                            <span className="font-semibold text-xs text-neutral-900 w-5 text-center tabular-nums">{item.guests}</span>
+                                                                            <span className="font-mono font-medium text-xs text-[#171717] w-5 text-center tabular-nums">{item.guests}</span>
                                                                             <button
                                                                                 type="button"
                                                                                 onClick={() => setCartItems(cartItems.map(i => {
@@ -1432,7 +1432,7 @@ export default function Home() {
                                                                                     const step = isCouple ? 2 : 1;
                                                                                     return { ...i, guests: i.guests + step };
                                                                                 }))}
-                                                                                className="w-6 h-6 rounded-full bg-white hover:bg-neutral-50 text-neutral-900 shadow-2xs flex items-center justify-center transition-colors active:scale-95"
+                                                                                className="w-6 h-6 rounded-[4px] bg-white border border-[#ebebeb] hover:bg-[#fafafa] text-[#171717] flex items-center justify-center transition-colors active:scale-95"
                                                                             >
                                                                                 <Plus className="w-3 h-3" />
                                                                             </button>
@@ -1448,56 +1448,56 @@ export default function Home() {
                                                 <button
                                                     type="button"
                                                     onClick={() => setIsSelectingMore(true)}
-                                                    className="w-full h-11 bg-white hover:bg-neutral-50 text-neutral-700 hover:text-neutral-900 border border-dashed border-neutral-300 hover:border-neutral-400 rounded-xl text-xs font-medium uppercase tracking-wider transition-all mb-4 flex items-center justify-center gap-1.5 active:scale-[0.99]"
+                                                    className="w-full h-10 bg-white hover:bg-[#fafafa] text-[#171717] border border-[#ebebeb] hover:border-[#171717] rounded-[6px] text-xs font-mono uppercase tracking-[0.071em] transition-all mb-4 flex items-center justify-center gap-1.5 active:scale-[0.99]"
                                                 >
-                                                    <Plus className="w-3.5 h-3.5 text-neutral-400" /> Add Another Treatment
+                                                    <Plus className="w-3.5 h-3.5 text-[#a8a8a8]" /> Add Another Treatment
                                                 </button>
 
                                                 {/* Massage Table Setup with - and + counter & Professional Explanation */}
-                                                <div className="bg-white border border-neutral-200 rounded-2xl p-4 sm:p-5 shadow-xs mb-4">
+                                                <div className="bg-white border border-[#ebebeb] rounded-[6px] p-4 sm:p-5 shadow-[0_0_0_1px_rgba(0,0,0,0.04)] mb-4">
                                                     <div className="flex items-start justify-between mb-3.5">
                                                         <div>
-                                                            <h4 className="text-xs font-semibold text-neutral-900 uppercase tracking-wider">Massage Table Setup</h4>
-                                                            <p className="text-[11px] text-neutral-500 mt-0.5">
+                                                            <h4 className="font-mono text-[11px] uppercase tracking-[0.071em] text-[#171717]">Massage Table Setup</h4>
+                                                            <p className="text-xs text-[#4d4d4d] mt-0.5">
                                                                 Select your preferred massage setup at your villa or hotel
                                                             </p>
                                                         </div>
                                                         <button
                                                             type="button"
                                                             onClick={() => setShowTableFeeModal(true)}
-                                                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium text-neutral-600 bg-neutral-100 hover:bg-neutral-200 hover:text-neutral-900 transition-colors shrink-0"
+                                                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-mono text-[#666666] border border-[#ebebeb] hover:text-[#171717] hover:border-[#171717] transition-colors shrink-0"
                                                             title="Read why there is an additional fee"
                                                         >
-                                                            <Info className="w-3 h-3 text-neutral-400" />
+                                                            <Info className="w-3 h-3 text-[#a8a8a8]" />
                                                             <span>Why a fee?</span>
                                                         </button>
                                                     </div>
 
                                                     {/* Table Counter Row */}
-                                                    <div className="flex items-center justify-between p-3.5 rounded-xl bg-neutral-50/70 border border-neutral-200/80 mb-3">
+                                                    <div className="flex items-center justify-between p-3.5 rounded-[6px] bg-[#fafafa] border border-[#ebebeb] mb-3">
                                                         <div>
-                                                            <div className="font-medium text-xs text-neutral-900">Bring Portable Table</div>
-                                                            <div className="text-[11px] text-neutral-500 mt-0.5 font-mono">
+                                                            <div className="font-medium text-xs text-[#171717]">Bring Portable Table</div>
+                                                            <div className="text-[11px] text-[#666666] mt-0.5 font-mono">
                                                                 IDR 100,000 PER TABLE
                                                             </div>
                                                         </div>
 
-                                                        <div className="flex items-center gap-1.5 bg-white border border-neutral-200 rounded-full p-0.5 shadow-2xs">
+                                                        <div className="flex items-center gap-1 bg-white border border-[#ebebeb] rounded-[6px] p-0.5">
                                                             <button
                                                                 type="button"
                                                                 onClick={() => setMassageTableCount(Math.max(0, massageTableCount - 1))}
                                                                 disabled={massageTableCount <= 0}
-                                                                className="w-7 h-7 rounded-full bg-neutral-100 hover:bg-neutral-200 text-neutral-700 disabled:opacity-30 disabled:pointer-events-none flex items-center justify-center transition-colors active:scale-95"
+                                                                className="w-7 h-7 rounded-[4px] bg-[#fafafa] hover:bg-[#ebebeb] text-[#171717] disabled:opacity-30 disabled:pointer-events-none flex items-center justify-center transition-colors active:scale-95"
                                                             >
                                                                 <Minus className="w-3 h-3" />
                                                             </button>
-                                                            <span className="font-semibold text-xs text-neutral-900 w-5 text-center tabular-nums">
+                                                            <span className="font-mono font-medium text-xs text-[#171717] w-6 text-center tabular-nums">
                                                                 {massageTableCount}
                                                             </span>
                                                             <button
                                                                 type="button"
                                                                 onClick={() => setMassageTableCount(massageTableCount + 1)}
-                                                                className="w-7 h-7 rounded-full bg-neutral-100 hover:bg-neutral-200 text-neutral-700 flex items-center justify-center transition-colors active:scale-95"
+                                                                className="w-7 h-7 rounded-[4px] bg-[#fafafa] hover:bg-[#ebebeb] text-[#171717] flex items-center justify-center transition-colors active:scale-95"
                                                             >
                                                                 <Plus className="w-3 h-3" />
                                                             </button>
@@ -1505,54 +1505,54 @@ export default function Home() {
                                                     </div>
 
                                                     {/* Massage on Your Bed Option info */}
-                                                    <div className="p-3.5 rounded-xl bg-neutral-50/70 border border-neutral-200/80">
-                                                        <div className="font-medium text-xs text-neutral-900 mb-1">
+                                                    <div className="p-3.5 rounded-[6px] bg-[#fafafa] border border-[#ebebeb]">
+                                                        <div className="font-medium text-xs text-[#171717] mb-1">
                                                             Massage on Your Bed (Complimentary)
                                                         </div>
-                                                        <p className="text-[11px] text-neutral-500 leading-relaxed">
+                                                        <p className="text-[11px] text-[#4d4d4d] leading-relaxed">
                                                             If you prefer not to add a portable table, your therapist will set up comfortably on your villa bed or mattress. The therapist will bring an ergonomic face cradle, clean sanitized towels, and protective spa linens for your complete comfort and neck support.
                                                         </p>
                                                     </div>
                                                 </div>
 
                                                 {/* Promo Code Input */}
-                                                <div className="bg-white border border-[#E5E5E5] rounded-xl p-4 shadow-2xs mb-5">
-                                                    <label className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-[#737373] mb-2">
-                                                        <Tag className="w-3.5 h-3.5" /> Promo Code (Optional)
+                                                <div className="bg-white border border-[#ebebeb] rounded-[6px] p-4 shadow-[0_0_0_1px_rgba(0,0,0,0.04)] mb-5">
+                                                    <label className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.071em] text-[#666666] mb-2">
+                                                        <Tag className="w-3.5 h-3.5 text-[#a8a8a8]" /> Promo Code (Optional)
                                                     </label>
                                                     <div className="flex gap-2 w-full">
                                                         <input
                                                             type="text" placeholder="ENTER CODE"
                                                             value={promoCodeInput} onChange={e => setPromoCodeInput(e.target.value.toUpperCase())}
                                                             disabled={!!appliedPromo || isPromoLoading}
-                                                            className="w-full bg-white border border-[#E5E5E5] rounded-lg px-3 py-2 text-xs font-mono text-black placeholder:text-[#A3A3A3] focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-colors uppercase"
+                                                            className="w-full bg-white border border-[#ebebeb] rounded-[6px] px-3 py-2 text-xs font-mono text-[#171717] placeholder:text-[#a8a8a8] focus:outline-none focus:border-[#171717] focus:ring-1 focus:ring-[#171717] transition-colors uppercase"
                                                         />
                                                         {appliedPromo ? (
-                                                            <button type="button" onClick={handleRemovePromo} className="px-3.5 bg-red-50 text-red-600 border border-red-200 rounded-lg text-xs font-medium hover:bg-red-100 transition-colors uppercase whitespace-nowrap">
+                                                            <button type="button" onClick={handleRemovePromo} className="px-3.5 bg-red-50 text-red-600 border border-red-200 rounded-[6px] text-xs font-medium hover:bg-red-100 transition-colors uppercase whitespace-nowrap">
                                                                 Remove
                                                             </button>
                                                         ) : (
-                                                            <button type="button" onClick={handleApplyPromo} disabled={!promoCodeInput.trim() || isPromoLoading} className="px-4 bg-black text-white rounded-lg text-xs font-semibold hover:bg-[#262626] transition-colors disabled:opacity-40 disabled:cursor-not-allowed uppercase whitespace-nowrap">
+                                                            <button type="button" onClick={handleApplyPromo} disabled={!promoCodeInput.trim() || isPromoLoading} className="px-4 bg-[#171717] text-white rounded-[6px] text-xs font-medium hover:bg-[#262626] transition-colors disabled:opacity-40 disabled:cursor-not-allowed uppercase whitespace-nowrap border border-[#171717]">
                                                                 {isPromoLoading ? 'Applying...' : 'Apply'}
                                                             </button>
                                                         )}
                                                     </div>
                                                     {promoError && <p className="text-xs text-red-500 mt-1.5 ml-1">{promoError}</p>}
-                                                    {promoSuccess && <p className="text-xs text-emerald-600 mt-1.5 ml-1">{promoSuccess}</p>}
+                                                    {promoSuccess && <p className="text-xs text-[#297a3a] mt-1.5 ml-1">{promoSuccess}</p>}
                                                 </div>
 
                                                 {/* Price & Continue */}
-                                                <div className="pt-4 border-t border-[#E5E5E5]">
+                                                <div className="pt-4 border-t border-[#ebebeb]">
                                                     <div className="flex items-end justify-between mb-4">
-                                                        <span className="text-xs font-semibold text-[#737373] uppercase tracking-wider">Total Price</span>
-                                                        <span className="text-2xl font-serif text-black font-medium">
+                                                        <span className="font-mono text-xs uppercase tracking-[0.071em] text-[#666666]">Total Price</span>
+                                                        <span className="text-2xl font-mono text-[#171717] font-medium tabular-nums">
                                                             IDR {calculateCartTotal(cartItems, appliedPromo, massageTableCount * 100000).total.toLocaleString('en-US')}
                                                         </span>
                                                     </div>
                                                     <button
                                                         type="button"
                                                         onClick={() => setTherapickStep('details')}
-                                                        className="w-full bg-black hover:bg-[#262626] text-white px-6 py-3.5 rounded-xl text-xs sm:text-[13px] font-semibold flex items-center justify-center gap-2 transition-colors shadow-2xs uppercase tracking-wider"
+                                                        className="w-full bg-[#171717] hover:bg-[#262626] text-white px-5 py-3 rounded-[6px] text-xs sm:text-[13px] font-medium flex items-center justify-center gap-2 transition-all active:scale-[0.99] border border-[#171717]"
                                                     >
                                                         <span>Continue to Guest Details</span>
                                                         <ArrowRight className="w-4 h-4" />
@@ -1567,12 +1567,17 @@ export default function Home() {
                                                     <button
                                                         type="button"
                                                         onClick={() => setTherapickStep('selection')}
-                                                        className="inline-flex items-center gap-1 text-xs font-medium text-[#737373] hover:text-black uppercase tracking-wider mb-2"
+                                                        className="inline-flex items-center gap-1 text-xs font-mono uppercase tracking-[0.071em] text-[#4d4d4d] hover:text-[#171717] transition-colors mb-2"
                                                     >
                                                         <ChevronLeft className="w-4 h-4" /> Back to Treatments
                                                     </button>
-                                                    <h2 className="font-serif text-2xl sm:text-3xl text-black font-medium tracking-tight mb-1">GUEST DETAILS</h2>
-                                                    <p className="text-xs text-[#737373]">Enter your villa location and schedule for our therapists.</p>
+                                                    <span className="font-mono text-[11px] uppercase tracking-[0.071em] text-[#171717] block mb-1">
+                                                        Step 2 of 3
+                                                    </span>
+                                                    <h2 className="font-sans text-2xl sm:text-[28px] text-[#171717] font-medium tracking-[-0.05em] leading-tight mb-1">
+                                                        Guest Details
+                                                    </h2>
+                                                    <p className="text-xs text-[#4d4d4d]">Enter your villa location and schedule for our therapists.</p>
                                                 </div>
 
                                                 <form className="space-y-4 pb-2" onSubmit={(e) => {
@@ -1583,84 +1588,84 @@ export default function Home() {
                                                     }
                                                     setTherapickStep('review');
                                                 }}>
-                                                    <div className="space-y-1 w-full">
-                                                        <label className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#737373]">
-                                                            <User className="w-3.5 h-3.5" /> Guest Name
+                                                    <div className="space-y-1.5 w-full">
+                                                        <label className="flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.071em] text-[#171717]">
+                                                            <User className="w-3.5 h-3.5 text-[#a8a8a8]" /> Guest Name
                                                         </label>
                                                         <input
                                                             type="text" required placeholder="John Doe"
                                                             value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })}
-                                                            className="w-full bg-white border border-[#E5E5E5] rounded-lg px-3.5 py-2.5 text-xs sm:text-[13px] text-black placeholder:text-[#A3A3A3] shadow-2xs focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-colors"
+                                                            className="w-full bg-white border border-[#ebebeb] rounded-[6px] px-3.5 py-2 text-xs sm:text-[13px] text-[#171717] placeholder:text-[#a8a8a8] focus:outline-none focus:border-[#171717] focus:ring-1 focus:ring-[#171717] transition-colors"
                                                         />
                                                     </div>
 
                                                     <div className="flex flex-row gap-3 w-full">
-                                                        <div className="space-y-1 flex-1 min-w-0">
-                                                            <label className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#737373]">
-                                                                <Calendar className="w-3.5 h-3.5" /> Date
+                                                        <div className="space-y-1.5 flex-1 min-w-0">
+                                                            <label className="flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.071em] text-[#171717]">
+                                                                <Calendar className="w-3.5 h-3.5 text-[#a8a8a8]" /> Date
                                                             </label>
                                                             <input
                                                                 type="date" required
                                                                 value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })}
-                                                                className="w-full min-w-0 appearance-none bg-white border border-[#E5E5E5] rounded-lg px-3 py-2 text-xs sm:text-[13px] text-black shadow-2xs focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-colors"
+                                                                className="w-full min-w-0 appearance-none bg-white border border-[#ebebeb] rounded-[6px] px-3 py-2 text-xs sm:text-[13px] text-[#171717] focus:outline-none focus:border-[#171717] focus:ring-1 focus:ring-[#171717] transition-colors font-mono"
                                                             />
                                                         </div>
 
-                                                        <div className="space-y-1 flex-1 min-w-0">
-                                                            <label className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#737373]">
-                                                                <Clock className="w-3.5 h-3.5" /> Time
+                                                        <div className="space-y-1.5 flex-1 min-w-0">
+                                                            <label className="flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.071em] text-[#171717]">
+                                                                <Clock className="w-3.5 h-3.5 text-[#a8a8a8]" /> Time
                                                             </label>
                                                             <input
                                                                 type="time" required
                                                                 value={formData.time} onChange={e => setFormData({ ...formData, time: e.target.value })}
-                                                                className="w-full min-w-0 appearance-none bg-white border border-[#E5E5E5] rounded-lg px-3 py-2 text-xs sm:text-[13px] text-black shadow-2xs focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-colors"
+                                                                className="w-full min-w-0 appearance-none bg-white border border-[#ebebeb] rounded-[6px] px-3 py-2 text-xs sm:text-[13px] text-[#171717] focus:outline-none focus:border-[#171717] focus:ring-1 focus:ring-[#171717] transition-colors font-mono"
                                                             />
                                                         </div>
                                                     </div>
 
-                                                    <div className="space-y-1 w-full">
-                                                        <label className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#737373]">
-                                                            <MapPin className="w-3.5 h-3.5" /> Villa / Hotel Name
+                                                    <div className="space-y-1.5 w-full">
+                                                        <label className="flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.071em] text-[#171717]">
+                                                            <MapPin className="w-3.5 h-3.5 text-[#a8a8a8]" /> Villa / Hotel Name
                                                         </label>
                                                         <input
                                                             type="text" required placeholder="e.g. Four Seasons Sayan"
                                                             value={formData.location} onChange={e => setFormData({ ...formData, location: e.target.value })}
-                                                            className="w-full bg-white border border-[#E5E5E5] rounded-lg px-3.5 py-2.5 text-xs sm:text-[13px] text-black placeholder:text-[#A3A3A3] shadow-2xs focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-colors"
+                                                            className="w-full bg-white border border-[#ebebeb] rounded-[6px] px-3.5 py-2 text-xs sm:text-[13px] text-[#171717] placeholder:text-[#a8a8a8] focus:outline-none focus:border-[#171717] focus:ring-1 focus:ring-[#171717] transition-colors"
                                                         />
                                                     </div>
 
-                                                    <div className="space-y-1 w-full">
-                                                        <label className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#737373]">
-                                                            <DoorOpen className="w-3.5 h-3.5" /> Room Number (Optional)
+                                                    <div className="space-y-1.5 w-full">
+                                                        <label className="flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.071em] text-[#171717]">
+                                                            <DoorOpen className="w-3.5 h-3.5 text-[#a8a8a8]" /> Room Number (Optional)
                                                         </label>
                                                         <input
                                                             type="text" placeholder="e.g. Villa 12"
                                                             value={formData.room} onChange={e => setFormData({ ...formData, room: e.target.value })}
-                                                            className="w-full bg-white border border-[#E5E5E5] rounded-lg px-3.5 py-2.5 text-xs sm:text-[13px] text-black placeholder:text-[#A3A3A3] shadow-2xs focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-colors"
+                                                            className="w-full bg-white border border-[#ebebeb] rounded-[6px] px-3.5 py-2 text-xs sm:text-[13px] text-[#171717] placeholder:text-[#a8a8a8] focus:outline-none focus:border-[#171717] focus:ring-1 focus:ring-[#171717] transition-colors font-mono"
                                                         />
                                                     </div>
 
-                                                    <div className="space-y-1 w-full">
-                                                        <label className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#737373]">
-                                                            <MessageCircle className="w-3.5 h-3.5" /> WhatsApp Number
+                                                    <div className="space-y-1.5 w-full">
+                                                        <label className="flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.071em] text-[#171717]">
+                                                            <MessageCircle className="w-3.5 h-3.5 text-[#a8a8a8]" /> WhatsApp Number
                                                         </label>
                                                         <input
                                                             type="tel" required placeholder="e.g. +62 812 3456 7890"
                                                             value={formData.whatsapp} onChange={e => setFormData({ ...formData, whatsapp: e.target.value })}
-                                                            className="w-full bg-white border border-[#E5E5E5] rounded-lg px-3.5 py-2.5 text-xs sm:text-[13px] text-black placeholder:text-[#A3A3A3] shadow-2xs focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-colors"
+                                                            className="w-full bg-white border border-[#ebebeb] rounded-[6px] px-3.5 py-2 text-xs sm:text-[13px] text-[#171717] placeholder:text-[#a8a8a8] focus:outline-none focus:border-[#171717] focus:ring-1 focus:ring-[#171717] transition-colors font-mono"
                                                         />
                                                     </div>
 
-                                                    <div className="pt-4 border-t border-[#E5E5E5]">
+                                                    <div className="pt-4 border-t border-[#ebebeb]">
                                                         <div className="flex items-end justify-between mb-4">
-                                                            <span className="text-xs font-semibold text-[#737373] uppercase tracking-wider">Total Price</span>
-                                                            <span className="text-2xl font-serif text-black font-medium">
+                                                            <span className="font-mono text-xs uppercase tracking-[0.071em] text-[#666666]">Total Price</span>
+                                                            <span className="text-2xl font-mono text-[#171717] font-medium tabular-nums">
                                                                 IDR {calculateCartTotal(cartItems, appliedPromo, massageTableCount * 100000).total.toLocaleString('en-US')}
                                                             </span>
                                                         </div>
                                                         <button
                                                             type="submit"
-                                                            className="w-full bg-black hover:bg-[#262626] text-white px-6 py-3.5 rounded-xl text-xs sm:text-[13px] font-semibold flex items-center justify-center gap-2 transition-colors shadow-2xs uppercase tracking-wider"
+                                                            className="w-full bg-[#171717] hover:bg-[#262626] text-white px-5 py-3 rounded-[6px] text-xs sm:text-[13px] font-medium flex items-center justify-center gap-2 transition-all active:scale-[0.99] border border-[#171717]"
                                                         >
                                                             <span>Review Booking</span>
                                                             <ArrowRight className="w-4 h-4" />
@@ -1676,43 +1681,48 @@ export default function Home() {
                                                     <button
                                                         type="button"
                                                         onClick={() => setTherapickStep('details')}
-                                                        className="inline-flex items-center gap-1 text-xs font-medium text-[#737373] hover:text-black uppercase tracking-wider mb-2"
+                                                        className="inline-flex items-center gap-1 text-xs font-mono uppercase tracking-[0.071em] text-[#4d4d4d] hover:text-[#171717] transition-colors mb-2"
                                                     >
                                                         <ChevronLeft className="w-4 h-4" /> Edit Details
                                                     </button>
-                                                    <h2 className="font-serif text-2xl sm:text-3xl text-black font-medium tracking-tight mb-1">REVIEW BOOKING</h2>
-                                                    <p className="text-xs text-[#737373]">Please verify your booking details below.</p>
+                                                    <span className="font-mono text-[11px] uppercase tracking-[0.071em] text-[#171717] block mb-1">
+                                                        Step 3 of 3
+                                                    </span>
+                                                    <h2 className="font-sans text-2xl sm:text-[28px] text-[#171717] font-medium tracking-[-0.05em] leading-tight mb-1">
+                                                        Review Booking
+                                                    </h2>
+                                                    <p className="text-xs text-[#4d4d4d]">Please verify your booking details below.</p>
                                                 </div>
 
                                                 <div className="space-y-4 pb-2">
                                                     {/* Guest Details Summary */}
-                                                    <div className="bg-white border border-[#E5E5E5] rounded-xl p-4 sm:p-5 shadow-2xs space-y-3">
-                                                        <h4 className="text-xs font-semibold text-black uppercase tracking-wider border-b border-[#E5E5E5] pb-2">Guest Logistics</h4>
+                                                    <div className="bg-white border border-[#ebebeb] rounded-[6px] p-4 sm:p-5 shadow-[0_0_0_1px_rgba(0,0,0,0.04)] space-y-3">
+                                                        <h4 className="font-mono text-[11px] uppercase tracking-[0.071em] text-[#171717] border-b border-[#ebebeb] pb-2">Guest Logistics</h4>
                                                         <div className="grid grid-cols-2 gap-3 text-xs">
                                                             <div>
-                                                                <span className="text-[10px] font-medium uppercase tracking-wider text-[#737373] block">Guest Name</span>
-                                                                <span className="font-semibold text-black">{formData.name}</span>
+                                                                <span className="font-mono text-[10px] uppercase tracking-[0.071em] text-[#666666] block">Guest Name</span>
+                                                                <span className="font-medium text-[#171717]">{formData.name}</span>
                                                             </div>
                                                             <div>
-                                                                <span className="text-[10px] font-medium uppercase tracking-wider text-[#737373] block">WhatsApp</span>
-                                                                <span className="font-semibold text-black">{formData.whatsapp}</span>
+                                                                <span className="font-mono text-[10px] uppercase tracking-[0.071em] text-[#666666] block">WhatsApp</span>
+                                                                <span className="font-mono font-medium text-[#171717]">{formData.whatsapp}</span>
                                                             </div>
                                                             <div>
-                                                                <span className="text-[10px] font-medium uppercase tracking-wider text-[#737373] block">Date & Time</span>
-                                                                <span className="font-semibold text-black">{formData.date} at {formData.time}</span>
+                                                                <span className="font-mono text-[10px] uppercase tracking-[0.071em] text-[#666666] block">Date & Time</span>
+                                                                <span className="font-mono font-medium text-[#171717]">{formData.date} at {formData.time}</span>
                                                             </div>
                                                             <div>
-                                                                <span className="text-[10px] font-medium uppercase tracking-wider text-[#737373] block">Villa / Location</span>
-                                                                <span className="font-semibold text-black">{formData.location} {formData.room ? `(${formData.room})` : ''}</span>
+                                                                <span className="font-mono text-[10px] uppercase tracking-[0.071em] text-[#666666] block">Villa / Location</span>
+                                                                <span className="font-medium text-[#171717]">{formData.location} {formData.room ? `(${formData.room})` : ''}</span>
                                                             </div>
                                                         </div>
                                                     </div>
 
                                                     {/* Setup Preference Summary */}
-                                                    <div className="bg-white border border-[#E5E5E5] rounded-xl p-4 shadow-2xs flex items-center justify-between text-xs">
+                                                    <div className="bg-white border border-[#ebebeb] rounded-[6px] p-4 shadow-[0_0_0_1px_rgba(0,0,0,0.04)] flex items-center justify-between text-xs">
                                                         <div>
-                                                            <span className="text-[10px] font-medium uppercase tracking-wider text-[#737373] block">Massage Setup</span>
-                                                            <span className="font-semibold text-black">
+                                                            <span className="font-mono text-[10px] uppercase tracking-[0.071em] text-[#666666] block">Massage Setup</span>
+                                                            <span className="font-medium text-[#171717]">
                                                                 {massageTableCount > 0
                                                                     ? `${massageTableCount} Portable Table${massageTableCount > 1 ? 's' : ''} (+IDR ${(massageTableCount * 100000).toLocaleString('en-US')})`
                                                                     : 'Villa Bed / Floor Mat Setup (IDR 0)'
@@ -1722,20 +1732,20 @@ export default function Home() {
                                                         <button
                                                             type="button"
                                                             onClick={() => setTherapickStep('selection')}
-                                                            className="text-[11px] font-semibold text-[#737373] hover:text-black underline transition-colors"
+                                                            className="text-xs font-mono text-[#4d4d4d] hover:text-[#171717] underline transition-colors"
                                                         >
                                                             Change
                                                         </button>
                                                     </div>
 
                                                     {/* Treatments Summary */}
-                                                    <div className="bg-white border border-[#E5E5E5] rounded-xl p-4 shadow-2xs space-y-2.5">
-                                                        <div className="flex items-center justify-between border-b border-[#E5E5E5] pb-2">
-                                                            <h4 className="text-xs font-semibold text-black uppercase tracking-wider">Treatments ({cartItems.length})</h4>
+                                                    <div className="bg-white border border-[#ebebeb] rounded-[6px] p-4 shadow-[0_0_0_1px_rgba(0,0,0,0.04)] space-y-2.5">
+                                                        <div className="flex items-center justify-between border-b border-[#ebebeb] pb-2">
+                                                            <h4 className="font-mono text-[11px] uppercase tracking-[0.071em] text-[#171717]">Treatments ({cartItems.length})</h4>
                                                             <button
                                                                 type="button"
                                                                 onClick={() => setTherapickStep('selection')}
-                                                                className="text-[11px] font-semibold text-[#737373] hover:text-black underline transition-colors"
+                                                                className="text-xs font-mono text-[#4d4d4d] hover:text-[#171717] underline transition-colors"
                                                             >
                                                                 Modify
                                                             </button>
@@ -1746,18 +1756,18 @@ export default function Home() {
                                                             const mult = isCouple ? (item.guests / 2) : item.guests;
                                                             const totalItem = (item.price + addonsTotal) * mult;
                                                             return (
-                                                                <div key={idx} className="text-xs border-b border-[#E5E5E5]/60 last:border-b-0 pb-2">
-                                                                    <div className="flex items-center justify-between font-semibold text-black">
+                                                                <div key={idx} className="text-xs border-b border-[#ebebeb]/70 last:border-b-0 pb-2">
+                                                                    <div className="flex items-center justify-between font-medium text-[#171717]">
                                                                         <span>{item.title}</span>
-                                                                        <span className="font-mono">IDR {totalItem.toLocaleString('en-US')}</span>
+                                                                        <span className="font-mono tabular-nums">IDR {totalItem.toLocaleString('en-US')}</span>
                                                                     </div>
-                                                                    <div className="text-[11px] text-[#737373] flex items-center gap-2 mt-0.5">
+                                                                    <div className="font-mono text-[11px] text-[#666666] flex items-center gap-2 mt-0.5">
                                                                         <span>{item.duration} Mins</span>
                                                                         <span>•</span>
                                                                         <span>{item.guests} Guest{item.guests > 1 ? 's' : ''}</span>
                                                                     </div>
                                                                     {item.addons && item.addons.length > 0 && (
-                                                                        <div className="text-[10px] text-[#737373] mt-1">
+                                                                        <div className="font-mono text-[10px] text-[#666666] mt-1">
                                                                             Add-ons: {item.addons.map((a: any) => a.title).join(', ')}
                                                                         </div>
                                                                     )}
@@ -1767,26 +1777,26 @@ export default function Home() {
                                                     </div>
 
                                                     {/* Pricing Summary */}
-                                                    <div className="pt-3 border-t border-[#E5E5E5]">
+                                                    <div className="pt-3 border-t border-[#ebebeb]">
                                                         {appliedPromo && (
                                                             <div className="flex items-center justify-between mb-2 text-xs">
-                                                                <span className="text-[#737373] uppercase tracking-wider font-semibold">Subtotal</span>
-                                                                <span className="font-mono text-[#737373] line-through">
+                                                                <span className="font-mono text-[#666666] uppercase tracking-[0.071em]">Subtotal</span>
+                                                                <span className="font-mono text-[#666666] line-through">
                                                                     IDR {calculateCartTotal(cartItems).subtotal.toLocaleString('en-US')}
                                                                 </span>
                                                             </div>
                                                         )}
                                                         {massageTableCount > 0 && (
                                                             <div className="flex items-center justify-between mb-2 text-xs">
-                                                                <span className="text-[#737373] uppercase tracking-wider font-semibold">Portable Table Fee ({massageTableCount}x)</span>
-                                                                <span className="font-mono text-black font-semibold">
+                                                                <span className="font-mono text-[#666666] uppercase tracking-[0.071em]">Portable Table Fee ({massageTableCount}x)</span>
+                                                                <span className="font-mono text-[#171717] font-medium">
                                                                     +IDR {(massageTableCount * 100000).toLocaleString('en-US')}
                                                                 </span>
                                                             </div>
                                                         )}
                                                         <div className="flex items-end justify-between mb-4">
-                                                            <span className="text-xs font-semibold text-[#737373] uppercase tracking-wider">Total Price</span>
-                                                            <span className="text-2xl font-serif text-black font-medium">
+                                                            <span className="font-mono text-xs uppercase tracking-[0.071em] text-[#666666]">Total Price</span>
+                                                            <span className="text-2xl font-mono text-[#171717] font-medium tabular-nums">
                                                                 IDR {calculateCartTotal(cartItems, appliedPromo, massageTableCount * 100000).total.toLocaleString('en-US')}
                                                             </span>
                                                         </div>
@@ -1795,9 +1805,9 @@ export default function Home() {
                                                             type="button"
                                                             onClick={() => handleCampaignBooking()}
                                                             disabled={isProcessing}
-                                                            className="w-full bg-black hover:bg-[#262626] text-white px-6 py-3.5 rounded-xl text-xs sm:text-[13px] font-semibold flex items-center justify-center gap-2 transition-colors shadow-2xs uppercase tracking-wider disabled:opacity-50"
+                                                            className="w-full bg-[#171717] hover:bg-[#262626] text-white px-5 py-3.5 rounded-[6px] text-xs sm:text-[13px] font-medium flex items-center justify-center gap-2 transition-all active:scale-[0.99] border border-[#171717] disabled:opacity-50"
                                                         >
-                                                            <MessageCircle className="w-4 h-4 text-emerald-400 fill-emerald-400" />
+                                                            <MessageCircle className="w-4 h-4 text-[#297a3a] fill-[#297a3a]" />
                                                             <span>{isProcessing ? 'PROCESSING...' : 'CONFIRM ON WHATSAPP'}</span>
                                                         </button>
                                                     </div>
@@ -2189,25 +2199,37 @@ export default function Home() {
                                 initial={{ opacity: 0, scale: 0.95, y: 15 }}
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.95, y: 15 }}
-                                className="relative bg-white rounded-2xl p-5 sm:p-6 shadow-xl max-w-md w-full max-h-[85vh] flex flex-col z-10 border border-neutral-200"
+                                className={`relative bg-white p-5 sm:p-6 max-w-md w-full max-h-[85vh] flex flex-col z-10 ${
+                                    isTherapick
+                                        ? 'rounded-[6px] border border-[#ebebeb] shadow-[0_0_0_1px_rgba(0,0,0,0.08)]'
+                                        : 'rounded-2xl shadow-xl border border-neutral-200'
+                                }`}
                             >
                                 {/* Modal Header */}
-                                <div className="flex items-start justify-between pb-3.5 border-b border-neutral-100">
+                                <div className={`flex items-start justify-between pb-3.5 border-b ${isTherapick ? 'border-[#ebebeb]' : 'border-neutral-100'}`}>
                                     <div>
-                                        <span className="text-[10px] font-semibold tracking-wider text-neutral-400 uppercase block mb-1">
+                                        <span className={`block mb-1 uppercase ${
+                                            isTherapick
+                                                ? 'font-mono text-[11px] tracking-[0.071em] text-[#666666]'
+                                                : 'text-[10px] font-semibold tracking-wider text-neutral-400'
+                                        }`}>
                                             Wellness Enhancements
                                         </span>
-                                        <h3 className="font-serif text-lg sm:text-xl font-medium text-neutral-900">
+                                        <h3 className={isTherapick ? 'text-lg font-normal tracking-[-0.03em] text-[#171717]' : 'font-serif text-lg sm:text-xl font-medium text-neutral-900'}>
                                             Add-On Treatments
                                         </h3>
-                                        <p className="text-[11px] text-neutral-500 mt-0.5">
-                                            Enhance your <span className="font-medium text-neutral-800">{selectedAddonItem.title}</span> ritual
+                                        <p className={`text-[11px] mt-0.5 ${isTherapick ? 'text-[#666666]' : 'text-neutral-500'}`}>
+                                            Enhance your <span className={`font-medium ${isTherapick ? 'text-[#171717]' : 'text-neutral-800'}`}>{selectedAddonItem.title}</span> ritual
                                         </p>
                                     </div>
                                     <button
                                         type="button"
                                         onClick={() => setSelectedAddonItem(null)}
-                                        className="w-8 h-8 rounded-full bg-neutral-100 hover:bg-neutral-200 text-neutral-500 hover:text-neutral-900 flex items-center justify-center transition-colors shrink-0"
+                                        className={`w-8 h-8 flex items-center justify-center transition-colors shrink-0 ${
+                                            isTherapick
+                                                ? 'rounded-[6px] border border-[#ebebeb] text-[#666666] hover:text-[#171717] bg-[#fafafa] hover:bg-[#ebebeb]'
+                                                : 'rounded-full bg-neutral-100 hover:bg-neutral-200 text-neutral-500 hover:text-neutral-900'
+                                        }`}
                                     >
                                         <X className="w-4 h-4" />
                                     </button>
@@ -2221,27 +2243,32 @@ export default function Home() {
                                             return (
                                                 <div
                                                     key={addon.id}
-                                                    className={`p-3.5 rounded-xl border transition-all ${isAdded
-                                                            ? 'bg-neutral-50 border-neutral-900/40 shadow-xs'
-                                                            : 'bg-white border-neutral-200 hover:border-neutral-300'
-                                                        }`}
+                                                    className={`p-3.5 border transition-all ${
+                                                        isTherapick
+                                                            ? isAdded
+                                                                ? 'rounded-[6px] bg-[#fafafa] border-[#171717]'
+                                                                : 'rounded-[6px] bg-white border-[#ebebeb] hover:border-[#8f8f8f]'
+                                                            : isAdded
+                                                                ? 'rounded-xl bg-neutral-50 border-neutral-900/40 shadow-xs'
+                                                                : 'rounded-xl bg-white border-neutral-200 hover:border-neutral-300'
+                                                    }`}
                                                 >
                                                     <div className="flex items-start justify-between gap-3 mb-1.5">
                                                         <div>
-                                                            <div className="font-medium text-xs text-neutral-900">{addon.title}</div>
-                                                            <div className="text-[10px] text-neutral-400 flex items-center gap-1 mt-0.5">
-                                                                <Clock className="w-3 h-3 text-neutral-400" />
+                                                            <div className={`font-medium text-xs ${isTherapick ? 'text-[#171717]' : 'text-neutral-900'}`}>{addon.title}</div>
+                                                            <div className={`text-[10px] flex items-center gap-1 mt-0.5 ${isTherapick ? 'font-mono text-[#666666]' : 'text-neutral-400'}`}>
+                                                                <Clock className="w-3 h-3" />
                                                                 <span>{addon.duration}</span>
                                                             </div>
                                                         </div>
                                                         <div className="text-right shrink-0">
-                                                            <div className="font-serif text-xs font-medium text-neutral-900">
+                                                            <div className={`text-xs font-medium ${isTherapick ? 'font-mono text-[#171717]' : 'font-serif text-neutral-900'}`}>
                                                                 +IDR {Number(addon.price).toLocaleString('en-US')}
                                                             </div>
                                                         </div>
                                                     </div>
                                                     {addon.description && (
-                                                        <p className="text-[11px] text-neutral-600 leading-relaxed mb-3">
+                                                        <p className={`text-[11px] leading-relaxed mb-3 ${isTherapick ? 'text-[#4d4d4d]' : 'text-neutral-600'}`}>
                                                             {addon.description}
                                                         </p>
                                                     )}
@@ -2262,10 +2289,15 @@ export default function Home() {
                                                                 addons: updatedAddons
                                                             });
                                                         }}
-                                                        className={`w-full h-8 px-3 rounded-lg text-xs font-medium uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 ${isAdded
-                                                                ? 'bg-neutral-200 text-neutral-800 hover:bg-red-50 hover:text-red-600'
-                                                                : 'bg-neutral-900 text-white hover:bg-neutral-800'
-                                                            }`}
+                                                        className={`w-full h-8 px-3 text-xs transition-all flex items-center justify-center gap-1.5 ${
+                                                            isTherapick
+                                                                ? isAdded
+                                                                    ? 'rounded-[6px] bg-[#ebebeb] text-[#171717] font-mono text-[11px] uppercase tracking-[0.071em]'
+                                                                    : 'rounded-[6px] bg-[#171717] text-white font-mono text-[11px] uppercase tracking-[0.071em] hover:bg-black'
+                                                                : isAdded
+                                                                    ? 'rounded-lg bg-neutral-200 text-neutral-800 hover:bg-red-50 hover:text-red-600 font-medium uppercase tracking-wider'
+                                                                    : 'rounded-lg bg-neutral-900 text-white hover:bg-neutral-800 font-medium uppercase tracking-wider'
+                                                        }`}
                                                     >
                                                         {isAdded ? (
                                                             <>
@@ -2282,17 +2314,25 @@ export default function Home() {
                                         })
                                     ) : (
                                         <div className="py-6 px-4 text-center space-y-3">
-                                            <div className="w-10 h-10 rounded-full bg-neutral-100 border border-neutral-200/80 flex items-center justify-center mx-auto text-neutral-800 mb-2">
-                                                <Sparkles className="w-4 h-4 text-neutral-700" />
+                                            <div className={`w-10 h-10 flex items-center justify-center mx-auto mb-2 ${
+                                                isTherapick
+                                                    ? 'rounded-[6px] bg-[#fafafa] border border-[#ebebeb] text-[#171717]'
+                                                    : 'rounded-full bg-neutral-100 border border-neutral-200/80 text-neutral-800'
+                                            }`}>
+                                                <Sparkles className="w-4 h-4" />
                                             </div>
-                                            <h4 className="font-serif text-lg font-medium text-neutral-900">
+                                            <h4 className={isTherapick ? 'text-base font-normal tracking-[-0.03em] text-[#171717]' : 'font-serif text-lg font-medium text-neutral-900'}>
                                                 Complete Luxury Spa Ritual
                                             </h4>
-                                            <p className="text-xs text-neutral-500 leading-relaxed max-w-xs mx-auto">
+                                            <p className={`text-xs leading-relaxed max-w-xs mx-auto ${isTherapick ? 'text-[#666666]' : 'text-neutral-500'}`}>
                                                 Your selected ritual is already fully inclusive with our signature organic aromatherapy oils, customized pressure, and dedicated therapist care.
                                             </p>
-                                            <div className="bg-neutral-50/80 border border-neutral-200/80 rounded-xl p-3.5 text-[11px] text-neutral-600 leading-relaxed text-left mt-2">
-                                                <span className="font-medium text-xs text-neutral-900 block mb-1">Specialty Enhancements Upon Request</span>
+                                            <div className={`p-3.5 text-[11px] leading-relaxed text-left mt-2 ${
+                                                isTherapick
+                                                    ? 'rounded-[6px] bg-[#fafafa] border border-[#ebebeb] text-[#4d4d4d]'
+                                                    : 'bg-neutral-50/80 border border-neutral-200/80 rounded-xl text-neutral-600'
+                                            }`}>
+                                                <span className={`font-medium text-xs block mb-1 ${isTherapick ? 'text-[#171717]' : 'text-neutral-900'}`}>Specialty Enhancements Upon Request</span>
                                                 Custom organic facial treatments, herbal body compresses, or extended massage durations can also be arranged directly with your private therapist upon arrival at your villa.
                                             </div>
                                         </div>
@@ -2300,11 +2340,15 @@ export default function Home() {
                                 </div>
 
                                 {/* Modal Footer */}
-                                <div className="pt-3 border-t border-neutral-100">
+                                <div className={`pt-3 border-t ${isTherapick ? 'border-[#ebebeb]' : 'border-neutral-100'}`}>
                                     <button
                                         type="button"
                                         onClick={() => setSelectedAddonItem(null)}
-                                        className="w-full h-11 bg-neutral-900 hover:bg-neutral-800 text-white rounded-xl text-xs font-semibold uppercase tracking-wider transition-all active:scale-[0.99] shadow-xs"
+                                        className={`w-full h-11 transition-all active:scale-[0.99] flex items-center justify-center ${
+                                            isTherapick
+                                                ? 'rounded-[6px] bg-[#171717] hover:bg-black text-white font-mono text-[11px] uppercase tracking-[0.071em]'
+                                                : 'rounded-xl bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-semibold uppercase tracking-wider shadow-xs'
+                                        }`}
                                     >
                                         Done
                                     </button>
@@ -2329,22 +2373,34 @@ export default function Home() {
                                 initial={{ opacity: 0, scale: 0.95, y: 15 }}
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.95, y: 15 }}
-                                className="relative bg-white rounded-2xl p-5 sm:p-6 shadow-xl max-w-md w-full max-h-[85vh] flex flex-col z-10 border border-neutral-200"
+                                className={`relative bg-white p-5 sm:p-6 max-w-md w-full max-h-[85vh] flex flex-col z-10 ${
+                                    isTherapick
+                                        ? 'rounded-[6px] border border-[#ebebeb] shadow-[0_0_0_1px_rgba(0,0,0,0.08)]'
+                                        : 'rounded-2xl shadow-xl border border-neutral-200'
+                                }`}
                             >
                                 {/* Modal Header */}
-                                <div className="flex items-start justify-between pb-3.5 border-b border-neutral-100">
+                                <div className={`flex items-start justify-between pb-3.5 border-b ${isTherapick ? 'border-[#ebebeb]' : 'border-neutral-100'}`}>
                                     <div>
-                                        <span className="text-[10px] font-semibold tracking-wider text-neutral-400 uppercase block mb-1">
+                                        <span className={`block mb-1 uppercase ${
+                                            isTherapick
+                                                ? 'font-mono text-[11px] tracking-[0.071em] text-[#666666]'
+                                                : 'text-[10px] font-semibold tracking-wider text-neutral-400'
+                                        }`}>
                                             Equipment & Transport Logistics
                                         </span>
-                                        <h3 className="font-serif text-lg sm:text-xl font-medium text-neutral-900">
+                                        <h3 className={isTherapick ? 'text-lg font-normal tracking-[-0.03em] text-[#171717]' : 'font-serif text-lg sm:text-xl font-medium text-neutral-900'}>
                                             Why Is There a Table Fee?
                                         </h3>
                                     </div>
                                     <button
                                         type="button"
                                         onClick={() => setShowTableFeeModal(false)}
-                                        className="w-8 h-8 rounded-full bg-neutral-100 hover:bg-neutral-200 text-neutral-500 hover:text-neutral-900 flex items-center justify-center transition-colors shrink-0"
+                                        className={`w-8 h-8 flex items-center justify-center transition-colors shrink-0 ${
+                                            isTherapick
+                                                ? 'rounded-[6px] border border-[#ebebeb] text-[#666666] hover:text-[#171717] bg-[#fafafa] hover:bg-[#ebebeb]'
+                                                : 'rounded-full bg-neutral-100 hover:bg-neutral-200 text-neutral-500 hover:text-neutral-900'
+                                        }`}
                                     >
                                         <X className="w-4 h-4" />
                                     </button>
@@ -2352,43 +2408,67 @@ export default function Home() {
 
                                 {/* Modal Body */}
                                 <div className="py-4 overflow-y-auto space-y-3 flex-1 no-scrollbar text-xs">
-                                    <div className="p-3.5 rounded-xl bg-neutral-50/80 border border-neutral-200/80 flex items-start gap-3">
-                                        <div className="w-8 h-8 rounded-lg bg-white border border-neutral-200 flex items-center justify-center shrink-0 text-neutral-800 mt-0.5 shadow-2xs">
+                                    <div className={`p-3.5 flex items-start gap-3 ${
+                                        isTherapick
+                                            ? 'rounded-[6px] bg-[#fafafa] border border-[#ebebeb]'
+                                            : 'rounded-xl bg-neutral-50/80 border border-neutral-200/80'
+                                    }`}>
+                                        <div className={`w-8 h-8 flex items-center justify-center shrink-0 mt-0.5 ${
+                                            isTherapick
+                                                ? 'rounded-[6px] bg-white border border-[#ebebeb] text-[#171717]'
+                                                : 'rounded-lg bg-white border border-neutral-200 text-neutral-800 shadow-2xs'
+                                        }`}>
                                             <Shield className="w-4 h-4" />
                                         </div>
                                         <div>
-                                            <h4 className="font-semibold text-xs text-neutral-900 uppercase tracking-wider mb-1">
+                                            <h4 className={`text-xs mb-1 uppercase ${isTherapick ? 'font-mono text-[11px] tracking-[0.071em] text-[#171717]' : 'font-semibold tracking-wider text-neutral-900'}`}>
                                                 Heavy Commercial Equipment
                                             </h4>
-                                            <p className="text-[11px] text-neutral-600 leading-relaxed">
+                                            <p className={`text-[11px] leading-relaxed ${isTherapick ? 'text-[#4d4d4d]' : 'text-neutral-600'}`}>
                                                 Our massage tables are full-length, professional heavy-duty spa tables equipped with adjustable face cradles, luxury padding, and freshly sanitized linens (15–20 kg).
                                             </p>
                                         </div>
                                     </div>
 
-                                    <div className="p-3.5 rounded-xl bg-neutral-50/80 border border-neutral-200/80 flex items-start gap-3">
-                                        <div className="w-8 h-8 rounded-lg bg-white border border-neutral-200 flex items-center justify-center shrink-0 text-neutral-800 mt-0.5 shadow-2xs">
+                                    <div className={`p-3.5 flex items-start gap-3 ${
+                                        isTherapick
+                                            ? 'rounded-[6px] bg-[#fafafa] border border-[#ebebeb]'
+                                            : 'rounded-xl bg-neutral-50/80 border border-neutral-200/80'
+                                    }`}>
+                                        <div className={`w-8 h-8 flex items-center justify-center shrink-0 mt-0.5 ${
+                                            isTherapick
+                                                ? 'rounded-[6px] bg-white border border-[#ebebeb] text-[#171717]'
+                                                : 'rounded-lg bg-white border border-neutral-200 text-neutral-800 shadow-2xs'
+                                        }`}>
                                             <MapPin className="w-4 h-4" />
                                         </div>
                                         <div>
-                                            <h4 className="font-semibold text-xs text-neutral-900 uppercase tracking-wider mb-1">
+                                            <h4 className={`text-xs mb-1 uppercase ${isTherapick ? 'font-mono text-[11px] tracking-[0.071em] text-[#171717]' : 'font-semibold tracking-wider text-neutral-900'}`}>
                                                 Independent Scooter Transport
                                             </h4>
-                                            <p className="text-[11px] text-neutral-600 leading-relaxed">
+                                            <p className={`text-[11px] leading-relaxed ${isTherapick ? 'text-[#4d4d4d]' : 'text-neutral-600'}`}>
                                                 Therapists commute directly to your villa across Bali on personal motor scooters. Transporting heavy, bulky equipment through Bali traffic, steep inclines, and narrow villa gangways requires careful physical effort and dedicated handling.
                                             </p>
                                         </div>
                                     </div>
 
-                                    <div className="p-3.5 rounded-xl bg-neutral-50/80 border border-neutral-200/80 flex items-start gap-3">
-                                        <div className="w-8 h-8 rounded-lg bg-white border border-neutral-200 flex items-center justify-center shrink-0 text-neutral-800 mt-0.5 shadow-2xs">
+                                    <div className={`p-3.5 flex items-start gap-3 ${
+                                        isTherapick
+                                            ? 'rounded-[6px] bg-[#fafafa] border border-[#ebebeb]'
+                                            : 'rounded-xl bg-neutral-50/80 border border-neutral-200/80'
+                                    }`}>
+                                        <div className={`w-8 h-8 flex items-center justify-center shrink-0 mt-0.5 ${
+                                            isTherapick
+                                                ? 'rounded-[6px] bg-white border border-[#ebebeb] text-[#171717]'
+                                                : 'rounded-lg bg-white border border-neutral-200 text-neutral-800 shadow-2xs'
+                                        }`}>
                                             <Tag className="w-4 h-4" />
                                         </div>
                                         <div>
-                                            <h4 className="font-semibold text-xs text-neutral-900 uppercase tracking-wider mb-1">
+                                            <h4 className={`text-xs mb-1 uppercase ${isTherapick ? 'font-mono text-[11px] tracking-[0.071em] text-[#171717]' : 'font-semibold tracking-wider text-neutral-900'}`}>
                                                 100% Direct Therapist Surcharge
                                             </h4>
-                                            <p className="text-[11px] text-neutral-600 leading-relaxed">
+                                            <p className={`text-[11px] leading-relaxed ${isTherapick ? 'text-[#4d4d4d]' : 'text-neutral-600'}`}>
                                                 The surcharge of <strong>IDR 100,000 per table</strong> goes directly to your private therapist to cover physical transportation logistics and on-site setup.
                                             </p>
                                         </div>
@@ -2396,11 +2476,15 @@ export default function Home() {
                                 </div>
 
                                 {/* Modal Footer */}
-                                <div className="pt-3 border-t border-neutral-100">
+                                <div className={`pt-3 border-t ${isTherapick ? 'border-[#ebebeb]' : 'border-neutral-100'}`}>
                                     <button
                                         type="button"
                                         onClick={() => setShowTableFeeModal(false)}
-                                        className="w-full h-11 bg-neutral-900 hover:bg-neutral-800 text-white rounded-xl text-xs font-semibold uppercase tracking-wider transition-all active:scale-[0.99] shadow-xs"
+                                        className={`w-full h-11 transition-all active:scale-[0.99] flex items-center justify-center ${
+                                            isTherapick
+                                                ? 'rounded-[6px] bg-[#171717] hover:bg-black text-white font-mono text-[11px] uppercase tracking-[0.071em]'
+                                                : 'rounded-xl bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-semibold uppercase tracking-wider shadow-xs'
+                                        }`}
                                     >
                                         Understood
                                     </button>

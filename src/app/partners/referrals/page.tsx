@@ -61,8 +61,8 @@ export default function PartnerReferralsPage() {
     <div className="space-y-4 w-full font-sans antialiased pb-12">
       {/* CRM Toolbar */}
       <div className="flex items-center justify-between gap-3">
-        <div className="inline-flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-[#E5E5E5] text-xs font-mono font-semibold text-black">
-          <Users size={14} className="text-[#737373]" />
+        <div className="inline-flex items-center gap-2 bg-white px-3 py-1.5 rounded-[6px] border border-[#ebebeb] text-xs font-mono text-[#171717] shadow-[0_0_0_1px_rgba(0,0,0,0.02)]">
+          <Users size={14} className="text-[#666666]" />
           <span>{referrals.length} {referrals.length === 1 ? 'Booking' : 'Bookings'}</span>
         </div>
         <button
@@ -72,32 +72,32 @@ export default function PartnerReferralsPage() {
             loadReferrals();
           }}
           disabled={loading}
-          className="p-1.5 text-black hover:bg-[#F5F5F5] rounded-lg transition-colors cursor-pointer border border-[#E5E5E5]"
+          className="p-1.5 text-[#171717] hover:bg-[#fafafa] rounded-[6px] transition-colors cursor-pointer border border-[#ebebeb]"
           title="Refresh bookings"
         >
-          <RefreshCw size={15} className={loading ? 'animate-spin' : ''} />
+          <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
         </button>
       </div>
 
       {/* Main Content Area */}
-      <div className="border border-[#E5E5E5] rounded-xl bg-white overflow-hidden">
+      <div className="border border-[#ebebeb] rounded-[6px] bg-white overflow-hidden shadow-[0_0_0_1px_rgba(0,0,0,0.02)]">
         {loading ? (
           <div className="p-16 text-center space-y-3">
-            <div className="w-6 h-6 border-2 border-black border-t-transparent rounded-full animate-spin mx-auto" />
-            <div className="text-xs text-[#737373] font-medium">Loading referred bookings...</div>
+            <div className="w-5 h-5 border-2 border-[#171717] border-t-transparent rounded-full animate-spin mx-auto" />
+            <div className="font-mono text-xs text-[#666666]">Loading referred bookings...</div>
           </div>
         ) : referrals.length === 0 ? (
           <div className="p-12 text-center space-y-2">
-            <Calendar size={24} className="mx-auto text-[#737373]/40" />
-            <p className="text-sm font-semibold text-black">No referred bookings recorded yet.</p>
-            <p className="text-xs text-[#737373] max-w-sm mx-auto">
+            <Calendar size={22} className="mx-auto text-[#8f8f8f]" />
+            <p className="text-sm font-medium text-[#171717]">No referred bookings recorded yet.</p>
+            <p className="text-xs text-[#666666] max-w-sm mx-auto">
               Share your link or QR code to begin tracking customer visits and appointments.
             </p>
           </div>
         ) : (
           <>
             {/* Mobile Card View (< 640px) */}
-            <div className="block sm:hidden divide-y divide-[#E5E5E5]">
+            <div className="block sm:hidden divide-y divide-[#ebebeb]">
               {referrals.map((item) => {
                 const isPaid = item.payment_status === 'paid';
                 const isCancelled = item.booking_status === 'Cancelled' || item.commission_status === 'cancelled';
@@ -107,23 +107,23 @@ export default function PartnerReferralsPage() {
                   <div key={item.id} className="p-4 space-y-2.5">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div className="flex items-center gap-1.5">
-                        <span className="font-mono font-bold text-xs text-black bg-[#F5F5F5] px-2 py-0.5 rounded border border-[#E5E5E5]">
+                        <span className="font-mono text-xs text-[#171717] bg-[#fafafa] px-2 py-0.5 rounded-[4px] border border-[#ebebeb]">
                           #{item.booking_id}
                         </span>
 
                         {/* Payment Label: Paid / Unpaid */}
                         {isPaid ? (
-                          <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                          <span className="font-mono text-[10px] text-[#297a3a] bg-[#fafafa] px-2 py-0.5 rounded-[4px] border border-[#ebebeb]">
                             Paid
                           </span>
                         ) : (
-                          <span className="text-[10px] font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                          <span className="font-mono text-[10px] text-[#666666] bg-[#fafafa] px-2 py-0.5 rounded-[4px] border border-[#ebebeb]">
                             Unpaid
                           </span>
                         )}
                       </div>
 
-                      <span className="text-xs text-[#737373]">
+                      <span className="font-mono text-[11px] text-[#8f8f8f]">
                         {new Date(item.created_at).toLocaleDateString('en-GB', {
                           day: 'numeric',
                           month: 'short',
@@ -134,52 +134,52 @@ export default function PartnerReferralsPage() {
 
                     <div className="flex items-center justify-between text-xs gap-2">
                       <div className="min-w-0">
-                        <div className="flex items-center gap-1.5 text-black font-semibold truncate">
-                          <User size={13} className="text-[#737373] shrink-0" />
+                        <div className="flex items-center gap-1.5 text-[#171717] font-medium truncate">
+                          <User size={12} className="text-[#8f8f8f] shrink-0" />
                           <span className="truncate">{item.customer_name || 'Guest'}</span>
                         </div>
-                        <p className="text-[11px] text-[#737373] truncate mt-0.5">
+                        <p className="text-[11px] text-[#666666] truncate mt-0.5">
                           {item.treatment_name || 'Spa Treatment'}
                         </p>
                       </div>
 
                       {/* Treatment Status Label */}
                       {isCancelled ? (
-                        <span className="text-[10px] font-semibold text-red-600 bg-red-50 px-2 py-0.5 rounded-md border border-red-200 whitespace-nowrap">
+                        <span className="font-mono text-[10px] text-[#8f8f8f] bg-white px-2 py-0.5 rounded-[4px] border border-[#ebebeb] whitespace-nowrap">
                           Cancelled
                         </span>
                       ) : item.booking_status === 'Ongoing' ? (
-                        <span className="text-[10px] font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-200 flex items-center gap-1 whitespace-nowrap">
-                          <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+                        <span className="font-mono text-[10px] text-[#171717] bg-[#fafafa] px-2 py-0.5 rounded-[4px] border border-[#ebebeb] flex items-center gap-1 whitespace-nowrap">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#171717] animate-pulse" />
                           Ongoing
                         </span>
                       ) : item.booking_status === 'Completed' ? (
-                        <span className="text-[10px] font-semibold text-teal-700 bg-teal-50 px-2 py-0.5 rounded-md border border-teal-200 whitespace-nowrap">
+                        <span className="font-mono text-[10px] text-[#297a3a] bg-[#fafafa] px-2 py-0.5 rounded-[4px] border border-[#ebebeb] whitespace-nowrap">
                           Finish
                         </span>
                       ) : item.booking_status === 'Confirmed' ? (
-                        <span className="text-[10px] font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200 whitespace-nowrap">
+                        <span className="font-mono text-[10px] text-[#171717] bg-[#fafafa] px-2 py-0.5 rounded-[4px] border border-[#ebebeb] whitespace-nowrap">
                           Confirmed
                         </span>
                       ) : (
-                        <span className="text-[10px] font-semibold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200 whitespace-nowrap">
+                        <span className="font-mono text-[10px] text-[#666666] bg-[#fafafa] px-2 py-0.5 rounded-[4px] border border-[#ebebeb] whitespace-nowrap">
                           Awaiting Treatment
                         </span>
                       )}
                     </div>
 
-                    <div className="pt-2 border-t border-[#E5E5E5] flex items-center justify-between">
+                    <div className="pt-2 border-t border-[#ebebeb] flex items-center justify-between">
                       {/* Commission Status */}
                       {isCancelled ? (
-                        <span className="text-[10px] font-semibold text-[#737373] bg-[#F5F5F5] px-2 py-0.5 rounded-md border border-[#E5E5E5]">
+                        <span className="font-mono text-[10px] text-[#8f8f8f] bg-[#fafafa] px-2 py-0.5 rounded-[4px] border border-[#ebebeb]">
                           Cancelled
                         </span>
                       ) : isApproved ? (
-                        <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                        <span className="font-mono text-[10px] text-[#297a3a] bg-[#fafafa] px-2 py-0.5 rounded-[4px] border border-[#ebebeb]">
                           Approved
                         </span>
                       ) : (
-                        <span className="text-[10px] font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                        <span className="font-mono text-[10px] text-[#666666] bg-[#fafafa] px-2 py-0.5 rounded-[4px] border border-[#ebebeb]">
                           Pending
                         </span>
                       )}
@@ -187,10 +187,10 @@ export default function PartnerReferralsPage() {
                       <Link
                         href={`/invoice/${item.booking_id}`}
                         target="_blank"
-                        className="inline-flex items-center gap-1 font-semibold text-xs text-black hover:underline"
+                        className="inline-flex items-center gap-1 font-mono text-[11px] text-[#171717] hover:underline"
                       >
                         <span>Invoice</span>
-                        <ExternalLink size={11} className="text-[#737373]" />
+                        <ExternalLink size={10} className="text-[#666666]" />
                       </Link>
                     </div>
                   </div>
@@ -201,7 +201,7 @@ export default function PartnerReferralsPage() {
             {/* Desktop Table View (>= 640px) */}
             <div className="hidden sm:block overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-[#FAFAFA] border-b border-[#E5E5E5] text-[11px] font-semibold uppercase tracking-wider text-[#737373]">
+                <thead className="bg-[#fafafa] border-b border-[#ebebeb] font-mono text-[11px] font-normal uppercase tracking-[0.071em] text-[#666666]">
                   <tr>
                     <th className="py-3 px-4">Date</th>
                     <th className="py-3 px-4">Booking Ref</th>
@@ -213,76 +213,76 @@ export default function PartnerReferralsPage() {
                     <th className="py-3 px-4 text-right">Details</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#E5E5E5]">
+                <tbody className="divide-y divide-[#ebebeb]">
                   {referrals.map((item) => {
                     const isPaid = item.payment_status === 'paid';
                     const isCancelled = item.booking_status === 'Cancelled' || item.commission_status === 'cancelled';
                     const isApproved = item.commission_status === 'approved';
 
                     return (
-                      <tr key={item.id} className="hover:bg-[#F9FAFB] transition-colors">
-                        <td className="py-3.5 px-4 text-[#737373]">
+                      <tr key={item.id} className="hover:bg-[#fafafa] transition-colors">
+                        <td className="py-3.5 px-4 font-mono text-[11px] text-[#666666]">
                           {new Date(item.created_at).toLocaleDateString('en-GB', {
                             day: 'numeric',
                             month: 'short',
                             year: 'numeric',
                           })}
                         </td>
-                        <td className="py-3.5 px-4 font-mono font-bold text-black">
+                        <td className="py-3.5 px-4 font-mono text-xs text-[#171717]">
                           #{item.booking_id}
                         </td>
-                        <td className="py-3.5 px-4 text-black font-medium">
+                        <td className="py-3.5 px-4 text-[#171717] font-normal">
                           {item.customer_name || 'Guest'}
                         </td>
-                        <td className="py-3.5 px-4 text-[#737373] truncate max-w-[160px]">
+                        <td className="py-3.5 px-4 text-[#666666] truncate max-w-[160px]">
                           {item.treatment_name || 'Spa Treatment'}
                         </td>
                         <td className="py-3.5 px-4">
                           {isPaid ? (
-                            <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                            <span className="font-mono text-[10px] text-[#297a3a] bg-[#fafafa] px-2 py-0.5 rounded-[4px] border border-[#ebebeb]">
                               Paid
                             </span>
                           ) : (
-                            <span className="text-[10px] font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                            <span className="font-mono text-[10px] text-[#666666] bg-[#fafafa] px-2 py-0.5 rounded-[4px] border border-[#ebebeb]">
                               Unpaid
                             </span>
                           )}
                         </td>
                         <td className="py-3.5 px-4">
                           {isCancelled ? (
-                            <span className="text-[10px] font-semibold text-red-600 bg-red-50 px-2 py-0.5 rounded-md border border-red-200">
+                            <span className="font-mono text-[10px] text-[#8f8f8f] bg-white px-2 py-0.5 rounded-[4px] border border-[#ebebeb]">
                               Cancelled
                             </span>
                           ) : item.booking_status === 'Ongoing' ? (
-                            <span className="text-[10px] font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-200 flex items-center gap-1">
-                              <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+                            <span className="font-mono text-[10px] text-[#171717] bg-[#fafafa] px-2 py-0.5 rounded-[4px] border border-[#ebebeb] flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#171717] animate-pulse" />
                               Ongoing
                             </span>
                           ) : item.booking_status === 'Completed' ? (
-                            <span className="text-[10px] font-semibold text-teal-700 bg-teal-50 px-2 py-0.5 rounded-md border border-teal-200">
+                            <span className="font-mono text-[10px] text-[#297a3a] bg-[#fafafa] px-2 py-0.5 rounded-[4px] border border-[#ebebeb]">
                               Finish
                             </span>
                           ) : item.booking_status === 'Confirmed' ? (
-                            <span className="text-[10px] font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200">
+                            <span className="font-mono text-[10px] text-[#171717] bg-[#fafafa] px-2 py-0.5 rounded-[4px] border border-[#ebebeb]">
                               Confirmed
                             </span>
                           ) : (
-                            <span className="text-[10px] font-semibold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                            <span className="font-mono text-[10px] text-[#666666] bg-[#fafafa] px-2 py-0.5 rounded-[4px] border border-[#ebebeb]">
                               Awaiting Treatment
                             </span>
                           )}
                         </td>
                         <td className="py-3.5 px-4">
                           {isCancelled ? (
-                            <span className="text-[10px] font-semibold text-[#737373] bg-[#F5F5F5] px-2 py-0.5 rounded-md border border-[#E5E5E5]">
+                            <span className="font-mono text-[10px] text-[#8f8f8f] bg-[#fafafa] px-2 py-0.5 rounded-[4px] border border-[#ebebeb]">
                               Cancelled
                             </span>
                           ) : isApproved ? (
-                            <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                            <span className="font-mono text-[10px] text-[#297a3a] bg-[#fafafa] px-2 py-0.5 rounded-[4px] border border-[#ebebeb]">
                               Approved
                             </span>
                           ) : (
-                            <span className="text-[10px] font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                            <span className="font-mono text-[10px] text-[#666666] bg-[#fafafa] px-2 py-0.5 rounded-[4px] border border-[#ebebeb]">
                               Pending
                             </span>
                           )}
@@ -291,10 +291,10 @@ export default function PartnerReferralsPage() {
                           <Link
                             href={`/invoice/${item.booking_id}`}
                             target="_blank"
-                            className="inline-flex items-center gap-1 text-black font-semibold hover:underline"
+                            className="inline-flex items-center gap-1 font-mono text-[11px] text-[#171717] hover:underline"
                           >
                             <span>Invoice</span>
-                            <ExternalLink size={10} className="text-[#737373]" />
+                            <ExternalLink size={10} className="text-[#666666]" />
                           </Link>
                         </td>
                       </tr>

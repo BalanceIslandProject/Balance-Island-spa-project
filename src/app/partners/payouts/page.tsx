@@ -46,7 +46,7 @@ export default function PartnerPayoutsPage() {
     <div className="space-y-4 w-full font-sans pb-12">
       {/* CRM Toolbar */}
       <div className="flex items-center justify-between gap-3">
-        <div className="inline-flex items-center gap-1.5 bg-white text-black border border-[#E5E5E5] px-3 py-1.5 rounded-lg text-xs font-semibold shadow-xs">
+        <div className="inline-flex items-center gap-1.5 bg-white text-[#171717] border border-[#ebebeb] px-3 py-1.5 rounded-[6px] font-mono text-[11px] uppercase tracking-[0.071em] shadow-[0_0_0_1px_rgba(0,0,0,0.02)]">
           <span>No Minimum Withdrawal</span>
         </div>
         <button
@@ -56,7 +56,7 @@ export default function PartnerPayoutsPage() {
             loadPayouts();
           }}
           disabled={loading}
-          className="p-1.5 text-black hover:bg-[#F5F5F5] rounded-lg transition-colors cursor-pointer border border-[#E5E5E5]"
+          className="p-1.5 text-[#171717] hover:bg-[#fafafa] rounded-[6px] transition-colors cursor-pointer border border-[#ebebeb]"
           title="Refresh payouts"
           aria-label="Refresh"
         >
@@ -65,31 +65,31 @@ export default function PartnerPayoutsPage() {
       </div>
 
       {/* Main Table / Cards */}
-      <div className="border border-[#E5E5E5] rounded-xl bg-white overflow-hidden">
+      <div className="border border-[#ebebeb] rounded-[6px] bg-white overflow-hidden shadow-[0_0_0_1px_rgba(0,0,0,0.02)]">
         {loading ? (
           <div className="p-16 text-center space-y-3">
-            <div className="w-6 h-6 border-2 border-black border-t-transparent rounded-full animate-spin mx-auto" />
-            <div className="text-xs text-[#737373] font-medium">Loading payout history...</div>
+            <div className="w-5 h-5 border-2 border-[#171717] border-t-transparent rounded-full animate-spin mx-auto" />
+            <div className="font-mono text-xs text-[#666666]">Loading payout history...</div>
           </div>
         ) : payouts.length === 0 ? (
           <div className="p-12 text-center space-y-2">
-            <Wallet size={24} className="mx-auto text-[#737373]/40" />
-            <p className="text-sm font-semibold text-black">No payouts recorded yet.</p>
-            <p className="text-xs text-[#737373] max-w-sm mx-auto">
+            <Wallet size={22} className="mx-auto text-[#8f8f8f]" />
+            <p className="text-sm font-medium text-[#171717]">No payouts recorded yet.</p>
+            <p className="text-xs text-[#666666] max-w-sm mx-auto">
               Once your approved commission is withdrawn, official disbursement receipts will appear here.
             </p>
           </div>
         ) : (
           <>
             {/* Mobile Card View (< 640px) */}
-            <div className="block sm:hidden divide-y divide-[#E5E5E5]">
+            <div className="block sm:hidden divide-y divide-[#ebebeb]">
               {payouts.map((item) => (
                 <div key={item.id} className="p-4 space-y-2.5">
                   <div className="flex items-center justify-between">
-                    <span className="font-mono font-bold text-xs text-black bg-[#F5F5F5] px-2 py-0.5 rounded border border-[#E5E5E5]">
+                    <span className="font-mono text-xs text-[#171717] bg-[#fafafa] px-2 py-0.5 rounded-[4px] border border-[#ebebeb]">
                       #{cleanPayoutRef(item.payout_reference)}
                     </span>
-                    <span className="text-xs text-[#737373]">
+                    <span className="font-mono text-[11px] text-[#8f8f8f]">
                       {new Date(item.created_at).toLocaleDateString('en-GB', {
                         day: 'numeric',
                         month: 'short',
@@ -100,24 +100,24 @@ export default function PartnerPayoutsPage() {
 
                   <div className="flex items-center justify-between text-xs">
                     <div>
-                      <span className="text-[10px] text-[#737373] uppercase block font-semibold">Method</span>
-                      <span className="font-medium text-black capitalize">{item.payout_method.replace('_', ' ')}</span>
+                      <span className="font-mono text-[10px] text-[#666666] uppercase tracking-[0.071em] block">Method</span>
+                      <span className="font-normal text-[#171717] capitalize">{item.payout_method.replace('_', ' ')}</span>
                     </div>
 
                     <div className="text-right">
-                      <span className="text-[10px] text-[#737373] uppercase block font-semibold">Amount</span>
-                      <span className="text-sm font-bold text-black font-mono tabular-nums">{formatIDR(item.amount)}</span>
+                      <span className="font-mono text-[10px] text-[#666666] uppercase tracking-[0.071em] block">Amount</span>
+                      <span className="text-sm font-medium text-[#171717] font-mono tabular-nums">{formatIDR(item.amount)}</span>
                     </div>
                   </div>
 
-                  <div className="pt-2 border-t border-[#E5E5E5] flex items-center justify-between text-xs">
-                    <span className="border border-emerald-200 bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-md text-[10px] uppercase font-semibold">
+                  <div className="pt-2 border-t border-[#ebebeb] flex items-center justify-between text-xs">
+                    <span className="border border-[#ebebeb] bg-[#fafafa] text-[#297a3a] px-2 py-0.5 rounded-[4px] font-mono text-[10px] uppercase">
                       {item.status}
                     </span>
                     <button
                       type="button"
                       onClick={() => setSelectedPayout(item)}
-                      className="px-3 py-1.5 bg-black text-white rounded-lg font-semibold text-xs hover:bg-neutral-800 transition-colors"
+                      className="px-3 py-1.5 bg-[#171717] text-white rounded-[6px] font-mono text-[11px] uppercase tracking-[0.071em] hover:bg-black transition-colors"
                     >
                       View Details &rarr;
                     </button>
@@ -129,7 +129,7 @@ export default function PartnerPayoutsPage() {
             {/* Desktop Table View (>= 640px) */}
             <div className="hidden sm:block overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-[#FAFAFA] border-b border-[#E5E5E5] text-[11px] font-semibold uppercase tracking-wider text-[#737373]">
+                <thead className="bg-[#fafafa] border-b border-[#ebebeb] font-mono text-[11px] font-normal uppercase tracking-[0.071em] text-[#666666]">
                   <tr>
                     <th className="py-3 px-4">Date</th>
                     <th className="py-3 px-4">Reference</th>
@@ -140,38 +140,38 @@ export default function PartnerPayoutsPage() {
                     <th className="py-3 px-4 text-right">Details</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#E5E5E5]">
+                <tbody className="divide-y divide-[#ebebeb]">
                   {payouts.map((item) => (
-                    <tr key={item.id} className="hover:bg-[#F9FAFB] transition-colors">
-                      <td className="py-3.5 px-4 text-[#737373] whitespace-nowrap">
+                    <tr key={item.id} className="hover:bg-[#fafafa] transition-colors">
+                      <td className="py-3.5 px-4 font-mono text-[11px] text-[#666666] whitespace-nowrap">
                         {new Date(item.created_at).toLocaleDateString('en-GB', {
                           day: 'numeric',
                           month: 'short',
                           year: 'numeric',
                         })}
                       </td>
-                      <td className="py-3.5 px-4 font-mono font-bold text-black">
+                      <td className="py-3.5 px-4 font-mono text-xs text-[#171717]">
                         {cleanPayoutRef(item.payout_reference)}
                       </td>
-                      <td className="py-3.5 px-4 font-bold text-black font-mono tabular-nums text-sm">
+                      <td className="py-3.5 px-4 font-mono text-[#171717] tabular-nums text-sm">
                         {formatIDR(item.amount)}
                       </td>
-                      <td className="py-3.5 px-4 capitalize text-black font-medium">
+                      <td className="py-3.5 px-4 capitalize text-[#171717] font-normal">
                         {item.payout_method.replace('_', ' ')}
                       </td>
                       <td className="py-3.5 px-4">
-                        <span className="border border-emerald-200 bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-md text-[10px] uppercase font-semibold">
+                        <span className="border border-[#ebebeb] bg-[#fafafa] text-[#297a3a] px-2 py-0.5 rounded-[4px] font-mono text-[10px] uppercase">
                           {item.status}
                         </span>
                       </td>
-                      <td className="py-3.5 px-4 text-[#737373]">
+                      <td className="py-3.5 px-4 text-[#666666]">
                         {item.notes || '-'}
                       </td>
                       <td className="py-3.5 px-4 text-right">
                         <button
                           type="button"
                           onClick={() => setSelectedPayout(item)}
-                          className="px-3 py-1.5 bg-black text-white hover:bg-neutral-800 font-semibold rounded-lg text-xs transition-colors"
+                          className="px-3 py-1.5 bg-[#171717] text-white hover:bg-black font-mono text-[11px] uppercase tracking-[0.071em] rounded-[6px] transition-colors"
                         >
                           View Bookings &rarr;
                         </button>
@@ -187,30 +187,30 @@ export default function PartnerPayoutsPage() {
 
       {/* FULLSCREEN POPUP: PAID OUT BOOKING DETAILS BREAKDOWN */}
       {selectedPayout && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 md:p-6">
-          <div className="bg-white rounded-xl w-full h-full max-w-[98vw] max-h-[96vh] flex flex-col border border-[#E5E5E5] shadow-xl overflow-hidden font-sans">
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 md:p-6">
+          <div className="bg-white rounded-[6px] w-full h-full max-w-[98vw] max-h-[96vh] flex flex-col border border-[#ebebeb] shadow-[0_0_0_1px_rgba(0,0,0,0.08)] overflow-hidden font-sans">
             {/* Modal Header */}
-            <div className="p-4 sm:p-5 bg-white border-b border-[#E5E5E5] text-black flex items-start justify-between shrink-0">
+            <div className="p-4 sm:p-5 bg-white border-b border-[#ebebeb] text-[#171717] flex items-start justify-between shrink-0">
               <div>
                 <div className="flex items-center gap-2.5 flex-wrap">
-                  <h3 className="font-bold text-black text-lg sm:text-xl tracking-tight">
+                  <h3 className="font-normal text-[#171717] text-lg sm:text-xl tracking-[-0.03em]">
                     Disbursement Details
                   </h3>
-                  <span className="font-mono font-bold text-black bg-[#F5F5F5] px-2.5 py-0.5 rounded-md text-xs border border-[#E5E5E5]">
+                  <span className="font-mono text-xs text-[#171717] bg-[#fafafa] px-2.5 py-0.5 rounded-[4px] border border-[#ebebeb]">
                     {cleanPayoutRef(selectedPayout.payout_reference)}
                   </span>
-                  <span className="text-[10px] font-semibold uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  <span className="font-mono text-[10px] uppercase tracking-[0.071em] px-2.5 py-0.5 rounded-[4px] bg-[#fafafa] text-[#297a3a] border border-[#ebebeb]">
                     {selectedPayout.status || 'COMPLETED'}
                   </span>
                 </div>
-                <div className="text-xs text-[#737373] mt-1 flex items-center gap-2 flex-wrap">
-                  <span>Disbursed on: <strong className="text-black">{new Date(selectedPayout.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</strong></span>
+                <div className="text-xs text-[#666666] mt-1 flex items-center gap-2 flex-wrap">
+                  <span>Disbursed on: <strong className="text-[#171717] font-mono">{new Date(selectedPayout.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</strong></span>
                   <span>&bull;</span>
-                  <span>Method: <strong className="capitalize text-black">{selectedPayout.payout_method?.replace('_', ' ')}</strong></span>
+                  <span>Method: <strong className="capitalize text-[#171717]">{selectedPayout.payout_method?.replace('_', ' ')}</strong></span>
                   {selectedPayout.notes && (
                     <>
                       <span>&bull;</span>
-                      <span>Notes: <strong className="text-black">{selectedPayout.notes}</strong></span>
+                      <span>Notes: <strong className="text-[#171717]">{selectedPayout.notes}</strong></span>
                     </>
                   )}
                 </div>
@@ -218,45 +218,45 @@ export default function PartnerPayoutsPage() {
 
               <div className="flex items-center gap-4">
                 <div className="text-right hidden sm:block">
-                  <span className="text-[10px] text-[#737373] block font-semibold uppercase tracking-wider">Total Disbursed</span>
-                  <span className="font-mono font-bold text-xl text-black">
+                  <span className="font-mono text-[10px] text-[#666666] block uppercase tracking-[0.071em]">Total Disbursed</span>
+                  <span className="font-mono text-xl text-[#171717]">
                     {formatIDR(selectedPayout.amount)}
                   </span>
                 </div>
                 <button
                   type="button"
                   onClick={() => setSelectedPayout(null)}
-                  className="w-8 h-8 rounded-lg bg-[#F5F5F5] hover:bg-[#E5E5E5] text-black flex items-center justify-center transition-colors"
+                  className="w-8 h-8 rounded-[6px] bg-[#fafafa] hover:bg-[#ebebeb] text-[#171717] border border-[#ebebeb] flex items-center justify-center transition-colors"
                   title="Close"
                 >
-                  <X size={16} />
+                  <X size={15} />
                 </button>
               </div>
             </div>
 
             {/* Quick KPI Bar */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 sm:p-5 bg-[#FAFAFA] border-b border-[#E5E5E5] shrink-0 text-xs">
-              <div className="bg-white p-3.5 rounded-lg border border-[#E5E5E5]">
-                <span className="text-[10px] uppercase font-semibold text-[#737373] block">Payout Amount</span>
-                <span className="text-base font-bold text-black font-mono mt-0.5 block">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 sm:p-5 bg-[#fafafa] border-b border-[#ebebeb] shrink-0 text-xs">
+              <div className="bg-white p-3.5 rounded-[6px] border border-[#ebebeb]">
+                <span className="font-mono text-[10px] uppercase tracking-[0.071em] text-[#666666] block">Payout Amount</span>
+                <span className="text-base text-[#171717] font-mono mt-0.5 block">
                   {formatIDR(selectedPayout.amount)}
                 </span>
               </div>
-              <div className="bg-white p-3.5 rounded-lg border border-[#E5E5E5]">
-                <span className="text-[10px] uppercase font-semibold text-[#737373] block">Paid Bookings</span>
-                <span className="text-base font-bold text-black mt-0.5 block">
+              <div className="bg-white p-3.5 rounded-[6px] border border-[#ebebeb]">
+                <span className="font-mono text-[10px] uppercase tracking-[0.071em] text-[#666666] block">Paid Bookings</span>
+                <span className="text-base text-[#171717] mt-0.5 block font-mono">
                   {(selectedPayout.items || []).length} bookings
                 </span>
               </div>
-              <div className="bg-white p-3.5 rounded-lg border border-[#E5E5E5]">
-                <span className="text-[10px] uppercase font-semibold text-[#737373] block">Total Guest Treatments</span>
-                <span className="text-base font-bold text-black font-mono mt-0.5 block">
+              <div className="bg-white p-3.5 rounded-[6px] border border-[#ebebeb]">
+                <span className="font-mono text-[10px] uppercase tracking-[0.071em] text-[#666666] block">Total Guest Treatments</span>
+                <span className="text-base text-[#171717] font-mono mt-0.5 block">
                   {formatIDR((selectedPayout.items || []).reduce((sum: number, b: any) => sum + Number(b.eligible_treatment_amount || 0), 0))}
                 </span>
               </div>
-              <div className="bg-white p-3.5 rounded-lg border border-[#E5E5E5]">
-                <span className="text-[10px] uppercase font-semibold text-[#737373] block">Transfer Method</span>
-                <span className="text-sm font-bold text-black capitalize mt-0.5 block">
+              <div className="bg-white p-3.5 rounded-[6px] border border-[#ebebeb]">
+                <span className="font-mono text-[10px] uppercase tracking-[0.071em] text-[#666666] block">Transfer Method</span>
+                <span className="text-sm text-[#171717] capitalize mt-0.5 block">
                   {selectedPayout.payout_method?.replace('_', ' ')}
                 </span>
               </div>
@@ -265,23 +265,23 @@ export default function PartnerPayoutsPage() {
             {/* Itemized Bookings List (Scrollable, Fullscreen) */}
             <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
               <div>
-                <h4 className="font-bold text-black text-sm tracking-tight flex items-center justify-between">
+                <h4 className="font-normal text-[#171717] text-sm tracking-tight flex items-center justify-between">
                   <span>Settled Referrals & Bookings</span>
-                  <span className="text-xs text-[#737373] font-normal">
+                  <span className="font-mono text-xs text-[#666666]">
                     {(selectedPayout.items || []).length} items included in this disbursement
                   </span>
                 </h4>
               </div>
 
               {(selectedPayout.items || []).length === 0 ? (
-                <div className="bg-white p-8 rounded-xl border border-[#E5E5E5] text-center text-[#737373] space-y-1">
-                  <p className="font-semibold text-black">No itemized booking records linked to this receipt.</p>
+                <div className="bg-white p-8 rounded-[6px] border border-[#ebebeb] text-center text-[#666666] space-y-1">
+                  <p className="font-medium text-[#171717]">No itemized booking records linked to this receipt.</p>
                   <p className="text-xs">This disbursement was processed as a direct commission settlement of {formatIDR(selectedPayout.amount)}.</p>
                 </div>
               ) : (
-                <div className="bg-white rounded-xl border border-[#E5E5E5] overflow-hidden">
+                <div className="bg-white rounded-[6px] border border-[#ebebeb] overflow-hidden">
                   <table className="w-full text-left text-xs">
-                    <thead className="bg-[#FAFAFA] border-b border-[#E5E5E5] text-[11px] font-semibold uppercase tracking-wider text-[#737373]">
+                    <thead className="bg-[#fafafa] border-b border-[#ebebeb] font-mono text-[11px] font-normal uppercase tracking-[0.071em] text-[#666666]">
                       <tr>
                         <th className="py-3 px-4">Booking Ref</th>
                         <th className="py-3 px-4">Date</th>
@@ -293,56 +293,56 @@ export default function PartnerPayoutsPage() {
                         <th className="py-3 px-4 text-right">Status</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-[#E5E5E5]">
+                    <tbody className="divide-y divide-[#ebebeb]">
                       {selectedPayout.items.map((b: any) => (
-                        <tr key={b.id} className="hover:bg-[#F9FAFB] transition-colors">
-                          <td className="py-3.5 px-4 font-mono font-bold text-black whitespace-nowrap">
+                        <tr key={b.id} className="hover:bg-[#fafafa] transition-colors">
+                          <td className="py-3.5 px-4 font-mono text-xs text-[#171717] whitespace-nowrap">
                             <div className="flex items-center gap-1.5">
                               <span>#{b.booking_id}</span>
                               <button
                                 type="button"
                                 onClick={() => handleCopy(b.booking_id, `p-${b.id}`)}
-                                className="text-[#737373] hover:text-black"
+                                className="text-[#8f8f8f] hover:text-[#171717]"
                               >
-                                {copiedId === `p-${b.id}` ? <Check size={11} className="text-emerald-700" /> : <Copy size={11} />}
+                                {copiedId === `p-${b.id}` ? <Check size={11} className="text-[#297a3a]" /> : <Copy size={11} />}
                               </button>
                             </div>
                           </td>
-                          <td className="py-3.5 px-4 text-[#737373] whitespace-nowrap">
+                          <td className="py-3.5 px-4 font-mono text-[11px] text-[#666666] whitespace-nowrap">
                             {b.booking_date ? new Date(b.booking_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '-'}
                             {b.booking_time ? ` ${b.booking_time}` : ''}
                           </td>
                           <td className="py-3.5 px-4">
-                            <div className="font-semibold text-black">{b.guest_name || 'Guest'}</div>
+                            <div className="font-normal text-[#171717]">{b.guest_name || 'Guest'}</div>
                             {b.location && (
-                              <div className="text-[11px] text-[#737373] flex items-center gap-1 mt-0.5">
-                                <MapPin size={11} className="text-[#737373] shrink-0" />
+                              <div className="text-[11px] text-[#666666] flex items-center gap-1 mt-0.5">
+                                <MapPin size={11} className="text-[#8f8f8f] shrink-0" />
                                 <span>{b.location}</span>
                               </div>
                             )}
                             {b.room_number && (
                               <div className="pt-0.5">
-                                <span className="inline-flex items-center gap-1 text-[11px] font-medium text-black bg-[#F5F5F5] border border-[#E5E5E5] px-1.5 py-0.5 rounded">
-                                  <DoorClosed size={11} className="text-[#737373] shrink-0" />
+                                <span className="inline-flex items-center gap-1 text-[11px] font-mono text-[#171717] bg-[#fafafa] border border-[#ebebeb] px-1.5 py-0.5 rounded-[4px]">
+                                  <DoorClosed size={11} className="text-[#8f8f8f] shrink-0" />
                                   Room {b.room_number}
                                 </span>
                               </div>
                             )}
                           </td>
                           <td className="py-3.5 px-4">
-                            <div className="text-black font-semibold">{b.treatment_name || 'Spa Treatment'}</div>
+                            <div className="text-[#171717]">{b.treatment_name || 'Spa Treatment'}</div>
                           </td>
-                          <td className="py-3.5 px-4 font-mono text-black">
+                          <td className="py-3.5 px-4 font-mono text-[#171717]">
                             {formatIDR(b.eligible_treatment_amount)}
                           </td>
-                          <td className="py-3.5 px-4 font-mono text-[#737373]">
+                          <td className="py-3.5 px-4 font-mono text-[#666666]">
                             {b.commission_rate_pct}%
                           </td>
-                          <td className="py-3.5 px-4 font-bold font-mono text-black">
+                          <td className="py-3.5 px-4 font-mono text-[#297a3a]">
                             +{formatIDR(b.commission_amount)}
                           </td>
                           <td className="py-3.5 px-4 text-right">
-                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 whitespace-nowrap">
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-[4px] font-mono text-[10px] bg-[#fafafa] text-[#297a3a] border border-[#ebebeb] whitespace-nowrap">
                               <CheckCircle2 size={11} /> Paid Out
                             </span>
                           </td>
@@ -355,14 +355,14 @@ export default function PartnerPayoutsPage() {
             </div>
 
             {/* Modal Footer */}
-            <div className="p-4 border-t border-[#E5E5E5] bg-[#FAFAFA] flex items-center justify-between shrink-0">
-              <span className="text-xs text-[#737373] font-mono">
+            <div className="p-4 border-t border-[#ebebeb] bg-[#fafafa] flex items-center justify-between shrink-0">
+              <span className="text-xs text-[#666666] font-mono">
                 Receipt #{cleanPayoutRef(selectedPayout.payout_reference)}
               </span>
               <button
                 type="button"
                 onClick={() => setSelectedPayout(null)}
-                className="px-5 py-2 bg-black text-white text-xs font-semibold rounded-lg hover:bg-neutral-800 transition-colors"
+                className="px-5 py-2 bg-[#171717] text-white font-mono text-[11px] uppercase tracking-[0.071em] rounded-[6px] hover:bg-black transition-colors"
               >
                 Close
               </button>

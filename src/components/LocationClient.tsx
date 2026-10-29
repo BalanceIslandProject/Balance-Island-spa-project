@@ -2019,12 +2019,12 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                     </div>
                                 </div>
 
-                                <div className="p-3.5 rounded-2xl bg-stone-50 border border-border/70 flex items-start gap-3">
-                                    <div className="w-8 h-8 rounded-xl bg-white border border-border/80 flex items-center justify-center shrink-0 text-primary mt-0.5">
+                                <div className={`p-3.5 ${isTherapick ? 'rounded-[6px] bg-[#fafafa] border border-[#ebebeb]' : 'rounded-2xl bg-stone-50 border border-border/70'} flex items-start gap-3`}>
+                                    <div className={`w-8 h-8 ${isTherapick ? 'rounded-[6px] bg-white border border-[#ebebeb] text-[#171717]' : 'rounded-xl bg-white border border-border/80 text-primary'} flex items-center justify-center shrink-0 mt-0.5`}>
                                         <Tag className="w-4 h-4" />
                                     </div>
                                     <div>
-                                        <h4 className="font-bold text-xs text-primary uppercase tracking-wider mb-1">
+                                        <h4 className={isTherapick ? "font-mono text-[11px] uppercase tracking-[0.071em] text-[#171717] font-semibold mb-1" : "font-bold text-xs text-primary uppercase tracking-wider mb-1"}>
                                             100% Direct Therapist Surcharge
                                         </h4>
                                         <p className="text-[11px] text-stone-600 leading-relaxed">
@@ -2032,22 +2032,14 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                         </p>
                                     </div>
                                 </div>
-
-                                <div className="p-3.5 rounded-2xl bg-[#FDFBF7] border border-amber-200/70 text-[11px] text-stone-700 leading-relaxed">
-                                    <div className="font-bold text-primary mb-1 flex items-center gap-1.5">
-                                        <Check className="w-3.5 h-3.5 text-stone-800" />
-                                        Prefer zero additional fee?
-                                    </div>
-                                    Leave the table count at <strong>0</strong>. Your therapist will set up comfortably on your villa bed or mattress at no extra cost, bringing a specialized face cradle and sanitized linens for your comfort.
-                                </div>
                             </div>
 
                             {/* Modal Footer */}
-                            <div className="pt-3 border-t border-border/60">
+                            <div className={`pt-3 border-t ${isTherapick ? 'border-[#ebebeb]' : 'border-border/60'}`}>
                                 <button
                                     type="button"
                                     onClick={() => setShowTableFeeModal(false)}
-                                    className="w-full bg-black hover:bg-neutral-800 text-white py-3 rounded-xl text-xs font-bold uppercase tracking-widest transition-all shadow-sm"
+                                    className={isTherapick ? "w-full bg-[#171717] hover:bg-black text-white py-3 rounded-[6px] text-xs font-mono uppercase tracking-[0.071em] transition-colors shadow-xs" : "w-full bg-black hover:bg-neutral-800 text-white py-3 rounded-xl text-xs font-bold uppercase tracking-widest transition-all shadow-sm"}
                                 >
                                     Understood
                                 </button>

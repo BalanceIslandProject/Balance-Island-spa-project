@@ -27,8 +27,8 @@ export default function PaymentSuccessPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center justify-center p-4 sm:p-6 font-sans text-[#171717] antialiased">
-      <div className="bg-white rounded-2xl p-6 sm:p-10 text-center max-w-md w-full border border-[#E5E5E5] shadow-xs space-y-6">
+    <div className="min-h-screen bg-[#fafafa] flex flex-col items-center justify-center p-4 sm:p-6 font-sans text-[#171717] antialiased">
+      <div className="bg-white rounded-[6px] p-6 sm:p-10 text-center max-w-md w-full border border-[#ebebeb] shadow-[0_0_0_1px_rgba(0,0,0,0.04)] space-y-6">
         
         {/* Brand Identification */}
         <div className="flex justify-center items-center pb-2">
@@ -39,22 +39,22 @@ export default function PaymentSuccessPage() {
           />
         </div>
 
-        {/* Calm Apple-inspired Status Indicator */}
-        <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto border border-emerald-200">
-          <CheckCircle2 size={28} strokeWidth={2} />
+        {/* Status Indicator */}
+        <div className="w-12 h-12 bg-[#fafafa] text-[#297a3a] rounded-[6px] flex items-center justify-center mx-auto border border-[#ebebeb]">
+          <CheckCircle2 size={24} strokeWidth={2} />
         </div>
 
         <div className="space-y-2">
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md border border-emerald-200 bg-emerald-50 text-emerald-700 text-[11px] font-medium tracking-tight">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] border border-[#ebebeb] bg-[#fafafa] text-[#297a3a] text-[11px] font-mono uppercase tracking-[0.071em]">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#297a3a]" />
             <span>Payment Verified</span>
           </div>
 
-          <h1 className="font-serif text-2xl sm:text-3xl text-black font-medium tracking-tight">
+          <h1 className="font-sans text-xl sm:text-2xl text-[#171717] font-medium tracking-tight">
             Payment Successful
           </h1>
           
-          <p className="text-xs sm:text-[13px] text-[#737373] leading-relaxed max-w-sm mx-auto">
+          <p className="text-xs sm:text-[13px] text-[#666666] leading-relaxed max-w-sm mx-auto">
             {waUrl
               ? 'Thank you for your booking. Redirecting you to WhatsApp to receive your therapist confirmation and dispatch details...'
               : 'Thank you for your purchase. We have received your payment and our concierge team will reach out promptly.'}
@@ -66,24 +66,24 @@ export default function PaymentSuccessPage() {
           {waUrl && (
             <a
               href={waUrl}
-              className="inline-flex items-center justify-center gap-2 w-full bg-black text-white hover:bg-[#262626] h-12 rounded-xl text-xs sm:text-[13px] font-semibold tracking-wide transition-colors"
+              className="inline-flex items-center justify-center gap-2 w-full bg-[#171717] text-white hover:bg-black h-10 rounded-[6px] text-xs font-mono uppercase tracking-[0.071em] transition-colors shadow-xs"
             >
-              <MessageCircle size={16} className="text-emerald-400" />
+              <MessageCircle size={15} className="text-emerald-400" />
               <span>Confirm on WhatsApp</span>
               <ArrowRight size={14} />
             </a>
           )}
           <Link
             href="/"
-            className="inline-flex items-center justify-center gap-2 w-full bg-white text-black border border-[#E5E5E5] hover:bg-[#F5F5F5] h-12 rounded-xl text-xs sm:text-[13px] font-semibold tracking-wide transition-colors"
+            className="inline-flex items-center justify-center gap-2 w-full bg-white text-[#171717] border border-[#ebebeb] hover:bg-[#fafafa] h-10 rounded-[6px] text-xs font-mono uppercase tracking-[0.071em] transition-colors"
           >
-            <Home size={15} className="text-[#737373]" />
+            <Home size={14} className="text-[#666666]" />
             <span>Return to Therapick</span>
           </Link>
         </div>
 
-        <div className="pt-2 border-t border-[#E5E5E5]">
-          <span className="text-[10px] font-mono uppercase tracking-widest text-[#A3A3A3]">
+        <div className="pt-2 border-t border-[#ebebeb]">
+          <span className="text-[10px] font-mono uppercase tracking-[0.071em] text-[#888888]">
             Therapick • Bali Luxury Mobile Spa
           </span>
         </div>
