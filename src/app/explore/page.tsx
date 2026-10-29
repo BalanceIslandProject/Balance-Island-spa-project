@@ -3,7 +3,7 @@
 import React, { useState, Suspense, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSearchParams } from 'next/navigation';
-import { Search, Clock, ArrowLeft } from 'lucide-react';
+import { Search, Clock, ArrowLeft, X, SlidersHorizontal } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useSpa } from '@/context/SpaContext';
@@ -63,34 +63,51 @@ function ExploreContent() {
     }, [treatments, activeCategory, searchQuery, maxPrice, locationQuery]);
 
     return (
-        <main className="min-h-screen bg-white pb-20 pt-40">
+        <main className="min-h-screen bg-white pb-20 pt-36">
             {/* Search & Categories Sticky Header */}
-            <div className="fixed top-0 left-0 right-0 z-50 bg-white pt-6 pb-2 border-b border-gray-100/50 shadow-sm">
+            <div className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md pt-5 pb-2.5 border-b border-gray-100 shadow-xs">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="mb-4 relative z-30">
-                        <div className="flex items-center gap-3 w-full">
-                            <div className="flex-1 bg-white rounded-full shadow-[0_4px_16px_rgb(0,0,0,0.08)] border border-gray-100 h-14 flex items-center px-2 hover:shadow-[0_4px_20px_rgb(0,0,0,0.12)] transition-shadow">
-                                <Link href="/" className="shrink-0 p-2 hover:bg-gray-50 rounded-full transition-colors flex items-center justify-center">
-                                    <ArrowLeft className="w-5 h-5 text-gray-800" strokeWidth={2.5} />
+                    <div className="mb-3.5 relative z-30">
+                        <div className="flex items-center gap-2.5 w-full">
+                            <div className="flex-1 bg-white rounded-full shadow-[0_2px_12px_rgb(0,0,0,0.06)] border border-gray-200/80 h-12 flex items-center px-1.5 hover:shadow-[0_4px_16px_rgb(0,0,0,0.09)] focus-within:border-gray-900/40 focus-within:shadow-[0_4px_18px_rgb(0,0,0,0.1)] transition-all">
+                                <Link 
+                                    href="/" 
+                                    className="w-9 h-9 hover:bg-gray-100 rounded-full transition-colors flex items-center justify-center shrink-0 text-gray-700 hover:text-black"
+                                    aria-label="Back to home"
+                                >
+                                    <ArrowLeft className="w-4 h-4" strokeWidth={2.5} />
                                 </Link>
-                                <div className="flex flex-col ml-3 flex-1 pr-4 justify-center">
+                                <div className="flex items-center flex-1 ml-2 mr-2 min-w-0">
+                                    <Search className="w-4 h-4 text-gray-400 shrink-0 mr-2" />
                                     <input 
                                         type="text"
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
-                                        placeholder={locationQuery ? `${locationQuery}, Bali` : "Where to? Search treatments..."}
-                                        className="text-[13px] font-bold text-gray-900 leading-tight bg-transparent border-none outline-none focus:ring-0 placeholder:text-gray-900 w-full p-0 m-0"
+                                        placeholder={locationQuery ? `Search in ${locationQuery}...` : "Search treatments or packages..."}
+                                        className="text-[13px] font-medium text-gray-900 bg-transparent border-none outline-none focus:ring-0 placeholder:text-gray-400 w-full p-0 m-0"
                                     />
-                                    <span className="text-[11px] text-gray-500 font-medium mt-0.5">
-                                        {locationQuery ? `${locationQuery}, Bali` : 'Ubud, Bali'} • In-Villa Mobile Spa • Any date
-                                    </span>
+                                    {searchQuery && (
+                                        <button
+                                            type="button"
+                                            onClick={() => setSearchQuery('')}
+                                            className="w-5 h-5 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 hover:text-gray-800 transition-colors shrink-0 ml-1"
+                                            aria-label="Clear search"
+                                        >
+                                            <X className="w-3 h-3" />
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                             <button 
                                 onClick={() => setIsPriceFilterOpen(!isPriceFilterOpen)}
-                                className="w-14 h-14 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center shrink-0 hover:bg-gray-50 transition-colors"
+                                className={`w-12 h-12 rounded-full border shadow-2xs flex items-center justify-center shrink-0 transition-all ${
+                                    isPriceFilterOpen 
+                                        ? 'bg-[#1D1D1F] text-white border-black shadow-sm' 
+                                        : 'bg-white text-gray-700 border-gray-200/90 hover:bg-gray-50 hover:border-gray-300'
+                                }`}
+                                aria-label="Filter by price"
                             >
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-800"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                                <SlidersHorizontal className="w-4 h-4" />
                             </button>
                         </div>
 
