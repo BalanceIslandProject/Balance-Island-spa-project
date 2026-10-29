@@ -450,14 +450,16 @@ export default function Home() {
                         <AnimatePresence>
                             {isPriceFilterOpen && (
                                 <motion.div
-                                    initial={{ opacity: 0, y: -10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -10 }}
-                                    className="absolute top-full right-0 mt-3 w-64 md:w-72 bg-white rounded-[24px] border border-gray-200 p-5 shadow-[0_20px_40px_rgb(0,0,0,0.12)] z-30"
+                                    initial={{ opacity: 0, scale: 0.96, y: -6 }}
+                                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                                    exit={{ opacity: 0, scale: 0.96, y: -6 }}
+                                    transition={{ duration: 0.18, ease: [0.23, 1, 0.32, 1] }}
+                                    style={{ transformOrigin: 'top right' }}
+                                    className="absolute top-full right-0 mt-3 w-64 md:w-72 bg-white/95 saturate-[1.8] backdrop-blur-2xl rounded-[24px] border border-gray-200/90 p-5 shadow-[0_20px_40px_rgba(0,0,0,0.12)] z-30"
                                 >
                                     <div className="flex items-center justify-between mb-4">
                                         <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Max Price</span>
-                                        <span className="text-sm font-semibold text-gray-900">IDR {maxPrice.toLocaleString('en-US')}</span>
+                                        <span className="text-sm font-semibold text-gray-900 tabular-nums">IDR {maxPrice.toLocaleString('en-US')}</span>
                                     </div>
                                     <input
                                         type="range"
@@ -468,7 +470,7 @@ export default function Home() {
                                         onChange={(e) => setMaxPrice(parseInt(e.target.value))}
                                         className="w-full accent-black h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                                     />
-                                    <div className="flex justify-between text-[10px] text-gray-400 mt-2 font-medium tracking-wider">
+                                    <div className="flex justify-between text-[10px] text-gray-400 mt-2 font-medium tracking-wider tabular-nums">
                                         <span>150k</span>
                                         <span>1.5m</span>
                                     </div>
@@ -733,14 +735,16 @@ export default function Home() {
                             <AnimatePresence>
                                 {isPriceFilterOpen && (
                                     <motion.div
-                                        initial={{ opacity: 0, y: -10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        exit={{ opacity: 0, y: -10 }}
-                                        className="absolute top-full right-0 mt-3 w-64 md:w-72 bg-white rounded-[24px] border border-gray-200 p-5 shadow-[0_20px_40px_rgb(0,0,0,0.12)] z-30"
+                                        initial={{ opacity: 0, scale: 0.96, y: -6 }}
+                                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                                        exit={{ opacity: 0, scale: 0.96, y: -6 }}
+                                        transition={{ duration: 0.18, ease: [0.23, 1, 0.32, 1] }}
+                                        style={{ transformOrigin: 'top right' }}
+                                        className="absolute top-full right-0 mt-3 w-64 md:w-72 bg-white/95 saturate-[1.8] backdrop-blur-2xl rounded-[24px] border border-gray-200/90 p-5 shadow-[0_20px_40px_rgba(0,0,0,0.12)] z-30"
                                     >
                                         <div className="flex items-center justify-between mb-4">
                                             <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Max Price</span>
-                                            <span className="text-sm font-semibold text-gray-900">IDR {maxPrice.toLocaleString('en-US')}</span>
+                                            <span className="text-sm font-semibold text-gray-900 tabular-nums">IDR {maxPrice.toLocaleString('en-US')}</span>
                                         </div>
                                         <input
                                             type="range"
@@ -751,7 +755,7 @@ export default function Home() {
                                             onChange={(e) => setMaxPrice(parseInt(e.target.value))}
                                             className="w-full accent-black h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                                         />
-                                        <div className="flex justify-between text-[10px] text-gray-400 mt-2 font-medium tracking-wider">
+                                        <div className="flex justify-between text-[10px] text-gray-400 mt-2 font-medium tracking-wider tabular-nums">
                                             <span>150k</span>
                                             <span>1.5m</span>
                                         </div>
@@ -779,29 +783,29 @@ export default function Home() {
 
                         <div ref={scrollContainerRef} className="flex overflow-x-auto pb-10 -mx-6 px-6 md:mx-0 md:px-0 gap-6 no-scrollbar scroll-smooth scroll-reveal-stagger">
                             {filteredAndSortedTreatments.map((item, idx) => (
-                                <Link href={`/rituals/${createSlug(item.title)}`} key={item.id} className="w-72 md:w-80 shrink-0 block group outline-none">
-                                    <div className={`rounded-[32px] md:rounded-[40px] bg-gradient-to-br ${item.bgPattern} border border-border/40 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.08)] transition-all duration-700 flex flex-col h-full relative overflow-hidden group-hover:-translate-y-2 p-6 md:p-8`}>
+                                <Link href={`/rituals/${createSlug(item.title)}`} key={item.id} className="w-72 md:w-80 shrink-0 block group outline-none active:scale-[0.985] transition-transform duration-160">
+                                    <div className={`rounded-[32px] md:rounded-[40px] bg-gradient-to-br ${item.bgPattern} border border-border/60 shadow-[0_8px_30px_rgba(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-all duration-300 flex flex-col h-full relative overflow-hidden group-hover:-translate-y-1 p-6 md:p-8`}>
 
                                         {/* Subtle glowing orb for spa ambiance */}
-                                        <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/60 blur-[30px] rounded-full pointer-events-none transition-transform duration-700 group-hover:scale-150"></div>
+                                        <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/60 blur-[30px] rounded-full pointer-events-none transition-transform duration-400 group-hover:scale-125"></div>
 
                                         <div className="mb-8 flex items-start justify-between relative z-10">
-                                            <div className="bg-white/60 backdrop-blur-sm border border-primary/10 text-primary px-4 py-2 rounded-full text-[10px] font-bold tracking-widest uppercase shadow-sm">
+                                            <div className="bg-white/70 backdrop-blur-sm border border-primary/10 text-primary px-4 py-2 rounded-full text-[10px] font-bold tracking-widest uppercase shadow-xs">
                                                 {item.category}
                                             </div>
                                         </div>
 
                                         <div className="relative z-10 flex-grow flex flex-col">
-                                            <h4 className="font-serif text-xl font-medium text-primary mb-3 leading-tight">{item.title}</h4>
+                                            <h4 className="font-serif text-xl font-medium text-primary mb-3 leading-tight tracking-tight">{item.title}</h4>
                                             <p className="text-xs text-text-muted leading-relaxed font-light mb-6 flex-grow line-clamp-4">{item.desc.charAt(0).toUpperCase() + item.desc.slice(1).toLowerCase()}</p>
 
                                             <div className="mt-auto pt-5 border-t border-border/50">
                                                 <div className="flex items-center gap-1.5 text-[10px] font-bold text-text-muted mb-3 uppercase tracking-widest">
-                                                    <Clock className="w-3.5 h-3.5" /> {item.options[0]?.duration} MINS
+                                                    <Clock className="w-3.5 h-3.5" /> <span className="tabular-nums">{item.options[0]?.duration}</span> MINS
                                                 </div>
                                                 <div className="flex items-center justify-between bg-white/80 backdrop-blur-sm rounded-full p-1 pl-4 border border-gray-100">
-                                                    <span className="font-semibold text-gray-900 text-[14px]">IDR {parseInt(item.options[0]?.price.replace(/,/g, '') || '0').toLocaleString('en-US')}</span>
-                                                    <button className="w-10 h-10 rounded-full bg-[#1D1D1F] text-white flex items-center justify-center hover:bg-black transition-colors shrink-0 shadow-sm">
+                                                    <span className="font-semibold text-gray-900 text-[14px] tabular-nums">IDR {parseInt(item.options[0]?.price.replace(/,/g, '') || '0').toLocaleString('en-US')}</span>
+                                                    <button className="w-10 h-10 rounded-full bg-[#1D1D1F] text-white flex items-center justify-center hover:bg-black active:scale-90 transition-all duration-140 shrink-0 shadow-sm">
                                                         <Plus size={20} strokeWidth={2.5} />
                                                     </button>
                                                 </div>
@@ -1161,14 +1165,18 @@ export default function Home() {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            className="fixed inset-0 z-[110] overflow-y-auto overflow-x-hidden bg-black/60 backdrop-blur-sm flex justify-center items-start p-0 sm:p-4 md:p-6"
+                            transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
+                            className="fixed inset-0 z-[110] overflow-y-auto overflow-x-hidden bg-black/40 backdrop-blur-sm flex justify-center items-end sm:items-center p-0 sm:p-4 md:p-6"
                         >
                             <motion.div
-                                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                                initial={{ opacity: 0, scale: 0.96, y: 16 }}
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                                exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                                className="bg-white w-full max-w-full sm:max-w-lg h-[100dvh] sm:h-auto sm:max-h-[90vh] sm:my-auto sm:rounded-[28px] rounded-none p-5 sm:p-7 md:p-8 shadow-2xl relative flex flex-col box-border overflow-y-auto overflow-x-hidden no-scrollbar"
+                                exit={{ opacity: 0, scale: 0.96, y: 16 }}
+                                transition={{ type: 'spring', damping: 28, stiffness: 320 }}
+                                className="bg-white w-full max-w-full sm:max-w-lg h-[92dvh] sm:h-auto sm:max-h-[90vh] mt-auto sm:my-auto sm:rounded-[32px] rounded-t-[28px] rounded-b-none p-5 sm:p-7 md:p-8 shadow-[0_24px_80px_rgba(0,0,0,0.2)] relative flex flex-col box-border overflow-y-auto overflow-x-hidden no-scrollbar"
                             >
+                                {/* Mobile Drag Indicator */}
+                                <div className="w-10 h-1 bg-black/15 rounded-full mx-auto mb-3 sm:hidden shrink-0" />
                                 <button 
                                 onClick={() => {
                                     if (cartItems.length > 0) {
@@ -1348,11 +1356,11 @@ export default function Home() {
                                                                     const step = isCouple ? 2 : 1;
                                                                     return { ...i, guests: Math.max(step, i.guests - step) };
                                                                 }))}
-                                                                className="w-8 h-8 rounded-full bg-white border border-border flex items-center justify-center text-primary hover:bg-border transition-colors shadow-sm"
+                                                                className="w-8 h-8 rounded-full bg-white border border-border flex items-center justify-center text-primary hover:bg-border active:scale-90 transition-transform shadow-sm"
                                                             >
                                                                 <Minus className="w-3 h-3" />
                                                             </button>
-                                                            <span className="font-bold text-sm text-primary w-4 text-center">{item.guests}</span>
+                                                            <span className="font-bold text-sm text-primary w-5 text-center tabular-nums">{item.guests}</span>
                                                             <button
                                                                 type="button"
                                                                 onClick={() => setCartItems(cartItems.map(i => {
@@ -1361,7 +1369,7 @@ export default function Home() {
                                                                     const step = isCouple ? 2 : 1;
                                                                     return { ...i, guests: i.guests + step };
                                                                 }))}
-                                                                className="w-8 h-8 rounded-full bg-white border border-border flex items-center justify-center text-primary hover:bg-border transition-colors shadow-sm"
+                                                                className="w-8 h-8 rounded-full bg-white border border-border flex items-center justify-center text-primary hover:bg-border active:scale-90 transition-transform shadow-sm"
                                                             >
                                                                 <Plus className="w-3 h-3" />
                                                             </button>
@@ -1462,7 +1470,7 @@ export default function Home() {
                                                 {appliedPromo && (
                                                     <div className="flex items-center justify-between mb-2">
                                                         <span className="text-xs font-bold text-text-muted uppercase tracking-widest">Subtotal</span>
-                                                        <span className="text-sm font-serif text-text-muted line-through">
+                                                        <span className="text-sm font-serif text-text-muted line-through tabular-nums">
                                                             IDR {cartItems.reduce((acc, item) => {
                                                                 const isCouple = ['couple', 'honeymoon'].some(k => item.title.toLowerCase().includes(k));
                                                                 const multiplier = isCouple ? (item.guests / 2) : item.guests;
@@ -1473,7 +1481,7 @@ export default function Home() {
                                                 )}
                                                 <div className="flex items-end justify-between mb-6">
                                                     <span className="text-xs font-bold text-primary uppercase tracking-widest">Total Price</span>
-                                                    <span className="text-2xl font-serif text-primary">
+                                                    <span className="text-2xl font-serif text-primary tabular-nums">
                                                         IDR {(() => {
                                                             let sub = cartItems.reduce((acc, item) => {
                                                                 const isCouple = ['couple', 'honeymoon'].some(k => item.title.toLowerCase().includes(k));
@@ -1502,7 +1510,7 @@ export default function Home() {
                                                             }
                                                             setIsReviewingBooking(true);
                                                         }}
-                                                        className="w-full bg-primary text-white px-6 py-4 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-primary/90 hover:scale-[1.02] transition-all duration-300 shadow-[0_8px_24px_rgb(0,0,0,0.15)] uppercase tracking-widest"
+                                                        className="w-full bg-primary text-white px-6 py-4 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-primary/95 active:scale-[0.98] transition-all duration-160 shadow-[0_8px_24px_rgb(0,0,0,0.15)] uppercase tracking-widest"
                                                     >
                                                         REVIEW BOOKING
                                                     </button>
@@ -1551,7 +1559,7 @@ export default function Home() {
                                                         type="button"
                                                         onClick={(e) => handleCampaignBooking(e)}
                                                         disabled={isProcessing}
-                                                        className="w-full bg-primary text-white px-6 py-4 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-primary/90 hover:scale-[1.02] transition-all duration-300 shadow-[0_8px_24px_rgb(0,0,0,0.15)] uppercase tracking-widest disabled:opacity-70"
+                                                        className="w-full bg-primary text-white px-6 py-4 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-primary/95 active:scale-[0.98] transition-all duration-160 shadow-[0_8px_24px_rgb(0,0,0,0.15)] uppercase tracking-widest disabled:opacity-70"
                                                     >
                                                         {isProcessing ? 'PROCESSING...' : 'CONFIRM ON WHATSAPP'}
                                                     </button>

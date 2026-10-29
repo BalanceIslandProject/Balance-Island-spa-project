@@ -56,14 +56,14 @@ function ExploreContent() {
     }, [treatments, activeCategory, searchQuery, maxPrice]);
 
     return (
-        <main className="min-h-screen bg-white pb-20 pt-40">
+        <main className="min-h-screen bg-white pb-28 md:pb-20 pt-40">
             {/* Search & Categories Sticky Header */}
-            <div className="fixed top-0 left-0 right-0 z-50 bg-white pt-6 pb-2 border-b border-gray-100/50 shadow-sm">
+            <div className="fixed top-0 left-0 right-0 z-50 bg-white/94 saturate-[1.8] backdrop-blur-2xl pt-6 pb-2 border-b border-gray-100 shadow-xs">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="mb-4 relative z-30">
                         <div className="flex items-center gap-3 w-full">
-                            <div className="flex-1 bg-white rounded-full shadow-[0_4px_16px_rgb(0,0,0,0.08)] border border-gray-100 h-14 flex items-center px-2 hover:shadow-[0_4px_20px_rgb(0,0,0,0.12)] transition-shadow">
-                                <Link href="/" className="shrink-0 p-2 hover:bg-gray-50 rounded-full transition-colors flex items-center justify-center">
+                            <div className="flex-1 bg-white rounded-full shadow-[0_4px_16px_rgba(0,0,0,0.06)] border border-gray-100 h-14 flex items-center px-2 hover:shadow-[0_4px_20px_rgba(0,0,0,0.1)] transition-shadow">
+                                <Link href="/" className="shrink-0 p-2 hover:bg-gray-50 active:scale-90 rounded-full transition-transform flex items-center justify-center">
                                     <ArrowLeft className="w-5 h-5 text-gray-800" strokeWidth={2.5} />
                                 </Link>
                                 <div className="flex flex-col ml-3 flex-1 pr-4 justify-center">
@@ -79,9 +79,12 @@ function ExploreContent() {
                             </div>
                             <button 
                                 onClick={() => setIsPriceFilterOpen(!isPriceFilterOpen)}
-                                className="w-14 h-14 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center shrink-0 hover:bg-gray-50 transition-colors"
+                                className={`w-14 h-14 rounded-full border shadow-xs flex items-center justify-center shrink-0 active:scale-95 transition-all ${
+                                    isPriceFilterOpen ? 'bg-black text-white border-black' : 'bg-white border-gray-200 text-gray-800 hover:bg-gray-50'
+                                }`}
+                                aria-label="Toggle price filter"
                             >
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-800"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
                             </button>
                         </div>
 
@@ -89,14 +92,16 @@ function ExploreContent() {
                         <AnimatePresence>
                             {isPriceFilterOpen && (
                                 <motion.div 
-                                    initial={{ opacity: 0, y: -10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -10 }}
-                                    className="absolute top-full right-0 mt-3 w-[calc(100%-8px)] mx-1 md:w-72 bg-white rounded-2xl p-5 shadow-[0_20px_40px_rgb(0,0,0,0.12)] border border-gray-100 z-30"
+                                    initial={{ opacity: 0, scale: 0.96, y: -6 }}
+                                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                                    exit={{ opacity: 0, scale: 0.96, y: -6 }}
+                                    transition={{ duration: 0.18, ease: [0.23, 1, 0.32, 1] }}
+                                    style={{ transformOrigin: 'top right' }}
+                                    className="absolute top-full right-0 mt-3 w-[calc(100%-8px)] mx-1 md:w-72 bg-white/95 saturate-[1.8] backdrop-blur-2xl rounded-2xl p-5 shadow-[0_20px_40px_rgba(0,0,0,0.12)] border border-gray-100 z-30"
                                 >
                                     <div className="flex items-center justify-between mb-4">
                                         <span className="text-[10px] font-bold uppercase tracking-widest text-primary/80">Max Price</span>
-                                        <span className="text-sm font-serif text-primary font-medium">Rp {maxPrice.toLocaleString('en-US')}</span>
+                                        <span className="text-sm font-serif text-primary font-medium tabular-nums">Rp {maxPrice.toLocaleString('en-US')}</span>
                                     </div>
                                     <input 
                                         type="range" 
@@ -107,7 +112,7 @@ function ExploreContent() {
                                         onChange={(e) => setMaxPrice(parseInt(e.target.value))}
                                         className="w-full accent-primary h-1.5 bg-secondary rounded-lg appearance-none cursor-pointer"
                                     />
-                                    <div className="flex justify-between text-[10px] text-text-muted mt-2 font-medium tracking-wider">
+                                    <div className="flex justify-between text-[10px] text-text-muted mt-2 font-medium tracking-wider tabular-nums">
                                         <span>150k</span>
                                         <span>1.5m</span>
                                     </div>
@@ -124,10 +129,10 @@ function ExploreContent() {
                                 <button
                                     key={cat.id}
                                     onClick={() => setActiveCategory(cat.id)}
-                                    className={`flex items-center justify-center px-4 py-2 rounded-[20px] whitespace-nowrap transition-all duration-300 shrink-0 ${
+                                    className={`flex items-center justify-center px-4 py-2 rounded-[20px] whitespace-nowrap transition-all duration-160 active:scale-95 shrink-0 ${
                                         isActive 
                                             ? 'bg-[#1D1D1F] text-white border border-black shadow-[0_4px_16px_rgba(0,0,0,0.18)] scale-[1.02]' 
-                                            : 'bg-white text-gray-700 border border-gray-200/90 shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:border-gray-400 hover:shadow-md hover:bg-gray-50 active:scale-95'
+                                            : 'bg-white text-gray-700 border border-gray-200/90 shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:border-gray-400 hover:shadow-xs hover:bg-gray-50'
                                     }`}
                                 >
                                     <span className={`text-[13px] ${isActive ? 'font-bold' : 'font-medium'}`}>{cat.label}</span>
@@ -148,9 +153,9 @@ function ExploreContent() {
                         </div>
                         <div className="flex overflow-x-auto gap-4 no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 pb-4 snap-x snap-mandatory scroll-reveal-stagger">
                             {treatments.filter(t => t.is_pinned).map(treatment => (
-                                <Link href={`/rituals/${createSlug(treatment.title)}`} key={treatment.id} className="w-[180px] sm:w-[220px] shrink-0 snap-center md:snap-align-none outline-none">
+                                <Link href={`/rituals/${createSlug(treatment.title)}`} key={treatment.id} className="w-[180px] sm:w-[220px] shrink-0 snap-center md:snap-align-none outline-none active:scale-[0.985] transition-transform duration-160">
                                     <div className="flex flex-col gap-2 group cursor-pointer">
-                                        <div className="aspect-[4/3] relative bg-[#F5F5F7] overflow-hidden rounded-2xl shadow-[0_2px_12px_rgb(0,0,0,0.06)] group-hover:shadow-[0_8px_24px_rgb(0,0,0,0.12)] transition-shadow">
+                                        <div className="aspect-[4/3] relative bg-[#F5F5F7] overflow-hidden rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.06)] group-hover:shadow-[0_8px_24px_rgba(0,0,0,0.1)] transition-shadow">
                                             {treatment.pinned_image ? (
                                                 <Image 
                                                     src={treatment.pinned_image} 
@@ -164,10 +169,10 @@ function ExploreContent() {
                                             )}
                                         </div>
                                         <div className="flex flex-col px-1 pt-1">
-                                            <p className="text-gray-900 text-[14px] font-bold">{treatment.title}</p>
-                                            <p className="text-gray-500 text-[12px] font-medium mt-0.5"><Clock className="inline w-3 h-3 mr-1 mb-0.5 text-gray-400"/>{treatment.options[0]?.duration} MINS</p>
+                                            <p className="text-gray-900 text-[14px] font-bold line-clamp-1">{treatment.title}</p>
+                                            <p className="text-gray-500 text-[12px] font-medium mt-0.5"><Clock className="inline w-3 h-3 mr-1 mb-0.5 text-gray-400"/><span className="tabular-nums">{treatment.options[0]?.duration}</span> MINS</p>
                                             <div className="mt-1 flex items-center">
-                                                <span className="font-semibold text-gray-900 text-[13px]">
+                                                <span className="font-semibold text-gray-900 text-[13px] tabular-nums">
                                                     IDR {parseInt((treatment.options[0]?.price || '0').replace(/,/g, '')).toLocaleString('en-US')}
                                                 </span>
                                             </div>
@@ -187,10 +192,10 @@ function ExploreContent() {
 
                     <div className="grid grid-cols-2 gap-x-4 gap-y-8 scroll-reveal-stagger">
                         {filteredAndSortedTreatments.map((item) => (
-                            <Link href={`/rituals/${createSlug(item.title)}`} key={item.id} className="w-full block group outline-none">
-                                <div className="rounded-2xl bg-white border border-gray-100 flex flex-col h-full relative overflow-hidden p-4 aspect-[4/5] shadow-[0_2px_12px_rgb(0,0,0,0.04)] hover:shadow-md transition-all cursor-pointer group-hover:-translate-y-1 duration-300">
+                            <Link href={`/rituals/${createSlug(item.title)}`} key={item.id} className="w-full block group outline-none active:scale-[0.985] transition-transform duration-160">
+                                <div className="rounded-2xl bg-white border border-gray-100 flex flex-col h-full relative overflow-hidden p-4 aspect-[4/5] shadow-[0_2px_12px_rgba(0,0,0,0.04)] hover:shadow-md transition-all cursor-pointer group-hover:-translate-y-1 duration-200">
                                     <div className="relative z-10 flex flex-col h-full">
-                                        <div className="bg-white text-gray-800 border border-gray-200 px-2.5 py-1 rounded-full text-[8px] font-bold tracking-widest uppercase self-start mb-3 shadow-sm">
+                                        <div className="bg-white text-gray-800 border border-gray-200 px-2.5 py-1 rounded-full text-[8px] font-bold tracking-widest uppercase self-start mb-3 shadow-xs">
                                             {item.category}
                                         </div>
                                         <h4 className="font-bold text-gray-900 text-[13px] leading-snug mb-1.5 line-clamp-2">{item.title}</h4>
@@ -198,11 +203,11 @@ function ExploreContent() {
                                         
                                         <div className="mt-auto pt-3 border-t border-gray-100">
                                             <div className="flex items-center gap-1.5 text-[10px] font-bold text-gray-800 mb-2 uppercase tracking-widest">
-                                                <Clock className="w-3.5 h-3.5 text-gray-500" /> {item.options[0]?.duration} MINS
+                                                <Clock className="w-3.5 h-3.5 text-gray-500" /> <span className="tabular-nums">{item.options[0]?.duration}</span> MINS
                                             </div>
                                             <div className="flex items-center justify-between">
-                                                <span className="font-semibold text-gray-900 text-[12px]">IDR {parseInt(item.options[0]?.price.replace(/,/g, '') || '0').toLocaleString('en-US')}</span>
-                                                <div className="w-7 h-7 rounded-full bg-[#1D1D1F] text-white flex items-center justify-center shrink-0 shadow-sm hover:scale-105 transition-transform">
+                                                <span className="font-semibold text-gray-900 text-[12px] tabular-nums">IDR {parseInt(item.options[0]?.price.replace(/,/g, '') || '0').toLocaleString('en-US')}</span>
+                                                <div className="w-7 h-7 rounded-full bg-[#1D1D1F] text-white flex items-center justify-center shrink-0 shadow-xs active:scale-90 transition-transform">
                                                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                                                 </div>
                                             </div>

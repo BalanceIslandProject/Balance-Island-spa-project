@@ -46,6 +46,8 @@ interface CartContextType {
     restoreAction: RestoreBookingAction | null;
     triggerRestoreBooking: (bookingId: string, mode: 'draft' | 'bookAgain') => void;
     clearRestoreAction: () => void;
+    isCartOpen: boolean;
+    setIsCartOpen: (open: boolean) => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -54,6 +56,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     const [history, setHistory] = useState<BookingHistory[]>([]);
     const [isLoaded, setIsLoaded] = useState(false);
     const [restoreAction, setRestoreAction] = useState<RestoreBookingAction | null>(null);
+    const [isCartOpen, setIsCartOpen] = useState(false);
 
     useEffect(() => {
         const saved = localStorage.getItem('spa_booking_history');
@@ -133,7 +136,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
             removeHistory,
             restoreAction,
             triggerRestoreBooking,
-            clearRestoreAction
+            clearRestoreAction,
+            isCartOpen,
+            setIsCartOpen
         }}>
             {children}
         </CartContext.Provider>

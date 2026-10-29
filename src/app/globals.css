@@ -1,19 +1,26 @@
 @import "tailwindcss";
 
+:root {
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 @theme {
   --color-background: #FFFFFF;
   --color-surface: #FFFFFF;
-  --color-primary: #322F37; /* Dark bento boxes and text */
-  --color-secondary: #F3F4F6; /* Light gray */
-  --color-accent: #E5E7EB; /* Gray for cards */
-  --color-highlight: #F9FAFB; /* Off-white */
-  --color-text: #1C221D;
-  --color-text-muted: #7A7C75;
-  --color-border: #E8EBE3;
+  --color-primary: #23211E; /* Rich warm obsidian bronze */
+  --color-secondary: #F6F5F2; /* Warm organic linen */
+  --color-accent: #EAE7E1; /* Warm stone for cards */
+  --color-highlight: #FAF9F6; /* Alabaster off-white */
+  --color-text: #191816;
+  --color-text-muted: #737069;
+  --color-border: #E8E5DF;
   
-  --shadow-soft: 0 8px 24px -4px rgba(0, 0, 0, 0.04);
-  --shadow-soft-lg: 0 12px 32px -4px rgba(0, 0, 0, 0.08);
-  --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.06);
+  --shadow-soft: 0 8px 24px -4px rgba(25, 24, 22, 0.04);
+  --shadow-soft-lg: 0 12px 32px -4px rgba(25, 24, 22, 0.07);
+  --shadow-glass: 0 12px 40px 0 rgba(25, 24, 22, 0.08);
 
   --font-sans: var(--font-jakarta), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-serif: var(--font-newsreader), "Newsreader", Georgia, serif;
@@ -22,9 +29,9 @@
 body[data-domain="bali"],
 body[data-domain="therapick"] {
   --color-background: #FFFFFF;
-  --color-secondary: #F3F4F6; /* Light gray */
-  --color-accent: #E5E7EB; /* Gray for cards */
-  --color-highlight: #F9FAFB; /* Off-white */
+  --color-secondary: #F6F5F2;
+  --color-accent: #EAE7E1;
+  --color-highlight: #FAF9F6;
 }
 
 html, body {
@@ -34,8 +41,36 @@ html, body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Emil Kowalski: Tighter tracking for headings and balanced text wrap */
 h1, h2, h3, h4, h5, h6, .font-serif {
-  letter-spacing: -0.01em;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+
+/* Emil Kowalski UI Cheatsheet: Tabular numerals prevent price and counter jitter */
+.tabular-nums,
+[data-tabular-nums] {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Tactile micro-interactions: subtle 0.97 scale on active for native responsiveness */
+.btn-tactile {
+  transition: transform 160ms var(--ease-out), opacity 160ms var(--ease-out);
+}
+.btn-tactile:active {
+  transform: scale(0.97);
+}
+
+.card-tactile {
+  transition: transform 220ms var(--ease-out), box-shadow 220ms var(--ease-out), border-color 220ms var(--ease-out);
+}
+.card-tactile:active {
+  transform: scale(0.985);
+}
+
+/* Safe area insets for mobile app-like feel */
+.pb-safe {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom, 1rem));
 }
 
 /* Hide scrollbar for a native app feel */
@@ -71,7 +106,8 @@ body[data-domain="therapick"] .domain-spa-only {
 
 /* Partners Subdomain Isolation: strictly never show main website header or footer */
 body[data-subdomain="partners"] header,
-body[data-subdomain="partners"] footer {
+body[data-subdomain="partners"] footer,
+body[data-subdomain="partners"] [data-app-dock] {
   display: none !important;
 }
 
@@ -81,11 +117,12 @@ input:-webkit-autofill:hover,
 input:-webkit-autofill:focus, 
 input:-webkit-autofill:active {
     -webkit-box-shadow: 0 0 0 30px white inset !important;
-    -webkit-text-fill-color: var(--color-primary, #322F37) !important;
+    -webkit-text-fill-color: var(--color-primary, #23211E) !important;
 }
 
 /* ==========================================================================
-   Smooth Scrolling & Scroll-Driven Reveal Animations (All Domains)
+   Smooth Scrolling & Fast Scroll-Driven Reveal Animations (Emil Kowalski Spec)
+   Sub-450ms durations with strong ease-out curves instead of sluggish 0.85s
    ========================================================================== */
 
 html {
@@ -96,9 +133,9 @@ html {
 /* Base scroll reveal entrance */
 .scroll-reveal {
   opacity: 0;
-  transform: translate3d(0, 32px, 0);
-  transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translate3d(0, 16px, 0);
+  transition: opacity 0.42s var(--ease-spring),
+              transform 0.42s var(--ease-spring);
   will-change: opacity, transform;
 }
 
@@ -110,9 +147,9 @@ html {
 /* Soft scale entrance variation */
 .scroll-reveal-scale {
   opacity: 0;
-  transform: translate3d(0, 24px, 0) scale(0.97);
-  transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translate3d(0, 14px, 0) scale(0.98);
+  transition: opacity 0.42s var(--ease-spring),
+              transform 0.42s var(--ease-spring);
   will-change: opacity, transform;
 }
 
@@ -124,9 +161,9 @@ html {
 /* Lateral entrances for 2-column sections */
 .scroll-reveal-left {
   opacity: 0;
-  transform: translate3d(-32px, 0, 0);
-  transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translate3d(-18px, 0, 0);
+  transition: opacity 0.42s var(--ease-spring),
+              transform 0.42s var(--ease-spring);
   will-change: opacity, transform;
 }
 
@@ -137,9 +174,9 @@ html {
 
 .scroll-reveal-right {
   opacity: 0;
-  transform: translate3d(32px, 0, 0);
-  transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translate3d(18px, 0, 0);
+  transition: opacity 0.42s var(--ease-spring),
+              transform 0.42s var(--ease-spring);
   will-change: opacity, transform;
 }
 
@@ -148,59 +185,59 @@ html {
   transform: translate3d(0, 0, 0) !important;
 }
 
-/* Staggered child reveals for grids & cards */
+/* Staggered child reveals for grids & cards (Snappy ~40ms staggered deltas) */
 .scroll-reveal-stagger > * {
   opacity: 0;
-  transform: translate3d(0, 24px, 0);
-  transition: opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translate3d(0, 14px, 0);
+  transition: opacity 0.38s var(--ease-spring),
+              transform 0.38s var(--ease-spring);
   will-change: opacity, transform;
 }
 
 .scroll-reveal-stagger.is-revealed > *:nth-child(1) {
   opacity: 1 !important;
   transform: translate3d(0, 0, 0) !important;
-  transition-delay: 0.04s;
+  transition-delay: 0.02s;
 }
 .scroll-reveal-stagger.is-revealed > *:nth-child(2) {
   opacity: 1 !important;
   transform: translate3d(0, 0, 0) !important;
-  transition-delay: 0.10s;
+  transition-delay: 0.05s;
 }
 .scroll-reveal-stagger.is-revealed > *:nth-child(3) {
   opacity: 1 !important;
   transform: translate3d(0, 0, 0) !important;
-  transition-delay: 0.16s;
+  transition-delay: 0.08s;
 }
 .scroll-reveal-stagger.is-revealed > *:nth-child(4) {
   opacity: 1 !important;
   transform: translate3d(0, 0, 0) !important;
-  transition-delay: 0.22s;
+  transition-delay: 0.11s;
 }
 .scroll-reveal-stagger.is-revealed > *:nth-child(5) {
   opacity: 1 !important;
   transform: translate3d(0, 0, 0) !important;
-  transition-delay: 0.28s;
+  transition-delay: 0.14s;
 }
 .scroll-reveal-stagger.is-revealed > *:nth-child(6) {
   opacity: 1 !important;
   transform: translate3d(0, 0, 0) !important;
-  transition-delay: 0.34s;
+  transition-delay: 0.17s;
 }
 .scroll-reveal-stagger.is-revealed > *:nth-child(7) {
   opacity: 1 !important;
   transform: translate3d(0, 0, 0) !important;
-  transition-delay: 0.40s;
+  transition-delay: 0.20s;
 }
 .scroll-reveal-stagger.is-revealed > *:nth-child(8) {
   opacity: 1 !important;
   transform: translate3d(0, 0, 0) !important;
-  transition-delay: 0.46s;
+  transition-delay: 0.23s;
 }
 .scroll-reveal-stagger.is-revealed > *:nth-child(n+9) {
   opacity: 1 !important;
   transform: translate3d(0, 0, 0) !important;
-  transition-delay: 0.52s;
+  transition-delay: 0.26s;
 }
 
 /* Accessibility: reduce motion */
