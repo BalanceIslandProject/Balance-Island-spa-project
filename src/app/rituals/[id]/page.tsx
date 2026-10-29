@@ -11,6 +11,7 @@ import { useParams } from 'next/navigation';
 import { useSpa, Treatment } from '@/context/SpaContext';
 import { supabase } from '@/lib/supabase';
 import { createSlug } from '@/utils/slugify';
+import { SPA_ADDONS } from '@/lib/constants';
 
 export default function RitualsDetails() {
     const { saveDraft, confirmBooking } = useCart();
@@ -65,6 +66,8 @@ export default function RitualsDetails() {
         duration: string;
         price: number;
         guests: number;
+        massageTable?: boolean;
+        addons?: any[];
     }[]>([]);
     const [isSelectingMore, setIsSelectingMore] = useState(false);
     const [expandedTreatmentId, setExpandedTreatmentId] = useState<string | null>(null);
@@ -72,6 +75,7 @@ export default function RitualsDetails() {
     const [isReviewingBooking, setIsReviewingBooking] = useState(false);
     const [detailsModalTreatment, setDetailsModalTreatment] = useState<any>(null);
     const [isProcessing, setIsProcessing] = useState(false);
+    const [openAddonItemId, setOpenAddonItemId] = useState<string | null>(null);
     
     // Promo Code State
     const [promoCodeInput, setPromoCodeInput] = useState('');
@@ -180,11 +184,11 @@ export default function RitualsDetails() {
     const totalPrice = Math.max(0, subtotalPrice - discountAmount);
     const formattedTotalPrice = totalPrice.toLocaleString('en-US');
 
-    const handleBooking = async (e: React.FormEvent, ) => {
-        e.preventDefault();
+    const handleBooking = async (e?: React.FormEvent) => {
+        if (e && e.preventDefault) e.preventDefault();
         
-        if (!formData.name || !formData.date || !formData.time || !formData.location || (isTherapick && !formData.whatsapp)) {
-            alert(`Please fill in all required fields (Name, Date, Time, Location${isTherapick ? ', WhatsApp Number' : ''}).`);
+        if (cartItems.length === 0) {
+            alert('Your booking list is empty. Please select a treatment.');
             return;
         }
 
@@ -192,74 +196,67 @@ export default function RitualsDetails() {
         if (appliedPromo) {
             try {
                 await supabase.rpc('increment_promo_use', { promo_id: appliedPromo.id });
-            } catch (e) {
-                console.error('Failed to increment promo use', e);
+            } catch (err) {
+                console.error('Failed to increment promo use', err);
             }
         }
 
         // Open window synchronously to bypass popup blockers
         const newWindow = window.open('', '_blank');
-
         setIsProcessing(true);
 
         try {
-            const treatmentsListStr = cartItems.map(item => `${item.title} (${item.duration} MINS)`).join(', ');
-
             const waNumber = '6285174119423';
-            const treatmentsList = cartItems.map(item => {
+            const treatmentsList = cartItems.map((item, idx) => {
                 const isCouple = ['couple', 'honeymoon'].some(k => item.title.toLowerCase().includes(k));
                 const multiplier = isCouple ? (item.guests / 2) : item.guests;
-                const price = (item.price * multiplier).toLocaleString('en-US');
-                const itemTreatment = treatments.find(t => t.id === item.treatmentId);
-                
-                let whatsIncludedText = '';
-                if (itemTreatment && itemTreatment.desc) {
-                    const parts = itemTreatment.desc.split(/What's Included\s*:?\s*/i);
-                    if (parts.length > 1) {
-                        const cleanIncluded = parts[1].trim();
-                        whatsIncludedText = `\n\n*WHAT'S INCLUDED:*\n${cleanIncluded}`;
-                    }
-                }
+                const addonsTotal = (item.addons || []).reduce((sum: number, a: any) => sum + (Number(a.price) || 0), 0);
+                const itemTotal = ((item.price + addonsTotal) * multiplier).toLocaleString('en-US');
+
+                const tableChoice = item.massageTable === false 
+                    ? 'Villa Bed / Mat' 
+                    : 'Professional Massage Table (Included Free)';
 
                 const guestAndPriceText = isCouple 
-                    ? (item.guests === 2 ? `1 COUPLE\n2 PERSONS\nIDR ${price}` : `${item.guests / 2} COUPLES\n${item.guests} PERSONS\nIDR ${price}`)
-                    : `${item.guests} PERSON${item.guests > 1 ? 'S' : ''} IDR ${price}`;
+                    ? (item.guests === 2 ? `1 COUPLE (2 Persons)\nIDR ${itemTotal}` : `${item.guests / 2} COUPLES (${item.guests} Persons)\nIDR ${itemTotal}`)
+                    : `${item.guests} PERSON${item.guests > 1 ? 'S' : ''}\nIDR ${itemTotal}`;
 
-                return `*${item.title.toUpperCase()}*\nDURATION ${item.duration} MINS\n${guestAndPriceText}${whatsIncludedText}`;
+                let addonsListText = '';
+                if (item.addons && item.addons.length > 0) {
+                    addonsListText = `\n*ADD-ONS:* ` + item.addons.map((a: any) => `${a.title} (+IDR ${Number(a.price).toLocaleString('en-US')})`).join(', ');
+                }
+
+                return `*${idx + 1}. ${item.title.toUpperCase()}*\nDURATION: ${item.duration} MINS\n${guestAndPriceText}\nSETUP: ${tableChoice}${addonsListText}`;
             }).join('\n\n------------------------\n\n');
             
-            const rawHost = typeof window !== 'undefined' ? window.location.hostname : 'elexoirhomespaubud.com';
+            const rawHost = typeof window !== 'undefined' ? window.location.hostname : 'booktherapick.com';
             const cleanHost = rawHost.replace(/^https?:\/\//, '').replace(/\/$/, '');
             const websiteSource = cleanHost.startsWith('www.') ? cleanHost : `www.${cleanHost}`;
             
             let promoDetailsText = '';
             if (appliedPromo) {
-                promoDetailsText = `\n\n*PROMO APPLIED:*\n• Code: ${appliedPromo.code}\n• Discount: ${appliedPromo.discount_type === 'percentage' ? appliedPromo.discount_value + '%' : 'IDR ' + appliedPromo.discount_value.toLocaleString('en-US')}\n• Subtotal: IDR ${subtotalPrice.toLocaleString('en-US')}`;
+                promoDetailsText = `\n\n*PROMO APPLIED:*\n• Code: ${appliedPromo.code}\n• Discount: ${appliedPromo.discount_type === 'percentage' ? appliedPromo.discount_value + '%' : 'IDR ' + appliedPromo.discount_value.toLocaleString('en-US')}\n• Subtotal: IDR ${calculateCartTotal(cartItems).subtotal.toLocaleString('en-US')}`;
             }
 
-            const baseMessage = `*NEW SPA BOOKING*\n${websiteSource}\n\n*TREATMENTS:*\n${treatmentsList}\n\n*TOTAL PRICE:* IDR ${formattedTotalPrice}${promoDetailsText}\n\n*CLIENT DETAILS:*\n- Name: ${formData.name}\n- Date: ${formData.date}\n- Time: ${formData.time}\n- Location/Villa: ${formData.location}\n- Room Number: ${formData.room || 'N/A'}\n\nHello! I would like to confirm this booking.`;
-            
-            
-            
-            
-            const minInvoice = {
-                id: bookingIdRef.current,
-                date: new Date().toISOString(),
-                status: 'confirmed',
-                items: cartItems.map(i => ({ title: i.title, duration: i.duration, guests: i.guests, price: i.price })),
-                customerDetails: { name: formData.name, date: formData.date, time: formData.time, location: formData.location, room: formData.room || '', whatsapp: formData.whatsapp || '' },
-                totalPrice: typeof totalPrice !== 'undefined' ? totalPrice : calculateCartTotal(cartItems, appliedPromo).total
+            const currentTotal = calculateCartTotal(cartItems, appliedPromo).total;
+            const baseMessage = `*NEW SPA BOOKING REQUEST*\n${websiteSource}\n\n*TREATMENTS SELECTED:*\n${treatmentsList}\n\n*TOTAL PRICE:* IDR ${currentTotal.toLocaleString('en-US')}${promoDetailsText}\n\n*NOTE TO CONCIERGE:*\nHello Therapick team! I would like to book these treatments. Please confirm therapist availability, and I will provide my villa/hotel address and preferred appointment time.`;
+
+            const fallbackCustomer = {
+                name: formData.name || 'Guest (WhatsApp Request)',
+                date: formData.date || new Date().toISOString().split('T')[0],
+                time: formData.time || 'Pending CS Scheduling',
+                location: formData.location || 'Villa / Hotel (Confirmed on WhatsApp)',
+                room: formData.room || '',
+                whatsapp: formData.whatsapp || ''
             };
-            const invoiceUrl = window.location.origin + '/invoice/' + bookingIdRef.current;
-    
-    
+
             // Save to Supabase before opening WhatsApp
             const activeBrand = treatment?.brand || siteBrandFilter || 'therapick';
             await saveBookingToSupabase(
                 bookingIdRef.current,
-                formData,
+                fallbackCustomer,
                 cartItems,
-                typeof totalPrice !== 'undefined' ? totalPrice : calculateCartTotal(cartItems, appliedPromo).total,
+                currentTotal,
                 activeBrand
             );
 
@@ -270,8 +267,8 @@ export default function RitualsDetails() {
                 date: new Date().toISOString(),
                 status: 'confirmed',
                 items: cartItems,
-                customerDetails: formData,
-                totalPrice: typeof totalPrice !== 'undefined' ? totalPrice : calculateCartTotal(cartItems, appliedPromo).total
+                customerDetails: fallbackCustomer,
+                totalPrice: currentTotal
             });
     
             const waUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent(finalMessage)}`;
@@ -684,55 +681,46 @@ export default function RitualsDetails() {
 
                                     {/* Cart Items List */}
                                     <div className="space-y-3 mb-4">
-                                        {cartItems.map(item => (
+                                        {cartItems.map(item => {
+                                            const addonsTotal = (item.addons || []).reduce((s: number, a: any) => s + (Number(a.price) || 0), 0);
+                                            const singlePrice = item.price + addonsTotal;
+                                            return (
                                             <div key={item.id} className="bg-white border border-border/80 rounded-2xl p-4 sm:p-5 shadow-sm relative">
                                                 
-                                                <div className="flex items-start justify-between mb-4 pr-6">
+                                                <div className="flex items-start justify-between mb-3 pr-6">
                                                     <div>
                                                         <h3 className="font-bold text-sm text-primary leading-tight">{item.title}</h3>
-                                                        <p className="text-xs text-text-muted flex items-center gap-1 mt-1 mb-2">
+                                                        <p className="text-xs text-text-muted flex items-center gap-1 mt-1 mb-1">
                                                             <Clock className="w-3 h-3" /> {item.duration} Mins
                                                         </p>
-                                                        {isReviewingBooking && (() => {
-                                                            const itemTreatment = treatments.find(t => t.id === item.treatmentId || t.title === item.title);
-                                                            if (!itemTreatment || !itemTreatment.desc) return null;
-                                                            return (
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => setDetailsModalTreatment(itemTreatment)}
-                                                                    className="mt-2 mb-3 text-[10px] font-bold uppercase tracking-widest text-primary underline underline-offset-4 decoration-primary/30 hover:decoration-primary transition-all flex items-center gap-1"
-                                                                >
-                                                                    See Details <ArrowRight className="w-3 h-3" />
-                                                                </button>
-                                                            );
-                                                        })()}
                                                     </div>
                                                     <span className="font-serif text-primary font-medium text-right flex flex-col shrink-0">
-                                                        IDR {item.price.toLocaleString('en-US')}
+                                                        IDR {singlePrice.toLocaleString('en-US')}
                                                         <span className="text-[9px] font-sans text-text-muted font-normal uppercase tracking-wider">
                                                             {['couple', 'honeymoon'].some(k => item.title.toLowerCase().includes(k)) ? 'For 2 Persons' : 'Per Person'}
                                                         </span>
                                                     </span>
                                                 </div>
-                                                <div className="flex items-center justify-between pt-3 border-t border-border/50">
+
+                                                {/* Guests Selector */}
+                                                <div className="flex items-center justify-between pt-2.5 pb-2.5 border-t border-border/50">
                                                     <span className="text-[10px] font-bold uppercase tracking-widest text-primary/80">Guests</span>
                                                     <div className="flex items-center gap-3">
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => {
-                                                                    const newCart = cartItems.filter(i => i.id !== item.id);
-                                                                    setCartItems(newCart);
-                                                                    if (newCart.length === 0) {
-                                                                        setIsModalOpen(false);
-                                                                        setIsReviewingBooking(false);
-                                                                    }
-                                                                }}
-                                                                className="w-8 h-8 rounded-full bg-white border border-border flex items-center justify-center text-text-muted hover:text-red-500 hover:border-red-200 transition-colors shadow-sm"
-                                                                title="Remove treatment"
-                                                            >
-                                                                <Trash2 className="w-4 h-4" />
-                                                            </button>
-                                                            <div className="w-px h-5 bg-border mx-1"></div>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                const newCart = cartItems.filter(i => i.id !== item.id);
+                                                                setCartItems(newCart);
+                                                                if (newCart.length === 0) {
+                                                                    setIsModalOpen(false);
+                                                                }
+                                                            }}
+                                                            className="w-8 h-8 rounded-full bg-white border border-border flex items-center justify-center text-text-muted hover:text-red-500 hover:border-red-200 transition-colors shadow-sm"
+                                                            title="Remove treatment"
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </button>
+                                                        <div className="w-px h-5 bg-border mx-1"></div>
                                                         <button 
                                                             type="button"
                                                             onClick={() => setCartItems(cartItems.map(i => {
@@ -760,8 +748,138 @@ export default function RitualsDetails() {
                                                         </button>
                                                     </div>
                                                 </div>
+
+                                                {/* Massage Table Option */}
+                                                <div className="pt-2.5 pb-2.5 border-t border-border/50 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                                    <span className="text-[10px] font-bold uppercase tracking-wider text-primary/80 flex items-center gap-1.5">
+                                                        <span>🛏️</span> Massage Table Setup
+                                                    </span>
+                                                    <div className="inline-flex p-0.5 bg-gray-100 rounded-lg text-[11px] font-medium">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setCartItems(cartItems.map(i => i.id === item.id ? { ...i, massageTable: true } : i));
+                                                            }}
+                                                            className={`px-2.5 py-1 rounded-md transition-all ${
+                                                                item.massageTable !== false 
+                                                                    ? 'bg-white text-primary font-bold shadow-xs' 
+                                                                    : 'text-text-muted hover:text-primary'
+                                                                }`}
+                                                        >
+                                                            Bring Massage Table (Free)
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setCartItems(cartItems.map(i => i.id === item.id ? { ...i, massageTable: false } : i));
+                                                            }}
+                                                            className={`px-2.5 py-1 rounded-md transition-all ${
+                                                                item.massageTable === false 
+                                                                    ? 'bg-white text-primary font-bold shadow-xs' 
+                                                                    : 'text-text-muted hover:text-primary'
+                                                                }`}
+                                                        >
+                                                            Villa Bed / Mat
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                {/* Add-on Section */}
+                                                <div className="pt-2.5 border-t border-border/50">
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="text-[10px] font-bold uppercase tracking-wider text-primary/80 flex items-center gap-1.5">
+                                                            <span>✨</span> Add-ons & Enhancements
+                                                        </span>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setOpenAddonItemId(openAddonItemId === item.id ? null : item.id)}
+                                                            className="text-[11px] font-bold uppercase tracking-wider text-primary border border-primary/25 hover:border-primary px-3 py-1 rounded-lg transition-colors flex items-center gap-1 bg-primary/5 hover:bg-primary/10"
+                                                        >
+                                                            <Plus className="w-3 h-3" /> {openAddonItemId === item.id ? 'Close' : 'Add-on'}
+                                                        </button>
+                                                    </div>
+
+                                                    {/* Selected Add-ons display */}
+                                                    {item.addons && item.addons.length > 0 && (
+                                                        <div className="flex flex-wrap gap-1.5 mt-2.5">
+                                                            {item.addons.map((addon: any) => (
+                                                                <span 
+                                                                    key={addon.id}
+                                                                    className="inline-flex items-center gap-1 bg-stone-100 text-stone-800 border border-stone-200 text-[10px] font-medium px-2.5 py-1 rounded-full"
+                                                                >
+                                                                    <span>+ {addon.title} (IDR {addon.price.toLocaleString('en-US')})</span>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => {
+                                                                            setCartItems(cartItems.map(i => {
+                                                                                if (i.id !== item.id) return i;
+                                                                                return {
+                                                                                    ...i,
+                                                                                    addons: (i.addons || []).filter((a: any) => a.id !== addon.id)
+                                                                                };
+                                                                            }));
+                                                                        }}
+                                                                        className="hover:text-red-500 transition-colors ml-0.5"
+                                                                    >
+                                                                        <X className="w-3 h-3" />
+                                                                    </button>
+                                                                </span>
+                                                            ))}
+                                                        </div>
+                                                    )}
+
+                                                    {/* Expandable Add-ons Selection */}
+                                                    <AnimatePresence>
+                                                        {openAddonItemId === item.id && (
+                                                            <motion.div
+                                                                initial={{ opacity: 0, height: 0 }}
+                                                                animate={{ opacity: 1, height: 'auto' }}
+                                                                exit={{ opacity: 0, height: 0 }}
+                                                                className="mt-3 bg-stone-50 border border-border/60 rounded-xl p-3 space-y-2 overflow-hidden"
+                                                            >
+                                                                <div className="text-[10px] font-bold uppercase tracking-wider text-primary/70 mb-1">
+                                                                    Select Add-ons for this treatment
+                                                                </div>
+                                                                {SPA_ADDONS.map((addon) => {
+                                                                    const isAdded = (item.addons || []).some((a: any) => a.id === addon.id);
+                                                                    return (
+                                                                        <div 
+                                                                            key={addon.id} 
+                                                                            className="flex items-center justify-between p-2.5 rounded-lg bg-white border border-border/50 text-xs"
+                                                                        >
+                                                                            <div className="pr-2">
+                                                                                <div className="font-semibold text-primary">{addon.title}</div>
+                                                                                <div className="text-[10px] text-text-muted">{addon.duration} • IDR {addon.price.toLocaleString('en-US')}</div>
+                                                                            </div>
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => {
+                                                                                    setCartItems(cartItems.map(i => {
+                                                                                        if (i.id !== item.id) return i;
+                                                                                        const existing = i.addons || [];
+                                                                                        const nextAddons = isAdded 
+                                                                                            ? existing.filter((a: any) => a.id !== addon.id)
+                                                                                            : [...existing, addon];
+                                                                                        return { ...i, addons: nextAddons };
+                                                                                    }));
+                                                                                }}
+                                                                                className={`px-3 py-1 rounded-md text-[11px] font-bold transition-all ${
+                                                                                    isAdded 
+                                                                                        ? 'bg-red-50 text-red-600 border border-red-200 hover:bg-red-100'
+                                                                                        : 'bg-primary text-white hover:bg-primary/90'
+                                                                                }`}
+                                                                            >
+                                                                                {isAdded ? 'Remove' : '+ Add'}
+                                                                            </button>
+                                                                        </div>
+                                                                    );
+                                                                })}
+                                                            </motion.div>
+                                                        )}
+                                                    </AnimatePresence>
+                                                </div>
                                             </div>
-                                        ))}
+                                        );})}
                                     </div>
                                     
                                     <button 
@@ -772,165 +890,66 @@ export default function RitualsDetails() {
                                         + ADD ANOTHER TREATMENT
                                     </button>
 
-                                    {!isReviewingBooking ? (
-                            <form className="space-y-5 pb-8 md:pb-0">
-                                <div className="space-y-1.5 w-full">
-                                    <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1"><User className="w-3.5 h-3.5"/> Guest Name</label>
-                                    <input 
-                                        type="text" required placeholder="John Doe"
-                                        value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})}
-                                        className="w-full bg-white border border-border/80 rounded-xl px-4 py-3.5 text-sm text-primary placeholder:text-text-muted/50 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-                                    />
-                                </div>
-                                <div className="flex flex-row gap-4 w-full">
-                                    <div className="space-y-1.5 flex-1 min-w-0">
-                                        <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1"><Calendar className="w-3.5 h-3.5"/> Date</label>
-                                        <input 
-                                            type="date" required 
-                                            value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})}
-                                            className="w-full min-w-0 appearance-none bg-white border border-border/80 rounded-xl px-4 py-3.5 text-sm text-primary placeholder:text-text-muted/50 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-                                        />
-                                    </div>
-                                    <div className="space-y-1.5 flex-1 min-w-0">
-                                        <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1"><Clock className="w-3.5 h-3.5"/> Time</label>
-                                        <input 
-                                            type="time" required 
-                                            value={formData.time} onChange={e => setFormData({...formData, time: e.target.value})}
-                                            className="w-full min-w-0 appearance-none bg-white border border-border/80 rounded-xl px-4 py-3.5 text-sm text-primary placeholder:text-text-muted/50 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-                                        />
-                                    </div>
-                                </div>
-                                <div className="space-y-1.5">
-                                    <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1"><MapPin className="w-3.5 h-3.5"/> Villa / Hotel Name</label>
-                                    <input 
-                                        type="text" required placeholder="e.g. Four Seasons Sayan"
-                                        value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})}
-                                        className="w-full bg-white border border-border/80 rounded-xl px-4 py-3.5 text-sm text-primary placeholder:text-text-muted/50 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-                                    />
-                                </div>
-                                <div className="space-y-1.5">
-                                    <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1"><DoorOpen className="w-3.5 h-3.5"/> Room Number (Optional)</label>
-                                    <input 
-                                        type="text" placeholder="e.g. Villa 12"
-                                        value={formData.room} onChange={e => setFormData({...formData, room: e.target.value})}
-                                        className="w-full bg-white border border-border/80 rounded-xl px-4 py-3.5 text-sm text-primary placeholder:text-text-muted/50 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-                                    />
-                                </div>
-
-                                {isTherapick && (
-                                <div className="space-y-1.5">
-                                    <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1">WhatsApp Number</label>
-                                    <input 
-                                        type="tel" required placeholder="e.g. +62 812 3456 7890"
-                                        value={formData.whatsapp || ''} onChange={e => setFormData({...formData, whatsapp: e.target.value})}
-                                        className="w-full bg-white border border-border/80 rounded-xl px-4 py-3.5 text-sm text-primary placeholder:text-text-muted/50 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-                                    />
-                                </div>
-                                )}
-
-                                <div className="space-y-1.5 pt-2 w-full">
-                                    <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1"><Tag className="w-3.5 h-3.5"/> Promo Code</label>
-                                    <div className="flex gap-2 w-full">
-                                        <input 
-                                            type="text" placeholder="Enter code"
-                                            value={promoCodeInput} onChange={e => setPromoCodeInput(e.target.value.toUpperCase())}
-                                            disabled={!!appliedPromo || isPromoLoading}
-                                            className="w-full bg-white border border-border/80 rounded-xl px-4 py-3.5 text-sm text-primary placeholder:text-text-muted/50 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all uppercase"
-                                        />
-                                        {appliedPromo ? (
-                                            <button type="button" onClick={handleRemovePromo} className="px-5 bg-red-50 text-red-600 border border-red-200 rounded-xl text-xs font-bold hover:bg-red-100 transition-colors uppercase tracking-wider whitespace-nowrap">
-                                                Remove
-                                            </button>
-                                        ) : (
-                                            <button type="button" onClick={handleApplyPromo} disabled={!promoCodeInput.trim() || isPromoLoading} className="px-5 bg-primary text-white rounded-xl text-xs font-bold hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wider whitespace-nowrap">
-                                                {isPromoLoading ? 'Applying...' : 'Apply'}
-                                            </button>
-                                        )}
-                                    </div>
-                                    {promoError && <p className="text-xs text-red-500 ml-1">{promoError}</p>}
-                                    {promoSuccess && <p className="text-xs text-emerald-600 ml-1">{promoSuccess}</p>}
-                                </div>
-
-                                <div className="mt-8 pt-6 border-t border-border/50">
-                                    {appliedPromo && (
-                                        <div className="flex items-center justify-between mb-2">
-                                            <span className="text-xs font-bold text-text-muted uppercase tracking-widest">Subtotal</span>
-                                            <span className="text-sm font-serif text-text-muted line-through">
-                                                IDR {subtotalPrice.toLocaleString('en-US')}
-                                            </span>
-                                        </div>
-                                    )}
-                                    <div className="flex items-end justify-between mb-6">
-                                        <span className="text-xs font-bold text-text-muted uppercase tracking-widest">Total Price</span>
-                                        <span className="text-2xl font-serif text-primary">IDR {formattedTotalPrice}</span>
-                                    </div>
-                                    <div className="flex flex-col gap-3">
-                                        <button 
-                                            type="button"
-                                            onClick={() => {
-                                                if (!formData.name || !formData.date || !formData.time || !formData.location || (isTherapick && !formData.whatsapp)) {
-                                                    alert(`Please fill in all required fields (Name, Date, Time, Location${isTherapick ? ', WhatsApp Number' : ''}).`);
-                                                    return;
-                                                }
-                                                setIsReviewingBooking(true);
-                                            }}
-                                            className="w-full bg-primary text-white px-6 py-4 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-primary/90 hover:scale-[1.02] transition-all duration-300 shadow-[0_8px_24px_rgb(0,0,0,0.15)] uppercase tracking-widest"
-                                        >
-                                            REVIEW BOOKING
-                                        </button>
-                                    </div>
-                                </div>
-                            </form>
-                                    ) : (
-                                    <div className="space-y-5 pb-8 sm:pb-0 animate-in fade-in slide-in-from-right-4 duration-300">
-                                        <div className="bg-white border border-border/80 rounded-xl p-5 space-y-4">
-                                            <h3 className="text-[10px] font-bold uppercase tracking-widest text-primary/80 border-b border-border/50 pb-2 mb-2">Guest Details</h3>
-                                            <div className="grid grid-cols-3 gap-3 sm:gap-5 items-center">
-                                                    <div className="flex flex-col gap-5">
-                                                        <div>
-                                                            <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-text-muted mb-1"><User className="w-3 h-3"/> Name</span>
-                                                            <span className="text-sm text-primary font-medium">{formData.name}</span>
-                                                        </div>
-                                                        <div>
-                                                            <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-text-muted mb-1"><Calendar className="w-3 h-3"/> Date</span>
-                                                            <span className="text-sm text-primary font-medium">{formData.date}</span>
-                                                        </div>
-                                                    </div>
-                                                    
-                                                    <div className="flex flex-col items-center justify-center text-center border-x border-border/50 px-2 h-full py-2">
-                                                        <span className="flex items-center justify-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-text-muted mb-2"><Clock className="w-3 h-3"/> Time</span>
-                                                        <span className="text-xl sm:text-2xl text-primary font-serif font-medium">{formData.time}</span>
-                                                    </div>
-
-                                                    <div className="flex flex-col gap-5">
-                                                        <div>
-                                                            <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-text-muted mb-1"><MapPin className="w-3 h-3"/> Location</span>
-                                                            <span className="text-sm text-primary font-medium line-clamp-2 leading-tight">{formData.location}</span>
-                                                        </div>
-                                                        {formData.room && (
-                                                            <div>
-                                                                <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-text-muted mb-1"><DoorOpen className="w-3 h-3"/> Room</span>
-                                                                <span className="text-sm text-primary font-medium line-clamp-1">{formData.room}</span>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </div>
+                                    {/* Direct Booking & Promo Section (No Guest Inputs Required) */}
+                                    <div className="space-y-4 pb-4">
+                                        {/* Promo Code Input */}
+                                        <div className="space-y-1.5 pt-1 w-full">
+                                            <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1">
+                                                <Tag className="w-3.5 h-3.5"/> Promo Code (Optional)
+                                            </label>
+                                            <div className="flex gap-2 w-full">
+                                                <input 
+                                                    type="text" placeholder="Enter code"
+                                                    value={promoCodeInput} onChange={e => setPromoCodeInput(e.target.value.toUpperCase())}
+                                                    disabled={!!appliedPromo || isPromoLoading}
+                                                    className="w-full bg-white border border-border/80 rounded-xl px-4 py-3 text-sm text-primary placeholder:text-text-muted/50 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all uppercase"
+                                                />
+                                                {appliedPromo ? (
+                                                    <button type="button" onClick={handleRemovePromo} className="px-5 bg-red-50 text-red-600 border border-red-200 rounded-xl text-xs font-bold hover:bg-red-100 transition-colors uppercase tracking-wider whitespace-nowrap">
+                                                        Remove
+                                                    </button>
+                                                ) : (
+                                                    <button type="button" onClick={handleApplyPromo} disabled={!promoCodeInput.trim() || isPromoLoading} className="px-5 bg-primary text-white rounded-xl text-xs font-bold hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wider whitespace-nowrap">
+                                                        {isPromoLoading ? 'Applying...' : 'Apply'}
+                                                    </button>
+                                                )}
                                             </div>
-                                            
-                                            <div className="mt-8 pt-6 border-t border-border/50">
-                                            <div className="flex flex-col gap-3">
-                                                <button
+                                            {promoError && <p className="text-xs text-red-500 ml-1">{promoError}</p>}
+                                            {promoSuccess && <p className="text-xs text-emerald-600 ml-1">{promoSuccess}</p>}
+                                        </div>
+
+                                        {/* Price Summary & WhatsApp Confirmation */}
+                                        <div className="mt-4 pt-4 border-t border-border/50">
+                                            {appliedPromo && (
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <span className="text-xs font-bold text-text-muted uppercase tracking-widest">Subtotal</span>
+                                                    <span className="text-sm font-serif text-text-muted line-through">
+                                                        IDR {calculateCartTotal(cartItems).subtotal.toLocaleString('en-US')}
+                                                    </span>
+                                                </div>
+                                            )}
+                                            <div className="flex items-end justify-between mb-5">
+                                                <span className="text-xs font-bold text-primary uppercase tracking-widest">Total Price</span>
+                                                <span className="text-2xl font-serif text-primary font-medium">
+                                                    IDR {calculateCartTotal(cartItems, appliedPromo).total.toLocaleString('en-US')}
+                                                </span>
+                                            </div>
+
+                                            <div className="flex flex-col gap-2.5">
+                                                <button 
                                                     type="button"
-                                                    onClick={(e) => handleBooking(e)}
+                                                    onClick={() => handleBooking()}
                                                     disabled={isProcessing}
-                                                    className="w-full bg-primary text-white px-6 py-4 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-primary/90 hover:scale-[1.02] transition-all duration-300 shadow-[0_8px_24px_rgb(0,0,0,0.15)] uppercase tracking-widest disabled:opacity-70"
+                                                    className="w-full bg-primary text-white px-6 py-4 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-primary/90 hover:scale-[1.01] transition-all duration-200 shadow-[0_8px_24px_rgb(0,0,0,0.15)] uppercase tracking-widest disabled:opacity-70"
                                                 >
                                                     {isProcessing ? 'PROCESSING...' : 'CONFIRM ON WHATSAPP'}
                                                 </button>
+                                                <p className="text-[11px] text-center text-text-muted leading-relaxed px-2">
+                                                    No need to fill in forms here. Our CS concierge will confirm your villa location and preferred schedule directly on WhatsApp.
+                                                </p>
                                             </div>
                                         </div>
                                     </div>
-                                    )}
                             </div>
                             )}
                         </motion.div>

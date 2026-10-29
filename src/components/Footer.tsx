@@ -26,6 +26,17 @@ const TripadvisorLogo = () => (
   </div>
 );
 
+const GetYourGuideLogo = () => (
+  <div className="flex items-center gap-1.5">
+    <img 
+      src="/getyourguide-logo.svg" 
+      alt="GetYourGuide" 
+      className="h-5 sm:h-5.5 md:h-6 w-auto object-contain" 
+    />
+    <span className="text-[#3c4043] font-bold text-[14px] sm:text-base md:text-lg tracking-tight font-sans">GetYourGuide</span>
+  </div>
+);
+
 export default function Footer() {
   const pathname = usePathname();
   const [isPartnersSubdomain, setIsPartnersSubdomain] = useState(false);
@@ -45,7 +56,7 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-8 lg:px-12 relative z-10">
         <div className="flex flex-col items-start max-w-2xl">
           
-          <div className="mb-8">
+          <div className="mb-8 w-full">
             <Link href="/" className="domain-therapick-only inline-block mb-5 outline-none group">
               <img 
                 src="/therapick-logo-2.png" 
@@ -60,19 +71,19 @@ export default function Footer() {
               Bali's premier luxury mobile spa. Bringing 5-star professional massages and organic wellness treatments directly to your private villa or hotel.
             </p>
 
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-3 w-full">
               <span className="text-xs font-bold uppercase tracking-widest text-text-muted">Find us on</span>
               
-              <div className="flex items-center gap-6 sm:gap-8 flex-wrap">
-                <a href="https://share.google/7evzKgW2VdC2C9QWY" target="_blank" rel="noopener noreferrer" className="domain-ubud-only inline-flex items-center hover:opacity-80 transition-opacity">
+              <div className="flex items-center gap-5 sm:gap-7 flex-nowrap overflow-x-auto no-scrollbar py-1">
+                <a href="https://share.google/7evzKgW2VdC2C9QWY" target="_blank" rel="noopener noreferrer" className="domain-ubud-only inline-flex items-center hover:opacity-80 transition-opacity shrink-0">
                   <GoogleReviewsLogo />
                 </a>
                 
-                <a href="https://share.google/mA7g8NkNuB37g8WHs" target="_blank" rel="noopener noreferrer" className="domain-bali-only inline-flex items-center hover:opacity-80 transition-opacity">
+                <a href="https://share.google/mA7g8NkNuB37g8WHs" target="_blank" rel="noopener noreferrer" className="domain-bali-only inline-flex items-center hover:opacity-80 transition-opacity shrink-0">
                   <GoogleReviewsLogo />
                 </a>
                 
-                <a href="https://share.google/LRhEtZHpMLBAg9ySs" target="_blank" rel="noopener noreferrer" className="domain-therapick-only inline-flex items-center hover:opacity-80 transition-opacity">
+                <a href="https://share.google/LRhEtZHpMLBAg9ySs" target="_blank" rel="noopener noreferrer" className="domain-therapick-only inline-flex items-center hover:opacity-80 transition-opacity shrink-0">
                   <GoogleReviewsLogo />
                 </a>
 
@@ -80,10 +91,20 @@ export default function Footer() {
                   href="https://www.tripadvisor.com/Attraction_Review-g297701-d34704669-Reviews-Therapick_Island_Relaxation_Delivered-Ubud_Gianyar_Regency_Bali.html" 
                   target="_blank" 
                   rel="noopener noreferrer" 
-                  className="inline-flex items-center hover:opacity-80 transition-opacity"
+                  className="inline-flex items-center hover:opacity-80 transition-opacity shrink-0"
                   title="Find Therapick on Tripadvisor"
                 >
                   <TripadvisorLogo />
+                </a>
+
+                <a 
+                  href="https://www.getyourguide.com/balance-island-tour-s252854/" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="inline-flex items-center hover:opacity-80 transition-opacity shrink-0"
+                  title="Find Balance Island on GetYourGuide"
+                >
+                  <GetYourGuideLogo />
                 </a>
               </div>
             </div>

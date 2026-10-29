@@ -35,16 +35,19 @@ export type PricingCartItem = {
     title: string;
     price: number;
     guests?: number;
+    addons?: { id: string; title: string; price: number }[];
+    massageTable?: boolean | string;
 };
 
 export type PricingPromo = {
-    discount_type: 'percentage' | 'fixed';
-    discount_value: number;
-} | null;
+    code?: string;
+    discount_type?: 'percentage' | 'fixed' | string;
+    discount_value?: number;
+} | string | null;
 
 /**
  * Calculates cart total price:
- * Safely computes subtotal, discount, and total without doubling couple/honeymoon packages.
+ * Safely computes subtotal (including add-ons), discount, and total without doubling couple/honeymoon packages.
  */
 export function calculateCartTotal(
     items: PricingCartItem[],
@@ -56,13 +59,16 @@ export function calculateCartTotal(
 
     const subtotal = items.reduce((acc, item) => {
         const mult = getItemMultiplier(item.title, item.guests);
-        return acc + (Number(item.price) || 0) * mult;
+        const addonsTotal = (item.addons || []).reduce((sum, a) => sum + (Number(a.price) || 0), 0);
+        return acc + ((Number(item.price) || 0) + addonsTotal) * mult;
     }, 0);
 
     let discount = 0;
     if (appliedPromo) {
-        if (appliedPromo.discount_type === 'percentage') {
-            discount = subtotal * (appliedPromo.discount_value / 100);
+        if (typeof appliedPromo === 'string') {
+            discount = subtotal * 0.1;
+        } else if (appliedPromo.discount_type === 'percentage') {
+            discount = subtotal * ((Number(appliedPromo.discount_value) || 0) / 100);
         } else {
             discount = Number(appliedPromo.discount_value) || 0;
         }

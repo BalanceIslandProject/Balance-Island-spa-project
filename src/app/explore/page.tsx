@@ -23,16 +23,23 @@ function ExploreContent() {
     const locationQuery = searchParams.get('location') || '';
 
     const [activeCategory, setActiveCategory] = useState('all');
-    const [searchQuery, setSearchQuery] = useState('');
+    const [searchQuery, setSearchQuery] = useState(locationQuery || '');
     const [maxPrice, setMaxPrice] = useState(1500000);
     const [isPriceFilterOpen, setIsPriceFilterOpen] = useState(false);
+
+    useEffect(() => {
+        if (locationQuery) {
+            setSearchQuery(locationQuery);
+        }
+    }, [locationQuery]);
 
     const showPinnedTreatments = treatments.some(t => t.is_pinned);
 
     const filteredAndSortedTreatments = React.useMemo(() => {
         let result = treatments.filter(t => {
             const matchesCategory = activeCategory === 'all' || t.category.toLowerCase() === activeCategory.toLowerCase();
-            const matchesSearch = t.title.toLowerCase().includes(searchQuery.toLowerCase()) || t.desc.toLowerCase().includes(searchQuery.toLowerCase());
+            const isLocationMatch = locationQuery && searchQuery.trim().toLowerCase() === locationQuery.trim().toLowerCase();
+            const matchesSearch = !searchQuery.trim() || isLocationMatch || t.title.toLowerCase().includes(searchQuery.toLowerCase()) || t.desc.toLowerCase().includes(searchQuery.toLowerCase());
             
             const getLowestPrice = (options: any[]) => {
                 if (!options || options.length === 0) return 0;
@@ -53,7 +60,7 @@ function ExploreContent() {
         });
 
         return result;
-    }, [treatments, activeCategory, searchQuery, maxPrice]);
+    }, [treatments, activeCategory, searchQuery, maxPrice, locationQuery]);
 
     return (
         <main className="min-h-screen bg-white pb-20 pt-40">
@@ -71,10 +78,12 @@ function ExploreContent() {
                                         type="text"
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
-                                        placeholder="Where to? Search treatments..."
+                                        placeholder={locationQuery ? `${locationQuery}, Bali` : "Where to? Search treatments..."}
                                         className="text-[13px] font-bold text-gray-900 leading-tight bg-transparent border-none outline-none focus:ring-0 placeholder:text-gray-900 w-full p-0 m-0"
                                     />
-                                    <span className="text-[11px] text-gray-500 font-medium mt-0.5">{locationQuery || 'Ubud'} • Any date • Add guests</span>
+                                    <span className="text-[11px] text-gray-500 font-medium mt-0.5">
+                                        {locationQuery ? `${locationQuery}, Bali` : 'Ubud, Bali'} • In-Villa Mobile Spa • Any date
+                                    </span>
                                 </div>
                             </div>
                             <button 

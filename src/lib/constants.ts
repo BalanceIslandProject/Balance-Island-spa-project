@@ -205,3 +205,11 @@ export const TESTIMONIALS: Testimonial[] = [
 export const SERVICE_AREAS = [
   "Seminyak", "Canggu", "Ubud", "Kuta", "Legian", "Jimbaran", "Nusa Dua", "Uluwatu", "Sanur", "All Bali Areas"
 ];
+
+export const SPA_ADDONS = [
+  { id: 'reflexology-30', title: 'Foot Reflexology', duration: '30 Mins', price: 150000 },
+  { id: 'head-shoulder-30', title: 'Head, Neck & Shoulder', duration: '30 Mins', price: 150000 },
+  { id: 'face-glow-30', title: 'Face Acupressure Glow', duration: '30 Mins', price: 150000 },
+  { id: 'body-scrub-30', title: 'Balinese Herbal Body Scrub', duration: '30 Mins', price: 150000 },
+  { id: 'aromatherapy-oil', title: 'Organic Essential Oil Upgrade', duration: 'Custom Blend', price: 50000 }
+];
