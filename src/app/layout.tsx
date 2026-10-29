@@ -3,7 +3,6 @@ import { Plus_Jakarta_Sans, Newsreader } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import TopNav from "@/components/TopNav";
-import MobileAppDock from "@/components/MobileAppDock";
 import Footer from "@/components/Footer";
 import { SpaProvider } from "@/context/SpaContext";
 import { CartProvider } from "@/context/CartContext";
@@ -746,7 +745,6 @@ export default async function RootLayout({
                 {children}
               </main>
               {!isPartnersSubdomain && <Footer />}
-              {!isPartnersSubdomain && <MobileAppDock />}
             </div>
           </CartProvider>
         </SpaProvider>

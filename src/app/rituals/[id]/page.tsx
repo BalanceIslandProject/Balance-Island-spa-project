@@ -420,13 +420,13 @@ export default function RitualsDetails() {
                                     <button 
                                         key={idx}
                                         onClick={() => setSelectedOptionIdx(idx)}
-                                        className={`flex-1 py-3 px-2 rounded-2xl text-sm font-bold transition-all duration-160 active:scale-95 ${
+                                        className={`flex-1 py-3 px-2 rounded-2xl text-sm font-bold transition-all duration-300 ${
                                             isActive 
-                                            ? 'bg-primary text-white shadow-[0_8px_20px_rgb(0,0,0,0.12)] scale-[1.02]' 
-                                            : 'bg-white/60 text-primary border border-white hover:bg-white'
+                                            ? 'bg-primary text-white shadow-[0_8px_20px_rgb(0,0,0,0.12)] scale-105' 
+                                            : 'bg-white/60 text-primary border border-white hover:bg-white hover:scale-[1.02]'
                                         }`}
                                     >
-                                        <span className="tabular-nums">{opt.duration}</span> <span className={`text-[10px] ${isActive ? 'text-white/70' : 'text-primary/50'}`}>MINS</span>
+                                        {opt.duration} <span className={`text-[10px] ${isActive ? 'text-white/70' : 'text-primary/50'}`}>MINS</span>
                                     </button>
                                 );
                             })}
@@ -445,20 +445,19 @@ export default function RitualsDetails() {
                                 <AnimatePresence mode="popLayout">
                                     <motion.div 
                                         key={selectedOption.price}
-                                        initial={{ opacity: 0, y: 8 }}
+                                        initial={{ opacity: 0, y: 10 }}
                                         animate={{ opacity: 1, y: 0 }}
-                                        exit={{ opacity: 0, y: -8 }}
-                                        transition={{ duration: 0.18, ease: [0.23, 1, 0.32, 1] }}
+                                        exit={{ opacity: 0, y: -10 }}
                                         className="flex items-baseline gap-2 text-white"
                                     >
                                         <span className="text-lg font-medium text-white/70">IDR</span>
-                                        <span className="text-4xl md:text-5xl font-serif tabular-nums">{parseInt(selectedOption.price.replace(/,/g, '') || '0').toLocaleString('en-US')}</span>
+                                        <span className="text-4xl md:text-5xl font-serif">{parseInt(selectedOption.price.replace(/,/g, '') || '0').toLocaleString('en-US')}</span>
                                     </motion.div>
                                 </AnimatePresence>
                             </div>
                             <button 
                                 onClick={handleInitialBook}
-                                className="w-full bg-white text-primary px-6 py-4 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-white/95 active:scale-[0.98] transition-all duration-160 shadow-[0_8px_24px_rgb(255,255,255,0.15)] uppercase tracking-widest"
+                                className="w-full bg-white text-primary px-6 py-4 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-white/90 hover:scale-[1.02] transition-all duration-300 shadow-[0_8px_24px_rgb(255,255,255,0.15)] uppercase tracking-widest"
                             >
                                 Book an Appointment
                             </button>
@@ -570,18 +569,14 @@ export default function RitualsDetails() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
                         className="fixed inset-0 z-[100] flex items-center justify-center px-0 md:px-4 bg-black/40 backdrop-blur-sm"
                     >
                         <motion.div 
-                            initial={{ opacity: 0, scale: 0.96, y: 16 }}
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.96, y: 16 }}
-                            transition={{ type: 'spring', damping: 28, stiffness: 320 }}
-                            className="bg-white w-full max-w-full sm:max-w-lg h-[92dvh] sm:h-auto sm:max-h-[90vh] mt-auto sm:my-auto sm:rounded-[32px] rounded-t-[28px] rounded-b-none p-5 sm:p-7 md:p-8 shadow-[0_24px_80px_rgba(0,0,0,0.2)] relative flex flex-col box-border overflow-y-auto overflow-x-hidden no-scrollbar"
+                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            className="bg-white w-full max-w-full sm:max-w-lg h-[100dvh] sm:h-auto sm:max-h-[90vh] sm:my-auto sm:rounded-[28px] rounded-none p-5 sm:p-7 md:p-8 shadow-2xl relative flex flex-col box-border overflow-y-auto overflow-x-hidden no-scrollbar"
                         >
-                            {/* Mobile Drag Indicator */}
-                            <div className="w-10 h-1 bg-black/15 rounded-full mx-auto mb-3 sm:hidden shrink-0" />
                             <button 
                                 onClick={() => {
                                     if (cartItems.length > 0) {
@@ -746,11 +741,11 @@ export default function RitualsDetails() {
                                                                 const step = isCouple ? 2 : 1;
                                                                 return { ...i, guests: Math.max(step, i.guests - step) };
                                                             }))}
-                                                            className="w-8 h-8 rounded-full bg-white border border-border flex items-center justify-center text-primary hover:bg-border active:scale-90 transition-transform shadow-sm"
+                                                            className="w-8 h-8 rounded-full bg-white border border-border flex items-center justify-center text-primary hover:bg-border transition-colors shadow-sm"
                                                         >
                                                             <Minus className="w-3 h-3" />
                                                         </button>
-                                                        <span className="font-bold text-sm text-primary w-5 text-center tabular-nums">{item.guests}</span>
+                                                        <span className="font-bold text-sm text-primary w-4 text-center">{item.guests}</span>
                                                         <button 
                                                             type="button"
                                                             onClick={() => setCartItems(cartItems.map(i => {
@@ -759,7 +754,7 @@ export default function RitualsDetails() {
                                                                 const step = isCouple ? 2 : 1;
                                                                 return { ...i, guests: i.guests + step };
                                                             }))}
-                                                            className="w-8 h-8 rounded-full bg-white border border-border flex items-center justify-center text-primary hover:bg-border active:scale-90 transition-transform shadow-sm"
+                                                            className="w-8 h-8 rounded-full bg-white border border-border flex items-center justify-center text-primary hover:bg-border transition-colors shadow-sm"
                                                         >
                                                             <Plus className="w-3 h-3" />
                                                         </button>
@@ -1040,30 +1035,6 @@ export default function RitualsDetails() {
                 )}
             </AnimatePresence>
 
-
-            {/* Mobile Sticky Booking Action Bar (App-Like Experience) */}
-            <div className="md:hidden fixed bottom-0 left-0 right-0 z-30 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] bg-white/94 saturate-[1.8] backdrop-blur-2xl border-t border-black/[0.08] shadow-[0_-10px_30px_rgba(0,0,0,0.08)]">
-                <div className="max-w-md mx-auto flex items-center justify-between gap-3">
-                    <div className="flex flex-col">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-text-muted">
-                            <span className="tabular-nums">{selectedOption?.duration}</span> MINS • {isCoupleTreatment ? '2 Guests' : 'Per Person'}
-                        </span>
-                        <div className="flex items-baseline gap-1 text-primary">
-                            <span className="text-[11px] font-bold text-text-muted">IDR</span>
-                            <span className="text-xl font-serif font-semibold tabular-nums leading-none">
-                                {parseInt(selectedOption.price.replace(/,/g, '') || '0').toLocaleString('en-US')}
-                            </span>
-                        </div>
-                    </div>
-                    <button
-                        type="button"
-                        onClick={handleInitialBook}
-                        className="flex-1 max-w-[200px] py-3.5 px-4 rounded-full bg-black text-white text-xs font-bold tracking-wider uppercase shadow-md active:scale-95 transition-transform duration-150 flex items-center justify-center gap-1.5"
-                    >
-                        Book Ritual
-                    </button>
-                </div>
-            </div>
 
         </div>
     );

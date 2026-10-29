@@ -107,10 +107,10 @@ export default function FaqSection() {
             >
               <button 
                 onClick={() => setOpenIdx(openIdx === idx ? null : idx)}
-                className="w-full flex items-center justify-between p-6 md:p-10 text-left focus:outline-none active:scale-[0.99] transition-transform"
+                className="w-full flex items-center justify-between p-6 md:p-10 text-left focus:outline-none"
               >
                 <h3 className="font-bold text-base md:text-lg text-primary pr-6 md:pr-8">{faq.q}</h3>
-                <div className={`w-8 h-8 shrink-0 rounded-full border flex items-center justify-center transition-all duration-200 ${openIdx === idx ? 'bg-primary text-white border-primary rotate-180' : 'bg-surface text-primary border-border'}`}>
+                <div className={`w-8 h-8 shrink-0 rounded-full border flex items-center justify-center transition-colors duration-300 ${openIdx === idx ? 'bg-primary text-white border-primary' : 'bg-surface text-primary border-border'}`}>
                   {openIdx === idx ? <Minus className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
                 </div>
               </button>
@@ -121,7 +121,7 @@ export default function FaqSection() {
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: 'auto', opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
+                    transition={{ duration: 0.3, ease: "easeInOut" }}
                   >
                     <div className="px-6 md:px-10 pb-6 md:pb-10 pt-0">
                       <p className="text-base md:text-lg text-text-muted font-normal leading-relaxed">
@@ -139,7 +139,7 @@ export default function FaqSection() {
           <div className="mt-8 md:mt-12 flex justify-center">
             <button 
               onClick={() => setShowAll(true)}
-              className="inline-flex items-center justify-center bg-white border border-border/80 text-primary px-8 py-3.5 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-gray-50 hover:shadow-md active:scale-95 transition-all duration-200"
+              className="inline-flex items-center justify-center bg-white border border-border/80 text-primary px-8 py-3.5 rounded-full text-sm font-bold tracking-wider hover:bg-gray-50 hover:shadow-md transition-all duration-300"
             >
               SEE MORE FAQS
             </button>

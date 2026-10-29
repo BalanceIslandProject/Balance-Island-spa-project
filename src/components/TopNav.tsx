@@ -13,7 +13,8 @@ export default function TopNav() {
     const router = useRouter();
     const [isOpen, setIsOpen] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
-    const { history, removeHistory, triggerRestoreBooking, isCartOpen, setIsCartOpen } = useCart();
+    const [isCartOpen, setIsCartOpen] = useState(false);
+    const { history, removeHistory, triggerRestoreBooking } = useCart();
     const dropdownRef = useRef<HTMLDivElement>(null);
     const [partnerPortalUrl, setPartnerPortalUrl] = useState('https://partners.booktherapick.com');
 
@@ -88,7 +89,7 @@ export default function TopNav() {
                 className={`pointer-events-auto flex items-center justify-between relative transition-all duration-300 ease-out will-change-transform
                     w-full max-w-5xl rounded-full px-3.5 sm:px-5 py-2 sm:py-2.5
                     ${isScrolled || isOpen
-                        ? 'bg-white/88 saturate-[1.8] backdrop-blur-2xl border border-black/[0.08] shadow-[0_12px_36px_rgba(0,0,0,0.08)]' 
+                        ? 'bg-white/85 saturate-[1.8] backdrop-blur-xl border border-white/70 shadow-[0_8px_30px_rgb(0,0,0,0.08)]' 
                         : 'bg-transparent border-transparent shadow-none'}`} 
                 ref={dropdownRef}
                 style={{ transformOrigin: 'top center' }}
@@ -96,7 +97,7 @@ export default function TopNav() {
                 {/* Left Section: Therapick Logo (Therapick domain) OR Store Button (Elexoir/Home Spa Ubud) */}
                 <div className="flex items-center shrink-0 z-10">
                     {/* Therapick Domain: Logo ONLY (no text title, no divider) */}
-                    <Link href="/" className="domain-therapick-only flex items-center group outline-none active:scale-[0.98] transition-transform">
+                    <Link href="/" className="domain-therapick-only flex items-center group outline-none">
                         <img 
                             src="/therapick-logo-2.png" 
                             alt="Therapick" 
@@ -130,7 +131,7 @@ export default function TopNav() {
                     {/* Primary Booking CTA on navbar: exact same size and styling as previous partner button */}
                     <Link
                         href="/explore"
-                        className="domain-therapick-only px-3.5 sm:px-4 py-1.5 rounded-full text-[10px] sm:text-[11px] md:text-xs font-bold tracking-[0.08em] uppercase transition-all duration-160 whitespace-nowrap bg-black text-white hover:bg-neutral-800 active:scale-95 shadow-xs border border-black/10"
+                        className="domain-therapick-only px-3.5 sm:px-4 py-1.5 rounded-full text-[10px] sm:text-[11px] md:text-xs font-bold tracking-[0.08em] uppercase transition-all duration-200 whitespace-nowrap bg-black text-white hover:bg-neutral-800 active:scale-95 shadow-xs border border-black/10"
                     >
                         BOOK NOW
                     </Link>
@@ -138,22 +139,20 @@ export default function TopNav() {
                     {/* Cart Drawer Trigger with Red Indicator Dot matching screenshot */}
                     <button 
                         onClick={() => setIsCartOpen(true)}
-                        className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-primary transition-all duration-160 hover:bg-black/5 active:scale-95 relative border border-black/5 shrink-0"
+                        className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-primary transition-all duration-200 hover:bg-black/5 active:scale-95 relative border border-black/5 shrink-0"
                         aria-label="Open Cart"
                         title="View Bookings"
                     >
                         <ShoppingBag size={18} strokeWidth={1.8} />
                         {history.length > 0 && (
-                          <span className="absolute top-1 right-1 min-w-[14px] h-[14px] px-0.5 bg-[#EF4444] text-white rounded-full text-[9px] font-bold tabular-nums ring-2 ring-white flex items-center justify-center">
-                            {history.length}
-                          </span>
+                            <span className="absolute top-1 right-1 w-2 h-2 bg-[#EF4444] rounded-full ring-2 ring-white"></span>
                         )}
                     </button>
 
                     {/* Dropdown Menu Toggle (Hamburger / Close) */}
                     <button 
                         onClick={() => setIsOpen(!isOpen)}
-                        className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-primary transition-all duration-160 hover:bg-black/5 active:scale-95 border border-black/5 shrink-0"
+                        className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-primary transition-all duration-200 hover:bg-black/5 active:scale-95 border border-black/5 shrink-0"
                         aria-label="Toggle Navigation Menu"
                         title="Menu"
                     >
@@ -161,17 +160,17 @@ export default function TopNav() {
                     </button>
                 </div>
 
-                {/* Dropdown Navigation Menu - Emil Kowalski Origin-Aware Animation */}
+                {/* Dropdown Navigation Menu */}
                 <AnimatePresence>
                     {isOpen && (
                         <motion.div
-                            initial={{ opacity: 0, scale: 0.96, y: -6 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.96, y: -6 }}
-                            transition={{ duration: 0.18, ease: [0.23, 1, 0.32, 1] }}
-                            style={{ transformOrigin: 'top right' }}
-                            className="absolute top-full right-0 left-0 sm:left-auto sm:w-76 mt-2 p-3 sm:p-3.5 bg-white/95 saturate-[1.8] backdrop-blur-2xl border border-black/[0.08] shadow-[0_24px_64px_rgba(0,0,0,0.16)] rounded-2xl sm:rounded-3xl flex flex-col gap-1 z-50 overflow-hidden"
+                            initial={{ opacity: 0, y: -8, scale: 0.97 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: -8, scale: 0.97 }}
+                            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+                            className="absolute top-full right-0 left-0 sm:left-auto sm:w-76 mt-2 p-3 sm:p-3.5 bg-white border border-black/[0.08] shadow-[0_20px_60px_rgba(0,0,0,0.16)] rounded-2xl sm:rounded-3xl flex flex-col gap-1 z-50 overflow-hidden"
                         >
+
 
                             {/* Dropdown Navigation Links */}
                             <div className="flex flex-col gap-0.5">
@@ -182,7 +181,7 @@ export default function TopNav() {
                                             key={item.href}
                                             href={item.href}
                                             onClick={() => setIsOpen(false)}
-                                            className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold tracking-wider uppercase transition-all duration-140 active:scale-[0.98] ${
+                                            className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold tracking-wider uppercase transition-colors ${
                                                 isActive 
                                                     ? 'bg-black/5 text-primary' 
                                                     : 'text-text-muted hover:bg-black/[0.04] hover:text-primary'
@@ -202,7 +201,7 @@ export default function TopNav() {
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     onClick={() => setIsOpen(false)}
-                                    className="flex items-center justify-center w-full px-3.5 py-2.5 rounded-xl text-xs font-bold tracking-wider transition-all duration-140 text-white bg-black hover:bg-neutral-800 shadow-sm uppercase active:scale-[0.98]"
+                                    className="flex items-center justify-center w-full px-3.5 py-2.5 rounded-xl text-xs font-bold tracking-wider transition-colors text-white bg-black hover:bg-neutral-800 shadow-sm uppercase"
                                 >
                                     PARTNER PORTAL
                                 </a>
@@ -214,7 +213,7 @@ export default function TopNav() {
             </header>
         </div>
 
-        {/* Cart Slide-over Drawer (Preserved completely with Emil Kowalski spring motion) */}
+        {/* Cart Slide-over Drawer (Preserved completely) */}
         <AnimatePresence>
             {isCartOpen && (
                 <>
@@ -222,22 +221,21 @@ export default function TopNav() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
                         onClick={() => setIsCartOpen(false)}
-                        className="fixed inset-0 bg-black/30 backdrop-blur-sm z-[60]"
+                        className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[60]"
                     />
                     <motion.div
                         initial={{ x: '100%' }}
                         animate={{ x: 0 }}
                         exit={{ x: '100%' }}
-                        transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-                        className="fixed top-0 right-0 bottom-0 w-full sm:w-[400px] bg-white z-[70] shadow-[0_24px_80px_rgba(0,0,0,0.2)] flex flex-col"
+                        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                        className="fixed top-0 right-0 bottom-0 w-full sm:w-[400px] bg-white z-[70] shadow-2xl flex flex-col"
                     >
                         <div className="p-5 flex items-center justify-between border-b border-border/50">
                             <h2 className="font-serif text-lg text-primary tracking-wide font-medium">YOUR BOOKINGS</h2>
                             <button 
                                 onClick={() => setIsCartOpen(false)}
-                                className="w-8 h-8 rounded-full bg-surface flex items-center justify-center text-text-muted hover:text-primary transition-all active:scale-95"
+                                className="w-8 h-8 rounded-full bg-surface flex items-center justify-center text-text-muted hover:text-primary transition-colors"
                             >
                                 <X size={16} />
                             </button>

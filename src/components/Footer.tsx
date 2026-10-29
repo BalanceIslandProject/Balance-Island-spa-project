@@ -41,7 +41,7 @@ export default function Footer() {
   }
 
   return (
-    <footer className="bg-white text-primary pt-12 pb-28 sm:pb-16 relative border-t border-border/40 scroll-reveal">
+    <footer className="bg-white text-primary pt-12 pb-16 relative border-t border-border/40 scroll-reveal">
       <div className="max-w-7xl mx-auto px-8 lg:px-12 relative z-10">
         <div className="flex flex-col items-start max-w-2xl">
           
