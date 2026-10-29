@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Clock, ArrowRight, X, Plus, Minus, ChevronLeft, ChevronRight, ChevronDown, User, Calendar, MapPin, Tag, DoorOpen, Trash2, MessageCircle, Info, Sparkles, Check } from 'lucide-react';
+import { Search, Clock, ArrowRight, X, Plus, Minus, ChevronLeft, ChevronRight, ChevronDown, User, Calendar, MapPin, Tag, DoorOpen, Trash2, MessageCircle, Info, Sparkles, Check, Shield } from 'lucide-react';
 import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
 import Image from 'next/image';
@@ -1215,7 +1215,7 @@ export default function Home() {
                                         }
                                         setIsBookingModalOpen(false);
                                     }}
-                                    className="absolute top-5 right-5 sm:top-6 sm:right-6 w-8 h-8 rounded-full bg-surface flex items-center justify-center text-text-muted hover:bg-border transition-colors z-10 shadow-sm"
+                                    className="absolute top-5 right-5 sm:top-6 sm:right-6 w-8 h-8 rounded-full bg-neutral-100 hover:bg-neutral-200 flex items-center justify-center text-neutral-500 hover:text-neutral-900 transition-colors z-10"
                                 >
                                     <X className="w-4 h-4" />
                                 </button>
@@ -1307,8 +1307,15 @@ export default function Home() {
                                         {therapickStep === 'selection' && (
                                             <>
                                                 <div className="mb-5 pr-8 relative">
-                                                    <h2 className="font-serif text-2xl sm:text-3xl text-black font-medium tracking-tight mb-1">YOUR SPA SELECTION</h2>
-                                                    <p className="text-xs text-[#737373]">Review treatments and choose your massage setup.</p>
+                                                    <span className="text-[10px] font-semibold tracking-wider text-neutral-400 uppercase block mb-1">
+                                                        Step 1 of 3
+                                                    </span>
+                                                    <h2 className="font-serif text-2xl sm:text-[26px] text-neutral-900 font-medium tracking-tight mb-1">
+                                                        Your Spa Selection
+                                                    </h2>
+                                                    <p className="text-xs text-neutral-500">
+                                                        Review treatments and choose your massage setup.
+                                                    </p>
                                                 </div>
 
                                                 {/* Cart Items List */}
@@ -1317,33 +1324,33 @@ export default function Home() {
                                                         const addonsTotal = (item.addons || []).reduce((s: number, a: any) => s + (Number(a.price) || 0), 0);
                                                         const singlePrice = item.price + addonsTotal;
                                                         return (
-                                                            <div key={item.id} className="bg-white border border-[#E5E5E5] rounded-xl p-4 sm:p-5 shadow-2xs relative">
-                                                                <div className="flex items-start justify-between mb-3 pr-6">
-                                                                    <div>
+                                                            <div key={item.id} className="bg-white border border-neutral-200 rounded-2xl p-4 sm:p-5 shadow-xs relative">
+                                                                <div className="flex items-start justify-between mb-3 pr-2">
+                                                                    <div className="pr-3">
                                                                         {item.isCampaign && (
-                                                                            <div className="flex flex-wrap items-center gap-1.5 mb-2.5">
-                                                                                <span className="bg-black text-white px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider shadow-2xs">
+                                                                            <div className="flex flex-wrap items-center gap-1.5 mb-2">
+                                                                                <span className="bg-neutral-900 text-white px-2.5 py-0.5 rounded-full text-[9px] font-semibold uppercase tracking-wider">
                                                                                     {item.campaignTitle}
                                                                                 </span>
                                                                                 {item.tripOffer ? (
-                                                                                    <span className="bg-[#F5F5F5] text-[#525252] border border-[#E5E5E5] px-2.5 py-0.5 rounded-full text-[9px] font-medium tracking-wide">
+                                                                                    <span className="bg-neutral-100 text-neutral-600 border border-neutral-200 px-2 py-0.5 rounded-full text-[9px] font-medium tracking-wide">
                                                                                         {item.tripOffer}
                                                                                     </span>
                                                                                 ) : null}
                                                                             </div>
                                                                         )}
-                                                                        <h3 className="font-semibold text-sm text-black leading-tight">{item.title}</h3>
-                                                                        <p className="text-xs text-[#737373] flex items-center gap-1 mt-1 mb-1 font-sans">
-                                                                            <Clock className="w-3.5 h-3.5 text-[#737373]" /> {item.duration} Mins
+                                                                        <h3 className="font-serif text-base sm:text-lg font-medium text-neutral-900 leading-snug">{item.title}</h3>
+                                                                        <p className="text-xs text-neutral-500 flex items-center gap-1.5 mt-1 font-sans">
+                                                                            <Clock className="w-3.5 h-3.5 text-neutral-400" /> {item.duration} Mins
                                                                         </p>
 
                                                                         {/* Selected Add-ons displayed directly below massage title */}
                                                                         {item.addons && item.addons.length > 0 && (
-                                                                            <div className="flex flex-wrap gap-1.5 mt-1.5">
+                                                                            <div className="flex flex-wrap gap-1.5 mt-2">
                                                                                 {item.addons.map((addon: any) => (
                                                                                     <span
                                                                                         key={addon.id}
-                                                                                        className="inline-flex items-center gap-1 bg-[#F5F5F5] text-black border border-[#E5E5E5] text-[10px] font-medium px-2 py-0.5 rounded-md"
+                                                                                        className="inline-flex items-center gap-1 bg-neutral-100 text-neutral-800 border border-neutral-200 text-[10px] font-medium px-2 py-0.5 rounded-md"
                                                                                     >
                                                                                         <span>+ {addon.title} (+IDR {Number(addon.price).toLocaleString('en-US')})</span>
                                                                                         <button
@@ -1366,27 +1373,27 @@ export default function Home() {
                                                                             </div>
                                                                         )}
                                                                     </div>
-                                                                    <span className="font-serif text-black font-medium text-right flex flex-col shrink-0">
+                                                                    <span className="font-serif text-neutral-900 font-medium text-right flex flex-col shrink-0">
                                                                         IDR {singlePrice.toLocaleString('en-US')}
-                                                                        <span className="text-[10px] font-sans text-[#737373] font-normal uppercase tracking-wider">
+                                                                        <span className="text-[10px] font-sans text-neutral-400 font-normal uppercase tracking-wider mt-0.5">
                                                                             {['couple', 'honeymoon'].some(k => item.title.toLowerCase().includes(k)) ? 'For 2 Persons' : 'Per Person'}
                                                                         </span>
                                                                     </span>
                                                                 </div>
 
                                                                 {/* Add-on on left side, Guests Title and counter on right side */}
-                                                                <div className="flex items-center justify-between pt-2.5 pb-1 border-t border-[#E5E5E5]">
+                                                                <div className="flex items-center justify-between pt-3 mt-1 border-t border-neutral-100">
                                                                     <div>
                                                                         <button
                                                                             type="button"
                                                                             onClick={() => setSelectedAddonItem(item)}
-                                                                            className="text-[10px] font-semibold uppercase tracking-wider text-black border border-[#E5E5E5] hover:border-black px-2.5 py-1 rounded-md transition-colors flex items-center gap-1.5 bg-[#FAFAFA]"
+                                                                            className="h-7 px-2.5 rounded-full text-[11px] font-medium text-neutral-700 bg-neutral-100 hover:bg-neutral-200 active:scale-95 transition-all flex items-center gap-1"
                                                                         >
-                                                                            <Plus className="w-3 h-3" /> Add-on
+                                                                            <Plus className="w-3 h-3 text-neutral-500" /> Add-on
                                                                         </button>
                                                                     </div>
-                                                                    <div className="flex items-center gap-2.5">
-                                                                        <span className="text-[10px] font-semibold uppercase tracking-widest text-[#737373]">Guests</span>
+                                                                    <div className="flex items-center gap-2">
+                                                                        <span className="text-[10px] font-semibold uppercase tracking-wider text-neutral-400">Guests</span>
                                                                         <button
                                                                             type="button"
                                                                             onClick={() => {
@@ -1397,13 +1404,13 @@ export default function Home() {
                                                                                     setTherapickStep('selection');
                                                                                 }
                                                                             }}
-                                                                            className="w-7 h-7 rounded-full bg-white border border-[#E5E5E5] flex items-center justify-center text-[#737373] hover:text-red-500 hover:border-red-200 transition-colors shadow-2xs"
+                                                                            className="w-7 h-7 rounded-full bg-neutral-100 hover:bg-neutral-200 text-neutral-400 hover:text-red-500 transition-colors flex items-center justify-center active:scale-95"
                                                                             title="Remove treatment"
                                                                         >
                                                                             <Trash2 className="w-3.5 h-3.5" />
                                                                         </button>
-                                                                        <div className="w-px h-4 bg-[#E5E5E5]"></div>
-                                                                        <div className="flex items-center gap-2">
+                                                                        <div className="w-px h-3.5 bg-neutral-200"></div>
+                                                                        <div className="flex items-center gap-1.5 bg-neutral-100 rounded-full p-0.5">
                                                                             <button
                                                                                 type="button"
                                                                                 onClick={() => setCartItems(cartItems.map(i => {
@@ -1412,11 +1419,11 @@ export default function Home() {
                                                                                     const step = isCouple ? 2 : 1;
                                                                                     return { ...i, guests: Math.max(step, i.guests - step) };
                                                                                 }))}
-                                                                                className="w-7 h-7 rounded-full bg-white border border-[#E5E5E5] flex items-center justify-center text-black hover:bg-[#F5F5F5] transition-colors shadow-2xs"
+                                                                                className="w-6 h-6 rounded-full bg-white hover:bg-neutral-50 text-neutral-900 shadow-2xs flex items-center justify-center transition-colors active:scale-95"
                                                                             >
                                                                                 <Minus className="w-3 h-3" />
                                                                             </button>
-                                                                            <span className="font-semibold text-sm text-black w-4 text-center tabular-nums">{item.guests}</span>
+                                                                            <span className="font-semibold text-xs text-neutral-900 w-5 text-center tabular-nums">{item.guests}</span>
                                                                             <button
                                                                                 type="button"
                                                                                 onClick={() => setCartItems(cartItems.map(i => {
@@ -1425,7 +1432,7 @@ export default function Home() {
                                                                                     const step = isCouple ? 2 : 1;
                                                                                     return { ...i, guests: i.guests + step };
                                                                                 }))}
-                                                                                className="w-7 h-7 rounded-full bg-white border border-[#E5E5E5] flex items-center justify-center text-black hover:bg-[#F5F5F5] transition-colors shadow-2xs"
+                                                                                className="w-6 h-6 rounded-full bg-white hover:bg-neutral-50 text-neutral-900 shadow-2xs flex items-center justify-center transition-colors active:scale-95"
                                                                             >
                                                                                 <Plus className="w-3 h-3" />
                                                                             </button>
@@ -1441,68 +1448,68 @@ export default function Home() {
                                                 <button
                                                     type="button"
                                                     onClick={() => setIsSelectingMore(true)}
-                                                    className="w-full bg-white text-black border border-[#E5E5E5] hover:bg-[#F5F5F5] px-6 py-3 rounded-xl text-xs font-semibold shadow-2xs transition-colors mb-4 tracking-wider uppercase"
+                                                    className="w-full h-11 bg-white hover:bg-neutral-50 text-neutral-700 hover:text-neutral-900 border border-dashed border-neutral-300 hover:border-neutral-400 rounded-xl text-xs font-medium uppercase tracking-wider transition-all mb-4 flex items-center justify-center gap-1.5 active:scale-[0.99]"
                                                 >
-                                                    + Add Another Treatment
+                                                    <Plus className="w-3.5 h-3.5 text-neutral-400" /> Add Another Treatment
                                                 </button>
 
                                                 {/* Massage Table Setup with - and + counter & Professional Explanation */}
-                                                <div className="bg-white border border-[#E5E5E5] rounded-xl p-4 sm:p-5 shadow-2xs mb-4">
+                                                <div className="bg-white border border-neutral-200 rounded-2xl p-4 sm:p-5 shadow-xs mb-4">
                                                     <div className="flex items-start justify-between mb-3.5">
                                                         <div>
-                                                            <h4 className="text-xs font-semibold text-black uppercase tracking-wider">Massage Table Setup</h4>
-                                                            <p className="text-[11px] text-[#737373] mt-0.5">
+                                                            <h4 className="text-xs font-semibold text-neutral-900 uppercase tracking-wider">Massage Table Setup</h4>
+                                                            <p className="text-[11px] text-neutral-500 mt-0.5">
                                                                 Select your preferred massage setup at your villa or hotel
                                                             </p>
                                                         </div>
                                                         <button
                                                             type="button"
                                                             onClick={() => setShowTableFeeModal(true)}
-                                                            className="text-[10px] font-medium text-[#737373] hover:text-black transition-colors flex items-center gap-1 bg-[#F5F5F5] px-2 py-0.5 rounded border border-[#E5E5E5] shrink-0"
+                                                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium text-neutral-600 bg-neutral-100 hover:bg-neutral-200 hover:text-neutral-900 transition-colors shrink-0"
                                                             title="Read why there is an additional fee"
                                                         >
-                                                            <Info className="w-3 h-3" />
+                                                            <Info className="w-3 h-3 text-neutral-400" />
                                                             <span>Why a fee?</span>
                                                         </button>
                                                     </div>
 
                                                     {/* Table Counter Row */}
-                                                    <div className="flex items-center justify-between p-3.5 rounded-lg bg-[#FAFAFA] border border-[#E5E5E5] mb-3">
+                                                    <div className="flex items-center justify-between p-3.5 rounded-xl bg-neutral-50/70 border border-neutral-200/80 mb-3">
                                                         <div>
-                                                            <div className="font-semibold text-xs text-black">Bring Portable Table</div>
-                                                            <div className="text-[11px] text-[#737373] mt-0.5 font-mono">
+                                                            <div className="font-medium text-xs text-neutral-900">Bring Portable Table</div>
+                                                            <div className="text-[11px] text-neutral-500 mt-0.5 font-mono">
                                                                 IDR 100,000 PER TABLE
                                                             </div>
                                                         </div>
 
-                                                        <div className="flex items-center gap-2.5">
+                                                        <div className="flex items-center gap-1.5 bg-white border border-neutral-200 rounded-full p-0.5 shadow-2xs">
                                                             <button
                                                                 type="button"
                                                                 onClick={() => setMassageTableCount(Math.max(0, massageTableCount - 1))}
                                                                 disabled={massageTableCount <= 0}
-                                                                className="w-8 h-8 rounded-full bg-white border border-[#E5E5E5] flex items-center justify-center text-black hover:bg-[#F5F5F5] disabled:opacity-40 transition-colors shadow-2xs"
+                                                                className="w-7 h-7 rounded-full bg-neutral-100 hover:bg-neutral-200 text-neutral-700 disabled:opacity-30 disabled:pointer-events-none flex items-center justify-center transition-colors active:scale-95"
                                                             >
-                                                                <Minus className="w-3.5 h-3.5" />
+                                                                <Minus className="w-3 h-3" />
                                                             </button>
-                                                            <span className="font-semibold text-sm text-black w-5 text-center tabular-nums">
+                                                            <span className="font-semibold text-xs text-neutral-900 w-5 text-center tabular-nums">
                                                                 {massageTableCount}
                                                             </span>
                                                             <button
                                                                 type="button"
                                                                 onClick={() => setMassageTableCount(massageTableCount + 1)}
-                                                                className="w-8 h-8 rounded-full bg-white border border-[#E5E5E5] flex items-center justify-center text-black hover:bg-[#F5F5F5] transition-colors shadow-2xs"
+                                                                className="w-7 h-7 rounded-full bg-neutral-100 hover:bg-neutral-200 text-neutral-700 flex items-center justify-center transition-colors active:scale-95"
                                                             >
-                                                                <Plus className="w-3.5 h-3.5" />
+                                                                <Plus className="w-3 h-3" />
                                                             </button>
                                                         </div>
                                                     </div>
 
                                                     {/* Massage on Your Bed Option info */}
-                                                    <div className="p-3.5 rounded-lg bg-[#FAFAFA] border border-[#E5E5E5]">
-                                                        <div className="font-semibold text-xs text-black mb-1">
+                                                    <div className="p-3.5 rounded-xl bg-neutral-50/70 border border-neutral-200/80">
+                                                        <div className="font-medium text-xs text-neutral-900 mb-1">
                                                             Massage on Your Bed (Complimentary)
                                                         </div>
-                                                        <p className="text-[11px] text-[#737373] leading-relaxed">
+                                                        <p className="text-[11px] text-neutral-500 leading-relaxed">
                                                             If you prefer not to add a portable table, your therapist will set up comfortably on your villa bed or mattress. The therapist will bring an ergonomic face cradle, clean sanitized towels, and protective spa linens for your complete comfort and neck support.
                                                         </p>
                                                     </div>
@@ -2182,25 +2189,25 @@ export default function Home() {
                                 initial={{ opacity: 0, scale: 0.95, y: 15 }}
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.95, y: 15 }}
-                                className="relative bg-white rounded-3xl p-5 sm:p-6 shadow-2xl max-w-md w-full max-h-[85vh] flex flex-col z-10 border border-border/80"
+                                className="relative bg-white rounded-2xl p-5 sm:p-6 shadow-xl max-w-md w-full max-h-[85vh] flex flex-col z-10 border border-neutral-200"
                             >
                                 {/* Modal Header */}
-                                <div className="flex items-start justify-between pb-3.5 border-b border-border/60">
+                                <div className="flex items-start justify-between pb-3.5 border-b border-neutral-100">
                                     <div>
-                                        <span className="text-[9px] font-bold tracking-widest text-primary/60 uppercase block mb-1">
+                                        <span className="text-[10px] font-semibold tracking-wider text-neutral-400 uppercase block mb-1">
                                             Wellness Enhancements
                                         </span>
-                                        <h3 className="font-serif text-lg sm:text-xl font-medium text-primary">
+                                        <h3 className="font-serif text-lg sm:text-xl font-medium text-neutral-900">
                                             Add-On Treatments
                                         </h3>
-                                        <p className="text-[11px] text-text-muted mt-0.5">
-                                            Enhance your <span className="font-semibold text-primary">{selectedAddonItem.title}</span> ritual
+                                        <p className="text-[11px] text-neutral-500 mt-0.5">
+                                            Enhance your <span className="font-medium text-neutral-800">{selectedAddonItem.title}</span> ritual
                                         </p>
                                     </div>
                                     <button
                                         type="button"
                                         onClick={() => setSelectedAddonItem(null)}
-                                        className="w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-600 hover:text-primary flex items-center justify-center transition-colors shrink-0"
+                                        className="w-8 h-8 rounded-full bg-neutral-100 hover:bg-neutral-200 text-neutral-500 hover:text-neutral-900 flex items-center justify-center transition-colors shrink-0"
                                     >
                                         <X className="w-4 h-4" />
                                     </button>
@@ -2214,27 +2221,27 @@ export default function Home() {
                                             return (
                                                 <div
                                                     key={addon.id}
-                                                    className={`p-3.5 rounded-2xl border transition-all ${isAdded
-                                                            ? 'bg-stone-50/90 border-primary/40 shadow-xs'
-                                                            : 'bg-white border-border/70 hover:border-border'
+                                                    className={`p-3.5 rounded-xl border transition-all ${isAdded
+                                                            ? 'bg-neutral-50 border-neutral-900/40 shadow-xs'
+                                                            : 'bg-white border-neutral-200 hover:border-neutral-300'
                                                         }`}
                                                 >
                                                     <div className="flex items-start justify-between gap-3 mb-1.5">
                                                         <div>
-                                                            <div className="font-bold text-xs text-primary">{addon.title}</div>
-                                                            <div className="text-[10px] text-text-muted flex items-center gap-1 mt-0.5">
-                                                                <Clock className="w-3 h-3" />
+                                                            <div className="font-medium text-xs text-neutral-900">{addon.title}</div>
+                                                            <div className="text-[10px] text-neutral-400 flex items-center gap-1 mt-0.5">
+                                                                <Clock className="w-3 h-3 text-neutral-400" />
                                                                 <span>{addon.duration}</span>
                                                             </div>
                                                         </div>
                                                         <div className="text-right shrink-0">
-                                                            <div className="font-serif text-xs font-semibold text-primary">
+                                                            <div className="font-serif text-xs font-medium text-neutral-900">
                                                                 +IDR {Number(addon.price).toLocaleString('en-US')}
                                                             </div>
                                                         </div>
                                                     </div>
                                                     {addon.description && (
-                                                        <p className="text-[11px] text-stone-600 leading-relaxed mb-3">
+                                                        <p className="text-[11px] text-neutral-600 leading-relaxed mb-3">
                                                             {addon.description}
                                                         </p>
                                                     )}
@@ -2255,14 +2262,14 @@ export default function Home() {
                                                                 addons: updatedAddons
                                                             });
                                                         }}
-                                                        className={`w-full py-2 px-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 ${isAdded
-                                                                ? 'bg-stone-200 text-stone-800 hover:bg-red-50 hover:text-red-600'
-                                                                : 'bg-primary text-white hover:bg-neutral-800'
+                                                        className={`w-full h-8 px-3 rounded-lg text-xs font-medium uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 ${isAdded
+                                                                ? 'bg-neutral-200 text-neutral-800 hover:bg-red-50 hover:text-red-600'
+                                                                : 'bg-neutral-900 text-white hover:bg-neutral-800'
                                                             }`}
                                                     >
                                                         {isAdded ? (
                                                             <>
-                                                                <Check className="w-3.5 h-3.5" /> Added to Treatment (Tap to Remove)
+                                                                <Check className="w-3.5 h-3.5" /> Added (Tap to Remove)
                                                             </>
                                                         ) : (
                                                             <>
@@ -2275,17 +2282,17 @@ export default function Home() {
                                         })
                                     ) : (
                                         <div className="py-6 px-4 text-center space-y-3">
-                                            <div className="w-12 h-12 rounded-full bg-stone-100 flex items-center justify-center mx-auto text-primary">
-                                                <Sparkles className="w-5 h-5 text-primary/80" />
+                                            <div className="w-10 h-10 rounded-full bg-neutral-100 border border-neutral-200/80 flex items-center justify-center mx-auto text-neutral-800 mb-2">
+                                                <Sparkles className="w-4 h-4 text-neutral-700" />
                                             </div>
-                                            <h4 className="font-serif text-base font-semibold text-primary">
+                                            <h4 className="font-serif text-lg font-medium text-neutral-900">
                                                 Complete Luxury Spa Ritual
                                             </h4>
-                                            <p className="text-xs text-text-muted leading-relaxed max-w-xs mx-auto">
+                                            <p className="text-xs text-neutral-500 leading-relaxed max-w-xs mx-auto">
                                                 Your selected ritual is already fully inclusive with our signature organic aromatherapy oils, customized pressure, and dedicated therapist care.
                                             </p>
-                                            <div className="bg-stone-50 border border-border/70 rounded-xl p-3.5 text-[11px] text-stone-600 leading-relaxed text-left">
-                                                <span className="font-bold text-primary block mb-0.5">Specialty Enhancements Upon Request</span>
+                                            <div className="bg-neutral-50/80 border border-neutral-200/80 rounded-xl p-3.5 text-[11px] text-neutral-600 leading-relaxed text-left mt-2">
+                                                <span className="font-medium text-xs text-neutral-900 block mb-1">Specialty Enhancements Upon Request</span>
                                                 Custom organic facial treatments, herbal body compresses, or extended massage durations can also be arranged directly with your private therapist upon arrival at your villa.
                                             </div>
                                         </div>
@@ -2293,11 +2300,11 @@ export default function Home() {
                                 </div>
 
                                 {/* Modal Footer */}
-                                <div className="pt-3 border-t border-border/60">
+                                <div className="pt-3 border-t border-neutral-100">
                                     <button
                                         type="button"
                                         onClick={() => setSelectedAddonItem(null)}
-                                        className="w-full bg-black hover:bg-neutral-800 text-white py-3 rounded-xl text-xs font-bold uppercase tracking-widest transition-all shadow-sm"
+                                        className="w-full h-11 bg-neutral-900 hover:bg-neutral-800 text-white rounded-xl text-xs font-semibold uppercase tracking-wider transition-all active:scale-[0.99] shadow-xs"
                                     >
                                         Done
                                     </button>
@@ -2316,28 +2323,28 @@ export default function Home() {
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
                                 onClick={() => setShowTableFeeModal(false)}
-                                className="fixed inset-0 bg-black/60 backdrop-blur-xs"
+                                className="fixed inset-0 bg-black/40 backdrop-blur-xs"
                             />
                             <motion.div
                                 initial={{ opacity: 0, scale: 0.95, y: 15 }}
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.95, y: 15 }}
-                                className="relative bg-white rounded-3xl p-5 sm:p-6 shadow-2xl max-w-md w-full max-h-[85vh] flex flex-col z-10 border border-border/80"
+                                className="relative bg-white rounded-2xl p-5 sm:p-6 shadow-xl max-w-md w-full max-h-[85vh] flex flex-col z-10 border border-neutral-200"
                             >
                                 {/* Modal Header */}
-                                <div className="flex items-start justify-between pb-3.5 border-b border-border/60">
+                                <div className="flex items-start justify-between pb-3.5 border-b border-neutral-100">
                                     <div>
-                                        <span className="text-[9px] font-bold tracking-widest text-primary/60 uppercase block mb-1">
+                                        <span className="text-[10px] font-semibold tracking-wider text-neutral-400 uppercase block mb-1">
                                             Equipment & Transport Logistics
                                         </span>
-                                        <h3 className="font-serif text-lg sm:text-xl font-medium text-primary">
+                                        <h3 className="font-serif text-lg sm:text-xl font-medium text-neutral-900">
                                             Why Is There a Table Fee?
                                         </h3>
                                     </div>
                                     <button
                                         type="button"
                                         onClick={() => setShowTableFeeModal(false)}
-                                        className="w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-600 hover:text-primary flex items-center justify-center transition-colors shrink-0"
+                                        className="w-8 h-8 rounded-full bg-neutral-100 hover:bg-neutral-200 text-neutral-500 hover:text-neutral-900 flex items-center justify-center transition-colors shrink-0"
                                     >
                                         <X className="w-4 h-4" />
                                     </button>
@@ -2345,63 +2352,55 @@ export default function Home() {
 
                                 {/* Modal Body */}
                                 <div className="py-4 overflow-y-auto space-y-3 flex-1 no-scrollbar text-xs">
-                                    <div className="p-3.5 rounded-2xl bg-stone-50 border border-border/70 flex items-start gap-3">
-                                        <div className="w-8 h-8 rounded-xl bg-white border border-border/80 flex items-center justify-center shrink-0 text-primary mt-0.5">
-                                            <Sparkles className="w-4 h-4" />
+                                    <div className="p-3.5 rounded-xl bg-neutral-50/80 border border-neutral-200/80 flex items-start gap-3">
+                                        <div className="w-8 h-8 rounded-lg bg-white border border-neutral-200 flex items-center justify-center shrink-0 text-neutral-800 mt-0.5 shadow-2xs">
+                                            <Shield className="w-4 h-4" />
                                         </div>
                                         <div>
-                                            <h4 className="font-bold text-xs text-primary uppercase tracking-wider mb-1">
+                                            <h4 className="font-semibold text-xs text-neutral-900 uppercase tracking-wider mb-1">
                                                 Heavy Commercial Equipment
                                             </h4>
-                                            <p className="text-[11px] text-stone-600 leading-relaxed">
+                                            <p className="text-[11px] text-neutral-600 leading-relaxed">
                                                 Our massage tables are full-length, professional heavy-duty spa tables equipped with adjustable face cradles, luxury padding, and freshly sanitized linens (15–20 kg).
                                             </p>
                                         </div>
                                     </div>
 
-                                    <div className="p-3.5 rounded-2xl bg-stone-50 border border-border/70 flex items-start gap-3">
-                                        <div className="w-8 h-8 rounded-xl bg-white border border-border/80 flex items-center justify-center shrink-0 text-primary mt-0.5">
-                                            <Clock className="w-4 h-4" />
+                                    <div className="p-3.5 rounded-xl bg-neutral-50/80 border border-neutral-200/80 flex items-start gap-3">
+                                        <div className="w-8 h-8 rounded-lg bg-white border border-neutral-200 flex items-center justify-center shrink-0 text-neutral-800 mt-0.5 shadow-2xs">
+                                            <MapPin className="w-4 h-4" />
                                         </div>
                                         <div>
-                                            <h4 className="font-bold text-xs text-primary uppercase tracking-wider mb-1">
+                                            <h4 className="font-semibold text-xs text-neutral-900 uppercase tracking-wider mb-1">
                                                 Independent Scooter Transport
                                             </h4>
-                                            <p className="text-[11px] text-stone-600 leading-relaxed">
+                                            <p className="text-[11px] text-neutral-600 leading-relaxed">
                                                 Therapists commute directly to your villa across Bali on personal motor scooters. Transporting heavy, bulky equipment through Bali traffic, steep inclines, and narrow villa gangways requires careful physical effort and dedicated handling.
                                             </p>
                                         </div>
                                     </div>
 
-                                    <div className="p-3.5 rounded-2xl bg-stone-50 border border-border/70 flex items-start gap-3">
-                                        <div className="w-8 h-8 rounded-xl bg-white border border-border/80 flex items-center justify-center shrink-0 text-primary mt-0.5">
+                                    <div className="p-3.5 rounded-xl bg-neutral-50/80 border border-neutral-200/80 flex items-start gap-3">
+                                        <div className="w-8 h-8 rounded-lg bg-white border border-neutral-200 flex items-center justify-center shrink-0 text-neutral-800 mt-0.5 shadow-2xs">
                                             <Tag className="w-4 h-4" />
                                         </div>
                                         <div>
-                                            <h4 className="font-bold text-xs text-primary uppercase tracking-wider mb-1">
+                                            <h4 className="font-semibold text-xs text-neutral-900 uppercase tracking-wider mb-1">
                                                 100% Direct Therapist Surcharge
                                             </h4>
-                                            <p className="text-[11px] text-stone-600 leading-relaxed">
+                                            <p className="text-[11px] text-neutral-600 leading-relaxed">
                                                 The surcharge of <strong>IDR 100,000 per table</strong> goes directly to your private therapist to cover physical transportation logistics and on-site setup.
                                             </p>
                                         </div>
                                     </div>
-
-                                    <div className="p-3.5 rounded-2xl bg-[#FDFBF7] border border-amber-200/70 text-[11px] text-stone-700 leading-relaxed">
-                                        <div className="font-bold text-primary mb-1 flex items-center gap-1.5">
-                                            <Check className="w-3.5 h-3.5 text-stone-800" />
-                                            Prefer zero additional fee?
-                                        </div>
-                                        Leave the table count at <strong>0</strong>. Your therapist will set up comfortably on your villa bed or mattress at no extra cost, bringing a specialized face cradle and sanitized linens for your comfort.
-                                    </div>
                                 </div>
 
                                 {/* Modal Footer */}
-                                <div className="pt-3 border-t border-border/60">
+                                <div className="pt-3 border-t border-neutral-100">
                                     <button
                                         type="button"
                                         onClick={() => setShowTableFeeModal(false)}
-                                        className="w-full bg-black hover:bg-neutral-800 text-white py-3 rounded-xl text-xs font-bold uppercase tracking-widest transition-all shadow-sm"
+                                        className="w-full h-11 bg-neutral-900 hover:bg-neutral-800 text-white rounded-xl text-xs font-semibold uppercase tracking-wider transition-all active:scale-[0.99] shadow-xs"
                                     >
                                         Understood
                                     </button>
