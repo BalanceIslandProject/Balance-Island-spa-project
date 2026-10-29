@@ -271,8 +271,8 @@ export default function Home() {
 
             let baseMessage = '';
             if (isTherapick) {
-                const tableChoice = massageTableCount > 0 
-                    ? `${massageTableCount} Portable Table${massageTableCount > 1 ? 's' : ''} (+IDR ${(massageTableCount * 100000).toLocaleString('en-US')})` 
+                const tableChoice = massageTableCount > 0
+                    ? `${massageTableCount} Portable Table${massageTableCount > 1 ? 's' : ''} (+IDR ${(massageTableCount * 100000).toLocaleString('en-US')})`
                     : 'Villa Bed / Floor Mat Setup (IDR 0)';
 
                 const treatmentsList = cartItems.map((item, idx) => {
@@ -344,7 +344,7 @@ export default function Home() {
             );
 
             const finalMessage = baseMessage + '\n\n*BOOKING ID :* ' + bookingIdRef.current;
-            
+
             saveDraft({
                 id: bookingIdRef.current,
                 date: new Date().toISOString(),
@@ -578,12 +578,12 @@ export default function Home() {
                                                     </div>
                                                 </div>
                                             </div>
-                                            
+
                                             {/* Divider with Cutouts */}
                                             <div className="relative w-0 flex flex-col justify-between items-center z-20">
                                                 {/* Top Cutout */}
                                                 <div className="absolute top-0 -translate-x-1/2 -translate-y-1/2 w-6 h-6 md:w-8 md:h-8 bg-[#FAFAFA] rounded-full border border-gray-200 shadow-inner"></div>
-                                                
+
                                                 {/* Vertical Dashed Line */}
                                                 <div className="absolute top-0 bottom-0 -translate-x-1/2 border-l-[3px] border-dotted border-gray-300/70 z-[-1]"></div>
 
@@ -607,7 +607,7 @@ export default function Home() {
                                                             <div className="text-xs md:text-sm font-bold text-black uppercase">NOW</div>
                                                         )}
                                                     </div>
-                                                    
+
                                                     <div className="w-6 h-px bg-gray-200"></div>
 
                                                     {/* End Date */}
@@ -1201,20 +1201,20 @@ export default function Home() {
                                 exit={{ opacity: 0, scale: 0.9, y: 20 }}
                                 className="bg-white w-full max-w-full sm:max-w-lg h-[100dvh] sm:h-auto sm:max-h-[90vh] sm:my-auto sm:rounded-[28px] rounded-none p-5 sm:p-7 md:p-8 shadow-2xl relative flex flex-col box-border overflow-y-auto overflow-x-hidden no-scrollbar"
                             >
-                                <button 
-                                onClick={() => {
-                                    if (cartItems.length > 0) {
-                                        saveDraft({
-                                            id: bookingIdRef.current,
-                                            date: new Date().toISOString(),
-                                            status: 'draft',
-                                            items: cartItems,
-                                            customerDetails: formData,
-                                            totalPrice: calculateCartTotal(cartItems, appliedPromo).total
-                                        });
-                                    }
-                                    setIsBookingModalOpen(false);
-                                }}
+                                <button
+                                    onClick={() => {
+                                        if (cartItems.length > 0) {
+                                            saveDraft({
+                                                id: bookingIdRef.current,
+                                                date: new Date().toISOString(),
+                                                status: 'draft',
+                                                items: cartItems,
+                                                customerDetails: formData,
+                                                totalPrice: calculateCartTotal(cartItems, appliedPromo).total
+                                            });
+                                        }
+                                        setIsBookingModalOpen(false);
+                                    }}
                                     className="absolute top-5 right-5 sm:top-6 sm:right-6 w-8 h-8 rounded-full bg-surface flex items-center justify-center text-text-muted hover:bg-border transition-colors z-10 shadow-sm"
                                 >
                                     <X className="w-4 h-4" />
@@ -1307,8 +1307,8 @@ export default function Home() {
                                         {therapickStep === 'selection' && (
                                             <>
                                                 <div className="mb-5 pr-8 relative">
-                                                    <h2 className="font-serif text-2xl sm:text-3xl text-primary font-medium tracking-tight mb-1">YOUR SPA SELECTION</h2>
-                                                    <p className="text-xs text-text-muted">Review treatments and choose your massage setup.</p>
+                                                    <h2 className="font-serif text-2xl sm:text-3xl text-black font-medium tracking-tight mb-1">YOUR SPA SELECTION</h2>
+                                                    <p className="text-xs text-[#737373]">Review treatments and choose your massage setup.</p>
                                                 </div>
 
                                                 {/* Cart Items List */}
@@ -1317,122 +1317,122 @@ export default function Home() {
                                                         const addonsTotal = (item.addons || []).reduce((s: number, a: any) => s + (Number(a.price) || 0), 0);
                                                         const singlePrice = item.price + addonsTotal;
                                                         return (
-                                                        <div key={item.id} className="bg-white border border-border/80 rounded-2xl p-4 sm:p-5 shadow-sm relative">
-                                                            <div className="flex items-start justify-between mb-3 pr-6">
-                                                                <div>
-                                                                    {item.isCampaign && (
-                                                                        <div className="flex flex-wrap items-center gap-1.5 mb-2.5">
-                                                                            <span className="bg-black text-white px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider shadow-sm">
-                                                                                {item.campaignTitle}
-                                                                            </span>
-                                                                            {item.tripOffer ? (
-                                                                                <span className="bg-stone-100 text-stone-700 border border-stone-200/80 px-2.5 py-0.5 rounded-full text-[9px] font-medium tracking-wide">
-                                                                                    {item.tripOffer}
+                                                            <div key={item.id} className="bg-white border border-[#E5E5E5] rounded-xl p-4 sm:p-5 shadow-2xs relative">
+                                                                <div className="flex items-start justify-between mb-3 pr-6">
+                                                                    <div>
+                                                                        {item.isCampaign && (
+                                                                            <div className="flex flex-wrap items-center gap-1.5 mb-2.5">
+                                                                                <span className="bg-black text-white px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider shadow-2xs">
+                                                                                    {item.campaignTitle}
                                                                                 </span>
-                                                                            ) : null}
-                                                                        </div>
-                                                                    )}
-                                                                    <h3 className="font-bold text-sm text-primary leading-tight">{item.title}</h3>
-                                                                    <p className="text-xs text-text-muted flex items-center gap-1 mt-1 mb-1">
-                                                                        <Clock className="w-3 h-3" /> {item.duration} Mins
-                                                                    </p>
+                                                                                {item.tripOffer ? (
+                                                                                    <span className="bg-[#F5F5F5] text-[#525252] border border-[#E5E5E5] px-2.5 py-0.5 rounded-full text-[9px] font-medium tracking-wide">
+                                                                                        {item.tripOffer}
+                                                                                    </span>
+                                                                                ) : null}
+                                                                            </div>
+                                                                        )}
+                                                                        <h3 className="font-semibold text-sm text-black leading-tight">{item.title}</h3>
+                                                                        <p className="text-xs text-[#737373] flex items-center gap-1 mt-1 mb-1 font-sans">
+                                                                            <Clock className="w-3.5 h-3.5 text-[#737373]" /> {item.duration} Mins
+                                                                        </p>
 
-                                                                    {/* Selected Add-ons displayed directly below massage title */}
-                                                                    {item.addons && item.addons.length > 0 && (
-                                                                        <div className="flex flex-wrap gap-1.5 mt-1.5">
-                                                                            {item.addons.map((addon: any) => (
-                                                                                <span 
-                                                                                    key={addon.id}
-                                                                                    className="inline-flex items-center gap-1 bg-stone-100 text-stone-800 border border-stone-200 text-[10px] font-medium px-2 py-0.5 rounded-full"
-                                                                                >
-                                                                                    <span>+ {addon.title} (+IDR {Number(addon.price).toLocaleString('en-US')})</span>
-                                                                                    <button
-                                                                                        type="button"
-                                                                                        onClick={() => {
-                                                                                            setCartItems(cartItems.map(i => {
-                                                                                                if (i.id !== item.id) return i;
-                                                                                                return {
-                                                                                                    ...i,
-                                                                                                    addons: (i.addons || []).filter((a: any) => a.id !== addon.id)
-                                                                                                };
-                                                                                            }));
-                                                                                        }}
-                                                                                        className="hover:text-red-500 transition-colors ml-0.5"
+                                                                        {/* Selected Add-ons displayed directly below massage title */}
+                                                                        {item.addons && item.addons.length > 0 && (
+                                                                            <div className="flex flex-wrap gap-1.5 mt-1.5">
+                                                                                {item.addons.map((addon: any) => (
+                                                                                    <span
+                                                                                        key={addon.id}
+                                                                                        className="inline-flex items-center gap-1 bg-[#F5F5F5] text-black border border-[#E5E5E5] text-[10px] font-medium px-2 py-0.5 rounded-md"
                                                                                     >
-                                                                                        <X className="w-2.5 h-2.5" />
-                                                                                    </button>
-                                                                                </span>
-                                                                            ))}
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                                <span className="font-serif text-primary font-medium text-right flex flex-col shrink-0">
-                                                                    IDR {singlePrice.toLocaleString('en-US')}
-                                                                    <span className="text-[10px] font-sans text-text-muted font-normal uppercase tracking-wider">
-                                                                        {['couple', 'honeymoon'].some(k => item.title.toLowerCase().includes(k)) ? 'For 2 Persons' : 'Per Person'}
+                                                                                        <span>+ {addon.title} (+IDR {Number(addon.price).toLocaleString('en-US')})</span>
+                                                                                        <button
+                                                                                            type="button"
+                                                                                            onClick={() => {
+                                                                                                setCartItems(cartItems.map(i => {
+                                                                                                    if (i.id !== item.id) return i;
+                                                                                                    return {
+                                                                                                        ...i,
+                                                                                                        addons: (i.addons || []).filter((a: any) => a.id !== addon.id)
+                                                                                                    };
+                                                                                                }));
+                                                                                            }}
+                                                                                            className="hover:text-red-500 transition-colors ml-0.5"
+                                                                                        >
+                                                                                            <X className="w-2.5 h-2.5" />
+                                                                                        </button>
+                                                                                    </span>
+                                                                                ))}
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                    <span className="font-serif text-black font-medium text-right flex flex-col shrink-0">
+                                                                        IDR {singlePrice.toLocaleString('en-US')}
+                                                                        <span className="text-[10px] font-sans text-[#737373] font-normal uppercase tracking-wider">
+                                                                            {['couple', 'honeymoon'].some(k => item.title.toLowerCase().includes(k)) ? 'For 2 Persons' : 'Per Person'}
+                                                                        </span>
                                                                     </span>
-                                                                </span>
-                                                            </div>
-
-                                                            {/* Add-on on left side, Guests Title and counter on right side */}
-                                                            <div className="flex items-center justify-between pt-2.5 pb-1 border-t border-border/50">
-                                                                <div>
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={() => setSelectedAddonItem(item)}
-                                                                        className="text-[10px] font-bold uppercase tracking-wider text-primary border border-border/80 hover:border-primary px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 bg-stone-50 hover:bg-stone-100 shadow-2xs"
-                                                                    >
-                                                                        <Plus className="w-3 h-3" /> Add-on
-                                                                    </button>
                                                                 </div>
-                                                                <div className="flex items-center gap-2.5">
-                                                                    <span className="text-[10px] font-bold uppercase tracking-widest text-primary/80">Guests</span>
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={() => {
-                                                                            const newCart = cartItems.filter(i => i.id !== item.id);
-                                                                            setCartItems(newCart);
-                                                                            if (newCart.length === 0) {
-                                                                                setIsBookingModalOpen(false);
-                                                                                setTherapickStep('selection');
-                                                                            }
-                                                                        }}
-                                                                        className="w-7 h-7 rounded-full bg-white border border-border flex items-center justify-center text-text-muted hover:text-red-500 hover:border-red-200 transition-colors shadow-2xs"
-                                                                        title="Remove treatment"
-                                                                    >
-                                                                        <Trash2 className="w-3.5 h-3.5" />
-                                                                    </button>
-                                                                    <div className="w-px h-4 bg-border/60"></div>
-                                                                    <div className="flex items-center gap-2">
+
+                                                                {/* Add-on on left side, Guests Title and counter on right side */}
+                                                                <div className="flex items-center justify-between pt-2.5 pb-1 border-t border-[#E5E5E5]">
+                                                                    <div>
                                                                         <button
                                                                             type="button"
-                                                                            onClick={() => setCartItems(cartItems.map(i => {
-                                                                                if (i.id !== item.id) return i;
-                                                                                const isCouple = ['couple', 'honeymoon'].some(k => i.title.toLowerCase().includes(k));
-                                                                                const step = isCouple ? 2 : 1;
-                                                                                return { ...i, guests: Math.max(step, i.guests - step) };
-                                                                            }))}
-                                                                            className="w-7 h-7 rounded-full bg-white border border-border flex items-center justify-center text-primary hover:bg-border transition-colors shadow-2xs"
+                                                                            onClick={() => setSelectedAddonItem(item)}
+                                                                            className="text-[10px] font-semibold uppercase tracking-wider text-black border border-[#E5E5E5] hover:border-black px-2.5 py-1 rounded-md transition-colors flex items-center gap-1.5 bg-[#FAFAFA]"
                                                                         >
-                                                                            <Minus className="w-3 h-3" />
+                                                                            <Plus className="w-3 h-3" /> Add-on
                                                                         </button>
-                                                                        <span className="font-bold text-sm text-primary w-4 text-center tabular-nums">{item.guests}</span>
+                                                                    </div>
+                                                                    <div className="flex items-center gap-2.5">
+                                                                        <span className="text-[10px] font-semibold uppercase tracking-widest text-[#737373]">Guests</span>
                                                                         <button
                                                                             type="button"
-                                                                            onClick={() => setCartItems(cartItems.map(i => {
-                                                                                if (i.id !== item.id) return i;
-                                                                                const isCouple = ['couple', 'honeymoon'].some(k => i.title.toLowerCase().includes(k));
-                                                                                const step = isCouple ? 2 : 1;
-                                                                                return { ...i, guests: i.guests + step };
-                                                                            }))}
-                                                                            className="w-7 h-7 rounded-full bg-white border border-border flex items-center justify-center text-primary hover:bg-border transition-colors shadow-2xs"
+                                                                            onClick={() => {
+                                                                                const newCart = cartItems.filter(i => i.id !== item.id);
+                                                                                setCartItems(newCart);
+                                                                                if (newCart.length === 0) {
+                                                                                    setIsBookingModalOpen(false);
+                                                                                    setTherapickStep('selection');
+                                                                                }
+                                                                            }}
+                                                                            className="w-7 h-7 rounded-full bg-white border border-[#E5E5E5] flex items-center justify-center text-[#737373] hover:text-red-500 hover:border-red-200 transition-colors shadow-2xs"
+                                                                            title="Remove treatment"
                                                                         >
-                                                                            <Plus className="w-3 h-3" />
+                                                                            <Trash2 className="w-3.5 h-3.5" />
                                                                         </button>
+                                                                        <div className="w-px h-4 bg-[#E5E5E5]"></div>
+                                                                        <div className="flex items-center gap-2">
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => setCartItems(cartItems.map(i => {
+                                                                                    if (i.id !== item.id) return i;
+                                                                                    const isCouple = ['couple', 'honeymoon'].some(k => i.title.toLowerCase().includes(k));
+                                                                                    const step = isCouple ? 2 : 1;
+                                                                                    return { ...i, guests: Math.max(step, i.guests - step) };
+                                                                                }))}
+                                                                                className="w-7 h-7 rounded-full bg-white border border-[#E5E5E5] flex items-center justify-center text-black hover:bg-[#F5F5F5] transition-colors shadow-2xs"
+                                                                            >
+                                                                                <Minus className="w-3 h-3" />
+                                                                            </button>
+                                                                            <span className="font-semibold text-sm text-black w-4 text-center tabular-nums">{item.guests}</span>
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => setCartItems(cartItems.map(i => {
+                                                                                    if (i.id !== item.id) return i;
+                                                                                    const isCouple = ['couple', 'honeymoon'].some(k => i.title.toLowerCase().includes(k));
+                                                                                    const step = isCouple ? 2 : 1;
+                                                                                    return { ...i, guests: i.guests + step };
+                                                                                }))}
+                                                                                className="w-7 h-7 rounded-full bg-white border border-[#E5E5E5] flex items-center justify-center text-black hover:bg-[#F5F5F5] transition-colors shadow-2xs"
+                                                                            >
+                                                                                <Plus className="w-3 h-3" />
+                                                                            </button>
+                                                                        </div>
                                                                     </div>
                                                                 </div>
                                                             </div>
-                                                        </div>
                                                         );
                                                     })}
                                                 </div>
@@ -1441,36 +1441,36 @@ export default function Home() {
                                                 <button
                                                     type="button"
                                                     onClick={() => setIsSelectingMore(true)}
-                                                    className="w-full bg-white text-primary border border-border/80 px-6 py-3.5 rounded-xl text-xs font-bold shadow-sm hover:bg-white transition-colors mb-4 tracking-widest uppercase"
+                                                    className="w-full bg-white text-black border border-[#E5E5E5] hover:bg-[#F5F5F5] px-6 py-3 rounded-xl text-xs font-semibold shadow-2xs transition-colors mb-4 tracking-wider uppercase"
                                                 >
                                                     + Add Another Treatment
                                                 </button>
 
                                                 {/* Massage Table Setup with - and + counter & Professional Explanation */}
-                                                <div className="bg-white border border-border/80 rounded-2xl p-4 sm:p-5 shadow-xs mb-4">
+                                                <div className="bg-white border border-[#E5E5E5] rounded-xl p-4 sm:p-5 shadow-2xs mb-4">
                                                     <div className="flex items-start justify-between mb-3.5">
                                                         <div>
-                                                            <h4 className="text-xs font-bold text-primary uppercase tracking-wider">Massage Table Setup</h4>
-                                                            <p className="text-[11px] text-text-muted mt-0.5">
+                                                            <h4 className="text-xs font-semibold text-black uppercase tracking-wider">Massage Table Setup</h4>
+                                                            <p className="text-[11px] text-[#737373] mt-0.5">
                                                                 Select your preferred massage setup at your villa or hotel
                                                             </p>
                                                         </div>
                                                         <button
                                                             type="button"
                                                             onClick={() => setShowTableFeeModal(true)}
-                                                            className="text-[10px] font-semibold text-primary/80 hover:text-primary transition-colors flex items-center gap-1 bg-stone-100 hover:bg-stone-200/80 px-2.5 py-1 rounded-full shrink-0"
+                                                            className="text-[10px] font-medium text-[#737373] hover:text-black transition-colors flex items-center gap-1 bg-[#F5F5F5] px-2 py-0.5 rounded border border-[#E5E5E5] shrink-0"
                                                             title="Read why there is an additional fee"
                                                         >
-                                                            <Info className="w-3 h-3 text-primary/70" />
+                                                            <Info className="w-3 h-3" />
                                                             <span>Why a fee?</span>
                                                         </button>
                                                     </div>
 
-                                                    {/* Table Counter Row - displays ONLY "IDR 100,000 PER TABLE" */}
-                                                    <div className="flex items-center justify-between p-3.5 rounded-xl bg-stone-50/70 border border-border/60 mb-3">
+                                                    {/* Table Counter Row */}
+                                                    <div className="flex items-center justify-between p-3.5 rounded-lg bg-[#FAFAFA] border border-[#E5E5E5] mb-3">
                                                         <div>
-                                                            <div className="font-bold text-xs text-primary">Bring Portable Table</div>
-                                                            <div className="text-[11px] text-text-muted mt-0.5 font-medium">
+                                                            <div className="font-semibold text-xs text-black">Bring Portable Table</div>
+                                                            <div className="text-[11px] text-[#737373] mt-0.5 font-mono">
                                                                 IDR 100,000 PER TABLE
                                                             </div>
                                                         </div>
@@ -1480,17 +1480,17 @@ export default function Home() {
                                                                 type="button"
                                                                 onClick={() => setMassageTableCount(Math.max(0, massageTableCount - 1))}
                                                                 disabled={massageTableCount <= 0}
-                                                                className="w-8 h-8 rounded-full bg-white border border-border/80 flex items-center justify-center text-primary hover:bg-stone-100 disabled:opacity-40 transition-colors shadow-2xs"
+                                                                className="w-8 h-8 rounded-full bg-white border border-[#E5E5E5] flex items-center justify-center text-black hover:bg-[#F5F5F5] disabled:opacity-40 transition-colors shadow-2xs"
                                                             >
                                                                 <Minus className="w-3.5 h-3.5" />
                                                             </button>
-                                                            <span className="font-bold text-sm text-primary w-5 text-center tabular-nums">
+                                                            <span className="font-semibold text-sm text-black w-5 text-center tabular-nums">
                                                                 {massageTableCount}
                                                             </span>
                                                             <button
                                                                 type="button"
                                                                 onClick={() => setMassageTableCount(massageTableCount + 1)}
-                                                                className="w-8 h-8 rounded-full bg-white border border-border/80 flex items-center justify-center text-primary hover:bg-stone-100 transition-colors shadow-2xs"
+                                                                className="w-8 h-8 rounded-full bg-white border border-[#E5E5E5] flex items-center justify-center text-black hover:bg-[#F5F5F5] transition-colors shadow-2xs"
                                                             >
                                                                 <Plus className="w-3.5 h-3.5" />
                                                             </button>
@@ -1498,34 +1498,34 @@ export default function Home() {
                                                     </div>
 
                                                     {/* Massage on Your Bed Option info */}
-                                                    <div className="p-3.5 rounded-xl bg-stone-50/50 border border-border/60">
-                                                        <div className="font-bold text-xs text-primary mb-1">
+                                                    <div className="p-3.5 rounded-lg bg-[#FAFAFA] border border-[#E5E5E5]">
+                                                        <div className="font-semibold text-xs text-black mb-1">
                                                             Massage on Your Bed (Complimentary)
                                                         </div>
-                                                        <p className="text-[11px] text-stone-600 leading-relaxed">
+                                                        <p className="text-[11px] text-[#737373] leading-relaxed">
                                                             If you prefer not to add a portable table, your therapist will set up comfortably on your villa bed or mattress. The therapist will bring an ergonomic face cradle, clean sanitized towels, and protective spa linens for your complete comfort and neck support.
                                                         </p>
                                                     </div>
                                                 </div>
 
-                                                {/* Promo Code Input - Displayed on this section only */}
-                                                <div className="bg-white border border-border/80 rounded-2xl p-4 shadow-xs mb-5">
-                                                    <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/80 mb-2">
-                                                        <Tag className="w-3.5 h-3.5"/> Promo Code (Optional)
+                                                {/* Promo Code Input */}
+                                                <div className="bg-white border border-[#E5E5E5] rounded-xl p-4 shadow-2xs mb-5">
+                                                    <label className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-[#737373] mb-2">
+                                                        <Tag className="w-3.5 h-3.5" /> Promo Code (Optional)
                                                     </label>
                                                     <div className="flex gap-2 w-full">
-                                                        <input 
+                                                        <input
                                                             type="text" placeholder="ENTER CODE"
                                                             value={promoCodeInput} onChange={e => setPromoCodeInput(e.target.value.toUpperCase())}
                                                             disabled={!!appliedPromo || isPromoLoading}
-                                                            className="w-full bg-stone-50/60 border border-border/80 rounded-xl px-4 py-2.5 text-xs text-primary placeholder:text-text-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all uppercase tracking-wider font-medium"
+                                                            className="w-full bg-white border border-[#E5E5E5] rounded-lg px-3 py-2 text-xs font-mono text-black placeholder:text-[#A3A3A3] focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-colors uppercase"
                                                         />
                                                         {appliedPromo ? (
-                                                            <button type="button" onClick={handleRemovePromo} className="px-4 bg-red-50 text-red-600 border border-red-200 rounded-xl text-xs font-bold hover:bg-red-100 transition-colors uppercase tracking-wider whitespace-nowrap">
+                                                            <button type="button" onClick={handleRemovePromo} className="px-3.5 bg-red-50 text-red-600 border border-red-200 rounded-lg text-xs font-medium hover:bg-red-100 transition-colors uppercase whitespace-nowrap">
                                                                 Remove
                                                             </button>
                                                         ) : (
-                                                            <button type="button" onClick={handleApplyPromo} disabled={!promoCodeInput.trim() || isPromoLoading} className="px-5 bg-primary text-white rounded-xl text-xs font-bold hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wider whitespace-nowrap">
+                                                            <button type="button" onClick={handleApplyPromo} disabled={!promoCodeInput.trim() || isPromoLoading} className="px-4 bg-black text-white rounded-lg text-xs font-semibold hover:bg-[#262626] transition-colors disabled:opacity-40 disabled:cursor-not-allowed uppercase whitespace-nowrap">
                                                                 {isPromoLoading ? 'Applying...' : 'Apply'}
                                                             </button>
                                                         )}
@@ -1535,17 +1535,17 @@ export default function Home() {
                                                 </div>
 
                                                 {/* Price & Continue */}
-                                                <div className="pt-4 border-t border-border/50">
-                                                    <div className="flex items-end justify-between mb-5">
-                                                        <span className="text-xs font-bold text-primary uppercase tracking-widest">Total Price</span>
-                                                        <span className="text-2xl font-serif text-primary font-medium">
+                                                <div className="pt-4 border-t border-[#E5E5E5]">
+                                                    <div className="flex items-end justify-between mb-4">
+                                                        <span className="text-xs font-semibold text-[#737373] uppercase tracking-wider">Total Price</span>
+                                                        <span className="text-2xl font-serif text-black font-medium">
                                                             IDR {calculateCartTotal(cartItems, appliedPromo, massageTableCount * 100000).total.toLocaleString('en-US')}
                                                         </span>
                                                     </div>
                                                     <button
                                                         type="button"
                                                         onClick={() => setTherapickStep('details')}
-                                                        className="w-full bg-black hover:bg-neutral-800 text-white px-6 py-4 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:scale-[1.01] transition-all shadow-md uppercase tracking-widest"
+                                                        className="w-full bg-black hover:bg-[#262626] text-white px-6 py-3.5 rounded-xl text-xs sm:text-[13px] font-semibold flex items-center justify-center gap-2 transition-colors shadow-2xs uppercase tracking-wider"
                                                     >
                                                         <span>Continue to Guest Details</span>
                                                         <ArrowRight className="w-4 h-4" />
@@ -1560,12 +1560,12 @@ export default function Home() {
                                                     <button
                                                         type="button"
                                                         onClick={() => setTherapickStep('selection')}
-                                                        className="inline-flex items-center gap-1 text-xs font-bold text-text-muted hover:text-primary uppercase tracking-wider mb-2"
+                                                        className="inline-flex items-center gap-1 text-xs font-medium text-[#737373] hover:text-black uppercase tracking-wider mb-2"
                                                     >
                                                         <ChevronLeft className="w-4 h-4" /> Back to Treatments
                                                     </button>
-                                                    <h2 className="font-serif text-2xl sm:text-3xl text-primary font-medium tracking-tight mb-1">GUEST DETAILS</h2>
-                                                    <p className="text-xs text-text-muted">Enter your villa location and schedule for our therapists.</p>
+                                                    <h2 className="font-serif text-2xl sm:text-3xl text-black font-medium tracking-tight mb-1">GUEST DETAILS</h2>
+                                                    <p className="text-xs text-[#737373]">Enter your villa location and schedule for our therapists.</p>
                                                 </div>
 
                                                 <form className="space-y-4 pb-2" onSubmit={(e) => {
@@ -1576,83 +1576,84 @@ export default function Home() {
                                                     }
                                                     setTherapickStep('review');
                                                 }}>
-                                                    <div className="space-y-1.5 w-full">
-                                                        <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1">
-                                                            <User className="w-3.5 h-3.5"/> Guest Name
+                                                    <div className="space-y-1 w-full">
+                                                        <label className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#737373]">
+                                                            <User className="w-3.5 h-3.5" /> Guest Name
                                                         </label>
-                                                        <input 
+                                                        <input
                                                             type="text" required placeholder="John Doe"
                                                             value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })}
-                                                            className="w-full bg-white border border-border/80 rounded-xl px-4 py-3.5 text-sm text-primary placeholder:text-text-muted/50 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                                                            className="w-full bg-white border border-[#E5E5E5] rounded-lg px-3.5 py-2.5 text-xs sm:text-[13px] text-black placeholder:text-[#A3A3A3] shadow-2xs focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-colors"
                                                         />
                                                     </div>
 
-                                                    <div className="flex flex-row gap-4 w-full">
-                                                        <div className="space-y-1.5 flex-1 min-w-0">
-                                                            <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1">
-                                                                <Calendar className="w-3.5 h-3.5"/> Date
+                                                    <div className="flex flex-row gap-3 w-full">
+                                                        <div className="space-y-1 flex-1 min-w-0">
+                                                            <label className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#737373]">
+                                                                <Calendar className="w-3.5 h-3.5" /> Date
                                                             </label>
-                                                            <input 
-                                                                type="date" required 
+                                                            <input
+                                                                type="date" required
                                                                 value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })}
-                                                                className="w-full min-w-0 appearance-none bg-white border border-border/80 rounded-xl px-4 py-3.5 text-sm text-primary placeholder:text-text-muted/50 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                                                                className="w-full min-w-0 appearance-none bg-white border border-[#E5E5E5] rounded-lg px-3 py-2 text-xs sm:text-[13px] text-black shadow-2xs focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-colors"
                                                             />
                                                         </div>
-                                                        <div className="space-y-1.5 flex-1 min-w-0">
-                                                            <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1">
-                                                                <Clock className="w-3.5 h-3.5"/> Time
+
+                                                        <div className="space-y-1 flex-1 min-w-0">
+                                                            <label className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#737373]">
+                                                                <Clock className="w-3.5 h-3.5" /> Time
                                                             </label>
-                                                            <input 
-                                                                type="time" required 
+                                                            <input
+                                                                type="time" required
                                                                 value={formData.time} onChange={e => setFormData({ ...formData, time: e.target.value })}
-                                                                className="w-full min-w-0 appearance-none bg-white border border-border/80 rounded-xl px-4 py-3.5 text-sm text-primary placeholder:text-text-muted/50 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                                                                className="w-full min-w-0 appearance-none bg-white border border-[#E5E5E5] rounded-lg px-3 py-2 text-xs sm:text-[13px] text-black shadow-2xs focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-colors"
                                                             />
                                                         </div>
                                                     </div>
 
-                                                    <div className="space-y-1.5 w-full">
-                                                        <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1">
-                                                            <MapPin className="w-3.5 h-3.5"/> Villa / Hotel Name
+                                                    <div className="space-y-1 w-full">
+                                                        <label className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#737373]">
+                                                            <MapPin className="w-3.5 h-3.5" /> Villa / Hotel Name
                                                         </label>
-                                                        <input 
+                                                        <input
                                                             type="text" required placeholder="e.g. Four Seasons Sayan"
                                                             value={formData.location} onChange={e => setFormData({ ...formData, location: e.target.value })}
-                                                            className="w-full bg-white border border-border/80 rounded-xl px-4 py-3.5 text-sm text-primary placeholder:text-text-muted/50 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                                                            className="w-full bg-white border border-[#E5E5E5] rounded-lg px-3.5 py-2.5 text-xs sm:text-[13px] text-black placeholder:text-[#A3A3A3] shadow-2xs focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-colors"
                                                         />
                                                     </div>
 
-                                                    <div className="space-y-1.5 w-full">
-                                                        <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1">
-                                                            <DoorOpen className="w-3.5 h-3.5"/> Room Number (Optional)
+                                                    <div className="space-y-1 w-full">
+                                                        <label className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#737373]">
+                                                            <DoorOpen className="w-3.5 h-3.5" /> Room Number (Optional)
                                                         </label>
-                                                        <input 
+                                                        <input
                                                             type="text" placeholder="e.g. Villa 12"
                                                             value={formData.room} onChange={e => setFormData({ ...formData, room: e.target.value })}
-                                                            className="w-full bg-white border border-border/80 rounded-xl px-4 py-3.5 text-sm text-primary placeholder:text-text-muted/50 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                                                            className="w-full bg-white border border-[#E5E5E5] rounded-lg px-3.5 py-2.5 text-xs sm:text-[13px] text-black placeholder:text-[#A3A3A3] shadow-2xs focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-colors"
                                                         />
                                                     </div>
 
-                                                    <div className="space-y-1.5 w-full">
-                                                        <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1">
-                                                            <MessageCircle className="w-3.5 h-3.5"/> WhatsApp Number
+                                                    <div className="space-y-1 w-full">
+                                                        <label className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#737373]">
+                                                            <MessageCircle className="w-3.5 h-3.5" /> WhatsApp Number
                                                         </label>
-                                                        <input 
+                                                        <input
                                                             type="tel" required placeholder="e.g. +62 812 3456 7890"
                                                             value={formData.whatsapp} onChange={e => setFormData({ ...formData, whatsapp: e.target.value })}
-                                                            className="w-full bg-white border border-border/80 rounded-xl px-4 py-3.5 text-sm text-primary placeholder:text-text-muted/50 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                                                            className="w-full bg-white border border-[#E5E5E5] rounded-lg px-3.5 py-2.5 text-xs sm:text-[13px] text-black placeholder:text-[#A3A3A3] shadow-2xs focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-colors"
                                                         />
                                                     </div>
 
-                                                    <div className="pt-4 border-t border-border/50">
-                                                        <div className="flex items-end justify-between mb-5">
-                                                            <span className="text-xs font-bold text-primary uppercase tracking-widest">Total Price</span>
-                                                            <span className="text-2xl font-serif text-primary font-medium">
+                                                    <div className="pt-4 border-t border-[#E5E5E5]">
+                                                        <div className="flex items-end justify-between mb-4">
+                                                            <span className="text-xs font-semibold text-[#737373] uppercase tracking-wider">Total Price</span>
+                                                            <span className="text-2xl font-serif text-black font-medium">
                                                                 IDR {calculateCartTotal(cartItems, appliedPromo, massageTableCount * 100000).total.toLocaleString('en-US')}
                                                             </span>
                                                         </div>
-                                                        <button 
+                                                        <button
                                                             type="submit"
-                                                            className="w-full bg-black hover:bg-neutral-800 text-white px-6 py-4 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:scale-[1.01] transition-all shadow-md uppercase tracking-widest"
+                                                            className="w-full bg-black hover:bg-[#262626] text-white px-6 py-3.5 rounded-xl text-xs sm:text-[13px] font-semibold flex items-center justify-center gap-2 transition-colors shadow-2xs uppercase tracking-wider"
                                                         >
                                                             <span>Review Booking</span>
                                                             <ArrowRight className="w-4 h-4" />
@@ -1668,66 +1669,66 @@ export default function Home() {
                                                     <button
                                                         type="button"
                                                         onClick={() => setTherapickStep('details')}
-                                                        className="inline-flex items-center gap-1 text-xs font-bold text-text-muted hover:text-primary uppercase tracking-wider mb-2"
+                                                        className="inline-flex items-center gap-1 text-xs font-medium text-[#737373] hover:text-black uppercase tracking-wider mb-2"
                                                     >
                                                         <ChevronLeft className="w-4 h-4" /> Edit Details
                                                     </button>
-                                                    <h2 className="font-serif text-2xl sm:text-3xl text-primary font-medium tracking-tight mb-1">REVIEW BOOKING</h2>
-                                                    <p className="text-xs text-text-muted">Please verify your booking details below.</p>
+                                                    <h2 className="font-serif text-2xl sm:text-3xl text-black font-medium tracking-tight mb-1">REVIEW BOOKING</h2>
+                                                    <p className="text-xs text-[#737373]">Please verify your booking details below.</p>
                                                 </div>
 
                                                 <div className="space-y-4 pb-2">
                                                     {/* Guest Details Summary */}
-                                                    <div className="bg-white border border-border/80 rounded-2xl p-4 sm:p-5 shadow-xs space-y-3">
-                                                        <h4 className="text-xs font-bold text-primary uppercase tracking-wider border-b border-border/40 pb-2">Guest Logistics</h4>
+                                                    <div className="bg-white border border-[#E5E5E5] rounded-xl p-4 sm:p-5 shadow-2xs space-y-3">
+                                                        <h4 className="text-xs font-semibold text-black uppercase tracking-wider border-b border-[#E5E5E5] pb-2">Guest Logistics</h4>
                                                         <div className="grid grid-cols-2 gap-3 text-xs">
                                                             <div>
-                                                                <span className="text-[10px] font-bold uppercase tracking-wider text-text-muted block">Guest Name</span>
-                                                                <span className="font-medium text-primary">{formData.name}</span>
+                                                                <span className="text-[10px] font-medium uppercase tracking-wider text-[#737373] block">Guest Name</span>
+                                                                <span className="font-semibold text-black">{formData.name}</span>
                                                             </div>
                                                             <div>
-                                                                <span className="text-[10px] font-bold uppercase tracking-wider text-text-muted block">WhatsApp</span>
-                                                                <span className="font-medium text-primary">{formData.whatsapp}</span>
+                                                                <span className="text-[10px] font-medium uppercase tracking-wider text-[#737373] block">WhatsApp</span>
+                                                                <span className="font-semibold text-black">{formData.whatsapp}</span>
                                                             </div>
                                                             <div>
-                                                                <span className="text-[10px] font-bold uppercase tracking-wider text-text-muted block">Date & Time</span>
-                                                                <span className="font-medium text-primary">{formData.date} at {formData.time}</span>
+                                                                <span className="text-[10px] font-medium uppercase tracking-wider text-[#737373] block">Date & Time</span>
+                                                                <span className="font-semibold text-black">{formData.date} at {formData.time}</span>
                                                             </div>
                                                             <div>
-                                                                <span className="text-[10px] font-bold uppercase tracking-wider text-text-muted block">Villa / Location</span>
-                                                                <span className="font-medium text-primary">{formData.location} {formData.room ? `(${formData.room})` : ''}</span>
+                                                                <span className="text-[10px] font-medium uppercase tracking-wider text-[#737373] block">Villa / Location</span>
+                                                                <span className="font-semibold text-black">{formData.location} {formData.room ? `(${formData.room})` : ''}</span>
                                                             </div>
                                                         </div>
                                                     </div>
 
                                                     {/* Setup Preference Summary */}
-                                                    <div className="bg-white border border-border/80 rounded-2xl p-4 shadow-xs flex items-center justify-between text-xs">
+                                                    <div className="bg-white border border-[#E5E5E5] rounded-xl p-4 shadow-2xs flex items-center justify-between text-xs">
                                                         <div>
-                                                            <span className="text-[10px] font-bold uppercase tracking-wider text-text-muted block">Massage Setup</span>
-                                                            <span className="font-medium text-primary">
-                                                                {massageTableCount > 0 
-                                                                    ? `${massageTableCount} Portable Table${massageTableCount > 1 ? 's' : ''} (+IDR ${(massageTableCount * 100000).toLocaleString('en-US')})` 
+                                                            <span className="text-[10px] font-medium uppercase tracking-wider text-[#737373] block">Massage Setup</span>
+                                                            <span className="font-semibold text-black">
+                                                                {massageTableCount > 0
+                                                                    ? `${massageTableCount} Portable Table${massageTableCount > 1 ? 's' : ''} (+IDR ${(massageTableCount * 100000).toLocaleString('en-US')})`
                                                                     : 'Villa Bed / Floor Mat Setup (IDR 0)'
                                                                 }
                                                             </span>
                                                         </div>
-                                                        <button 
-                                                            type="button" 
+                                                        <button
+                                                            type="button"
                                                             onClick={() => setTherapickStep('selection')}
-                                                            className="text-[10px] font-bold uppercase tracking-wider text-text-muted hover:text-primary underline"
+                                                            className="text-[11px] font-semibold text-[#737373] hover:text-black underline transition-colors"
                                                         >
                                                             Change
                                                         </button>
                                                     </div>
 
                                                     {/* Treatments Summary */}
-                                                    <div className="bg-white border border-border/80 rounded-2xl p-4 shadow-xs space-y-2.5">
-                                                        <div className="flex items-center justify-between border-b border-border/40 pb-2">
-                                                            <h4 className="text-xs font-bold text-primary uppercase tracking-wider">Treatments ({cartItems.length})</h4>
-                                                            <button 
-                                                                type="button" 
+                                                    <div className="bg-white border border-[#E5E5E5] rounded-xl p-4 shadow-2xs space-y-2.5">
+                                                        <div className="flex items-center justify-between border-b border-[#E5E5E5] pb-2">
+                                                            <h4 className="text-xs font-semibold text-black uppercase tracking-wider">Treatments ({cartItems.length})</h4>
+                                                            <button
+                                                                type="button"
                                                                 onClick={() => setTherapickStep('selection')}
-                                                                className="text-[10px] font-bold uppercase tracking-wider text-text-muted hover:text-primary underline"
+                                                                className="text-[11px] font-semibold text-[#737373] hover:text-black underline transition-colors"
                                                             >
                                                                 Modify
                                                             </button>
@@ -1738,18 +1739,18 @@ export default function Home() {
                                                             const mult = isCouple ? (item.guests / 2) : item.guests;
                                                             const totalItem = (item.price + addonsTotal) * mult;
                                                             return (
-                                                                <div key={idx} className="text-xs border-b border-border/20 last:border-b-0 pb-2">
-                                                                    <div className="flex items-center justify-between font-semibold text-primary">
+                                                                <div key={idx} className="text-xs border-b border-[#E5E5E5]/60 last:border-b-0 pb-2">
+                                                                    <div className="flex items-center justify-between font-semibold text-black">
                                                                         <span>{item.title}</span>
-                                                                        <span>IDR {totalItem.toLocaleString('en-US')}</span>
+                                                                        <span className="font-mono">IDR {totalItem.toLocaleString('en-US')}</span>
                                                                     </div>
-                                                                    <div className="text-[11px] text-text-muted flex items-center gap-2 mt-0.5">
+                                                                    <div className="text-[11px] text-[#737373] flex items-center gap-2 mt-0.5">
                                                                         <span>{item.duration} Mins</span>
                                                                         <span>•</span>
                                                                         <span>{item.guests} Guest{item.guests > 1 ? 's' : ''}</span>
                                                                     </div>
                                                                     {item.addons && item.addons.length > 0 && (
-                                                                        <div className="text-[10px] text-text-muted mt-1">
+                                                                        <div className="text-[10px] text-[#737373] mt-1">
                                                                             Add-ons: {item.addons.map((a: any) => a.title).join(', ')}
                                                                         </div>
                                                                     )}
@@ -1759,35 +1760,35 @@ export default function Home() {
                                                     </div>
 
                                                     {/* Pricing Summary */}
-                                                    <div className="pt-3 border-t border-border/50">
+                                                    <div className="pt-3 border-t border-[#E5E5E5]">
                                                         {appliedPromo && (
                                                             <div className="flex items-center justify-between mb-2 text-xs">
-                                                                <span className="text-text-muted uppercase tracking-widest font-bold">Subtotal</span>
-                                                                <span className="font-serif text-text-muted line-through">
+                                                                <span className="text-[#737373] uppercase tracking-wider font-semibold">Subtotal</span>
+                                                                <span className="font-mono text-[#737373] line-through">
                                                                     IDR {calculateCartTotal(cartItems).subtotal.toLocaleString('en-US')}
                                                                 </span>
                                                             </div>
                                                         )}
                                                         {massageTableCount > 0 && (
                                                             <div className="flex items-center justify-between mb-2 text-xs">
-                                                                <span className="text-text-muted uppercase tracking-widest font-bold">Portable Table Fee ({massageTableCount}x)</span>
-                                                                <span className="font-serif text-primary">
+                                                                <span className="text-[#737373] uppercase tracking-wider font-semibold">Portable Table Fee ({massageTableCount}x)</span>
+                                                                <span className="font-mono text-black font-semibold">
                                                                     +IDR {(massageTableCount * 100000).toLocaleString('en-US')}
                                                                 </span>
                                                             </div>
                                                         )}
-                                                        <div className="flex items-end justify-between mb-5">
-                                                            <span className="text-xs font-bold text-primary uppercase tracking-widest">Total Price</span>
-                                                            <span className="text-2xl font-serif text-primary font-medium">
+                                                        <div className="flex items-end justify-between mb-4">
+                                                            <span className="text-xs font-semibold text-[#737373] uppercase tracking-wider">Total Price</span>
+                                                            <span className="text-2xl font-serif text-black font-medium">
                                                                 IDR {calculateCartTotal(cartItems, appliedPromo, massageTableCount * 100000).total.toLocaleString('en-US')}
                                                             </span>
                                                         </div>
 
-                                                        <button 
+                                                        <button
                                                             type="button"
                                                             onClick={() => handleCampaignBooking()}
                                                             disabled={isProcessing}
-                                                            className="w-full bg-black hover:bg-neutral-800 text-white px-6 py-4 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:scale-[1.01] transition-all duration-200 shadow-[0_8px_24px_rgb(0,0,0,0.15)] uppercase tracking-widest disabled:opacity-70"
+                                                            className="w-full bg-black hover:bg-[#262626] text-white px-6 py-3.5 rounded-xl text-xs sm:text-[13px] font-semibold flex items-center justify-center gap-2 transition-colors shadow-2xs uppercase tracking-wider disabled:opacity-50"
                                                         >
                                                             <MessageCircle className="w-4 h-4 text-emerald-400 fill-emerald-400" />
                                                             <span>{isProcessing ? 'PROCESSING...' : 'CONFIRM ON WHATSAPP'}</span>
@@ -1907,160 +1908,160 @@ export default function Home() {
                                         </button>
 
                                         {!isReviewingBooking ? (
-                                        <form className="space-y-5 pb-8 sm:pb-0" onSubmit={(e) => {
-                                            e.preventDefault();
-                                            if (!formData.name || !formData.date || !formData.time || !formData.location) {
-                                                alert('Please fill in all required fields (Name, Date, Time, Location).');
-                                                return;
-                                            }
-                                            setIsReviewingBooking(true);
-                                        }}>
-                                            <div className="space-y-1.5 w-full">
-                                                <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1"><User className="w-3.5 h-3.5"/> Guest Name</label>
-                                                <input
-                                                    type="text" required placeholder="John Doe"
-                                                    value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })}
-                                                    className="w-full bg-white border border-border/80 rounded-xl px-4 py-3.5 text-sm text-primary placeholder:text-text-muted/50 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-                                                />
-                                            </div>
-                                            <div className="flex flex-row gap-4 w-full">
-                                                <div className="space-y-1.5 flex-1 min-w-0">
-                                                    <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1"><Calendar className="w-3.5 h-3.5"/> Date</label>
+                                            <form className="space-y-5 pb-8 sm:pb-0" onSubmit={(e) => {
+                                                e.preventDefault();
+                                                if (!formData.name || !formData.date || !formData.time || !formData.location) {
+                                                    alert('Please fill in all required fields (Name, Date, Time, Location).');
+                                                    return;
+                                                }
+                                                setIsReviewingBooking(true);
+                                            }}>
+                                                <div className="space-y-1.5 w-full">
+                                                    <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1"><User className="w-3.5 h-3.5" /> Guest Name</label>
                                                     <input
-                                                        type="date" required
-                                                        value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })}
-                                                        className="w-full min-w-0 appearance-none bg-white border border-border/80 rounded-xl px-4 py-3.5 text-sm text-primary placeholder:text-text-muted/50 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                                                        type="text" required placeholder="John Doe"
+                                                        value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })}
+                                                        className="w-full bg-white border border-border/80 rounded-xl px-4 py-3.5 text-sm text-primary placeholder:text-text-muted/50 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
                                                     />
                                                 </div>
-                                                <div className="space-y-1.5 flex-1 min-w-0">
-                                                    <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1"><Clock className="w-3.5 h-3.5"/> Time</label>
-                                                    <input
-                                                        type="time" required
-                                                        value={formData.time} onChange={e => setFormData({ ...formData, time: e.target.value })}
-                                                        className="w-full min-w-0 appearance-none bg-white border border-border/80 rounded-xl px-4 py-3.5 text-sm text-primary placeholder:text-text-muted/50 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-                                                    />
-                                                </div>
-                                            </div>
-                                            <div className="space-y-1.5 w-full">
-                                                <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1"><MapPin className="w-3.5 h-3.5"/> Villa / Hotel Name</label>
-                                                <input
-                                                    type="text" required placeholder="e.g. Four Seasons Sayan"
-                                                    value={formData.location} onChange={e => setFormData({ ...formData, location: e.target.value })}
-                                                    className="w-full bg-white border border-border/80 rounded-xl px-4 py-3.5 text-sm text-primary placeholder:text-text-muted/50 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-                                                />
-                                            </div>
-                                            <div className="space-y-1.5 w-full">
-                                                <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1"><DoorOpen className="w-3.5 h-3.5"/> Room Number (Optional)</label>
-                                                <input
-                                                    type="text" placeholder="e.g. Villa 12"
-                                                    value={formData.room} onChange={e => setFormData({ ...formData, room: e.target.value })}
-                                                    className="w-full bg-white border border-border/80 rounded-xl px-4 py-3.5 text-sm text-primary placeholder:text-text-muted/50 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-                                                />
-                                            </div>
-
-                                            {/* Promo Code Input */}
-                                            <div className="space-y-1.5 pt-1 w-full">
-                                                <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1"><Tag className="w-3.5 h-3.5"/> Promo Code (Optional)</label>
-                                                <div className="flex gap-2 w-full">
-                                                    <input
-                                                        type="text" placeholder="Enter code"
-                                                        value={promoCodeInput} onChange={e => setPromoCodeInput(e.target.value.toUpperCase())}
-                                                        disabled={!!appliedPromo || isPromoLoading}
-                                                        className="w-full bg-white border border-border/80 rounded-xl px-4 py-3 text-sm text-primary placeholder:text-text-muted/50 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all uppercase"
-                                                    />
-                                                    {appliedPromo ? (
-                                                        <button type="button" onClick={handleRemovePromo} className="px-5 bg-red-50 text-red-600 border border-red-200 rounded-xl text-xs font-bold hover:bg-red-100 transition-colors uppercase tracking-wider whitespace-nowrap">
-                                                            Remove
-                                                        </button>
-                                                    ) : (
-                                                        <button type="button" onClick={handleApplyPromo} disabled={!promoCodeInput.trim() || isPromoLoading} className="px-5 bg-primary text-white rounded-xl text-xs font-bold hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wider whitespace-nowrap">
-                                                            {isPromoLoading ? 'Applying...' : 'Apply'}
-                                                        </button>
-                                                    )}
-                                                </div>
-                                                {promoError && <p className="text-xs text-red-500 ml-1">{promoError}</p>}
-                                                {promoSuccess && <p className="text-xs text-emerald-600 ml-1">{promoSuccess}</p>}
-                                            </div>
-
-                                            <div className="mt-8 pt-6 border-t border-border/50">
-                                                <div className="flex items-end justify-between mb-6">
-                                                    <span className="text-xs font-bold text-text-muted uppercase tracking-widest">Total Price</span>
-                                                    <span className="text-2xl font-serif text-primary">
-                                                        IDR {calculateCartTotal(cartItems, appliedPromo).total.toLocaleString('en-US')}
-                                                    </span>
-                                                </div>
-                                                <div className="flex flex-col gap-3">
-                                                    <button
-                                                        type="submit"
-                                                        className="w-full bg-primary text-white px-6 py-4 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-primary/90 hover:scale-[1.02] transition-all duration-300 shadow-[0_8px_24px_rgb(0,0,0,0.15)] uppercase tracking-widest"
-                                                    >
-                                                        REVIEW BOOKING
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </form>
-                                        ) : (
-                                        <div className="space-y-5 pb-8 sm:pb-0 animate-in fade-in slide-in-from-right-4 duration-300">
-                                            <div className="bg-white border border-border/80 rounded-xl p-5 space-y-4">
-                                                <h3 className="text-[10px] font-bold uppercase tracking-widest text-primary/80 border-b border-border/50 pb-2 mb-2">Guest Details</h3>
-                                                <div className="grid grid-cols-3 gap-3 sm:gap-5 items-center">
-                                                    <div className="flex flex-col gap-5">
-                                                        <div>
-                                                            <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-text-muted mb-1"><User className="w-3 h-3"/> Name</span>
-                                                            <span className="text-sm text-primary font-medium">{formData.name}</span>
-                                                        </div>
-                                                        <div>
-                                                            <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-text-muted mb-1"><Calendar className="w-3 h-3"/> Date</span>
-                                                            <span className="text-sm text-primary font-medium">{formData.date}</span>
-                                                        </div>
+                                                <div className="flex flex-row gap-4 w-full">
+                                                    <div className="space-y-1.5 flex-1 min-w-0">
+                                                        <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1"><Calendar className="w-3.5 h-3.5" /> Date</label>
+                                                        <input
+                                                            type="date" required
+                                                            value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })}
+                                                            className="w-full min-w-0 appearance-none bg-white border border-border/80 rounded-xl px-4 py-3.5 text-sm text-primary placeholder:text-text-muted/50 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                                                        />
                                                     </div>
-                                                    
-                                                    <div className="flex flex-col items-center justify-center text-center border-x border-border/50 px-2 h-full py-2">
-                                                        <span className="flex items-center justify-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-text-muted mb-2"><Clock className="w-3 h-3"/> Time</span>
-                                                        <span className="text-xl sm:text-2xl text-primary font-serif font-medium">{formData.time}</span>
+                                                    <div className="space-y-1.5 flex-1 min-w-0">
+                                                        <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1"><Clock className="w-3.5 h-3.5" /> Time</label>
+                                                        <input
+                                                            type="time" required
+                                                            value={formData.time} onChange={e => setFormData({ ...formData, time: e.target.value })}
+                                                            className="w-full min-w-0 appearance-none bg-white border border-border/80 rounded-xl px-4 py-3.5 text-sm text-primary placeholder:text-text-muted/50 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                                                        />
                                                     </div>
+                                                </div>
+                                                <div className="space-y-1.5 w-full">
+                                                    <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1"><MapPin className="w-3.5 h-3.5" /> Villa / Hotel Name</label>
+                                                    <input
+                                                        type="text" required placeholder="e.g. Four Seasons Sayan"
+                                                        value={formData.location} onChange={e => setFormData({ ...formData, location: e.target.value })}
+                                                        className="w-full bg-white border border-border/80 rounded-xl px-4 py-3.5 text-sm text-primary placeholder:text-text-muted/50 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                                                    />
+                                                </div>
+                                                <div className="space-y-1.5 w-full">
+                                                    <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1"><DoorOpen className="w-3.5 h-3.5" /> Room Number (Optional)</label>
+                                                    <input
+                                                        type="text" placeholder="e.g. Villa 12"
+                                                        value={formData.room} onChange={e => setFormData({ ...formData, room: e.target.value })}
+                                                        className="w-full bg-white border border-border/80 rounded-xl px-4 py-3.5 text-sm text-primary placeholder:text-text-muted/50 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                                                    />
+                                                </div>
 
-                                                    <div className="flex flex-col gap-5">
-                                                        <div>
-                                                            <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-text-muted mb-1"><MapPin className="w-3 h-3"/> Location</span>
-                                                            <span className="text-sm text-primary font-medium line-clamp-2 leading-tight">{formData.location}</span>
-                                                        </div>
-                                                        {formData.room && (
-                                                            <div>
-                                                                <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-text-muted mb-1"><DoorOpen className="w-3 h-3"/> Room</span>
-                                                                <span className="text-sm text-primary font-medium line-clamp-1">{formData.room}</span>
-                                                            </div>
+                                                {/* Promo Code Input */}
+                                                <div className="space-y-1.5 pt-1 w-full">
+                                                    <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1"><Tag className="w-3.5 h-3.5" /> Promo Code (Optional)</label>
+                                                    <div className="flex gap-2 w-full">
+                                                        <input
+                                                            type="text" placeholder="Enter code"
+                                                            value={promoCodeInput} onChange={e => setPromoCodeInput(e.target.value.toUpperCase())}
+                                                            disabled={!!appliedPromo || isPromoLoading}
+                                                            className="w-full bg-white border border-border/80 rounded-xl px-4 py-3 text-sm text-primary placeholder:text-text-muted/50 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all uppercase"
+                                                        />
+                                                        {appliedPromo ? (
+                                                            <button type="button" onClick={handleRemovePromo} className="px-5 bg-red-50 text-red-600 border border-red-200 rounded-xl text-xs font-bold hover:bg-red-100 transition-colors uppercase tracking-wider whitespace-nowrap">
+                                                                Remove
+                                                            </button>
+                                                        ) : (
+                                                            <button type="button" onClick={handleApplyPromo} disabled={!promoCodeInput.trim() || isPromoLoading} className="px-5 bg-primary text-white rounded-xl text-xs font-bold hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wider whitespace-nowrap">
+                                                                {isPromoLoading ? 'Applying...' : 'Apply'}
+                                                            </button>
                                                         )}
                                                     </div>
+                                                    {promoError && <p className="text-xs text-red-500 ml-1">{promoError}</p>}
+                                                    {promoSuccess && <p className="text-xs text-emerald-600 ml-1">{promoSuccess}</p>}
                                                 </div>
-                                            </div>
 
-                                            <div className="mt-8 pt-6 border-t border-border/50">
-                                                <div className="flex items-end justify-between mb-6">
-                                                    <span className="text-xs font-bold text-text-muted uppercase tracking-widest">Total Price</span>
-                                                    <span className="text-2xl font-serif text-primary">
-                                                        IDR {calculateCartTotal(cartItems, appliedPromo).total.toLocaleString('en-US')}
-                                                    </span>
+                                                <div className="mt-8 pt-6 border-t border-border/50">
+                                                    <div className="flex items-end justify-between mb-6">
+                                                        <span className="text-xs font-bold text-text-muted uppercase tracking-widest">Total Price</span>
+                                                        <span className="text-2xl font-serif text-primary">
+                                                            IDR {calculateCartTotal(cartItems, appliedPromo).total.toLocaleString('en-US')}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex flex-col gap-3">
+                                                        <button
+                                                            type="submit"
+                                                            className="w-full bg-primary text-white px-6 py-4 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-primary/90 hover:scale-[1.02] transition-all duration-300 shadow-[0_8px_24px_rgb(0,0,0,0.15)] uppercase tracking-widest"
+                                                        >
+                                                            REVIEW BOOKING
+                                                        </button>
+                                                    </div>
                                                 </div>
-                                                <div className="flex flex-col gap-3">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleCampaignBooking()}
-                                                        disabled={isProcessing}
-                                                        className="w-full bg-primary text-white px-6 py-4 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-primary/90 hover:scale-[1.02] transition-all duration-300 shadow-[0_8px_24px_rgb(0,0,0,0.15)] uppercase tracking-widest disabled:opacity-70"
-                                                    >
-                                                        {isProcessing ? 'PROCESSING...' : 'CONFIRM ON WHATSAPP'}
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setIsReviewingBooking(false)}
-                                                        className="w-full bg-transparent text-text-muted hover:text-primary py-2 text-xs font-bold tracking-widest uppercase transition-colors"
-                                                    >
-                                                        Back to Edit
-                                                    </button>
+                                            </form>
+                                        ) : (
+                                            <div className="space-y-5 pb-8 sm:pb-0 animate-in fade-in slide-in-from-right-4 duration-300">
+                                                <div className="bg-white border border-border/80 rounded-xl p-5 space-y-4">
+                                                    <h3 className="text-[10px] font-bold uppercase tracking-widest text-primary/80 border-b border-border/50 pb-2 mb-2">Guest Details</h3>
+                                                    <div className="grid grid-cols-3 gap-3 sm:gap-5 items-center">
+                                                        <div className="flex flex-col gap-5">
+                                                            <div>
+                                                                <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-text-muted mb-1"><User className="w-3 h-3" /> Name</span>
+                                                                <span className="text-sm text-primary font-medium">{formData.name}</span>
+                                                            </div>
+                                                            <div>
+                                                                <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-text-muted mb-1"><Calendar className="w-3 h-3" /> Date</span>
+                                                                <span className="text-sm text-primary font-medium">{formData.date}</span>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="flex flex-col items-center justify-center text-center border-x border-border/50 px-2 h-full py-2">
+                                                            <span className="flex items-center justify-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-text-muted mb-2"><Clock className="w-3 h-3" /> Time</span>
+                                                            <span className="text-xl sm:text-2xl text-primary font-serif font-medium">{formData.time}</span>
+                                                        </div>
+
+                                                        <div className="flex flex-col gap-5">
+                                                            <div>
+                                                                <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-text-muted mb-1"><MapPin className="w-3 h-3" /> Location</span>
+                                                                <span className="text-sm text-primary font-medium line-clamp-2 leading-tight">{formData.location}</span>
+                                                            </div>
+                                                            {formData.room && (
+                                                                <div>
+                                                                    <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-text-muted mb-1"><DoorOpen className="w-3 h-3" /> Room</span>
+                                                                    <span className="text-sm text-primary font-medium line-clamp-1">{formData.room}</span>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div className="mt-8 pt-6 border-t border-border/50">
+                                                    <div className="flex items-end justify-between mb-6">
+                                                        <span className="text-xs font-bold text-text-muted uppercase tracking-widest">Total Price</span>
+                                                        <span className="text-2xl font-serif text-primary">
+                                                            IDR {calculateCartTotal(cartItems, appliedPromo).total.toLocaleString('en-US')}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex flex-col gap-3">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleCampaignBooking()}
+                                                            disabled={isProcessing}
+                                                            className="w-full bg-primary text-white px-6 py-4 rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:bg-primary/90 hover:scale-[1.02] transition-all duration-300 shadow-[0_8px_24px_rgb(0,0,0,0.15)] uppercase tracking-widest disabled:opacity-70"
+                                                        >
+                                                            {isProcessing ? 'PROCESSING...' : 'CONFIRM ON WHATSAPP'}
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setIsReviewingBooking(false)}
+                                                            className="w-full bg-transparent text-text-muted hover:text-primary py-2 text-xs font-bold tracking-widest uppercase transition-colors"
+                                                        >
+                                                            Back to Edit
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
                                         )}
                                     </div>
                                 )}
@@ -2069,348 +2070,346 @@ export default function Home() {
                     )}
                 </AnimatePresence>
 
-            {/* Treatment Details Modal */}
-            <AnimatePresence>
-                {detailsModalTreatment && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 sm:p-6"
-                    >
+                {/* Treatment Details Modal */}
+                <AnimatePresence>
+                    {detailsModalTreatment && (
                         <motion.div
-                            initial={{ y: '100%', opacity: 0 }}
-                            animate={{ y: 0, opacity: 1 }}
-                            exit={{ y: '100%', opacity: 0 }}
-                            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                            className="bg-white w-full max-w-2xl max-h-[90vh] rounded-[2rem] overflow-hidden flex flex-col shadow-2xl"
-                        >
-                            <div className="p-6 border-b border-border/50 flex items-center justify-between sticky top-0 bg-white/95 backdrop-blur z-10">
-                                <h3 className="font-serif text-2xl text-primary">{detailsModalTreatment.title}</h3>
-                                <button
-                                    onClick={() => setDetailsModalTreatment(null)}
-                                    className="p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors"
-                                >
-                                    <X className="w-5 h-5 text-primary" />
-                                </button>
-                            </div>
-                            <div className="p-6 overflow-y-auto no-scrollbar">
-                                {(() => {
-                                    let whatsIncluded = '';
-                                    let desc = detailsModalTreatment.desc;
-                                    if (desc) {
-                                        const parts = desc.split(/What's Included\s*:?\s*/i);
-                                        if (parts.length > 1) {
-                                            desc = parts[0].trim();
-                                            whatsIncluded = parts[1].trim();
-                                        }
-                                    }
-                                    return (
-                                        <div className="space-y-8">
-                                            {desc && (
-                                                <div className="space-y-3">
-                                                    <h4 className="text-[10px] font-bold uppercase tracking-widest text-primary/80">Description</h4>
-                                                    <p className="text-sm text-text-muted leading-relaxed">{desc}</p>
-                                                </div>
-                                            )}
-                                            {whatsIncluded && (
-                                                <div className="space-y-4">
-                                                    <h4 className="text-[10px] font-bold uppercase tracking-widest text-primary/80">What's Included</h4>
-                                                    <div className="border border-border/80 rounded-2xl overflow-hidden">
-                                                        <table className="w-full text-left border-collapse">
-                                                            <thead>
-                                                                <tr className="bg-white border-b border-border/80">
-                                                                    <th className="py-3 px-4 text-[9px] font-bold uppercase tracking-widest text-primary/70">Treatment</th>
-                                                                    <th className="py-3 px-4 text-[9px] font-bold uppercase tracking-widest text-primary/70 w-1/3">Duration</th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody className="divide-y divide-border/50">
-                                                                {whatsIncluded.split('\n').filter(Boolean).map((line, i) => {
-                                                                    const cleanLine = line.replace(/^-\s*/, '').trim();
-                                                                    const durationMatch = cleanLine.match(/^(\d+\s*-\s*[Mm]inutes?)\s+(.*)/i) || cleanLine.match(/^(.*)\s+\((\d+\s*[Mm]inutes?)\)$/i);
-                                                                    
-                                                                    let treatmentName = cleanLine;
-                                                                    let durationStr = '-';
-                                                                    
-                                                                    if (durationMatch) {
-                                                                        if (cleanLine.match(/^(\d+\s*-\s*[Mm]inutes?)\s+(.*)/i)) {
-                                                                            durationStr = durationMatch[1].replace('-', '').trim();
-                                                                            treatmentName = durationMatch[2].trim();
-                                                                        } else {
-                                                                            treatmentName = durationMatch[1].trim();
-                                                                            durationStr = durationMatch[2].trim();
-                                                                        }
-                                                                    }
-
-                                                                    return (
-                                                                        <tr key={i} className="hover:bg-white/50 transition-colors">
-                                                                            <td className="py-3 px-4 text-xs font-medium text-primary">{treatmentName}</td>
-                                                                            <td className="py-3 px-4 text-xs text-text-muted flex items-center gap-1.5">
-                                                                                {durationStr !== '-' && <Clock className="w-3 h-3 opacity-50" />}
-                                                                                {durationStr}
-                                                                            </td>
-                                                                        </tr>
-                                                                    );
-                                                                })}
-                                                            </tbody>
-                                                        </table>
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    );
-                                })()}
-                            </div>
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
-            {/* Custom Add-on Treatments Pop-up Modal */}
-            <AnimatePresence>
-                {selectedAddonItem && (
-                    <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
-                        <motion.div 
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            onClick={() => setSelectedAddonItem(null)}
-                            className="fixed inset-0 bg-black/60 backdrop-blur-xs"
-                        />
-                        <motion.div 
-                            initial={{ opacity: 0, scale: 0.95, y: 15 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95, y: 15 }}
-                            className="relative bg-white rounded-3xl p-5 sm:p-6 shadow-2xl max-w-md w-full max-h-[85vh] flex flex-col z-10 border border-border/80"
+                            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 sm:p-6"
                         >
-                            {/* Modal Header */}
-                            <div className="flex items-start justify-between pb-3.5 border-b border-border/60">
-                                <div>
-                                    <span className="text-[9px] font-bold tracking-widest text-primary/60 uppercase block mb-1">
-                                        Wellness Enhancements
-                                    </span>
-                                    <h3 className="font-serif text-lg sm:text-xl font-medium text-primary">
-                                        Add-On Treatments
-                                    </h3>
-                                    <p className="text-[11px] text-text-muted mt-0.5">
-                                        Enhance your <span className="font-semibold text-primary">{selectedAddonItem.title}</span> ritual
-                                    </p>
+                            <motion.div
+                                initial={{ y: '100%', opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                exit={{ y: '100%', opacity: 0 }}
+                                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                                className="bg-white w-full max-w-2xl max-h-[90vh] rounded-[2rem] overflow-hidden flex flex-col shadow-2xl"
+                            >
+                                <div className="p-6 border-b border-border/50 flex items-center justify-between sticky top-0 bg-white/95 backdrop-blur z-10">
+                                    <h3 className="font-serif text-2xl text-primary">{detailsModalTreatment.title}</h3>
+                                    <button
+                                        onClick={() => setDetailsModalTreatment(null)}
+                                        className="p-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors"
+                                    >
+                                        <X className="w-5 h-5 text-primary" />
+                                    </button>
                                 </div>
-                                <button
-                                    type="button"
-                                    onClick={() => setSelectedAddonItem(null)}
-                                    className="w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-600 hover:text-primary flex items-center justify-center transition-colors shrink-0"
-                                >
-                                    <X className="w-4 h-4" />
-                                </button>
-                            </div>
-
-                            {/* Modal Body */}
-                            <div className="py-4 overflow-y-auto space-y-3 flex-1 no-scrollbar">
-                                {availableAddons && availableAddons.length > 0 ? (
-                                    availableAddons.map((addon) => {
-                                        const isAdded = (selectedAddonItem.addons || []).some((a: any) => a.id === addon.id);
+                                <div className="p-6 overflow-y-auto no-scrollbar">
+                                    {(() => {
+                                        let whatsIncluded = '';
+                                        let desc = detailsModalTreatment.desc;
+                                        if (desc) {
+                                            const parts = desc.split(/What's Included\s*:?\s*/i);
+                                            if (parts.length > 1) {
+                                                desc = parts[0].trim();
+                                                whatsIncluded = parts[1].trim();
+                                            }
+                                        }
                                         return (
-                                            <div 
-                                                key={addon.id} 
-                                                className={`p-3.5 rounded-2xl border transition-all ${
-                                                    isAdded 
-                                                        ? 'bg-stone-50/90 border-primary/40 shadow-xs' 
-                                                        : 'bg-white border-border/70 hover:border-border'
-                                                }`}
-                                            >
-                                                <div className="flex items-start justify-between gap-3 mb-1.5">
-                                                    <div>
-                                                        <div className="font-bold text-xs text-primary">{addon.title}</div>
-                                                        <div className="text-[10px] text-text-muted flex items-center gap-1 mt-0.5">
-                                                            <Clock className="w-3 h-3" />
-                                                            <span>{addon.duration}</span>
-                                                        </div>
+                                            <div className="space-y-8">
+                                                {desc && (
+                                                    <div className="space-y-3">
+                                                        <h4 className="text-[10px] font-bold uppercase tracking-widest text-primary/80">Description</h4>
+                                                        <p className="text-sm text-text-muted leading-relaxed">{desc}</p>
                                                     </div>
-                                                    <div className="text-right shrink-0">
-                                                        <div className="font-serif text-xs font-semibold text-primary">
-                                                            +IDR {Number(addon.price).toLocaleString('en-US')}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                {addon.description && (
-                                                    <p className="text-[11px] text-stone-600 leading-relaxed mb-3">
-                                                        {addon.description}
-                                                    </p>
                                                 )}
-                                                <button
-                                                    type="button"
-                                                    onClick={() => {
-                                                        const updatedAddons = isAdded
-                                                            ? (selectedAddonItem.addons || []).filter((a: any) => a.id !== addon.id)
-                                                            : [...(selectedAddonItem.addons || []), addon];
-                                                        
-                                                        setCartItems(cartItems.map(i => {
-                                                            if (i.id !== selectedAddonItem.id) return i;
-                                                            return { ...i, addons: updatedAddons };
-                                                        }));
+                                                {whatsIncluded && (
+                                                    <div className="space-y-4">
+                                                        <h4 className="text-[10px] font-bold uppercase tracking-widest text-primary/80">What's Included</h4>
+                                                        <div className="border border-border/80 rounded-2xl overflow-hidden">
+                                                            <table className="w-full text-left border-collapse">
+                                                                <thead>
+                                                                    <tr className="bg-white border-b border-border/80">
+                                                                        <th className="py-3 px-4 text-[9px] font-bold uppercase tracking-widest text-primary/70">Treatment</th>
+                                                                        <th className="py-3 px-4 text-[9px] font-bold uppercase tracking-widest text-primary/70 w-1/3">Duration</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody className="divide-y divide-border/50">
+                                                                    {whatsIncluded.split('\n').filter(Boolean).map((line, i) => {
+                                                                        const cleanLine = line.replace(/^-\s*/, '').trim();
+                                                                        const durationMatch = cleanLine.match(/^(\d+\s*-\s*[Mm]inutes?)\s+(.*)/i) || cleanLine.match(/^(.*)\s+\((\d+\s*[Mm]inutes?)\)$/i);
 
-                                                        setSelectedAddonItem({
-                                                            ...selectedAddonItem,
-                                                            addons: updatedAddons
-                                                        });
-                                                    }}
-                                                    className={`w-full py-2 px-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 ${
-                                                        isAdded
-                                                            ? 'bg-stone-200 text-stone-800 hover:bg-red-50 hover:text-red-600'
-                                                            : 'bg-primary text-white hover:bg-neutral-800'
-                                                    }`}
-                                                >
-                                                    {isAdded ? (
-                                                        <>
-                                                            <Check className="w-3.5 h-3.5" /> Added to Treatment (Tap to Remove)
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <Plus className="w-3.5 h-3.5" /> Add to Treatment
-                                                        </>
-                                                    )}
-                                                </button>
+                                                                        let treatmentName = cleanLine;
+                                                                        let durationStr = '-';
+
+                                                                        if (durationMatch) {
+                                                                            if (cleanLine.match(/^(\d+\s*-\s*[Mm]inutes?)\s+(.*)/i)) {
+                                                                                durationStr = durationMatch[1].replace('-', '').trim();
+                                                                                treatmentName = durationMatch[2].trim();
+                                                                            } else {
+                                                                                treatmentName = durationMatch[1].trim();
+                                                                                durationStr = durationMatch[2].trim();
+                                                                            }
+                                                                        }
+
+                                                                        return (
+                                                                            <tr key={i} className="hover:bg-white/50 transition-colors">
+                                                                                <td className="py-3 px-4 text-xs font-medium text-primary">{treatmentName}</td>
+                                                                                <td className="py-3 px-4 text-xs text-text-muted flex items-center gap-1.5">
+                                                                                    {durationStr !== '-' && <Clock className="w-3 h-3 opacity-50" />}
+                                                                                    {durationStr}
+                                                                                </td>
+                                                                            </tr>
+                                                                        );
+                                                                    })}
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    </div>
+                                                )}
                                             </div>
                                         );
-                                    })
-                                ) : (
-                                    <div className="py-6 px-4 text-center space-y-3">
-                                        <div className="w-12 h-12 rounded-full bg-stone-100 flex items-center justify-center mx-auto text-primary">
-                                            <Sparkles className="w-5 h-5 text-primary/80" />
-                                        </div>
-                                        <h4 className="font-serif text-base font-semibold text-primary">
-                                            Complete Luxury Spa Ritual
-                                        </h4>
-                                        <p className="text-xs text-text-muted leading-relaxed max-w-xs mx-auto">
-                                            Your selected ritual is already fully inclusive with our signature organic aromatherapy oils, customized pressure, and dedicated therapist care.
-                                        </p>
-                                        <div className="bg-stone-50 border border-border/70 rounded-xl p-3.5 text-[11px] text-stone-600 leading-relaxed text-left">
-                                            <span className="font-bold text-primary block mb-0.5">Specialty Enhancements Upon Request</span>
-                                            Custom organic facial treatments, herbal body compresses, or extended massage durations can also be arranged directly with your private therapist upon arrival at your villa.
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Modal Footer */}
-                            <div className="pt-3 border-t border-border/60">
-                                <button
-                                    type="button"
-                                    onClick={() => setSelectedAddonItem(null)}
-                                    className="w-full bg-black hover:bg-neutral-800 text-white py-3 rounded-xl text-xs font-bold uppercase tracking-widest transition-all shadow-sm"
-                                >
-                                    Done
-                                </button>
-                            </div>
+                                    })()}
+                                </div>
+                            </motion.div>
                         </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
+                    )}
+                </AnimatePresence>
 
-            {/* Why a Fee? Pop-up Modal */}
-            <AnimatePresence>
-                {showTableFeeModal && (
-                    <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
-                        <motion.div 
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            onClick={() => setShowTableFeeModal(false)}
-                            className="fixed inset-0 bg-black/60 backdrop-blur-xs"
-                        />
-                        <motion.div 
-                            initial={{ opacity: 0, scale: 0.95, y: 15 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95, y: 15 }}
-                            className="relative bg-white rounded-3xl p-5 sm:p-6 shadow-2xl max-w-md w-full max-h-[85vh] flex flex-col z-10 border border-border/80"
-                        >
-                            {/* Modal Header */}
-                            <div className="flex items-start justify-between pb-3.5 border-b border-border/60">
-                                <div>
-                                    <span className="text-[9px] font-bold tracking-widest text-primary/60 uppercase block mb-1">
-                                        Equipment & Transport Logistics
-                                    </span>
-                                    <h3 className="font-serif text-lg sm:text-xl font-medium text-primary">
-                                        Why Is There a Table Fee?
-                                    </h3>
-                                </div>
-                                <button
-                                    type="button"
-                                    onClick={() => setShowTableFeeModal(false)}
-                                    className="w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-600 hover:text-primary flex items-center justify-center transition-colors shrink-0"
-                                >
-                                    <X className="w-4 h-4" />
-                                </button>
-                            </div>
-
-                            {/* Modal Body */}
-                            <div className="py-4 overflow-y-auto space-y-3 flex-1 no-scrollbar text-xs">
-                                <div className="p-3.5 rounded-2xl bg-stone-50 border border-border/70 flex items-start gap-3">
-                                    <div className="w-8 h-8 rounded-xl bg-white border border-border/80 flex items-center justify-center shrink-0 text-primary mt-0.5">
-                                        <Sparkles className="w-4 h-4" />
-                                    </div>
+                {/* Custom Add-on Treatments Pop-up Modal */}
+                <AnimatePresence>
+                    {selectedAddonItem && (
+                        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                onClick={() => setSelectedAddonItem(null)}
+                                className="fixed inset-0 bg-black/60 backdrop-blur-xs"
+                            />
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.95, y: 15 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.95, y: 15 }}
+                                className="relative bg-white rounded-3xl p-5 sm:p-6 shadow-2xl max-w-md w-full max-h-[85vh] flex flex-col z-10 border border-border/80"
+                            >
+                                {/* Modal Header */}
+                                <div className="flex items-start justify-between pb-3.5 border-b border-border/60">
                                     <div>
-                                        <h4 className="font-bold text-xs text-primary uppercase tracking-wider mb-1">
-                                            Heavy Commercial Equipment
-                                        </h4>
-                                        <p className="text-[11px] text-stone-600 leading-relaxed">
-                                            Our massage tables are full-length, professional heavy-duty spa tables equipped with adjustable face cradles, luxury padding, and freshly sanitized linens (15–20 kg).
+                                        <span className="text-[9px] font-bold tracking-widest text-primary/60 uppercase block mb-1">
+                                            Wellness Enhancements
+                                        </span>
+                                        <h3 className="font-serif text-lg sm:text-xl font-medium text-primary">
+                                            Add-On Treatments
+                                        </h3>
+                                        <p className="text-[11px] text-text-muted mt-0.5">
+                                            Enhance your <span className="font-semibold text-primary">{selectedAddonItem.title}</span> ritual
                                         </p>
                                     </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setSelectedAddonItem(null)}
+                                        className="w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-600 hover:text-primary flex items-center justify-center transition-colors shrink-0"
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </button>
                                 </div>
 
-                                <div className="p-3.5 rounded-2xl bg-stone-50 border border-border/70 flex items-start gap-3">
-                                    <div className="w-8 h-8 rounded-xl bg-white border border-border/80 flex items-center justify-center shrink-0 text-primary mt-0.5">
-                                        <Clock className="w-4 h-4" />
-                                    </div>
+                                {/* Modal Body */}
+                                <div className="py-4 overflow-y-auto space-y-3 flex-1 no-scrollbar">
+                                    {availableAddons && availableAddons.length > 0 ? (
+                                        availableAddons.map((addon) => {
+                                            const isAdded = (selectedAddonItem.addons || []).some((a: any) => a.id === addon.id);
+                                            return (
+                                                <div
+                                                    key={addon.id}
+                                                    className={`p-3.5 rounded-2xl border transition-all ${isAdded
+                                                            ? 'bg-stone-50/90 border-primary/40 shadow-xs'
+                                                            : 'bg-white border-border/70 hover:border-border'
+                                                        }`}
+                                                >
+                                                    <div className="flex items-start justify-between gap-3 mb-1.5">
+                                                        <div>
+                                                            <div className="font-bold text-xs text-primary">{addon.title}</div>
+                                                            <div className="text-[10px] text-text-muted flex items-center gap-1 mt-0.5">
+                                                                <Clock className="w-3 h-3" />
+                                                                <span>{addon.duration}</span>
+                                                            </div>
+                                                        </div>
+                                                        <div className="text-right shrink-0">
+                                                            <div className="font-serif text-xs font-semibold text-primary">
+                                                                +IDR {Number(addon.price).toLocaleString('en-US')}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    {addon.description && (
+                                                        <p className="text-[11px] text-stone-600 leading-relaxed mb-3">
+                                                            {addon.description}
+                                                        </p>
+                                                    )}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            const updatedAddons = isAdded
+                                                                ? (selectedAddonItem.addons || []).filter((a: any) => a.id !== addon.id)
+                                                                : [...(selectedAddonItem.addons || []), addon];
+
+                                                            setCartItems(cartItems.map(i => {
+                                                                if (i.id !== selectedAddonItem.id) return i;
+                                                                return { ...i, addons: updatedAddons };
+                                                            }));
+
+                                                            setSelectedAddonItem({
+                                                                ...selectedAddonItem,
+                                                                addons: updatedAddons
+                                                            });
+                                                        }}
+                                                        className={`w-full py-2 px-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 ${isAdded
+                                                                ? 'bg-stone-200 text-stone-800 hover:bg-red-50 hover:text-red-600'
+                                                                : 'bg-primary text-white hover:bg-neutral-800'
+                                                            }`}
+                                                    >
+                                                        {isAdded ? (
+                                                            <>
+                                                                <Check className="w-3.5 h-3.5" /> Added to Treatment (Tap to Remove)
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <Plus className="w-3.5 h-3.5" /> Add to Treatment
+                                                            </>
+                                                        )}
+                                                    </button>
+                                                </div>
+                                            );
+                                        })
+                                    ) : (
+                                        <div className="py-6 px-4 text-center space-y-3">
+                                            <div className="w-12 h-12 rounded-full bg-stone-100 flex items-center justify-center mx-auto text-primary">
+                                                <Sparkles className="w-5 h-5 text-primary/80" />
+                                            </div>
+                                            <h4 className="font-serif text-base font-semibold text-primary">
+                                                Complete Luxury Spa Ritual
+                                            </h4>
+                                            <p className="text-xs text-text-muted leading-relaxed max-w-xs mx-auto">
+                                                Your selected ritual is already fully inclusive with our signature organic aromatherapy oils, customized pressure, and dedicated therapist care.
+                                            </p>
+                                            <div className="bg-stone-50 border border-border/70 rounded-xl p-3.5 text-[11px] text-stone-600 leading-relaxed text-left">
+                                                <span className="font-bold text-primary block mb-0.5">Specialty Enhancements Upon Request</span>
+                                                Custom organic facial treatments, herbal body compresses, or extended massage durations can also be arranged directly with your private therapist upon arrival at your villa.
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Modal Footer */}
+                                <div className="pt-3 border-t border-border/60">
+                                    <button
+                                        type="button"
+                                        onClick={() => setSelectedAddonItem(null)}
+                                        className="w-full bg-black hover:bg-neutral-800 text-white py-3 rounded-xl text-xs font-bold uppercase tracking-widest transition-all shadow-sm"
+                                    >
+                                        Done
+                                    </button>
+                                </div>
+                            </motion.div>
+                        </div>
+                    )}
+                </AnimatePresence>
+
+                {/* Why a Fee? Pop-up Modal */}
+                <AnimatePresence>
+                    {showTableFeeModal && (
+                        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                onClick={() => setShowTableFeeModal(false)}
+                                className="fixed inset-0 bg-black/60 backdrop-blur-xs"
+                            />
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.95, y: 15 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.95, y: 15 }}
+                                className="relative bg-white rounded-3xl p-5 sm:p-6 shadow-2xl max-w-md w-full max-h-[85vh] flex flex-col z-10 border border-border/80"
+                            >
+                                {/* Modal Header */}
+                                <div className="flex items-start justify-between pb-3.5 border-b border-border/60">
                                     <div>
-                                        <h4 className="font-bold text-xs text-primary uppercase tracking-wider mb-1">
-                                            Independent Scooter Transport
-                                        </h4>
-                                        <p className="text-[11px] text-stone-600 leading-relaxed">
-                                            Therapists commute directly to your villa across Bali on personal motor scooters. Transporting heavy, bulky equipment through Bali traffic, steep inclines, and narrow villa gangways requires careful physical effort and dedicated handling.
-                                        </p>
+                                        <span className="text-[9px] font-bold tracking-widest text-primary/60 uppercase block mb-1">
+                                            Equipment & Transport Logistics
+                                        </span>
+                                        <h3 className="font-serif text-lg sm:text-xl font-medium text-primary">
+                                            Why Is There a Table Fee?
+                                        </h3>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowTableFeeModal(false)}
+                                        className="w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-600 hover:text-primary flex items-center justify-center transition-colors shrink-0"
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </button>
+                                </div>
+
+                                {/* Modal Body */}
+                                <div className="py-4 overflow-y-auto space-y-3 flex-1 no-scrollbar text-xs">
+                                    <div className="p-3.5 rounded-2xl bg-stone-50 border border-border/70 flex items-start gap-3">
+                                        <div className="w-8 h-8 rounded-xl bg-white border border-border/80 flex items-center justify-center shrink-0 text-primary mt-0.5">
+                                            <Sparkles className="w-4 h-4" />
+                                        </div>
+                                        <div>
+                                            <h4 className="font-bold text-xs text-primary uppercase tracking-wider mb-1">
+                                                Heavy Commercial Equipment
+                                            </h4>
+                                            <p className="text-[11px] text-stone-600 leading-relaxed">
+                                                Our massage tables are full-length, professional heavy-duty spa tables equipped with adjustable face cradles, luxury padding, and freshly sanitized linens (15–20 kg).
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="p-3.5 rounded-2xl bg-stone-50 border border-border/70 flex items-start gap-3">
+                                        <div className="w-8 h-8 rounded-xl bg-white border border-border/80 flex items-center justify-center shrink-0 text-primary mt-0.5">
+                                            <Clock className="w-4 h-4" />
+                                        </div>
+                                        <div>
+                                            <h4 className="font-bold text-xs text-primary uppercase tracking-wider mb-1">
+                                                Independent Scooter Transport
+                                            </h4>
+                                            <p className="text-[11px] text-stone-600 leading-relaxed">
+                                                Therapists commute directly to your villa across Bali on personal motor scooters. Transporting heavy, bulky equipment through Bali traffic, steep inclines, and narrow villa gangways requires careful physical effort and dedicated handling.
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="p-3.5 rounded-2xl bg-stone-50 border border-border/70 flex items-start gap-3">
+                                        <div className="w-8 h-8 rounded-xl bg-white border border-border/80 flex items-center justify-center shrink-0 text-primary mt-0.5">
+                                            <Tag className="w-4 h-4" />
+                                        </div>
+                                        <div>
+                                            <h4 className="font-bold text-xs text-primary uppercase tracking-wider mb-1">
+                                                100% Direct Therapist Surcharge
+                                            </h4>
+                                            <p className="text-[11px] text-stone-600 leading-relaxed">
+                                                The surcharge of <strong>IDR 100,000 per table</strong> goes directly to your private therapist to cover physical transportation logistics and on-site setup.
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="p-3.5 rounded-2xl bg-[#FDFBF7] border border-amber-200/70 text-[11px] text-stone-700 leading-relaxed">
+                                        <div className="font-bold text-primary mb-1 flex items-center gap-1.5">
+                                            <Check className="w-3.5 h-3.5 text-stone-800" />
+                                            Prefer zero additional fee?
+                                        </div>
+                                        Leave the table count at <strong>0</strong>. Your therapist will set up comfortably on your villa bed or mattress at no extra cost, bringing a specialized face cradle and sanitized linens for your comfort.
                                     </div>
                                 </div>
 
-                                <div className="p-3.5 rounded-2xl bg-stone-50 border border-border/70 flex items-start gap-3">
-                                    <div className="w-8 h-8 rounded-xl bg-white border border-border/80 flex items-center justify-center shrink-0 text-primary mt-0.5">
-                                        <Tag className="w-4 h-4" />
-                                    </div>
-                                    <div>
-                                        <h4 className="font-bold text-xs text-primary uppercase tracking-wider mb-1">
-                                            100% Direct Therapist Surcharge
-                                        </h4>
-                                        <p className="text-[11px] text-stone-600 leading-relaxed">
-                                            The surcharge of <strong>IDR 100,000 per table</strong> goes directly to your private therapist to cover physical transportation logistics and on-site setup.
-                                        </p>
-                                    </div>
+                                {/* Modal Footer */}
+                                <div className="pt-3 border-t border-border/60">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowTableFeeModal(false)}
+                                        className="w-full bg-black hover:bg-neutral-800 text-white py-3 rounded-xl text-xs font-bold uppercase tracking-widest transition-all shadow-sm"
+                                    >
+                                        Understood
+                                    </button>
                                 </div>
-
-                                <div className="p-3.5 rounded-2xl bg-[#FDFBF7] border border-amber-200/70 text-[11px] text-stone-700 leading-relaxed">
-                                    <div className="font-bold text-primary mb-1 flex items-center gap-1.5">
-                                        <Check className="w-3.5 h-3.5 text-stone-800" />
-                                        Prefer zero additional fee?
-                                    </div>
-                                    Leave the table count at <strong>0</strong>. Your therapist will set up comfortably on your villa bed or mattress at no extra cost, bringing a specialized face cradle and sanitized linens for your comfort.
-                                </div>
-                            </div>
-
-                            {/* Modal Footer */}
-                            <div className="pt-3 border-t border-border/60">
-                                <button
-                                    type="button"
-                                    onClick={() => setShowTableFeeModal(false)}
-                                    className="w-full bg-black hover:bg-neutral-800 text-white py-3 rounded-xl text-xs font-bold uppercase tracking-widest transition-all shadow-sm"
-                                >
-                                    Understood
-                                </button>
-                            </div>
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
+                            </motion.div>
+                        </div>
+                    )}
+                </AnimatePresence>
 
                 <div className="max-w-7xl mx-auto px-6 relative z-10">
                 </div>

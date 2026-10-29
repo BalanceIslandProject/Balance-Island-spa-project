@@ -63,34 +63,38 @@ function ExploreContent() {
     }, [treatments, activeCategory, searchQuery, maxPrice, locationQuery]);
 
     return (
-        <main className="min-h-screen bg-white pb-20 pt-40">
+        <main className="min-h-screen bg-white pb-20 pt-40 font-sans text-[#171717] antialiased">
             {/* Search & Categories Sticky Header */}
-            <div className="fixed top-0 left-0 right-0 z-50 bg-white pt-6 pb-2 border-b border-gray-100/50 shadow-sm">
+            <div className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md pt-5 pb-3 border-b border-[#E5E5E5]">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="mb-4 relative z-30">
-                        <div className="flex items-center gap-3 w-full">
-                            <div className="flex-1 bg-white rounded-full shadow-[0_4px_16px_rgb(0,0,0,0.08)] border border-gray-100 h-14 flex items-center px-2 hover:shadow-[0_4px_20px_rgb(0,0,0,0.12)] transition-shadow">
-                                <Link href="/" className="shrink-0 p-2 hover:bg-gray-50 rounded-full transition-colors flex items-center justify-center">
-                                    <ArrowLeft className="w-5 h-5 text-gray-800" strokeWidth={2.5} />
+                    <div className="mb-3 relative z-30">
+                        <div className="flex items-center gap-2.5 w-full">
+                            <div className="flex-1 bg-white rounded-xl shadow-2xs border border-[#E5E5E5] h-13 flex items-center px-2 hover:border-[#A3A3A3] transition-colors">
+                                <Link href="/" className="shrink-0 p-2 text-[#737373] hover:text-black rounded-lg transition-colors flex items-center justify-center">
+                                    <ArrowLeft className="w-5 h-5" strokeWidth={2} />
                                 </Link>
-                                <div className="flex flex-col ml-3 flex-1 pr-4 justify-center">
+                                <div className="flex flex-col ml-2 flex-1 pr-3 justify-center">
                                     <input 
                                         type="text"
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
-                                        placeholder={locationQuery ? `${locationQuery}, Bali` : "Where to? Search treatments..."}
-                                        className="text-[13px] font-bold text-gray-900 leading-tight bg-transparent border-none outline-none focus:ring-0 placeholder:text-gray-900 w-full p-0 m-0"
+                                        placeholder={locationQuery ? `${locationQuery}, Bali` : "Search mobile spa treatments..."}
+                                        className="text-xs sm:text-[13px] font-semibold text-black leading-tight bg-transparent border-none outline-none focus:ring-0 placeholder:text-[#A3A3A3] w-full p-0 m-0"
                                     />
-                                    <span className="text-[11px] text-gray-500 font-medium mt-0.5">
-                                        {locationQuery ? `${locationQuery}, Bali` : 'Ubud, Bali'} • In-Villa Mobile Spa • Any date
+                                    <span className="text-[10px] sm:text-[11px] text-[#737373] font-medium mt-0.5">
+                                        {locationQuery ? `${locationQuery}, Bali` : 'Bali, Indonesia'} • In-Villa Luxury Mobile Spa
                                     </span>
                                 </div>
                             </div>
                             <button 
                                 onClick={() => setIsPriceFilterOpen(!isPriceFilterOpen)}
-                                className="w-14 h-14 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center shrink-0 hover:bg-gray-50 transition-colors"
+                                className={`w-13 h-13 rounded-xl border flex items-center justify-center shrink-0 transition-colors cursor-pointer ${
+                                    isPriceFilterOpen ? 'bg-black text-white border-black' : 'bg-white text-black border-[#E5E5E5] hover:bg-[#F5F5F5]'
+                                }`}
+                                aria-label="Filter by price"
+                                title="Filter by price"
                             >
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-800"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
                             </button>
                         </div>
 
@@ -98,14 +102,14 @@ function ExploreContent() {
                         <AnimatePresence>
                             {isPriceFilterOpen && (
                                 <motion.div 
-                                    initial={{ opacity: 0, y: -10 }}
+                                    initial={{ opacity: 0, y: -6 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -10 }}
-                                    className="absolute top-full right-0 mt-3 w-[calc(100%-8px)] mx-1 md:w-72 bg-white rounded-2xl p-5 shadow-[0_20px_40px_rgb(0,0,0,0.12)] border border-gray-100 z-30"
+                                    exit={{ opacity: 0, y: -6 }}
+                                    className="absolute top-full right-0 mt-2 w-[calc(100%-8px)] mx-1 sm:w-80 bg-white rounded-xl p-4 sm:p-5 shadow-lg border border-[#E5E5E5] z-30"
                                 >
-                                    <div className="flex items-center justify-between mb-4">
-                                        <span className="text-[10px] font-bold uppercase tracking-widest text-primary/80">Max Price</span>
-                                        <span className="text-sm font-serif text-primary font-medium">Rp {maxPrice.toLocaleString('en-US')}</span>
+                                    <div className="flex items-center justify-between mb-3 pb-2 border-b border-[#E5E5E5]">
+                                        <span className="text-[10px] font-semibold uppercase tracking-wider text-[#737373]">Maximum Price</span>
+                                        <span className="text-xs font-mono font-semibold text-black">IDR {maxPrice.toLocaleString('en-US')}</span>
                                     </div>
                                     <input 
                                         type="range" 
@@ -114,11 +118,11 @@ function ExploreContent() {
                                         step="50000"
                                         value={maxPrice}
                                         onChange={(e) => setMaxPrice(parseInt(e.target.value))}
-                                        className="w-full accent-primary h-1.5 bg-secondary rounded-lg appearance-none cursor-pointer"
+                                        className="w-full accent-black h-1.5 bg-[#F5F5F5] rounded-lg appearance-none cursor-pointer"
                                     />
-                                    <div className="flex justify-between text-[10px] text-text-muted mt-2 font-medium tracking-wider">
-                                        <span>150k</span>
-                                        <span>1.5m</span>
+                                    <div className="flex justify-between text-[10px] text-[#A3A3A3] mt-2 font-mono">
+                                        <span>IDR 150K</span>
+                                        <span>IDR 1.5M</span>
                                     </div>
                                 </motion.div>
                             )}
@@ -126,20 +130,20 @@ function ExploreContent() {
                     </div>
 
                     {/* Categories Row */}
-                    <div className="flex overflow-x-auto gap-2.5 no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 pt-2 pb-1">
+                    <div className="flex overflow-x-auto gap-2 no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 pt-1 pb-1">
                         {CATEGORIES.map((cat) => {
                             const isActive = activeCategory === cat.id;
                             return (
                                 <button
                                     key={cat.id}
                                     onClick={() => setActiveCategory(cat.id)}
-                                    className={`flex items-center justify-center px-4 py-2 rounded-[20px] whitespace-nowrap transition-all duration-300 shrink-0 ${
+                                    className={`flex items-center justify-center px-3.5 py-1.5 rounded-lg whitespace-nowrap text-xs transition-colors shrink-0 ${
                                         isActive 
-                                            ? 'bg-[#1D1D1F] text-white border border-black shadow-[0_4px_16px_rgba(0,0,0,0.18)] scale-[1.02]' 
-                                            : 'bg-white text-gray-700 border border-gray-200/90 shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:border-gray-400 hover:shadow-md hover:bg-gray-50 active:scale-95'
+                                            ? 'bg-black text-white font-semibold' 
+                                            : 'bg-white text-[#737373] border border-[#E5E5E5] hover:text-black hover:border-black font-medium'
                                     }`}
                                 >
-                                    <span className={`text-[13px] ${isActive ? 'font-bold' : 'font-medium'}`}>{cat.label}</span>
+                                    <span>{cat.label}</span>
                                 </button>
                             );
                         })}
@@ -159,7 +163,7 @@ function ExploreContent() {
                             {treatments.filter(t => t.is_pinned).map(treatment => (
                                 <Link href={`/rituals/${createSlug(treatment.title)}`} prefetch={true} key={treatment.id} className="w-[180px] sm:w-[220px] shrink-0 snap-center md:snap-align-none outline-none active:scale-[0.98] transition-all">
                                     <div className="flex flex-col gap-2 group cursor-pointer">
-                                        <div className="aspect-[4/3] relative bg-[#F5F5F7] overflow-hidden rounded-2xl shadow-[0_2px_12px_rgb(0,0,0,0.06)] group-hover:shadow-[0_8px_24px_rgb(0,0,0,0.12)] transition-shadow">
+                                        <div className="aspect-[4/3] relative bg-[#F5F5F5] overflow-hidden rounded-xl border border-[#E5E5E5] shadow-2xs group-hover:border-[#A3A3A3] transition-colors">
                                             {treatment.pinned_image ? (
                                                 <Image 
                                                     src={treatment.pinned_image} 
@@ -173,10 +177,10 @@ function ExploreContent() {
                                             )}
                                         </div>
                                         <div className="flex flex-col px-1 pt-1">
-                                            <p className="text-gray-900 text-[14px] font-bold">{treatment.title}</p>
-                                            <p className="text-gray-500 text-[12px] font-medium mt-0.5"><Clock className="inline w-3 h-3 mr-1 mb-0.5 text-gray-400"/>{treatment.options[0]?.duration} MINS</p>
+                                            <p className="text-black text-[13px] font-semibold">{treatment.title}</p>
+                                            <p className="text-[#737373] text-[11px] font-medium mt-0.5"><Clock className="inline w-3 h-3 mr-1 mb-0.5 text-[#737373]"/>{treatment.options[0]?.duration} MINS</p>
                                             <div className="mt-1 flex items-center">
-                                                <span className="font-semibold text-gray-900 text-[13px]">
+                                                <span className="font-mono font-semibold text-black text-xs">
                                                     IDR {parseInt((treatment.options[0]?.price || '0').replace(/,/g, '')).toLocaleString('en-US')}
                                                 </span>
                                             </div>
@@ -191,28 +195,28 @@ function ExploreContent() {
                 {/* Popular Treatments (2-Column Grid) */}
                 <section data-reveal className="mb-24 relative group scroll-reveal">
                     <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-bold text-gray-900 tracking-tight">Popular Category</h3>
+                        <h3 className="text-base sm:text-lg font-semibold text-black tracking-tight">Popular Category</h3>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-x-4 gap-y-8 scroll-reveal-stagger">
+                    <div className="grid grid-cols-2 gap-3 sm:gap-4 scroll-reveal-stagger">
                         {filteredAndSortedTreatments.map((item) => (
-                            <Link href={`/rituals/${createSlug(item.title)}`} prefetch={true} key={item.id} className="w-full block group outline-none active:scale-[0.98] transition-all">
-                                <div className="rounded-2xl bg-white border border-gray-100 flex flex-col h-full relative overflow-hidden p-4 aspect-[4/5] shadow-[0_2px_12px_rgb(0,0,0,0.04)] hover:shadow-md transition-all cursor-pointer group-hover:-translate-y-1 duration-300">
+                            <Link href={`/rituals/${createSlug(item.title)}`} prefetch={true} key={item.id} className="w-full block group outline-none active:scale-[0.99] transition-all">
+                                <div className="rounded-xl bg-white border border-[#E5E5E5] flex flex-col h-full relative overflow-hidden p-3.5 sm:p-4 aspect-[4/5] shadow-2xs hover:border-black transition-colors cursor-pointer">
                                     <div className="relative z-10 flex flex-col h-full">
-                                        <div className="bg-white text-gray-800 border border-gray-200 px-2.5 py-1 rounded-full text-[8px] font-bold tracking-widest uppercase self-start mb-3 shadow-sm">
+                                        <div className="bg-[#FAFAFA] text-black border border-[#E5E5E5] px-2 py-0.5 rounded text-[8px] font-semibold tracking-wider uppercase self-start mb-2.5">
                                             {item.category}
                                         </div>
-                                        <h4 className="font-bold text-gray-900 text-[13px] leading-snug mb-1.5 line-clamp-2">{item.title}</h4>
-                                        <p className="text-[10px] text-gray-500 line-clamp-2 mb-auto leading-relaxed font-medium">{item.desc}</p>
+                                        <h4 className="font-semibold text-black text-xs sm:text-[13px] leading-snug mb-1 line-clamp-2">{item.title}</h4>
+                                        <p className="text-[10px] text-[#737373] line-clamp-2 mb-auto leading-relaxed font-normal">{item.desc}</p>
                                         
-                                        <div className="mt-auto pt-3 border-t border-gray-100">
-                                            <div className="flex items-center gap-1.5 text-[10px] font-bold text-gray-800 mb-2 uppercase tracking-widest">
-                                                <Clock className="w-3.5 h-3.5 text-gray-500" /> {item.options[0]?.duration} MINS
+                                        <div className="mt-auto pt-2.5 border-t border-[#E5E5E5]">
+                                            <div className="flex items-center gap-1.5 text-[10px] font-medium text-[#737373] mb-1.5 uppercase tracking-wide">
+                                                <Clock className="w-3 h-3 text-[#737373]" /> {item.options[0]?.duration} MINS
                                             </div>
                                             <div className="flex items-center justify-between">
-                                                <span className="font-semibold text-gray-900 text-[12px]">IDR {parseInt(item.options[0]?.price.replace(/,/g, '') || '0').toLocaleString('en-US')}</span>
-                                                <div className="w-7 h-7 rounded-full bg-[#1D1D1F] text-white flex items-center justify-center shrink-0 shadow-sm hover:scale-105 transition-transform">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                                <span className="font-mono font-semibold text-black text-xs">IDR {parseInt(item.options[0]?.price.replace(/,/g, '') || '0').toLocaleString('en-US')}</span>
+                                                <div className="w-6 h-6 rounded-full bg-black text-white flex items-center justify-center shrink-0">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                                                 </div>
                                             </div>
                                         </div>

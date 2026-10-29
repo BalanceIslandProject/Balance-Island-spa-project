@@ -2,50 +2,93 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { CheckCircle2, Home, MessageCircle } from 'lucide-react';
+import { CheckCircle2, Home, MessageCircle, ArrowRight } from 'lucide-react';
 
 export default function PaymentSuccessPage() {
-    const [waUrl, setWaUrl] = useState<string | null>(null);
+  const [waUrl, setWaUrl] = useState<string | null>(null);
 
-    useEffect(() => {
-        const pendingMessage = localStorage.getItem('pendingBookingMessage');
-        if (pendingMessage) {
-            const finalMessage = pendingMessage;
-            const url = `https://wa.me/6285174119423?text=${encodeURIComponent(finalMessage)}`;
-            setWaUrl(url);
+  useEffect(() => {
+    const pendingMessage = localStorage.getItem('pendingBookingMessage');
+    if (pendingMessage) {
+      const finalMessage = pendingMessage;
+      const url = `https://wa.me/6285174119423?text=${encodeURIComponent(finalMessage)}`;
+      setWaUrl(url);
 
-            // Clean up so it doesn't trigger again on refresh
-            localStorage.removeItem('pendingBookingMessage');
+      // Clean up so it doesn't trigger again on refresh
+      localStorage.removeItem('pendingBookingMessage');
 
-            // Automatic redirect after a short delay
-            setTimeout(() => {
-                window.location.href = url;
-            }, 2500);
-        }
-    }, []);
+      // Automatic redirect after a short delay
+      const redirectTimer = setTimeout(() => {
+        window.location.href = url;
+      }, 2500);
 
-    return (
-        <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 font-sans">
-            <div className="bg-white rounded-[40px] p-10 md:p-16 text-center max-w-lg w-full shadow-[0_20px_40px_rgb(0,0,0,0.08)] border border-border/50">
-                <div className="w-24 h-24 bg-green-50 rounded-full flex items-center justify-center text-green-500 mx-auto mb-8 border border-green-100 shadow-inner animate-bounce">
-                    <CheckCircle2 size={48} strokeWidth={2} />
-                </div>
-                <h1 className="font-serif text-3xl md:text-4xl text-primary font-medium mb-4 tracking-tight">Payment Successful</h1>
-                <p className="text-text-muted text-sm md:text-base leading-relaxed mb-10">
-                    Thank you for your purchase. We have received your payment. {waUrl ? "You are being redirected to WhatsApp to complete your booking confirmation..." : "You will receive a confirmation shortly."}
-                </p>
+      return () => clearTimeout(redirectTimer);
+    }
+  }, []);
 
-                <div className="flex flex-col gap-4">
-                    {waUrl && (
-                        <a href={waUrl} className="inline-flex items-center justify-center gap-3 w-full bg-[#25D366] text-white py-4 rounded-2xl font-bold text-sm hover:bg-[#20bd5a] transition-all shadow-[0_8px_24px_rgb(0,0,0,0.15)] hover:scale-[1.02] uppercase tracking-widest">
-                            <MessageCircle size={18} /> Confirm on WhatsApp
-                        </a>
-                    )}
-                    <Link href="/" className="inline-flex items-center justify-center gap-3 w-full bg-primary text-white py-4 rounded-2xl font-bold text-sm hover:bg-primary/90 transition-all shadow-[0_8px_24px_rgb(0,0,0,0.15)] hover:scale-[1.02] uppercase tracking-widest">
-                        <Home size={18} /> Return Home
-                    </Link>
-                </div>
-            </div>
+  return (
+    <div className="min-h-screen bg-white flex flex-col items-center justify-center p-4 sm:p-6 font-sans text-[#171717] antialiased">
+      <div className="bg-white rounded-2xl p-6 sm:p-10 text-center max-w-md w-full border border-[#E5E5E5] shadow-xs space-y-6">
+        
+        {/* Brand Identification */}
+        <div className="flex justify-center items-center pb-2">
+          <img
+            src="/therapick-logo-2.png"
+            alt="Therapick"
+            className="h-7 w-auto object-contain"
+          />
         </div>
-    );
+
+        {/* Calm Apple-inspired Status Indicator */}
+        <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto border border-emerald-200">
+          <CheckCircle2 size={28} strokeWidth={2} />
+        </div>
+
+        <div className="space-y-2">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md border border-emerald-200 bg-emerald-50 text-emerald-700 text-[11px] font-medium tracking-tight">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+            <span>Payment Verified</span>
+          </div>
+
+          <h1 className="font-serif text-2xl sm:text-3xl text-black font-medium tracking-tight">
+            Payment Successful
+          </h1>
+          
+          <p className="text-xs sm:text-[13px] text-[#737373] leading-relaxed max-w-sm mx-auto">
+            {waUrl
+              ? 'Thank you for your booking. Redirecting you to WhatsApp to receive your therapist confirmation and dispatch details...'
+              : 'Thank you for your purchase. We have received your payment and our concierge team will reach out promptly.'}
+          </p>
+        </div>
+
+        {/* Action Controls */}
+        <div className="flex flex-col gap-2.5 pt-2">
+          {waUrl && (
+            <a
+              href={waUrl}
+              className="inline-flex items-center justify-center gap-2 w-full bg-black text-white hover:bg-[#262626] h-12 rounded-xl text-xs sm:text-[13px] font-semibold tracking-wide transition-colors"
+            >
+              <MessageCircle size={16} className="text-emerald-400" />
+              <span>Confirm on WhatsApp</span>
+              <ArrowRight size={14} />
+            </a>
+          )}
+          <Link
+            href="/"
+            className="inline-flex items-center justify-center gap-2 w-full bg-white text-black border border-[#E5E5E5] hover:bg-[#F5F5F5] h-12 rounded-xl text-xs sm:text-[13px] font-semibold tracking-wide transition-colors"
+          >
+            <Home size={15} className="text-[#737373]" />
+            <span>Return to Therapick</span>
+          </Link>
+        </div>
+
+        <div className="pt-2 border-t border-[#E5E5E5]">
+          <span className="text-[10px] font-mono uppercase tracking-widest text-[#A3A3A3]">
+            Therapick • Bali Luxury Mobile Spa
+          </span>
+        </div>
+
+      </div>
+    </div>
+  );
 }
