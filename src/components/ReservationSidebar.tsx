@@ -1,5 +1,5 @@
 import React from 'react';
-import { Trash2, X, ChevronRight, Sparkles, Plus, Minus, Calendar, Clock, MapPin, User, Home } from 'lucide-react';
+import { Trash2, X, ChevronRight, Plus, Minus, Calendar, Clock, MapPin, User, Home } from 'lucide-react';
 import { formatPrice, SERVICES } from '@/lib/constants';
 import LocationAutocomplete from './LocationAutocomplete';
 import { motion } from 'framer-motion';
@@ -77,7 +77,7 @@ const ReservationSidebar: React.FC<Props> = ({
                     {cart.length === 0 ? (
                         <div className="py-16 px-4 bg-surface/30 border border-dashed border-border/60 flex flex-col items-center justify-center text-center rounded-xl">
                             <div className="w-12 h-12 border border-border/80 flex items-center justify-center mb-4 text-accent/80 rounded-full bg-background">
-                                <Sparkles size={18} strokeWidth={1.5} />
+                                <Clock size={18} strokeWidth={1.5} />
                             </div>
                             <p className="font-serif text-xl text-primary mb-1">Empty Ritual</p>
                             <p className="text-[9px] font-medium uppercase tracking-[0.18em] text-text-muted">Select a treatment to begin your journey</p>

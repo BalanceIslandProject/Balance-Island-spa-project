@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
     Megaphone, PlusCircle, Store, Settings, LayoutDashboard, 
     UploadCloud, CheckCircle, Plus, Trash2, Edit3, Pin, 
-    ChevronDown, ChevronUp, Calculator, LogOut, Sparkles,
+    ChevronDown, ChevronUp, Calculator, LogOut,
     ArrowRight, ArrowUp, ArrowDown, Compass, ShieldCheck, Check, Ticket, Search, Menu, MoreHorizontal, Calendar, FileText, Heart, Clock, Share2, Layers
 } from 'lucide-react';
 import Link from 'next/link';

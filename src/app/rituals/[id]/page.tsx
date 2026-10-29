@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, Share, MapPin, Clock, Calendar, Sparkles, Plus, Minus, X, MessageCircle, Heart, Bitcoin, ArrowRight, User, Tag, DoorOpen, Trash2, Info, Check, Phone } from 'lucide-react';
+import { ChevronLeft, Share, MapPin, Clock, Calendar, Plus, Minus, X, MessageCircle, Heart, Bitcoin, ArrowRight, User, Tag, DoorOpen, Trash2, Info, Check, Phone } from 'lucide-react';
 import Link from 'next/link';
 import { saveBookingToSupabase } from '@/lib/bookingUtils';
 import { useCart } from '@/context/CartContext';
@@ -1226,7 +1226,7 @@ export default function RitualsDetails() {
                                 ) : (
                                     <div className="py-6 px-4 text-center space-y-3">
                                         <div className="w-12 h-12 rounded-full bg-stone-100 flex items-center justify-center mx-auto text-primary">
-                                            <Sparkles className="w-5 h-5 text-primary/80" />
+                                            <Check className="w-5 h-5 text-primary/80" />
                                         </div>
                                         <h4 className="font-serif text-base font-semibold text-primary">
                                             Complete Luxury Spa Ritual

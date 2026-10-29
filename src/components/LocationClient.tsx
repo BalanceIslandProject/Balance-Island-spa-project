@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, Search, Heart, Cloud, Sparkles, Droplet, User, Flame, Clock, ArrowRight, X, ShoppingBag, Plus, Minus, MessageCircle, ChevronLeft, ChevronDown, Bitcoin, CheckCircle2, Copy, Calendar, MapPin, Tag, DoorOpen, Trash2, Info, Check, Phone } from 'lucide-react';
+import { Bell, Search, Heart, Cloud, Droplet, User, Flame, Clock, ArrowRight, X, ShoppingBag, Plus, Minus, MessageCircle, ChevronLeft, ChevronDown, Bitcoin, CheckCircle2, Copy, Calendar, MapPin, Tag, DoorOpen, Trash2, Info, Check, Phone } from 'lucide-react';
 import Link from 'next/link';
 import { saveBookingToSupabase } from '@/lib/bookingUtils';
 import { calculateCartTotal, getItemMultiplier } from '@/lib/pricingUtils';
@@ -295,27 +295,23 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                        className="relative w-full flex flex-row rounded-[24px] overflow-hidden shadow-sm group transition-colors duration-300 border border-gray-200 bg-[#FAFAFA] min-h-[180px] md:min-h-[200px] mb-8 cursor-pointer"
+                        className="relative w-full flex flex-row rounded-[24px] overflow-hidden shadow-sm group transition-colors duration-300 border border-gray-200 bg-[#FAFAFA] min-h-[160px] md:min-h-[180px] mb-8 cursor-pointer"
                     >
                         {/* Left Section (Blue) */}
                         <div className="flex-1 bg-[#3b82f6] text-white p-5 md:p-6 flex flex-col justify-between relative z-10">
                             <div>
-                                <div className="inline-flex items-center text-[10px] md:text-xs font-bold tracking-wide uppercase mb-3 text-white/90">
+                                <div className="inline-flex items-center text-[10px] md:text-xs font-bold tracking-wide uppercase mb-2 text-white/90">
                                     {campaign.label || `${campaign.discountPercentage}% OFF`}
                                 </div>
-                                <h3 className="text-xl md:text-2xl font-bold leading-tight mb-2">
+                                <h3 className="text-xl md:text-2xl font-bold leading-tight">
                                     {campaign.title}
                                 </h3>
-                                {campaign.description && (
-                                    <p className="text-white/80 text-xs md:text-sm line-clamp-2 leading-relaxed max-w-[95%]">
-                                        {campaign.description}
-                                    </p>
-                                )}
                             </div>
-                            <div className="mt-4 flex items-center">
+                            <div className="mt-4 flex items-center gap-2">
                                 <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white transition-transform group-hover:scale-105">
                                     <ArrowRight size={14} />
                                 </div>
+                                <span className="text-xs font-semibold text-white/90">View Offers</span>
                             </div>
                         </div>
                         
@@ -331,38 +327,20 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                             <div className="absolute bottom-0 -translate-x-1/2 translate-y-1/2 w-6 h-6 md:w-8 md:h-8 bg-[#FAFAFA] rounded-full border border-gray-200 shadow-inner"></div>
                         </div>
 
-                        {/* Right Section (White) */}
-                        <div className="w-[90px] md:w-[120px] bg-white flex flex-col items-center justify-center py-4 px-2 shrink-0 text-center relative z-10">
-                            <div className="flex flex-col items-center justify-center gap-3">
-                                {/* Start Date */}
-                                <div className="flex flex-col items-center">
-                                    <div className="text-[8px] md:text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Start</div>
-                                    {campaign.startDate ? (
-                                        <>
-                                            <div className="text-[10px] md:text-xs font-bold text-gray-800 uppercase leading-none">{new Date(campaign.startDate).toLocaleDateString('en-US', { month: 'short' })}</div>
-                                            <div className="text-xl md:text-2xl font-black text-black leading-none my-0.5">{new Date(campaign.startDate).getDate()}</div>
-                                            <div className="text-[9px] md:text-[10px] font-bold text-gray-500 uppercase leading-none">{new Date(campaign.startDate).getFullYear()}</div>
-                                        </>
-                                    ) : (
-                                        <div className="text-xs md:text-sm font-bold text-black uppercase">NOW</div>
-                                    )}
-                                </div>
-                                
-                                <div className="w-6 h-px bg-gray-200"></div>
-
-                                {/* End Date */}
-                                <div className="flex flex-col items-center">
-                                    <div className="text-[8px] md:text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">End</div>
-                                    {campaign.endDate ? (
-                                        <>
-                                            <div className="text-[10px] md:text-xs font-bold text-gray-800 uppercase leading-none">{new Date(campaign.endDate).toLocaleDateString('en-US', { month: 'short' })}</div>
-                                            <div className="text-xl md:text-2xl font-black text-black leading-none my-0.5">{new Date(campaign.endDate).getDate()}</div>
-                                            <div className="text-[9px] md:text-[10px] font-bold text-gray-500 uppercase leading-none">{new Date(campaign.endDate).getFullYear()}</div>
-                                        </>
-                                    ) : (
-                                        <div className="text-[10px] md:text-xs font-bold text-black uppercase">{campaign.duration.replace('_', ' ')}</div>
-                                    )}
-                                </div>
+                        {/* Right Section (White Ticket Stub) */}
+                        <div className="w-[100px] md:w-[130px] bg-white flex flex-col items-center justify-center py-4 px-2.5 shrink-0 text-center relative z-10">
+                            <div className="flex flex-col items-center justify-center gap-1.5">
+                                <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">
+                                    Discount
+                                </span>
+                                <span className="text-xl md:text-2xl font-black text-[#2563eb] leading-tight">
+                                    -{campaign.discountPercentage}%
+                                </span>
+                                {campaign.endDate && (
+                                    <span className="text-[10px] font-medium text-gray-500 mt-1">
+                                        Until {new Date(campaign.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                    </span>
+                                )}
                             </div>
                         </div>
                     </motion.div>
@@ -387,8 +365,8 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                         onClick={() => setActiveCategory(cat.id)}
                                         className={`flex items-center justify-center gap-2 px-5 py-2.5 rounded-[20px] whitespace-nowrap transition-all duration-300 font-medium ${
                                             isActive 
-                                                ? 'bg-[#1D1D1F] text-white shadow-[0_4px_16px_rgba(0,0,0,0.18)] scale-[1.02] border border-black font-semibold' 
-                                                : 'bg-white text-gray-700 border border-gray-200/90 shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:border-gray-400 hover:shadow-md hover:bg-gray-50 active:scale-95'
+                                                ? 'bg-[#1D1D1F] text-white border border-black font-semibold' 
+                                                : 'bg-white text-gray-700 border border-gray-200/90 hover:border-gray-400 hover:bg-gray-50 active:scale-95'
                                         }`}
                                     >
                                         <span className="text-xs sm:text-sm tracking-wide">{cat.label}</span>
@@ -629,27 +607,19 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                         {/* Modal Scrollable Content */}
                         <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6 md:p-8 space-y-6 max-w-4xl mx-auto w-full">
                             {/* Campaign Hero Banner */}
-                            <div className="bg-gradient-to-br from-white via-white to-blue-50/40 rounded-[28px] border border-gray-200/90 p-5 sm:p-7 shadow-sm relative overflow-hidden">
-                                <div className="relative z-10">
-                                    <div className="text-[10px] font-bold text-[#3b82f6] uppercase tracking-widest mb-1.5">
-                                        Exclusive Campaign Offer
+                            <div className="bg-white rounded-2xl border border-gray-200/80 p-5 sm:p-6 shadow-xs relative overflow-hidden">
+                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                                    <div>
+                                        <h2 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">
+                                            {campaign?.title}
+                                        </h2>
                                     </div>
-                                    <h2 className="font-serif text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight mb-2">
-                                        {campaign?.title}
-                                    </h2>
-                                    {campaign?.description && (
-                                        <p className="text-xs sm:text-sm text-gray-600 leading-relaxed font-light max-w-2xl">
-                                            {campaign.description}
-                                        </p>
+                                    {campaign?.endDate && (
+                                        <div className="inline-flex items-center gap-1.5 bg-gray-100 px-3 py-1.5 rounded-full text-gray-700 text-xs font-medium self-start sm:self-auto shrink-0">
+                                            <Clock size={13} className="text-gray-500" />
+                                            <span>Valid until {new Date(campaign.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                                        </div>
                                     )}
-                                    <div className="mt-4 flex items-center gap-3 text-[11px] font-semibold text-gray-500 flex-wrap">
-                                        {campaign?.endDate && (
-                                            <span className="inline-flex items-center gap-1.5 bg-gray-100/80 px-3 py-1 rounded-full text-gray-700">
-                                                <Clock size={13} className="text-gray-500" />
-                                                Valid until {new Date(campaign.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                                            </span>
-                                        )}
-                                    </div>
                                 </div>
                             </div>
 
@@ -657,9 +627,7 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                             <div className="pb-10">
                                 <div className="flex items-center justify-between gap-3 mb-4 px-1">
                                     <h3 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-gray-800">
-                                        {Number(campaign?.discountPercentage) > 0
-                                            ? 'Select Treatment to Activate Discount'
-                                            : 'Select Treatment'}
+                                        Select Treatment
                                     </h3>
                                     <div className="shrink-0 whitespace-nowrap inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50/90 border border-blue-200/80 text-[#1d4ed8] text-[11px] font-bold shadow-xs">
                                         <span className="w-1.5 h-1.5 rounded-full bg-[#2563eb]"></span>
@@ -702,10 +670,10 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                                 <div
                                                     key={`${treatment.id}-${duration}`}
                                                     onClick={handleBookTreatment}
-                                                    className="relative w-full flex flex-row rounded-[24px] overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-200/90 bg-[#FAFAFA] min-h-[175px] md:min-h-[195px] cursor-pointer group active:scale-[0.99]"
+                                                    className="relative w-full flex flex-row rounded-[24px] overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-200/90 bg-[#FAFAFA] min-h-[155px] md:min-h-[175px] cursor-pointer group active:scale-[0.99]"
                                                 >
                                                     {/* Left Section (Blue) */}
-                                                    <div className="flex-1 bg-[#3b82f6] text-white p-4 sm:p-5 md:p-6 flex flex-col justify-between relative z-10">
+                                                    <div className="flex-1 bg-[#3b82f6] text-white p-4 sm:p-5 flex flex-col justify-between relative z-10">
                                                         <div>
                                                             {/* Badges Row */}
                                                             <div className="flex items-center gap-2 mb-2 flex-wrap">
@@ -715,16 +683,9 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                                             </div>
 
                                                             {/* Treatment Title */}
-                                                            <h4 className="text-base sm:text-lg md:text-xl font-bold leading-tight mb-1.5 text-white tracking-tight">
+                                                            <h4 className="text-base sm:text-lg md:text-xl font-bold leading-tight text-white tracking-tight">
                                                                 {treatment.title}
                                                             </h4>
-
-                                                            {/* Treatment Description */}
-                                                            {treatment.desc && (
-                                                                <p className="text-white/80 text-xs md:text-sm line-clamp-2 leading-relaxed max-w-[95%] font-light">
-                                                                    {treatment.desc}
-                                                                </p>
-                                                            )}
                                                         </div>
 
                                                         {/* Bottom Row */}
@@ -1425,7 +1386,7 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                 ) : (
                                     <div className="py-6 px-4 text-center space-y-3">
                                         <div className="w-12 h-12 rounded-full bg-stone-100 flex items-center justify-center mx-auto text-primary">
-                                            <Sparkles className="w-5 h-5 text-primary/80" />
+                                            <Check className="w-5 h-5 text-primary/80" />
                                         </div>
                                         <h4 className="font-serif text-base font-semibold text-primary">
                                             Complete Luxury Spa Ritual

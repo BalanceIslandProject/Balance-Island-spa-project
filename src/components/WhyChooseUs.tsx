@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Sparkles, Droplets, Home, Clock, HeartHandshake, ShieldCheck } from 'lucide-react';
+import { Award, Droplets, Home, Clock, HeartHandshake, ShieldCheck } from 'lucide-react';
 import { useSpa } from '@/context/SpaContext';
 
 export default function WhyChooseUs() {
@@ -10,7 +10,7 @@ export default function WhyChooseUs() {
   const brandLabel = siteBrandFilter === 'therapick' ? 'Therapick Standard' : siteBrandFilter === 'bali' ? 'Our Standard' : 'Elexoir Standard';
   const reasons = [
     { 
-      icon: Sparkles,
+      icon: Award,
       title: "Certified Therapists", 
       desc: "Highly trained professionals with years of luxury wellness experience." 
     },

@@ -72,10 +72,10 @@ function ExploreContent() {
                             <div className="flex-1 bg-white rounded-full shadow-[0_2px_12px_rgb(0,0,0,0.06)] border border-gray-200/80 h-12 flex items-center px-1.5 hover:shadow-[0_4px_16px_rgb(0,0,0,0.09)] focus-within:border-gray-900/40 focus-within:shadow-[0_4px_18px_rgb(0,0,0,0.1)] transition-all">
                                 <Link 
                                     href="/" 
-                                    className="w-9 h-9 hover:bg-gray-100 rounded-full transition-colors flex items-center justify-center shrink-0 text-gray-700 hover:text-black"
+                                    className="w-8 h-8 rounded-full bg-black hover:bg-neutral-800 text-white transition-all flex items-center justify-center shrink-0 shadow-xs active:scale-95 ml-1"
                                     aria-label="Back to home"
                                 >
-                                    <ArrowLeft className="w-4 h-4" strokeWidth={2.5} />
+                                    <ArrowLeft className="w-4 h-4 text-white" strokeWidth={2.5} />
                                 </Link>
                                 <div className="flex items-center flex-1 ml-2 mr-2 min-w-0">
                                     <Search className="w-4 h-4 text-gray-400 shrink-0 mr-2" />
@@ -152,8 +152,8 @@ function ExploreContent() {
                                     onClick={() => setActiveCategory(cat.id)}
                                     className={`flex items-center justify-center px-4 py-2 rounded-[20px] whitespace-nowrap transition-all duration-300 shrink-0 ${
                                         isActive 
-                                            ? 'bg-[#1D1D1F] text-white border border-black shadow-[0_4px_16px_rgba(0,0,0,0.18)] scale-[1.02]' 
-                                            : 'bg-white text-gray-700 border border-gray-200/90 shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:border-gray-400 hover:shadow-md hover:bg-gray-50 active:scale-95'
+                                            ? 'bg-[#1D1D1F] text-white border border-black' 
+                                            : 'bg-white text-gray-700 border border-gray-200/90 hover:border-gray-400 hover:bg-gray-50 active:scale-95'
                                     }`}
                                 >
                                     <span className={`text-[13px] ${isActive ? 'font-bold' : 'font-medium'}`}>{cat.label}</span>

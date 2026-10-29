@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Star, Clock, ArrowRight, Wind, Activity, Zap, Moon, Droplets, Heart, Flower2, Waves, Feather, Sparkles } from 'lucide-react';
+import { X, Star, Clock, ArrowRight, Wind, Activity, Zap, Moon, Droplets, Heart, Flower2, Waves, Feather } from 'lucide-react';
 import { ServiceItem } from '@/lib/types';
 import { parseServiceOptions } from '@/lib/constants';
 
@@ -77,7 +77,7 @@ const ServiceDetailModal: React.FC<Props> = ({ service, onClose, onAdd }) => {
         if (t.includes('balance') || t.includes('spirit') || t.includes('clarity') || t.includes('mind') || t.includes('focus') || t.includes('headache')) {
             return <Wind {...iconProps} className="text-accent" />;
         }
-        return <Sparkles {...iconProps} className="text-accent" />;
+        return <Flower2 {...iconProps} className="text-accent" />;
     };
 
     return (
