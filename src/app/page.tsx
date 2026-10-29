@@ -553,20 +553,24 @@ export default function Home() {
                                     >
                                         <div className="relative w-full flex flex-row rounded-[24px] overflow-hidden shadow-sm group transition-colors duration-300 border border-gray-200 bg-[#FAFAFA] min-h-[160px] md:min-h-[180px]">
                                             {/* Left Section (Blue) */}
-                                            <div className="flex-1 bg-[#3b82f6] text-white p-5 md:p-6 flex flex-col justify-between relative z-10">
+                                            <div className="flex-1 bg-[#3b82f6] text-white p-4 sm:p-5 md:p-6 flex flex-col justify-between relative z-10">
                                                 <div>
-                                                    <div className="inline-flex items-center text-[10px] md:text-xs font-bold tracking-wide uppercase mb-2 text-white/90">
+                                                    <div className="inline-flex items-center text-[10px] md:text-xs font-bold tracking-wide uppercase mb-1.5 text-white/90">
                                                         {camp.label || `${camp.discountPercentage}% OFF`}
                                                     </div>
-                                                    <h3 className="text-xl md:text-2xl font-bold leading-tight">
+                                                    <h3 className="text-xl md:text-2xl font-bold leading-tight mb-1.5">
                                                         {camp.title}
                                                     </h3>
+                                                    {camp.description && (
+                                                        <p className="text-white/80 text-xs md:text-sm line-clamp-2 leading-relaxed max-w-[95%] font-light">
+                                                            {camp.description}
+                                                        </p>
+                                                    )}
                                                 </div>
-                                                <div className="mt-4 flex items-center gap-2">
+                                                <div className="mt-3 flex items-center">
                                                     <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white transition-transform group-hover:scale-105">
                                                         <ArrowRight size={14} />
                                                     </div>
-                                                    <span className="text-xs font-semibold text-white/90">View Offers</span>
                                                 </div>
                                             </div>
                                             
@@ -582,20 +586,38 @@ export default function Home() {
                                                 <div className="absolute bottom-0 -translate-x-1/2 translate-y-1/2 w-6 h-6 md:w-8 md:h-8 bg-[#FAFAFA] rounded-full border border-gray-200 shadow-inner"></div>
                                             </div>
 
-                                            {/* Right Section (White Ticket Stub) */}
-                                            <div className="w-[100px] md:w-[130px] bg-white flex flex-col items-center justify-center py-4 px-2.5 shrink-0 text-center relative z-10">
-                                                <div className="flex flex-col items-center justify-center gap-1.5">
-                                                    <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">
-                                                        Discount
-                                                    </span>
-                                                    <span className="text-xl md:text-2xl font-black text-[#2563eb] leading-tight">
-                                                        -{camp.discountPercentage}%
-                                                    </span>
-                                                    {camp.endDate && (
-                                                        <span className="text-[10px] font-medium text-gray-500 mt-1">
-                                                            Until {new Date(camp.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                                                        </span>
-                                                    )}
+                                            {/* Right Section (White Ticket Stub with Date Details) */}
+                                            <div className="w-[90px] md:w-[120px] bg-white flex flex-col items-center justify-center py-3 px-2 shrink-0 text-center relative z-10">
+                                                <div className="flex flex-col items-center justify-center gap-2">
+                                                    {/* Start Date */}
+                                                    <div className="flex flex-col items-center">
+                                                        <div className="text-[8px] md:text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Start</div>
+                                                        {camp.startDate ? (
+                                                            <>
+                                                                <div className="text-[10px] md:text-xs font-bold text-gray-800 uppercase leading-none">{new Date(camp.startDate).toLocaleDateString('en-US', { month: 'short' })}</div>
+                                                                <div className="text-lg md:text-xl font-black text-black leading-none my-0.5">{new Date(camp.startDate).getDate()}</div>
+                                                                <div className="text-[9px] md:text-[10px] font-bold text-gray-500 uppercase leading-none">{new Date(camp.startDate).getFullYear()}</div>
+                                                            </>
+                                                        ) : (
+                                                            <div className="text-xs md:text-sm font-bold text-black uppercase">NOW</div>
+                                                        )}
+                                                    </div>
+                                                    
+                                                    <div className="w-6 h-px bg-gray-200"></div>
+
+                                                    {/* End Date */}
+                                                    <div className="flex flex-col items-center">
+                                                        <div className="text-[8px] md:text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">End</div>
+                                                        {camp.endDate ? (
+                                                            <>
+                                                                <div className="text-[10px] md:text-xs font-bold text-gray-800 uppercase leading-none">{new Date(camp.endDate).toLocaleDateString('en-US', { month: 'short' })}</div>
+                                                                <div className="text-lg md:text-xl font-black text-black leading-none my-0.5">{new Date(camp.endDate).getDate()}</div>
+                                                                <div className="text-[9px] md:text-[10px] font-bold text-gray-500 uppercase leading-none">{new Date(camp.endDate).getFullYear()}</div>
+                                                            </>
+                                                        ) : (
+                                                            <div className="text-[10px] md:text-xs font-bold text-black uppercase">{camp.duration ? camp.duration.replace('_', ' ') : 'OCT'}</div>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -1022,32 +1044,32 @@ export default function Home() {
                                                         <div
                                                             key={treatment.id}
                                                             onClick={handleBookTreatment}
-                                                            className="relative w-full flex flex-row rounded-[24px] overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-200/90 bg-[#FAFAFA] min-h-[155px] md:min-h-[175px] cursor-pointer group active:scale-[0.99]"
+                                                            className="relative w-full flex flex-row rounded-[24px] overflow-hidden shadow-xs hover:shadow-md transition-all duration-300 border border-gray-200/90 bg-white min-h-[155px] md:min-h-[175px] cursor-pointer group active:scale-[0.99]"
                                                         >
-                                                            {/* Left Section (Blue) */}
-                                                            <div className="flex-1 bg-[#3b82f6] text-white p-4 sm:p-5 flex flex-col justify-between relative z-10">
+                                                            {/* Left Section (White) */}
+                                                            <div className="flex-1 bg-white text-gray-900 p-4 sm:p-5 flex flex-col justify-between relative z-10">
                                                                 <div>
                                                                     {/* Badges Row */}
                                                                     <div className="flex items-center gap-2 mb-2 flex-wrap">
-                                                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-black/35 backdrop-blur-sm text-white text-[9px] md:text-[10px] font-bold tracking-widest uppercase border border-white/15">
+                                                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-700 text-[9px] md:text-[10px] font-bold tracking-widest uppercase border border-gray-200/80">
                                                                             {treatment.category}
                                                                         </span>
                                                                     </div>
 
                                                                     {/* Treatment Title */}
-                                                                    <h4 className="text-base sm:text-lg md:text-xl font-bold leading-tight text-white tracking-tight">
+                                                                    <h4 className="text-base sm:text-lg md:text-xl font-bold leading-tight text-gray-900 tracking-tight">
                                                                         {treatment.title}
                                                                     </h4>
                                                                 </div>
 
                                                                 {/* Bottom Row */}
-                                                                <div className="mt-3 pt-3 border-t border-white/20 flex items-center gap-2">
+                                                                <div className="mt-3 pt-3 border-t border-gray-100 flex items-center gap-2">
                                                                     {/* Duration Dropdown Pill */}
                                                                     <div
                                                                         className="relative inline-flex items-center"
                                                                         onClick={(e) => e.stopPropagation()}
                                                                     >
-                                                                        <Clock className="w-3.5 h-3.5 text-white/90 absolute left-2.5 pointer-events-none" />
+                                                                        <Clock className="w-3.5 h-3.5 text-gray-500 absolute left-2.5 pointer-events-none" />
                                                                         <select
                                                                             value={activeOption.duration}
                                                                             onChange={(e) => {
@@ -1056,7 +1078,7 @@ export default function Home() {
                                                                                     [treatment.id]: e.target.value
                                                                                 }));
                                                                             }}
-                                                                            className="appearance-none bg-white/20 hover:bg-white/30 text-[11px] font-bold text-white uppercase tracking-wider pl-7 pr-6 py-1.5 rounded-xl border border-white/30 cursor-pointer focus:outline-none backdrop-blur-sm transition-all"
+                                                                            className="appearance-none bg-gray-50 hover:bg-gray-100 text-[11px] font-bold text-gray-800 uppercase tracking-wider pl-7 pr-6 py-1.5 rounded-xl border border-gray-200/90 cursor-pointer focus:outline-none transition-all"
                                                                         >
                                                                             {allowedOptions.map(opt => (
                                                                                 <option key={opt.duration} value={opt.duration} className="text-black bg-white font-semibold">
@@ -1064,12 +1086,12 @@ export default function Home() {
                                                                                 </option>
                                                                             ))}
                                                                         </select>
-                                                                        <ChevronDown size={12} className="absolute right-2 pointer-events-none text-white/80" />
+                                                                        <ChevronDown size={12} className="absolute right-2 pointer-events-none text-gray-500" />
                                                                     </div>
                                                                 </div>
                                                             </div>
 
-                                                            {/* Divider with Cutouts */}
+                                                            {/* Divider with Cutouts - Curves Kept */}
                                                             <div className="relative w-0 flex flex-col justify-between items-center z-20">
                                                                 {/* Top Cutout */}
                                                                 <div className="absolute top-0 -translate-x-1/2 -translate-y-1/2 w-6 h-6 md:w-8 md:h-8 bg-[#F8F9FA] rounded-full border border-gray-200 shadow-inner"></div>
@@ -1082,7 +1104,7 @@ export default function Home() {
                                                             </div>
 
                                                             {/* Right Section (White Ticket Stub) */}
-                                                            <div className="w-[110px] sm:w-[120px] md:w-[135px] bg-white flex flex-col items-center justify-between py-4 px-2.5 shrink-0 text-center relative z-10">
+                                                            <div className="w-[110px] sm:w-[120px] md:w-[135px] bg-[#FAFAFA] flex flex-col items-center justify-between py-4 px-2.5 shrink-0 text-center relative z-10 border-l border-gray-100/60">
                                                                 <div className="flex flex-col items-center justify-center w-full my-auto">
                                                                     {/* Discount Section */}
                                                                     {hasSpaDiscount ? (
