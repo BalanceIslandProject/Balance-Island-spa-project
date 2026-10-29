@@ -51,10 +51,11 @@ export type PricingPromo = {
  */
 export function calculateCartTotal(
     items: PricingCartItem[],
-    appliedPromo?: PricingPromo
-): { subtotal: number; discount: number; total: number } {
+    appliedPromo?: PricingPromo,
+    extraFee: number = 0
+): { subtotal: number; discount: number; total: number; extraFee: number } {
     if (!items || items.length === 0) {
-        return { subtotal: 0, discount: 0, total: 0 };
+        return { subtotal: 0, discount: 0, total: extraFee, extraFee };
     }
 
     const subtotal = items.reduce((acc, item) => {
@@ -74,8 +75,8 @@ export function calculateCartTotal(
         }
     }
 
-    const total = Math.max(0, subtotal - discount);
-    return { subtotal, discount, total };
+    const total = Math.max(0, subtotal - discount) + extraFee;
+    return { subtotal, discount, total, extraFee };
 }
 
 /**

@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, Search, Heart, Cloud, Sparkles, Droplet, User, Flame, Clock, ArrowRight, X, ShoppingBag, Plus, Minus, MessageCircle, ChevronLeft, ChevronDown, Bitcoin, CheckCircle2, Copy, Calendar, MapPin, Tag, DoorOpen, Trash2 } from 'lucide-react';
+import { Bell, Search, Heart, Cloud, Sparkles, Droplet, User, Flame, Clock, ArrowRight, X, ShoppingBag, Plus, Minus, MessageCircle, ChevronLeft, ChevronDown, Bitcoin, CheckCircle2, Copy, Calendar, MapPin, Tag, DoorOpen, Trash2, Info } from 'lucide-react';
 import Link from 'next/link';
 import { saveBookingToSupabase } from '@/lib/bookingUtils';
 import { calculateCartTotal, getItemMultiplier } from '@/lib/pricingUtils';
@@ -62,8 +62,36 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
     const [isReviewingBooking, setIsReviewingBooking] = useState(false);
     const [detailsModalTreatment, setDetailsModalTreatment] = useState<any>(null);
     const [isProcessing, setIsProcessing] = useState(false);
-    const [massageTableSetup, setMassageTableSetup] = useState<'table' | 'bed'>('table');
+    const [massageTableCount, setMassageTableCount] = useState<number>(0);
+    const [showTableFeeInfo, setShowTableFeeInfo] = useState<boolean>(false);
+    const [availableAddons, setAvailableAddons] = useState<any[]>([]);
     const [therapickStep, setTherapickStep] = useState<'selection' | 'details' | 'review'>('selection');
+
+    // Load custom addons configured from Therapick Admin Dashboard
+    useEffect(() => {
+        const loadCustomAddons = () => {
+            try {
+                const raw = localStorage.getItem('therapick_custom_addons');
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    if (Array.isArray(parsed)) {
+                        setAvailableAddons(parsed.filter((a: any) => a.is_active));
+                        return;
+                    }
+                }
+            } catch (e) {
+                console.error('Failed to load custom addons', e);
+            }
+            setAvailableAddons([]);
+        };
+        loadCustomAddons();
+        window.addEventListener('storage', loadCustomAddons);
+        window.addEventListener('therapick_addons_updated', loadCustomAddons);
+        return () => {
+            window.removeEventListener('storage', loadCustomAddons);
+            window.removeEventListener('therapick_addons_updated', loadCustomAddons);
+        };
+    }, []);
     
     // Initialize date and time
     const getInitialDateTime = () => {
@@ -120,7 +148,8 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
         setIsProcessing(true);
         
         try {
-            const pricing = calculateCartTotal(cartItems, appliedPromo || undefined);
+            const tableFee = isTherapick ? (massageTableCount * 100000) : 0;
+            const pricing = calculateCartTotal(cartItems, appliedPromo || undefined, tableFee);
             const totalPrice = pricing.total;
             const waNumber = '6285174119423';
             
@@ -132,9 +161,9 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
 
             let baseMessage = '';
             if (isTherapick) {
-                const tableChoice = massageTableSetup === 'table' 
-                    ? 'Bring Professional Massage Table' 
-                    : 'Villa Bed / Floor Mat Setup';
+                const tableChoice = massageTableCount > 0 
+                    ? `${massageTableCount} Portable Table${massageTableCount > 1 ? 's' : ''} (+IDR ${(massageTableCount * 100000).toLocaleString('en-US')})` 
+                    : 'Villa Bed / Floor Mat Setup (IDR 0)';
 
                 const treatmentsList = cartItems.map((item, idx) => {
                     const isCouple = ['couple', 'honeymoon'].some(k => item.title.toLowerCase().includes(k));
@@ -927,6 +956,35 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                                                 <p className="text-xs text-text-muted flex items-center gap-1 mt-1 mb-1">
                                                                     <Clock className="w-3 h-3" /> {item.duration} Mins
                                                                 </p>
+
+                                                                {/* Selected Add-ons displayed directly below massage title */}
+                                                                {item.addons && item.addons.length > 0 && (
+                                                                    <div className="flex flex-wrap gap-1.5 mt-1.5">
+                                                                        {item.addons.map((addon: any) => (
+                                                                            <span 
+                                                                                key={addon.id}
+                                                                                className="inline-flex items-center gap-1 bg-stone-100 text-stone-800 border border-stone-200 text-[10px] font-medium px-2 py-0.5 rounded-full"
+                                                                            >
+                                                                                <span>+ {addon.title} (+IDR {Number(addon.price).toLocaleString('en-US')})</span>
+                                                                                <button
+                                                                                    type="button"
+                                                                                    onClick={() => {
+                                                                                        setCartItems(cartItems.map(i => {
+                                                                                            if (i.id !== item.id) return i;
+                                                                                            return {
+                                                                                                ...i,
+                                                                                                addons: (i.addons || []).filter((a: any) => a.id !== addon.id)
+                                                                                            };
+                                                                                        }));
+                                                                                    }}
+                                                                                    className="hover:text-red-500 transition-colors ml-0.5"
+                                                                                >
+                                                                                    <X className="w-2.5 h-2.5" />
+                                                                                </button>
+                                                                            </span>
+                                                                        ))}
+                                                                    </div>
+                                                                )}
                                                             </div>
                                                             <span className="font-serif text-primary font-medium text-right flex flex-col shrink-0">
                                                                 IDR {singlePrice.toLocaleString('en-US')}
@@ -936,9 +994,18 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                                             </span>
                                                         </div>
 
-                                                        {/* Guests Selector */}
-                                                        <div className="flex items-center justify-between pt-2.5 pb-2.5 border-t border-border/50">
-                                                            <span className="text-[10px] font-bold uppercase tracking-widest text-primary/80">Guests</span>
+                                                        {/* Guests Selector & Add-on Button on the same row */}
+                                                        <div className="flex items-center justify-between pt-2.5 pb-1 border-t border-border/50">
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="text-[10px] font-bold uppercase tracking-widest text-primary/80">Guests</span>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => setOpenAddonItemId(openAddonItemId === item.id ? null : item.id)}
+                                                                    className="text-[10px] font-bold uppercase tracking-wider text-primary border border-border/80 hover:border-primary px-2.5 py-1 rounded-lg transition-all flex items-center gap-1 bg-stone-50 hover:bg-stone-100 shadow-2xs"
+                                                                >
+                                                                    <Plus className="w-3 h-3" /> {openAddonItemId === item.id ? 'Close' : 'Add-on'}
+                                                                </button>
+                                                            </div>
                                                             <div className="flex items-center gap-3">
                                                                 <button
                                                                     type="button"
@@ -956,73 +1023,35 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                                                     <Trash2 className="w-4 h-4" />
                                                                 </button>
                                                                 <div className="w-px h-5 bg-border mx-1"></div>
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => setCartItems(cartItems.map(i => {
-                                                                        if (i.id !== item.id) return i;
-                                                                        const isCouple = ['couple', 'honeymoon'].some(k => i.title.toLowerCase().includes(k));
-                                                                        const step = isCouple ? 2 : 1;
-                                                                        return { ...i, guests: Math.max(step, i.guests - step) };
-                                                                    }))}
-                                                                    className="w-8 h-8 rounded-full bg-white border border-border flex items-center justify-center text-primary hover:bg-border transition-colors shadow-sm"
-                                                                >
-                                                                    <Minus className="w-3 h-3" />
-                                                                </button>
-                                                                <span className="font-bold text-sm text-primary w-4 text-center">{item.guests}</span>
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => setCartItems(cartItems.map(i => {
-                                                                        if (i.id !== item.id) return i;
-                                                                        const isCouple = ['couple', 'honeymoon'].some(k => i.title.toLowerCase().includes(k));
-                                                                        const step = isCouple ? 2 : 1;
-                                                                        return { ...i, guests: i.guests + step };
-                                                                    }))}
-                                                                    className="w-8 h-8 rounded-full bg-white border border-border flex items-center justify-center text-primary hover:bg-border transition-colors shadow-sm"
-                                                                >
-                                                                    <Plus className="w-3 h-3" />
-                                                                </button>
-                                                            </div>
-                                                        </div>
-
-                                                        {/* Add-on button without any other title */}
-                                                        <div className="pt-2.5 border-t border-border/50 flex justify-end">
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => setOpenAddonItemId(openAddonItemId === item.id ? null : item.id)}
-                                                                className="text-[11px] font-bold uppercase tracking-wider text-primary border border-border/80 hover:border-primary px-3.5 py-1.5 rounded-xl transition-all flex items-center gap-1.5 bg-stone-50 hover:bg-stone-100"
-                                                            >
-                                                                <Plus className="w-3.5 h-3.5" /> {openAddonItemId === item.id ? 'Close' : 'Add-on'}
-                                                            </button>
-                                                        </div>
-
-                                                        {/* Selected Add-ons display */}
-                                                        {item.addons && item.addons.length > 0 && (
-                                                            <div className="flex flex-wrap gap-1.5 mt-2.5">
-                                                                {item.addons.map((addon: any) => (
-                                                                    <span 
-                                                                        key={addon.id}
-                                                                        className="inline-flex items-center gap-1 bg-stone-100 text-stone-800 border border-stone-200 text-[10px] font-medium px-2.5 py-1 rounded-full"
+                                                                <div className="flex items-center gap-2">
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => setCartItems(cartItems.map(i => {
+                                                                            if (i.id !== item.id) return i;
+                                                                            const isCouple = ['couple', 'honeymoon'].some(k => i.title.toLowerCase().includes(k));
+                                                                            const step = isCouple ? 2 : 1;
+                                                                            return { ...i, guests: Math.max(step, i.guests - step) };
+                                                                        }))}
+                                                                        className="w-8 h-8 rounded-full bg-white border border-border flex items-center justify-center text-primary hover:bg-border transition-colors shadow-sm"
                                                                     >
-                                                                        <span>+ {addon.title} (IDR {addon.price.toLocaleString('en-US')})</span>
-                                                                        <button
-                                                                            type="button"
-                                                                            onClick={() => {
-                                                                                setCartItems(cartItems.map(i => {
-                                                                                    if (i.id !== item.id) return i;
-                                                                                    return {
-                                                                                        ...i,
-                                                                                        addons: (i.addons || []).filter((a: any) => a.id !== addon.id)
-                                                                                    };
-                                                                                }));
-                                                                            }}
-                                                                            className="hover:text-red-500 transition-colors ml-0.5"
-                                                                        >
-                                                                            <X className="w-3 h-3" />
-                                                                        </button>
-                                                                    </span>
-                                                                ))}
+                                                                        <Minus className="w-3 h-3" />
+                                                                    </button>
+                                                                    <span className="font-bold text-sm text-primary w-4 text-center">{item.guests}</span>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => setCartItems(cartItems.map(i => {
+                                                                            if (i.id !== item.id) return i;
+                                                                            const isCouple = ['couple', 'honeymoon'].some(k => i.title.toLowerCase().includes(k));
+                                                                            const step = isCouple ? 2 : 1;
+                                                                            return { ...i, guests: i.guests + step };
+                                                                        }))}
+                                                                        className="w-8 h-8 rounded-full bg-white border border-border flex items-center justify-center text-primary hover:bg-border transition-colors shadow-sm"
+                                                                    >
+                                                                        <Plus className="w-3 h-3" />
+                                                                    </button>
+                                                                </div>
                                                             </div>
-                                                        )}
+                                                        </div>
 
                                                         {/* Expandable Add-ons Selection */}
                                                         <AnimatePresence>
@@ -1036,40 +1065,46 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                                                     <div className="text-[10px] font-bold uppercase tracking-wider text-primary/70 mb-1">
                                                                         Select Add-ons for this treatment
                                                                     </div>
-                                                                    {SPA_ADDONS.map((addon) => {
-                                                                        const isAdded = (item.addons || []).some((a: any) => a.id === addon.id);
-                                                                        return (
-                                                                            <div 
-                                                                                key={addon.id} 
-                                                                                className="flex items-center justify-between p-2.5 rounded-lg bg-white border border-border/50 text-xs"
-                                                                            >
-                                                                                <div className="pr-2">
-                                                                                    <div className="font-semibold text-primary">{addon.title}</div>
-                                                                                    <div className="text-[10px] text-text-muted">{addon.duration} • IDR {addon.price.toLocaleString('en-US')}</div>
-                                                                                </div>
-                                                                                <button
-                                                                                    type="button"
-                                                                                    onClick={() => {
-                                                                                        setCartItems(cartItems.map(i => {
-                                                                                            if (i.id !== item.id) return i;
-                                                                                            const existing = i.addons || [];
-                                                                                            const nextAddons = isAdded 
-                                                                                                ? existing.filter((a: any) => a.id !== addon.id)
-                                                                                                : [...existing, addon];
-                                                                                            return { ...i, addons: nextAddons };
-                                                                                        }));
-                                                                                    }}
-                                                                                    className={`px-3 py-1 rounded-md text-[11px] font-bold transition-all ${
-                                                                                        isAdded 
-                                                                                            ? 'bg-red-50 text-red-600 border border-red-200 hover:bg-red-100'
-                                                                                            : 'bg-primary text-white hover:bg-primary/90'
-                                                                                    }`}
+                                                                    {availableAddons.length === 0 ? (
+                                                                        <div className="text-center py-3 text-xs text-text-muted">
+                                                                            No add-on options configured yet. Add them in the Therapick Admin Dashboard.
+                                                                        </div>
+                                                                    ) : (
+                                                                        availableAddons.map((addon) => {
+                                                                            const isAdded = (item.addons || []).some((a: any) => a.id === addon.id);
+                                                                            return (
+                                                                                <div 
+                                                                                    key={addon.id} 
+                                                                                    className="flex items-center justify-between p-2.5 rounded-lg bg-white border border-border/50 text-xs"
                                                                                 >
-                                                                                    {isAdded ? 'Remove' : '+ Add'}
-                                                                                </button>
-                                                                            </div>
-                                                                        );
-                                                                    })}
+                                                                                    <div className="pr-2">
+                                                                                        <div className="font-semibold text-primary">{addon.title}</div>
+                                                                                        <div className="text-[10px] text-text-muted">{addon.duration} • IDR {Number(addon.price).toLocaleString('en-US')}</div>
+                                                                                    </div>
+                                                                                    <button
+                                                                                        type="button"
+                                                                                        onClick={() => {
+                                                                                            setCartItems(cartItems.map(i => {
+                                                                                                if (i.id !== item.id) return i;
+                                                                                                const existing = i.addons || [];
+                                                                                                const nextAddons = isAdded 
+                                                                                                    ? existing.filter((a: any) => a.id !== addon.id)
+                                                                                                    : [...existing, addon];
+                                                                                                return { ...i, addons: nextAddons };
+                                                                                            }));
+                                                                                        }}
+                                                                                        className={`px-3 py-1 rounded-md text-[11px] font-bold transition-all ${
+                                                                                            isAdded 
+                                                                                                ? 'bg-red-50 text-red-600 border border-red-200 hover:bg-red-100'
+                                                                                                : 'bg-primary text-white hover:bg-primary/90'
+                                                                                        }`}
+                                                                                    >
+                                                                                        {isAdded ? 'Remove' : '+ Add'}
+                                                                                    </button>
+                                                                                </div>
+                                                                            );
+                                                                        })
+                                                                    )}
                                                                 </motion.div>
                                                             )}
                                                         </AnimatePresence>
@@ -1082,41 +1117,136 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                             <button
                                                 type="button"
                                                 onClick={() => setIsSelectingMore(true)}
-                                                className="w-full bg-white text-primary border border-border/80 px-6 py-3.5 rounded-xl text-xs font-bold shadow-sm hover:bg-white transition-colors mb-5 tracking-widest uppercase"
+                                                className="w-full bg-white text-primary border border-border/80 px-6 py-3.5 rounded-xl text-xs font-bold shadow-sm hover:bg-white transition-colors mb-4 tracking-widest uppercase"
                                             >
                                                 + Add Another Treatment
                                             </button>
 
-                                            {/* Massage Table Setup Positioned Below Add Another Treatment */}
-                                            <div className="bg-white border border-border/80 rounded-2xl p-4 sm:p-5 shadow-xs mb-5">
-                                                <h4 className="text-xs font-bold text-primary uppercase tracking-wider mb-1">Massage Table Setup</h4>
-                                                <p className="text-[11px] text-text-muted mb-3">Select your preferred massage setup at your villa or hotel</p>
-                                                <div className="grid grid-cols-2 gap-2.5">
+                                            {/* Massage Table Setup with - and + counter & Professional Explanation */}
+                                            <div className="bg-white border border-border/80 rounded-2xl p-4 sm:p-5 shadow-xs mb-4">
+                                                <div className="flex items-start justify-between mb-3">
+                                                    <div>
+                                                        <h4 className="text-xs font-bold text-primary uppercase tracking-wider">Massage Table Setup</h4>
+                                                        <p className="text-[11px] text-text-muted mt-0.5">
+                                                            Professional portable massage table brought to your villa
+                                                        </p>
+                                                    </div>
                                                     <button
                                                         type="button"
-                                                        onClick={() => setMassageTableSetup('table')}
-                                                        className={`py-3 px-3 rounded-xl text-xs font-bold border transition-all text-center flex flex-col items-center justify-center gap-1 ${
-                                                            massageTableSetup === 'table'
-                                                                ? 'bg-black text-white border-black shadow-sm'
-                                                                : 'bg-stone-50/80 text-primary border-border/80 hover:bg-stone-100'
-                                                        }`}
+                                                        onClick={() => setShowTableFeeInfo(!showTableFeeInfo)}
+                                                        className="text-[10px] font-semibold text-primary/70 hover:text-primary transition-colors flex items-center gap-1 bg-stone-100 hover:bg-stone-200/80 px-2.5 py-1 rounded-full shrink-0"
+                                                        title="Read why there is an additional fee"
                                                     >
-                                                        <span>Bring Massage Table</span>
-                                                        <span className={`text-[10px] font-normal ${massageTableSetup === 'table' ? 'text-white/80' : 'text-text-muted'}`}>Therapist brings portable table</span>
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setMassageTableSetup('bed')}
-                                                        className={`py-3 px-3 rounded-xl text-xs font-bold border transition-all text-center flex flex-col items-center justify-center gap-1 ${
-                                                            massageTableSetup === 'bed'
-                                                                ? 'bg-black text-white border-black shadow-sm'
-                                                                : 'bg-stone-50/80 text-primary border-border/80 hover:bg-stone-100'
-                                                        }`}
-                                                    >
-                                                        <span>Villa Bed / Floor Mat</span>
-                                                        <span className={`text-[10px] font-normal ${massageTableSetup === 'bed' ? 'text-white/80' : 'text-text-muted'}`}>Setup on villa bed or floor mattress</span>
+                                                        <Info className="w-3 h-3 text-primary/70" />
+                                                        <span>Why a fee?</span>
                                                     </button>
                                                 </div>
+
+                                                {/* Notification Description explaining the fee */}
+                                                <AnimatePresence>
+                                                    {showTableFeeInfo && (
+                                                        <motion.div
+                                                            initial={{ opacity: 0, height: 0 }}
+                                                            animate={{ opacity: 1, height: 'auto' }}
+                                                            exit={{ opacity: 0, height: 0 }}
+                                                            className="mb-3.5 bg-stone-50 border border-border/70 rounded-xl p-3.5 text-xs text-text-muted leading-relaxed"
+                                                        >
+                                                            <div className="flex items-start justify-between gap-2 mb-1.5">
+                                                                <span className="font-bold text-primary text-[11px] uppercase tracking-wider">
+                                                                    Portable Equipment & Scooter Logistics
+                                                                </span>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => setShowTableFeeInfo(false)}
+                                                                    className="text-text-muted hover:text-primary"
+                                                                >
+                                                                    <X className="w-3.5 h-3.5" />
+                                                                </button>
+                                                            </div>
+                                                            <p className="text-[11px] text-stone-600 leading-normal">
+                                                                Our therapists bring full-sized, professional spa massage tables, clean sanitized linens, and specialized equipment directly to your villa. Because our therapists travel independently across Bali by motor scooter carrying heavy portable equipment through traffic and villa pathways, this modest surcharge (IDR 100,000 per person) directly supports their dedicated transport logistics and careful setup for your comfort.
+                                                            </p>
+                                                            <p className="text-[10px] text-stone-500 mt-1.5 italic">
+                                                                If you prefer no additional fee, simply leave this at 0 to enjoy your treatment comfortably on your villa bed or mattress.
+                                                            </p>
+                                                        </motion.div>
+                                                    )}
+                                                </AnimatePresence>
+
+                                                {/* Table Counter Row */}
+                                                <div className="flex items-center justify-between p-3.5 rounded-xl bg-stone-50/70 border border-border/60">
+                                                    <div>
+                                                        <div className="font-bold text-xs text-primary">Bring Portable Table</div>
+                                                        <div className="text-[11px] text-text-muted mt-0.5">
+                                                            {massageTableCount > 0 
+                                                                ? `${massageTableCount} Table${massageTableCount > 1 ? 's' : ''} (+IDR ${(massageTableCount * 100000).toLocaleString('en-US')})`
+                                                                : '0 Tables (Using Villa Bed / Floor Mat • IDR 0)'
+                                                            }
+                                                        </div>
+                                                        <div className="text-[10px] text-stone-400 font-medium">
+                                                            IDR 100,000 per person / table
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="flex items-center gap-2.5">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setMassageTableCount(Math.max(0, massageTableCount - 1))}
+                                                            disabled={massageTableCount <= 0}
+                                                            className="w-8 h-8 rounded-full bg-white border border-border/80 flex items-center justify-center text-primary hover:bg-stone-100 disabled:opacity-40 transition-colors shadow-2xs"
+                                                        >
+                                                            <Minus className="w-3.5 h-3.5" />
+                                                        </button>
+                                                        <span className="font-bold text-sm text-primary w-5 text-center tabular-nums">
+                                                            {massageTableCount}
+                                                        </span>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setMassageTableCount(massageTableCount + 1)}
+                                                            className="w-8 h-8 rounded-full bg-white border border-border/80 flex items-center justify-center text-primary hover:bg-stone-100 transition-colors shadow-2xs"
+                                                        >
+                                                            <Plus className="w-3.5 h-3.5" />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Promo Code Input - Displayed on this section only */}
+                                            <div className="bg-white border border-border/80 rounded-2xl p-4 shadow-xs mb-5">
+                                                <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/80 mb-2">
+                                                    <Tag className="w-3.5 h-3.5"/> Promo Code (Optional)
+                                                </label>
+                                                <div className="flex gap-2 w-full">
+                                                    <input 
+                                                        type="text" placeholder="ENTER CODE"
+                                                        value={promoCode} onChange={e => {
+                                                            setPromoCode(e.target.value.toUpperCase());
+                                                            setPromoError(null);
+                                                        }}
+                                                        disabled={!!appliedPromo}
+                                                        className="w-full bg-stone-50/60 border border-border/80 rounded-xl px-4 py-2.5 text-xs text-primary placeholder:text-text-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all uppercase tracking-wider font-medium"
+                                                    />
+                                                    {appliedPromo ? (
+                                                        <button type="button" onClick={() => { setAppliedPromo(null); setPromoCode(''); }} className="px-4 bg-red-50 text-red-600 border border-red-200 rounded-xl text-xs font-bold hover:bg-red-100 transition-colors uppercase tracking-wider whitespace-nowrap">
+                                                            Remove
+                                                        </button>
+                                                    ) : (
+                                                        <button type="button" onClick={() => {
+                                                            const clean = promoCode.trim().toUpperCase();
+                                                            if (!clean) return;
+                                                            if (clean === 'BALISPA10' || clean === 'VIP10' || clean === 'THERAPICK10') {
+                                                                setAppliedPromo(clean);
+                                                                setPromoError(null);
+                                                            } else {
+                                                                setPromoError('Invalid promo code');
+                                                            }
+                                                        }} disabled={!promoCode.trim()} className="px-5 bg-primary text-white rounded-xl text-xs font-bold hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wider whitespace-nowrap">
+                                                            Apply
+                                                        </button>
+                                                    )}
+                                                </div>
+                                                {promoError && <p className="text-xs text-red-500 mt-1.5 ml-1">{promoError}</p>}
+                                                {appliedPromo && <p className="text-xs text-emerald-600 mt-1.5 ml-1">Promo &quot;{appliedPromo}&quot; applied: 10% off</p>}
                                             </div>
 
                                             {/* Price & Continue */}
@@ -1124,7 +1254,7 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                                 <div className="flex items-end justify-between mb-5">
                                                     <span className="text-xs font-bold text-primary uppercase tracking-widest">Total Price</span>
                                                     <span className="text-2xl font-serif text-primary font-medium">
-                                                        IDR {calculateCartTotal(cartItems, appliedPromo || undefined).total.toLocaleString('en-US')}
+                                                        IDR {calculateCartTotal(cartItems, appliedPromo || undefined, massageTableCount * 100000).total.toLocaleString('en-US')}
                                                     </span>
                                                 </div>
                                                 <button
@@ -1228,49 +1358,11 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                                     />
                                                 </div>
 
-                                                {/* Promo Code Input */}
-                                                <div className="space-y-1.5 pt-1 w-full">
-                                                    <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1">
-                                                        <Tag className="w-3.5 h-3.5"/> Promo Code (Optional)
-                                                    </label>
-                                                    <div className="flex gap-2 w-full">
-                                                        <input 
-                                                            type="text" placeholder="Enter code"
-                                                            value={promoCode} onChange={e => {
-                                                                setPromoCode(e.target.value.toUpperCase());
-                                                                setPromoError(null);
-                                                            }}
-                                                            disabled={!!appliedPromo}
-                                                            className="w-full bg-white border border-border/80 rounded-xl px-4 py-3 text-sm text-primary placeholder:text-text-muted/50 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all uppercase"
-                                                        />
-                                                        {appliedPromo ? (
-                                                            <button type="button" onClick={() => { setAppliedPromo(null); setPromoCode(''); }} className="px-5 bg-red-50 text-red-600 border border-red-200 rounded-xl text-xs font-bold hover:bg-red-100 transition-colors uppercase tracking-wider whitespace-nowrap">
-                                                                Remove
-                                                            </button>
-                                                        ) : (
-                                                            <button type="button" onClick={() => {
-                                                                const clean = promoCode.trim().toUpperCase();
-                                                                if (!clean) return;
-                                                                if (clean === 'BALISPA10' || clean === 'VIP10' || clean === 'THERAPICK10') {
-                                                                    setAppliedPromo(clean);
-                                                                    setPromoError(null);
-                                                                } else {
-                                                                    setPromoError('Invalid promo code');
-                                                                }
-                                                            }} disabled={!promoCode.trim()} className="px-5 bg-primary text-white rounded-xl text-xs font-bold hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wider whitespace-nowrap">
-                                                                Apply
-                                                            </button>
-                                                        )}
-                                                    </div>
-                                                    {promoError && <p className="text-xs text-red-500 ml-1">{promoError}</p>}
-                                                    {appliedPromo && <p className="text-xs text-emerald-600 ml-1">Promo &quot;{appliedPromo}&quot; applied: 10% off</p>}
-                                                </div>
-
                                                 <div className="pt-4 border-t border-border/50">
                                                     <div className="flex items-end justify-between mb-5">
                                                         <span className="text-xs font-bold text-primary uppercase tracking-widest">Total Price</span>
                                                         <span className="text-2xl font-serif text-primary font-medium">
-                                                            IDR {calculateCartTotal(cartItems, appliedPromo || undefined).total.toLocaleString('en-US')}
+                                                            IDR {calculateCartTotal(cartItems, appliedPromo || undefined, massageTableCount * 100000).total.toLocaleString('en-US')}
                                                         </span>
                                                     </div>
                                                     <button 
@@ -1328,7 +1420,10 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                                     <div>
                                                         <span className="text-[10px] font-bold uppercase tracking-wider text-text-muted block">Massage Setup</span>
                                                         <span className="font-medium text-primary">
-                                                            {massageTableSetup === 'table' ? 'Bring Professional Massage Table' : 'Villa Bed / Floor Mat Setup'}
+                                                            {massageTableCount > 0 
+                                                                ? `${massageTableCount} Portable Table${massageTableCount > 1 ? 's' : ''} (+IDR ${(massageTableCount * 100000).toLocaleString('en-US')})` 
+                                                                : 'Villa Bed / Floor Mat Setup (IDR 0)'
+                                                            }
                                                         </span>
                                                     </div>
                                                     <button 
@@ -1388,10 +1483,18 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                                             </span>
                                                         </div>
                                                     )}
+                                                    {massageTableCount > 0 && (
+                                                        <div className="flex items-center justify-between mb-2 text-xs">
+                                                            <span className="text-text-muted uppercase tracking-widest font-bold">Portable Table Fee ({massageTableCount}x)</span>
+                                                            <span className="font-serif text-primary">
+                                                                +IDR {(massageTableCount * 100000).toLocaleString('en-US')}
+                                                            </span>
+                                                        </div>
+                                                    )}
                                                     <div className="flex items-end justify-between mb-5">
                                                         <span className="text-xs font-bold text-primary uppercase tracking-widest">Total Price</span>
                                                         <span className="text-2xl font-serif text-primary font-medium">
-                                                            IDR {calculateCartTotal(cartItems, appliedPromo || undefined).total.toLocaleString('en-US')}
+                                                            IDR {calculateCartTotal(cartItems, appliedPromo || undefined, massageTableCount * 100000).total.toLocaleString('en-US')}
                                                         </span>
                                                     </div>
 

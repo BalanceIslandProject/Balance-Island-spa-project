@@ -6,7 +6,7 @@ import {
     Megaphone, PlusCircle, Store, Settings, LayoutDashboard, 
     UploadCloud, CheckCircle, Plus, Trash2, Edit3, Pin, 
     ChevronDown, ChevronUp, Calculator, LogOut, Sparkles,
-    ArrowRight, ArrowUp, ArrowDown, Compass, ShieldCheck, Check, Ticket, Search, Menu, MoreHorizontal, Calendar, FileText, Heart, Clock, Share2
+    ArrowRight, ArrowUp, ArrowDown, Compass, ShieldCheck, Check, Ticket, Search, Menu, MoreHorizontal, Calendar, FileText, Heart, Clock, Share2, Layers
 } from 'lucide-react';
 import Link from 'next/link';
 import { useSpa, SelectedCampaignTreatment, Treatment, Product, TherapistFee, Campaign, sortCampaigns, DEFAULT_CAMPAIGNS } from '@/context/SpaContext';
@@ -14,6 +14,7 @@ import { supabase } from '@/lib/supabase';
 import BookingManagement from '@/components/BookingManagement';
 import TherapickBookingManagement from '@/components/TherapickBookingManagement';
 import AffiliateManagement from '@/components/admin/AffiliateManagement';
+import TherapickAddonSettings from '@/components/admin/TherapickAddonSettings';
 import { cx, btn, inputCls, selectCls, thCls, tdCls, StatusBadge, CountPill, EmptyState, SearchInput } from '@/components/admin/affiliate/ui';
 
 // Quick Preset Campaigns for Trip & Spa Deals
@@ -46,7 +47,7 @@ export default function AdminDashboard() {
         therapists, setTherapists
     } = useSpa();
 
-    const [activeTab, setActiveTab] = useState<'campaign' | 'treatment' | 'store' | 'fees' | 'calculator' | 'list' | 'settings' | 'promo' | 'bookings' | 'invoice' | 'affiliates'>('campaign');
+    const [activeTab, setActiveTab] = useState<'campaign' | 'treatment' | 'store' | 'fees' | 'calculator' | 'list' | 'settings' | 'promo' | 'bookings' | 'invoice' | 'affiliates' | 'addons'>('campaign');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [success, setSuccess] = useState(false);
     
@@ -888,7 +889,7 @@ export default function AdminDashboard() {
                 <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
                     {[
                         ...(siteBrandFilter === 'central' ? [{ id: 'bookings', icon: Calendar, label: 'Booking' }, { id: 'invoice', icon: Ticket, label: 'Invoices' }] : []),
-                        ...(siteBrandFilter === 'therapick' ? [{ id: 'bookings', icon: Calendar, label: 'Bookings' }, { id: 'affiliates', icon: Share2, label: 'Affiliates' }] : []),
+                        ...(siteBrandFilter === 'therapick' ? [{ id: 'bookings', icon: Calendar, label: 'Bookings' }, { id: 'affiliates', icon: Share2, label: 'Affiliates' }, { id: 'addons', icon: Layers, label: 'Add-on Settings' }] : []),
                         { id: 'campaign', icon: Megaphone, label: 'Campaign Card' },
                         { id: 'promo', icon: Ticket, label: 'Promo Codes' },
                         { id: 'treatment', icon: PlusCircle, label: 'Treatments' },
@@ -969,7 +970,7 @@ export default function AdminDashboard() {
                                     { id: 'campaign', icon: Megaphone, label: 'Campaign Card' },
                                     { id: 'promo', icon: Ticket, label: 'Promo Codes' },
                                 ]),
-                                ...(siteBrandFilter === 'therapick' ? [{ id: 'bookings', icon: Calendar, label: 'Bookings' }, { id: 'affiliates', icon: Share2, label: 'Affiliates' }] : []),
+                                ...(siteBrandFilter === 'therapick' ? [{ id: 'bookings', icon: Calendar, label: 'Bookings' }, { id: 'affiliates', icon: Share2, label: 'Affiliates' }, { id: 'addons', icon: Layers, label: 'Add-on Settings' }] : []),
                                 { id: 'store', icon: Store, label: 'Store Products' },
                                 { id: 'calculator', icon: Calculator, label: 'Commission Calc' },
                             ].map((tab) => {
@@ -2352,6 +2353,11 @@ export default function AdminDashboard() {
                         <TherapickBookingManagement treatments={treatments} therapistFees={therapistFees} />
                     )}
 
+                    {/* ADD-ON SETTINGS TAB (THERAPICK ADMIN ONLY) */}
+                    {activeTab === 'addons' && siteBrandFilter === 'therapick' && (
+                        <TherapickAddonSettings />
+                    )}
+
                     {/* INVOICE TAB (CENTRAL ADMIN ONLY) */}
                     {activeTab === 'invoice' && siteBrandFilter === 'central' && (
                         <div className="w-full max-w-xl mx-auto mt-6 animate-in fade-in duration-300">
@@ -2449,8 +2455,8 @@ export default function AdminDashboard() {
                     ] : siteBrandFilter === 'therapick' ? [
                         { id: 'bookings', icon: Calendar, label: 'Book' },
                         { id: 'affiliates', icon: Share2, label: 'Affils' },
+                        { id: 'addons', icon: Layers, label: 'Add-ons' },
                         { id: 'treatment', icon: PlusCircle, label: 'Treats' },
-                        { id: 'fees', icon: Settings, label: 'Fees' },
                         { id: 'more', icon: MoreHorizontal, label: 'More' }
                     ] : [
                         { id: 'treatment', icon: PlusCircle, label: 'Treats' },
