@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Clock, ArrowRight, X, Plus, Minus, ChevronLeft, ChevronRight, ChevronDown, User, Calendar, MapPin, Tag, DoorOpen, Trash2, MessageCircle, Info } from 'lucide-react';
+import { Search, Clock, ArrowRight, X, Plus, Minus, ChevronLeft, ChevronRight, ChevronDown, User, Calendar, MapPin, Tag, DoorOpen, Trash2, MessageCircle, Info, Sparkles, Check } from 'lucide-react';
 import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
 import Image from 'next/image';
@@ -97,9 +97,9 @@ export default function Home() {
     const [isReviewingBooking, setIsReviewingBooking] = useState(false);
     const [detailsModalTreatment, setDetailsModalTreatment] = useState<any>(null);
     const [isProcessing, setIsProcessing] = useState(false);
-    const [openAddonItemId, setOpenAddonItemId] = useState<string | null>(null);
+    const [selectedAddonItem, setSelectedAddonItem] = useState<any | null>(null);
     const [massageTableCount, setMassageTableCount] = useState<number>(0);
-    const [showTableFeeInfo, setShowTableFeeInfo] = useState<boolean>(false);
+    const [showTableFeeModal, setShowTableFeeModal] = useState<boolean>(false);
     const [availableAddons, setAvailableAddons] = useState<any[]>([]);
     const [therapickStep, setTherapickStep] = useState<'selection' | 'details' | 'review'>('selection');
     const [selectedCampaignDurations, setSelectedCampaignDurations] = useState<Record<string, string>>({});
@@ -1374,19 +1374,19 @@ export default function Home() {
                                                                 </span>
                                                             </div>
 
-                                                            {/* Guests Selector & Add-on Button on the same row */}
+                                                            {/* Add-on on left side, Guests Title and counter on right side */}
                                                             <div className="flex items-center justify-between pt-2.5 pb-1 border-t border-border/50">
-                                                                <div className="flex items-center gap-2">
-                                                                    <span className="text-[10px] font-bold uppercase tracking-widest text-primary/80">Guests</span>
+                                                                <div>
                                                                     <button
                                                                         type="button"
-                                                                        onClick={() => setOpenAddonItemId(openAddonItemId === item.id ? null : item.id)}
-                                                                        className="text-[10px] font-bold uppercase tracking-wider text-primary border border-border/80 hover:border-primary px-2.5 py-1 rounded-lg transition-all flex items-center gap-1 bg-stone-50 hover:bg-stone-100 shadow-2xs"
+                                                                        onClick={() => setSelectedAddonItem(item)}
+                                                                        className="text-[10px] font-bold uppercase tracking-wider text-primary border border-border/80 hover:border-primary px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 bg-stone-50 hover:bg-stone-100 shadow-2xs"
                                                                     >
-                                                                        <Plus className="w-3 h-3" /> {openAddonItemId === item.id ? 'Close' : 'Add-on'}
+                                                                        <Plus className="w-3 h-3" /> Add-on
                                                                     </button>
                                                                 </div>
-                                                                <div className="flex items-center gap-3">
+                                                                <div className="flex items-center gap-2.5">
+                                                                    <span className="text-[10px] font-bold uppercase tracking-widest text-primary/80">Guests</span>
                                                                     <button
                                                                         type="button"
                                                                         onClick={() => {
@@ -1397,12 +1397,12 @@ export default function Home() {
                                                                                 setTherapickStep('selection');
                                                                             }
                                                                         }}
-                                                                        className="w-8 h-8 rounded-full bg-white border border-border flex items-center justify-center text-text-muted hover:text-red-500 hover:border-red-200 transition-colors shadow-sm"
+                                                                        className="w-7 h-7 rounded-full bg-white border border-border flex items-center justify-center text-text-muted hover:text-red-500 hover:border-red-200 transition-colors shadow-2xs"
                                                                         title="Remove treatment"
                                                                     >
-                                                                        <Trash2 className="w-4 h-4" />
+                                                                        <Trash2 className="w-3.5 h-3.5" />
                                                                     </button>
-                                                                    <div className="w-px h-5 bg-border mx-1"></div>
+                                                                    <div className="w-px h-4 bg-border/60"></div>
                                                                     <div className="flex items-center gap-2">
                                                                         <button
                                                                             type="button"
@@ -1412,11 +1412,11 @@ export default function Home() {
                                                                                 const step = isCouple ? 2 : 1;
                                                                                 return { ...i, guests: Math.max(step, i.guests - step) };
                                                                             }))}
-                                                                            className="w-8 h-8 rounded-full bg-white border border-border flex items-center justify-center text-primary hover:bg-border transition-colors shadow-sm"
+                                                                            className="w-7 h-7 rounded-full bg-white border border-border flex items-center justify-center text-primary hover:bg-border transition-colors shadow-2xs"
                                                                         >
                                                                             <Minus className="w-3 h-3" />
                                                                         </button>
-                                                                        <span className="font-bold text-sm text-primary w-4 text-center">{item.guests}</span>
+                                                                        <span className="font-bold text-sm text-primary w-4 text-center tabular-nums">{item.guests}</span>
                                                                         <button
                                                                             type="button"
                                                                             onClick={() => setCartItems(cartItems.map(i => {
@@ -1425,69 +1425,13 @@ export default function Home() {
                                                                                 const step = isCouple ? 2 : 1;
                                                                                 return { ...i, guests: i.guests + step };
                                                                             }))}
-                                                                            className="w-8 h-8 rounded-full bg-white border border-border flex items-center justify-center text-primary hover:bg-border transition-colors shadow-sm"
+                                                                            className="w-7 h-7 rounded-full bg-white border border-border flex items-center justify-center text-primary hover:bg-border transition-colors shadow-2xs"
                                                                         >
                                                                             <Plus className="w-3 h-3" />
                                                                         </button>
                                                                     </div>
                                                                 </div>
                                                             </div>
-
-                                                            {/* Expandable Add-ons Selection */}
-                                                            <AnimatePresence>
-                                                                {openAddonItemId === item.id && (
-                                                                    <motion.div
-                                                                        initial={{ opacity: 0, height: 0 }}
-                                                                        animate={{ opacity: 1, height: 'auto' }}
-                                                                        exit={{ opacity: 0, height: 0 }}
-                                                                        className="mt-3 bg-stone-50 border border-border/60 rounded-xl p-3 space-y-2 overflow-hidden"
-                                                                    >
-                                                                        <div className="text-[10px] font-bold uppercase tracking-wider text-primary/70 mb-1">
-                                                                            Select Add-ons for this treatment
-                                                                        </div>
-                                                                        {availableAddons.length === 0 ? (
-                                                                            <div className="text-center py-3 text-xs text-text-muted">
-                                                                                No add-on options configured yet. Add them in the Therapick Admin Dashboard.
-                                                                            </div>
-                                                                        ) : (
-                                                                            availableAddons.map((addon) => {
-                                                                                const isAdded = (item.addons || []).some((a: any) => a.id === addon.id);
-                                                                                return (
-                                                                                    <div 
-                                                                                        key={addon.id} 
-                                                                                        className="flex items-center justify-between p-2.5 rounded-lg bg-white border border-border/50 text-xs"
-                                                                                    >
-                                                                                        <div className="pr-2">
-                                                                                            <div className="font-semibold text-primary">{addon.title}</div>
-                                                                                            <div className="text-[10px] text-text-muted">{addon.duration} • IDR {Number(addon.price).toLocaleString('en-US')}</div>
-                                                                                        </div>
-                                                                                        <button
-                                                                                            type="button"
-                                                                                            onClick={() => {
-                                                                                                setCartItems(cartItems.map(i => {
-                                                                                                    if (i.id !== item.id) return i;
-                                                                                                    const existing = i.addons || [];
-                                                                                                    const nextAddons = isAdded 
-                                                                                                        ? existing.filter((a: any) => a.id !== addon.id)
-                                                                                                        : [...existing, addon];
-                                                                                                    return { ...i, addons: nextAddons };
-                                                                                                }));
-                                                                                            }}
-                                                                                            className={`px-3 py-1 rounded-md text-[11px] font-bold transition-all ${
-                                                                                                isAdded 
-                                                                                                    ? 'bg-red-50 text-red-600 border border-red-200 hover:bg-red-100'
-                                                                                                    : 'bg-primary text-white hover:bg-primary/90'
-                                                                                            }`}
-                                                                                        >
-                                                                                            {isAdded ? 'Remove' : '+ Add'}
-                                                                                        </button>
-                                                                                    </div>
-                                                                                );
-                                                                            })
-                                                                        )}
-                                                                    </motion.div>
-                                                                )}
-                                                            </AnimatePresence>
                                                         </div>
                                                         );
                                                     })}
@@ -1504,17 +1448,17 @@ export default function Home() {
 
                                                 {/* Massage Table Setup with - and + counter & Professional Explanation */}
                                                 <div className="bg-white border border-border/80 rounded-2xl p-4 sm:p-5 shadow-xs mb-4">
-                                                    <div className="flex items-start justify-between mb-3">
+                                                    <div className="flex items-start justify-between mb-3.5">
                                                         <div>
                                                             <h4 className="text-xs font-bold text-primary uppercase tracking-wider">Massage Table Setup</h4>
                                                             <p className="text-[11px] text-text-muted mt-0.5">
-                                                                Professional portable massage table brought to your villa
+                                                                Select your preferred massage setup at your villa or hotel
                                                             </p>
                                                         </div>
                                                         <button
                                                             type="button"
-                                                            onClick={() => setShowTableFeeInfo(!showTableFeeInfo)}
-                                                            className="text-[10px] font-semibold text-primary/70 hover:text-primary transition-colors flex items-center gap-1 bg-stone-100 hover:bg-stone-200/80 px-2.5 py-1 rounded-full shrink-0"
+                                                            onClick={() => setShowTableFeeModal(true)}
+                                                            className="text-[10px] font-semibold text-primary/80 hover:text-primary transition-colors flex items-center gap-1 bg-stone-100 hover:bg-stone-200/80 px-2.5 py-1 rounded-full shrink-0"
                                                             title="Read why there is an additional fee"
                                                         >
                                                             <Info className="w-3 h-3 text-primary/70" />
@@ -1522,49 +1466,12 @@ export default function Home() {
                                                         </button>
                                                     </div>
 
-                                                    {/* Notification Description explaining the fee */}
-                                                    <AnimatePresence>
-                                                        {showTableFeeInfo && (
-                                                            <motion.div
-                                                                initial={{ opacity: 0, height: 0 }}
-                                                                animate={{ opacity: 1, height: 'auto' }}
-                                                                exit={{ opacity: 0, height: 0 }}
-                                                                className="mb-3.5 bg-stone-50 border border-border/70 rounded-xl p-3.5 text-xs text-text-muted leading-relaxed"
-                                                            >
-                                                                <div className="flex items-start justify-between gap-2 mb-1.5">
-                                                                    <span className="font-bold text-primary text-[11px] uppercase tracking-wider">
-                                                                        Portable Equipment & Scooter Logistics
-                                                                    </span>
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={() => setShowTableFeeInfo(false)}
-                                                                        className="text-text-muted hover:text-primary"
-                                                                    >
-                                                                        <X className="w-3.5 h-3.5" />
-                                                                    </button>
-                                                                </div>
-                                                                <p className="text-[11px] text-stone-600 leading-normal">
-                                                                    Our therapists bring full-sized, professional spa massage tables, clean sanitized linens, and specialized equipment directly to your villa. Because our therapists travel independently across Bali by motor scooter carrying heavy portable equipment through traffic and villa pathways, this modest surcharge (IDR 100,000 per person) directly supports their dedicated transport logistics and careful setup for your comfort.
-                                                                </p>
-                                                                <p className="text-[10px] text-stone-500 mt-1.5 italic">
-                                                                    If you prefer no additional fee, simply leave this at 0 to enjoy your treatment comfortably on your villa bed or mattress.
-                                                                </p>
-                                                            </motion.div>
-                                                        )}
-                                                    </AnimatePresence>
-
-                                                    {/* Table Counter Row */}
-                                                    <div className="flex items-center justify-between p-3.5 rounded-xl bg-stone-50/70 border border-border/60">
+                                                    {/* Table Counter Row - displays ONLY "IDR 100,000 PER TABLE" */}
+                                                    <div className="flex items-center justify-between p-3.5 rounded-xl bg-stone-50/70 border border-border/60 mb-3">
                                                         <div>
                                                             <div className="font-bold text-xs text-primary">Bring Portable Table</div>
-                                                            <div className="text-[11px] text-text-muted mt-0.5">
-                                                                {massageTableCount > 0 
-                                                                    ? `${massageTableCount} Table${massageTableCount > 1 ? 's' : ''} (+IDR ${(massageTableCount * 100000).toLocaleString('en-US')})`
-                                                                    : '0 Tables (Using Villa Bed / Floor Mat • IDR 0)'
-                                                                }
-                                                            </div>
-                                                            <div className="text-[10px] text-stone-400 font-medium">
-                                                                IDR 100,000 per person / table
+                                                            <div className="text-[11px] text-text-muted mt-0.5 font-medium">
+                                                                IDR 100,000 PER TABLE
                                                             </div>
                                                         </div>
 
@@ -1588,6 +1495,16 @@ export default function Home() {
                                                                 <Plus className="w-3.5 h-3.5" />
                                                             </button>
                                                         </div>
+                                                    </div>
+
+                                                    {/* Massage on Your Bed Option info */}
+                                                    <div className="p-3.5 rounded-xl bg-stone-50/50 border border-border/60">
+                                                        <div className="font-bold text-xs text-primary mb-1">
+                                                            Massage on Your Bed (Complimentary)
+                                                        </div>
+                                                        <p className="text-[11px] text-stone-600 leading-relaxed">
+                                                            If you prefer not to add a portable table, your therapist will set up comfortably on your villa bed or mattress. The therapist will bring an ergonomic face cradle, clean sanitized towels, and protective spa linens for your complete comfort and neck support.
+                                                        </p>
                                                     </div>
                                                 </div>
 
@@ -2249,6 +2166,251 @@ export default function Home() {
                 )}
             </AnimatePresence>
 
+            {/* Custom Add-on Treatments Pop-up Modal */}
+            <AnimatePresence>
+                {selectedAddonItem && (
+                    <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+                        <motion.div 
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setSelectedAddonItem(null)}
+                            className="fixed inset-0 bg-black/60 backdrop-blur-xs"
+                        />
+                        <motion.div 
+                            initial={{ opacity: 0, scale: 0.95, y: 15 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 15 }}
+                            className="relative bg-white rounded-3xl p-5 sm:p-6 shadow-2xl max-w-md w-full max-h-[85vh] flex flex-col z-10 border border-border/80"
+                        >
+                            {/* Modal Header */}
+                            <div className="flex items-start justify-between pb-3.5 border-b border-border/60">
+                                <div>
+                                    <span className="text-[9px] font-bold tracking-widest text-primary/60 uppercase block mb-1">
+                                        Wellness Enhancements
+                                    </span>
+                                    <h3 className="font-serif text-lg sm:text-xl font-medium text-primary">
+                                        Add-On Treatments
+                                    </h3>
+                                    <p className="text-[11px] text-text-muted mt-0.5">
+                                        Enhance your <span className="font-semibold text-primary">{selectedAddonItem.title}</span> ritual
+                                    </p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setSelectedAddonItem(null)}
+                                    className="w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-600 hover:text-primary flex items-center justify-center transition-colors shrink-0"
+                                >
+                                    <X className="w-4 h-4" />
+                                </button>
+                            </div>
+
+                            {/* Modal Body */}
+                            <div className="py-4 overflow-y-auto space-y-3 flex-1 no-scrollbar">
+                                {availableAddons && availableAddons.length > 0 ? (
+                                    availableAddons.map((addon) => {
+                                        const isAdded = (selectedAddonItem.addons || []).some((a: any) => a.id === addon.id);
+                                        return (
+                                            <div 
+                                                key={addon.id} 
+                                                className={`p-3.5 rounded-2xl border transition-all ${
+                                                    isAdded 
+                                                        ? 'bg-stone-50/90 border-primary/40 shadow-xs' 
+                                                        : 'bg-white border-border/70 hover:border-border'
+                                                }`}
+                                            >
+                                                <div className="flex items-start justify-between gap-3 mb-1.5">
+                                                    <div>
+                                                        <div className="font-bold text-xs text-primary">{addon.title}</div>
+                                                        <div className="text-[10px] text-text-muted flex items-center gap-1 mt-0.5">
+                                                            <Clock className="w-3 h-3" />
+                                                            <span>{addon.duration}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-right shrink-0">
+                                                        <div className="font-serif text-xs font-semibold text-primary">
+                                                            +IDR {Number(addon.price).toLocaleString('en-US')}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                {addon.description && (
+                                                    <p className="text-[11px] text-stone-600 leading-relaxed mb-3">
+                                                        {addon.description}
+                                                    </p>
+                                                )}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        const updatedAddons = isAdded
+                                                            ? (selectedAddonItem.addons || []).filter((a: any) => a.id !== addon.id)
+                                                            : [...(selectedAddonItem.addons || []), addon];
+                                                        
+                                                        setCartItems(cartItems.map(i => {
+                                                            if (i.id !== selectedAddonItem.id) return i;
+                                                            return { ...i, addons: updatedAddons };
+                                                        }));
+
+                                                        setSelectedAddonItem({
+                                                            ...selectedAddonItem,
+                                                            addons: updatedAddons
+                                                        });
+                                                    }}
+                                                    className={`w-full py-2 px-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 ${
+                                                        isAdded
+                                                            ? 'bg-stone-200 text-stone-800 hover:bg-red-50 hover:text-red-600'
+                                                            : 'bg-primary text-white hover:bg-neutral-800'
+                                                    }`}
+                                                >
+                                                    {isAdded ? (
+                                                        <>
+                                                            <Check className="w-3.5 h-3.5" /> Added to Treatment (Tap to Remove)
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <Plus className="w-3.5 h-3.5" /> Add to Treatment
+                                                        </>
+                                                    )}
+                                                </button>
+                                            </div>
+                                        );
+                                    })
+                                ) : (
+                                    <div className="py-6 px-4 text-center space-y-3">
+                                        <div className="w-12 h-12 rounded-full bg-stone-100 flex items-center justify-center mx-auto text-primary">
+                                            <Sparkles className="w-5 h-5 text-primary/80" />
+                                        </div>
+                                        <h4 className="font-serif text-base font-semibold text-primary">
+                                            Complete Luxury Spa Ritual
+                                        </h4>
+                                        <p className="text-xs text-text-muted leading-relaxed max-w-xs mx-auto">
+                                            Your selected ritual is already fully inclusive with our signature organic aromatherapy oils, customized pressure, and dedicated therapist care.
+                                        </p>
+                                        <div className="bg-stone-50 border border-border/70 rounded-xl p-3.5 text-[11px] text-stone-600 leading-relaxed text-left">
+                                            <span className="font-bold text-primary block mb-0.5">Specialty Enhancements Upon Request</span>
+                                            Custom organic facial treatments, herbal body compresses, or extended massage durations can also be arranged directly with your private therapist upon arrival at your villa.
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Modal Footer */}
+                            <div className="pt-3 border-t border-border/60">
+                                <button
+                                    type="button"
+                                    onClick={() => setSelectedAddonItem(null)}
+                                    className="w-full bg-black hover:bg-neutral-800 text-white py-3 rounded-xl text-xs font-bold uppercase tracking-widest transition-all shadow-sm"
+                                >
+                                    Done
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Why a Fee? Pop-up Modal */}
+            <AnimatePresence>
+                {showTableFeeModal && (
+                    <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+                        <motion.div 
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setShowTableFeeModal(false)}
+                            className="fixed inset-0 bg-black/60 backdrop-blur-xs"
+                        />
+                        <motion.div 
+                            initial={{ opacity: 0, scale: 0.95, y: 15 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 15 }}
+                            className="relative bg-white rounded-3xl p-5 sm:p-6 shadow-2xl max-w-md w-full max-h-[85vh] flex flex-col z-10 border border-border/80"
+                        >
+                            {/* Modal Header */}
+                            <div className="flex items-start justify-between pb-3.5 border-b border-border/60">
+                                <div>
+                                    <span className="text-[9px] font-bold tracking-widest text-primary/60 uppercase block mb-1">
+                                        Equipment & Transport Logistics
+                                    </span>
+                                    <h3 className="font-serif text-lg sm:text-xl font-medium text-primary">
+                                        Why Is There a Table Fee?
+                                    </h3>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowTableFeeModal(false)}
+                                    className="w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-600 hover:text-primary flex items-center justify-center transition-colors shrink-0"
+                                >
+                                    <X className="w-4 h-4" />
+                                </button>
+                            </div>
+
+                            {/* Modal Body */}
+                            <div className="py-4 overflow-y-auto space-y-3 flex-1 no-scrollbar text-xs">
+                                <div className="p-3.5 rounded-2xl bg-stone-50 border border-border/70 flex items-start gap-3">
+                                    <div className="w-8 h-8 rounded-xl bg-white border border-border/80 flex items-center justify-center shrink-0 text-primary mt-0.5">
+                                        <Sparkles className="w-4 h-4" />
+                                    </div>
+                                    <div>
+                                        <h4 className="font-bold text-xs text-primary uppercase tracking-wider mb-1">
+                                            Heavy Commercial Equipment
+                                        </h4>
+                                        <p className="text-[11px] text-stone-600 leading-relaxed">
+                                            Our massage tables are full-length, professional heavy-duty spa tables equipped with adjustable face cradles, luxury padding, and freshly sanitized linens (15–20 kg).
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="p-3.5 rounded-2xl bg-stone-50 border border-border/70 flex items-start gap-3">
+                                    <div className="w-8 h-8 rounded-xl bg-white border border-border/80 flex items-center justify-center shrink-0 text-primary mt-0.5">
+                                        <Clock className="w-4 h-4" />
+                                    </div>
+                                    <div>
+                                        <h4 className="font-bold text-xs text-primary uppercase tracking-wider mb-1">
+                                            Independent Scooter Transport
+                                        </h4>
+                                        <p className="text-[11px] text-stone-600 leading-relaxed">
+                                            Therapists commute directly to your villa across Bali on personal motor scooters. Transporting heavy, bulky equipment through Bali traffic, steep inclines, and narrow villa gangways requires careful physical effort and dedicated handling.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="p-3.5 rounded-2xl bg-stone-50 border border-border/70 flex items-start gap-3">
+                                    <div className="w-8 h-8 rounded-xl bg-white border border-border/80 flex items-center justify-center shrink-0 text-primary mt-0.5">
+                                        <Tag className="w-4 h-4" />
+                                    </div>
+                                    <div>
+                                        <h4 className="font-bold text-xs text-primary uppercase tracking-wider mb-1">
+                                            100% Direct Therapist Surcharge
+                                        </h4>
+                                        <p className="text-[11px] text-stone-600 leading-relaxed">
+                                            The surcharge of <strong>IDR 100,000 per table</strong> goes directly to your private therapist to cover physical transportation logistics and on-site setup.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="p-3.5 rounded-2xl bg-[#FDFBF7] border border-amber-200/70 text-[11px] text-stone-700 leading-relaxed">
+                                    <div className="font-bold text-primary mb-1 flex items-center gap-1.5">
+                                        <Check className="w-3.5 h-3.5 text-stone-800" />
+                                        Prefer zero additional fee?
+                                    </div>
+                                    Leave the table count at <strong>0</strong>. Your therapist will set up comfortably on your villa bed or mattress at no extra cost, bringing a specialized face cradle and sanitized linens for your comfort.
+                                </div>
+                            </div>
+
+                            {/* Modal Footer */}
+                            <div className="pt-3 border-t border-border/60">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowTableFeeModal(false)}
+                                    className="w-full bg-black hover:bg-neutral-800 text-white py-3 rounded-xl text-xs font-bold uppercase tracking-widest transition-all shadow-sm"
+                                >
+                                    Understood
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
 
                 <div className="max-w-7xl mx-auto px-6 relative z-10">
                 </div>
