@@ -18,9 +18,15 @@ export default function RitualsDetails() {
     const bookingIdRef = React.useRef<string>(Math.random().toString(36).substring(2, 8).toUpperCase());
 
     const params = useParams();
-    const id = params?.id as string;
+    const rawId = (params?.id as string) || '';
+    const cleanId = decodeURIComponent(rawId).toLowerCase();
     const { treatments, siteBrandFilter } = useSpa();
-    const contextTreatment = treatments.find(t => t.id === id || createSlug(t.title) === id);
+    const contextTreatment = treatments.find(
+        t => t.id === rawId || 
+             createSlug(t.title) === cleanId || 
+             createSlug(t.title) === rawId || 
+             t.id.toLowerCase() === cleanId
+    );
     const [fetchedTreatment, setFetchedTreatment] = useState<Treatment | null>(null);
     const [fetchFailed, setFetchFailed] = useState(false);
 
@@ -36,7 +42,10 @@ export default function RitualsDetails() {
                     .eq('is_published', true);
                 if (data && data.length > 0) {
                     const found = data.find(
-                        (t: any) => t.id === id || createSlug(t.title) === id
+                        (t: any) => t.id === rawId || 
+                                    createSlug(t.title) === cleanId || 
+                                    createSlug(t.title) === rawId || 
+                                    t.id.toLowerCase() === cleanId
                     );
                     if (isMounted) {
                         if (found) {
@@ -54,7 +63,7 @@ export default function RitualsDetails() {
         }
         fetchSingleTreatment();
         return () => { isMounted = false; };
-    }, [id, contextTreatment, fetchedTreatment, fetchFailed]);
+    }, [rawId, cleanId, contextTreatment, fetchedTreatment, fetchFailed]);
 
     const treatment = contextTreatment || fetchedTreatment;
 

@@ -3,10 +3,30 @@ import { headers } from 'next/headers';
 import { supabase } from '@/lib/supabase';
 import { createSlug } from '@/utils/slugify';
 
+import { unstable_cache } from 'next/cache';
+
 type Props = {
   params: Promise<{ id: string }>;
   children: React.ReactNode;
 };
+
+// Cache treatment metadata in memory for 300s to avoid hitting Supabase on every route click
+const getCachedPublishedTreatments = unstable_cache(
+  async () => {
+    try {
+      const { data: treatments } = await supabase
+        .from('treatments')
+        .select('*')
+        .eq('is_published', true);
+      return treatments || [];
+    } catch (err) {
+      console.error('Error fetching treatment metadata:', err);
+      return [];
+    }
+  },
+  ['published-treatments-meta'],
+  { revalidate: 300, tags: ['treatments', 'spa-data'] }
+);
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
@@ -27,22 +47,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     ? 'https://www.booktherapick.com'
     : (isBaliDomain ? 'https://www.homespaubud.com' : 'https://www.elexoirhomespaubud.com');
 
-  // Fetch treatments from Supabase to match by id or slug
-  let treatment: any = null;
-  try {
-    const { data: treatments } = await supabase
-      .from('treatments')
-      .select('*')
-      .eq('is_published', true);
-
-    if (treatments && treatments.length > 0) {
-      treatment = treatments.find(
-        (t: any) => t.id === id || createSlug(t.title) === id
-      );
-    }
-  } catch (err) {
-    console.error('Error fetching treatment metadata:', err);
-  }
+  // Fast in-memory cached lookup by id or slug
+  const treatments = await getCachedPublishedTreatments();
+  const rawId = (id || '').trim();
+  const cleanId = decodeURIComponent(rawId).toLowerCase();
+  const treatment = treatments.find(
+    (t: any) => t.id === rawId || createSlug(t.title) === cleanId || createSlug(t.title) === rawId || t.id.toLowerCase() === cleanId
+  );
 
   const rawTitle = treatment?.title || id.split('-').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
   const treatmentDesc = treatment?.desc || `Luxury in-villa ${rawTitle} treatment delivered directly to your private villa or resort by certified 5-star therapists.`;
@@ -167,19 +178,12 @@ export default async function RitualLayout({
   const brandName = isTherapick ? 'Therapick Bali' : 'Home Spa Ubud';
   const baseUrl = isTherapick ? 'https://www.booktherapick.com' : 'https://www.homespaubud.com';
 
-  let treatment: any = null;
-  try {
-    const { data: treatments } = await supabase
-      .from('treatments')
-      .select('*')
-      .eq('is_published', true);
-
-    if (treatments && treatments.length > 0) {
-      treatment = treatments.find(
-        (t: any) => t.id === id || createSlug(t.title) === id
-      );
-    }
-  } catch {}
+  const treatments = await getCachedPublishedTreatments();
+  const rawId = (id || '').trim();
+  const cleanId = decodeURIComponent(rawId).toLowerCase();
+  const treatment = treatments.find(
+    (t: any) => t.id === rawId || createSlug(t.title) === cleanId || createSlug(t.title) === rawId || t.id.toLowerCase() === cleanId
+  );
 
   const rawTitle = treatment?.title || id.split('-').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
   const treatmentDesc = treatment?.desc || `Luxury in-villa ${rawTitle} treatment delivered directly to your private villa or resort.`;

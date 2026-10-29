@@ -157,7 +157,7 @@ function ExploreContent() {
                         </div>
                         <div className="flex overflow-x-auto gap-4 no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 pb-4 snap-x snap-mandatory scroll-reveal-stagger">
                             {treatments.filter(t => t.is_pinned).map(treatment => (
-                                <Link href={`/rituals/${createSlug(treatment.title)}`} key={treatment.id} className="w-[180px] sm:w-[220px] shrink-0 snap-center md:snap-align-none outline-none">
+                                <Link href={`/rituals/${createSlug(treatment.title)}`} prefetch={true} key={treatment.id} className="w-[180px] sm:w-[220px] shrink-0 snap-center md:snap-align-none outline-none active:scale-[0.98] transition-all">
                                     <div className="flex flex-col gap-2 group cursor-pointer">
                                         <div className="aspect-[4/3] relative bg-[#F5F5F7] overflow-hidden rounded-2xl shadow-[0_2px_12px_rgb(0,0,0,0.06)] group-hover:shadow-[0_8px_24px_rgb(0,0,0,0.12)] transition-shadow">
                                             {treatment.pinned_image ? (
@@ -196,7 +196,7 @@ function ExploreContent() {
 
                     <div className="grid grid-cols-2 gap-x-4 gap-y-8 scroll-reveal-stagger">
                         {filteredAndSortedTreatments.map((item) => (
-                            <Link href={`/rituals/${createSlug(item.title)}`} key={item.id} className="w-full block group outline-none">
+                            <Link href={`/rituals/${createSlug(item.title)}`} prefetch={true} key={item.id} className="w-full block group outline-none active:scale-[0.98] transition-all">
                                 <div className="rounded-2xl bg-white border border-gray-100 flex flex-col h-full relative overflow-hidden p-4 aspect-[4/5] shadow-[0_2px_12px_rgb(0,0,0,0.04)] hover:shadow-md transition-all cursor-pointer group-hover:-translate-y-1 duration-300">
                                     <div className="relative z-10 flex flex-col h-full">
                                         <div className="bg-white text-gray-800 border border-gray-200 px-2.5 py-1 rounded-full text-[8px] font-bold tracking-widest uppercase self-start mb-3 shadow-sm">

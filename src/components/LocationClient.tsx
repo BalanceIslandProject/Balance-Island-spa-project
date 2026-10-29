@@ -490,7 +490,7 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                     ) : (
                     <div ref={scrollContainerRef} className="flex overflow-x-auto pb-10 -mx-6 px-6 md:mx-0 md:px-0 gap-6 no-scrollbar scroll-smooth scroll-reveal-stagger">
                         {filteredAndSortedTreatments.map((item, idx) => (
-                            <Link href={`/rituals/${createSlug(item.title)}`} key={item.id} className="w-72 md:w-80 shrink-0 block group outline-none">
+                            <Link href={`/rituals/${createSlug(item.title)}`} prefetch={true} key={item.id} className="w-72 md:w-80 shrink-0 block group outline-none active:scale-[0.98] transition-all">
                                 <div className={`rounded-[32px] md:rounded-[40px] bg-gradient-to-br ${item.bgPattern} border border-border/40 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.08)] transition-all duration-700 flex flex-col h-full relative overflow-hidden group-hover:-translate-y-2 p-6 md:p-8`}>
                                     
                                     {/* Subtle glowing orb for spa ambiance */}
@@ -512,9 +512,9 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                             </div>
                                             <div className="flex items-center justify-between bg-white/80 backdrop-blur-sm rounded-full p-1 pl-4 border border-gray-100">
                                                 <span className="font-semibold text-gray-900 text-[14px]">IDR {parseInt(item.options[0]?.price.replace(/,/g, '') || '0').toLocaleString('en-US')}</span>
-                                                <button className="w-10 h-10 rounded-full bg-[#1D1D1F] text-white flex items-center justify-center hover:bg-black transition-colors shrink-0 shadow-sm">
+                                                <div className="w-10 h-10 rounded-full bg-[#1D1D1F] text-white flex items-center justify-center group-hover:bg-black transition-colors shrink-0 shadow-sm">
                                                     <Plus size={20} strokeWidth={2.5} />
-                                                </button>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
