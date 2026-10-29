@@ -26,7 +26,7 @@ Hello, I would like to inquire about your mobile spa services.
 👤 Name: 
 📍 Location: 
 🗓 Date/Time: 
-✨ Treatment: 
+• Treatment: 
 
 ──────────────────────`;
     
