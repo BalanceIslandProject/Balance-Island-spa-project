@@ -66,7 +66,8 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
     { href: '/partners/bookings', label: 'Bookings', icon: CalendarDays },
     { href: '/partners/commissions', label: 'Commissions', icon: Receipt },
     { href: '/partners/payouts', label: 'Payouts', icon: Wallet },
-    { href: '/partners/profile', label: 'Profile', icon: User },
+    { href: '/partners/referrals', label: 'Referrals & QR', icon: Share2 },
+    { href: '/partners/profile', label: 'Settings', icon: User },
   ];
 
   return (

@@ -18,7 +18,9 @@ import {
   CheckCircle2,
   X,
   Layers,
-  ArrowUpRight
+  ArrowUpRight,
+  List,
+  LayoutGrid
 } from 'lucide-react';
 import { CalendarBooking } from '../FloatingBookingCalendar';
 import ScheduleTrackingModal from '../ScheduleTrackingModal';
@@ -39,6 +41,7 @@ export default function PartnerBookingsPage() {
   const [statusFilter, setStatusFilter] = useState<'all' | 'approved' | 'pending' | 'paid' | 'cancelled'>('all');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [trackingBooking, setTrackingBooking] = useState<CalendarBooking | null>(null);
+  const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   
   // Date filtering and calendar navigation
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -739,16 +742,42 @@ export default function PartnerBookingsPage() {
               ))}
             </div>
 
-            {/* Search Input */}
-            <div className="relative flex-1 sm:max-w-xs">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8f8f8f]" />
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search guest or invoice..."
-                className="w-full h-8 pl-9 pr-3 rounded-[6px] bg-white border border-[#ebebeb] text-xs text-[#171717] placeholder:text-[#8f8f8f] focus:outline-none focus:border-[#171717] transition-colors"
-              />
+            {/* View Switcher & Search Input */}
+            <div className="flex items-center gap-2">
+              <div className="hidden sm:flex items-center gap-1 border border-[#ebebeb] bg-[#fafafa] p-0.5 rounded-[6px]">
+                <button
+                  type="button"
+                  onClick={() => setViewMode('table')}
+                  className={`p-1.5 rounded-[4px] transition-colors cursor-pointer ${
+                    viewMode === 'table' ? 'bg-white text-[#171717] shadow-xs' : 'text-[#8f8f8f] hover:text-[#171717]'
+                  }`}
+                  title="Data Table View"
+                >
+                  <List size={13} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode('cards')}
+                  className={`p-1.5 rounded-[4px] transition-colors cursor-pointer ${
+                    viewMode === 'cards' ? 'bg-white text-[#171717] shadow-xs' : 'text-[#8f8f8f] hover:text-[#171717]'
+                  }`}
+                  title="Card Grid View"
+                >
+                  <LayoutGrid size={13} />
+                </button>
+              </div>
+
+              {/* Search Input */}
+              <div className="relative flex-1 sm:w-60">
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8f8f8f]" />
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search guest or invoice..."
+                  className="w-full h-8 pl-9 pr-3 rounded-[6px] bg-white border border-[#ebebeb] text-xs text-[#171717] placeholder:text-[#8f8f8f] focus:outline-none focus:border-[#171717] transition-colors"
+                />
+              </div>
             </div>
           </div>
 
@@ -776,7 +805,7 @@ export default function PartnerBookingsPage() {
             </div>
           )}
 
-          {/* ─── Bookings List / Grid ─── */}
+          {/* ─── Bookings List / Data Table / Grid ─── */}
           {loading ? (
             <div className="p-16 text-center rounded-[8px] bg-white border border-[#ebebeb] space-y-3">
               <div className="w-5 h-5 border-2 border-[#171717] border-t-transparent rounded-full animate-spin mx-auto" />
@@ -803,7 +832,173 @@ export default function PartnerBookingsPage() {
                 </button>
               )}
             </div>
+          ) : viewMode === 'table' ? (
+            <>
+              {/* Desktop Professional Data Table (>= 768px) */}
+              <div className="hidden md:block bg-white border border-[#ebebeb] rounded-[8px] overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-[#fafafa] border-b border-[#ebebeb] font-mono text-[10px] uppercase tracking-[0.071em] text-[#666666]">
+                      <tr>
+                        <th className="py-3 px-3.5">Date</th>
+                        <th className="py-3 px-3.5">Invoice</th>
+                        <th className="py-3 px-3.5">Guest</th>
+                        <th className="py-3 px-3.5">Treatment</th>
+                        <th className="py-3 px-3.5 text-right">Treatment Net</th>
+                        <th className="py-3 px-3.5 text-right">Earned</th>
+                        <th className="py-3 px-3.5">Status</th>
+                        <th className="py-3 px-3.5 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#ebebeb]">
+                      {filteredBookings.map((b) => {
+                        const isCancelled = b.commission_status === 'cancelled' || b.booking_status === 'Cancelled';
+                        const isPaidOut = b.commission_status === 'paid';
+                        const isApproved = b.commission_status === 'approved';
+
+                        return (
+                          <tr key={b.id || b.booking_id} className="hover:bg-[#fafafa] transition-colors">
+                            <td className="py-3 px-3.5 font-mono text-[11px] text-[#666666] whitespace-nowrap">
+                              {formatFriendlyDate(b.date)}
+                            </td>
+                            <td className="py-3 px-3.5 font-mono text-xs font-bold text-[#171717] whitespace-nowrap">
+                              <div className="flex items-center gap-1.5">
+                                <span>#{b.booking_id}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleCopy(b.booking_id)}
+                                  className="text-[#8f8f8f] hover:text-[#171717] p-0.5 cursor-pointer"
+                                  title="Copy invoice code"
+                                >
+                                  {copiedId === b.booking_id ? <Check size={11} className="text-[#297a3a]" /> : <Copy size={11} />}
+                                </button>
+                              </div>
+                            </td>
+                            <td className="py-3 px-3.5 font-medium text-[#171717] truncate max-w-[150px]">
+                              {b.guest_name || 'Guest Booking'}
+                            </td>
+                            <td className="py-3 px-3.5 text-[#666666] truncate max-w-[160px]">
+                              {b.treatment_name || 'Spa Ritual'}
+                            </td>
+                            <td className="py-3 px-3.5 font-mono text-right text-[#171717] whitespace-nowrap tabular-nums">
+                              {formatIDR(b.treatment_amount || b.gross_amount)}
+                            </td>
+                            <td className="py-3 px-3.5 font-mono text-right font-bold text-xs whitespace-nowrap tabular-nums">
+                              <span className={isCancelled ? 'line-through text-[#8f8f8f]' : 'text-[#297a3a]'}>
+                                {isCancelled ? 'IDR 0' : `+${formatIDR(b.commission_amount)}`}
+                              </span>
+                            </td>
+                            <td className="py-3 px-3.5 whitespace-nowrap">
+                              {isPaidOut ? (
+                                <span className="font-mono text-[9px] font-semibold text-white bg-[#171717] px-2 py-0.5 rounded uppercase">
+                                  PAID OUT
+                                </span>
+                              ) : isApproved ? (
+                                <span className="font-mono text-[9px] font-semibold text-[#137333] bg-[#e6f4ea] px-2 py-0.5 rounded uppercase border border-[#ceead6]">
+                                  Approved
+                                </span>
+                              ) : isCancelled ? (
+                                <span className="font-mono text-[9px] font-semibold text-[#c5221f] bg-[#fce8e6] px-2 py-0.5 rounded uppercase border border-[#fad2cf]">
+                                  Cancelled
+                                </span>
+                              ) : (
+                                <span className="font-mono text-[9px] font-semibold text-[#b06000] bg-[#fef7e0] px-2 py-0.5 rounded uppercase border border-[#feefc3]">
+                                  Pending
+                                </span>
+                              )}
+                            </td>
+                            <td className="py-3 px-3.5 text-right whitespace-nowrap">
+                              <div className="flex items-center justify-end gap-1.5">
+                                <button
+                                  type="button"
+                                  onClick={() => setTrackingBooking(b)}
+                                  className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-mono text-[#171717] bg-[#fafafa] hover:bg-[#ebebeb] border border-[#ebebeb] rounded transition-colors cursor-pointer"
+                                  title="Track appointment schedule and status history"
+                                >
+                                  <Clock size={11} className="text-[#666666]" />
+                                  <span>Track</span>
+                                </button>
+                                <Link
+                                  href={`/invoice/${b.booking_id}`}
+                                  target="_blank"
+                                  className="p-1 text-[#666666] hover:text-[#171717] rounded hover:bg-[#f0f0f0] transition-colors"
+                                  title="View invoice"
+                                >
+                                  <ExternalLink size={12} />
+                                </Link>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Mobile Responsive Booking Cards (< 768px) */}
+              <div className="md:hidden space-y-3">
+                {filteredBookings.map((b) => {
+                  const isCancelled = b.commission_status === 'cancelled' || b.booking_status === 'Cancelled';
+                  const isPaidOut = b.commission_status === 'paid';
+
+                  return (
+                    <div
+                      key={b.id || b.booking_id}
+                      className="p-4 rounded-[8px] bg-white border border-[#ebebeb] space-y-3 shadow-[0_1px_2px_rgba(0,0,0,0.02)]"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          {isPaidOut && (
+                            <span className="font-mono text-[10px] font-semibold text-white bg-[#171717] px-2 py-0.5 rounded-[4px] uppercase">
+                              PAID OUT
+                            </span>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => setTrackingBooking(b)}
+                            className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium text-[#171717] bg-[#fafafa] border border-[#ebebeb] rounded"
+                          >
+                            <Clock size={11} className="text-[#666666]" />
+                            <span>Track</span>
+                          </button>
+                        </div>
+                        <span className="font-mono text-xs font-bold text-[#171717] bg-[#fafafa] px-2 py-0.5 rounded border border-[#ebebeb]">
+                          #{b.booking_id}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-medium text-[#171717]">{b.guest_name || 'Guest'}</span>
+                        <Link
+                          href={`/invoice/${b.booking_id}`}
+                          target="_blank"
+                          className="font-mono text-[11px] text-[#666666] hover:text-black underline flex items-center gap-1"
+                        >
+                          <span>Invoice</span>
+                          <ExternalLink size={10} />
+                        </Link>
+                      </div>
+
+                      <div className="pt-2 border-t border-[#ebebeb] flex items-center justify-between text-xs">
+                        <div>
+                          <span className="font-mono text-[9px] uppercase text-[#666666] block">Treatment</span>
+                          <span className="font-mono font-medium text-[#171717]">{formatIDR(b.treatment_amount || b.gross_amount)}</span>
+                        </div>
+                        <div className="text-right">
+                          <span className="font-mono text-[9px] uppercase text-[#297a3a] block">Earned</span>
+                          <span className={`font-mono font-bold ${isCancelled ? 'line-through text-[#8f8f8f]' : 'text-[#297a3a]'}`}>
+                            {isCancelled ? 'IDR 0' : `+${formatIDR(b.commission_amount)}`}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
           ) : (
+            /* Card Grid View */
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
               {filteredBookings.map((b) => {
                 const isCancelled = b.commission_status === 'cancelled' || b.booking_status === 'Cancelled';
@@ -814,29 +1009,23 @@ export default function PartnerBookingsPage() {
                     key={b.id || b.booking_id}
                     className="p-4 rounded-[8px] bg-white border border-[#ebebeb] space-y-3 hover:border-[#171717]/40 transition-colors shadow-[0_1px_2px_rgba(0,0,0,0.02)]"
                   >
-                    {/* Top Row: PAID OUT label + Track Schedule button + Invoice ID */}
                     <div className="flex items-center justify-between gap-2 flex-wrap">
                       <div className="flex items-center gap-2">
-                        {/* ONLY commission paid out has a label in capital letters */}
                         {isPaidOut && (
                           <span className="font-mono text-[10px] font-semibold text-white bg-[#171717] px-2 py-0.5 rounded-[4px] uppercase tracking-wider">
                             PAID OUT
                           </span>
                         )}
-
-                        {/* Single-click button to track book schedule */}
                         <button
                           type="button"
                           onClick={() => setTrackingBooking(b)}
                           className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-[#171717] bg-[#fafafa] hover:bg-[#f0f0f0] border border-[#ebebeb] rounded-[6px] transition-colors cursor-pointer shadow-2xs"
-                          title="Track appointment schedule and status history"
                         >
                           <Clock size={12} className="text-[#666666]" />
                           <span>Track Schedule</span>
                         </button>
                       </div>
 
-                      {/* Invoice Code with Copy */}
                       <div className="flex items-center gap-1.5 text-xs shrink-0">
                         <span className="font-mono text-[10px] font-medium uppercase tracking-[0.071em] text-[#666666]">
                           Invoice:
@@ -848,14 +1037,12 @@ export default function PartnerBookingsPage() {
                           type="button"
                           onClick={() => handleCopy(b.booking_id)}
                           className="text-[#666666] hover:text-[#171717] transition-colors p-1 rounded hover:bg-[#fafafa] cursor-pointer"
-                          title="Copy invoice code"
                         >
                           {copiedId === b.booking_id ? <Check size={12} className="text-[#297a3a]" /> : <Copy size={12} />}
                         </button>
                       </div>
                     </div>
 
-                    {/* Middle Row: Customer Name & Treatment Details link */}
                     <div className="flex items-center justify-between gap-3 pt-0.5">
                       <div className="font-medium text-sm text-[#171717] flex items-center gap-1.5 min-w-0">
                         <User size={14} className="text-[#666666] shrink-0" />
@@ -866,7 +1053,6 @@ export default function PartnerBookingsPage() {
                         href={`/invoice/${b.booking_id}`}
                         target="_blank"
                         className="group inline-flex items-center gap-1.5 text-xs font-medium text-[#171717] hover:text-black py-0.5 cursor-pointer shrink-0"
-                        title="View treatment details in invoice"
                       >
                         <FileText size={12} className="text-[#666666] group-hover:text-[#171717] transition-colors shrink-0" />
                         <span className="underline decoration-[#ebebeb] group-hover:decoration-[#171717] underline-offset-2 transition-colors">
@@ -876,7 +1062,6 @@ export default function PartnerBookingsPage() {
                       </Link>
                     </div>
 
-                    {/* Bottom Row: Treatment Amount vs Earned Commission */}
                     <div className="pt-2.5 border-t border-[#ebebeb] flex items-center justify-between text-xs">
                       <div>
                         <span className="font-mono text-[10px] uppercase font-medium text-[#666666] block">
