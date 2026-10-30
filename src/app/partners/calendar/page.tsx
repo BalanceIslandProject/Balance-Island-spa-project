@@ -10,8 +10,6 @@ import {
   Copy, 
   Check, 
   User, 
-  MapPin, 
-  DoorOpen, 
   FileText, 
   ExternalLink,
   Users,
@@ -845,14 +843,14 @@ export default function PartnerCalendarPage() {
                 return (
                   <div
                     key={b.id || b.booking_id}
-                    className="p-4 rounded-[6px] bg-white border border-[#ebebeb] space-y-3 hover:border-[#171717]/40 transition-colors shadow-[0_0_0_1px_rgba(0,0,0,0.02)]"
+                    className="p-4 rounded-[6px] bg-white border border-[#ebebeb] space-y-3 hover:border-[#171717]/40 transition-colors shadow-[0_1px_2px_rgba(0,0,0,0.02)]"
                   >
-                    {/* Header: Status Pills & Action */}
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div className="flex flex-wrap items-center gap-1.5">
+                    {/* Top Row: Status Badges & Invoice ID */}
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <div className="flex items-center gap-1.5 flex-wrap">
                         {isPaid ? (
                           <span className="font-mono text-[10px] font-medium text-[#297a3a] bg-[#297a3a]/10 px-2 py-0.5 rounded-[4px] border border-[#297a3a]/20">
-                            {b.payment_method === 'cash' ? 'Paid (Cash)' : b.payment_method === 'online' ? 'Paid (Online)' : 'Paid'}
+                            {b.payment_method === 'cash' ? 'Paid (Cash)' : 'Paid'}
                           </span>
                         ) : (
                           <span className="font-mono text-[10px] font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded-[4px] border border-amber-200">
@@ -894,36 +892,8 @@ export default function PartnerCalendarPage() {
                         ) : null}
                       </div>
 
-                      <div className="text-right">
-                        <span className={`text-xs font-mono font-bold tabular-nums ${isCancelled ? 'line-through text-[#8f8f8f]' : 'text-[#297a3a]'}`}>
-                          {isCancelled ? 'IDR 0' : `+${formatIDR(b.commission_amount)}`}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Customer Name, View Treatment Details Link, Invoice Code */}
-                    <div className="space-y-1.5 pt-1">
-                      <div className="font-medium text-sm text-[#171717] flex items-center gap-1.5">
-                        <User size={14} className="text-[#666666] shrink-0" />
-                        <span className="truncate">{b.guest_name || 'Guest Booking'}</span>
-                      </div>
-
-                      {/* View Treatment Details link */}
-                      <div>
-                        <Link
-                          href={`/invoice/${b.booking_id}`}
-                          target="_blank"
-                          className="group inline-flex items-center gap-1.5 text-xs font-medium text-[#171717] hover:underline py-0.5 cursor-pointer"
-                          title="View treatment details in invoice"
-                        >
-                          <FileText size={13} className="text-[#666666] shrink-0" />
-                          <span>View Treatment Details</span>
-                          <ExternalLink size={11} className="text-[#666666] shrink-0" />
-                        </Link>
-                      </div>
-
-                      {/* Invoice Code below View Treatment Details */}
-                      <div className="flex items-center gap-1.5 text-[#666666] text-xs font-medium pt-0.5">
+                      {/* Invoice Code with copy */}
+                      <div className="flex items-center gap-1.5 text-xs shrink-0">
                         <span className="font-mono text-[10px] font-medium uppercase tracking-[0.071em] text-[#666666]">
                           Invoice:
                         </span>
@@ -941,55 +911,46 @@ export default function PartnerCalendarPage() {
                       </div>
                     </div>
 
-                    {/* Schedule & Place */}
-                    <div className="bg-[#fafafa] rounded-[6px] p-2.5 border border-[#ebebeb] text-xs space-y-1.5">
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="flex items-center gap-1.5 text-[#171717] truncate">
-                          <CalendarIcon size={12} className="text-[#666666] shrink-0" />
-                          <span className="font-mono text-xs text-[#171717] truncate">
-                            {safeFormatDate(b.date, { day: 'numeric', month: 'short' })}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-1.5 text-[#171717] justify-end truncate">
-                          <Clock size={12} className="text-[#666666] shrink-0" />
-                          <span className="font-mono text-xs text-[#171717] truncate">
-                            {b.time || 'Flexible'}
-                          </span>
-                        </div>
+                    {/* Middle Row: Customer Name & View Treatment Details link */}
+                    <div className="flex items-center justify-between gap-3 pt-0.5">
+                      <div className="font-medium text-sm text-[#171717] flex items-center gap-1.5 min-w-0">
+                        <User size={14} className="text-[#666666] shrink-0" />
+                        <span className="truncate">{b.guest_name || 'Guest Booking'}</span>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-2 pt-1 border-t border-[#ebebeb]">
-                        <div className="flex items-center gap-1.5 text-[#171717] truncate">
-                          <MapPin size={12} className="text-[#666666] shrink-0" />
-                          <span className="text-xs text-[#171717] font-medium truncate" title={b.location}>
-                            {b.location || 'Villa / Hotel'}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-1.5 text-[#171717] justify-end truncate">
-                          <DoorOpen size={12} className="text-[#666666] shrink-0" />
-                          <span className="text-xs font-medium text-[#171717] truncate">
-                            {b.room_number ? `Room ${b.room_number}` : '-'}
-                          </span>
-                        </div>
-                      </div>
+                      <Link
+                        href={`/invoice/${b.booking_id}`}
+                        target="_blank"
+                        className="group inline-flex items-center gap-1.5 text-xs font-medium text-[#171717] hover:text-black py-0.5 cursor-pointer shrink-0"
+                        title="View treatment details in invoice"
+                      >
+                        <FileText size={12} className="text-[#666666] group-hover:text-[#171717] transition-colors shrink-0" />
+                        <span className="underline decoration-[#ebebeb] group-hover:decoration-[#171717] underline-offset-2 transition-colors">
+                          View Treatment Details
+                        </span>
+                        <ExternalLink size={10} className="text-[#666666] group-hover:text-[#171717] transition-colors shrink-0" />
+                      </Link>
                     </div>
 
                     {/* Bottom: Treatment Amount vs Earned Commission */}
-                    <div className="pt-2 border-t border-[#ebebeb] flex items-center justify-between text-xs">
+                    <div className="pt-2.5 border-t border-[#ebebeb] flex items-center justify-between text-xs">
                       <div>
-                        <span className="font-mono text-[10px] uppercase font-medium text-[#666666] block">Treatment</span>
-                        <span className="font-mono font-bold text-xs text-[#171717] tabular-nums">
+                        <span className="font-mono text-[10px] uppercase font-medium text-[#666666] block">
+                          Treatment
+                        </span>
+                        <span className="font-mono font-bold text-xs sm:text-[13px] text-[#171717] tabular-nums">
                           {formatIDR(b.treatment_amount || b.gross_amount)}
                         </span>
                       </div>
                       <div className="text-right">
-                        <span className="font-mono text-[10px] uppercase font-medium text-[#297a3a] block">Earned ({b.commission_rate_pct}%)</span>
-                        <span className="font-mono font-bold text-xs text-[#297a3a] tabular-nums">
-                          +{formatIDR(b.commission_amount)}
+                        <span className="font-mono text-[10px] uppercase font-medium text-[#297a3a] block">
+                          Earned
+                        </span>
+                        <span className={`font-mono font-bold text-xs sm:text-[13px] tabular-nums ${isCancelled ? 'line-through text-[#8f8f8f]' : 'text-[#297a3a]'}`}>
+                          {isCancelled ? 'IDR 0' : `+${formatIDR(b.commission_amount)}`}
                         </span>
                       </div>
                     </div>
-
                   </div>
                 );
               })}
