@@ -43,10 +43,6 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
     }
   };
 
-  const handleOpenCalendar = () => {
-    router.push('/partners/calendar');
-  };
-
   const handleCopyCode = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!session?.partner_code) return;
@@ -68,7 +64,6 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
   const authNavItems = [
     { href: '/partners/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/partners/bookings', label: 'Bookings', icon: CalendarDays },
-    { href: '/partners/referrals', label: 'Referrals', icon: Users },
     { href: '/partners/commissions', label: 'Commissions', icon: Receipt },
     { href: '/partners/payouts', label: 'Payouts', icon: Wallet },
     { href: '/partners/profile', label: 'Profile', icon: User },
@@ -137,22 +132,6 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
                   </Link>
                 );
               })}
-
-              {/* Interactive Calendar View Link in Sidebar */}
-              <Link
-                href="/partners/calendar"
-                className={`w-full flex items-center justify-between px-3.5 py-2 rounded-[6px] text-[13px] font-normal transition-colors ${
-                  pathname === '/partners/calendar'
-                    ? 'bg-[#171717] text-white shadow-xs'
-                    : 'text-[#4d4d4d] hover:text-[#171717] hover:bg-[#fafafa]'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <CalendarDays size={15} strokeWidth={pathname === '/partners/calendar' ? 2 : 1.75} className={pathname === '/partners/calendar' ? 'text-white' : 'text-[#666666]'} />
-                  <span>Calendar View</span>
-                </div>
-                <span className={`w-2 h-2 rounded-full ${pathname === '/partners/calendar' ? 'bg-[#297a3a]' : 'bg-[#297a3a]'}`} />
-              </Link>
 
               {/* Quick Link Card in Sidebar */}
               {session.partner_code && (
@@ -357,17 +336,6 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
                       </Link>
                     );
                   })}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMobileMenuOpen(false);
-                      handleOpenCalendar();
-                    }}
-                    className="flex items-center gap-2 px-3 py-2 rounded-[6px] text-xs font-normal text-[#171717] border border-[#ebebeb] hover:bg-[#fafafa] text-left"
-                  >
-                    <CalendarDays size={14} className="text-[#666666]" />
-                    <span>Calendar</span>
-                  </button>
                 </div>
 
                 <div className="pt-2 border-t border-[#ebebeb] flex items-center justify-between text-xs text-[#666666]">
@@ -441,36 +409,20 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
               <span className="text-[10px] mt-0.5 tracking-tight font-mono">Overview</span>
             </Link>
 
-            {/* 2. Payouts */}
+            {/* 2. Bookings */}
             <Link
-              href="/partners/payouts"
+              href="/partners/bookings"
               className={`flex flex-col items-center justify-center min-h-[46px] py-1 rounded-[6px] transition-colors ${
-                pathname === '/partners/payouts'
+                pathname === '/partners/bookings'
                   ? 'text-[#171717] font-medium'
                   : 'text-[#666666] hover:text-[#171717]'
               }`}
             >
-              <Wallet size={17} strokeWidth={pathname === '/partners/payouts' ? 2 : 1.75} />
-              <span className="text-[10px] mt-0.5 tracking-tight font-mono">Payouts</span>
+              <CalendarDays size={17} strokeWidth={pathname === '/partners/bookings' ? 2 : 1.75} />
+              <span className="text-[10px] mt-0.5 tracking-tight font-mono">Bookings</span>
             </Link>
 
-            {/* 3. Calendar (Center Highlight Tab) */}
-            <Link
-              href="/partners/calendar"
-              className={`flex flex-col items-center justify-center min-h-[46px] py-1 transition-all ${
-                pathname === '/partners/calendar' ? 'text-[#171717] font-medium' : 'text-[#666666] hover:text-[#171717]'
-              }`}
-            >
-              <div className={`relative p-1 rounded-[6px] border transition-colors ${
-                pathname === '/partners/calendar' ? 'bg-[#171717] text-white border-[#171717]' : 'bg-white border-[#ebebeb] text-[#171717]'
-              }`}>
-                <CalendarDays size={15} strokeWidth={1.8} />
-                <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-[#297a3a] ring-1 ring-white" />
-              </div>
-              <span className="text-[10px] mt-0.5 font-mono tracking-tight">Calendar</span>
-            </Link>
-
-            {/* 4. Ledger (Commissions) */}
+            {/* 3. Ledger (Commissions) */}
             <Link
               href="/partners/commissions"
               className={`flex flex-col items-center justify-center min-h-[46px] py-1 rounded-[6px] transition-colors ${
@@ -481,6 +433,19 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
             >
               <Receipt size={17} strokeWidth={pathname === '/partners/commissions' ? 2 : 1.75} />
               <span className="text-[10px] mt-0.5 tracking-tight font-mono">Ledger</span>
+            </Link>
+
+            {/* 4. Payouts */}
+            <Link
+              href="/partners/payouts"
+              className={`flex flex-col items-center justify-center min-h-[46px] py-1 rounded-[6px] transition-colors ${
+                pathname === '/partners/payouts'
+                  ? 'text-[#171717] font-medium'
+                  : 'text-[#666666] hover:text-[#171717]'
+              }`}
+            >
+              <Wallet size={17} strokeWidth={pathname === '/partners/payouts' ? 2 : 1.75} />
+              <span className="text-[10px] mt-0.5 tracking-tight font-mono">Payouts</span>
             </Link>
 
             {/* 5. Profile */}

@@ -16,6 +16,7 @@ import {
   CalendarDays
 } from 'lucide-react';
 import { CalendarBooking } from './FloatingBookingCalendar';
+import ScheduleTrackingModal from './ScheduleTrackingModal';
 
 interface PartnerCalendarCardProps {
   bookings: CalendarBooking[];
@@ -61,6 +62,7 @@ export default function PartnerCalendarCard({ bookings = [], className = '' }: P
   const [statusFilter, setStatusFilter] = useState<'all' | 'approved' | 'pending' | 'cancelled'>('all');
   const [viewMode, setViewMode] = useState<'month' | 'week'>('month');
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [trackingBooking, setTrackingBooking] = useState<CalendarBooking | null>(null);
 
   const formatIDR = (val: number) => {
     const formatted = new Intl.NumberFormat('id-ID', {
@@ -547,51 +549,26 @@ export default function PartnerCalendarCard({ bookings = [], className = '' }: P
                       : 'border-[#ebebeb] bg-white hover:border-[#171717]/40 shadow-[0_1px_2px_rgba(0,0,0,0.02)]'
                   }`}
                 >
-                  {/* Top Row: Status Badges & Invoice ID */}
+                  {/* Top Row: PAID OUT label + Track Schedule button + Invoice ID */}
                   <div className="flex items-center justify-between gap-2 flex-wrap">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      {isPaid ? (
-                        <span className="font-mono text-[10px] font-medium text-[#297a3a] bg-[#297a3a]/10 px-2 py-0.5 rounded-[4px] border border-[#297a3a]/20">
-                          {b.payment_method === 'cash' ? 'Paid (Cash)' : 'Paid'}
-                        </span>
-                      ) : (
-                        <span className="font-mono text-[10px] font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded-[4px] border border-amber-200">
-                          Unpaid
+                    <div className="flex items-center gap-2">
+                      {/* ONLY commission paid out has a label in capital letters */}
+                      {isPaidCommission && (
+                        <span className="font-mono text-[10px] font-semibold text-white bg-[#171717] px-2 py-0.5 rounded-[4px] uppercase tracking-wider">
+                          PAID OUT
                         </span>
                       )}
 
-                      {isCancelled ? (
-                        <span className="font-mono text-[10px] font-medium text-red-600 bg-red-50 px-2 py-0.5 rounded-[4px] border border-red-200">
-                          Cancelled
-                        </span>
-                      ) : b.booking_status === 'Ongoing' || b.treatment_status === 'Ongoing' || b.treatment_status === 'In Progress' ? (
-                        <span className="font-mono text-[10px] font-medium text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-[4px] border border-indigo-200 flex items-center gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
-                          Ongoing
-                        </span>
-                      ) : b.booking_status === 'Completed' || b.treatment_status === 'Finish' || b.treatment_status === 'Finished' || b.service_completed ? (
-                        <span className="font-mono text-[10px] font-medium text-[#297a3a] bg-[#297a3a]/10 px-2 py-0.5 rounded-[4px] border border-[#297a3a]/20">
-                          Finish
-                        </span>
-                      ) : b.booking_status === 'Confirmed' ? (
-                        <span className="font-mono text-[10px] font-medium text-blue-700 bg-blue-50 px-2 py-0.5 rounded-[4px] border border-blue-200">
-                          Confirmed
-                        </span>
-                      ) : (
-                        <span className="font-mono text-[10px] font-medium text-amber-800 bg-amber-50 px-2 py-0.5 rounded-[4px] border border-amber-200">
-                          Awaiting Treatment
-                        </span>
-                      )}
-
-                      {isPaidCommission ? (
-                        <span className="font-mono text-[10px] font-medium text-white bg-[#171717] px-2 py-0.5 rounded-[4px] inline-flex items-center gap-1">
-                          ✓ Paid Out
-                        </span>
-                      ) : isApproved ? (
-                        <span className="font-mono text-[10px] font-medium text-[#297a3a] bg-[#297a3a]/10 px-2 py-0.5 rounded-[4px] border border-[#297a3a]/20">
-                          Approved
-                        </span>
-                      ) : null}
+                      {/* Single-click button to track book schedule */}
+                      <button
+                        type="button"
+                        onClick={() => setTrackingBooking(b)}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-[#171717] bg-[#fafafa] hover:bg-[#f0f0f0] border border-[#ebebeb] rounded-[6px] transition-colors cursor-pointer shadow-2xs"
+                        title="Track appointment schedule and status history"
+                      >
+                        <Clock size={12} className="text-[#666666]" />
+                        <span>Track Schedule</span>
+                      </button>
                     </div>
 
                     {/* Invoice Code with copy */}
@@ -674,6 +651,12 @@ export default function PartnerCalendarCard({ bookings = [], className = '' }: P
           </span>
         </div>
       </div>
+
+      {/* Schedule Tracking History Modal */}
+      <ScheduleTrackingModal
+        booking={trackingBooking}
+        onClose={() => setTrackingBooking(null)}
+      />
 
     </div>
   );

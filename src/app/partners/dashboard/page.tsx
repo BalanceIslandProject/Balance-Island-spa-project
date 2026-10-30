@@ -8,10 +8,12 @@ import {
   AlertCircle,
   ChevronRight,
   Download,
-  RefreshCw
+  RefreshCw,
+  Clock
 } from 'lucide-react';
 import { CalendarBooking } from '../FloatingBookingCalendar';
 import PartnerCommissionFilterCard from '../PartnerCommissionFilterCard';
+import ScheduleTrackingModal from '../ScheduleTrackingModal';
 import { supabase } from '@/lib/supabase';
 
 interface PartnerStats {
@@ -46,6 +48,7 @@ export default function PartnerDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedBookingId, setCopiedBookingId] = useState<string | null>(null);
+  const [trackingBooking, setTrackingBooking] = useState<CalendarBooking | null>(null);
 
   const fetchData = async () => {
     try {
@@ -408,10 +411,10 @@ Please verify and process the payout to my registered details. Thank you!`;
                 </span>
               </div>
               <Link
-                href="/partners/referrals"
+                href="/partners/bookings"
                 className="font-mono text-[11px] uppercase tracking-[0.071em] text-[#666666] hover:text-[#171717] flex items-center gap-0.5 transition-colors"
               >
-                <span>All Referrals</span>
+                <span>All Bookings</span>
                 <ChevronRight size={13} />
               </Link>
             </div>
@@ -426,14 +429,14 @@ Please verify and process the payout to my registered details. Thank you!`;
             ) : (
               <div className="divide-y divide-[#ebebeb]">
                 {recentReferrals.map((b) => {
-                  const isApproved = b.commission_status === 'approved';
                   const isCancelled = b.commission_status === 'cancelled' || b.booking_status === 'Cancelled';
-                  const isPaid = b.payment_status === 'paid' || b.payment_verified;
+                  const isPaidOut = b.commission_status === 'paid';
 
                   return (
                     <div key={b.id || b.booking_id} className="py-3.5 first:pt-1 last:pb-1 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                       <div className="min-w-0 space-y-1.5">
                         <div className="flex flex-wrap items-center gap-1.5">
+                          {/* Invoice / Booking ID with copy */}
                           <button
                             type="button"
                             onClick={() => handleCopyBooking(b.booking_id)}
@@ -444,48 +447,23 @@ Please verify and process the payout to my registered details. Thank you!`;
                             {copiedBookingId === b.booking_id ? <Check size={11} className="text-[#297a3a]" /> : <Copy size={11} className="text-[#8f8f8f]" />}
                           </button>
 
-                          {isPaid ? (
-                            <span className="font-mono text-[10px] text-[#297a3a] bg-[#fafafa] px-2 py-0.5 rounded-[4px] border border-[#ebebeb]">
-                              {b.payment_method === 'cash' ? 'Paid (Cash)' : b.payment_method === 'online' ? 'Paid (Online)' : 'Paid'}
-                            </span>
-                          ) : (
-                            <span className="font-mono text-[10px] text-[#666666] bg-[#fafafa] px-2 py-0.5 rounded-[4px] border border-[#ebebeb]">
-                              Unpaid
+                          {/* Only commission paid out has a label in capital letters */}
+                          {isPaidOut && (
+                            <span className="font-mono text-[10px] font-semibold text-white bg-[#171717] px-2 py-0.5 rounded-[4px] uppercase tracking-wider">
+                              PAID OUT
                             </span>
                           )}
 
-                          {isCancelled ? (
-                            <span className="font-mono text-[10px] text-[#8f8f8f] bg-white px-2 py-0.5 rounded-[4px] border border-[#ebebeb]">
-                              Cancelled
-                            </span>
-                          ) : b.booking_status === 'Ongoing' || b.treatment_status === 'Ongoing' || b.treatment_status === 'In Progress' ? (
-                            <span className="font-mono text-[10px] text-[#171717] bg-[#fafafa] px-2 py-0.5 rounded-[4px] border border-[#ebebeb] flex items-center gap-1">
-                              <span className="w-1.5 h-1.5 rounded-full bg-[#171717] animate-pulse" />
-                              Ongoing Treatment
-                            </span>
-                          ) : b.booking_status === 'Completed' || b.treatment_status === 'Finish' || b.treatment_status === 'Finished' || b.service_completed ? (
-                            <span className="font-mono text-[10px] text-[#297a3a] bg-[#fafafa] px-2 py-0.5 rounded-[4px] border border-[#ebebeb]">
-                              Finish Treatment
-                            </span>
-                          ) : b.booking_status === 'Confirmed' ? (
-                            <span className="font-mono text-[10px] text-[#171717] bg-[#fafafa] px-2 py-0.5 rounded-[4px] border border-[#ebebeb]">
-                              Confirmed
-                            </span>
-                          ) : (
-                            <span className="font-mono text-[10px] text-[#666666] bg-[#fafafa] px-2 py-0.5 rounded-[4px] border border-[#ebebeb]">
-                              Awaiting Treatment
-                            </span>
-                          )}
-
-                          {b.commission_status === 'paid' ? (
-                            <span className="font-mono text-[10px] text-white bg-[#171717] px-2 py-0.5 rounded-[4px] border border-[#171717] inline-flex items-center gap-1">
-                              ✓ Paid Out
-                            </span>
-                          ) : isApproved ? (
-                            <span className="font-mono text-[10px] text-[#297a3a] bg-[#fafafa] px-2 py-0.5 rounded-[4px] border border-[#ebebeb]">
-                              Approved
-                            </span>
-                          ) : null}
+                          {/* Single-click button to track book schedule */}
+                          <button
+                            type="button"
+                            onClick={() => setTrackingBooking(b)}
+                            className="inline-flex items-center gap-1.5 px-2 py-0.5 text-[11px] font-medium text-[#171717] bg-[#fafafa] hover:bg-[#f0f0f0] border border-[#ebebeb] rounded-[4px] transition-colors cursor-pointer shadow-2xs"
+                            title="Track appointment schedule and status history"
+                          >
+                            <Clock size={11} className="text-[#666666]" />
+                            <span>Track Schedule</span>
+                          </button>
                         </div>
 
                         <p className="text-xs text-[#4d4d4d] truncate font-normal">
@@ -515,6 +493,12 @@ Please verify and process the payout to my registered details. Thank you!`;
           <PartnerCommissionFilterCard bookings={calendarBookings} />
         </div>
       </div>
+
+      {/* Schedule Tracking History Modal */}
+      <ScheduleTrackingModal
+        booking={trackingBooking}
+        onClose={() => setTrackingBooking(null)}
+      />
 
     </div>
   );
