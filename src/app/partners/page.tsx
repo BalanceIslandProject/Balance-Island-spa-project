@@ -1,31 +1,72 @@
-import React from 'react';
+'use client';
+
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { 
   ArrowRight, 
   Building2, 
   Compass, 
   Globe, 
-  ShieldCheck, 
-  Sparkles, 
   CheckCircle2,
   QrCode,
   Wallet,
-  Clock
+  Clock,
+  Sparkles,
+  LayoutDashboard
 } from 'lucide-react';
+import { VercelSpinner } from '@/components/therapick/TherapickUI';
 
 export default function PartnerProgramOverviewPage() {
+  const router = useRouter();
+  const [loadingAction, setLoadingAction] = useState<string | null>(null);
+  const [partner, setPartner] = useState<any>(null);
+
+  useEffect(() => {
+    // Check if user is already authenticated
+    async function checkAuth() {
+      try {
+        const res = await fetch('/api/affiliates/auth/me');
+        const data = await res.json();
+        if (data.success && data.partner) {
+          setPartner(data.partner);
+        }
+      } catch {
+        // Unauthenticated visitor
+      }
+    }
+    checkAuth();
+  }, []);
+
+  const handleNavigate = (path: string, actionKey: string) => {
+    setLoadingAction(actionKey);
+    router.push(path);
+  };
+
   return (
     <div className="w-full max-w-5xl mx-auto space-y-8 sm:space-y-12 py-2 sm:py-6 px-2 sm:px-4">
       
       {/* ========================================================
           1. HERO SECTION: Professional Vercel Light Aesthetics
          ======================================================== */}
-      <section className="bg-white border border-[#ebebeb] rounded-[6px] p-6 sm:p-10 md:p-12 shadow-[0_0_0_1px_rgba(0,0,0,0.03)] space-y-6">
+      <section className="bg-white border border-[#ebebeb] rounded-[6px] p-6 sm:p-10 md:p-12 shadow-[0_1px_3px_rgba(0,0,0,0.02)] space-y-6">
         
         {/* Program Status Badge */}
-        <div className="inline-flex items-center gap-2 font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.071em] text-[#666666] bg-[#fafafa] px-3 py-1 rounded-[6px] border border-[#ebebeb]">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#297a3a]" />
-          <span>Partner Program • Bali</span>
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div className="inline-flex items-center gap-2 font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.071em] text-[#666666] bg-[#fafafa] px-3 py-1 rounded-[6px] border border-[#ebebeb]">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#297a3a]" />
+            <span>Partner Program • Bali</span>
+          </div>
+
+          {partner && (
+            <Link
+              href="/partners/dashboard"
+              className="inline-flex items-center gap-1.5 font-mono text-[11px] text-[#297a3a] bg-[#297a3a]/10 border border-[#297a3a]/25 px-2.5 py-1 rounded-full hover:bg-[#297a3a]/15 transition-colors"
+            >
+              <span>Logged in as {partner.first_name || 'Partner'} (#{partner.partner_code})</span>
+              <ArrowRight size={11} />
+            </Link>
+          )}
         </div>
 
         {/* Title & Brand */}
@@ -34,7 +75,7 @@ export default function PartnerProgramOverviewPage() {
             <img
               src="/therapick-logo-2.png"
               alt="Therapick"
-              className="h-8 sm:h-10 w-auto object-contain"
+              className="h-8 sm:h-9 w-auto object-contain"
             />
           </div>
 
@@ -47,28 +88,72 @@ export default function PartnerProgramOverviewPage() {
           </p>
         </div>
 
-        {/* Action CTAs */}
+        {/* Action CTAs with Instant Loading State */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
-          <Link
-            href="/partners/register"
-            className="inline-flex items-center justify-center gap-2 px-6 h-11 rounded-[6px] bg-[#171717] text-white font-mono text-xs uppercase tracking-[0.071em] hover:bg-black active:scale-[0.99] transition-all shadow-xs"
-          >
-            <span>Apply as a Partner</span>
-            <ArrowRight size={13} />
-          </Link>
-          <Link
-            href="/partners/login"
-            className="inline-flex items-center justify-center px-6 h-11 rounded-[6px] border border-[#ebebeb] bg-white text-[#171717] font-mono text-xs uppercase tracking-[0.071em] hover:bg-[#fafafa] active:scale-[0.99] transition-all"
-          >
-            Partner Portal Login
-          </Link>
+          {partner ? (
+            <button
+              type="button"
+              onClick={() => handleNavigate('/partners/dashboard', 'dashboard')}
+              disabled={Boolean(loadingAction)}
+              className="inline-flex items-center justify-center gap-2 px-6 h-11 rounded-[6px] bg-[#171717] hover:bg-black text-white font-mono text-xs uppercase tracking-[0.071em] transition-all cursor-pointer disabled:opacity-70 shadow-xs"
+            >
+              {loadingAction === 'dashboard' ? (
+                <>
+                  <VercelSpinner className="w-3.5 h-3.5 text-white" />
+                  <span>Opening Dashboard...</span>
+                </>
+              ) : (
+                <>
+                  <LayoutDashboard size={14} />
+                  <span>Go to Partner Dashboard</span>
+                  <ArrowRight size={13} />
+                </>
+              )}
+            </button>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={() => handleNavigate('/partners/register', 'apply')}
+                disabled={Boolean(loadingAction)}
+                className="inline-flex items-center justify-center gap-2 px-6 h-11 rounded-[6px] bg-[#171717] hover:bg-black text-white font-mono text-xs uppercase tracking-[0.071em] transition-all cursor-pointer disabled:opacity-70 shadow-xs"
+              >
+                {loadingAction === 'apply' ? (
+                  <>
+                    <VercelSpinner className="w-3.5 h-3.5 text-white" />
+                    <span>Loading Application...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Apply as a Partner</span>
+                    <ArrowRight size={13} />
+                  </>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => handleNavigate('/partners/login', 'login')}
+                disabled={Boolean(loadingAction)}
+                className="inline-flex items-center justify-center gap-2 px-6 h-11 rounded-[6px] border border-[#ebebeb] bg-white text-[#171717] font-mono text-xs uppercase tracking-[0.071em] hover:bg-[#fafafa] transition-all cursor-pointer disabled:opacity-70"
+              >
+                {loadingAction === 'login' ? (
+                  <>
+                    <VercelSpinner className="w-3.5 h-3.5 text-[#171717]" />
+                    <span>Opening Login...</span>
+                  </>
+                ) : (
+                  <span>Partner Portal Login</span>
+                )}
+              </button>
+            </>
+          )}
         </div>
 
         {/* Key Metrics Hairline Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 pt-6 border-t border-[#ebebeb]">
           <div className="p-3.5 rounded-[6px] bg-[#fafafa] border border-[#ebebeb] space-y-0.5">
-            <span className="font-mono text-lg sm:text-xl font-medium text-[#171717] block">15%</span>
-            <span className="font-mono text-[10px] text-[#666666] uppercase tracking-[0.05em] block">Commission Rate</span>
+            <span className="font-mono text-lg sm:text-xl font-medium text-[#171717] block">Weekly</span>
+            <span className="font-mono text-[10px] text-[#666666] uppercase tracking-[0.05em] block">Direct Payouts</span>
           </div>
           <div className="p-3.5 rounded-[6px] bg-[#fafafa] border border-[#ebebeb] space-y-0.5">
             <span className="font-mono text-lg sm:text-xl font-medium text-[#171717] block">24h</span>
@@ -80,7 +165,7 @@ export default function PartnerProgramOverviewPage() {
           </div>
           <div className="p-3.5 rounded-[6px] bg-[#fafafa] border border-[#ebebeb] space-y-0.5">
             <span className="font-mono text-lg sm:text-xl font-medium text-[#171717] block">100%</span>
-            <span className="font-mono text-[10px] text-[#666666] uppercase tracking-[0.05em] block">In-Villa Service</span>
+            <span className="font-mono text-[10px] text-[#666666] uppercase tracking-[0.05em] block">In-Villa Coverage</span>
           </div>
         </div>
 
@@ -100,7 +185,7 @@ export default function PartnerProgramOverviewPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <div className="p-5 sm:p-6 border border-[#ebebeb] rounded-[6px] bg-white shadow-[0_0_0_1px_rgba(0,0,0,0.02)] space-y-2.5">
+          <div className="p-5 sm:p-6 border border-[#ebebeb] rounded-[6px] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.02)] space-y-2.5">
             <div className="flex items-center justify-between">
               <span className="w-6 h-6 rounded-[4px] bg-[#fafafa] border border-[#ebebeb] font-mono text-xs text-[#171717] font-medium flex items-center justify-center">
                 01
@@ -115,7 +200,7 @@ export default function PartnerProgramOverviewPage() {
             </p>
           </div>
 
-          <div className="p-5 sm:p-6 border border-[#ebebeb] rounded-[6px] bg-white shadow-[0_0_0_1px_rgba(0,0,0,0.02)] space-y-2.5">
+          <div className="p-5 sm:p-6 border border-[#ebebeb] rounded-[6px] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.02)] space-y-2.5">
             <div className="flex items-center justify-between">
               <span className="w-6 h-6 rounded-[4px] bg-[#fafafa] border border-[#ebebeb] font-mono text-xs text-[#171717] font-medium flex items-center justify-center">
                 02
@@ -128,7 +213,7 @@ export default function PartnerProgramOverviewPage() {
             </p>
           </div>
 
-          <div className="p-5 sm:p-6 border border-[#ebebeb] rounded-[6px] bg-white shadow-[0_0_0_1px_rgba(0,0,0,0.02)] space-y-2.5">
+          <div className="p-5 sm:p-6 border border-[#ebebeb] rounded-[6px] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.02)] space-y-2.5">
             <div className="flex items-center justify-between">
               <span className="w-6 h-6 rounded-[4px] bg-[#297a3a]/10 border border-[#297a3a]/25 font-mono text-xs text-[#297a3a] font-medium flex items-center justify-center">
                 03
@@ -137,7 +222,7 @@ export default function PartnerProgramOverviewPage() {
             </div>
             <h3 className="text-sm font-medium text-[#171717] tracking-[-0.02em]">Automated Commissions</h3>
             <p className="text-xs text-[#666666] leading-relaxed">
-              Receive 15% on completed and verified rituals. Track earnings transparently with weekly disbursements via direct bank transfer or Wise.
+              Receive verified commissions on completed rituals. Track earnings transparently with weekly disbursements via direct bank transfer or Wise.
             </p>
           </div>
         </div>
@@ -157,7 +242,7 @@ export default function PartnerProgramOverviewPage() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div className="p-5 sm:p-6 border border-[#ebebeb] rounded-[6px] bg-white shadow-[0_0_0_1px_rgba(0,0,0,0.02)] space-y-2">
+          <div className="p-5 sm:p-6 border border-[#ebebeb] rounded-[6px] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.02)] space-y-2">
             <div className="w-8 h-8 rounded-[6px] bg-[#fafafa] border border-[#ebebeb] flex items-center justify-center text-[#171717]">
               <Building2 size={16} />
             </div>
@@ -167,7 +252,7 @@ export default function PartnerProgramOverviewPage() {
             </p>
           </div>
 
-          <div className="p-5 sm:p-6 border border-[#ebebeb] rounded-[6px] bg-white shadow-[0_0_0_1px_rgba(0,0,0,0.02)] space-y-2">
+          <div className="p-5 sm:p-6 border border-[#ebebeb] rounded-[6px] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.02)] space-y-2">
             <div className="w-8 h-8 rounded-[6px] bg-[#fafafa] border border-[#ebebeb] flex items-center justify-center text-[#171717]">
               <Compass size={16} />
             </div>
@@ -177,7 +262,7 @@ export default function PartnerProgramOverviewPage() {
             </p>
           </div>
 
-          <div className="p-5 sm:p-6 border border-[#ebebeb] rounded-[6px] bg-white shadow-[0_0_0_1px_rgba(0,0,0,0.02)] space-y-2">
+          <div className="p-5 sm:p-6 border border-[#ebebeb] rounded-[6px] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.02)] space-y-2">
             <div className="w-8 h-8 rounded-[6px] bg-[#fafafa] border border-[#ebebeb] flex items-center justify-center text-[#171717]">
               <Globe size={16} />
             </div>
@@ -203,7 +288,7 @@ export default function PartnerProgramOverviewPage() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div className="p-5 rounded-[6px] bg-white border border-[#ebebeb] space-y-1.5 shadow-[0_0_0_1px_rgba(0,0,0,0.02)]">
+          <div className="p-5 rounded-[6px] bg-white border border-[#ebebeb] space-y-1.5 shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
             <div className="flex items-center gap-2">
               <CheckCircle2 size={15} className="text-[#297a3a]" />
               <h3 className="text-xs sm:text-sm font-medium text-[#171717]">Certified Balinese Therapists</h3>
@@ -213,7 +298,7 @@ export default function PartnerProgramOverviewPage() {
             </p>
           </div>
 
-          <div className="p-5 rounded-[6px] bg-white border border-[#ebebeb] space-y-1.5 shadow-[0_0_0_1px_rgba(0,0,0,0.02)]">
+          <div className="p-5 rounded-[6px] bg-white border border-[#ebebeb] space-y-1.5 shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
             <div className="flex items-center gap-2">
               <CheckCircle2 size={15} className="text-[#297a3a]" />
               <h3 className="text-xs sm:text-sm font-medium text-[#171717]">Luxury Mobile Setup</h3>
@@ -223,7 +308,7 @@ export default function PartnerProgramOverviewPage() {
             </p>
           </div>
 
-          <div className="p-5 rounded-[6px] bg-white border border-[#ebebeb] space-y-1.5 shadow-[0_0_0_1px_rgba(0,0,0,0.02)]">
+          <div className="p-5 rounded-[6px] bg-white border border-[#ebebeb] space-y-1.5 shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
             <div className="flex items-center gap-2">
               <CheckCircle2 size={15} className="text-[#297a3a]" />
               <h3 className="text-xs sm:text-sm font-medium text-[#171717]">Real-Time Portal Tracking</h3>
@@ -233,7 +318,7 @@ export default function PartnerProgramOverviewPage() {
             </p>
           </div>
 
-          <div className="p-5 rounded-[6px] bg-white border border-[#ebebeb] space-y-1.5 shadow-[0_0_0_1px_rgba(0,0,0,0.02)]">
+          <div className="p-5 rounded-[6px] bg-white border border-[#ebebeb] space-y-1.5 shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
             <div className="flex items-center gap-2">
               <CheckCircle2 size={15} className="text-[#297a3a]" />
               <h3 className="text-xs sm:text-sm font-medium text-[#171717]">Priority WhatsApp Concierge</h3>
@@ -246,9 +331,9 @@ export default function PartnerProgramOverviewPage() {
       </section>
 
       {/* ========================================================
-          5. CALL TO ACTION BANNER
+          5. CALL TO ACTION BANNER (with instant loading state)
          ======================================================== */}
-      <section className="border border-[#ebebeb] p-6 sm:p-10 rounded-[6px] text-center space-y-4 bg-white shadow-[0_0_0_1px_rgba(0,0,0,0.03)]">
+      <section className="border border-[#ebebeb] p-6 sm:p-10 rounded-[6px] text-center space-y-4 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
         <div className="flex justify-center mb-1">
           <img
             src="/therapick-logo-2.png"
@@ -265,19 +350,62 @@ export default function PartnerProgramOverviewPage() {
           </p>
         </div>
         <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
-          <Link
-            href="/partners/register"
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 h-10 rounded-[6px] bg-[#171717] text-white font-mono text-xs uppercase tracking-[0.071em] hover:bg-black active:scale-[0.99] transition-all shadow-xs"
-          >
-            <span>Create Partner Account</span>
-            <ArrowRight size={13} />
-          </Link>
-          <Link
-            href="/partners/login"
-            className="w-full sm:w-auto inline-flex items-center justify-center px-6 h-10 rounded-[6px] border border-[#ebebeb] bg-white text-[#171717] font-mono text-xs uppercase tracking-[0.071em] hover:bg-[#fafafa] active:scale-[0.99] transition-all"
-          >
-            Partner Login
-          </Link>
+          {partner ? (
+            <button
+              type="button"
+              onClick={() => handleNavigate('/partners/dashboard', 'cta_dash')}
+              disabled={Boolean(loadingAction)}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 h-10 rounded-[6px] bg-[#171717] hover:bg-black text-white font-mono text-xs uppercase tracking-[0.071em] transition-all cursor-pointer shadow-xs disabled:opacity-70"
+            >
+              {loadingAction === 'cta_dash' ? (
+                <>
+                  <VercelSpinner className="w-3.5 h-3.5 text-white" />
+                  <span>Opening Dashboard...</span>
+                </>
+              ) : (
+                <>
+                  <span>Open Partner Dashboard</span>
+                  <ArrowRight size={13} />
+                </>
+              )}
+            </button>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={() => handleNavigate('/partners/register', 'cta_apply')}
+                disabled={Boolean(loadingAction)}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 h-10 rounded-[6px] bg-[#171717] hover:bg-black text-white font-mono text-xs uppercase tracking-[0.071em] transition-all cursor-pointer shadow-xs disabled:opacity-70"
+              >
+                {loadingAction === 'cta_apply' ? (
+                  <>
+                    <VercelSpinner className="w-3.5 h-3.5 text-white" />
+                    <span>Loading Application...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Create Partner Account</span>
+                    <ArrowRight size={13} />
+                  </>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => handleNavigate('/partners/login', 'cta_login')}
+                disabled={Boolean(loadingAction)}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 h-10 rounded-[6px] border border-[#ebebeb] bg-white text-[#171717] font-mono text-xs uppercase tracking-[0.071em] hover:bg-[#fafafa] transition-all cursor-pointer disabled:opacity-70"
+              >
+                {loadingAction === 'cta_login' ? (
+                  <>
+                    <VercelSpinner className="w-3.5 h-3.5 text-[#171717]" />
+                    <span>Opening Login...</span>
+                  </>
+                ) : (
+                  <span>Partner Login</span>
+                )}
+              </button>
+            </>
+          )}
         </div>
       </section>
 
