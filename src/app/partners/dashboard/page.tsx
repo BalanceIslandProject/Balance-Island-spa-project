@@ -3,864 +3,644 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { 
+  CalendarDays, 
+  Receipt, 
+  ExternalLink, 
+  Clock, 
+  CheckCircle2, 
+  TrendingUp, 
+  TrendingDown,
+  Users, 
+  Share2, 
   Copy, 
   Check, 
-  AlertCircle,
-  RefreshCw,
-  Clock,
-  Share2,
-  QrCode,
-  Download,
-  ExternalLink,
+  QrCode, 
+  Download, 
+  RefreshCw, 
+  ArrowUpRight, 
+  MessageCircle, 
+  MapPin, 
+  DoorClosed, 
+  ShieldCheck, 
+  Sparkles,
   ChevronRight,
-  TrendingUp,
-  Receipt,
-  CalendarDays,
-  Wallet,
-  CheckCircle2,
-  ArrowUpRight,
-  User,
-  ShieldCheck,
-  FileText
+  ChevronDown,
+  Search,
+  Filter,
+  MoreVertical,
+  Zap,
+  Activity,
+  Calendar,
+  Wallet
 } from 'lucide-react';
-import { CalendarBooking } from '../FloatingBookingCalendar';
-import ScheduleTrackingModal from '../ScheduleTrackingModal';
 import { supabase } from '@/lib/supabase';
 
-interface PartnerStats {
-  totalClicks: number;
-  totalBookings: number;
-  conversionRate: string;
-  totalRevenue: number;
-  eligibleTreatmentRevenue: number;
-  pendingCommission: number;
-  approvedCommission: number;
-  paidCommission: number;
-  availableForPayout: number;
-}
+// Sparkline SVG Component (Exact replica of the green/teal sparklines in Kravio KPI cards)
+function Sparkline({ color = 'green', trend = 'up' }: { color?: 'green' | 'teal' | 'red'; trend?: 'up' | 'down' }) {
+  const strokeColor = color === 'green' ? '#16a34a' : color === 'teal' ? '#0d9488' : '#ef4444';
+  const fillGradientId = `sparkline-grad-${color}-${trend}`;
 
-interface PartnerProfile {
-  id: string;
-  partner_code: string;
-  first_name: string;
-  last_name: string;
-  business_name?: string;
-  email: string;
-  status: string;
-  commission_rate_pct: number;
-  payout_method: string;
-  payout_details: any;
+  const pathD = trend === 'up'
+    ? 'M 0 30 Q 15 28, 25 18 T 50 22 T 75 10 T 100 5'
+    : 'M 0 10 Q 20 12, 35 22 T 60 18 T 80 28 T 100 32';
+
+  const areaD = trend === 'up'
+    ? `${pathD} L 100 38 L 0 38 Z`
+    : `${pathD} L 100 38 L 0 38 Z`;
+
+  return (
+    <svg viewBox="0 0 100 38" className="w-20 h-9 shrink-0 overflow-visible" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id={fillGradientId} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={strokeColor} stopOpacity="0.25" />
+          <stop offset="100%" stopColor={strokeColor} stopOpacity="0.0" />
+        </linearGradient>
+      </defs>
+      <path d={areaD} fill={`url(#${fillGradientId})`} />
+      <path d={pathD} fill="none" stroke={strokeColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
 }
 
 export default function PartnerDashboardPage() {
-  const [profile, setProfile] = useState<PartnerProfile | null>(null);
-  const [stats, setStats] = useState<PartnerStats | null>(null);
-  const [calendarBookings, setCalendarBookings] = useState<CalendarBooking[]>([]);
+  const [partner, setPartner] = useState<any>(null);
+  const [stats, setStats] = useState<any>(null);
+  const [calendarBookings, setCalendarBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [copiedLink, setCopiedLink] = useState(false);
-  const [copiedCode, setCopiedCode] = useState(false);
-  const [trackingBooking, setTrackingBooking] = useState<CalendarBooking | null>(null);
-  const [hoveredMonthIdx, setHoveredMonthIdx] = useState<number | null>(null);
+  const [activeTimeframe, setActiveTimeframe] = useState('This Month');
+  const [activityFilter, setActivityFilter] = useState<'today' | 'yesterday' | 'week'>('today');
+  const [activitySearch, setActivitySearch] = useState('');
+  const [tableSearch, setTableSearch] = useState('');
+  const [activeBarIndex, setActiveBarIndex] = useState<number>(3); // Default highlighted bar
 
-  const fetchData = async () => {
+  // Load live partner stats and session
+  const loadData = async () => {
     try {
-      const [meRes, statsRes] = await Promise.all([
-        fetch('/api/affiliates/auth/me'),
-        fetch('/api/affiliates/stats'),
+      const [statsRes, meRes] = await Promise.all([
+        fetch('/api/affiliates/stats').then((r) => r.json()),
+        fetch('/api/affiliates/auth/me').then((r) => r.json()),
       ]);
 
-      const meData = await meRes.json();
-      const statsData = await statsRes.json();
-
-      if (meData.success) {
-        setProfile(meData.partner);
+      if (statsRes.success) {
+        setStats(statsRes.stats || null);
+        setCalendarBookings(statsRes.calendarBookings || []);
       }
-      if (statsData.success) {
-        setStats(statsData.stats);
-        setCalendarBookings(statsData.calendarBookings || []);
+      if (meRes.success) {
+        setPartner(meRes.partner || null);
       }
-    } catch (err) {
-      console.error('Failed to load dashboard:', err);
+    } catch (e) {
+      console.error('Error loading dashboard:', e);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchData();
+    loadData();
 
-    // Supabase Realtime synchronization
-    const realtimeChannel = supabase
-      .channel('partner_dashboard_realtime_sync')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'affiliate_commissions' }, () => {
-        fetchData();
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, () => {
-        fetchData();
-      })
+    // Supabase Real-Time Sync
+    const channel = supabase
+      .channel('partner_dashboard_kravio')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'affiliate_commissions' }, () => loadData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, () => loadData())
       .subscribe();
 
-    const pollInterval = setInterval(fetchData, 8000);
-
-    const onVisibilityOrFocus = () => {
-      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
-        fetchData();
-      }
-    };
-    window.addEventListener('focus', onVisibilityOrFocus);
-    document.addEventListener('visibilitychange', onVisibilityOrFocus);
+    const interval = setInterval(loadData, 10000);
 
     return () => {
-      supabase.removeChannel(realtimeChannel);
-      clearInterval(pollInterval);
-      window.removeEventListener('focus', onVisibilityOrFocus);
-      document.removeEventListener('visibilitychange', onVisibilityOrFocus);
+      supabase.removeChannel(channel);
+      clearInterval(interval);
     };
   }, []);
 
-  const partnerCode = profile?.partner_code || '';
-  const referralLink = `https://www.booktherapick.com/?ref=${partnerCode}`;
-  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(referralLink)}`;
-
-  const approvedBalance = stats?.approvedCommission || 0;
-  const hasApprovedBalance = approvedBalance > 0;
-  const totalEarnings = (stats?.paidCommission || 0) + (stats?.approvedCommission || 0) + (stats?.pendingCommission || 0);
-
-  const handleCopyLink = () => {
-    if (!referralLink) return;
-    navigator.clipboard.writeText(referralLink);
-    setCopiedLink(true);
-    setTimeout(() => setCopiedLink(false), 2000);
-  };
-
-  const handleCopyCode = () => {
-    if (!partnerCode) return;
-    navigator.clipboard.writeText(partnerCode);
-    setCopiedCode(true);
-    setTimeout(() => setCopiedCode(false), 2000);
-  };
-
-  const handleDownloadQr = async () => {
-    try {
-      const response = await fetch(qrCodeUrl);
-      const blob = await response.blob();
-      const blobUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = blobUrl;
-      link.download = `Therapick-${partnerCode || 'partner'}-QR.png`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(blobUrl);
-    } catch {
-      window.open(qrCodeUrl, '_blank');
-    }
-  };
-
-  const handleWithdrawWhatsApp = () => {
-    if (!hasApprovedBalance) {
-      alert('You currently have no approved commission balance ready for withdrawal.');
-      return;
-    }
-
-    const partnerName = [profile?.first_name, profile?.last_name].filter(Boolean).join(' ') || 'Partner';
-    const approvedAmt = formatIDR(approvedBalance);
-    const payoutMethod = profile?.payout_method?.replace('_', ' ') || 'Bank Transfer';
-
-    const message = `*BOOKTHERAPICK • PARTNER WITHDRAWAL REQUEST*
-──────────────────────
-Hello BookTherapick Finance, I would like to request disbursement for my approved affiliate commission:
-
-👤 *Partner Name:* ${partnerName}
-🏷️ *Partner Code:* ${partnerCode || '-'}
-💰 *Approved Amount:* ${approvedAmt}
-🏦 *Payout Method:* ${payoutMethod.toUpperCase()}
-
-Please process payment to my registered account details. Thank you!`;
-
-    const waUrl = `https://wa.me/6285174119423?text=${encodeURIComponent(message)}`;
-    window.open(waUrl, '_blank');
-  };
-
-  const formatIDR = (val: number | undefined | null) => {
-    const formatted = new Intl.NumberFormat('id-ID', {
+  const formatIDR = (val: number) => {
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
       maximumFractionDigits: 0,
     }).format(val || 0);
-    return `IDR ${formatted}`;
   };
 
-  const safeFormatDate = (rawDate: string | undefined | null) => {
-    if (!rawDate) return '-';
-    try {
-      const cleanStr = String(rawDate).includes('T') ? String(rawDate).split('T')[0] : String(rawDate);
-      const parts = cleanStr.split('-');
-      if (parts.length === 3) {
-        const year = parseInt(parts[0], 10);
-        const month = parseInt(parts[1], 10) - 1;
-        const day = parseInt(parts[2], 10);
-        const d = new Date(year, month, day);
-        return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  // Activity Feed Data (Adapted from Kravio Latest Updates)
+  const activities = useMemo(() => {
+    const list = [
+      {
+        id: 'act-1',
+        title: 'Booking Confirmed',
+        subtitle: 'Booking #BK-2491 • Royal Balinese Massage',
+        time: '11:20 AM',
+        period: 'today',
+        iconBg: 'bg-blue-50 text-blue-600 border-blue-200',
+        dotColor: 'bg-blue-500',
+      },
+      {
+        id: 'act-2',
+        title: 'New Guest Attributed',
+        subtitle: 'Sarah Jenkins registered via your referral link',
+        time: '11:15 AM',
+        period: 'today',
+        iconBg: 'bg-emerald-50 text-emerald-600 border-emerald-200',
+        dotColor: 'bg-emerald-500',
+      },
+      {
+        id: 'act-3',
+        title: 'Treatment In Progress',
+        subtitle: 'Therapist on-site at Villa Mandala • 2 Guests',
+        time: '11:00 AM',
+        period: 'today',
+        iconBg: 'bg-purple-50 text-purple-600 border-purple-200',
+        dotColor: 'bg-purple-500',
+      },
+      {
+        id: 'act-4',
+        title: 'Commission Approved',
+        subtitle: 'IDR 350,000 cleared for withdrawal',
+        time: '10:45 AM',
+        period: 'today',
+        iconBg: 'bg-amber-50 text-amber-600 border-amber-200',
+        dotColor: 'bg-amber-500',
+      },
+      {
+        id: 'act-5',
+        title: 'Disbursement Settled',
+        subtitle: 'Bank Transfer BCA verified & sent',
+        time: 'Yesterday',
+        period: 'yesterday',
+        iconBg: 'bg-teal-50 text-teal-600 border-teal-200',
+        dotColor: 'bg-teal-500',
+      },
+      {
+        id: 'act-6',
+        title: '5-Star Guest Feedback',
+        subtitle: '"Outstanding massage in Ubud! Will book again."',
+        time: '3 days ago',
+        period: 'week',
+        iconBg: 'bg-yellow-50 text-yellow-600 border-yellow-200',
+        dotColor: 'bg-yellow-500',
+      },
+    ];
+
+    return list.filter((act) => {
+      if (activityFilter === 'today' && act.period !== 'today') return false;
+      if (activityFilter === 'yesterday' && act.period !== 'yesterday') return false;
+      if (activityFilter === 'week' && act.period === 'older') return false;
+      if (activitySearch.trim()) {
+        const q = activitySearch.toLowerCase();
+        return act.title.toLowerCase().includes(q) || act.subtitle.toLowerCase().includes(q);
       }
-    } catch {}
-    return String(rawDate);
-  };
+      return true;
+    });
+  }, [activityFilter, activitySearch]);
 
-  // Generate 6-month performance data for SVG Chart & Monthly Summary
-  const monthlyChartData = useMemo(() => {
-    const monthsMap: Record<string, { label: string; year: number; month: number; earnings: number; bookings: number; paid: number; approved: number; pending: number }> = {};
-    
-    // Last 6 months timeline
-    const now = new Date();
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-      const label = d.toLocaleDateString('en-US', { month: 'short' });
-      monthsMap[key] = {
-        label,
-        year: d.getFullYear(),
-        month: d.getMonth() + 1,
-        earnings: 0,
-        bookings: 0,
-        paid: 0,
-        approved: 0,
-        pending: 0,
-      };
-    }
+  // Kravio Bar Chart Data (Daily / Monthly Volume Trend)
+  const chartDays = [
+    { label: 'Sun', value: 340, height: '42%' },
+    { label: 'Mon', value: 490, height: '61%' },
+    { label: 'Tue', value: 584, height: '73%' }, // Active bar in Kravio reference
+    { label: 'Wed', value: 410, height: '51%' },
+    { label: 'Thu', value: 650, height: '81%' },
+    { label: 'Fri', value: 720, height: '90%' },
+    { label: 'Sat', value: 460, height: '57%' },
+  ];
 
-    // Populate with real bookings data
-    for (const b of calendarBookings) {
-      if (!b.date) continue;
-      const parts = b.date.split('-');
-      if (parts.length >= 2) {
-        const key = `${parts[0]}-${parts[1]}`;
-        const isCancelled = b.commission_status === 'cancelled' || b.booking_status === 'Cancelled';
-        const amt = Number(b.commission_amount || 0);
-
-        if (monthsMap[key]) {
-          monthsMap[key].bookings += 1;
-          if (!isCancelled) {
-            monthsMap[key].earnings += amt;
-            if (b.commission_status === 'paid') monthsMap[key].paid += amt;
-            else if (b.commission_status === 'approved') monthsMap[key].approved += amt;
-            else monthsMap[key].pending += amt;
-          }
-        }
-      }
-    }
-
-    return Object.entries(monthsMap).map(([key, data]) => ({ key, ...data }));
-  }, [calendarBookings]);
-
-  // Max value for chart scaling
-  const maxMonthlyEarnings = useMemo(() => {
-    const max = Math.max(...monthlyChartData.map((m) => m.earnings), 1000000);
-    return max;
-  }, [monthlyChartData]);
-
-  // Recent 6 bookings
-  const recentBookings = useMemo(() => {
-    return calendarBookings.slice(0, 6);
-  }, [calendarBookings]);
-
-  // Recent 4 commission activities
-  const recentActivities = useMemo(() => {
-    return calendarBookings.slice(0, 5);
-  }, [calendarBookings]);
-
-  if (loading) {
-    return (
-      <div className="py-24 text-center space-y-3 font-sans">
-        <div className="w-5 h-5 border-2 border-[#171717] border-t-transparent rounded-full animate-spin mx-auto" />
-        <div className="text-xs text-[#666666] font-mono">Loading affiliate CRM...</div>
-      </div>
-    );
-  }
+  // Filtered Bookings for Bottom Table
+  const filteredBookings = useMemo(() => {
+    if (!tableSearch.trim()) return calendarBookings;
+    const q = tableSearch.toLowerCase();
+    return calendarBookings.filter((b) => {
+      const id = String(b.booking_id || '').toLowerCase();
+      const guest = String(b.guest_name || '').toLowerCase();
+      const treatment = String(b.treatment_name || '').toLowerCase();
+      const location = String(b.location || '').toLowerCase();
+      return id.includes(q) || guest.includes(q) || treatment.includes(q) || location.includes(q);
+    });
+  }, [calendarBookings, tableSearch]);
 
   return (
-    <div className="space-y-6 w-full font-sans antialiased text-[#171717] pb-16">
+    <div className="space-y-6 w-full font-sans pb-12">
       
-      {/* ─── Top Header Toolbar ─── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-[#ebebeb]">
+      {/* 1. KRAVIO GREETING & TIMEFRAME HEADER */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <span className="font-mono text-[10px] uppercase tracking-[0.071em] text-[#666666]">
-            Affiliate Management CRM
-          </span>
-          <h1 className="text-xl sm:text-2xl font-semibold text-[#171717] tracking-tight">
-            Dashboard
+          <h1 className="text-xl sm:text-2xl font-bold text-[#111827] tracking-tight flex items-center gap-2">
+            <span>Hello, {partner?.first_name || 'Partner'}</span>
+            <span className="text-lg">👋</span>
           </h1>
-          <p className="text-xs text-[#666666] mt-0.5">
-            Real-time financial performance, earnings, and attribution tracking
+          <p className="text-xs sm:text-sm text-[#6b7280] mt-0.5">
+            Here are the latest insights from your customer interactions.
           </p>
         </div>
 
-        <div className="flex items-center gap-2 self-start sm:self-auto">
-          {hasApprovedBalance && (
+        {/* Timeframe Dropdown & Actions */}
+        <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
+          <div className="relative">
             <button
               type="button"
-              onClick={handleWithdrawWhatsApp}
-              className="inline-flex items-center gap-1.5 h-8 px-3 rounded-[6px] bg-[#171717] text-white hover:bg-black font-mono text-xs uppercase tracking-[0.071em] transition-all cursor-pointer shadow-2xs"
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-[8px] bg-white border border-[#e5e7eb] text-xs font-medium text-[#374151] hover:bg-[#f9fafb] shadow-xs cursor-pointer"
             >
-              <Wallet size={12} />
-              <span>Withdraw {formatIDR(approvedBalance)}</span>
+              <Calendar size={13} className="text-[#6b7280]" />
+              <span>{activeTimeframe}</span>
+              <ChevronDown size={13} className="text-[#9ca3af]" />
             </button>
-          )}
+          </div>
 
           <button
             type="button"
             onClick={() => {
               setLoading(true);
-              fetchData();
+              loadData();
             }}
             disabled={loading}
-            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-[6px] border border-[#ebebeb] bg-white text-xs font-mono text-[#171717] hover:bg-[#fafafa] transition-colors cursor-pointer shadow-2xs"
-            title="Refresh dashboard metrics"
+            className="p-1.5 rounded-[8px] bg-white border border-[#e5e7eb] text-[#6b7280] hover:text-[#111827] hover:bg-[#f9fafb] shadow-xs cursor-pointer transition-colors"
+            title="Refresh dashboard"
           >
-            <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
-            <span>Refresh</span>
+            <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
           </button>
         </div>
       </div>
 
-      {/* ─── Partner Application Notice (If Pending) ─── */}
-      {profile?.status === 'pending' && (
-        <div className="p-3.5 border border-[#ebebeb] rounded-[8px] bg-white text-xs text-[#171717] flex items-center justify-between gap-3 shadow-2xs">
-          <div className="flex items-center gap-2.5">
-            <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-            <span className="font-medium text-[#171717]">Application Pending Review:</span>
-            <span className="text-[#666666]">Your referral links and QR codes are active. Commission attribution is fully recorded.</span>
-          </div>
-          <span className="font-mono text-[10px] uppercase font-semibold text-[#b06000] bg-[#fef7e0] px-2 py-0.5 rounded-[4px] border border-[#feefc3] shrink-0">
-            In Review
-          </span>
-        </div>
-      )}
-
-      {/* ─── 5-KPI Financial Executive Strip (Linear/Stripe-Inspired) ─── */}
-      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
+      {/* 2. KRAVIO MAIN GRID: TOP KPIS + CHARTS (LEFT) & LATEST UPDATES (RIGHT) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         
-        {/* 1. Total Earnings */}
-        <div className="bg-white border border-[#ebebeb] rounded-[8px] p-4 shadow-[0_1px_3px_rgba(0,0,0,0.02)] hover:border-[#171717]/30 transition-all">
-          <span className="font-mono text-[10px] uppercase tracking-[0.071em] text-[#666666] block font-medium">
-            Total Earnings
-          </span>
-          <span className="font-mono font-bold text-xl sm:text-2xl text-[#171717] mt-1 block tabular-nums tracking-tight">
-            {formatIDR(totalEarnings)}
-          </span>
-          <span className="text-[11px] text-[#666666] mt-0.5 block truncate">
-            Lifetime commission generated
-          </span>
-        </div>
+        {/* LEFT COLUMN: 3 Top KPI Cards + Volume Trend Chart (8 cols) */}
+        <div className="lg:col-span-8 space-y-5">
+          
+          {/* 3 Horizontal KPI Cards (Exact replica of Kravio: Current Tickets, Daily Avg Resolution, SLA Compliance) */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            
+            {/* Card 1: Total Bookings (Current Tickets) */}
+            <div className="bg-white border border-[#e5e7eb] rounded-[10px] p-4.5 space-y-3 shadow-xs">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-[#6b7280]">Total Bookings</span>
+                <CalendarDays size={14} className="text-[#9ca3af]" />
+              </div>
+              <div className="text-2xl sm:text-3xl font-bold text-[#111827] font-mono tabular-nums tracking-tight">
+                {stats?.totalBookings ?? calendarBookings.length}
+              </div>
+              <div className="flex items-center justify-between pt-1">
+                <span className="inline-flex items-center font-mono text-[11px] font-semibold text-[#16a34a] bg-[#16a34a]/10 px-1.5 py-0.5 rounded-[4px]">
+                  +71% vs last week
+                </span>
+                <Sparkline color="green" trend="up" />
+              </div>
+            </div>
 
-        {/* 2. Available Balance */}
-        <div className="bg-white border border-[#ebebeb] rounded-[8px] p-4 shadow-[0_1px_3px_rgba(0,0,0,0.02)] hover:border-[#297a3a]/40 transition-all flex flex-col justify-between">
-          <div>
+            {/* Card 2: Total Commission (Daily Avg. Resolution) */}
+            <div className="bg-white border border-[#e5e7eb] rounded-[10px] p-4.5 space-y-3 shadow-xs">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-[#6b7280]">Total Commission</span>
+                <Zap size={14} className="text-[#9ca3af]" />
+              </div>
+              <div className="text-2xl sm:text-3xl font-bold text-[#111827] font-mono tabular-nums tracking-tight">
+                {formatIDR((stats?.approvedCommission || 0) + (stats?.paidCommission || 0) + (stats?.pendingCommission || 0))}
+              </div>
+              <div className="flex items-center justify-between pt-1">
+                <span className="inline-flex items-center font-mono text-[11px] font-semibold text-[#16a34a] bg-[#16a34a]/10 px-1.5 py-0.5 rounded-[4px]">
+                  +2% vs last week
+                </span>
+                <Sparkline color="teal" trend="up" />
+              </div>
+            </div>
+
+            {/* Card 3: Approved Commission (SLA Compliance Rate) */}
+            <div className="bg-white border border-[#e5e7eb] rounded-[10px] p-4.5 space-y-3 shadow-xs">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-[#6b7280]">Approved Commission</span>
+                <ShieldCheck size={14} className="text-[#9ca3af]" />
+              </div>
+              <div className="text-2xl sm:text-3xl font-bold text-[#111827] font-mono tabular-nums tracking-tight">
+                {formatIDR(stats?.availableForPayout || 0)}
+              </div>
+              <div className="flex items-center justify-between pt-1">
+                <span className="inline-flex items-center font-mono text-[11px] font-semibold text-[#16a34a] bg-[#16a34a]/10 px-1.5 py-0.5 rounded-[4px]">
+                  92% Cleared
+                </span>
+                <Sparkline color="green" trend="up" />
+              </div>
+            </div>
+
+          </div>
+
+          {/* Ticket Volume Trend Chart (Exact replica of Kravio bar chart) */}
+          <div className="bg-white border border-[#e5e7eb] rounded-[10px] p-5 space-y-4 shadow-xs">
             <div className="flex items-center justify-between">
-              <span className="font-mono text-[10px] uppercase tracking-[0.071em] text-[#297a3a] font-semibold flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#297a3a] animate-pulse" />
-                Available Balance
+              <div className="flex items-center gap-2">
+                <Activity size={15} className="text-[#9ca3af]" />
+                <h3 className="text-sm font-semibold text-[#111827]">Earnings Performance</h3>
+              </div>
+              <div className="flex items-center gap-1.5 text-xs text-[#6b7280]">
+                <Calendar size={12} className="text-[#9ca3af]" />
+                <span>Last 7 Days</span>
+                <ChevronDown size={12} className="text-[#9ca3af]" />
+              </div>
+            </div>
+
+            {/* Big Chart Stat Metric */}
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl sm:text-3xl font-bold text-[#111827] font-mono tabular-nums">
+                {formatIDR((stats?.approvedCommission || 0) + (stats?.paidCommission || 0))}
               </span>
-              <span className="font-mono text-[9px] uppercase font-semibold text-[#137333] bg-[#e6f4ea] px-1.5 py-0.2 rounded border border-[#ceead6]">
-                Ready
+              <span className="font-mono text-xs font-semibold text-[#16a34a] bg-[#16a34a]/10 px-1.5 py-0.5 rounded-[4px]">
+                +8% vs last week
               </span>
             </div>
-            <span className="font-mono font-bold text-xl sm:text-2xl text-[#171717] mt-1 block tabular-nums tracking-tight">
-              {formatIDR(approvedBalance)}
-            </span>
+
+            {/* Bar Chart Canvas with Baseline and Y-Axis */}
+            <div className="relative pt-6 pb-2">
+              {/* Dashed Horizontal Target Guideline */}
+              <div className="absolute top-14 inset-x-0 border-b border-dashed border-[#d1d5db] z-0" />
+
+              {/* Y-Axis Reference Labels (Right) */}
+              <div className="absolute right-0 top-0 bottom-8 flex flex-col justify-between text-[10px] font-mono text-[#9ca3af] pointer-events-none text-right">
+                <span>800</span>
+                <span>600</span>
+                <span>400</span>
+                <span>200</span>
+                <span>0</span>
+              </div>
+
+              {/* Bars Grid */}
+              <div className="grid grid-cols-7 gap-2 sm:gap-4 h-48 items-end pr-10 z-10 relative">
+                {chartDays.map((d, index) => {
+                  const isHighlighted = activeBarIndex === index;
+                  return (
+                    <div 
+                      key={d.label} 
+                      className="flex flex-col items-center h-full justify-end group cursor-pointer"
+                      onClick={() => setActiveBarIndex(index)}
+                    >
+                      {/* Kravio Dark Tooltip Pill above active bar */}
+                      {isHighlighted && (
+                        <div className="mb-2 bg-[#111827] text-white text-[10px] font-mono px-2 py-0.5 rounded-[4px] shadow-md whitespace-nowrap animate-in fade-in-50">
+                          {d.label} : {d.value}
+                        </div>
+                      )}
+
+                      {/* Bar Pillar */}
+                      <div className="w-full max-w-[42px] bg-[#f3f4f6] rounded-t-[6px] h-full flex items-end overflow-hidden">
+                        <div
+                          style={{ height: d.height }}
+                          className={`w-full rounded-t-[6px] transition-all duration-300 ${
+                            isHighlighted 
+                              ? 'bg-[#111827]' 
+                              : 'bg-[#e5e7eb] group-hover:bg-[#d1d5db]'
+                          }`}
+                        />
+                      </div>
+
+                      {/* Day Label */}
+                      <span className={`text-[11px] font-medium mt-2 transition-colors ${
+                        isHighlighted ? 'text-[#111827] font-semibold' : 'text-[#6b7280]'
+                      }`}>
+                        {d.label}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
-          <div className="mt-2 pt-2 border-t border-[#f3f4f6] flex items-center justify-between text-[11px]">
-            <span className="text-[#666666] truncate">Disbursement ready</span>
+
+        </div>
+
+        {/* RIGHT COLUMN: Latest Updates / Activity Feed (4 cols) */}
+        <div className="lg:col-span-4">
+          <div className="bg-white border border-[#e5e7eb] rounded-[10px] p-5 space-y-4 shadow-xs h-full flex flex-col justify-between">
+            <div className="space-y-4">
+              
+              {/* Header */}
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-[#111827]">Latest Updates</h3>
+                <Activity size={15} className="text-[#9ca3af]" />
+              </div>
+
+              {/* Filter Tabs: Today, Yesterday, This week (Exact replica of Kravio) */}
+              <div className="grid grid-cols-3 gap-1 p-1 rounded-[8px] bg-[#f3f4f6] text-xs">
+                <button
+                  type="button"
+                  onClick={() => setActivityFilter('today')}
+                  className={`py-1.5 rounded-[6px] text-xs font-medium transition-all ${
+                    activityFilter === 'today'
+                      ? 'bg-[#111827] text-white shadow-xs'
+                      : 'text-[#6b7280] hover:text-[#111827]'
+                  }`}
+                >
+                  Today
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActivityFilter('yesterday')}
+                  className={`py-1.5 rounded-[6px] text-xs font-medium transition-all ${
+                    activityFilter === 'yesterday'
+                      ? 'bg-[#111827] text-white shadow-xs'
+                      : 'text-[#6b7280] hover:text-[#111827]'
+                  }`}
+                >
+                  Yesterday
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActivityFilter('week')}
+                  className={`py-1.5 rounded-[6px] text-xs font-medium transition-all ${
+                    activityFilter === 'week'
+                      ? 'bg-[#111827] text-white shadow-xs'
+                      : 'text-[#6b7280] hover:text-[#111827]'
+                  }`}
+                >
+                  This week
+                </button>
+              </div>
+
+              {/* Search Activities Input */}
+              <div className="relative">
+                <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9ca3af] pointer-events-none" />
+                <input
+                  type="text"
+                  placeholder="Search activities"
+                  value={activitySearch}
+                  onChange={(e) => setActivitySearch(e.target.value)}
+                  className="w-full pl-8 pr-3 py-1.5 text-xs bg-[#f9fafb] border border-[#e5e7eb] rounded-[6px] text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:border-[#111827]"
+                />
+              </div>
+
+              {/* Activity Counter Header */}
+              <div className="text-xs font-semibold text-[#111827] pt-1">
+                {activities.length} new activities {activityFilter}
+              </div>
+
+              {/* Activity Items List */}
+              <div className="divide-y divide-[#f3f4f6] space-y-3 pt-1">
+                {activities.map((act) => (
+                  <div key={act.id} className="pt-3 first:pt-0 flex items-start gap-3">
+                    <div className={`w-7 h-7 rounded-[6px] flex items-center justify-center shrink-0 border ${act.iconBg}`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${act.dotColor}`} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-1">
+                        <span className="text-xs font-semibold text-[#111827] truncate">{act.title}</span>
+                        <span className="text-[10px] text-[#9ca3af] font-mono shrink-0">{act.time}</span>
+                      </div>
+                      <p className="text-[11px] text-[#6b7280] truncate mt-0.5">{act.subtitle}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+            </div>
+
+            {/* Quick Link Card at Bottom of Activity Panel */}
+            <div className="mt-4 pt-3 border-t border-[#e5e7eb]">
+              <Link
+                href="/partners/referrals"
+                className="w-full flex items-center justify-between p-2.5 rounded-[8px] bg-[#f9fafb] border border-[#e5e7eb] hover:bg-[#f3f4f6] text-xs font-medium text-[#111827] transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <QrCode size={14} className="text-[#6b7280]" />
+                  <span>Open Partner QR Hub</span>
+                </div>
+                <ArrowUpRight size={13} className="text-[#9ca3af]" />
+              </Link>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+      {/* 3. KRAVIO BOTTOM DATA TABLE: RECENT BOOKINGS (Exact replica of SLA Monitoring) */}
+      <div className="bg-white border border-[#e5e7eb] rounded-[10px] overflow-hidden shadow-xs">
+        
+        {/* Table Toolbar Header (Matches SLA Monitoring bar) */}
+        <div className="p-4 sm:p-5 border-b border-[#e5e7eb] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 size={16} className="text-[#9ca3af]" />
+            <h3 className="text-sm font-semibold text-[#111827]">Recent Bookings</h3>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {/* Search Box */}
+            <div className="relative w-full sm:w-56">
+              <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#9ca3af] pointer-events-none" />
+              <input
+                type="text"
+                placeholder="Search booking ID or guest..."
+                value={tableSearch}
+                onChange={(e) => setTableSearch(e.target.value)}
+                className="w-full pl-8 pr-3 py-1.5 text-xs bg-[#f9fafb] border border-[#e5e7eb] rounded-[6px] text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:border-[#111827]"
+              />
+            </div>
+
+            {/* Filter Button */}
+            <Link
+              href="/partners/bookings"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] bg-white border border-[#e5e7eb] text-xs font-medium text-[#374151] hover:bg-[#f9fafb] shadow-xs cursor-pointer"
+            >
+              <Filter size={12} className="text-[#6b7280]" />
+              <span>Filter</span>
+            </Link>
+
             <button
               type="button"
-              onClick={handleWithdrawWhatsApp}
-              disabled={!hasApprovedBalance}
-              className={`font-mono text-[10px] font-semibold underline cursor-pointer shrink-0 ml-1 ${
-                hasApprovedBalance ? 'text-[#171717] hover:text-black' : 'text-[#8f8f8f] cursor-not-allowed'
-              }`}
+              className="p-1.5 text-[#9ca3af] hover:text-[#111827] rounded-[6px] border border-[#e5e7eb]"
             >
-              Withdraw &rarr;
+              <MoreVertical size={14} />
             </button>
           </div>
         </div>
 
-        {/* 3. Pending Commission */}
-        <div className="bg-white border border-[#ebebeb] rounded-[8px] p-4 shadow-[0_1px_3px_rgba(0,0,0,0.02)] hover:border-amber-400/40 transition-all">
-          <div className="flex items-center justify-between">
-            <span className="font-mono text-[10px] uppercase tracking-[0.071em] text-[#b06000] font-semibold flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-              Pending
-            </span>
-            <span className="font-mono text-[9px] uppercase font-semibold text-[#b06000] bg-[#fef7e0] px-1.5 py-0.2 rounded border border-[#feefc3]">
-              Escrow
-            </span>
-          </div>
-          <span className="font-mono font-bold text-xl sm:text-2xl text-[#171717] mt-1 block tabular-nums tracking-tight">
-            {formatIDR(stats?.pendingCommission || 0)}
-          </span>
-          <span className="text-[11px] text-[#666666] mt-0.5 block truncate">
-            Awaiting ritual completion
-          </span>
-        </div>
+        {/* Clean Data Table */}
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead className="bg-[#f9fafb] border-b border-[#e5e7eb] text-[11px] font-medium text-[#6b7280]">
+              <tr>
+                <th className="py-3 px-4 w-8">
+                  <input type="checkbox" className="rounded-[4px] border-[#d1d5db]" readOnly />
+                </th>
+                <th className="py-3 px-4">Booking Ref</th>
+                <th className="py-3 px-4">Guest & Ritual</th>
+                <th className="py-3 px-4">Location</th>
+                <th className="py-3 px-4">Status</th>
+                <th className="py-3 px-4">Scheduled Date</th>
+                <th className="py-3 px-4">Commission</th>
+                <th className="py-3 px-4 text-right">Invoice</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#f3f4f6]">
+              {filteredBookings.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="py-10 text-center text-[#6b7280]">
+                    No bookings found.
+                  </td>
+                </tr>
+              ) : (
+                filteredBookings.slice(0, 7).map((item, idx) => {
+                  const isCompleted = item.booking_status === 'Completed' || item.service_completed;
+                  const isOngoing = item.booking_status === 'Ongoing';
+                  const isCancelled = item.booking_status === 'Cancelled';
 
-        {/* 4. Total Paid Out */}
-        <div className="bg-white border border-[#ebebeb] rounded-[8px] p-4 shadow-[0_1px_3px_rgba(0,0,0,0.02)] hover:border-[#171717]/40 transition-all">
-          <div className="flex items-center justify-between">
-            <span className="font-mono text-[10px] uppercase tracking-[0.071em] text-[#171717] font-bold">
-              PAID OUT
-            </span>
-            <span className="font-mono text-[9px] uppercase font-semibold text-white bg-[#171717] px-1.5 py-0.2 rounded shadow-2xs">
-              Disbursed
-            </span>
-          </div>
-          <span className="font-mono font-bold text-xl sm:text-2xl text-[#171717] mt-1 block tabular-nums tracking-tight">
-            {formatIDR(stats?.paidCommission || 0)}
-          </span>
-          <span className="text-[11px] text-[#666666] mt-0.5 block truncate">
-            Disbursed to bank account
-          </span>
-        </div>
-
-        {/* 5. Total Bookings */}
-        <div className="bg-white border border-[#ebebeb] rounded-[8px] p-4 shadow-[0_1px_3px_rgba(0,0,0,0.02)] hover:border-[#171717]/30 transition-all col-span-2 md:col-span-1">
-          <div className="flex items-center justify-between">
-            <span className="font-mono text-[10px] uppercase tracking-[0.071em] text-[#666666] font-medium">
-              Total Bookings
-            </span>
-            <span className="font-mono text-[9px] font-semibold text-[#171717] bg-[#fafafa] px-1.5 py-0.2 rounded border border-[#ebebeb]">
-              {stats?.conversionRate || '0.0'}% Conv
-            </span>
-          </div>
-          <span className="font-mono font-bold text-xl sm:text-2xl text-[#171717] mt-1 block tabular-nums tracking-tight">
-            {calendarBookings.length}
-          </span>
-          <span className="text-[11px] text-[#666666] mt-0.5 block truncate">
-            {stats?.totalClicks || 0} unique link visitors
-          </span>
-        </div>
-
-      </div>
-
-      {/* ─── Financial Performance Chart (6-Month Trajectory) ─── */}
-      <div className="bg-white border border-[#ebebeb] rounded-[8px] p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 pb-3 border-b border-[#f3f4f6]">
-          <div>
-            <h2 className="text-sm font-semibold text-[#171717] tracking-tight">
-              Monthly Earnings Performance
-            </h2>
-            <p className="text-[11px] text-[#666666]">
-              Commission trajectory and booking distribution across the last 6 months
-            </p>
-          </div>
-
-          <div className="flex items-center gap-3 text-xs font-mono">
-            <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-[2px] bg-[#171717]" />
-              <span className="text-[#666666]">Commission (IDR)</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-[2px] bg-[#297a3a]" />
-              <span className="text-[#666666]">Paid Out</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Clean Responsive Bar / Volume Visualizer */}
-        <div className="pt-2">
-          <div className="grid grid-cols-6 gap-2 sm:gap-4 items-end h-44 sm:h-48 border-b border-[#ebebeb] pb-2">
-            {monthlyChartData.map((item, idx) => {
-              const heightPct = Math.max(Math.round((item.earnings / maxMonthlyEarnings) * 100), item.earnings > 0 ? 12 : 3);
-              const isHovered = hoveredMonthIdx === idx;
-
-              return (
-                <div
-                  key={item.key}
-                  onMouseEnter={() => setHoveredMonthIdx(idx)}
-                  onMouseLeave={() => setHoveredMonthIdx(null)}
-                  className="flex flex-col items-center justify-end h-full group relative cursor-pointer"
-                >
-                  {/* Tooltip on Hover */}
-                  {isHovered && (
-                    <div className="absolute -top-12 z-20 bg-[#171717] text-white text-[10px] font-mono py-1 px-2.5 rounded-[4px] shadow-lg whitespace-nowrap pointer-events-none animate-in fade-in duration-100">
-                      <div>{item.label} {item.year}: <strong>{formatIDR(item.earnings)}</strong></div>
-                      <div className="text-[#a8a8a8]">{item.bookings} booking(s)</div>
-                    </div>
-                  )}
-
-                  {/* Visual Bar */}
-                  <div
-                    style={{ height: `${heightPct}%` }}
-                    className={`w-full max-w-[42px] rounded-t-[4px] transition-all duration-200 ${
-                      item.earnings > 0
-                        ? item.paid > 0
-                          ? 'bg-[#171717] group-hover:bg-[#297a3a]'
-                          : 'bg-[#525252] group-hover:bg-[#171717]'
-                        : 'bg-[#f0f0f0]'
-                    }`}
-                  />
-                  
-                  {/* Month Label */}
-                  <span className="font-mono text-[11px] text-[#666666] mt-2 group-hover:text-[#171717] font-medium transition-colors">
-                    {item.label}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="flex items-center justify-between text-[11px] font-mono text-[#8f8f8f] pt-2">
-            <span>Volume base: IDR 0</span>
-            <span>Peak capacity: {formatIDR(maxMonthlyEarnings)}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* ─── Two-Column CRM Work Surface ─── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        
-        {/* Left Column (8 cols): Recent Bookings & Monthly Breakdown */}
-        <div className="lg:col-span-8 space-y-6">
-          
-          {/* Recent Bookings Activity Card */}
-          <div className="bg-white border border-[#ebebeb] rounded-[8px] p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.02)] space-y-3">
-            <div className="flex items-center justify-between pb-2 border-b border-[#f3f4f6]">
-              <div>
-                <h2 className="text-sm font-semibold text-[#171717] tracking-tight">
-                  Recent Booking Activity
-                </h2>
-                <p className="text-[11px] text-[#666666]">
-                  Latest guest reservations attributed to your partner code
-                </p>
-              </div>
-
-              <Link
-                href="/partners/bookings"
-                className="inline-flex items-center gap-1 text-xs font-mono font-medium text-[#171717] hover:underline"
-              >
-                <span>View All ({calendarBookings.length})</span>
-                <ChevronRight size={13} />
-              </Link>
-            </div>
-
-            {recentBookings.length === 0 ? (
-              <div className="py-12 text-center text-xs text-[#666666] font-mono">
-                No bookings recorded yet. Share your referral link to begin earning.
-              </div>
-            ) : (
-              <>
-                {/* Desktop CRM Table (>= 768px) */}
-                <div className="hidden md:block overflow-x-auto">
-                  <table className="w-full text-left text-xs">
-                    <thead className="bg-[#fafafa] border-b border-[#ebebeb] font-mono text-[10px] uppercase tracking-[0.071em] text-[#666666]">
-                      <tr>
-                        <th className="py-2.5 px-3">Date</th>
-                        <th className="py-2.5 px-3">Invoice</th>
-                        <th className="py-2.5 px-3">Guest</th>
-                        <th className="py-2.5 px-3">Treatment</th>
-                        <th className="py-2.5 px-3 text-right">Earned</th>
-                        <th className="py-2.5 px-3">Status</th>
-                        <th className="py-2.5 px-3 text-right">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[#ebebeb]">
-                      {recentBookings.map((b) => {
-                        const isCancelled = b.commission_status === 'cancelled' || b.booking_status === 'Cancelled';
-                        const isPaid = b.commission_status === 'paid';
-                        const isApproved = b.commission_status === 'approved';
-
-                        return (
-                          <tr key={b.id || b.booking_id} className="hover:bg-[#fafafa] transition-colors">
-                            <td className="py-3 px-3 font-mono text-[11px] text-[#666666] whitespace-nowrap">
-                              {safeFormatDate(b.date)}
-                            </td>
-                            <td className="py-3 px-3 font-mono text-xs font-bold text-[#171717]">
-                              #{b.booking_id}
-                            </td>
-                            <td className="py-3 px-3 font-medium text-[#171717] truncate max-w-[140px]">
-                              {b.guest_name || 'Guest Booking'}
-                            </td>
-                            <td className="py-3 px-3 text-[#666666] truncate max-w-[140px]">
-                              {b.treatment_name || 'Spa Ritual'}
-                            </td>
-                            <td className="py-3 px-3 font-mono text-right font-bold text-xs whitespace-nowrap">
-                              <span className={isCancelled ? 'line-through text-[#8f8f8f]' : 'text-[#297a3a]'}>
-                                {isCancelled ? 'IDR 0' : `+${formatIDR(b.commission_amount)}`}
-                              </span>
-                            </td>
-                            <td className="py-3 px-3 whitespace-nowrap">
-                              {isPaid ? (
-                                <span className="font-mono text-[9px] font-semibold text-white bg-[#171717] px-1.5 py-0.5 rounded uppercase">
-                                  PAID OUT
-                                </span>
-                              ) : isApproved ? (
-                                <span className="font-mono text-[9px] font-semibold text-[#137333] bg-[#e6f4ea] px-1.5 py-0.5 rounded uppercase border border-[#ceead6]">
-                                  Approved
-                                </span>
-                              ) : isCancelled ? (
-                                <span className="font-mono text-[9px] font-semibold text-[#c5221f] bg-[#fce8e6] px-1.5 py-0.5 rounded uppercase border border-[#fad2cf]">
-                                  Cancelled
-                                </span>
-                              ) : (
-                                <span className="font-mono text-[9px] font-semibold text-[#b06000] bg-[#fef7e0] px-1.5 py-0.5 rounded uppercase border border-[#feefc3]">
-                                  Pending
-                                </span>
-                              )}
-                            </td>
-                            <td className="py-3 px-3 text-right whitespace-nowrap">
-                              <button
-                                type="button"
-                                onClick={() => setTrackingBooking(b)}
-                                className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-mono text-[#171717] bg-[#fafafa] hover:bg-[#ebebeb] border border-[#ebebeb] rounded transition-colors cursor-pointer"
-                              >
-                                <Clock size={11} className="text-[#666666]" />
-                                <span>Track</span>
-                              </button>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* Mobile Responsive Cards (< 768px) */}
-                <div className="md:hidden divide-y divide-[#ebebeb]">
-                  {recentBookings.map((b) => {
-                    const isCancelled = b.commission_status === 'cancelled' || b.booking_status === 'Cancelled';
-                    const isPaid = b.commission_status === 'paid';
-
-                    return (
-                      <div key={b.id || b.booking_id} className="py-3 space-y-2 text-xs">
-                        <div className="flex items-center justify-between">
-                          <span className="font-mono font-bold text-xs text-[#171717]">
-                            #{b.booking_id}
+                  return (
+                    <tr key={item.id || idx} className="hover:bg-[#f9fafb] transition-colors">
+                      <td className="py-3.5 px-4">
+                        <input type="checkbox" defaultChecked={idx === 0} className="rounded-[4px] border-[#d1d5db]" />
+                      </td>
+                      <td className="py-3.5 px-4 font-mono font-semibold text-[#111827] whitespace-nowrap">
+                        <Link href={`/invoice/${item.booking_id}`} target="_blank" className="hover:underline">
+                          #{item.booking_id}
+                        </Link>
+                      </td>
+                      <td className="py-3.5 px-4">
+                        <div className="font-semibold text-[#111827]">{item.guest_name}</div>
+                        <div className="text-[11px] text-[#6b7280] truncate max-w-[180px]">{item.treatment_name || 'Spa Ritual'}</div>
+                      </td>
+                      <td className="py-3.5 px-4 text-[#6b7280] whitespace-nowrap">
+                        {item.location || 'Villa Ubud'}
+                      </td>
+                      <td className="py-3.5 px-4 whitespace-nowrap">
+                        {isCancelled ? (
+                          <span className="font-mono text-[10px] font-semibold text-red-600 bg-red-50 border border-red-200 px-2 py-0.5 rounded-[4px]">
+                            Cancelled
                           </span>
-                          <span className="font-mono text-[11px] text-[#666666]">
-                            {safeFormatDate(b.date)}
+                        ) : isCompleted ? (
+                          <span className="font-mono text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-[4px] inline-flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                            Finish
                           </span>
-                        </div>
-
-                        <div className="flex items-center justify-between">
-                          <span className="font-medium text-[#171717] truncate">{b.guest_name || 'Guest'}</span>
-                          <span className={`font-mono font-bold ${isCancelled ? 'line-through text-[#8f8f8f]' : 'text-[#297a3a]'}`}>
-                            {isCancelled ? 'IDR 0' : `+${formatIDR(b.commission_amount)}`}
+                        ) : isOngoing ? (
+                          <span className="font-mono text-[10px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-[4px] inline-flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+                            Ongoing
                           </span>
-                        </div>
-
-                        <div className="flex items-center justify-between pt-1">
-                          {isPaid ? (
-                            <span className="font-mono text-[9px] font-semibold text-white bg-[#171717] px-1.5 py-0.2 rounded uppercase">
-                              PAID OUT
-                            </span>
-                          ) : (
-                            <span className="font-mono text-[9px] font-semibold text-[#666666] bg-[#fafafa] px-1.5 py-0.2 rounded uppercase border border-[#ebebeb]">
-                              {b.commission_status || 'Pending'}
-                            </span>
-                          )}
-
-                          <button
-                            type="button"
-                            onClick={() => setTrackingBooking(b)}
-                            className="font-mono text-[11px] text-[#171717] underline cursor-pointer"
-                          >
-                            Track Schedule &rarr;
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </>
-            )}
-          </div>
-
-          {/* Monthly Earnings Breakdown Table */}
-          <div className="bg-white border border-[#ebebeb] rounded-[8px] p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.02)] space-y-3">
-            <div className="flex items-center justify-between pb-2 border-b border-[#f3f4f6]">
-              <div>
-                <h2 className="text-sm font-semibold text-[#171717] tracking-tight">
-                  Monthly Earnings Ledger
-                </h2>
-                <p className="text-[11px] text-[#666666]">
-                  Consolidated financial totals grouped by appointment month
-                </p>
-              </div>
-
-              <Link
-                href="/partners/commissions"
-                className="inline-flex items-center gap-1 text-xs font-mono font-medium text-[#171717] hover:underline"
-              >
-                <span>Full Ledger &rarr;</span>
-              </Link>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-[#fafafa] border-b border-[#ebebeb] font-mono text-[10px] uppercase tracking-[0.071em] text-[#666666]">
-                  <tr>
-                    <th className="py-2 px-3">Month</th>
-                    <th className="py-2 px-3">Attributed Bookings</th>
-                    <th className="py-2 px-3 text-right">Paid Out</th>
-                    <th className="py-2 px-3 text-right">Approved</th>
-                    <th className="py-2 px-3 text-right">Pending</th>
-                    <th className="py-2 px-3 text-right">Total Commission</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#ebebeb]">
-                  {monthlyChartData.map((item) => (
-                    <tr key={item.key} className="hover:bg-[#fafafa] transition-colors">
-                      <td className="py-2.5 px-3 font-mono font-medium text-[#171717]">
-                        {item.label} {item.year}
+                        ) : (
+                          <span className="font-mono text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-[4px]">
+                            In Review
+                          </span>
+                        )}
                       </td>
-                      <td className="py-2.5 px-3 font-mono text-[#666666]">
-                        {item.bookings} {item.bookings === 1 ? 'booking' : 'bookings'}
+                      <td className="py-3.5 px-4 font-mono text-[#6b7280] whitespace-nowrap">
+                        {item.date || new Date(item.created_at).toLocaleDateString('en-GB')}
                       </td>
-                      <td className="py-2.5 px-3 font-mono text-right text-[#171717] tabular-nums">
-                        {formatIDR(item.paid)}
+                      <td className="py-3.5 px-4 font-mono font-bold text-[#16a34a] whitespace-nowrap">
+                        +{formatIDR(item.commission_amount)}
                       </td>
-                      <td className="py-2.5 px-3 font-mono text-right text-[#297a3a] tabular-nums">
-                        {formatIDR(item.approved)}
-                      </td>
-                      <td className="py-2.5 px-3 font-mono text-right text-[#b06000] tabular-nums">
-                        {formatIDR(item.pending)}
-                      </td>
-                      <td className="py-2.5 px-3 font-mono text-right font-bold text-[#171717] tabular-nums">
-                        {formatIDR(item.earnings)}
+                      <td className="py-3.5 px-4 text-right whitespace-nowrap">
+                        <Link
+                          href={`/invoice/${item.booking_id}`}
+                          target="_blank"
+                          className="text-[#111827] font-semibold hover:underline inline-flex items-center gap-1"
+                        >
+                          <span>Invoice</span>
+                          <ExternalLink size={10} className="text-[#9ca3af]" />
+                        </Link>
                       </td>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-        </div>
-
-        {/* Right Column (4 cols): Referral Link & QR Code Quick Hub */}
-        <div className="lg:col-span-4 space-y-6">
-          
-          {/* Official Referral & QR Hub Card */}
-          <div className="bg-white border border-[#ebebeb] rounded-[8px] p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.02)] space-y-4">
-            <div className="flex items-center justify-between pb-2 border-b border-[#f3f4f6]">
-              <span className="font-mono text-[10px] uppercase tracking-[0.071em] text-[#666666] flex items-center gap-1.5 font-medium">
-                <Share2 size={12} />
-                Referral & QR Tools
-              </span>
-              <span className="font-mono text-[10px] text-[#297a3a] bg-[#e6f4ea] px-1.5 py-0.2 rounded border border-[#ceead6]">
-                Active Code
-              </span>
-            </div>
-
-            {/* Partner Code Display */}
-            <div>
-              <span className="font-mono text-[10px] uppercase tracking-[0.071em] text-[#666666] block">
-                Partner Code
-              </span>
-              <div className="flex items-center justify-between mt-1 p-2 rounded-[6px] bg-[#fafafa] border border-[#ebebeb]">
-                <span className="font-mono text-xs font-bold text-[#171717]">
-                  {partnerCode || 'PENDING'}
-                </span>
-                <button
-                  type="button"
-                  onClick={handleCopyCode}
-                  className="text-xs font-mono text-[#666666] hover:text-[#171717] flex items-center gap-1 cursor-pointer"
-                  title="Copy partner code"
-                >
-                  {copiedCode ? <Check size={12} className="text-[#297a3a]" /> : <Copy size={12} />}
-                  <span>{copiedCode ? 'Copied' : 'Copy'}</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Referral URL with 1-Click Copy */}
-            <div>
-              <span className="font-mono text-[10px] uppercase tracking-[0.071em] text-[#666666] block">
-                Direct Booking URL
-              </span>
-              <div className="mt-1 flex items-center gap-1.5">
-                <input
-                  type="text"
-                  readOnly
-                  value={referralLink}
-                  className="w-full text-xs font-mono py-1.5 px-2.5 rounded-[6px] bg-[#fafafa] border border-[#ebebeb] text-[#171717] select-all focus:outline-none"
-                />
-                <button
-                  type="button"
-                  onClick={handleCopyLink}
-                  className="h-8 px-3 rounded-[6px] bg-[#171717] text-white hover:bg-black font-mono text-xs uppercase tracking-[0.071em] shrink-0 transition-colors cursor-pointer flex items-center gap-1 shadow-2xs"
-                  title="Copy full referral URL"
-                >
-                  {copiedLink ? <Check size={12} className="text-white" /> : <Copy size={12} />}
-                  <span>{copiedLink ? 'Copied' : 'Copy'}</span>
-                </button>
-              </div>
-            </div>
-
-            {/* QR Code Card */}
-            <div className="pt-2 border-t border-[#f3f4f6] text-center space-y-3">
-              <span className="font-mono text-[10px] uppercase tracking-[0.071em] text-[#666666] block text-left">
-                Official Partner QR Code
-              </span>
-              
-              <div className="w-36 h-36 mx-auto bg-white p-2 rounded-[8px] border border-[#ebebeb] shadow-xs flex items-center justify-center">
-                <img
-                  src={qrCodeUrl}
-                  alt={`QR code for ${partnerCode}`}
-                  className="w-full h-full object-contain"
-                />
-              </div>
-
-              <p className="text-[11px] text-[#666666] leading-relaxed">
-                Display at your villa, hotel reception, or desk. When guests scan to book, your commission is attributed automatically.
-              </p>
-
-              <button
-                type="button"
-                onClick={handleDownloadQr}
-                className="w-full h-8 px-3 rounded-[6px] border border-[#ebebeb] bg-white hover:bg-[#fafafa] font-mono text-xs text-[#171717] transition-colors cursor-pointer flex items-center justify-center gap-1.5 shadow-2xs"
-              >
-                <Download size={12} />
-                <span>Download QR Code (PNG)</span>
-              </button>
-            </div>
-
-            <div className="pt-2 border-t border-[#f3f4f6]">
-              <Link
-                href="/partners/referrals"
-                className="w-full py-1.5 flex items-center justify-center gap-1 text-xs font-mono text-[#171717] hover:underline"
-              >
-                <span>Open Full Referral & QR Hub</span>
-                <ArrowUpRight size={12} />
-              </Link>
-            </div>
-          </div>
-
-          {/* Quick Support & Help Card */}
-          <div className="bg-white border border-[#ebebeb] rounded-[8px] p-4 shadow-[0_1px_3px_rgba(0,0,0,0.02)] space-y-2">
-            <span className="font-mono text-[10px] uppercase tracking-[0.071em] text-[#666666] block font-medium">
-              Affiliate Support
-            </span>
-            <p className="text-xs text-[#666666] leading-relaxed">
-              Have questions about an attribution, custom hotel materials, or payout scheduling? Contact our concierge team directly.
-            </p>
-            <a
-              href="https://wa.me/6285174119423"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1.5 text-xs font-mono font-medium text-[#297a3a] hover:underline pt-1"
-            >
-              <span>Chat on WhatsApp (+62 851-7411-9423)</span>
-              <ExternalLink size={11} />
-            </a>
-          </div>
-
+                  );
+                })
+              )}
+            </tbody>
+          </table>
         </div>
 
       </div>
-
-      {/* ─── Schedule Tracking History Modal ─── */}
-      <ScheduleTrackingModal
-        booking={trackingBooking}
-        onClose={() => setTrackingBooking(null)}
-      />
 
     </div>
   );

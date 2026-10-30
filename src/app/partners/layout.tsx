@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { isBookTherapickHost } from '@/lib/domainIsolation';
 import { getPartnerSession } from '@/lib/partnerAuth';
 import PartnerNav from './PartnerNav';
+import PartnerTopBar from './PartnerTopBar';
 
 export const metadata = {
   title: 'Partner Program | BookTherapick Bali',
@@ -28,8 +29,7 @@ export default async function PartnersLayout({
   const headersList = await headers();
   const host = headersList.get('x-forwarded-host') || headersList.get('host') || '';
 
-  // STRICT DOMAIN ISOLATION:
-  // Reject access on any non-BookTherapick host
+  // STRICT DOMAIN ISOLATION
   if (!isBookTherapickHost(host)) {
     notFound();
   }
@@ -37,14 +37,16 @@ export default async function PartnersLayout({
   const session = await getPartnerSession();
 
   return (
-    <div className="min-h-screen md:h-screen md:overflow-hidden bg-[#fafafa] text-[#171717] flex flex-col md:flex-row font-sans selection:bg-[#171717] selection:text-white antialiased relative">
+    <div className="min-h-screen md:h-screen md:overflow-hidden bg-[#f9fafb] text-[#111827] flex flex-col md:flex-row font-sans selection:bg-[#111827] selection:text-white antialiased relative">
       <PartnerNav session={session} />
-      <main className="flex-1 min-w-0 w-full h-full md:h-screen md:overflow-y-auto px-4 sm:px-6 md:px-8 lg:px-10 py-4 sm:py-6 md:py-8 pb-24 md:pb-12 overscroll-contain">
-        <div className="w-full">
-          {children}
-        </div>
-      </main>
+      <div className="flex-1 flex flex-col min-w-0 w-full h-full md:h-screen md:overflow-hidden">
+        {session && <PartnerTopBar session={session} />}
+        <main className="flex-1 min-w-0 w-full h-full md:overflow-y-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-6 pb-24 md:pb-12 overscroll-contain">
+          <div className="w-full max-w-[1440px] mx-auto">
+            {children}
+          </div>
+        </main>
+      </div>
     </div>
   );
 }
-

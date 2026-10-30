@@ -48,7 +48,6 @@ export default function PartnerProfilePage() {
   });
 
   useEffect(() => {
-    // 1. Load custom profile photo from device storage
     try {
       const savedPhoto = localStorage.getItem(AVATAR_STORAGE_KEY);
       if (savedPhoto) {
@@ -58,7 +57,6 @@ export default function PartnerProfilePage() {
       console.error('Error loading avatar from local storage:', e);
     }
 
-    // 2. Load partner profile from server
     async function loadProfile() {
       try {
         const res = await fetch('/api/affiliates/auth/me');
@@ -135,7 +133,6 @@ export default function PartnerProfilePage() {
               localStorage.setItem(AVATAR_STORAGE_KEY, compressed);
               setLocalAvatar(compressed);
             } catch (storageErr) {
-              console.error('Failed to save to localStorage:', storageErr);
               try {
                 localStorage.setItem(AVATAR_STORAGE_KEY, dataUrl);
                 setLocalAvatar(dataUrl);
@@ -239,8 +236,8 @@ export default function PartnerProfilePage() {
   if (loading) {
     return (
       <div className="py-24 text-center space-y-3">
-        <div className="w-6 h-6 border-2 border-[#171717] border-t-transparent rounded-full animate-spin mx-auto" />
-        <div className="text-xs text-[#666666] font-mono">Loading partner profile...</div>
+        <div className="w-6 h-6 border-2 border-[#111827] border-t-transparent rounded-full animate-spin mx-auto" />
+        <div className="text-xs text-[#6b7280] font-mono">Loading partner profile...</div>
       </div>
     );
   }
@@ -248,10 +245,20 @@ export default function PartnerProfilePage() {
   const initials = `${formData.first_name?.[0] || partner?.first_name?.[0] || 'P'}${formData.last_name?.[0] || partner?.last_name?.[0] || ''}`.toUpperCase();
 
   return (
-    <div className="w-full max-w-4xl mx-auto space-y-4 pb-12 font-sans">
+    <div className="w-full max-w-4xl mx-auto space-y-5 pb-12 font-sans">
       
+      {/* Title */}
+      <div>
+        <h1 className="text-xl sm:text-2xl font-bold text-[#111827] tracking-tight">
+          Partner Settings & Profile
+        </h1>
+        <p className="text-xs sm:text-sm text-[#6b7280] mt-0.5">
+          Manage your partner profile, Indonesian bank transfer destination, and account security.
+        </p>
+      </div>
+
       {/* Hero Profile Identity Card */}
-      <div className="bg-white border border-[#ebebeb] rounded-[6px] p-5 sm:p-6 relative overflow-hidden shadow-[0_0_0_1px_rgba(0,0,0,0.03)]">
+      <div className="bg-white border border-[#e5e7eb] rounded-[10px] p-5 sm:p-6 shadow-xs">
         <input
           ref={fileInputRef}
           type="file"
@@ -268,7 +275,7 @@ export default function PartnerProfilePage() {
             <div className="relative shrink-0">
               <div 
                 onClick={() => fileInputRef.current?.click()}
-                className="w-16 h-16 sm:w-20 sm:h-20 rounded-[6px] bg-[#171717] text-white font-bold text-lg sm:text-2xl flex items-center justify-center border border-[#ebebeb] cursor-pointer overflow-hidden group relative transition-transform"
+                className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[#111827] text-white font-bold text-lg sm:text-2xl flex items-center justify-center border border-[#e5e7eb] cursor-pointer overflow-hidden group relative transition-transform"
                 title="Tap to change profile photo"
               >
                 {localAvatar ? (
@@ -287,46 +294,43 @@ export default function PartnerProfilePage() {
               </div>
             </div>
 
-            {/* Partner Details */}
+            {/* Details */}
             <div className="space-y-1.5 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-base sm:text-lg font-bold text-[#171717] tracking-tight truncate">
+                <h2 className="text-base sm:text-lg font-bold text-[#111827] tracking-tight truncate">
                   {formData.first_name || 'Partner'} {formData.last_name || ''}
-                </h1>
-                <span className="inline-flex items-center gap-1 font-mono text-[10px] font-semibold text-[#16a34a] bg-[#16a34a]/10 px-2 py-0.5 rounded-[4px] border border-[#16a34a]/20 uppercase tracking-[0.071em]">
+                </h2>
+                <span className="inline-flex items-center gap-1 font-mono text-[10px] font-semibold text-[#16a34a] bg-[#16a34a]/10 px-2 py-0.5 rounded-[4px] border border-[#16a34a]/20 uppercase">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#16a34a] animate-pulse" />
                   {partner?.status || 'Active'}
                 </span>
               </div>
 
-              {/* Company / Business Name */}
-              <div className="flex items-center gap-1.5 text-xs text-[#666666] truncate font-medium">
-                <Building2 size={13} className="text-[#666666] shrink-0" />
+              <div className="flex items-center gap-1.5 text-xs text-[#6b7280] truncate font-medium">
+                <Building2 size={13} className="text-[#9ca3af] shrink-0" />
                 <span className="truncate">{formData.business_name || 'Hospitality Partner'}</span>
               </div>
 
-              {/* Commission Rate & Email */}
-              <div className="flex items-center gap-2 flex-wrap text-xs text-[#666666] font-mono">
-                <span className="text-[#171717] bg-[#fafafa] px-2 py-0.5 rounded-[4px] border border-[#ebebeb] font-semibold">
+              <div className="flex items-center gap-2 flex-wrap text-xs text-[#6b7280] font-mono">
+                <span className="text-[#111827] bg-[#f3f4f6] px-2 py-0.5 rounded-[4px] font-semibold">
                   {partner?.commission_rate_pct || 10}% Commission
                 </span>
                 <span>•</span>
                 <span className="truncate">{partner?.email}</span>
               </div>
 
-              {/* Photo Controls */}
               <div className="pt-1 flex items-center gap-2 text-xs">
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="font-medium text-[#171717] hover:underline cursor-pointer inline-flex items-center gap-1"
+                  className="font-medium text-[#111827] hover:underline cursor-pointer inline-flex items-center gap-1"
                 >
-                  <Camera size={11} className="text-[#666666]" />
+                  <Camera size={11} className="text-[#6b7280]" />
                   <span>{localAvatar ? 'Change Photo' : 'Upload Photo'}</span>
                 </button>
                 {localAvatar && (
                   <>
-                    <span className="text-[#ebebeb]">•</span>
+                    <span className="text-[#e5e7eb]">•</span>
                     <button
                       type="button"
                       onClick={handleRemoveAvatar}
@@ -341,19 +345,19 @@ export default function PartnerProfilePage() {
             </div>
           </div>
 
-          {/* Quick Partner Code Pill */}
-          <div className="flex sm:flex-col items-center sm:items-end justify-between gap-2 border-t sm:border-t-0 pt-3 sm:pt-0 border-[#ebebeb]">
-            <span className="font-mono text-[10px] uppercase tracking-[0.071em] text-[#666666]">
+          {/* Quick Partner Code */}
+          <div className="flex sm:flex-col items-center sm:items-end justify-between gap-2 border-t sm:border-t-0 pt-3 sm:pt-0 border-[#e5e7eb]">
+            <span className="font-mono text-[10px] uppercase tracking-wider text-[#6b7280]">
               Partner Code
             </span>
             <div className="flex items-center gap-1.5">
-              <span className="font-mono font-bold text-sm text-[#171717] bg-[#fafafa] px-2.5 py-1 rounded-[4px] border border-[#ebebeb]">
+              <span className="font-mono font-bold text-sm text-[#111827] bg-[#f9fafb] px-2.5 py-1 rounded-[6px] border border-[#e5e7eb]">
                 {partner?.partner_code || '...'}
               </span>
               <button
                 type="button"
                 onClick={handleCopyCode}
-                className="p-1.5 rounded-[4px] bg-[#fafafa] hover:bg-[#ebebeb] border border-[#ebebeb] text-[#171717] cursor-pointer"
+                className="p-1.5 rounded-[6px] bg-[#f9fafb] hover:bg-[#f3f4f6] border border-[#e5e7eb] text-[#111827] cursor-pointer"
                 title="Copy partner code"
               >
                 {copiedCode ? <Check size={12} className="text-[#16a34a]" /> : <Copy size={12} />}
@@ -362,24 +366,24 @@ export default function PartnerProfilePage() {
           </div>
         </div>
 
-        {/* Quick Referral Link Banner */}
-        <div className="mt-4 pt-4 border-t border-[#ebebeb] flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <div className="flex items-center gap-1.5 font-mono text-xs text-[#666666]">
+        {/* Quick Link Row */}
+        <div className="mt-4 pt-4 border-t border-[#e5e7eb] flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5 text-xs text-[#6b7280]">
             <Share2 size={13} />
             <span>Referral Attribution Link:</span>
           </div>
           <button
             type="button"
             onClick={handleCopyLink}
-            className="w-full sm:w-auto flex items-center justify-between sm:justify-start gap-2 px-3 py-1.5 rounded-[6px] bg-[#fafafa] hover:bg-[#ebebeb] border border-[#ebebeb] text-xs font-mono text-[#171717] transition-all cursor-pointer"
+            className="flex items-center justify-between sm:justify-start gap-2 px-3 py-1.5 rounded-[6px] bg-[#f9fafb] hover:bg-[#f3f4f6] border border-[#e5e7eb] text-xs font-mono text-[#111827] transition-all cursor-pointer"
           >
             <span className="truncate">?ref={partner?.partner_code}</span>
             {copiedLink ? (
               <span className="font-mono text-[10px] font-semibold text-[#16a34a] flex items-center gap-1">
-                <Check size={12} /> Copied!
+                <Check size={12} /> Copied
               </span>
             ) : (
-              <span className="font-mono text-[10px] font-medium text-[#666666] flex items-center gap-1">
+              <span className="font-mono text-[10px] font-medium text-[#6b7280] flex items-center gap-1">
                 <Copy size={12} /> Copy Full Link
               </span>
             )}
@@ -387,12 +391,11 @@ export default function PartnerProfilePage() {
         </div>
       </div>
 
-      {/* Status Notifications */}
       {statusMsg && (
         <div
-          className={`p-3.5 rounded-[6px] border text-xs flex items-center gap-2.5 animate-in fade-in-50 duration-200 ${
+          className={`p-3.5 rounded-[8px] border text-xs flex items-center gap-2.5 animate-in fade-in-50 ${
             statusMsg.type === 'success'
-              ? 'border-[#16a34a]/20 bg-[#16a34a]/10 text-[#16a34a]'
+              ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
               : 'border-red-200 bg-red-50 text-red-950'
           }`}
         >
@@ -406,120 +409,103 @@ export default function PartnerProfilePage() {
       )}
 
       {/* Main Settings Form */}
-      <form onSubmit={handleSave} className="space-y-4">
+      <form onSubmit={handleSave} className="space-y-5">
         
-        {/* Section 1: Partner & Business Information */}
-        <div className="bg-white border border-[#ebebeb] rounded-[6px] p-5 sm:p-6 space-y-4 shadow-[0_0_0_1px_rgba(0,0,0,0.03)]">
-          <div className="flex items-start gap-2.5 border-b border-[#ebebeb] pb-3">
-            <User size={18} className="text-[#171717] shrink-0 mt-0.5" />
+        {/* Section 1: Contact Information */}
+        <div className="bg-white border border-[#e5e7eb] rounded-[10px] p-5 sm:p-6 space-y-4 shadow-xs">
+          <div className="flex items-start gap-2.5 border-b border-[#e5e7eb] pb-3">
+            <User size={18} className="text-[#111827] shrink-0 mt-0.5" />
             <div>
-              <h2 className="font-mono text-xs sm:text-sm font-semibold text-[#171717] uppercase tracking-[0.071em]">
-                Partner & Business Information
-              </h2>
-              <p className="text-xs text-[#666666]">
-                Your identity and registered hospitality partner details
+              <h3 className="text-sm font-semibold text-[#111827]">
+                Contact & Business Information
+              </h3>
+              <p className="text-xs text-[#6b7280]">
+                Your identity and registered partner details
               </p>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block font-mono text-[11px] font-medium text-[#666666] uppercase tracking-[0.071em] mb-1.5">
-                First Name
-              </label>
+              <label className="block text-xs font-medium text-[#374151] mb-1.5">First Name</label>
               <input
                 type="text"
                 name="first_name"
                 value={formData.first_name}
                 onChange={handleChange}
                 placeholder="First name"
-                className="w-full px-3 py-2 rounded-[6px] border border-[#ebebeb] text-xs font-medium text-[#171717] bg-white focus:outline-none focus:border-[#171717] transition-colors"
+                className="w-full px-3 py-2 rounded-[6px] border border-[#e5e7eb] text-xs font-medium text-[#111827] bg-white focus:outline-none focus:border-[#111827]"
               />
             </div>
-
             <div>
-              <label className="block font-mono text-[11px] font-medium text-[#666666] uppercase tracking-[0.071em] mb-1.5">
-                Last Name
-              </label>
+              <label className="block text-xs font-medium text-[#374151] mb-1.5">Last Name</label>
               <input
                 type="text"
                 name="last_name"
                 value={formData.last_name}
                 onChange={handleChange}
                 placeholder="Last name"
-                className="w-full px-3 py-2 rounded-[6px] border border-[#ebebeb] text-xs font-medium text-[#171717] bg-white focus:outline-none focus:border-[#171717] transition-colors"
+                className="w-full px-3 py-2 rounded-[6px] border border-[#e5e7eb] text-xs font-medium text-[#111827] bg-white focus:outline-none focus:border-[#111827]"
               />
             </div>
           </div>
 
           <div>
-            <label className="block font-mono text-[11px] font-medium text-[#666666] uppercase tracking-[0.071em] mb-1.5 flex items-center gap-1.5">
-              <Building2 size={13} className="text-[#666666]" />
-              Villa, Hotel, or Business Name
-            </label>
+            <label className="block text-xs font-medium text-[#374151] mb-1.5">Villa, Hotel, or Business Name</label>
             <input
               type="text"
               name="business_name"
               value={formData.business_name}
               onChange={handleChange}
-              placeholder="e.g. Villa Mandala Ubud or Luxury Concierge Bali"
-              className="w-full px-3 py-2 rounded-[6px] border border-[#ebebeb] text-xs font-medium text-[#171717] bg-white focus:outline-none focus:border-[#171717] transition-colors"
+              placeholder="e.g. Villa Mandala Ubud"
+              className="w-full px-3 py-2 rounded-[6px] border border-[#e5e7eb] text-xs font-medium text-[#111827] bg-white focus:outline-none focus:border-[#111827]"
             />
           </div>
 
           <div>
-            <label className="block font-mono text-[11px] font-medium text-[#666666] uppercase tracking-[0.071em] mb-1.5 flex items-center gap-1.5">
-              <MessageCircle size={13} className="text-[#666666]" />
-              WhatsApp Number
-            </label>
+            <label className="block text-xs font-medium text-[#374151] mb-1.5">WhatsApp Number</label>
             <input
               type="tel"
               name="whatsapp"
               value={formData.whatsapp}
               onChange={handleChange}
               placeholder="+62 812 3456 7890"
-              className="w-full px-3 py-2 rounded-[6px] border border-[#ebebeb] text-xs font-medium text-[#171717] bg-white focus:outline-none focus:border-[#171717] transition-colors"
+              className="w-full px-3 py-2 rounded-[6px] border border-[#e5e7eb] text-xs font-medium text-[#111827] bg-white focus:outline-none focus:border-[#111827]"
             />
-            <p className="text-[11px] text-[#666666] mt-1">
+            <p className="text-[11px] text-[#6b7280] mt-1">
               Used for automated guest booking alerts and finance settlements. Include country code (+62).
             </p>
           </div>
         </div>
 
         {/* Section 2: Bank Transfer Payout Destination */}
-        <div className="bg-white border border-[#ebebeb] rounded-[6px] p-5 sm:p-6 space-y-4 shadow-[0_0_0_1px_rgba(0,0,0,0.03)]">
-          <div className="flex items-start gap-2.5 border-b border-[#ebebeb] pb-3">
-            <Landmark size={18} className="text-[#171717] shrink-0 mt-0.5" />
+        <div className="bg-white border border-[#e5e7eb] rounded-[10px] p-5 sm:p-6 space-y-4 shadow-xs">
+          <div className="flex items-start gap-2.5 border-b border-[#e5e7eb] pb-3">
+            <Landmark size={18} className="text-[#111827] shrink-0 mt-0.5" />
             <div>
-              <h2 className="font-mono text-xs sm:text-sm font-semibold text-[#171717] uppercase tracking-[0.071em]">
+              <h3 className="text-sm font-semibold text-[#111827]">
                 Bank Transfer Payout Destination
-              </h2>
-              <p className="text-xs text-[#666666]">
-                Where you receive your weekly or on-demand affiliate earnings via direct Indonesian bank transfer
+              </h3>
+              <p className="text-xs text-[#6b7280]">
+                Where you receive your weekly or on-demand affiliate earnings via direct bank transfer
               </p>
             </div>
           </div>
 
-          <div className="space-y-3.5 p-4 rounded-[6px] bg-[#fafafa] border border-[#ebebeb]">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div className="space-y-3.5 p-4 rounded-[8px] bg-[#f9fafb] border border-[#e5e7eb]">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block font-mono text-[11px] font-medium text-[#666666] uppercase tracking-[0.071em] mb-1.5">
-                  Bank Name
-                </label>
+                <label className="block text-xs font-medium text-[#374151] mb-1.5">Bank Name</label>
                 <div className="relative">
-                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-[#666666] pointer-events-none">
-                    <Landmark size={13} />
-                  </div>
                   <input
                     type="text"
                     name="bank_name"
                     value={formData.bank_name}
                     onChange={handleChange}
                     placeholder="BCA, Mandiri, BNI, BRI, etc."
-                    className="w-full pl-8 pr-3 py-2 rounded-[6px] border border-[#ebebeb] text-xs font-semibold text-[#171717] bg-white focus:outline-none focus:border-[#171717]"
+                    className="w-full px-3 py-2 rounded-[6px] border border-[#e5e7eb] text-xs font-semibold text-[#111827] bg-white focus:outline-none focus:border-[#111827]"
                   />
                 </div>
-                {/* One-Tap Bank Selector Chips */}
                 <div className="flex items-center gap-1.5 mt-2 flex-wrap">
                   {['BCA', 'Mandiri', 'BNI', 'BRI'].map((bank) => (
                     <button
@@ -528,8 +514,8 @@ export default function PartnerProfilePage() {
                       onClick={() => setFormData((prev) => ({ ...prev, bank_name: bank }))}
                       className={`px-2.5 py-0.5 rounded-[4px] text-xs font-mono transition-all cursor-pointer border ${
                         formData.bank_name?.toUpperCase() === bank
-                          ? 'bg-[#171717] text-white border-[#171717] font-semibold'
-                          : 'bg-white border-[#ebebeb] text-[#666666] hover:text-[#171717] hover:border-[#171717]'
+                          ? 'bg-[#111827] text-white border-[#111827] font-semibold'
+                          : 'bg-white border-[#e5e7eb] text-[#6b7280] hover:text-[#111827]'
                       }`}
                     >
                       {bank}
@@ -539,42 +525,38 @@ export default function PartnerProfilePage() {
               </div>
 
               <div>
-                <label className="block font-mono text-[11px] font-medium text-[#666666] uppercase tracking-[0.071em] mb-1.5">
-                  Account Number
-                </label>
+                <label className="block text-xs font-medium text-[#374151] mb-1.5">Account Number</label>
                 <input
                   type="text"
                   name="account_number"
                   value={formData.account_number}
                   onChange={handleChange}
                   placeholder="e.g. 1234567890"
-                  className="w-full px-3 py-2 rounded-[6px] border border-[#ebebeb] text-xs font-mono font-medium text-[#171717] bg-white focus:outline-none focus:border-[#171717]"
+                  className="w-full px-3 py-2 rounded-[6px] border border-[#e5e7eb] text-xs font-mono font-medium text-[#111827] bg-white focus:outline-none focus:border-[#111827]"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block font-mono text-[11px] font-medium text-[#666666] uppercase tracking-[0.071em] mb-1.5">
-                Account Holder Full Name
-              </label>
+              <label className="block text-xs font-medium text-[#374151] mb-1.5">Account Holder Full Name</label>
               <input
                 type="text"
                 name="account_holder"
                 value={formData.account_holder}
                 onChange={handleChange}
-                placeholder="Exact name registered on your bank passbook / app"
-                className="w-full px-3 py-2 rounded-[6px] border border-[#ebebeb] text-xs font-medium text-[#171717] bg-white focus:outline-none focus:border-[#171717]"
+                placeholder="Exact name registered on your bank passbook / mobile app"
+                className="w-full px-3 py-2 rounded-[6px] border border-[#e5e7eb] text-xs font-medium text-[#111827] bg-white focus:outline-none focus:border-[#111827]"
               />
             </div>
           </div>
         </div>
 
-        {/* Save Changes Primary Action */}
-        <div className="pt-1">
+        {/* Save Changes Button */}
+        <div>
           <button
             type="submit"
             disabled={saving}
-            className="w-full py-2.5 px-4 rounded-[6px] bg-[#171717] hover:bg-black text-white font-mono font-medium text-xs tracking-[0.071em] uppercase transition-colors disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 shadow-xs"
+            className="w-full py-2.5 px-4 rounded-[8px] bg-[#111827] hover:bg-black text-white font-mono font-medium text-xs uppercase tracking-wider transition-colors disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 shadow-xs"
           >
             {saving ? (
               <>
@@ -589,54 +571,49 @@ export default function PartnerProfilePage() {
       </form>
 
       {/* Section 3: Account Security & Support Actions */}
-      <div className="bg-white border border-[#ebebeb] rounded-[6px] p-5 sm:p-6 space-y-4 shadow-[0_0_0_1px_rgba(0,0,0,0.03)]">
-        <div className="flex items-center gap-2 border-b border-[#ebebeb] pb-3">
-          <ShieldCheck size={16} className="text-[#171717]" />
-          <h2 className="font-mono text-xs sm:text-sm font-semibold uppercase tracking-[0.071em] text-[#171717]">
-            Account Security & Support
-          </h2>
+      <div className="bg-white border border-[#e5e7eb] rounded-[10px] p-5 sm:p-6 space-y-4 shadow-xs">
+        <div className="flex items-center gap-2 border-b border-[#e5e7eb] pb-3">
+          <ShieldCheck size={16} className="text-[#111827]" />
+          <h3 className="text-sm font-semibold text-[#111827]">Account Security & Support</h3>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {/* WhatsApp Support Concierge */}
           <a
             href="https://wa.me/6285174119423"
             target="_blank"
             rel="noreferrer"
-            className="flex items-center p-3.5 rounded-[6px] bg-[#fafafa] hover:bg-[#ebebeb] border border-[#ebebeb] text-xs font-medium text-[#171717] transition-colors"
+            className="flex items-center p-3.5 rounded-[8px] bg-[#f9fafb] hover:bg-[#f3f4f6] border border-[#e5e7eb] text-xs font-medium text-[#111827] transition-colors"
           >
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-[4px] bg-white text-[#171717] flex items-center justify-center shrink-0 border border-[#ebebeb]">
+              <div className="w-8 h-8 rounded-[6px] bg-white text-[#111827] flex items-center justify-center shrink-0 border border-[#e5e7eb]">
                 <MessageCircle size={15} />
               </div>
               <div>
-                <span className="font-semibold text-[#171717] block">WhatsApp Partner Support</span>
-                <span className="text-[11px] text-[#666666]">Assistance with payouts & tracking</span>
+                <span className="font-semibold text-[#111827] block">WhatsApp Partner Support</span>
+                <span className="text-[11px] text-[#6b7280]">Assistance with payouts & tracking</span>
               </div>
             </div>
           </a>
 
-          {/* Password & Credential Security */}
-          <div className="flex items-center p-3.5 rounded-[6px] bg-[#fafafa] border border-[#ebebeb] text-xs font-medium text-[#171717]">
+          <div className="flex items-center p-3.5 rounded-[8px] bg-[#f9fafb] border border-[#e5e7eb] text-xs font-medium text-[#111827]">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-[4px] bg-white text-[#171717] flex items-center justify-center shrink-0 border border-[#ebebeb]">
+              <div className="w-8 h-8 rounded-[6px] bg-white text-[#111827] flex items-center justify-center shrink-0 border border-[#e5e7eb]">
                 <KeyRound size={15} />
               </div>
               <div>
-                <span className="font-semibold text-[#171717] block">Password & Security</span>
-                <span className="text-[11px] text-[#666666]">Contact finance concierge to update</span>
+                <span className="font-semibold text-[#111827] block">Password & Credentials</span>
+                <span className="text-[11px] text-[#6b7280]">Managed via secure partner concierge</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Sign Out Button */}
-        <div className="pt-2 border-t border-[#ebebeb]">
+        <div className="pt-2 border-t border-[#e5e7eb]">
           <button
             type="button"
             onClick={handleLogout}
             disabled={loggingOut}
-            className="w-full py-2.5 px-4 rounded-[6px] bg-red-50 hover:bg-red-100 text-red-600 font-mono font-semibold text-xs tracking-[0.071em] uppercase border border-red-200 transition-colors flex items-center justify-center gap-2 cursor-pointer"
+            className="w-full py-2.5 px-4 rounded-[8px] bg-red-50 hover:bg-red-100 text-red-600 font-mono font-semibold text-xs tracking-wider uppercase border border-red-200 transition-colors flex items-center justify-center gap-2 cursor-pointer"
           >
             {loggingOut ? (
               <>
@@ -650,13 +627,6 @@ export default function PartnerProfilePage() {
               </>
             )}
           </button>
-        </div>
-
-        <div className="pt-1 text-center">
-          <p className="font-mono text-[11px] text-[#666666] flex items-center justify-center gap-1.5">
-            <Lock size={11} className="text-[#8f8f8f]" />
-            <span>End-to-end encrypted session • partners.booktherapick.com</span>
-          </p>
         </div>
       </div>
 
