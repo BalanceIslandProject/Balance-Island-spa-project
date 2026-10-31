@@ -10,17 +10,10 @@ import {
   Clock, 
   Copy, 
   Check, 
-  User, 
-  FileText, 
   ExternalLink, 
-  RefreshCw,
-  Sparkles,
-  CheckCircle2,
-  X,
-  Layers,
-  ArrowUpRight,
-  List,
-  LayoutGrid
+  X, 
+  List, 
+  LayoutGrid 
 } from 'lucide-react';
 import { CalendarBooking } from '../FloatingBookingCalendar';
 import ScheduleTrackingModal from '../ScheduleTrackingModal';
@@ -31,7 +24,7 @@ const MONTH_NAMES = [
   'July', 'August', 'September', 'October', 'November', 'December'
 ];
 
-// Matching user's reference: Mon, Tues, Wed, Thurs, Fri, Sat, Sun
+// Weekdays matching design: Mon, Tues, Wed, Thurs, Fri, Sat, Sun
 const WEEKDAY_NAMES = ['Mon', 'Tues', 'Wed', 'Thurs', 'Fri', 'Sat', 'Sun'];
 
 export default function PartnerBookingsPage() {
@@ -171,38 +164,8 @@ export default function PartnerBookingsPage() {
     setSelectedDate(todayStr);
   };
 
-  // Aggregate metrics summary for affiliate CRM
-  const metrics = useMemo(() => {
-    const total = bookings.length;
-    let approvedTotal = 0;
-    let pendingTotal = 0;
-    let paidTotal = 0;
-    let paidCount = 0;
-    let approvedCount = 0;
-    let pendingCount = 0;
-
-    for (const b of bookings) {
-      const isCancelled = b.commission_status === 'cancelled' || b.booking_status === 'Cancelled';
-      if (isCancelled) continue;
-      const amt = b.commission_amount || 0;
-      if (b.commission_status === 'paid') {
-        paidTotal += amt;
-        paidCount++;
-      } else if (b.commission_status === 'approved') {
-        approvedTotal += amt;
-        approvedCount++;
-      } else {
-        pendingTotal += amt;
-        pendingCount++;
-      }
-    }
-
-    return { total, approvedTotal, pendingTotal, paidTotal, paidCount, approvedCount, pendingCount };
-  }, [bookings]);
-
-  // Calendar grid computation matching reference image
+  // Calendar grid computation
   const calendarDays = useMemo(() => {
-    // Week starts on Monday: Monday = 0, ..., Sunday = 6
     const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
     const startDayIndex = (firstDayOfMonth.getDay() + 6) % 7;
     const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
@@ -252,8 +215,6 @@ export default function PartnerBookingsPage() {
       const dStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
       const dayBookings = bookingsByDate[dStr] || [];
 
-      // Determine pill style based on bookings:
-      // blue = paid, green = approved, orange = pending, red = cancelled
       let statusStyle: 'paid' | 'approved' | 'pending' | 'cancelled' | null = null;
       if (dayBookings.length > 0) {
         if (dayBookings.some((b) => b.commission_status === 'paid')) {
@@ -297,28 +258,6 @@ export default function PartnerBookingsPage() {
     return cells;
   }, [currentYear, currentMonth, bookings]);
 
-  // Current month affiliate stats
-  const currentMonthStats = useMemo(() => {
-    let count = 0;
-    let earned = 0;
-    for (const b of bookings) {
-      if (!b.date) continue;
-      const parts = b.date.split('-');
-      if (parts.length >= 2) {
-        const y = parseInt(parts[0], 10);
-        const m = parseInt(parts[1], 10);
-        if (y === currentYear && m === currentMonth + 1) {
-          count++;
-          const isCancelled = b.commission_status === 'cancelled' || b.booking_status === 'Cancelled';
-          if (!isCancelled) {
-            earned += (b.commission_amount || 0);
-          }
-        }
-      }
-    }
-    return { count, earned };
-  }, [bookings, currentYear, currentMonth]);
-
   // Filtered bookings
   const filteredBookings = useMemo(() => {
     return bookings.filter((b) => {
@@ -357,52 +296,9 @@ export default function PartnerBookingsPage() {
   }, [bookings, search, statusFilter, selectedDate]);
 
   return (
-    <div className="space-y-6 w-full font-sans antialiased pb-16">
+    <div className="space-y-5 w-full font-sans antialiased pb-16 pt-1 sm:pt-2">
       
-      {/* ─── Top Header Toolbar ─── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#eaecf0]">
-        <div>
-          <span className="font-mono text-[10px] uppercase tracking-wider text-[#64748b] font-semibold block mb-0.5">
-            Partner Portal
-          </span>
-          <h1 className="text-2xl sm:text-[28px] font-bold text-[#0f172a] tracking-tight">
-            Bookings
-          </h1>
-          <p className="text-xs text-[#64748b] mt-0.5">
-            Track guest appointments, treatments, and commissions in real time
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2 self-start sm:self-auto">
-          {selectedDate && (
-            <button
-              type="button"
-              onClick={() => setSelectedDate(null)}
-              className="inline-flex items-center gap-1.5 h-8.5 px-3 rounded-xl border border-[#e2e8f0] bg-white hover:bg-red-50 hover:text-red-600 hover:border-red-200 text-xs font-medium text-[#64748b] transition-all cursor-pointer shadow-2xs active:scale-95"
-              title="Show all bookings"
-            >
-              <X size={13} />
-              <span>Clear Date</span>
-            </button>
-          )}
-
-          <button
-            type="button"
-            onClick={() => {
-              setLoading(true);
-              loadData();
-            }}
-            disabled={loading}
-            className="inline-flex items-center gap-1.5 h-8.5 px-3.5 rounded-xl border border-[#e2e8f0] bg-white text-xs font-medium text-[#0f172a] hover:bg-[#f8fafc] hover:border-[#cbd5e1] transition-all cursor-pointer shadow-2xs active:scale-95"
-            title="Refresh bookings"
-          >
-            <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
-            <span>Refresh</span>
-          </button>
-        </div>
-      </div>
-
-      {/* ─── Main Content Split: Left Corner Calendar + Right Booking Details ─── */}
+      {/* ─── Main Content Split: Left Compact Calendar + Right Booking List (Primary Focus) ─── */}
       <div className="flex flex-col lg:flex-row lg:items-start gap-5 lg:gap-6">
 
         {/* ─── Mobile App Calendar Header Bar (< lg) ─── */}
@@ -416,7 +312,7 @@ export default function PartnerBookingsPage() {
                 {MONTH_NAMES[currentMonth]} {currentYear}
               </div>
               <div className="text-[11px] text-[#64748b] font-mono truncate">
-                {currentMonthStats.count} {currentMonthStats.count === 1 ? 'booking' : 'bookings'} · +{formatIDR(currentMonthStats.earned)}
+                {bookings.length} {bookings.length === 1 ? 'booking' : 'bookings'}
               </div>
             </div>
           </div>
@@ -430,9 +326,9 @@ export default function PartnerBookingsPage() {
         </div>
 
         {/* ═══════════════════════════════════════════════════════════════
-            LEFT CORNER: Modern Compact Calendar Widget (Matches Ref Image)
+            LEFT CORNER: Clean Compact Calendar Widget (No Monthly Overview)
            ═══════════════════════════════════════════════════════════════ */}
-        <aside className={`w-full lg:w-[285px] xl:w-[300px] shrink-0 space-y-3.5 lg:sticky lg:top-4 self-start ${showMobileCalendar ? 'block' : 'hidden lg:block'}`}>
+        <aside className={`w-full lg:w-[285px] xl:w-[300px] shrink-0 space-y-3 lg:sticky lg:top-4 self-start ${showMobileCalendar ? 'block' : 'hidden lg:block'}`}>
           
           {/* Calendar Card Box */}
           <div className="bg-white border border-[#eaecf0] rounded-2xl p-4.5 sm:p-5 shadow-xs">
@@ -494,7 +390,7 @@ export default function PartnerBookingsPage() {
                   );
                 }
 
-                // Selected Date Style (Vibrant Blue with ring, matching active selection in reference)
+                // Selected Date Style (Vibrant Blue with ring)
                 if (isSelected) {
                   return (
                     <button
@@ -509,9 +405,8 @@ export default function PartnerBookingsPage() {
                   );
                 }
 
-                // Status Circular Pills (Matching Reference Image)
+                // Status Circular Pills
                 if (cell.statusStyle === 'paid') {
-                  // Soft Blue (Disbursed)
                   return (
                     <button
                       key={cell.dateStr}
@@ -526,7 +421,6 @@ export default function PartnerBookingsPage() {
                 }
 
                 if (cell.statusStyle === 'approved') {
-                  // Soft Green (Approved)
                   return (
                     <button
                       key={cell.dateStr}
@@ -541,7 +435,6 @@ export default function PartnerBookingsPage() {
                 }
 
                 if (cell.statusStyle === 'pending') {
-                  // Soft Orange/Amber (Pending)
                   return (
                     <button
                       key={cell.dateStr}
@@ -556,7 +449,6 @@ export default function PartnerBookingsPage() {
                 }
 
                 if (cell.statusStyle === 'cancelled') {
-                  // Soft Rose/Red (Cancelled)
                   return (
                     <button
                       key={cell.dateStr}
@@ -588,7 +480,7 @@ export default function PartnerBookingsPage() {
               })}
             </div>
 
-            {/* Calendar Legend: 4 Colored Statuses Matching Reference Image */}
+            {/* Calendar Legend: 4 Colored Statuses */}
             <div className="pt-3.5 mt-3.5 border-t border-[#f1f5f9] grid grid-cols-2 gap-2 text-[11px] text-[#64748b]">
               <div className="flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 rounded-full bg-[#2563eb] shrink-0" />
@@ -622,129 +514,14 @@ export default function PartnerBookingsPage() {
               </button>
             </div>
           </div>
-
-          {/* CRM Monthly Quick Performance Summary */}
-          <div className="p-4.5 rounded-2xl bg-gradient-to-br from-emerald-50/90 via-teal-50/40 to-white border border-emerald-200/90 shadow-xs space-y-2.5">
-            <div className="flex items-center justify-between">
-              <span className="font-mono text-xs uppercase tracking-wider text-emerald-950 font-bold">
-                {MONTH_NAMES[currentMonth]} Overview
-              </span>
-              <span className="font-mono text-xs font-bold text-emerald-800 bg-emerald-100 border border-emerald-200 px-2 py-0.5 rounded-md">
-                {currentMonthStats.count} {currentMonthStats.count === 1 ? 'Booking' : 'Bookings'}
-              </span>
-            </div>
-
-            <div className="flex items-baseline justify-between pt-1 border-t border-emerald-100">
-              <span className="text-xs font-bold text-emerald-900">Month Commission</span>
-              <span className="font-mono font-extrabold text-base text-emerald-700 tabular-nums">
-                +{formatIDR(currentMonthStats.earned)}
-              </span>
-            </div>
-
-            {selectedDate && (
-              <div className="pt-2 border-t border-emerald-100 flex items-center justify-between text-xs">
-                <span className="text-xs text-emerald-900 truncate">
-                  Filtered: <strong className="text-slate-900">{formatFriendlyDate(selectedDate)}</strong>
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setSelectedDate(null)}
-                  className="text-xs font-mono font-bold text-rose-600 hover:underline cursor-pointer shrink-0 ml-2"
-                >
-                  Reset
-                </button>
-              </div>
-            )}
-          </div>
         </aside>
 
         {/* ═══════════════════════════════════════════════════════════════
-            RIGHT AREA: Affiliate CRM Metric Cards + Filters + Booking Cards
+            RIGHT AREA: PRIMARY FOCUS — Filter Tabs + Search + Bookings
            ═══════════════════════════════════════════════════════════════ */}
-        <section className="flex-1 min-w-0 space-y-5">
+        <section className="flex-1 min-w-0 space-y-4">
           
-          {/* ─── Colorful, Bold Affiliate CRM Metric Strip (No long text) ─── */}
-          <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-3.5">
-            
-            {/* Total Bookings Card */}
-            <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-blue-50/90 via-sky-50/40 to-white border border-blue-200/90 shadow-xs hover:border-blue-300 hover:shadow-sm transition-all group overflow-hidden">
-              <div className="flex items-center justify-between">
-                <span className="font-mono text-xs sm:text-[13px] uppercase tracking-wider text-blue-900 font-bold whitespace-nowrap">
-                  TOTAL BOOKINGS
-                </span>
-                <span className="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-xs shadow-blue-500/25 shrink-0">
-                  <Layers size={14} />
-                </span>
-              </div>
-              <span className="font-sans font-extrabold text-2xl sm:text-[32px] text-blue-950 mt-2 block tabular-nums tracking-tight leading-none">
-                {metrics.total}
-              </span>
-              <div className="flex items-center justify-start text-xs mt-3 pt-2.5 border-t border-blue-100/80">
-                <span className="font-mono text-xs font-bold text-blue-700 bg-blue-100/90 border border-blue-200 px-2.5 py-1 rounded-md">
-                  {metrics.approvedCount + metrics.paidCount} Confirmed
-                </span>
-              </div>
-            </div>
-
-            {/* Approved Card */}
-            <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-emerald-50/90 via-teal-50/40 to-white border border-emerald-200/90 shadow-xs hover:border-emerald-300 hover:shadow-sm transition-all overflow-hidden">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-                  <span className="font-mono text-xs sm:text-[13px] uppercase tracking-wider text-emerald-900 font-bold whitespace-nowrap">
-                    APPROVED
-                  </span>
-                </div>
-              </div>
-              <span className="font-mono font-extrabold text-xl sm:text-[26px] text-emerald-950 mt-2 block tabular-nums tracking-tight leading-none">
-                {formatIDR(metrics.approvedTotal)}
-              </span>
-              <div className="flex items-center justify-start text-xs mt-3 pt-2.5 border-t border-emerald-100/80">
-                <span className="font-mono text-xs font-bold text-emerald-700 bg-emerald-100/90 border border-emerald-200 px-2.5 py-1 rounded-md">
-                  {metrics.approvedCount} Orders
-                </span>
-              </div>
-            </div>
-
-            {/* Pending Card */}
-            <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-amber-50/90 via-orange-50/40 to-white border border-amber-200/90 shadow-xs hover:border-amber-300 hover:shadow-sm transition-all overflow-hidden">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0" />
-                  <span className="font-mono text-xs sm:text-[13px] uppercase tracking-wider text-amber-900 font-bold whitespace-nowrap">
-                    PENDING
-                  </span>
-                </div>
-              </div>
-              <span className="font-mono font-extrabold text-xl sm:text-[26px] text-amber-950 mt-2 block tabular-nums tracking-tight leading-none">
-                {formatIDR(metrics.pendingTotal)}
-              </span>
-              <div className="flex items-center justify-start text-xs mt-3 pt-2.5 border-t border-amber-100/80">
-                <span className="font-mono text-xs font-bold text-amber-700 bg-amber-100/90 border border-amber-200 px-2.5 py-1 rounded-md">
-                  {metrics.pendingCount} Active
-                </span>
-              </div>
-            </div>
-
-            {/* Paid Out Card */}
-            <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-indigo-50/90 via-purple-50/40 to-white border border-indigo-200/90 shadow-xs hover:border-indigo-300 hover:shadow-sm transition-all overflow-hidden">
-              <div className="flex items-center justify-between">
-                <span className="font-mono text-xs sm:text-[13px] uppercase tracking-wider text-indigo-900 font-bold whitespace-nowrap">
-                  PAID OUT
-                </span>
-              </div>
-              <span className="font-mono font-extrabold text-xl sm:text-[26px] text-indigo-950 mt-2 block tabular-nums tracking-tight leading-none">
-                {formatIDR(metrics.paidTotal)}
-              </span>
-              <div className="flex items-center justify-start text-xs mt-3 pt-2.5 border-t border-indigo-100/80">
-                <span className="font-mono text-xs font-bold text-indigo-700 bg-indigo-100/90 border border-indigo-200 px-2.5 py-1 rounded-md">
-                  {metrics.paidCount} Payouts
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* ─── Search and Filter Tabs (Colorful & Bold Segmented Controls) ─── */}
+          {/* ─── Search and Filter Tabs (Segmented Controls) ─── */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
             {/* Filter Pills */}
             <div className="flex items-center gap-1.5 bg-slate-100 p-1.5 rounded-2xl border border-slate-200 overflow-x-auto no-scrollbar shrink-0">
@@ -865,7 +642,7 @@ export default function PartnerBookingsPage() {
             </div>
           ) : viewMode === 'table' ? (
             <>
-              {/* Desktop Professional Data Table (>= 768px) matching Reference Image */}
+              {/* Desktop Professional Data Table (>= 768px) */}
               <div className="hidden md:block bg-white border border-[#eaecf0] rounded-2xl overflow-hidden shadow-xs">
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs">
@@ -979,7 +756,7 @@ export default function PartnerBookingsPage() {
                 </div>
               </div>
 
-              {/* Mobile App Booking Cards (< 768px) with elevated CRM styling */}
+              {/* Mobile App Booking Cards (< 768px) */}
               <div className="md:hidden space-y-3">
                 {filteredBookings.map((b) => {
                   const isCancelled = b.commission_status === 'cancelled' || b.booking_status === 'Cancelled';
@@ -1039,7 +816,7 @@ export default function PartnerBookingsPage() {
                         </div>
                       </div>
 
-                      {/* Native App Actions Bar: Full-width Track CTA + Invoice Button */}
+                      {/* Native App Actions Bar: Track CTA + Invoice Button */}
                       <div className="pt-2.5 border-t border-[#f1f5f9] flex items-center gap-2">
                         <button
                           type="button"
@@ -1065,7 +842,7 @@ export default function PartnerBookingsPage() {
               </div>
             </>
           ) : (
-            /* Card Grid View with elevated CRM styling */
+            /* Card Grid View */
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-3.5">
               {filteredBookings.map((b) => {
                 const isCancelled = b.commission_status === 'cancelled' || b.booking_status === 'Cancelled';
@@ -1096,54 +873,59 @@ export default function PartnerBookingsPage() {
                             Pending
                           </span>
                         )}
-                        <span className="font-mono text-[11px] text-[#64748b]">
-                          {formatFriendlyDate(b.date)}
-                        </span>
                       </div>
 
-                      <div className="flex items-center gap-1 font-mono text-xs font-bold text-[#0f172a] shrink-0">
-                        <span>#{b.booking_id}</span>
-                        <button
-                          type="button"
-                          onClick={() => handleCopy(b.booking_id)}
-                          className="text-[#94a3b8] hover:text-[#0f172a] p-0.5 cursor-pointer"
-                        >
-                          {copiedId === b.booking_id ? <Check size={11} className="text-[#16a34a]" /> : <Copy size={11} />}
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="pt-2.5 border-t border-[#f1f5f9] flex items-center justify-between text-xs">
-                      <div>
-                        <span className="font-mono text-[9px] uppercase tracking-wider text-[#94a3b8] block font-semibold">Net</span>
-                        <span className="font-mono font-semibold text-[#0f172a] tabular-nums">
-                          {formatIDR(b.treatment_amount || b.gross_amount)} · {b.commission_rate_pct || 10}%
-                        </span>
-                      </div>
-                      <div className="text-right">
-                        <span className="font-mono text-[9px] uppercase tracking-wider text-[#16a34a] block font-bold">
-                          Earned
-                        </span>
-                        <span className={`font-mono font-bold tabular-nums ${isCancelled ? 'line-through text-[#94a3b8]' : 'text-[#16a34a]'}`}>
+                      <div className="text-right shrink-0">
+                        <span className={`font-mono font-bold text-xs sm:text-sm tabular-nums ${isCancelled ? 'line-through text-[#94a3b8]' : 'text-[#16a34a]'}`}>
                           {isCancelled ? 'Rp0' : `+${formatIDR(b.commission_amount)}`}
                         </span>
                       </div>
                     </div>
 
-                    <div className="pt-2.5 border-t border-[#f1f5f9] flex items-center justify-between">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <Link
+                            href={`/invoice/${b.booking_id}`}
+                            target="_blank"
+                            className="font-mono text-xs font-bold text-[#0f172a] hover:underline"
+                          >
+                            #{b.booking_id}
+                          </Link>
+                          <button
+                            type="button"
+                            onClick={() => handleCopy(b.booking_id)}
+                            className="text-[#94a3b8] hover:text-[#0f172a] p-0.5 cursor-pointer"
+                            title="Copy ID"
+                          >
+                            {copiedId === b.booking_id ? <Check size={11} className="text-[#16a34a]" /> : <Copy size={11} />}
+                          </button>
+                        </div>
+                        <div className="text-[11px] text-[#64748b] truncate mt-0.5">
+                          {b.treatment_name || 'Spa Treatment'}
+                        </div>
+                      </div>
+
+                      <div className="text-right shrink-0 text-[11px] font-mono text-[#64748b]">
+                        <div>{formatFriendlyDate(b.date)}</div>
+                        <div className="text-[10px] text-[#94a3b8]">Net {formatIDR(b.treatment_amount || b.gross_amount)}</div>
+                      </div>
+                    </div>
+
+                    <div className="pt-2 border-t border-[#f1f5f9] flex items-center justify-between gap-2">
                       <button
                         type="button"
                         onClick={() => setTrackingBooking(b)}
-                        className="h-7 px-3 rounded-lg bg-[#0f172a] hover:bg-black text-white text-xs font-medium inline-flex items-center gap-1.5 cursor-pointer transition-colors shadow-2xs active:scale-95"
+                        className="h-8 px-4 rounded-xl bg-slate-900 hover:bg-black text-white text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer transition-all shadow-xs active:scale-95"
                       >
-                        <Clock size={11} className="text-[#cbd5e1]" />
+                        <Clock size={12} className="text-slate-300" />
                         <span>Track</span>
                       </button>
 
                       <Link
                         href={`/invoice/${b.booking_id}`}
                         target="_blank"
-                        className="text-xs font-medium text-[#64748b] hover:text-[#0f172a] inline-flex items-center gap-1 hover:underline"
+                        className="text-xs font-bold text-[#64748b] hover:text-[#0f172a] inline-flex items-center gap-1 hover:underline px-2 py-1"
                       >
                         <span>Invoice</span>
                         <ExternalLink size={10} />
@@ -1154,11 +936,10 @@ export default function PartnerBookingsPage() {
               })}
             </div>
           )}
-
         </section>
       </div>
 
-      {/* ─── Schedule Tracking History Modal ─── */}
+      {/* ─── Schedule Tracking Modal ─── */}
       <ScheduleTrackingModal
         booking={trackingBooking}
         onClose={() => setTrackingBooking(null)}

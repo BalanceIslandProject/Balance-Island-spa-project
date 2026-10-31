@@ -7,52 +7,23 @@ import {
   Receipt, 
   CalendarDays, 
   X, 
-  RotateCcw, 
   Calendar as CalendarIcon,
   ChevronDown,
   RefreshCw,
   Search,
-  CheckCircle2,
   Clock,
-  ArrowUpRight,
-  TrendingUp,
-  Filter,
-  Zap,
-  ShieldCheck,
-  Wallet
+  Wallet,
+  XCircle,
+  CheckCircle2
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { CalendarBooking } from '../FloatingBookingCalendar';
 import ScheduleTrackingModal from '../ScheduleTrackingModal';
 
-// Sparkline SVG Component (Kravio style)
-function Sparkline({ color = 'green', trend = 'up' }: { color?: 'green' | 'teal' | 'red'; trend?: 'up' | 'down' }) {
-  const strokeColor = color === 'green' ? '#16a34a' : color === 'teal' ? '#0d9488' : '#ef4444';
-  const fillGradientId = `comm-sparkline-grad-${color}-${trend}`;
-
-  const pathD = trend === 'up'
-    ? 'M 0 30 Q 15 28, 25 18 T 50 22 T 75 10 T 100 5'
-    : 'M 0 10 Q 20 12, 35 22 T 60 18 T 80 28 T 100 32';
-
-  const areaD = `${pathD} L 100 38 L 0 38 Z`;
-
-  return (
-    <svg viewBox="0 0 100 38" className="w-18 h-8 shrink-0 overflow-visible" preserveAspectRatio="none">
-      <defs>
-        <linearGradient id={fillGradientId} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={strokeColor} stopOpacity="0.25" />
-          <stop offset="100%" stopColor={strokeColor} stopOpacity="0.0" />
-        </linearGradient>
-      </defs>
-      <path d={areaD} fill={`url(#${fillGradientId})`} />
-      <path d={pathD} fill="none" stroke={strokeColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
 export default function PartnerCommissionsPage() {
   const [commissions, setCommissions] = useState<any[]>([]);
-  const [filterStatus, setFilterStatus] = useState<string>('all');
+  // Only two treatment statuses: 'all' (both Paid Out and Cancelled), 'paid', 'cancelled'
+  const [filterStatus, setFilterStatus] = useState<'all' | 'paid' | 'cancelled'>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
@@ -74,7 +45,7 @@ export default function PartnerCommissionsPage() {
     commission_amount: Number(item.commission_amount || 0),
     commission_status: item.status || 'pending',
     payment_status: item.status === 'paid' ? 'paid' : 'unpaid',
-    payment_verified: item.status === 'paid' || item.status === 'approved',
+    payment_verified: item.status === 'paid',
     booking_status: item.status === 'cancelled' ? 'Cancelled' : 'Confirmed',
   });
 
@@ -162,39 +133,49 @@ export default function PartnerCommissionsPage() {
     setActiveDatePreset('all');
   };
 
-  // Global Financial KPI Calculations
-  const kpiTotals = useMemo(() => {
-    let totalEarned = 0;
-    let approved = 0;
-    let pending = 0;
-    let paid = 0;
-
-    for (const c of commissions) {
-      if (c.status === 'cancelled') continue;
-      const amt = Number(c.commission_amount || 0);
-      totalEarned += amt;
-
-      if (c.status === 'approved') approved += amt;
-      else if (c.status === 'pending') pending += amt;
-      else if (c.status === 'paid') paid += amt;
-    }
-
-    return { totalEarned, approved, pending, paid };
+  // Strictly filter for the TWO relevant treatment statuses: 'paid' and 'cancelled'
+  const relevantCommissions = useMemo(() => {
+    return commissions.filter((c) => c.status === 'paid' || c.status === 'cancelled');
   }, [commissions]);
 
-  // Combined Filtering
-  const filtered = useMemo(() => {
-    return commissions.filter((c) => {
-      if (filterStatus !== 'all' && c.status !== filterStatus) return false;
+  // Two-status KPI summary: Paid Out & Cancelled
+  const kpiTotals = useMemo(() => {
+    let paidTotal = 0;
+    let paidCount = 0;
+    let cancelledCount = 0;
 
+    for (const c of relevantCommissions) {
+      if (c.status === 'paid') {
+        paidTotal += Number(c.commission_amount || 0);
+        paidCount++;
+      } else if (c.status === 'cancelled') {
+        cancelledCount++;
+      }
+    }
+
+    return { paidTotal, paidCount, cancelledCount };
+  }, [relevantCommissions]);
+
+  // Combined Filtering (Status + Search + Date)
+  const filtered = useMemo(() => {
+    return relevantCommissions.filter((c) => {
+      // 1. Status Filter
+      if (filterStatus !== 'all' && c.status !== filterStatus) {
+        return false;
+      }
+
+      // 2. Search Query
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         const guest = (c.guest_name || '').toLowerCase();
         const ref = (c.booking_id || '').toLowerCase();
         const treatment = (c.treatment_name || '').toLowerCase();
-        if (!guest.includes(q) && !ref.includes(q) && !treatment.includes(q)) return false;
+        if (!guest.includes(q) && !ref.includes(q) && !treatment.includes(q)) {
+          return false;
+        }
       }
 
+      // 3. Date Range
       if (startDate || endDate) {
         const commissionDate = new Date(c.created_at);
         if (startDate) {
@@ -209,7 +190,7 @@ export default function PartnerCommissionsPage() {
 
       return true;
     });
-  }, [commissions, filterStatus, searchQuery, startDate, endDate]);
+  }, [relevantCommissions, filterStatus, searchQuery, startDate, endDate]);
 
   const totalFilteredCommission = useMemo(() => {
     return filtered.reduce((sum, c) => {
@@ -223,17 +204,14 @@ export default function PartnerCommissionsPage() {
   return (
     <div className="space-y-6 w-full pb-16 font-sans antialiased">
       
-      {/* Title & Short Functional Description */}
+      {/* ─── Top Header (Clean & Minimal) ─── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#eaecf0]">
         <div>
-          <span className="font-mono text-[10px] uppercase tracking-wider text-[#64748b] font-semibold block mb-0.5">
-            Partner Portal
-          </span>
           <h1 className="text-2xl sm:text-[28px] font-bold text-[#0f172a] tracking-tight">
             Commissions
           </h1>
           <p className="text-xs text-[#64748b] mt-0.5">
-            Itemized commissions, rates, and clearances.
+            Paid out and cancelled partner commissions
           </p>
         </div>
 
@@ -245,84 +223,17 @@ export default function PartnerCommissionsPage() {
           }}
           disabled={loading}
           className="inline-flex items-center gap-1.5 h-8.5 px-3.5 rounded-xl border border-[#e2e8f0] bg-white text-xs font-medium text-[#0f172a] hover:bg-[#f8fafc] hover:border-[#cbd5e1] shadow-2xs cursor-pointer self-start sm:self-auto transition-all active:scale-95"
+          title="Refresh commissions"
         >
           <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
           <span>Refresh</span>
         </button>
       </div>
 
-      {/* 4-KPI Horizontal Strip (Colorful CRM Gradients, Bold Typography, No Long Text) */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-3.5">
-        {/* Total Earned */}
-        <div className="bg-gradient-to-br from-blue-50/90 via-sky-50/40 to-white border border-blue-200/90 rounded-2xl p-4 sm:p-5 space-y-3 shadow-xs hover:border-blue-300 hover:shadow-sm transition-all overflow-hidden">
-          <div className="flex items-center justify-between">
-            <span className="font-mono text-xs sm:text-[13px] uppercase tracking-wider text-blue-900 font-bold whitespace-nowrap">
-              TOTAL COMMISSION
-            </span>
-            <span className="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-xs shadow-blue-500/20 shrink-0">
-              <Receipt size={14} />
-            </span>
-          </div>
-          <div className="text-xl sm:text-[25px] font-extrabold text-blue-950 font-mono tabular-nums leading-none">
-            {formatIDR(kpiTotals.totalEarned)}
-          </div>
-          <div className="flex items-center justify-between pt-2.5 border-t border-blue-100/80">
-            <span className="font-mono text-xs font-bold text-blue-700 bg-blue-100/90 border border-blue-200 px-2.5 py-0.5 rounded-md">
-              Cumulative
-            </span>
-            <Sparkline color="green" trend="up" />
-          </div>
-        </div>
-
-        {/* Approved Commission */}
-        <div className="bg-gradient-to-br from-emerald-50/90 via-teal-50/40 to-white border border-emerald-200/90 rounded-2xl p-4 sm:p-5 space-y-3 shadow-xs hover:border-emerald-300 hover:shadow-sm transition-all overflow-hidden">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5 min-w-0">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-              <span className="font-mono text-xs sm:text-[13px] uppercase tracking-wider text-emerald-900 font-bold whitespace-nowrap">
-                APPROVED
-              </span>
-            </div>
-            <span className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-xs shadow-emerald-500/20 shrink-0">
-              <ShieldCheck size={14} />
-            </span>
-          </div>
-          <div className="text-xl sm:text-[25px] font-extrabold text-emerald-950 font-mono tabular-nums leading-none">
-            {formatIDR(kpiTotals.approved)}
-          </div>
-          <div className="flex items-center justify-between pt-2.5 border-t border-emerald-100/80">
-            <span className="font-mono text-xs font-bold text-emerald-800 bg-emerald-100/90 border border-emerald-200 px-2.5 py-0.5 rounded-md">
-              Approved
-            </span>
-            <Sparkline color="teal" trend="up" />
-          </div>
-        </div>
-
-        {/* Pending Commission */}
-        <div className="bg-gradient-to-br from-amber-50/90 via-orange-50/40 to-white border border-amber-200/90 rounded-2xl p-4 sm:p-5 space-y-3 shadow-xs hover:border-amber-300 hover:shadow-sm transition-all overflow-hidden">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5 min-w-0">
-              <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0" />
-              <span className="font-mono text-xs sm:text-[13px] uppercase tracking-wider text-amber-900 font-bold whitespace-nowrap">
-                PENDING
-              </span>
-            </div>
-            <span className="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center shadow-xs shadow-amber-500/20 shrink-0">
-              <Clock size={14} />
-            </span>
-          </div>
-          <div className="text-xl sm:text-[25px] font-extrabold text-amber-950 font-mono tabular-nums leading-none">
-            {formatIDR(kpiTotals.pending)}
-          </div>
-          <div className="flex items-center justify-between pt-2.5 border-t border-amber-100/80">
-            <span className="font-mono text-xs font-bold text-amber-800 bg-amber-100/90 border border-amber-200 px-2.5 py-0.5 rounded-md">
-              Pending
-            </span>
-            <Sparkline color="green" trend="down" />
-          </div>
-        </div>
-
-        {/* Paid Commission */}
+      {/* ─── Simplified 2-Status KPI Summary Strip (Paid Out & Cancelled Only) ─── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+        
+        {/* Card 1: Paid Out */}
         <div className="bg-gradient-to-br from-indigo-50/90 via-purple-50/40 to-white border border-indigo-200/90 rounded-2xl p-4 sm:p-5 space-y-3 shadow-xs hover:border-indigo-300 hover:shadow-sm transition-all overflow-hidden">
           <div className="flex items-center justify-between">
             <span className="font-mono text-xs sm:text-[13px] uppercase tracking-wider text-indigo-900 font-bold whitespace-nowrap">
@@ -332,37 +243,52 @@ export default function PartnerCommissionsPage() {
               <Wallet size={14} />
             </span>
           </div>
-          <div className="text-xl sm:text-[25px] font-extrabold text-indigo-950 font-mono tabular-nums leading-none">
-            {formatIDR(kpiTotals.paid)}
+          <div className="text-2xl sm:text-[30px] font-extrabold text-indigo-950 font-mono tabular-nums leading-none">
+            {formatIDR(kpiTotals.paidTotal)}
           </div>
-          <div className="flex items-center justify-between pt-2.5 border-t border-indigo-100/80">
+          <div className="flex items-center justify-start text-xs pt-2.5 border-t border-indigo-100/80">
             <span className="font-mono text-xs font-bold text-indigo-700 bg-indigo-100/90 border border-indigo-200 px-2.5 py-0.5 rounded-md">
-              Settled
+              {kpiTotals.paidCount} {kpiTotals.paidCount === 1 ? 'Settled Treatment' : 'Settled Treatments'}
             </span>
-            <Sparkline color="teal" trend="up" />
+          </div>
+        </div>
+
+        {/* Card 2: Cancelled */}
+        <div className="bg-gradient-to-br from-rose-50/90 via-orange-50/30 to-white border border-rose-200/90 rounded-2xl p-4 sm:p-5 space-y-3 shadow-xs hover:border-rose-300 hover:shadow-sm transition-all overflow-hidden">
+          <div className="flex items-center justify-between">
+            <span className="font-mono text-xs sm:text-[13px] uppercase tracking-wider text-rose-900 font-bold whitespace-nowrap">
+              CANCELLED
+            </span>
+            <span className="w-8 h-8 rounded-xl bg-rose-600 text-white flex items-center justify-center shadow-xs shadow-rose-500/20 shrink-0">
+              <XCircle size={14} />
+            </span>
+          </div>
+          <div className="text-2xl sm:text-[30px] font-extrabold text-rose-950 font-sans tabular-nums leading-none">
+            {kpiTotals.cancelledCount}
+          </div>
+          <div className="flex items-center justify-start text-xs pt-2.5 border-t border-rose-100/80">
+            <span className="font-mono text-xs font-bold text-rose-700 bg-rose-100/90 border border-rose-200 px-2.5 py-0.5 rounded-md">
+              Rp0 Voided Commission
+            </span>
           </div>
         </div>
       </div>
 
-      {/* CRM Filter Controls Toolbar Card */}
+      {/* ─── CRM Filter Controls: 2-Status Tabs + Search & Date ─── */}
       <div className="bg-white border border-[#eaecf0] rounded-2xl p-4 sm:p-4.5 space-y-3.5 shadow-xs">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
           
-          {/* Status Tabs (Segmented Container) */}
+          {/* Status Tabs: ONLY ALL, PAID OUT, CANCELLED */}
           <div className="overflow-x-auto no-scrollbar">
             <div className="inline-flex items-center gap-1.5 p-1.5 rounded-2xl bg-slate-100 border border-slate-200 text-xs">
               {[
-                { key: 'all', label: 'All Commissions' },
-                { key: 'approved', label: 'Approved' },
-                { key: 'pending', label: 'Pending' },
-                { key: 'paid', label: 'PAID OUT' },
-                { key: 'cancelled', label: 'Cancelled' }
+                { key: 'all' as const, label: 'All Records' },
+                { key: 'paid' as const, label: 'Paid Out' },
+                { key: 'cancelled' as const, label: 'Cancelled' }
               ].map(({ key, label }) => {
                 const isSelected = filterStatus === key;
                 let activeClass = 'bg-slate-900 text-white shadow-xs';
-                if (key === 'approved') activeClass = 'bg-emerald-600 text-white shadow-xs shadow-emerald-500/20';
-                else if (key === 'pending') activeClass = 'bg-amber-500 text-white shadow-xs shadow-amber-500/20';
-                else if (key === 'paid') activeClass = 'bg-indigo-600 text-white shadow-xs shadow-indigo-500/20';
+                if (key === 'paid') activeClass = 'bg-indigo-600 text-white shadow-xs shadow-indigo-500/20';
                 else if (key === 'cancelled') activeClass = 'bg-rose-600 text-white shadow-xs shadow-rose-500/20';
 
                 return (
@@ -435,7 +361,7 @@ export default function PartnerCommissionsPage() {
               <button
                 type="button"
                 onClick={handleResetDate}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${
                   !hasDateFilter ? 'bg-[#0f172a] text-white border-[#0f172a] shadow-xs font-bold' : 'bg-white text-[#64748b] border-[#e2e8f0] hover:bg-[#f8fafc]'
                 }`}
               >
@@ -444,7 +370,7 @@ export default function PartnerCommissionsPage() {
               <button
                 type="button"
                 onClick={handleSetThisMonth}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${
                   activeDatePreset === 'this_month' && hasDateFilter ? 'bg-[#0f172a] text-white border-[#0f172a] shadow-xs font-bold' : 'bg-white text-[#64748b] border-[#e2e8f0] hover:bg-[#f8fafc]'
                 }`}
               >
@@ -453,7 +379,7 @@ export default function PartnerCommissionsPage() {
               <button
                 type="button"
                 onClick={handleSetLastMonth}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${
                   activeDatePreset === 'last_month' && hasDateFilter ? 'bg-[#0f172a] text-white border-[#0f172a] shadow-xs font-bold' : 'bg-white text-[#64748b] border-[#e2e8f0] hover:bg-[#f8fafc]'
                 }`}
               >
@@ -462,7 +388,7 @@ export default function PartnerCommissionsPage() {
               <button
                 type="button"
                 onClick={handleSetLast30Days}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${
                   activeDatePreset === 'last_30_days' && hasDateFilter ? 'bg-[#0f172a] text-white border-[#0f172a] shadow-xs font-bold' : 'bg-white text-[#64748b] border-[#e2e8f0] hover:bg-[#f8fafc]'
                 }`}
               >
@@ -479,7 +405,7 @@ export default function PartnerCommissionsPage() {
         </div>
       </div>
 
-      {/* Main Ledger Table (Enhanced CRM Table Style) */}
+      {/* ─── Main Ledger Table ─── */}
       <div className="bg-white border border-[#eaecf0] rounded-2xl overflow-hidden shadow-xs">
         {loading ? (
           <div className="p-16 text-center space-y-3">
@@ -491,7 +417,7 @@ export default function PartnerCommissionsPage() {
             <Receipt size={28} className="mx-auto text-[#94a3b8]" />
             <p className="text-sm font-bold text-[#0f172a]">No commission records found.</p>
             <p className="text-xs text-[#64748b] max-w-sm mx-auto leading-relaxed">
-              Any commissions matching the selected status will appear here.
+              Paid out and cancelled commissions will appear here.
             </p>
           </div>
         ) : (
@@ -501,9 +427,6 @@ export default function PartnerCommissionsPage() {
               <table className="w-full text-left text-xs">
                 <thead className="bg-[#f8fafc] border-b border-[#eaecf0] font-mono text-[10px] uppercase tracking-wider text-[#64748b]">
                   <tr>
-                    <th className="py-3.5 px-4 w-8">
-                      <input type="checkbox" className="rounded-md border-[#cbd5e1] text-[#0f172a]" readOnly />
-                    </th>
                     <th className="py-3.5 px-4 font-bold">Date</th>
                     <th className="py-3.5 px-4 font-bold">Invoice #</th>
                     <th className="py-3.5 px-4 font-bold text-right">Treatment Net</th>
@@ -514,16 +437,12 @@ export default function PartnerCommissionsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#f1f5f9]">
-                  {filtered.map((item, idx) => {
+                  {filtered.map((item) => {
                     const isPaid = item.status === 'paid';
-                    const isApproved = item.status === 'approved';
                     const isCancelled = item.status === 'cancelled';
 
                     return (
                       <tr key={item.id} className="hover:bg-[#f8fafc]/70 transition-colors">
-                        <td className="py-4 px-4">
-                          <input type="checkbox" defaultChecked={idx === 0} className="rounded-md border-[#cbd5e1] text-[#0f172a]" />
-                        </td>
                         <td className="py-4 px-4 font-mono text-[11px] text-[#475569] whitespace-nowrap font-medium">
                           {new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                         </td>
@@ -550,13 +469,9 @@ export default function PartnerCommissionsPage() {
                             <span className="font-mono text-[10px] font-bold text-white bg-indigo-600 px-3 py-1 rounded-full uppercase tracking-wider shadow-xs shadow-indigo-500/20">
                               PAID OUT
                             </span>
-                          ) : isApproved ? (
-                            <span className="font-mono text-[10px] font-bold text-emerald-800 bg-emerald-100/90 border border-emerald-300 px-3 py-1 rounded-full uppercase tracking-wider">
-                              Approved
-                            </span>
                           ) : (
-                            <span className="font-mono text-[10px] font-bold text-amber-800 bg-amber-100/90 border border-amber-300 px-3 py-1 rounded-full uppercase tracking-wider">
-                              Pending
+                            <span className="font-mono text-[10px] font-bold text-slate-700 bg-slate-100 px-3 py-1 rounded-full uppercase tracking-wider">
+                              {item.status}
                             </span>
                           )}
                         </td>
@@ -593,7 +508,6 @@ export default function PartnerCommissionsPage() {
             <div className="md:hidden space-y-3 p-3">
               {filtered.map((item) => {
                 const isPaid = item.status === 'paid';
-                const isApproved = item.status === 'approved';
                 const isCancelled = item.status === 'cancelled';
 
                 return (
@@ -618,7 +532,7 @@ export default function PartnerCommissionsPage() {
                       </div>
                       <div className="text-right shrink-0">
                         <span className={`font-mono font-bold text-xs sm:text-sm tabular-nums ${isCancelled ? 'line-through text-[#94a3b8]' : 'text-[#16a34a]'}`}>
-                          +{formatIDR(item.commission_amount)}
+                          {isCancelled ? 'Rp0' : `+${formatIDR(item.commission_amount)}`}
                         </span>
                       </div>
                     </div>
@@ -637,13 +551,9 @@ export default function PartnerCommissionsPage() {
                           <span className="font-mono text-[10px] font-bold text-white bg-indigo-600 px-3 py-1 rounded-full uppercase tracking-wider shadow-xs shadow-indigo-500/20">
                             PAID OUT
                           </span>
-                        ) : isApproved ? (
-                          <span className="font-mono text-[10px] font-bold text-emerald-800 bg-emerald-100/90 border border-emerald-300 px-3 py-1 rounded-full uppercase tracking-wider">
-                            Approved
-                          </span>
                         ) : (
-                          <span className="font-mono text-[10px] font-bold text-amber-800 bg-amber-100/90 border border-amber-300 px-3 py-1 rounded-full uppercase tracking-wider">
-                            Pending
+                          <span className="font-mono text-[10px] font-bold text-slate-700 bg-slate-100 px-3 py-1 rounded-full uppercase tracking-wider">
+                            {item.status}
                           </span>
                         )}
                       </div>
