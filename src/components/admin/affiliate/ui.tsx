@@ -68,51 +68,53 @@ export const cleanPayoutRef = (ref?: string) => {
 
 export const btn = {
   base:
-    'inline-flex items-center justify-center gap-1.5 rounded-lg font-medium transition-colors whitespace-nowrap disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-1',
-  primary: 'bg-black text-white border border-black hover:bg-[#262626]',
-  secondary: 'bg-white text-black border border-[#E5E5E5] hover:border-[#A3A3A3]',
-  danger: 'bg-white text-red-600 border border-[#E5E5E5] hover:border-red-300',
-  link: 'bg-white text-black underline-offset-2 hover:underline',
-  md: 'h-11 md:h-9 px-4 text-[13px]',
-  sm: 'h-10 md:h-8 px-3 text-[13px]',
-  xs: 'h-9 md:h-7 px-2.5 text-xs',
-  icon: 'h-11 w-11 md:h-9 md:w-9 px-0',
+    'inline-flex items-center justify-center gap-1.5 rounded-full font-medium transition-all whitespace-nowrap disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-1 active:scale-95 cursor-pointer',
+  primary: 'bg-neutral-900 text-white border border-neutral-900 hover:bg-neutral-800 shadow-2xs',
+  secondary: 'bg-white text-neutral-800 border border-stone-200/90 hover:bg-stone-50 hover:border-stone-300 shadow-2xs',
+  amber: 'bg-amber-300 text-neutral-950 border border-amber-300 hover:bg-amber-400 font-semibold shadow-2xs',
+  danger: 'bg-white text-rose-600 border border-stone-200/90 hover:bg-rose-50 hover:border-rose-300 shadow-2xs',
+  link: 'bg-transparent text-neutral-800 underline-offset-2 hover:underline',
+  pill: 'rounded-full border border-stone-200/90 bg-white px-3.5 py-1.5 text-xs text-stone-700 font-medium hover:bg-stone-50 shadow-2xs flex items-center gap-1.5',
+  md: 'h-10 md:h-9 px-4 text-xs font-semibold',
+  sm: 'h-9 md:h-8 px-3 text-xs font-medium',
+  xs: 'h-8 md:h-7 px-2.5 text-[11px] font-medium',
+  icon: 'h-9 w-9 md:h-8 md:w-8 px-0 rounded-full',
 };
 
 export const inputCls =
-  'w-full h-11 md:h-9 rounded-lg border border-[#E5E5E5] bg-white px-3 text-[13px] text-[#171717] placeholder:text-[#A3A3A3] focus:outline-none focus:border-black focus:ring-1 focus:ring-black disabled:opacity-50';
+  'w-full h-10 md:h-9 rounded-full border border-stone-200/90 bg-white px-3.5 text-xs text-neutral-900 placeholder:text-stone-400 shadow-2xs focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-200/50 disabled:opacity-50 transition-all';
 
 export const selectCls = cx(inputCls, 'cursor-pointer');
 
-export const thCls = 'h-10 px-4 text-left text-xs font-medium text-[#737373] whitespace-nowrap';
-export const tdCls = 'px-4 py-3 align-middle';
+export const thCls = 'h-10 px-4 text-left text-[11px] font-semibold text-stone-500 uppercase tracking-wider whitespace-nowrap bg-stone-50/60';
+export const tdCls = 'px-4 py-3 align-middle text-xs text-neutral-800';
 
 /* ------------------------------------------------------------------ */
-/* Status labels                                                       */
+/* Status labels (Crextio Pill Badges)                                */
 /* ------------------------------------------------------------------ */
 
-const GREEN = { cls: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' };
-const AMBER = { cls: 'bg-amber-50 text-amber-700 border-amber-200', dot: 'bg-amber-500' };
-const BLUE = { cls: 'bg-blue-50 text-blue-700 border-blue-200', dot: 'bg-blue-500' };
-const GRAY = { cls: 'bg-white text-[#525252] border-[#D4D4D4]', dot: 'bg-[#A3A3A3]' };
-const RED = { cls: 'bg-red-50 text-red-700 border-red-200', dot: 'bg-red-500' };
-const TEAL = { cls: 'bg-teal-50 text-teal-700 border-teal-200', dot: 'bg-teal-500' };
-const INDIGO = { cls: 'bg-indigo-50 text-indigo-700 border-indigo-200', dot: 'bg-indigo-500 animate-pulse' };
+const GREEN = { cls: 'bg-emerald-50 text-emerald-800 border-emerald-200/80', dot: 'bg-emerald-500' };
+const AMBER = { cls: 'bg-amber-50 text-amber-800 border-amber-200/80', dot: 'bg-amber-500' };
+const BLUE = { cls: 'bg-sky-50 text-sky-800 border-sky-200/80', dot: 'bg-sky-500' };
+const GRAY = { cls: 'bg-stone-50 text-stone-600 border-stone-200/80', dot: 'bg-stone-400' };
+const RED = { cls: 'bg-rose-50 text-rose-800 border-rose-200/80', dot: 'bg-rose-500' };
+const TEAL = { cls: 'bg-teal-50 text-teal-800 border-teal-200/80', dot: 'bg-teal-500' };
+const INDIGO = { cls: 'bg-indigo-50 text-indigo-800 border-indigo-200/80', dot: 'bg-indigo-500 animate-pulse' };
 
 const STATUS_MAP: Record<string, { label: string; cls: string; dot: string }> = {
   active: { label: 'Active', ...GREEN },
-  paid: { label: 'Paid Out', cls: 'bg-black text-white border-black', dot: 'bg-white' },
-  'paid out': { label: 'Paid Out', cls: 'bg-black text-white border-black', dot: 'bg-white' },
-  completed: { label: 'Paid Out', cls: 'bg-black text-white border-black', dot: 'bg-white' },
-  approved: { label: 'Approved', ...BLUE },
+  paid: { label: 'Paid Out', cls: 'bg-neutral-900 text-white border-neutral-900 shadow-2xs font-semibold', dot: 'bg-amber-400' },
+  'paid out': { label: 'Paid Out', cls: 'bg-neutral-900 text-white border-neutral-900 shadow-2xs font-semibold', dot: 'bg-amber-400' },
+  completed: { label: 'Completed', cls: 'bg-neutral-900 text-white border-neutral-900 shadow-2xs font-semibold', dot: 'bg-amber-400' },
+  approved: { label: 'Approved', ...GREEN },
   processing: { label: 'Processing', ...BLUE },
   pending: { label: 'Pending', ...AMBER },
-  ongoing: { label: 'Ongoing', ...INDIGO },
+  ongoing: { label: 'In Ritual', ...INDIGO },
   finished: { label: 'Finished', ...TEAL },
-  'awaiting treatment': { label: 'Awaiting Treatment', ...AMBER },
+  'awaiting treatment': { label: 'Scheduled', ...AMBER },
   suspended: { label: 'Suspended', ...GRAY },
   inactive: { label: 'Inactive', ...GRAY },
-  cancelled: { label: 'Cancelled', ...GRAY },
+  cancelled: { label: 'Cancelled', ...RED },
   rejected: { label: 'Rejected', ...RED },
   declined: { label: 'Declined', ...RED },
   failed: { label: 'Failed', ...RED },
@@ -124,11 +126,12 @@ export function StatusBadge({ status, className }: { status?: string | null; cla
     return (
       <span
         className={cx(
-          'inline-flex items-center gap-1 h-6 px-2.5 rounded-md bg-black text-white text-[11px] font-semibold whitespace-nowrap shadow-2xs',
+          'inline-flex items-center gap-1.5 h-6 px-2.5 rounded-full bg-neutral-900 text-white text-[11px] font-semibold whitespace-nowrap shadow-2xs',
           className
         )}
       >
-        <span className="text-white text-xs leading-none">✓</span> Paid Out
+        <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" aria-hidden="true" />
+        Paid Out
       </span>
     );
   }
@@ -136,7 +139,7 @@ export function StatusBadge({ status, className }: { status?: string | null; cla
   return (
     <span
       className={cx(
-        'inline-flex items-center gap-1.5 h-6 px-2 rounded-md border text-xs font-medium whitespace-nowrap capitalize',
+        'inline-flex items-center gap-1.5 h-6 px-2.5 rounded-full border text-[11px] font-semibold whitespace-nowrap capitalize',
         s.cls,
         className
       )}
@@ -176,6 +179,42 @@ export function NewIndicator({ count }: { count: number }) {
 
 export type TabItem = { id: string; label: string; count?: number; alert?: number };
 
+export function CrmDistributionTrack({
+  items,
+  className,
+}: {
+  items: { label: string; percentage: number; color?: 'dark' | 'yellow' | 'hatched' | 'light'; count?: number }[];
+  className?: string;
+}) {
+  return (
+    <div className={cx('flex flex-wrap items-center gap-1.5 p-1 rounded-full bg-stone-100/80 border border-stone-200/70', className)}>
+      {items.map((item, idx) => {
+        let style = 'bg-stone-200 text-stone-800';
+        if (item.color === 'dark') style = 'bg-neutral-900 text-white font-semibold shadow-xs';
+        else if (item.color === 'yellow') style = 'bg-amber-300 text-neutral-950 font-bold shadow-2xs';
+        else if (item.color === 'hatched') style = 'bg-amber-100 text-amber-900 border border-amber-200/80 font-medium';
+        else if (item.color === 'light') style = 'bg-white text-stone-700 border border-stone-200/90 font-medium';
+
+        return (
+          <div
+            key={idx}
+            className={cx(
+              'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] whitespace-nowrap transition-all',
+              style
+            )}
+          >
+            <span>{item.label}</span>
+            <span className="font-mono font-bold">{item.percentage}%</span>
+            {item.count !== undefined && (
+              <span className="opacity-70 text-[10px]">({item.count})</span>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export function Tabs({
   items,
   value,
@@ -190,7 +229,7 @@ export function Tabs({
   className?: string;
 }) {
   return (
-    <div role="tablist" className={cx('flex items-end gap-1 border-b border-[#E5E5E5] overflow-x-auto', className)}>
+    <div role="tablist" className={cx('inline-flex items-center gap-1 p-1.5 rounded-full bg-stone-100/80 border border-stone-200/70 overflow-x-auto no-scrollbar', className)}>
       {items.map((t) => {
         const active = t.id === value;
         return (
@@ -202,13 +241,13 @@ export function Tabs({
             aria-selected={active}
             onClick={() => onChange(t.id)}
             className={cx(
-              'relative -mb-px inline-flex items-center gap-2 h-11 md:h-10 px-3 text-[13px] font-medium border-b-2 whitespace-nowrap transition-colors',
-              active ? 'border-black text-black' : 'border-transparent text-[#737373] hover:text-black'
+              'inline-flex items-center gap-2 h-8 px-3.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer',
+              active ? 'bg-neutral-900 text-white shadow-xs' : 'text-stone-600 hover:text-neutral-900 hover:bg-white/60'
             )}
           >
             <span>{t.label}</span>
-            {t.count !== undefined && <CountPill className={active ? 'text-black border-[#D4D4D4]' : ''}>{t.count}</CountPill>}
-            {!!t.alert && <span className="w-1.5 h-1.5 rounded-full bg-amber-500" aria-label={`${t.alert} need attention`} />}
+            {t.count !== undefined && <CountPill className={active ? 'text-white border-neutral-700 bg-neutral-800' : ''}>{t.count}</CountPill>}
+            {!!t.alert && <span className="w-1.5 h-1.5 rounded-full bg-amber-400" aria-label={`${t.alert} need attention`} />}
           </button>
         );
       })}
@@ -228,7 +267,7 @@ export function FilterChips({
   idPrefix: string;
 }) {
   return (
-    <div className="flex items-center gap-1 overflow-x-auto" role="group">
+    <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar" role="group">
       {options.map((o) => {
         const active = o.value === value;
         return (
@@ -239,12 +278,12 @@ export function FilterChips({
             aria-pressed={active}
             onClick={() => onChange(o.value)}
             className={cx(
-              'inline-flex items-center gap-1.5 h-10 md:h-8 px-3 rounded-lg border text-[13px] font-medium whitespace-nowrap transition-colors',
-              active ? 'border-black text-black' : 'border-transparent text-[#737373] hover:text-black'
+              'inline-flex items-center gap-1.5 h-8 px-3.5 rounded-full border text-xs font-medium whitespace-nowrap transition-all cursor-pointer shadow-2xs',
+              active ? 'bg-amber-300 text-neutral-950 border-amber-300 font-bold' : 'bg-white text-stone-700 border-stone-200/90 hover:bg-stone-50'
             )}
           >
             {o.label}
-            {o.count !== undefined && <span className="text-[11px] tabular-nums text-[#A3A3A3]">{o.count}</span>}
+            {o.count !== undefined && <span className="text-[10px] font-mono tabular-nums opacity-70">{o.count}</span>}
           </button>
         );
       })}
@@ -267,7 +306,7 @@ export function SearchInput({
 }) {
   return (
     <div className={cx('relative', className)}>
-      <Search className="w-4 h-4 text-[#A3A3A3] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden="true" />
+      <Search className="w-3.5 h-3.5 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden="true" />
       <input
         id={id}
         type="search"
@@ -275,16 +314,16 @@ export function SearchInput({
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className={cx(inputCls, 'pl-9 pr-9')}
+        className={cx(inputCls, 'pl-9 pr-8 text-xs')}
       />
       {value && (
         <button
           type="button"
           aria-label="Clear search"
           onClick={() => onChange('')}
-          className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 inline-flex items-center justify-center rounded text-[#A3A3A3] hover:text-black"
+          className="absolute right-2.5 top-1/2 -translate-y-1/2 h-6 w-6 inline-flex items-center justify-center rounded-full text-stone-400 hover:text-neutral-900 cursor-pointer"
         >
-          <X size={14} />
+          <X size={12} />
         </button>
       )}
     </div>

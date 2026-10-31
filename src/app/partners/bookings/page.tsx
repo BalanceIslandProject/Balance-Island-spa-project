@@ -669,19 +669,18 @@ export default function PartnerBookingsPage() {
             {/* Total Bookings Card */}
             <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-blue-50/90 via-sky-50/40 to-white border border-blue-200/90 shadow-xs hover:border-blue-300 hover:shadow-sm transition-all group overflow-hidden">
               <div className="flex items-center justify-between">
-                <span className="font-mono text-xs uppercase tracking-wider text-blue-900 font-bold truncate">
+                <span className="font-mono text-xs sm:text-[13px] uppercase tracking-wider text-blue-900 font-bold whitespace-nowrap">
                   TOTAL BOOKINGS
                 </span>
                 <span className="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-xs shadow-blue-500/25 shrink-0">
                   <Layers size={14} />
                 </span>
               </div>
-              <span className="font-sans font-extrabold text-2xl sm:text-[30px] text-blue-950 mt-2 block tabular-nums tracking-tight leading-none">
+              <span className="font-sans font-extrabold text-2xl sm:text-[32px] text-blue-950 mt-2 block tabular-nums tracking-tight leading-none">
                 {metrics.total}
               </span>
-              <div className="flex items-center justify-between text-xs mt-3 pt-2.5 border-t border-blue-100/80">
-                <span className="font-bold text-slate-700">Total Bookings</span>
-                <span className="font-mono text-xs font-bold text-blue-700 bg-blue-100/90 border border-blue-200 px-2 py-0.5 rounded-md">
+              <div className="flex items-center justify-start text-xs mt-3 pt-2.5 border-t border-blue-100/80">
+                <span className="font-mono text-xs font-bold text-blue-700 bg-blue-100/90 border border-blue-200 px-2.5 py-1 rounded-md">
                   {metrics.approvedCount + metrics.paidCount} Confirmed
                 </span>
               </div>
@@ -690,22 +689,18 @@ export default function PartnerBookingsPage() {
             {/* Approved Card */}
             <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-emerald-50/90 via-teal-50/40 to-white border border-emerald-200/90 shadow-xs hover:border-emerald-300 hover:shadow-sm transition-all overflow-hidden">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5 min-w-0">
+                <div className="flex items-center gap-2">
                   <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-                  <span className="font-mono text-xs uppercase tracking-wider text-emerald-900 font-bold truncate">
+                  <span className="font-mono text-xs sm:text-[13px] uppercase tracking-wider text-emerald-900 font-bold whitespace-nowrap">
                     APPROVED
                   </span>
                 </div>
-                <span className="font-mono text-[10px] uppercase font-bold text-white bg-emerald-600 px-2.5 py-0.5 rounded-full shadow-xs shadow-emerald-500/20 shrink-0">
-                  READY TO PAY
-                </span>
               </div>
-              <span className="font-mono font-extrabold text-xl sm:text-[25px] text-emerald-950 mt-2 block tabular-nums tracking-tight leading-none truncate">
+              <span className="font-mono font-extrabold text-xl sm:text-[26px] text-emerald-950 mt-2 block tabular-nums tracking-tight leading-none">
                 {formatIDR(metrics.approvedTotal)}
               </span>
-              <div className="flex items-center justify-between text-xs mt-3 pt-2.5 border-t border-emerald-100/80">
-                <span className="font-bold text-emerald-900">Transfer</span>
-                <span className="font-mono text-xs font-bold text-emerald-700 bg-emerald-100/90 border border-emerald-200 px-2 py-0.5 rounded-md">
+              <div className="flex items-center justify-start text-xs mt-3 pt-2.5 border-t border-emerald-100/80">
+                <span className="font-mono text-xs font-bold text-emerald-700 bg-emerald-100/90 border border-emerald-200 px-2.5 py-1 rounded-md">
                   {metrics.approvedCount} Orders
                 </span>
               </div>
@@ -714,22 +709,18 @@ export default function PartnerBookingsPage() {
             {/* Pending Card */}
             <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-amber-50/90 via-orange-50/40 to-white border border-amber-200/90 shadow-xs hover:border-amber-300 hover:shadow-sm transition-all overflow-hidden">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5 min-w-0">
+                <div className="flex items-center gap-2">
                   <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0" />
-                  <span className="font-mono text-xs uppercase tracking-wider text-amber-900 font-bold truncate">
+                  <span className="font-mono text-xs sm:text-[13px] uppercase tracking-wider text-amber-900 font-bold whitespace-nowrap">
                     PENDING
                   </span>
                 </div>
-                <span className="font-mono text-[10px] uppercase font-bold text-white bg-amber-500 px-2.5 py-0.5 rounded-full shadow-xs shadow-amber-500/20 shrink-0">
-                  IN ESCROW
-                </span>
               </div>
-              <span className="font-mono font-extrabold text-xl sm:text-[25px] text-amber-950 mt-2 block tabular-nums tracking-tight leading-none truncate">
+              <span className="font-mono font-extrabold text-xl sm:text-[26px] text-amber-950 mt-2 block tabular-nums tracking-tight leading-none">
                 {formatIDR(metrics.pendingTotal)}
               </span>
-              <div className="flex items-center justify-between text-xs mt-3 pt-2.5 border-t border-amber-100/80">
-                <span className="font-bold text-amber-900">In Ritual</span>
-                <span className="font-mono text-xs font-bold text-amber-700 bg-amber-100/90 border border-amber-200 px-2 py-0.5 rounded-md">
+              <div className="flex items-center justify-start text-xs mt-3 pt-2.5 border-t border-amber-100/80">
+                <span className="font-mono text-xs font-bold text-amber-700 bg-amber-100/90 border border-amber-200 px-2.5 py-1 rounded-md">
                   {metrics.pendingCount} Active
                 </span>
               </div>
@@ -738,19 +729,15 @@ export default function PartnerBookingsPage() {
             {/* Paid Out Card */}
             <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-indigo-50/90 via-purple-50/40 to-white border border-indigo-200/90 shadow-xs hover:border-indigo-300 hover:shadow-sm transition-all overflow-hidden">
               <div className="flex items-center justify-between">
-                <span className="font-mono text-xs uppercase tracking-wider text-indigo-900 font-bold truncate">
+                <span className="font-mono text-xs sm:text-[13px] uppercase tracking-wider text-indigo-900 font-bold whitespace-nowrap">
                   PAID OUT
                 </span>
-                <span className="font-mono text-[10px] uppercase font-bold text-white bg-indigo-600 px-2.5 py-0.5 rounded-full shadow-xs shadow-indigo-500/20 shrink-0">
-                  DISBURSED
-                </span>
               </div>
-              <span className="font-mono font-extrabold text-xl sm:text-[25px] text-indigo-950 mt-2 block tabular-nums tracking-tight leading-none truncate">
+              <span className="font-mono font-extrabold text-xl sm:text-[26px] text-indigo-950 mt-2 block tabular-nums tracking-tight leading-none">
                 {formatIDR(metrics.paidTotal)}
               </span>
-              <div className="flex items-center justify-between text-xs mt-3 pt-2.5 border-t border-indigo-100/80">
-                <span className="font-bold text-indigo-900">Settled</span>
-                <span className="font-mono text-xs font-bold text-indigo-700 bg-indigo-100/90 border border-indigo-200 px-2 py-0.5 rounded-md">
+              <div className="flex items-center justify-start text-xs mt-3 pt-2.5 border-t border-indigo-100/80">
+                <span className="font-mono text-xs font-bold text-indigo-700 bg-indigo-100/90 border border-indigo-200 px-2.5 py-1 rounded-md">
                   {metrics.paidCount} Payouts
                 </span>
               </div>

@@ -22,6 +22,7 @@ import {
   Tabs,
   FilterChips,
   SearchInput,
+  CrmDistributionTrack,
   Pagination,
   EmptyState,
   ErrorState,
@@ -1042,7 +1043,7 @@ export default function AffiliateManagement({ initialSubTab = 'partners' }: { in
   };
 
   const tableShell = (children: React.ReactNode) => (
-    <div className="bg-white border border-[#E5E5E5] rounded-xl overflow-hidden">{children}</div>
+    <div className="bg-white/95 border border-stone-200/90 rounded-2xl overflow-hidden shadow-2xs">{children}</div>
   );
 
   /* ---------------------------------------------------------------- */
@@ -1056,6 +1057,39 @@ export default function AffiliateManagement({ initialSubTab = 'partners' }: { in
     { id: 'settings', label: 'Settings' },
   ];
 
+  const currentDistribution = useMemo(() => {
+    if (subTab === 'partners' || subTab === 'applications') {
+      const total = partners.length + applications.length || 1;
+      const active = statusCounts.active || 0;
+      const pending = applications.length;
+      const other = total - active - pending;
+      return [
+        { label: 'Active', percentage: Math.round((active / total) * 100), color: 'dark' as const, count: active },
+        { label: 'Awaiting', percentage: Math.round((pending / total) * 100), color: 'yellow' as const, count: pending },
+        { label: 'Other', percentage: Math.round((other / total) * 100), color: 'light' as const, count: Math.max(0, other) },
+      ];
+    } else if (subTab === 'commissions') {
+      const total = commissions.length || 1;
+      const app = commissions.filter(c => c.status === 'approved').length;
+      const paid = commissions.filter(c => c.status === 'paid').length;
+      const pend = commissions.filter(c => c.status === 'pending').length;
+      return [
+        { label: 'Approved', percentage: Math.round((app / total) * 100), color: 'dark' as const, count: app },
+        { label: 'Paid Out', percentage: Math.round((paid / total) * 100), color: 'yellow' as const, count: paid },
+        { label: 'In Escrow', percentage: Math.round((pend / total) * 100), color: 'hatched' as const, count: pend },
+      ];
+    } else if (subTab === 'payouts') {
+      const total = payouts.length || 1;
+      const comp = payouts.filter(p => p.status === 'completed' || !p.status).length;
+      const proc = payouts.filter(p => p.status === 'processing').length;
+      return [
+        { label: 'Completed', percentage: Math.round((comp / total) * 100), color: 'dark' as const, count: comp },
+        { label: 'Processing', percentage: Math.round((proc / total) * 100), color: 'yellow' as const, count: proc },
+      ];
+    }
+    return [];
+  }, [subTab, partners, applications, statusCounts, commissions, payouts]);
+
   const calendarDaysInMonth = new Date(partnerCalendarYear, partnerCalendarMonth + 1, 0).getDate();
   const calendarFirstDayOfWeek = new Date(partnerCalendarYear, partnerCalendarMonth, 1).getDay();
   const payoutCalendarDaysInMonth = new Date(payoutCalendarYear, payoutCalendarMonth + 1, 0).getDate();
@@ -1063,51 +1097,78 @@ export default function AffiliateManagement({ initialSubTab = 'partners' }: { in
   const todayKey = localTodayKey();
 
   return (
-    <div className="bg-white text-[#171717] space-y-6 pb-28 md:pb-0">
-      {/* Page header */}
-      <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-black">Affiliates</h1>
-          <p className="text-[13px] text-[#737373] mt-0.5">Therapick partner program</p>
+    <div className="space-y-6 pb-28 md:pb-0 font-sans antialiased text-neutral-900">
+      {/* ─── Crextio CRM Section Header ─── */}
+      <header className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 pb-3 border-b border-stone-200/60">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-900 capitalize">
+              {subTab === 'partners' ? 'Partners' :
+               subTab === 'applications' ? 'Applications' :
+               subTab === 'commissions' ? 'Commissions' :
+               subTab === 'payouts' ? 'Payouts' : 'Settings'}
+            </h1>
+            <CountPill className="text-xs">
+              {subTab === 'partners' ? `${partners.length} total` :
+               subTab === 'applications' ? `${applications.length} queue` :
+               subTab === 'commissions' ? `${commissions.length} items` :
+               subTab === 'payouts' ? `${payouts.length} payouts` : 'Config'}
+            </CountPill>
+          </div>
+          <p className="text-xs text-stone-500">
+            Therapick affiliate & partner network management
+          </p>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            id="aff-refresh"
-            type="button"
-            onClick={fetchAllData}
-            disabled={loading}
-            aria-label="Refresh data"
-            className={cx(btn.base, btn.secondary, btn.icon)}
-          >
-            <RefreshCw size={15} className={loading ? 'animate-spin' : ''} />
-          </button>
-          <button id="aff-record-payout" type="button" onClick={openNewPayout} className={cx(btn.base, btn.primary, btn.md)}>
-            <Plus size={15} />
-            Record payout
-          </button>
+
+        <div className="flex flex-wrap items-center gap-3">
+          {currentDistribution.length > 0 && (
+            <CrmDistributionTrack items={currentDistribution} />
+          )}
+
+          <div className="flex items-center gap-2">
+            <button
+              id="aff-refresh"
+              type="button"
+              onClick={fetchAllData}
+              disabled={loading}
+              aria-label="Refresh data"
+              className={cx(btn.base, btn.secondary, btn.icon)}
+            >
+              <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+            </button>
+            <button
+              id="aff-record-payout"
+              type="button"
+              onClick={openNewPayout}
+              className={cx(btn.base, btn.amber, btn.sm, 'gap-1.5')}
+            >
+              <Plus size={13} />
+              Record payout
+            </button>
+          </div>
         </div>
       </header>
 
-      {/* Summary metrics */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 border border-[#E5E5E5] rounded-xl divide-[#E5E5E5] [&>*]:border-[#E5E5E5] overflow-hidden">
+      {/* Summary metrics in Crextio Rounded Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {[
-          { label: 'Active partners', value: String(statusCounts.active || 0), hint: `${partners.length} total` },
-          { label: 'Applications', value: String(applications.length), hint: applications.length ? 'Awaiting review' : 'Nothing to review' },
-          { label: 'Ready to pay', value: formatIDR(summary.readyToPay), hint: 'Approved, unpaid' },
-          { label: 'Paid out', value: formatIDR(summary.paidOut), hint: `${payouts.length} payouts` },
-        ].map((m, i) => (
+          { label: 'Active partners', value: String(statusCounts.active || 0), hint: `${partners.length} registered` },
+          { label: 'Applications', value: String(applications.length), hint: applications.length ? 'Awaiting review' : 'Zero queue' },
+          { label: 'Ready to pay', value: formatIDR(summary.readyToPay), hint: 'Approved & cleared' },
+          { label: 'Paid out', value: formatIDR(summary.paidOut), hint: `${payouts.length} disbursements` },
+        ].map((m) => (
           <div
             key={m.label}
-            className={cx('p-4 bg-white min-w-0', i % 2 === 1 && 'border-l', i >= 2 && 'border-t lg:border-t-0', i === 2 && 'lg:border-l')}
+            className="p-4 bg-white/95 border border-stone-200/90 rounded-2xl min-w-0 shadow-2xs space-y-1 hover:border-amber-300 transition-all"
           >
-            <div className="text-xs text-[#737373] truncate">{m.label}</div>
-            <div className="text-lg md:text-xl font-semibold text-black mt-1 tabular-nums truncate" title={loading ? '—' : m.value}>{loading ? '—' : m.value}</div>
-            <div className="text-[11px] text-[#A3A3A3] mt-0.5 truncate">{m.hint}</div>
+            <div className="text-[11px] font-semibold text-stone-500 uppercase tracking-wider truncate">{m.label}</div>
+            <div className="text-lg md:text-xl font-bold text-neutral-900 tabular-nums truncate" title={loading ? '—' : m.value}>{loading ? '—' : m.value}</div>
+            <div className="text-[11px] text-stone-400 truncate">{m.hint}</div>
           </div>
         ))}
       </div>
 
-      {/* Section navigation */}
+      {/* Section navigation in Crextio Segmented Pills */}
       <Tabs idPrefix="aff-tab" items={subTabs} value={subTab} onChange={(id) => setSubTab(id as SubTab)} />
 
       {/* ============================ PARTNERS ============================ */}
@@ -1184,8 +1245,18 @@ export default function AffiliateManagement({ initialSubTab = 'partners' }: { in
                     ) : (
                       pagedPartners.map((p) => {
                         const m = metricsById[p.id];
+                        const isSelected = selectedPartnerId === p.id;
                         return (
-                          <tr key={p.id} className="border-b border-[#F0F0F0] last:border-0 hover:bg-[#FAFAFA]">
+                          <tr
+                            key={p.id}
+                            onClick={() => openPartnerModal(p)}
+                            className={cx(
+                              'border-b transition-colors cursor-pointer',
+                              isSelected
+                                ? 'border-amber-400 bg-amber-300 text-neutral-950 font-medium'
+                                : 'border-stone-100 last:border-0 hover:bg-stone-50/70'
+                            )}
+                          >
                             <td className={tdCls}>
                               <button type="button" onClick={() => openPartnerModal(p)} className="text-left max-w-[240px] block group" title={`${fullName(p)} — ${p.business_name || 'Individual'}`}>
                                 <span className="block font-medium text-[#171717] truncate group-hover:underline">{fullName(p)}</span>
@@ -1455,8 +1526,18 @@ export default function AffiliateManagement({ initialSubTab = 'partners' }: { in
                     ) : (
                       pagedCommissions.map((c) => {
                         const settledPayout = c.payout_id ? payoutById[c.payout_id] : null;
+                        const isSelected = selectedCommissionId === c.id;
                         return (
-                          <tr key={c.id} className="border-b border-[#F0F0F0] last:border-0 hover:bg-[#FAFAFA]">
+                          <tr
+                            key={c.id}
+                            onClick={() => setSelectedCommissionId(c.id)}
+                            className={cx(
+                              'border-b transition-colors cursor-pointer',
+                              isSelected
+                                ? 'border-amber-400 bg-amber-300 text-neutral-950 font-medium'
+                                : 'border-stone-100 last:border-0 hover:bg-stone-50/70'
+                            )}
+                          >
                             <td className={cx(tdCls, 'text-[#737373] whitespace-nowrap')}>{safeFormatDate(c.booking_date || c.created_at)}</td>
                             <td className={tdCls}>
                               <button type="button" onClick={() => setSelectedCommissionId(c.id)} className="text-left group max-w-[160px] block" title="View commission details">
@@ -1575,8 +1656,19 @@ export default function AffiliateManagement({ initialSubTab = 'partners' }: { in
                         </td>
                       </tr>
                     ) : (
-                      pagedPayouts.map((py) => (
-                        <tr key={py.id} className="border-b border-[#F0F0F0] last:border-0 hover:bg-[#FAFAFA]">
+                      pagedPayouts.map((py) => {
+                        const isSelected = selectedPayoutDetails?.id === py.id;
+                        return (
+                          <tr
+                            key={py.id}
+                            onClick={() => setSelectedPayoutDetails(py)}
+                            className={cx(
+                              'border-b transition-colors cursor-pointer',
+                              isSelected
+                                ? 'border-amber-400 bg-amber-300 text-neutral-950 font-medium'
+                                : 'border-stone-100 last:border-0 hover:bg-stone-50/70'
+                            )}
+                          >
                           <td className={cx(tdCls, 'text-[#737373] whitespace-nowrap')}>{safeFormatDate(py.created_at)}</td>
                           <td className={tdCls}>
                             <div className="flex items-center gap-0.5">
@@ -1598,8 +1690,9 @@ export default function AffiliateManagement({ initialSubTab = 'partners' }: { in
                             </button>
                           </td>
                         </tr>
-                      ))
-                    )}
+                      );
+                    })
+                  )}
                   </tbody>
                 </table>
               </div>

@@ -252,12 +252,14 @@ export default function PartnerCommissionsPage() {
       </div>
 
       {/* 4-KPI Horizontal Strip (Colorful CRM Gradients, Bold Typography, No Long Text) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-3.5">
         {/* Total Earned */}
-        <div className="bg-gradient-to-br from-blue-50/90 via-sky-50/40 to-white border border-blue-200/90 rounded-2xl p-5 space-y-3 shadow-xs hover:border-blue-300 hover:shadow-sm transition-all overflow-hidden">
+        <div className="bg-gradient-to-br from-blue-50/90 via-sky-50/40 to-white border border-blue-200/90 rounded-2xl p-4 sm:p-5 space-y-3 shadow-xs hover:border-blue-300 hover:shadow-sm transition-all overflow-hidden">
           <div className="flex items-center justify-between">
-            <span className="font-mono text-xs uppercase tracking-wider text-blue-900 font-bold">TOTAL COMMISSION</span>
-            <span className="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-xs shadow-blue-500/20">
+            <span className="font-mono text-xs sm:text-[13px] uppercase tracking-wider text-blue-900 font-bold whitespace-nowrap">
+              TOTAL COMMISSION
+            </span>
+            <span className="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-xs shadow-blue-500/20 shrink-0">
               <Receipt size={14} />
             </span>
           </div>
@@ -265,7 +267,7 @@ export default function PartnerCommissionsPage() {
             {formatIDR(kpiTotals.totalEarned)}
           </div>
           <div className="flex items-center justify-between pt-2.5 border-t border-blue-100/80">
-            <span className="font-mono text-xs font-bold text-blue-700 bg-blue-100/90 border border-blue-200 px-2.5 py-0.5 rounded-full">
+            <span className="font-mono text-xs font-bold text-blue-700 bg-blue-100/90 border border-blue-200 px-2.5 py-0.5 rounded-md">
               Cumulative
             </span>
             <Sparkline color="green" trend="up" />
@@ -273,13 +275,15 @@ export default function PartnerCommissionsPage() {
         </div>
 
         {/* Approved Commission */}
-        <div className="bg-gradient-to-br from-emerald-50/90 via-teal-50/40 to-white border border-emerald-200/90 rounded-2xl p-5 space-y-3 shadow-xs hover:border-emerald-300 hover:shadow-sm transition-all overflow-hidden">
+        <div className="bg-gradient-to-br from-emerald-50/90 via-teal-50/40 to-white border border-emerald-200/90 rounded-2xl p-4 sm:p-5 space-y-3 shadow-xs hover:border-emerald-300 hover:shadow-sm transition-all overflow-hidden">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 min-w-0">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-              <span className="font-mono text-xs uppercase tracking-wider text-emerald-900 font-bold">APPROVED</span>
+              <span className="font-mono text-xs sm:text-[13px] uppercase tracking-wider text-emerald-900 font-bold whitespace-nowrap">
+                APPROVED
+              </span>
             </div>
-            <span className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-xs shadow-emerald-500/20">
+            <span className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-xs shadow-emerald-500/20 shrink-0">
               <ShieldCheck size={14} />
             </span>
           </div>
@@ -287,21 +291,23 @@ export default function PartnerCommissionsPage() {
             {formatIDR(kpiTotals.approved)}
           </div>
           <div className="flex items-center justify-between pt-2.5 border-t border-emerald-100/80">
-            <span className="font-mono text-xs font-bold text-emerald-800 bg-emerald-100/90 border border-emerald-200 px-2.5 py-0.5 rounded-full">
-              Cleared
+            <span className="font-mono text-xs font-bold text-emerald-800 bg-emerald-100/90 border border-emerald-200 px-2.5 py-0.5 rounded-md">
+              Approved
             </span>
             <Sparkline color="teal" trend="up" />
           </div>
         </div>
 
         {/* Pending Commission */}
-        <div className="bg-gradient-to-br from-amber-50/90 via-orange-50/40 to-white border border-amber-200/90 rounded-2xl p-5 space-y-3 shadow-xs hover:border-amber-300 hover:shadow-sm transition-all overflow-hidden">
+        <div className="bg-gradient-to-br from-amber-50/90 via-orange-50/40 to-white border border-amber-200/90 rounded-2xl p-4 sm:p-5 space-y-3 shadow-xs hover:border-amber-300 hover:shadow-sm transition-all overflow-hidden">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 min-w-0">
               <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0" />
-              <span className="font-mono text-xs uppercase tracking-wider text-amber-900 font-bold">PENDING</span>
+              <span className="font-mono text-xs sm:text-[13px] uppercase tracking-wider text-amber-900 font-bold whitespace-nowrap">
+                PENDING
+              </span>
             </div>
-            <span className="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center shadow-xs shadow-amber-500/20">
+            <span className="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center shadow-xs shadow-amber-500/20 shrink-0">
               <Clock size={14} />
             </span>
           </div>
@@ -309,18 +315,20 @@ export default function PartnerCommissionsPage() {
             {formatIDR(kpiTotals.pending)}
           </div>
           <div className="flex items-center justify-between pt-2.5 border-t border-amber-100/80">
-            <span className="font-mono text-xs font-bold text-amber-800 bg-amber-100/90 border border-amber-200 px-2.5 py-0.5 rounded-full">
-              In Escrow
+            <span className="font-mono text-xs font-bold text-amber-800 bg-amber-100/90 border border-amber-200 px-2.5 py-0.5 rounded-md">
+              Pending
             </span>
             <Sparkline color="green" trend="down" />
           </div>
         </div>
 
         {/* Paid Commission */}
-        <div className="bg-gradient-to-br from-indigo-50/90 via-purple-50/40 to-white border border-indigo-200/90 rounded-2xl p-5 space-y-3 shadow-xs hover:border-indigo-300 hover:shadow-sm transition-all overflow-hidden">
+        <div className="bg-gradient-to-br from-indigo-50/90 via-purple-50/40 to-white border border-indigo-200/90 rounded-2xl p-4 sm:p-5 space-y-3 shadow-xs hover:border-indigo-300 hover:shadow-sm transition-all overflow-hidden">
           <div className="flex items-center justify-between">
-            <span className="font-mono text-xs uppercase tracking-wider text-indigo-900 font-bold">PAID OUT</span>
-            <span className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-xs shadow-indigo-500/20">
+            <span className="font-mono text-xs sm:text-[13px] uppercase tracking-wider text-indigo-900 font-bold whitespace-nowrap">
+              PAID OUT
+            </span>
+            <span className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-xs shadow-indigo-500/20 shrink-0">
               <Wallet size={14} />
             </span>
           </div>
@@ -328,8 +336,8 @@ export default function PartnerCommissionsPage() {
             {formatIDR(kpiTotals.paid)}
           </div>
           <div className="flex items-center justify-between pt-2.5 border-t border-indigo-100/80">
-            <span className="font-mono text-xs font-bold text-white bg-indigo-600 px-2.5 py-0.5 rounded-full shadow-xs shadow-indigo-500/20">
-              Disbursed
+            <span className="font-mono text-xs font-bold text-indigo-700 bg-indigo-100/90 border border-indigo-200 px-2.5 py-0.5 rounded-md">
+              Settled
             </span>
             <Sparkline color="teal" trend="up" />
           </div>

@@ -39,36 +39,33 @@ export default function AdminAuditLogsPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-white text-neutral-900 font-sans p-4 sm:p-6 lg:p-8 space-y-6">
-      <div className="flex items-center justify-between pb-4 border-b border-neutral-200">
-        <div className="flex items-center gap-3">
-          <Link
-            href="/admin"
-            className="p-2 rounded-xl border border-neutral-200 hover:bg-neutral-50 transition-colors text-neutral-600"
-          >
-            <ArrowLeft size={16} />
-          </Link>
-          <div>
-            <h1 className="text-xl sm:text-2xl font-serif font-medium text-neutral-950">
+    <div className="space-y-6 pb-28 md:pb-0 font-sans antialiased text-neutral-900">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-stone-200/60">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-900">
               Audit Logs
             </h1>
-            <p className="text-xs text-neutral-500">
-              Security trail for partner approvals, commission calculations, and payout records
-            </p>
+            <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-2 rounded-full border border-stone-200 bg-white text-xs font-medium text-stone-600">
+              {logs.length} events
+            </span>
           </div>
+          <p className="text-xs text-stone-500">
+            Security audit trail for partner approvals, commission approvals, and payout disbursements
+          </p>
         </div>
 
         <button
           onClick={fetchLogs}
           disabled={loading}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-neutral-200 text-xs font-medium hover:bg-neutral-50 transition-colors"
+          className="inline-flex items-center gap-1.5 h-8.5 px-3.5 rounded-full border border-stone-200/90 bg-white text-xs font-semibold text-neutral-900 hover:bg-stone-50 shadow-2xs transition-all cursor-pointer active:scale-95 self-start sm:self-auto"
         >
           <RefreshCw size={12} className={loading ? 'animate-spin' : ''} />
           <span>Refresh</span>
         </button>
       </div>
 
-      <div className="bg-white border border-neutral-200 rounded-2xl overflow-hidden shadow-2xs">
+      <div className="bg-white/95 border border-stone-200/90 rounded-2xl overflow-hidden shadow-2xs">
         {loading ? (
           <div className="p-8 text-center text-xs text-neutral-400">Loading audit trail...</div>
         ) : logs.length === 0 ? (

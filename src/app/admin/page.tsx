@@ -839,22 +839,22 @@ export default function AdminDashboard() {
     };
 
     return (
-        <div className="min-h-screen bg-white text-black flex flex-col md:flex-row font-sans selection:bg-black selection:text-white">
+        <div className="text-neutral-900 flex flex-col md:flex-row font-sans w-full min-w-0 gap-5">
             
             {/* Desktop Minimalist Monochrome Sidebar */}
-            <aside className="hidden md:flex flex-col w-64 bg-white border-r border-[#E5E5E5] z-20 shrink-0 sticky top-0 h-screen self-start">
-                <div className="p-5 border-b border-[#E5E5E5] flex flex-col gap-3">
+            <aside className="hidden md:flex flex-col w-64 bg-white/95 border border-stone-200/90 rounded-2xl p-4 shadow-2xs z-10 shrink-0 self-start space-y-4">
+                <div className="pb-3 border-b border-stone-100 flex flex-col gap-2.5">
                     <div>
-                        <span className="text-[10px] uppercase font-semibold tracking-wider text-[#737373] block">Management</span>
-                        <h1 className="text-base font-semibold tracking-tight text-black">Admin Portal</h1>
+                        <span className="text-[10px] uppercase font-bold tracking-wider text-stone-400 block">Workspace</span>
+                        <h2 className="text-sm font-bold tracking-tight text-neutral-900">Admin Controls</h2>
                     </div>
                     <div>
-                        <label className="text-[10px] font-semibold uppercase tracking-wider text-[#737373] block mb-1.5">Brand Configured</label>
+                        <label className="text-[10px] font-semibold uppercase tracking-wider text-stone-500 block mb-1">Brand Scope</label>
                         <select 
                             id="brandSelect"
                             value={siteBrandFilter}
                             onChange={(e) => setSiteBrandFilter(e.target.value)}
-                            className="w-full bg-white border border-[#E5E5E5] rounded-lg px-2.5 py-1.5 text-xs font-medium text-black focus:outline-none focus:border-black cursor-pointer"
+                            className="w-full bg-white border border-stone-200 rounded-full px-3 py-1.5 text-xs font-semibold text-neutral-900 focus:outline-none focus:border-amber-400 cursor-pointer shadow-2xs"
                         >
                             <option value="therapick">Therapick</option>
                             <option value="central">Central Admin</option>
@@ -873,10 +873,10 @@ export default function AdminDashboard() {
                                     type="button"
                                     id={`brand-chip-${b.id}`}
                                     onClick={() => setSiteBrandFilter(b.id)}
-                                    className={`px-2 py-1 rounded-md text-[11px] font-medium transition-colors text-center cursor-pointer ${
+                                    className={`px-2 py-1 rounded-full text-[11px] font-semibold transition-all text-center cursor-pointer ${
                                         siteBrandFilter === b.id 
-                                            ? 'bg-black text-white' 
-                                            : 'bg-[#F5F5F5] text-[#525252] hover:text-black hover:bg-[#E5E5E5]'
+                                            ? 'bg-neutral-900 text-white shadow-2xs' 
+                                            : 'bg-stone-100 text-stone-600 hover:text-neutral-900 hover:bg-stone-200/70'
                                     }`}
                                 >
                                     {b.label}
@@ -886,7 +886,7 @@ export default function AdminDashboard() {
                     </div>
                 </div>
 
-                <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+                <nav className="flex-1 space-y-1 overflow-y-auto">
                     {[
                         ...(siteBrandFilter === 'central' ? [{ id: 'bookings', icon: Calendar, label: 'Booking' }, { id: 'invoice', icon: Ticket, label: 'Invoices' }] : []),
                         ...(siteBrandFilter === 'therapick' ? [{ id: 'bookings', icon: Calendar, label: 'Bookings' }, { id: 'affiliates', icon: Share2, label: 'Affiliates' }, { id: 'addons', icon: Layers, label: 'Add-on Settings' }] : []),
@@ -905,32 +905,22 @@ export default function AdminDashboard() {
                                 key={tab.id}
                                 type="button"
                                 onClick={() => setActiveTab(tab.id as any)}
-                                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold tracking-tight transition-colors ${
+                                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-full text-xs font-semibold tracking-tight transition-all cursor-pointer ${
                                     isActive 
-                                    ? 'bg-black text-white shadow-xs' 
-                                    : 'text-[#525252] hover:bg-[#F5F5F5] hover:text-black'
+                                    ? 'bg-neutral-900 text-white shadow-xs' 
+                                    : 'text-stone-600 hover:bg-stone-100 hover:text-neutral-900'
                                 }`}
                             >
-                                <Icon size={16} strokeWidth={isActive ? 2.5 : 2} />
+                                <Icon size={14} strokeWidth={isActive ? 2.5 : 2} />
                                 {tab.label}
                             </button>
                         );
                     })}
                 </nav>
-
-                <div className="p-4 border-t border-[#E5E5E5] space-y-2">
-                    <Link
-                        href="/"
-                        target="_blank"
-                        className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-medium border border-[#E5E5E5] hover:bg-[#F5F5F5] text-black transition-colors"
-                    >
-                        View Live Website <ArrowRight size={14} />
-                    </Link>
-                </div>
             </aside>
 
             {/* Main Content Area */}
-            <main className="flex-1 relative overflow-y-auto bg-transparent min-h-screen pb-36 md:pb-12">
+            <main className="flex-1 relative min-w-0 pb-12">
                 
                 {/* Sticky Mobile Admin Selector */}
                 <div className="md:hidden sticky top-0 z-40 pt-3 px-4 pb-2 bg-white/95 backdrop-blur-xl border-b border-[#E5E5E5] mb-2">

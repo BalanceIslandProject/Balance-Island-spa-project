@@ -1,3 +1,5 @@
+import AdminCrmShell from '@/components/admin/AdminCrmShell';
+
 export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
 
@@ -6,5 +8,5 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <>{children}</>;
+  return <AdminCrmShell>{children}</AdminCrmShell>;
 }

@@ -30,7 +30,17 @@ import {
   ExternalLink
 } from 'lucide-react';
 import { Treatment, TherapistFee } from '@/context/SpaContext';
-import { cx, btn, inputCls, selectCls, CountPill, EmptyState } from '@/components/admin/affiliate/ui';
+import { 
+  cx, 
+  btn, 
+  inputCls, 
+  selectCls, 
+  CountPill, 
+  EmptyState, 
+  CrmDistributionTrack, 
+  StatusBadge, 
+  SearchInput 
+} from '@/components/admin/affiliate/ui';
 
 export interface Booking {
   id: string;
@@ -354,9 +364,50 @@ export default function TherapickBookingManagement({
     setIsLoading(false);
   };
 
+  const [bookingSearch, setBookingSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'confirmed' | 'finished' | 'ongoing' | 'pending'>('all');
+
   const dailyBookings = useMemo(() => {
     return monthBookings.filter(b => b.booking_date === selectedDate);
   }, [monthBookings, selectedDate]);
+
+  const bookingDistribution = useMemo(() => {
+    const total = monthBookings.length || 1;
+    const confirmed = monthBookings.filter(b => (b.status || '').toLowerCase() === 'confirmed').length;
+    const inProgress = monthBookings.filter(b => (b.treatment_status || '').toLowerCase() === 'in progress').length;
+    const finished = monthBookings.filter(b => (b.treatment_status || '').toLowerCase() === 'finished').length;
+    const pending = monthBookings.filter(b => !b.status || (b.status || '').toLowerCase() === 'pending').length;
+
+    return [
+      { label: 'Confirmed', count: confirmed, percentage: Math.round((confirmed / total) * 100), color: 'dark' as const },
+      { label: 'Finished', count: finished, percentage: Math.round((finished / total) * 100), color: 'yellow' as const },
+      { label: 'In Ritual', count: inProgress, percentage: Math.round((inProgress / total) * 100), color: 'hatched' as const },
+      { label: 'Pending', count: pending, percentage: Math.round((pending / total) * 100), color: 'light' as const },
+    ];
+  }, [monthBookings]);
+
+  const filteredDailyBookings = useMemo(() => {
+    return dailyBookings.filter(b => {
+      if (statusFilter !== 'all') {
+        const bStatus = (b.status || '').toLowerCase();
+        const tStatus = (b.treatment_status || '').toLowerCase();
+        if (statusFilter === 'confirmed' && bStatus !== 'confirmed') return false;
+        if (statusFilter === 'pending' && bStatus !== 'pending' && b.status) return false;
+        if (statusFilter === 'finished' && tStatus !== 'finished') return false;
+        if (statusFilter === 'ongoing' && tStatus !== 'in progress' && tStatus !== 'ongoing') return false;
+      }
+      if (bookingSearch.trim()) {
+        const q = bookingSearch.toLowerCase();
+        return (
+          (b.guest_name || '').toLowerCase().includes(q) ||
+          (b.treatment_name || '').toLowerCase().includes(q) ||
+          (b.reference_number || '').toLowerCase().includes(q) ||
+          (b.id || '').toLowerCase().includes(q)
+        );
+      }
+      return true;
+    });
+  }, [dailyBookings, statusFilter, bookingSearch]);
 
   const updateFormItem = (index: number, field: string, value: any) => {
     const newItems = [...formItems];
@@ -728,35 +779,58 @@ export default function TherapickBookingManagement({
   );
 
   return (
-    <div className="space-y-6 pb-28 md:pb-0">
-      {/* Top Action Toolbar (Title removed, keeping Refresh and Export CSV in clean position) */}
-      <div className="flex items-center justify-end gap-2">
-        <button
-          type="button"
-          onClick={fetchMonthBookings}
-          disabled={isLoading}
-          className={cx(btn.base, btn.secondary, btn.icon)}
-          title="Refresh bookings"
-          aria-label="Refresh bookings"
-        >
-          <RefreshCw size={15} className={cx(isLoading && 'animate-spin')} />
-        </button>
-        <button
-          type="button"
-          onClick={downloadCSV}
-          className={cx(btn.base, btn.primary, btn.sm)}
-        >
-          <Download size={14} /> Export CSV
-        </button>
+    <div className="space-y-6 pb-28 md:pb-0 font-sans antialiased">
+      {/* ─── Crextio CRM Section Header & Distribution Track ─── */}
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 pb-3 border-b border-stone-200/60">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-900">Bookings</h1>
+            <CountPill className="text-xs">{monthBookings.length} total</CountPill>
+          </div>
+          <p className="text-xs text-stone-500">
+            Appointments, treatment execution, payment verification, and affiliate attribution
+          </p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3">
+          <CrmDistributionTrack items={bookingDistribution} />
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={fetchMonthBookings}
+              disabled={isLoading}
+              className={cx(btn.base, btn.secondary, btn.icon)}
+              title="Refresh bookings"
+              aria-label="Refresh bookings"
+            >
+              <RefreshCw size={14} className={cx(isLoading && 'animate-spin')} />
+            </button>
+            <button
+              type="button"
+              onClick={downloadCSV}
+              className={cx(btn.base, btn.secondary, btn.sm, 'gap-1.5')}
+            >
+              <Download size={13} /> Export CSV
+            </button>
+            <button
+              type="button"
+              onClick={() => { resetForm(); setShowForm(true); }}
+              className={cx(btn.base, btn.amber, btn.sm, 'gap-1.5')}
+            >
+              <Plus size={13} /> Add booking
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Financial Metrics Strip: Daily & Monthly (Revenue, Profit, Commission Paid) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
         {/* Daily Financials */}
-        <div className="bg-white border border-[#E5E5E5] rounded-xl p-4 md:p-5">
-          <div className="flex items-center justify-between pb-2.5 mb-3 border-b border-[#F0F0F0]">
-            <span className="text-xs font-semibold text-[#737373] uppercase tracking-wider">
-              Daily Financials · <span className="text-black font-semibold">{new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+        <div className="bg-white/95 border border-stone-200/90 rounded-2xl p-4 md:p-5 shadow-2xs">
+          <div className="flex items-center justify-between pb-2.5 mb-3 border-b border-stone-100">
+            <span className="text-[11px] font-bold text-stone-500 uppercase tracking-wider">
+              Daily Financials · <span className="text-neutral-900 font-bold">{new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
             </span>
           </div>
           <div className="grid grid-cols-3 gap-2 sm:gap-4">
@@ -929,57 +1003,88 @@ export default function TherapickBookingManagement({
 
         {/* Right Col: Bookings for Selected Date */}
         <div className="lg:col-span-2 space-y-4">
-          <div className="bg-white border border-[#E5E5E5] rounded-xl p-3.5 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-2.5 flex-wrap">
-              {/* Quick Date Jumper: Prev, Today, Next */}
-              <div className="flex items-center gap-1">
-                <button 
-                  type="button" 
-                  onClick={handlePrevDay} 
-                  className={cx(btn.base, btn.secondary, btn.xs)}
-                  title="Previous Day"
-                >
-                  <ChevronLeft size={14} />
-                </button>
-                <button 
-                  type="button" 
-                  onClick={handleToday} 
-                  className={cx(
-                    btn.base, 
-                    selectedDate === toLocalDateString(new Date()) ? btn.primary : btn.secondary, 
-                    btn.xs
-                  )}
-                  title="Jump to Today"
-                >
-                  Today
-                </button>
-                <button 
-                  type="button" 
-                  onClick={handleNextDay} 
-                  className={cx(btn.base, btn.secondary, btn.xs)}
-                  title="Next Day"
-                >
-                  <ChevronRight size={14} />
-                </button>
+          <div className="bg-white/95 border border-stone-200/90 rounded-2xl p-3.5 sm:p-4 space-y-3 shadow-2xs">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-2 flex-wrap">
+                {/* Quick Date Jumper: Prev, Today, Next */}
+                <div className="inline-flex items-center gap-1 bg-stone-100 p-1 rounded-full border border-stone-200/80">
+                  <button 
+                    type="button" 
+                    onClick={handlePrevDay} 
+                    className="w-7 h-7 rounded-full bg-white text-stone-700 hover:text-neutral-900 flex items-center justify-center shadow-2xs cursor-pointer active:scale-95"
+                    title="Previous Day"
+                  >
+                    <ChevronLeft size={13} />
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={handleToday} 
+                    className={cx(
+                      'px-3 py-1 rounded-full text-xs font-semibold cursor-pointer transition-all',
+                      selectedDate === toLocalDateString(new Date()) 
+                        ? 'bg-neutral-900 text-white shadow-xs' 
+                        : 'text-stone-600 hover:text-neutral-900 hover:bg-white/80'
+                    )}
+                    title="Jump to Today"
+                  >
+                    Today
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={handleNextDay} 
+                    className="w-7 h-7 rounded-full bg-white text-stone-700 hover:text-neutral-900 flex items-center justify-center shadow-2xs cursor-pointer active:scale-95"
+                    title="Next Day"
+                  >
+                    <ChevronRight size={13} />
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-bold text-neutral-900">
+                    {new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
+                  </h3>
+                  <CountPill>{filteredDailyBookings.length}</CountPill>
+                </div>
               </div>
 
-              <div className="flex items-center gap-2">
-                <h3 className="text-sm sm:text-base font-semibold text-black">
-                  Bookings for {new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
-                </h3>
-                <CountPill>{dailyBookings.length}</CountPill>
+              {/* Search Pill Input */}
+              <div className="w-full sm:w-56">
+                <SearchInput
+                  id="crm-booking-search"
+                  value={bookingSearch}
+                  onChange={setBookingSearch}
+                  placeholder="Search bookings..."
+                />
               </div>
             </div>
 
-            {!showForm && (
-              <button 
-                type="button"
-                onClick={() => { resetForm(); setShowForm(true); }}
-                className={cx(btn.base, btn.primary, btn.sm, 'shrink-0')}
-              >
-                <Plus size={14} /> Add booking
-              </button>
-            )}
+            {/* Filter Pills Toolbar */}
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-2 border-t border-stone-100">
+              {[
+                { id: 'all', label: 'All' },
+                { id: 'confirmed', label: 'Confirmed' },
+                { id: 'ongoing', label: 'In Ritual' },
+                { id: 'finished', label: 'Finished' },
+                { id: 'pending', label: 'Pending' },
+              ].map(f => {
+                const isActive = statusFilter === f.id;
+                return (
+                  <button
+                    key={f.id}
+                    type="button"
+                    onClick={() => setStatusFilter(f.id as any)}
+                    className={cx(
+                      'px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-all cursor-pointer',
+                      isActive
+                        ? 'bg-amber-300 text-neutral-950 font-bold shadow-2xs'
+                        : 'bg-stone-100 text-stone-600 hover:text-neutral-900 hover:bg-stone-200/70'
+                    )}
+                  >
+                    {f.label}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {showForm && (
@@ -1118,7 +1223,7 @@ export default function TherapickBookingManagement({
             </div>
           ) : (
             <div className="space-y-2.5">
-              {dailyBookings.map(booking => {
+              {filteredDailyBookings.map(booking => {
                 let title = booking.treatment_name;
                 const match = title.match(/(.*) \((.*)\)$/);
                 if (match) {
@@ -1130,58 +1235,72 @@ export default function TherapickBookingManagement({
                 const paymentStatus = booking.payment_status || (booking.commission?.payment_verified ? 'Paid' : 'Unpaid');
                 const isPaid = paymentStatus.toLowerCase() === 'paid';
                 const treatmentStatus = booking.treatment_status || (booking.commission?.service_completed ? 'Finished' : 'Scheduled');
+                const isSelected = selectedBookingId === booking.id;
 
                 return (
                   <div 
                     key={booking.id} 
+                    onClick={() => setSelectedBookingId(booking.id)}
                     className={cx(
-                      'bg-white border rounded-xl p-3.5 sm:p-4 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3',
-                      isCancelled ? 'border-red-200 bg-red-50/15' : 'border-[#E5E5E5] hover:border-black/40'
+                      'rounded-2xl p-3.5 sm:p-4 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer',
+                      isSelected
+                        ? 'bg-amber-300 text-neutral-950 font-medium border border-amber-400 shadow-sm'
+                        : isCancelled
+                        ? 'bg-rose-50/30 border border-rose-200'
+                        : 'bg-white/95 border border-stone-200/90 hover:border-amber-300 hover:bg-stone-50/50 shadow-2xs'
                     )}
                   >
                     {/* Left: Clickable Booking ID + Customer Name + Status Badges + Treatment Name */}
                     <div className="min-w-0 space-y-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        {/* Clickable Booking ID */}
-                        <button
-                          type="button"
-                          onClick={() => setSelectedBookingId(booking.id)}
-                          className="font-mono text-xs font-semibold text-black bg-[#FAFAFA] hover:bg-black hover:text-white px-2 py-0.5 rounded border border-[#E5E5E5] transition-colors cursor-pointer inline-flex items-center gap-1 group"
-                          title="Click to view all booking details"
+                        {/* Booking ID Pill */}
+                        <span
+                          className={cx(
+                            'font-mono text-xs font-bold px-2 py-0.5 rounded-full border transition-colors inline-flex items-center gap-1',
+                            isSelected
+                              ? 'bg-neutral-900 text-white border-neutral-900'
+                              : 'bg-stone-100 text-neutral-900 border-stone-200/80'
+                          )}
                         >
                           <span>#{booking.reference_number || booking.id.substring(0, 8)}</span>
-                          <ExternalLink size={10} className="text-[#A3A3A3] group-hover:text-white transition-colors" />
-                        </button>
+                        </span>
 
                         {/* Customer Name */}
-                        <span className="font-semibold text-sm text-black truncate">
+                        <span className={cx(
+                          'font-bold text-sm truncate',
+                          isSelected ? 'text-neutral-950' : 'text-neutral-900'
+                        )}>
                           {booking.guest_name || 'Guest'}
                         </span>
 
                         {/* 1. Booking Status Badge */}
                         <span className={cx(
-                          'text-[10px] font-medium px-1.5 py-0.5 rounded border',
-                          bookingStatus.toLowerCase() === 'cancelled'
-                            ? 'text-red-700 bg-red-50 border-red-200'
+                          'text-[10px] font-semibold px-2 py-0.5 rounded-full border',
+                          isSelected
+                            ? 'bg-white/90 text-neutral-900 border-neutral-900/20'
+                            : bookingStatus.toLowerCase() === 'cancelled'
+                            ? 'text-rose-700 bg-rose-50 border-rose-200'
                             : bookingStatus.toLowerCase() === 'pending'
                             ? 'text-amber-800 bg-amber-50 border-amber-200'
                             : bookingStatus.toLowerCase() === 'approved'
                             ? 'text-emerald-800 bg-emerald-50 border-emerald-200'
-                            : 'text-blue-800 bg-blue-50 border-blue-200'
+                            : 'text-sky-800 bg-sky-50 border-sky-200'
                         )}>
                           {bookingStatus}
                         </span>
 
                         {/* 2. Treatment Progress Badge */}
                         <span className={cx(
-                          'text-[10px] font-medium px-1.5 py-0.5 rounded border flex items-center gap-1',
-                          treatmentStatus.toLowerCase() === 'finished'
+                          'text-[10px] font-semibold px-2 py-0.5 rounded-full border flex items-center gap-1',
+                          isSelected
+                            ? 'bg-white/90 text-neutral-900 border-neutral-900/20'
+                            : treatmentStatus.toLowerCase() === 'finished'
                             ? 'text-teal-800 bg-teal-50 border-teal-200'
                             : treatmentStatus.toLowerCase() === 'in progress'
                             ? 'text-indigo-800 bg-indigo-50 border-indigo-200'
                             : treatmentStatus.toLowerCase() === 'on the way' || treatmentStatus.toLowerCase() === 'arrived'
                             ? 'text-purple-800 bg-purple-50 border-purple-200'
-                            : 'text-[#737373] bg-[#FAFAFA] border-[#E5E5E5]'
+                            : 'text-stone-600 bg-stone-100 border-stone-200'
                         )}>
                           {treatmentStatus.toLowerCase() === 'in progress' && (
                             <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
@@ -1191,14 +1310,16 @@ export default function TherapickBookingManagement({
 
                         {/* 3. Payment Status Badge */}
                         <span className={cx(
-                          'text-[10px] font-medium px-1.5 py-0.5 rounded border',
-                          isPaid
-                            ? 'text-emerald-700 bg-emerald-50 border-emerald-200'
+                          'text-[10px] font-semibold px-2 py-0.5 rounded-full border',
+                          isSelected
+                            ? 'bg-white/90 text-neutral-900 border-neutral-900/20'
+                            : isPaid
+                            ? 'text-emerald-800 bg-emerald-50 border-emerald-200'
                             : paymentStatus.toLowerCase() === 'partially paid'
-                            ? 'text-orange-700 bg-orange-50 border-orange-200'
+                            ? 'text-orange-800 bg-orange-50 border-orange-200'
                             : paymentStatus.toLowerCase() === 'refunded'
-                            ? 'text-purple-700 bg-purple-50 border-purple-200'
-                            : 'text-amber-700 bg-amber-50 border-amber-200'
+                            ? 'text-purple-800 bg-purple-50 border-purple-200'
+                            : 'text-amber-800 bg-amber-50 border-amber-200'
                         )}>
                           {paymentStatus}
                         </span>
@@ -1206,22 +1327,34 @@ export default function TherapickBookingManagement({
                         {/* 4. Attribution Badge */}
                         {booking.commission ? (
                           <div className="inline-flex items-center gap-1">
-                            <span className="text-[10px] font-mono font-medium text-black bg-white px-1.5 py-0.5 rounded border border-[#E5E5E5]">
+                            <span className={cx(
+                              'text-[10px] font-mono font-medium px-2 py-0.5 rounded-full border',
+                              isSelected ? 'bg-white/90 text-neutral-900 border-neutral-900/20' : 'bg-white text-neutral-900 border-stone-200'
+                            )}>
                               #{booking.commission.partner_code}
                             </span>
-                            <span className="text-[10px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200 px-1.5 py-0.5 rounded tabular-nums">
+                            <span className={cx(
+                              'text-[10px] font-bold px-2 py-0.5 rounded-full tabular-nums',
+                              isSelected ? 'bg-neutral-900 text-white' : 'text-indigo-700 bg-indigo-50 border border-indigo-200'
+                            )}>
                               +{formatCurrency(booking.commission.commission_amount || 0)}
                             </span>
                           </div>
                         ) : (
-                          <span className="text-[10px] font-medium text-[#737373] bg-[#FAFAFA] px-1.5 py-0.5 rounded border border-[#E5E5E5]">
+                          <span className={cx(
+                            'text-[10px] font-medium px-2 py-0.5 rounded-full border',
+                            isSelected ? 'bg-white/90 text-neutral-900 border-neutral-900/20' : 'text-stone-600 bg-stone-100 border-stone-200'
+                          )}>
                             Direct
                           </span>
                         )}
                       </div>
 
                       {/* Treatment Name */}
-                      <p className="text-xs text-[#737373] font-medium truncate">
+                      <p className={cx(
+                        'text-xs font-medium truncate',
+                        isSelected ? 'text-neutral-800' : 'text-stone-500'
+                      )}>
                         {title}
                       </p>
                     </div>
@@ -1230,8 +1363,16 @@ export default function TherapickBookingManagement({
                     <div className="shrink-0 flex items-center gap-2">
                       <button
                         type="button"
-                        onClick={() => setSelectedBookingId(booking.id)}
-                        className={cx(btn.base, btn.secondary, btn.xs, 'gap-1')}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedBookingId(booking.id);
+                        }}
+                        className={cx(
+                          btn.base,
+                          isSelected ? 'bg-neutral-900 text-white border-neutral-900 shadow-xs' : btn.secondary,
+                          btn.xs,
+                          'gap-1 rounded-full'
+                        )}
                         title="View complete booking details"
                       >
                         <span>Details</span>
