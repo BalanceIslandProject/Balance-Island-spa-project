@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
+import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { 
-  Calendar, 
+  Calendar as CalendarIcon, 
   Plus, 
   Download, 
   Trash2, 
@@ -12,40 +13,23 @@ import {
   X, 
   ChevronLeft, 
   ChevronRight, 
-  Calculator, 
-  FileText, 
-  CheckCircle2, 
-  XCircle,
-  PlayCircle,
-  CheckCheck,
-  CreditCard,
-  Clock,
-  RefreshCw,
-  CheckSquare,
-  Copy,
-  Check,
-  User,
-  Lock,
-  MapPin,
-  ExternalLink,
-  Compass,
-  LayoutGrid,
-  Table
+  Clock, 
+  RefreshCw, 
+  Copy, 
+  Check, 
+  User, 
+  MapPin, 
+  ExternalLink, 
+  Compass, 
+  Layers, 
+  Search,
+  Sparkles,
+  CheckCircle2,
+  AlertCircle
 } from 'lucide-react';
 import { Treatment, TherapistFee } from '@/context/SpaContext';
-import ScheduleTrackingModal from '@/app/partners/ScheduleTrackingModal';
-import { CalendarBooking } from '@/app/partners/FloatingBookingCalendar';
-import { 
-  cx, 
-  btn, 
-  inputCls, 
-  selectCls, 
-  CountPill, 
-  EmptyState, 
-  CrmDistributionTrack, 
-  StatusBadge, 
-  SearchInput 
-} from '@/components/admin/affiliate/ui';
+import AdminScheduleTrackingModal from '@/components/admin/AdminScheduleTrackingModal';
+import { cx, btn, inputCls, selectCls, CountPill } from '@/components/admin/affiliate/ui';
 
 export interface Booking {
   id: string;
@@ -75,6 +59,14 @@ export interface Booking {
   guest_email?: string;
 }
 
+const MONTH_NAMES = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'
+];
+
+// Matching partner portal reference: Mon, Tues, Wed, Thurs, Fri, Sat, Sun
+const WEEKDAY_NAMES = ['Mon', 'Tues', 'Wed', 'Thurs', 'Fri', 'Sat', 'Sun'];
+
 const toLocalDateString = (date: Date) => {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, '0');
@@ -93,17 +85,25 @@ const safeFormatDate = (rawDate: string | undefined | null) => {
       const day = parseInt(parts[2], 10);
       if (!isNaN(year) && !isNaN(month) && !isNaN(day)) {
         const d = new Date(year, month, day);
-        return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+        return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
       }
     }
     const d = new Date(rawDate);
     if (!isNaN(d.getTime())) {
-      return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+      return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
     }
   } catch {
     // fallback
   }
   return String(rawDate);
+};
+
+const formatCurrency = (val: number | undefined | null) => {
+  return new Intl.NumberFormat('id-ID', { 
+    style: 'currency', 
+    currency: 'IDR', 
+    maximumFractionDigits: 0 
+  }).format(val || 0);
 };
 
 // Robust Couple Package Identifier: already priced for 2 persons
@@ -112,11 +112,10 @@ export const isCouplePackage = (title?: string) => {
   return /couple|honeymoon|duo|2\s*person|for\s*2/i.test(t);
 };
 
-// Secret admin password to undo Ongoing Treatment or Finish Treatment
+// Secret admin password to delete bookings
 const SECRET_ADMIN_PASSWORD = '022320';
 
 // Calculate therapist fee based on therapist_fees database table
-// Exactly matching central admin logic with couple packages = 2 therapists
 export const calculateBookingTherapistFee = (
   booking: Booking,
   treatmentsList: Treatment[],
@@ -201,46 +200,24 @@ export default function TherapickBookingManagement({
   treatments?: Treatment[], 
   therapistFees?: TherapistFee[] 
 }) {
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState<string>(toLocalDateString(new Date()));
+  const [currentYear, setCurrentYear] = useState(() => new Date().getFullYear());
+  const [currentMonth, setCurrentMonth] = useState(() => new Date().getMonth()); // 0-indexed
+  const [selectedDate, setSelectedDate] = useState<string | null>(toLocalDateString(new Date()));
   const [monthBookings, setMonthBookings] = useState<Booking[]>([]);
   const [allTherapistFees, setAllTherapistFees] = useState<TherapistFee[]>(therapistFees || []);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
-  const selectedBooking = useMemo(
-    () => monthBookings.find(b => b.id === selectedBookingId) || null,
-    [monthBookings, selectedBookingId]
-  );
+  const [trackingBooking, setTrackingBooking] = useState<Booking | null>(null);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'confirmed' | 'ongoing' | 'finished' | 'pending'>('all');
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [showMobileCalendar, setShowMobileCalendar] = useState(false);
 
-  const [viewMode, setViewMode] = useState<'agenda' | 'table'>('agenda');
-  const [trackingBooking, setTrackingBooking] = useState<CalendarBooking | null>(null);
-
-  const toCalendarBooking = (b: Booking): CalendarBooking => {
-    const comm = b.commission;
-    return {
-      id: b.id,
-      booking_id: b.reference_number || b.id.substring(0, 8).toUpperCase(),
-      date: b.booking_date,
-      time: b.time && b.time !== '-' ? b.time : undefined,
-      created_at: b.created_at,
-      guest_name: b.guest_name || 'Guest',
-      location: b.location || 'Ubud',
-      room_number: b.room_number,
-      treatment_name: b.treatment_name,
-      duration: b.items?.[0]?.duration,
-      booking_status: b.status,
-      treatment_status: b.treatment_status,
-      payment_status: (b.payment_status || '').toLowerCase() === 'paid' ? 'paid' : 'unpaid',
-      payment_method: b.payment_method,
-      payment_verified: (b.payment_status || '').toLowerCase() === 'paid',
-      service_completed: (b.treatment_status || '').toLowerCase() === 'finished',
-      gross_amount: b.revenue,
-      treatment_amount: b.revenue,
-      commission_rate_pct: comm?.commission_rate_pct || 10,
-      commission_amount: comm?.commission_amount || 0,
-      commission_status: comm?.status || 'pending',
-    };
-  };
+  // Form State for Add / Edit Booking
+  const [showForm, setShowForm] = useState(false);
+  const [isEditing, setIsEditing] = useState<string | null>(null);
+  type FormItem = { id: string; treatment: string; duration: string; pax: number; therapists: number; revenue: number; fee: number; };
+  const createDefaultItem = (): FormItem => ({ id: Math.random().toString(36).substring(2, 9), treatment: '', duration: '', pax: 1, therapists: 1, revenue: 0, fee: 0 });
+  const [formItems, setFormItems] = useState<FormItem[]>([createDefaultItem()]);
 
   useEffect(() => {
     if (therapistFees && therapistFees.length > 0) {
@@ -258,58 +235,12 @@ export default function TherapickBookingManagement({
     loadFreshFees();
   }, []);
 
-  // Form State
-  const [showForm, setShowForm] = useState(false);
-  const [isEditing, setIsEditing] = useState<string | null>(null);
-  type FormItem = { id: string; treatment: string; duration: string; pax: number; therapists: number; revenue: number; fee: number; };
-  const createDefaultItem = (): FormItem => ({ id: Math.random().toString(36).substring(2, 9), treatment: '', duration: '', pax: 1, therapists: 1, revenue: 0, fee: 0 });
-  const [formItems, setFormItems] = useState<FormItem[]>([createDefaultItem()]);
-
-  // Yearly Stats for Chart
-  const [yearlyStats, setYearlyStats] = useState<{ month: string, revenue: number, profit: number }[]>([]);
-  const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-
-  useEffect(() => {
-    async function fetchYearlyStats() {
-      const currentYear = new Date().getFullYear();
-      const startOfYear = `${currentYear}-01-01`;
-      const endOfYear = `${currentYear}-12-31`;
-
-      // STRICT DATA ISOLATION: Therapick has its own data exclusively for booktherapick.com
-      const { data } = await supabase
-        .from('bookings')
-        .select('booking_date, revenue, net_profit, brand')
-        .eq('brand', 'therapick')
-        .gte('booking_date', startOfYear)
-        .lte('booking_date', endOfYear);
-
-      if (data) {
-        const stats = Array.from({ length: 12 }, (_, i) => ({
-          month: monthNames[i].substring(0, 3),
-          revenue: 0,
-          profit: 0
-        }));
-
-        data.filter((b: any) => b.brand === 'therapick').forEach((b: any) => {
-          const m = parseInt(b.booking_date.split('-')[1], 10) - 1;
-          if (m >= 0 && m < 12) {
-            stats[m].revenue += (b.revenue || 0);
-            stats[m].profit += (b.net_profit || 0);
-          }
-        });
-
-        setYearlyStats(stats);
-      }
-    }
-    fetchYearlyStats();
-  }, []);
-
   // Fetch bookings for the ENTIRE month + Realtime sync with affiliate commissions
   useEffect(() => {
     fetchMonthBookings();
 
     const channel = supabase
-      .channel('admin_bookings_realtime_sync')
+      .channel('admin_therapick_bookings_realtime')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, () => {
         fetchMonthBookings();
       })
@@ -321,15 +252,13 @@ export default function TherapickBookingManagement({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [currentDate.getFullYear(), currentDate.getMonth()]);
+  }, [currentYear, currentMonth]);
 
   const fetchMonthBookings = async () => {
     setIsLoading(true);
     try {
-      const year = currentDate.getFullYear();
-      const month = currentDate.getMonth();
-      const startOfMonth = toLocalDateString(new Date(year, month, 1));
-      const endOfMonth = toLocalDateString(new Date(year, month + 1, 0));
+      const startOfMonth = toLocalDateString(new Date(currentYear, currentMonth, 1));
+      const endOfMonth = toLocalDateString(new Date(currentYear, currentMonth + 1, 0));
 
       const [bookingsRes, commissionsRes, feesRes] = await Promise.all([
         supabase
@@ -366,17 +295,17 @@ export default function TherapickBookingManagement({
         const ref = String(b.reference_number || b.id || '').trim().toUpperCase();
         const c = commMap.get(ref);
 
-        // 1. Independent Payment Status & Method
+        // 1. Payment Status & Method
         let paymentStatus = b.payment_status || (c?.payment_verified ? 'Paid' : 'Unpaid');
         if (c?.payment_verified && paymentStatus === 'Unpaid') {
           paymentStatus = 'Paid';
         }
-        let paymentMethod = b.payment_method || (c?.notes?.toLowerCase().includes('cash') ? 'Cash' : c?.notes?.toLowerCase().includes('online') ? 'Online' : 'Cash');
+        let paymentMethod = b.payment_method || (c?.notes?.toLowerCase().includes('online') ? 'Online' : 'Cash');
 
-        // 2. Independent Treatment Status
+        // 2. Treatment Status
         let treatmentStatus = b.treatment_status || (c?.service_completed ? 'Finished' : (b.status === 'Ongoing' ? 'In Progress' : 'Scheduled'));
 
-        // 3. Independent Booking Status
+        // 3. Booking Status
         let bookingStatus = b.status || 'Pending';
         if (bookingStatus === 'Ongoing' || bookingStatus === 'Completed') {
           bookingStatus = 'Confirmed';
@@ -386,13 +315,12 @@ export default function TherapickBookingManagement({
         const affiliateCode = b.affiliate_code || c?.partner_code || null;
         const source = b.source || (affiliateCode ? affiliateCode : 'Direct');
 
-        // Calculate therapist fee base on therapist_fees database (couple = 2 therapists)
+        // Calculate therapist fee
         const { totalFee, therapistsCount } = calculateBookingTherapistFee(b, treatments, currentFees);
         const effectiveTherapistFee = Number(b.therapist_fee_total || 0) > 0 ? Number(b.therapist_fee_total) : totalFee;
         const effectiveTherapistsCount = Number(b.therapists_count || 0) > 0 ? Number(b.therapists_count) : therapistsCount;
 
-        // Smart profit detection:
-        // Revenue minus therapist fees minus approved or paid affiliate commission
+        // Smart profit detection
         let autoCalculatedProfit = Math.max(0, Number(b.revenue || 0) - effectiveTherapistFee);
         if (c && (c.status === 'approved' || c.status === 'paid') && Number(c.commission_amount || 0) > 0) {
           autoCalculatedProfit = Math.max(0, Number(b.revenue || 0) - effectiveTherapistFee - Number(c.commission_amount || 0));
@@ -413,86 +341,334 @@ export default function TherapickBookingManagement({
         };
       });
 
-      // Filter: STRICT DATA ISOLATION - Exclusively BookTherapick data
+      // Filter: STRICT DATA ISOLATION - Exclusively Therapick
       const therapickFiltered = merged.filter(b => b.brand === 'therapick');
-
       setMonthBookings(therapickFiltered);
+
+      // If current tracking booking was open, update its reference in real time
+      if (trackingBooking) {
+        const updated = therapickFiltered.find(x => x.id === trackingBooking.id);
+        if (updated) setTrackingBooking(updated);
+      }
     } catch (e) {
-      console.error(e);
+      console.error('Error fetching Therapick month bookings:', e);
     }
     setIsLoading(false);
   };
 
-  const [bookingSearch, setBookingSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'confirmed' | 'finished' | 'ongoing' | 'pending'>('all');
+  const handleCopy = (id: string) => {
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(id);
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 2000);
+    }
+  };
 
-  const dailyBookings = useMemo(() => {
-    return monthBookings.filter(b => b.booking_date === selectedDate);
-  }, [monthBookings, selectedDate]);
+  // Month navigation
+  const handlePrevMonth = () => {
+    setCurrentMonth((prev) => {
+      if (prev === 0) {
+        setCurrentYear((y) => y - 1);
+        return 11;
+      }
+      return prev - 1;
+    });
+  };
 
-  const bookingDistribution = useMemo(() => {
-    const total = monthBookings.length || 1;
-    const confirmed = monthBookings.filter(b => (b.status || '').toLowerCase() === 'confirmed').length;
-    const inProgress = monthBookings.filter(b => (b.treatment_status || '').toLowerCase() === 'in progress').length;
-    const finished = monthBookings.filter(b => (b.treatment_status || '').toLowerCase() === 'finished').length;
-    const pending = monthBookings.filter(b => !b.status || (b.status || '').toLowerCase() === 'pending').length;
+  const handleNextMonth = () => {
+    setCurrentMonth((prev) => {
+      if (prev === 11) {
+        setCurrentYear((y) => y + 1);
+        return 0;
+      }
+      return prev + 1;
+    });
+  };
 
-    return [
-      { label: 'Confirmed', count: confirmed, percentage: Math.round((confirmed / total) * 100), color: 'dark' as const },
-      { label: 'Finished', count: finished, percentage: Math.round((finished / total) * 100), color: 'yellow' as const },
-      { label: 'In Ritual', count: inProgress, percentage: Math.round((inProgress / total) * 100), color: 'hatched' as const },
-      { label: 'Pending', count: pending, percentage: Math.round((pending / total) * 100), color: 'light' as const },
-    ];
+  const handleJumpToday = () => {
+    const today = new Date();
+    setCurrentYear(today.getFullYear());
+    setCurrentMonth(today.getMonth());
+    setSelectedDate(toLocalDateString(today));
+  };
+
+  // 1. Independent Booking Status Update ('Pending' | 'Approved' | 'Confirmed' | 'Cancelled')
+  const updateBookingStatus = async (id: string, newStatus: string) => {
+    const booking = monthBookings.find(b => b.id === id);
+    if (!booking) return;
+
+    try {
+      await fetch('/api/admin/bookings/status', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ booking_id: id, booking_status: newStatus }),
+      });
+    } catch (e) {
+      console.error('API update failed, updating via Supabase directly:', e);
+    }
+
+    // Direct Supabase update fallback for resilience
+    await supabase.from('bookings').update({ status: newStatus }).eq('id', id);
+
+    setMonthBookings(prev => prev.map(b => b.id === id ? { ...b, status: newStatus } : b));
+    if (trackingBooking && trackingBooking.id === id) {
+      setTrackingBooking(prev => prev ? { ...prev, status: newStatus } : null);
+    }
+    fetchMonthBookings();
+  };
+
+  // 2. Independent Treatment Status Update ('Scheduled' | 'In Progress' | 'Finished' | 'No Show')
+  const updateTreatmentStatus = async (id: string, newStatus: string) => {
+    const booking = monthBookings.find(b => b.id === id);
+    if (!booking) return;
+
+    try {
+      await fetch('/api/admin/bookings/status', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ booking_id: id, treatment_status: newStatus }),
+      });
+    } catch (e) {
+      console.error('API treatment update failed:', e);
+    }
+
+    // Direct Supabase updates
+    await supabase.from('bookings').update({ treatment_status: newStatus }).eq('id', id);
+    const ref = booking.reference_number || booking.id;
+    if (ref) {
+      await supabase.from('affiliate_commissions').update({
+        service_completed: newStatus === 'Finished',
+        updated_at: new Date().toISOString(),
+      }).ilike('booking_id', ref);
+    }
+
+    setMonthBookings(prev => prev.map(b => b.id === id ? { ...b, treatment_status: newStatus } : b));
+    if (trackingBooking && trackingBooking.id === id) {
+      setTrackingBooking(prev => prev ? { ...prev, treatment_status: newStatus } : null);
+    }
+    fetchMonthBookings();
+  };
+
+  // 3. Independent Payment Status Update ('Unpaid' | 'Paid') + Method ('Cash' | 'Online')
+  const updatePaymentStatus = async (id: string, newStatus: string, method?: string) => {
+    const booking = monthBookings.find(b => b.id === id);
+    if (!booking) return;
+
+    const chosenMethod = method || booking.payment_method || 'Cash';
+
+    try {
+      await fetch('/api/admin/bookings/status', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          booking_id: id, 
+          payment_status: newStatus, 
+          payment_method: chosenMethod 
+        }),
+      });
+    } catch (e) {
+      console.error('API payment update failed:', e);
+    }
+
+    // Direct Supabase updates
+    await supabase.from('bookings').update({ 
+      payment_status: newStatus, 
+      payment_method: chosenMethod 
+    }).eq('id', id);
+
+    const ref = booking.reference_number || booking.id;
+    if (ref) {
+      await supabase.from('affiliate_commissions').update({
+        payment_verified: newStatus === 'Paid',
+        notes: newStatus === 'Paid' ? `Paid via ${chosenMethod}` : newStatus,
+        updated_at: new Date().toISOString(),
+      }).ilike('booking_id', ref);
+    }
+
+    setMonthBookings(prev => prev.map(b => b.id === id ? { 
+      ...b, 
+      payment_status: newStatus, 
+      payment_method: chosenMethod 
+    } : b));
+    if (trackingBooking && trackingBooking.id === id) {
+      setTrackingBooking(prev => prev ? { ...prev, payment_status: newStatus, payment_method: chosenMethod } : null);
+    }
+    fetchMonthBookings();
+  };
+
+  // Calendar Day Grid Computation (Week starts on Monday matching partner portal)
+  const calendarDays = useMemo(() => {
+    const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
+    const startDayIndex = (firstDayOfMonth.getDay() + 6) % 7;
+    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+    const daysInPrevMonth = new Date(currentYear, currentMonth, 0).getDate();
+
+    const bookingsByDate: Record<string, Booking[]> = {};
+    for (const b of monthBookings) {
+      if (!b.booking_date) continue;
+      const dStr = b.booking_date.trim();
+      if (!bookingsByDate[dStr]) {
+        bookingsByDate[dStr] = [];
+      }
+      bookingsByDate[dStr].push(b);
+    }
+
+    const cells: Array<{
+      dayNumber: number;
+      dateStr: string;
+      isCurrentMonth: boolean;
+      isToday: boolean;
+      bookings: Booking[];
+      statusStyle: 'paid' | 'confirmed' | 'ongoing' | 'cancelled' | null;
+    }> = [];
+
+    const now = new Date();
+    const todayStr = toLocalDateString(now);
+
+    // Previous month padding
+    for (let i = startDayIndex - 1; i >= 0; i--) {
+      const d = daysInPrevMonth - i;
+      const prevMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+      const prevYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+      const dStr = `${prevYear}-${String(prevMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      cells.push({
+        dayNumber: d,
+        dateStr: dStr,
+        isCurrentMonth: false,
+        isToday: dStr === todayStr,
+        bookings: bookingsByDate[dStr] || [],
+        statusStyle: null,
+      });
+    }
+
+    // Current month days
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      const dayBookings = bookingsByDate[dStr] || [];
+
+      let statusStyle: 'paid' | 'confirmed' | 'ongoing' | 'cancelled' | null = null;
+      if (dayBookings.length > 0) {
+        if (dayBookings.some((b) => (b.payment_status || '').toLowerCase() === 'paid')) {
+          statusStyle = 'paid';
+        } else if (dayBookings.some((b) => (b.treatment_status || '').toLowerCase() === 'finished' || (b.status || '').toLowerCase() === 'confirmed')) {
+          statusStyle = 'confirmed';
+        } else if (dayBookings.some((b) => (b.treatment_status || '').toLowerCase() === 'in progress' || (b.status || '').toLowerCase() === 'pending')) {
+          statusStyle = 'ongoing';
+        } else if (dayBookings.every((b) => (b.status || '').toLowerCase() === 'cancelled')) {
+          statusStyle = 'cancelled';
+        }
+      }
+
+      cells.push({
+        dayNumber: d,
+        dateStr: dStr,
+        isCurrentMonth: true,
+        isToday: dStr === todayStr,
+        bookings: dayBookings,
+        statusStyle,
+      });
+    }
+
+    // Next month padding to fill a 35 or 42 grid
+    const totalCells = cells.length > 35 ? 42 : 35;
+    const remaining = totalCells - cells.length;
+    for (let d = 1; d <= remaining; d++) {
+      const nextMonth = currentMonth === 11 ? 0 : currentMonth + 1;
+      const nextYear = currentMonth === 11 ? currentYear + 1 : currentYear;
+      const dStr = `${nextYear}-${String(nextMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      cells.push({
+        dayNumber: d,
+        dateStr: dStr,
+        isCurrentMonth: false,
+        isToday: dStr === todayStr,
+        bookings: bookingsByDate[dStr] || [],
+        statusStyle: null,
+      });
+    }
+
+    return cells;
+  }, [currentYear, currentMonth, monthBookings]);
+
+  // Aggregate monthly stats
+  const monthlyMetrics = useMemo(() => {
+    const total = monthBookings.length;
+    let confirmedCount = 0;
+    let inRitualCount = 0;
+    let finishedCount = 0;
+    let pendingCount = 0;
+    let totalRevenue = 0;
+    let totalProfit = 0;
+    let totalCommission = 0;
+
+    for (const b of monthBookings) {
+      const isCancelled = (b.status || '').toLowerCase() === 'cancelled';
+      if (!isCancelled) {
+        totalRevenue += (b.revenue || 0);
+        totalProfit += (b.net_profit || 0);
+        if (b.commission && (b.commission.status === 'approved' || b.commission.status === 'paid')) {
+          totalCommission += Number(b.commission.commission_amount || 0);
+        }
+      }
+
+      const bStat = (b.status || '').toLowerCase();
+      const tStat = (b.treatment_status || '').toLowerCase();
+
+      if (bStat === 'confirmed' || bStat === 'approved') confirmedCount++;
+      if (tStat === 'in progress') inRitualCount++;
+      if (tStat === 'finished') finishedCount++;
+      if (!b.status || bStat === 'pending') pendingCount++;
+    }
+
+    return {
+      total,
+      confirmedCount,
+      inRitualCount,
+      finishedCount,
+      pendingCount,
+      totalRevenue,
+      totalProfit,
+      totalCommission,
+    };
   }, [monthBookings]);
 
-  const filteredDailyBookings = useMemo(() => {
-    return dailyBookings.filter(b => {
-      if (statusFilter !== 'all') {
-        const bStatus = (b.status || '').toLowerCase();
-        const tStatus = (b.treatment_status || '').toLowerCase();
-        if (statusFilter === 'confirmed' && bStatus !== 'confirmed') return false;
-        if (statusFilter === 'pending' && bStatus !== 'pending' && b.status) return false;
-        if (statusFilter === 'finished' && tStatus !== 'finished') return false;
-        if (statusFilter === 'ongoing' && tStatus !== 'in progress' && tStatus !== 'ongoing') return false;
+  // Filtered bookings
+  const filteredBookings = useMemo(() => {
+    return monthBookings.filter((b) => {
+      // 1. Calendar date filter
+      if (selectedDate) {
+        if (!b.booking_date || b.booking_date.trim() !== selectedDate) {
+          return false;
+        }
       }
-      if (bookingSearch.trim()) {
-        const q = bookingSearch.toLowerCase();
-        return (
-          (b.guest_name || '').toLowerCase().includes(q) ||
-          (b.treatment_name || '').toLowerCase().includes(q) ||
-          (b.reference_number || '').toLowerCase().includes(q) ||
-          (b.id || '').toLowerCase().includes(q)
-        );
+
+      // 2. Search query
+      if (search.trim()) {
+        const q = search.toLowerCase();
+        const matchesName = (b.guest_name || '').toLowerCase().includes(q);
+        const matchesRef = (b.reference_number || '').toLowerCase().includes(q);
+        const matchesId = (b.id || '').toLowerCase().includes(q);
+        const matchesTreatment = (b.treatment_name || '').toLowerCase().includes(q);
+        const matchesLocation = (b.location || '').toLowerCase().includes(q);
+        if (!matchesName && !matchesRef && !matchesId && !matchesTreatment && !matchesLocation) {
+          return false;
+        }
       }
+
+      // 3. Status filter
+      if (statusFilter === 'all') return true;
+      const bStatus = (b.status || '').toLowerCase();
+      const tStatus = (b.treatment_status || '').toLowerCase();
+
+      if (statusFilter === 'confirmed') return bStatus === 'confirmed' || bStatus === 'approved';
+      if (statusFilter === 'ongoing') return tStatus === 'in progress';
+      if (statusFilter === 'finished') return tStatus === 'finished';
+      if (statusFilter === 'pending') return !b.status || bStatus === 'pending';
+
       return true;
     });
-  }, [dailyBookings, statusFilter, bookingSearch]);
+  }, [monthBookings, selectedDate, search, statusFilter]);
 
-  const filteredMonthBookings = useMemo(() => {
-    return monthBookings.filter(b => {
-      if (statusFilter !== 'all') {
-        const bStatus = (b.status || '').toLowerCase();
-        const tStatus = (b.treatment_status || '').toLowerCase();
-        if (statusFilter === 'confirmed' && bStatus !== 'confirmed') return false;
-        if (statusFilter === 'pending' && bStatus !== 'pending' && b.status) return false;
-        if (statusFilter === 'finished' && tStatus !== 'finished') return false;
-        if (statusFilter === 'ongoing' && tStatus !== 'in progress' && tStatus !== 'ongoing') return false;
-      }
-      if (bookingSearch.trim()) {
-        const q = bookingSearch.toLowerCase();
-        return (
-          (b.guest_name || '').toLowerCase().includes(q) ||
-          (b.treatment_name || '').toLowerCase().includes(q) ||
-          (b.reference_number || '').toLowerCase().includes(q) ||
-          (b.id || '').toLowerCase().includes(q) ||
-          (b.location || '').toLowerCase().includes(q) ||
-          (b.affiliate_code || '').toLowerCase().includes(q)
-        );
-      }
-      return true;
-    });
-  }, [monthBookings, statusFilter, bookingSearch]);
-
+  // Form Management Handlers
   const updateFormItem = (index: number, field: string, value: any) => {
     const newItems = [...formItems];
     newItems[index] = { ...newItems[index], [field]: value };
@@ -515,7 +691,6 @@ export default function TherapickBookingManagement({
           const price = parseInt(priceStr || '0', 10);
           
           const isCouple = isCouplePackage(item.treatment);
-          // CRITICAL: Couple package price is ALREADY FOR 2 PERSONS! Do NOT multiply it by 2.
           item.revenue = isCouple ? (price * Math.max(1, Math.round(item.pax / 2))) : (price * item.pax);
         }
 
@@ -548,8 +723,10 @@ export default function TherapickBookingManagement({
     e.preventDefault();
     if (formItems.some(i => !i.treatment)) return alert("Please fill required fields for all treatments.");
 
+    const targetDate = selectedDate || toLocalDateString(new Date());
+
     const payloads = formItems.map(item => ({
-      booking_date: selectedDate,
+      booking_date: targetDate,
       time: "-", 
       treatment_name: item.duration ? `${item.treatment} (${item.duration})` : item.treatment,
       pax: item.pax,
@@ -562,199 +739,16 @@ export default function TherapickBookingManagement({
 
     if (isEditing) {
       const { error } = await supabase.from('bookings').update(payloads[0]).eq('id', isEditing);
-      if (error) {
-         if (error.code === '42P01') alert("Database table 'bookings' does not exist yet. Please run the SQL migration.");
-         else alert("Error updating: " + error.message);
-      }
+      if (error) alert("Error updating: " + error.message);
     } else {
       const { error } = await supabase.from('bookings').insert(payloads);
-      if (error) {
-         if (error.code === '42P01') alert("Database table 'bookings' does not exist yet. Please run the SQL migration.");
-         else alert("Error saving: " + error.message);
-      }
+      if (error) alert("Error saving: " + error.message);
     }
 
     setShowForm(false);
     setIsEditing(null);
-    resetForm();
-    fetchMonthBookings();
-  };
-
-  const resetForm = () => {
     setFormItems([createDefaultItem()]);
-  };
-
-  const handleDelete = async (id: string) => {
-    const booking = monthBookings.find(b => b.id === id);
-    const currentStatus = (booking?.status || '').toLowerCase();
-    if (currentStatus === 'ongoing' || currentStatus === 'completed') {
-      const pin = prompt(`Booking #${booking?.reference_number || id} is marked as ${booking?.status}. Enter secret admin password to delete:`);
-      if (pin !== (process.env.NEXT_PUBLIC_DELETE_PIN || SECRET_ADMIN_PASSWORD)) {
-        alert('Incorrect password. Deletion cancelled.');
-        return;
-      }
-    } else {
-      if (!confirm("Are you sure you want to delete this booking?")) return;
-    }
-
-    await supabase.from('bookings').delete().eq('id', id);
     fetchMonthBookings();
-  };
-
-  // 1. Independent Booking Status Update ('Pending' | 'Approved' | 'Confirmed' | 'Cancelled')
-  const updateBookingStatus = async (id: string, newStatus: string) => {
-    const booking = monthBookings.find(b => b.id === id);
-    if (!booking) return;
-
-    try {
-      const res = await fetch('/api/admin/bookings/status', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ booking_id: id, booking_status: newStatus }),
-      });
-      const data = await res.json();
-      if (!data.success) {
-        // Fallback to Supabase
-        await supabase.from('bookings').update({ status: newStatus }).eq('id', id);
-      }
-    } catch (e) {
-      console.error('Error updating booking status:', e);
-      await supabase.from('bookings').update({ status: newStatus }).eq('id', id);
-    }
-
-    setMonthBookings(prev => prev.map(b => b.id === id ? { ...b, status: newStatus } : b));
-    fetchMonthBookings();
-  };
-
-  // 2. Independent Treatment Status Update ('Scheduled' | 'Therapist Assigned' | 'On the Way' | 'Arrived' | 'In Progress' | 'Finished' | 'No Show')
-  const updateTreatmentStatus = async (id: string, newStatus: string) => {
-    const booking = monthBookings.find(b => b.id === id);
-    if (!booking) return;
-
-    try {
-      const res = await fetch('/api/admin/bookings/status', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ booking_id: id, treatment_status: newStatus }),
-      });
-      const data = await res.json();
-      if (!data.success) {
-        const ref = booking?.reference_number || booking?.id;
-        if (ref) {
-          await supabase.from('affiliate_commissions').update({
-            service_completed: newStatus === 'Finished',
-            updated_at: new Date().toISOString(),
-          }).ilike('booking_id', ref);
-        }
-      }
-    } catch (e) {
-      console.error('Error updating treatment status:', e);
-    }
-
-    setMonthBookings(prev => prev.map(b => b.id === id ? { ...b, treatment_status: newStatus } : b));
-    fetchMonthBookings();
-  };
-
-  // 3. Independent Payment Status Update ('Unpaid' | 'Partially Paid' | 'Paid' | 'Refunded' | 'Payment Failed')
-  const updatePaymentStatus = async (id: string, newStatus: string, method?: string) => {
-    const booking = monthBookings.find(b => b.id === id);
-    if (!booking) return;
-
-    const chosenMethod = method || booking.payment_method || 'Cash';
-
-    try {
-      const res = await fetch('/api/admin/bookings/status', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          booking_id: id, 
-          payment_status: newStatus, 
-          payment_method: chosenMethod 
-        }),
-      });
-      const data = await res.json();
-      if (!data.success) {
-        const ref = booking?.reference_number || booking?.id;
-        if (ref) {
-          await supabase.from('affiliate_commissions').update({
-            payment_verified: newStatus === 'Paid',
-            notes: newStatus === 'Paid' ? `Paid via ${chosenMethod}` : newStatus,
-            updated_at: new Date().toISOString(),
-          }).ilike('booking_id', ref);
-        }
-      }
-    } catch (e) {
-      console.error('Error updating payment status:', e);
-    }
-
-    setMonthBookings(prev => prev.map(b => b.id === id ? { 
-      ...b, 
-      payment_status: newStatus, 
-      payment_method: chosenMethod 
-    } : b));
-    fetchMonthBookings();
-  };
-
-  // Backward compatible status change helper
-  const handleStatusChange = async (id: string, newStatus: string) => {
-    if (!confirm(`Are you sure you want to mark this booking as ${newStatus}?`)) return;
-    await updateBookingStatus(id, newStatus);
-  };
-
-  const formatCurrency = (val: number) => {
-    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(val);
-  };
-
-  // Calendar Logic
-  const getDaysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();
-  const getFirstDayOfMonth = (year: number, month: number) => new Date(year, month, 1).getDay();
-
-  const year = currentDate.getFullYear();
-  const month = currentDate.getMonth();
-  const daysInMonth = getDaysInMonth(year, month);
-  const firstDay = getFirstDayOfMonth(year, month);
-  
-  
-
-  const handlePrevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
-  const handleNextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
-
-  const [copiedId, setCopiedId] = useState<string | null>(null);
-  const handleCopy = (text: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedId(text);
-    setTimeout(() => setCopiedId(null), 2000);
-  };
-
-  const handlePrevDay = () => {
-    const d = new Date(selectedDate + 'T00:00:00');
-    d.setDate(d.getDate() - 1);
-    const isoString = toLocalDateString(d);
-    setSelectedDate(isoString);
-    setCurrentDate(new Date(d.getFullYear(), d.getMonth(), 1));
-  };
-
-  const handleNextDay = () => {
-    const d = new Date(selectedDate + 'T00:00:00');
-    d.setDate(d.getDate() + 1);
-    const isoString = toLocalDateString(d);
-    setSelectedDate(isoString);
-    setCurrentDate(new Date(d.getFullYear(), d.getMonth(), 1));
-  };
-
-  const handleToday = () => {
-    const today = new Date();
-    const isoString = toLocalDateString(today);
-    setSelectedDate(isoString);
-    setCurrentDate(new Date(today.getFullYear(), today.getMonth(), 1));
-  };
-
-  const selectDate = (day: number) => {
-    const d = new Date(year, month, day);
-    // YYYY-MM-DD
-    const isoString = toLocalDateString(new Date(year, month, day));
-    setSelectedDate(isoString);
-    setShowForm(false);
   };
 
   const downloadCSV = async () => {
@@ -767,302 +761,126 @@ export default function TherapickBookingManagement({
       "Treatment Details", 
       "Status", 
       "Pax", 
-      "Therapists Used", 
       "Gross Revenue (IDR)", 
       "Therapist Fee (IDR)", 
       "Net Profit (IDR)"
     ];
     
     const csvRows = [
-      `"FINANCIAL REPORT - EXLEXOIR SPA"`,
-      `"Period: ${currentDate.toLocaleString('default', { month: 'long', year: 'numeric' })}"`,
+      `"FINANCIAL REPORT - THERAPICK BALI"`,
+      `"Period: ${MONTH_NAMES[currentMonth]} ${currentYear}"`,
       `""`,
       headers.join(',')
     ];
 
-    let totalRev = 0;
-    let totalFee = 0;
-    let totalProfit = 0;
-
     monthBookings.forEach(b => {
-      let treatmentDetails = b.treatment_name || '';
-      if (b.items && b.items.length > 0) {
-         treatmentDetails = b.items.map((i:any) => `${i.title} (${i.duration})`).join(' + ');
-      }
-      
-      csvRows.push([
-        `"${b.reference_number || `MANUAL-${b.id.substring(0,6).toUpperCase()}`}"`,
+      const row = [
+        `"${b.reference_number || b.id}"`,
         `"${b.booking_date}"`,
-        `"${b.guest_name || 'Walk-in / Manual'}"`,
-        `"${treatmentDetails}"`,
-        `"${b.status || 'Confirmed'}"`,
-        b.pax || 1,
-        b.therapists_count || 1,
+        `"${(b.guest_name || 'Guest').replace(/"/g, '""')}"`,
+        `"${(b.treatment_name || '').replace(/"/g, '""')}"`,
+        `"${b.status || 'Pending'}"`,
+        b.pax,
         b.revenue || 0,
         b.therapist_fee_total || 0,
         b.net_profit || 0
-      ].join(','));
-      
-      totalRev += Number(b.revenue) || 0;
-      totalFee += Number(b.therapist_fee_total) || 0;
-      totalProfit += Number(b.net_profit) || 0;
+      ];
+      csvRows.push(row.join(','));
     });
 
-    csvRows.push(`,,,,,,,,,`);
-    csvRows.push(`"GRAND TOTAL",,,,,,,${totalRev},${totalFee},${totalProfit}`);
-
-    const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `bookings-${monthNames[month]}-${year}.csv`;
-    a.click();
-    window.URL.revokeObjectURL(url);
+    const csvContent = "data:text/csv;charset=utf-8," + csvRows.join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `Therapick_Bookings_${MONTH_NAMES[currentMonth]}_${currentYear}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
-  const totalDailyRevenue = useMemo(
-    () => dailyBookings.filter(b => b.status?.toLowerCase() !== 'cancelled').reduce((sum, b) => sum + (b.revenue || 0), 0),
-    [dailyBookings]
-  );
-  const totalDailyProfit = useMemo(
-    () => dailyBookings.filter(b => b.status?.toLowerCase() !== 'cancelled').reduce((sum, b) => sum + (b.net_profit || 0), 0),
-    [dailyBookings]
-  );
-  const totalDailyCommission = useMemo(
-    () => dailyBookings
-      .filter(b => b.status?.toLowerCase() !== 'cancelled')
-      .reduce((sum, b) => {
-        const c = b.commission;
-        if (c && (c.status === 'approved' || c.status === 'paid')) {
-          return sum + Number(c.commission_amount || 0);
-        }
-        return sum;
-      }, 0),
-    [dailyBookings]
-  );
-
-  const totalMonthlyRevenue = useMemo(
-    () => monthBookings.filter(b => b.status?.toLowerCase() !== 'cancelled').reduce((sum, b) => sum + (b.revenue || 0), 0),
-    [monthBookings]
-  );
-  const totalMonthlyProfit = useMemo(
-    () => monthBookings.filter(b => b.status?.toLowerCase() !== 'cancelled').reduce((sum, b) => sum + (b.net_profit || 0), 0),
-    [monthBookings]
-  );
-  const totalMonthlyCommission = useMemo(
-    () => monthBookings
-      .filter(b => b.status?.toLowerCase() !== 'cancelled')
-      .reduce((sum, b) => {
-        const c = b.commission;
-        if (c && (c.status === 'approved' || c.status === 'paid')) {
-          return sum + Number(c.commission_amount || 0);
-        }
-        return sum;
-      }, 0),
-    [monthBookings]
-  );
-
   return (
-    <div className="space-y-5 pb-28 md:pb-6 font-sans antialiased w-full">
-      {/* ─── Crextio CRM Section Header, View Switcher & Distribution ─── */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-3 border-b border-stone-200/70">
-        <div className="space-y-1">
+    <div className="space-y-6 w-full font-sans antialiased pb-16">
+      
+      {/* ─── Top Header Toolbar (Clean, No Clutter, Removed View Switchers & Distribution Bar) ─── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#eaecf0]">
+        <div>
+          <span className="font-mono text-[10px] uppercase tracking-wider text-[#64748b] font-semibold block mb-0.5">
+            Therapick CRM · Operations
+          </span>
           <div className="flex items-center gap-2.5">
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-900">Bookings</h1>
+            <h1 className="text-2xl sm:text-[28px] font-bold text-[#0f172a] tracking-tight">
+              Bookings
+            </h1>
             <CountPill className="text-xs">{monthBookings.length} total</CountPill>
           </div>
-          <p className="text-xs text-stone-500">
+          <p className="text-xs text-[#64748b] mt-0.5">
             Appointments, treatment execution, payment verification, and affiliate attribution
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
-          {/* CRM View Switcher */}
-          <div className="inline-flex items-center gap-1 bg-stone-100 p-1 rounded-full border border-stone-200/80 shadow-2xs">
+        <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+          {selectedDate && (
             <button
               type="button"
-              onClick={() => setViewMode('agenda')}
-              className={cx(
-                'px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5',
-                viewMode === 'agenda'
-                  ? 'bg-neutral-900 text-white shadow-xs'
-                  : 'text-stone-600 hover:text-neutral-900 hover:bg-white/60'
-              )}
+              onClick={() => setSelectedDate(null)}
+              className="inline-flex items-center gap-1.5 h-8.5 px-3 rounded-xl border border-[#e2e8f0] bg-white hover:bg-red-50 hover:text-red-600 hover:border-red-200 text-xs font-medium text-[#64748b] transition-all cursor-pointer shadow-2xs active:scale-95"
+              title="Show all bookings"
             >
-              <Calendar size={13} />
-              <span>Day Agenda</span>
+              <X size={13} />
+              <span>Clear Date</span>
             </button>
-            <button
-              type="button"
-              onClick={() => setViewMode('table')}
-              className={cx(
-                'px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5',
-                viewMode === 'table'
-                  ? 'bg-neutral-900 text-white shadow-xs'
-                  : 'text-stone-600 hover:text-neutral-900 hover:bg-white/60'
-              )}
-            >
-              <Table size={13} />
-              <span>Master CRM Table</span>
-            </button>
-          </div>
+          )}
 
-          <CrmDistributionTrack items={bookingDistribution} />
+          <button
+            type="button"
+            onClick={fetchMonthBookings}
+            disabled={isLoading}
+            className="inline-flex items-center gap-1.5 h-8.5 px-3.5 rounded-xl border border-[#e2e8f0] bg-white text-xs font-medium text-[#0f172a] hover:bg-[#f8fafc] hover:border-[#cbd5e1] transition-all cursor-pointer shadow-2xs active:scale-95"
+            title="Refresh bookings"
+          >
+            <RefreshCw size={13} className={isLoading ? 'animate-spin' : ''} />
+            <span>Refresh</span>
+          </button>
 
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={fetchMonthBookings}
-              disabled={isLoading}
-              className={cx(btn.base, btn.secondary, btn.icon)}
-              title="Refresh bookings"
-              aria-label="Refresh bookings"
-            >
-              <RefreshCw size={14} className={cx(isLoading && 'animate-spin')} />
-            </button>
-            <button
-              type="button"
-              onClick={downloadCSV}
-              className={cx(btn.base, btn.secondary, btn.sm, 'gap-1.5')}
-            >
-              <Download size={13} /> Export CSV
-            </button>
-            <button
-              type="button"
-              onClick={() => { resetForm(); setShowForm(true); }}
-              className={cx(btn.base, btn.amber, btn.sm, 'gap-1.5')}
-            >
-              <Plus size={13} /> Add booking
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={downloadCSV}
+            className="inline-flex items-center gap-1.5 h-8.5 px-3.5 rounded-xl border border-[#e2e8f0] bg-white text-xs font-medium text-[#0f172a] hover:bg-[#f8fafc] hover:border-[#cbd5e1] transition-all cursor-pointer shadow-2xs active:scale-95"
+            title="Export CSV Report"
+          >
+            <Download size={13} />
+            <span>Export CSV</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setFormItems([createDefaultItem()]);
+              setIsEditing(null);
+              setShowForm(true);
+            }}
+            className="inline-flex items-center gap-1.5 h-8.5 px-3.5 rounded-xl bg-slate-900 hover:bg-black text-white text-xs font-bold transition-all cursor-pointer shadow-xs active:scale-95"
+          >
+            <Plus size={14} />
+            <span>Add Booking</span>
+          </button>
         </div>
       </div>
 
-      {/* ─── 4-Card Crextio CRM KPI Metric Ribbon ─── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-        {/* Card 1: Today's Appointments */}
-        <div className="bg-white/95 border border-stone-200/90 rounded-2xl p-3.5 sm:p-4 shadow-2xs">
-          <span className="text-[10px] uppercase font-bold tracking-wider text-stone-400 block truncate">
-            {new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} Appointments
-          </span>
-          <div className="text-xl sm:text-2xl font-bold text-neutral-900 mt-1 tabular-nums">
-            {dailyBookings.length} <span className="text-xs text-stone-500 font-normal">Bookings</span>
-          </div>
-          <div className="text-[11px] text-stone-500 mt-1 flex items-center gap-2 truncate">
-            <span>{dailyBookings.reduce((sum, b) => sum + (b.pax || 1), 0)} Guests</span>
-            <span>·</span>
-            <span className="text-emerald-700 font-semibold">{dailyBookings.filter(b => (b.status || '').toLowerCase() === 'confirmed').length} Confirmed</span>
-          </div>
-        </div>
-
-        {/* Card 2: Daily Revenue & Profit */}
-        <div className="bg-white/95 border border-stone-200/90 rounded-2xl p-3.5 sm:p-4 shadow-2xs">
-          <span className="text-[10px] uppercase font-bold tracking-wider text-stone-400 block truncate">
-            Daily Revenue & Profit
-          </span>
-          <div className="text-xl sm:text-2xl font-bold text-neutral-900 mt-1 tabular-nums truncate" title={formatCurrency(totalDailyRevenue)}>
-            {formatCurrency(totalDailyRevenue)}
-          </div>
-          <div className="text-[11px] text-emerald-600 font-semibold mt-1 flex items-center gap-1.5 tabular-nums truncate">
-            <span>Profit: {formatCurrency(totalDailyProfit)}</span>
-            {totalDailyRevenue > 0 && (
-              <span className="text-[10px] font-mono bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.2 rounded-full">
-                {Math.round((totalDailyProfit / totalDailyRevenue) * 100)}%
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* Card 3: Monthly Financials */}
-        <div className="bg-white/95 border border-stone-200/90 rounded-2xl p-3.5 sm:p-4 shadow-2xs">
-          <span className="text-[10px] uppercase font-bold tracking-wider text-stone-400 block truncate">
-            Monthly Revenue · {monthNames[month].toUpperCase()}
-          </span>
-          <div className="text-xl sm:text-2xl font-bold text-neutral-900 mt-1 tabular-nums truncate" title={formatCurrency(totalMonthlyRevenue)}>
-            {formatCurrency(totalMonthlyRevenue)}
-          </div>
-          <div className="text-[11px] text-emerald-600 font-semibold mt-1 flex items-center gap-1.5 tabular-nums truncate">
-            <span>Profit: {formatCurrency(totalMonthlyProfit)}</span>
-            <span className="text-stone-400 font-normal">({monthBookings.length} total)</span>
-          </div>
-        </div>
-
-        {/* Card 4: Partner Attribution & Commission */}
-        <div className="bg-white/95 border border-stone-200/90 rounded-2xl p-3.5 sm:p-4 shadow-2xs">
-          <span className="text-[10px] uppercase font-bold tracking-wider text-stone-400 block truncate">
-            Commissions & Escrow
-          </span>
-          <div className="text-xl sm:text-2xl font-bold text-indigo-700 mt-1 tabular-nums truncate" title={formatCurrency(totalMonthlyCommission)}>
-            {formatCurrency(totalMonthlyCommission)}
-          </div>
-          <div className="text-[11px] text-stone-500 mt-1 flex items-center gap-1.5 truncate">
-            <span>{monthBookings.filter(b => b.commission).length} Attributed Bookings</span>
-          </div>
-        </div>
-      </div>
-
-      {/* ─── Search & Status Filters Bar ─── */}
-      <div className="bg-white/95 border border-stone-200/90 rounded-2xl p-3 sm:p-3.5 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        {/* Filter Pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
-          {[
-            { id: 'all', label: 'All', count: monthBookings.length },
-            { id: 'confirmed', label: 'Confirmed', count: monthBookings.filter(b => (b.status || '').toLowerCase() === 'confirmed').length },
-            { id: 'ongoing', label: 'In Ritual', count: monthBookings.filter(b => (b.treatment_status || '').toLowerCase() === 'in progress').length, pulse: true },
-            { id: 'finished', label: 'Finished', count: monthBookings.filter(b => (b.treatment_status || '').toLowerCase() === 'finished').length },
-            { id: 'pending', label: 'Pending', count: monthBookings.filter(b => !b.status || (b.status || '').toLowerCase() === 'pending').length },
-          ].map(f => {
-            const isActive = statusFilter === f.id;
-            return (
-              <button
-                key={f.id}
-                type="button"
-                onClick={() => setStatusFilter(f.id as any)}
-                className={cx(
-                  'px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5',
-                  isActive
-                    ? 'bg-amber-300 text-neutral-950 shadow-2xs font-bold'
-                    : 'bg-stone-100 text-stone-600 hover:text-neutral-900 hover:bg-stone-200/70'
-                )}
-              >
-                {f.pulse && f.count > 0 && (
-                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-pulse" />
-                )}
-                <span>{f.label}</span>
-                <span className={cx(
-                  'font-mono text-[10px] px-1.5 py-0.2 rounded-full',
-                  isActive ? 'bg-neutral-900 text-white' : 'bg-white text-stone-600'
-                )}>
-                  {f.count}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Search Input */}
-        <div className="w-full sm:w-64 shrink-0">
-          <SearchInput
-            id="crm-booking-search"
-            value={bookingSearch}
-            onChange={setBookingSearch}
-            placeholder="Search guest, ref, villa..."
-          />
-        </div>
-      </div>
-
-      {/* ─── Add / Edit Booking Form Modal / Drawer ─── */}
+      {/* ─── Add / Edit Booking Form Modal (Clean Overlay) ─── */}
       {showForm && (
-        <div className="bg-white border border-stone-200/90 rounded-2xl p-5 sm:p-6 relative space-y-5 shadow-lg">
+        <div className="bg-white border border-stone-200/90 rounded-2xl p-5 sm:p-6 relative space-y-5 shadow-lg animate-in fade-in duration-150">
           <button
             type="button"
             onClick={() => setShowForm(false)}
-            className={cx(btn.base, btn.secondary, btn.icon, 'absolute top-4 right-4')}
+            className="h-8 w-8 rounded-xl bg-stone-100 hover:bg-stone-200 flex items-center justify-center text-stone-600 transition-colors absolute top-4 right-4 cursor-pointer"
             aria-label="Close form"
           >
             <X size={16} />
           </button>
-          <h4 className="font-bold text-base text-neutral-900">{isEditing ? 'Edit booking' : 'New booking'}</h4>
+          <h4 className="font-bold text-base text-neutral-900">
+            {isEditing ? 'Edit Booking' : 'New Appointment'} · {selectedDate ? safeFormatDate(selectedDate) : 'Today'}
+          </h4>
           
           <form onSubmit={handleSave} className="space-y-5">
             <div className="space-y-4">
@@ -1072,7 +890,7 @@ export default function TherapickBookingManagement({
                     <button
                       type="button"
                       onClick={() => removeFormItem(index)}
-                      className={cx(btn.base, btn.secondary, btn.icon, 'h-7 w-7 absolute -top-2 -right-2 text-red-600 hover:border-red-300')}
+                      className="h-7 w-7 rounded-lg bg-white border border-stone-200 text-red-600 hover:bg-red-50 absolute -top-2 -right-2 flex items-center justify-center cursor-pointer shadow-2xs"
                       title="Remove item"
                     >
                       <Trash2 size={13} />
@@ -1081,7 +899,7 @@ export default function TherapickBookingManagement({
                   
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="text-xs text-stone-600 block mb-1.5 font-medium">Select treatment {index + 1}</label>
+                      <label className="text-xs text-stone-600 block mb-1.5 font-medium">Select Treatment {index + 1}</label>
                       <select required value={item.treatment} onChange={e => updateFormItem(index, 'treatment', e.target.value)} className={selectCls}>
                         <option value="">-- Choose Treatment --</option>
                         {treatments.map(t => (
@@ -1108,11 +926,11 @@ export default function TherapickBookingManagement({
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="text-xs text-stone-600 block mb-1.5 font-medium">Number of pax</label>
+                      <label className="text-xs text-stone-600 block mb-1.5 font-medium">Number of Pax</label>
                       <input type="number" min="1" required value={item.pax} onChange={e => updateFormItem(index, 'pax', parseInt(e.target.value) || 1)} className={inputCls} />
                     </div>
                     <div>
-                      <label className="text-xs text-stone-600 block mb-1.5 font-medium">Number of therapists</label>
+                      <label className="text-xs text-stone-600 block mb-1.5 font-medium">Number of Therapists</label>
                       <input type="number" min="1" required value={item.therapists} onChange={e => updateFormItem(index, 'therapists', parseInt(e.target.value) || 1)} className={inputCls} />
                     </div>
                   </div>
@@ -1123,11 +941,11 @@ export default function TherapickBookingManagement({
                       <input type="number" required value={item.revenue} onChange={e => updateFormItem(index, 'revenue', parseInt(e.target.value) || 0)} className={cx(inputCls, 'tabular-nums')} />
                     </div>
                     <div>
-                      <label className="text-xs text-stone-600 block mb-1.5 font-medium">Therapist fee (IDR)</label>
+                      <label className="text-xs text-stone-600 block mb-1.5 font-medium">Therapist Fee (IDR)</label>
                       <input type="number" required value={item.fee} onChange={e => updateFormItem(index, 'fee', parseInt(e.target.value) || 0)} className={cx(inputCls, 'tabular-nums text-stone-600')} />
                     </div>
                     <div>
-                      <label className="text-xs text-stone-600 block mb-1.5 font-medium">Net profit (IDR)</label>
+                      <label className="text-xs text-stone-600 block mb-1.5 font-medium">Net Profit (IDR)</label>
                       <div className="h-9 px-3 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-800 text-xs font-semibold flex items-center tabular-nums">
                         {formatCurrency(item.revenue - item.fee)}
                       </div>
@@ -1139,26 +957,18 @@ export default function TherapickBookingManagement({
 
             {!isEditing && (
               <button type="button" onClick={addFormItem} className={cx(btn.base, btn.secondary, btn.sm, 'w-full')}>
-                <Plus size={14} /> Add another treatment
+                <Plus size={14} /> Add Another Treatment
               </button>
             )}
 
             <div className="pt-4 border-t border-stone-200 flex flex-col sm:flex-row justify-between items-center gap-4">
-              {formItems.length > 1 && (
-                <div className="text-xs text-stone-600">
-                  Total profit:{' '}
-                  <span className="font-semibold text-emerald-600 text-sm tabular-nums">
-                    {formatCurrency(formItems.reduce((acc, item) => acc + (item.revenue - item.fee), 0))}
-                  </span>
-                </div>
-              )}
               <div className="flex-1" />
               <div className="flex gap-2 w-full sm:w-auto">
                 <button type="button" onClick={() => setShowForm(false)} className={cx(btn.base, btn.secondary, btn.sm, 'flex-1 sm:flex-none')}>
                   Cancel
                 </button>
                 <button type="submit" className={cx(btn.base, btn.primary, btn.sm, 'flex-1 sm:flex-none')}>
-                  <Save size={14} /> Save booking
+                  <Save size={14} /> Save Booking
                 </button>
               </div>
             </div>
@@ -1166,953 +976,649 @@ export default function TherapickBookingManagement({
         </div>
       )}
 
-      {/* ─── CRM VIEW 1: DAY AGENDA (SPLIT CALENDAR + DAY STREAM) ─── */}
-      {viewMode === 'agenda' && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-start">
-          {/* Left Col: Calendar & Financial Summaries */}
-          <div className="lg:col-span-1 space-y-4">
-            <div className="bg-white/95 border border-stone-200/90 rounded-2xl p-4 sm:p-5 shadow-2xs">
-              <div className="flex items-center justify-between gap-2 mb-4">
-                <button
-                  type="button"
-                  onClick={handlePrevMonth}
-                  className={cx(btn.base, btn.secondary, btn.icon, 'h-8 w-8')}
-                  title="Previous month"
-                  aria-label="Previous month"
-                >
-                  <ChevronLeft size={16} />
-                </button>
-                <h3 className="font-bold text-sm md:text-base text-neutral-900">
-                  {monthNames[month]} {year}
-                </h3>
-                <button
-                  type="button"
-                  onClick={handleNextMonth}
-                  className={cx(btn.base, btn.secondary, btn.icon, 'h-8 w-8')}
-                  title="Next month"
-                  aria-label="Next month"
-                >
-                  <ChevronRight size={16} />
-                </button>
+      {/* ─── Main Content Split: Left Corner Calendar + Right Booking Cards ─── */}
+      <div className="flex flex-col lg:flex-row lg:items-start gap-5 lg:gap-6">
+
+        {/* ─── Mobile App Calendar Header Bar (< lg) ─── */}
+        <div className="lg:hidden w-full flex items-center justify-between p-3.5 rounded-2xl bg-white border border-[#eaecf0] shadow-xs">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-9 h-9 rounded-xl bg-[#f8fafc] border border-[#eaecf0] flex items-center justify-center text-[#0f172a] shrink-0">
+              <CalendarIcon size={16} />
+            </div>
+            <div className="min-w-0">
+              <div className="font-bold text-xs text-[#0f172a] truncate">
+                {MONTH_NAMES[currentMonth]} {currentYear}
               </div>
-
-              <div className="grid grid-cols-7 gap-1 text-center mb-1.5">
-                {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((d) => (
-                  <div key={d} className="text-[11px] font-bold text-stone-400 uppercase py-1">
-                    {d}
-                  </div>
-                ))}
-              </div>
-
-              <div className="grid grid-cols-7 gap-1">
-                {Array.from({ length: firstDay }).map((_, i) => (
-                  <div key={`empty-${i}`} className="h-9 w-full" />
-                ))}
-                {Array.from({ length: daysInMonth }).map((_, i) => {
-                  const day = i + 1;
-                  const d = new Date(year, month, day);
-                  const isoString = toLocalDateString(d);
-                  const isSelected = isoString === selectedDate;
-                  const isToday = isoString === toLocalDateString(new Date());
-                  
-                  const bookingsForThisDay = monthBookings.filter((b) => b.booking_date === isoString && b.status?.toLowerCase() !== 'cancelled');
-                  const paxCount = bookingsForThisDay.reduce((sum, b) => sum + b.pax, 0);
-                  const dayRev = bookingsForThisDay.reduce((sum, b) => sum + (b.revenue || 0), 0);
-                  const dayProfit = bookingsForThisDay.reduce((sum, b) => sum + (b.net_profit || 0), 0);
-                  const dayComm = bookingsForThisDay.reduce((sum, b) => {
-                    const c = b.commission;
-                    return (c && (c.status === 'approved' || c.status === 'paid')) ? sum + Number(c.commission_amount || 0) : sum;
-                  }, 0);
-
-                  return (
-                    <div key={day} className="relative flex justify-center">
-                      <button
-                        type="button"
-                        onClick={() => selectDate(day)}
-                        title={bookingsForThisDay.length > 0 
-                          ? `${isoString} · ${bookingsForThisDay.length} bookings (${paxCount} pax)\nRevenue: ${formatCurrency(dayRev)}\nProfit: ${formatCurrency(dayProfit)}\nCommission: ${formatCurrency(dayComm)}`
-                          : isoString}
-                        className={cx(
-                          'h-9 w-full rounded-xl flex items-center justify-center text-xs transition-all relative font-medium cursor-pointer',
-                          isSelected
-                            ? 'bg-neutral-900 text-white font-bold shadow-xs'
-                            : isToday
-                            ? 'border-2 border-amber-400 text-neutral-900 font-bold bg-amber-50/40'
-                            : 'hover:bg-stone-100 text-neutral-900'
-                        )}
-                      >
-                        {day}
-                        {paxCount > 0 && (
-                          <span
-                            className={cx(
-                              'absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full',
-                              isSelected ? 'bg-amber-300' : 'bg-emerald-500'
-                            )}
-                          />
-                        )}
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Selected Date Financial Summary under Calendar */}
-              <div className="mt-4 pt-3.5 border-t border-stone-200/80 space-y-2">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-bold text-neutral-900">
-                    {new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} Summary
-                  </span>
-                  <span className="text-[11px] text-stone-500 font-mono">
-                    {dailyBookings.length} {dailyBookings.length === 1 ? 'booking' : 'bookings'}
-                  </span>
-                </div>
-                <div className="grid grid-cols-3 gap-1.5 text-center bg-stone-50 rounded-xl p-2.5 border border-stone-200/80">
-                  <div className="min-w-0">
-                    <div className="text-[10px] text-stone-500 font-bold uppercase truncate">Revenue</div>
-                    <div className="text-xs font-bold text-neutral-900 mt-0.5 tabular-nums truncate" title={formatCurrency(totalDailyRevenue)}>{formatCurrency(totalDailyRevenue)}</div>
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-[10px] text-stone-500 font-bold uppercase truncate">Profit</div>
-                    <div className="text-xs font-bold text-emerald-600 mt-0.5 tabular-nums truncate" title={formatCurrency(totalDailyProfit)}>{formatCurrency(totalDailyProfit)}</div>
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-[10px] text-stone-500 font-bold uppercase truncate">Commission</div>
-                    <div className="text-xs font-bold text-indigo-600 mt-0.5 tabular-nums truncate" title={formatCurrency(totalDailyCommission)}>{formatCurrency(totalDailyCommission)}</div>
-                  </div>
-                </div>
+              <div className="text-[11px] text-[#64748b] font-mono truncate">
+                {monthBookings.length} bookings · {formatCurrency(monthlyMetrics.totalRevenue)}
               </div>
             </div>
           </div>
-
-          {/* Right Col: Bookings for Selected Date */}
-          <div className="lg:col-span-2 space-y-3.5">
-            {/* Date Header Strip */}
-            <div className="bg-white/90 border border-stone-200/80 rounded-2xl px-4 py-2.5 flex items-center justify-between gap-3 shadow-2xs">
-              <div className="flex items-center gap-2">
-                {/* Quick Date Jumper: Prev, Today, Next */}
-                <div className="inline-flex items-center gap-1 bg-stone-100 p-0.5 rounded-full border border-stone-200">
-                  <button 
-                    type="button" 
-                    onClick={handlePrevDay} 
-                    className="w-7 h-7 rounded-full bg-white text-stone-700 hover:text-neutral-900 flex items-center justify-center shadow-2xs cursor-pointer active:scale-95"
-                    title="Previous Day"
-                  >
-                    <ChevronLeft size={13} />
-                  </button>
-                  <button 
-                    type="button" 
-                    onClick={handleToday} 
-                    className={cx(
-                      'px-3 py-1 rounded-full text-xs font-semibold cursor-pointer transition-all',
-                      selectedDate === toLocalDateString(new Date()) 
-                        ? 'bg-neutral-900 text-white shadow-xs' 
-                        : 'text-stone-600 hover:text-neutral-900 hover:bg-white/80'
-                    )}
-                    title="Jump to Today"
-                  >
-                    Today
-                  </button>
-                  <button 
-                    type="button" 
-                    onClick={handleNextDay} 
-                    className="w-7 h-7 rounded-full bg-white text-stone-700 hover:text-neutral-900 flex items-center justify-center shadow-2xs cursor-pointer active:scale-95"
-                    title="Next Day"
-                  >
-                    <ChevronRight size={13} />
-                  </button>
-                </div>
-
-                <h3 className="text-sm font-bold text-neutral-900 ml-1">
-                  {new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
-                </h3>
-                <CountPill>{filteredDailyBookings.length}</CountPill>
-              </div>
-
-              <div className="text-xs text-stone-500 font-mono">
-                {filteredDailyBookings.reduce((sum, b) => sum + (b.pax || 1), 0)} Guests Total
-              </div>
-            </div>
-
-            {isLoading ? (
-              <div className="flex justify-center py-16"><div className="w-8 h-8 border-2 border-neutral-900 border-t-transparent rounded-full animate-spin"></div></div>
-            ) : filteredDailyBookings.length === 0 ? (
-              <div className="bg-white border border-stone-200/90 rounded-2xl shadow-2xs">
-                <EmptyState 
-                  title="No bookings scheduled for this date" 
-                  description={`No appointments logged for ${new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' })}.`}
-                  action={
-                    !showForm && (
-                      <button 
-                        type="button" 
-                        onClick={() => { resetForm(); setShowForm(true); }}
-                        className={cx(btn.base, btn.primary, btn.sm)}
-                      >
-                        <Plus size={14} /> Add booking
-                      </button>
-                    )
-                  }
-                />
-              </div>
-            ) : (
-              <div className="space-y-2.5">
-                {filteredDailyBookings.map(booking => {
-                  let title = booking.treatment_name;
-                  const match = title.match(/(.*) \((.*)\)$/);
-                  if (match) {
-                    title = match[1];
-                  }
-
-                  const bookingStatus = booking.status || 'Pending';
-                  const isCancelled = bookingStatus.toLowerCase() === 'cancelled';
-                  const paymentStatus = booking.payment_status || (booking.commission?.payment_verified ? 'Paid' : 'Unpaid');
-                  const isPaid = paymentStatus.toLowerCase() === 'paid';
-                  const treatmentStatus = booking.treatment_status || (booking.commission?.service_completed ? 'Finished' : 'Scheduled');
-                  const isSelected = selectedBookingId === booking.id;
-
-                  return (
-                    <div 
-                      key={booking.id} 
-                      onClick={() => setSelectedBookingId(booking.id)}
-                      className={cx(
-                        'rounded-2xl p-3.5 sm:p-4 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer',
-                        isSelected
-                          ? 'bg-amber-300 text-neutral-950 font-medium border border-amber-400 shadow-sm'
-                          : isCancelled
-                          ? 'bg-rose-50/40 border border-rose-200'
-                          : 'bg-white/95 border border-stone-200/90 hover:border-amber-300 hover:bg-stone-50/50 shadow-2xs'
-                      )}
-                    >
-                      {/* Left: Booking ID + Guest + Badges + Treatment */}
-                      <div className="min-w-0 space-y-1.5 flex-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          {/* Booking ID Pill */}
-                          <span
-                            className={cx(
-                              'font-mono text-xs font-bold px-2 py-0.5 rounded-full border transition-colors inline-flex items-center gap-1',
-                              isSelected
-                                ? 'bg-neutral-900 text-white border-neutral-900'
-                                : 'bg-stone-100 text-neutral-900 border-stone-200'
-                            )}
-                          >
-                            <span>#{booking.reference_number || booking.id.substring(0, 8)}</span>
-                          </span>
-
-                          {/* Customer Name */}
-                          <span className={cx(
-                            'font-bold text-sm truncate',
-                            isSelected ? 'text-neutral-950' : 'text-neutral-900'
-                          )}>
-                            {booking.guest_name || 'Guest'}
-                          </span>
-
-                          {/* 1. Booking Status Badge */}
-                          <span className={cx(
-                            'text-[10px] font-semibold px-2 py-0.5 rounded-full border',
-                            isSelected
-                              ? 'bg-white/90 text-neutral-900 border-neutral-900/20'
-                              : bookingStatus.toLowerCase() === 'cancelled'
-                              ? 'text-rose-700 bg-rose-50 border-rose-200'
-                              : bookingStatus.toLowerCase() === 'pending'
-                              ? 'text-amber-800 bg-amber-50 border-amber-200'
-                              : bookingStatus.toLowerCase() === 'approved'
-                              ? 'text-emerald-800 bg-emerald-50 border-emerald-200'
-                              : 'text-sky-800 bg-sky-50 border-sky-200'
-                          )}>
-                            {bookingStatus}
-                          </span>
-
-                          {/* 2. Treatment Progress Badge */}
-                          <span className={cx(
-                            'text-[10px] font-semibold px-2 py-0.5 rounded-full border flex items-center gap-1',
-                            isSelected
-                              ? 'bg-white/90 text-neutral-900 border-neutral-900/20'
-                              : treatmentStatus.toLowerCase() === 'finished'
-                              ? 'text-teal-800 bg-teal-50 border-teal-200'
-                              : treatmentStatus.toLowerCase() === 'in progress'
-                              ? 'text-indigo-800 bg-indigo-50 border-indigo-200'
-                              : 'text-stone-600 bg-stone-100 border-stone-200'
-                          )}>
-                            {treatmentStatus.toLowerCase() === 'in progress' && (
-                              <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
-                            )}
-                            {treatmentStatus}
-                          </span>
-
-                          {/* 3. Payment Status Badge */}
-                          <span className={cx(
-                            'text-[10px] font-semibold px-2 py-0.5 rounded-full border',
-                            isSelected
-                              ? 'bg-white/90 text-neutral-900 border-neutral-900/20'
-                              : isPaid
-                              ? 'text-emerald-800 bg-emerald-50 border-emerald-200'
-                              : 'text-amber-800 bg-amber-50 border-amber-200'
-                          )}>
-                            {paymentStatus}
-                          </span>
-
-                          {/* 4. Attribution Badge */}
-                          {booking.commission ? (
-                            <div className="inline-flex items-center gap-1">
-                              <span className={cx(
-                                'text-[10px] font-mono font-medium px-2 py-0.5 rounded-full border',
-                                isSelected ? 'bg-white/90 text-neutral-900 border-neutral-900/20' : 'bg-white text-neutral-900 border-stone-200'
-                              )}>
-                                #{booking.commission.partner_code}
-                              </span>
-                              <span className={cx(
-                                'text-[10px] font-bold px-2 py-0.5 rounded-full tabular-nums',
-                                isSelected ? 'bg-neutral-900 text-white' : 'text-indigo-700 bg-indigo-50 border border-indigo-200'
-                              )}>
-                                +{formatCurrency(booking.commission.commission_amount || 0)}
-                              </span>
-                            </div>
-                          ) : (
-                            <span className={cx(
-                              'text-[10px] font-medium px-2 py-0.5 rounded-full border',
-                              isSelected ? 'bg-white/90 text-neutral-900 border-neutral-900/20' : 'text-stone-600 bg-stone-100 border-stone-200'
-                            )}>
-                              Direct
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Treatment Name & Location */}
-                        <div className="flex items-center gap-2 text-xs truncate">
-                          <span className={cx(
-                            'font-semibold truncate',
-                            isSelected ? 'text-neutral-900' : 'text-neutral-800'
-                          )}>
-                            {title}
-                          </span>
-                          <span className={isSelected ? 'text-neutral-700' : 'text-stone-400'}>·</span>
-                          <span className={cx(
-                            'font-mono text-[11px] truncate',
-                            isSelected ? 'text-neutral-800' : 'text-stone-500'
-                          )}>
-                            {booking.location || 'Ubud'}{booking.room_number ? `, Room ${booking.room_number}` : ''}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Right: Actions CTA (Track + Details) */}
-                      <div className="shrink-0 flex items-center gap-1.5 self-end sm:self-auto">
-                        {/* Eye-catching Track Button */}
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setTrackingBooking(toCalendarBooking(booking));
-                          }}
-                          className={cx(
-                            btn.base,
-                            isSelected 
-                              ? 'bg-neutral-900 text-white border-neutral-900 shadow-xs' 
-                              : 'bg-emerald-50 text-emerald-800 border border-emerald-300 hover:bg-emerald-100 hover:border-emerald-400',
-                            btn.xs,
-                            'gap-1 rounded-full font-bold transition-all'
-                          )}
-                          title="Track appointment schedule and status history"
-                        >
-                          <Compass size={12} className={isSelected ? 'text-amber-300' : 'text-emerald-600'} />
-                          <span>Track</span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedBookingId(booking.id);
-                          }}
-                          className={cx(
-                            btn.base,
-                            isSelected ? 'bg-neutral-900 text-white border-neutral-900 shadow-xs' : btn.secondary,
-                            btn.xs,
-                            'gap-1 rounded-full'
-                          )}
-                          title="View complete booking details"
-                        >
-                          <span>Details</span>
-                          <ChevronRight size={13} />
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* ─── CRM VIEW 2: MASTER CRM TABLE (EXPANSIVE DATA GRID) ─── */}
-      {viewMode === 'table' && (
-        <div className="bg-white/95 border border-stone-200/90 rounded-2xl overflow-hidden shadow-2xs">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs">
-              <thead className="bg-stone-50 border-b border-stone-200/80 font-mono text-[10px] uppercase tracking-wider text-stone-500">
-                <tr>
-                  <th className="py-3 px-4 font-bold">Booking Ref</th>
-                  <th className="py-3 px-4 font-bold">Date & Time</th>
-                  <th className="py-3 px-4 font-bold">Guest</th>
-                  <th className="py-3 px-4 font-bold">Treatment</th>
-                  <th className="py-3 px-4 font-bold">Status</th>
-                  <th className="py-3 px-4 font-bold">Progress</th>
-                  <th className="py-3 px-4 font-bold">Payment</th>
-                  <th className="py-3 px-4 font-bold text-right">Revenue</th>
-                  <th className="py-3 px-4 font-bold text-right">Profit</th>
-                  <th className="py-3 px-4 font-bold">Attribution</th>
-                  <th className="py-3 px-4 font-bold text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-stone-100">
-                {isLoading ? (
-                  <tr>
-                    <td colSpan={11} className="py-12 text-center text-stone-400">
-                      <div className="w-6 h-6 border-2 border-neutral-900 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
-                      Loading bookings...
-                    </td>
-                  </tr>
-                ) : filteredMonthBookings.length === 0 ? (
-                  <tr>
-                    <td colSpan={11} className="py-12 text-center text-stone-400">
-                      No bookings matching current filter for this month.
-                    </td>
-                  </tr>
-                ) : (
-                  filteredMonthBookings.map((b) => {
-                    const isSelected = selectedBookingId === b.id;
-                    const bookingStatus = b.status || 'Pending';
-                    const treatmentStatus = b.treatment_status || 'Scheduled';
-                    const paymentStatus = b.payment_status || 'Unpaid';
-
-                    return (
-                      <tr
-                        key={b.id}
-                        onClick={() => setSelectedBookingId(b.id)}
-                        className={cx(
-                          'transition-colors cursor-pointer',
-                          isSelected
-                            ? 'bg-amber-100/80 font-medium'
-                            : 'hover:bg-stone-50/80'
-                        )}
-                      >
-                        {/* Ref # */}
-                        <td className="py-3 px-4 font-mono font-bold text-neutral-900 whitespace-nowrap">
-                          #{b.reference_number || b.id.substring(0, 8)}
-                        </td>
-
-                        {/* Date & Time */}
-                        <td className="py-3 px-4 whitespace-nowrap text-stone-600 font-mono text-[11px]">
-                          <div>{safeFormatDate(b.booking_date)}</div>
-                          <div className="text-stone-400 text-[10px]">{b.time || '-'}</div>
-                        </td>
-
-                        {/* Guest */}
-                        <td className="py-3 px-4 whitespace-nowrap font-bold text-neutral-900">
-                          {b.guest_name || 'Guest'}
-                          {b.pax > 1 && <span className="ml-1 text-[10px] text-stone-400 font-normal">({b.pax}p)</span>}
-                        </td>
-
-                        {/* Treatment */}
-                        <td className="py-3 px-4 max-w-[200px] truncate text-neutral-800">
-                          <span className="font-medium truncate block">{b.treatment_name}</span>
-                          <span className="text-[10px] text-stone-400 font-mono">{b.location || 'Ubud'}</span>
-                        </td>
-
-                        {/* Booking Status Dropdown */}
-                        <td className="py-3 px-4 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
-                          <select
-                            value={bookingStatus}
-                            onChange={(e) => updateBookingStatus(b.id, e.target.value)}
-                            className={cx(
-                              'text-[10px] font-bold uppercase rounded-full px-2 py-0.5 border cursor-pointer focus:outline-none',
-                              bookingStatus.toLowerCase() === 'confirmed'
-                                ? 'bg-sky-50 text-sky-800 border-sky-300'
-                                : bookingStatus.toLowerCase() === 'cancelled'
-                                ? 'bg-rose-50 text-rose-800 border-rose-300'
-                                : 'bg-amber-50 text-amber-800 border-amber-300'
-                            )}
-                          >
-                            <option value="Pending">Pending</option>
-                            <option value="Confirmed">Confirmed</option>
-                            <option value="Approved">Approved</option>
-                            <option value="Cancelled">Cancelled</option>
-                          </select>
-                        </td>
-
-                        {/* Progress Dropdown */}
-                        <td className="py-3 px-4 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
-                          <select
-                            value={treatmentStatus}
-                            onChange={(e) => updateTreatmentStatus(b.id, e.target.value)}
-                            className={cx(
-                              'text-[10px] font-bold uppercase rounded-full px-2 py-0.5 border cursor-pointer focus:outline-none',
-                              treatmentStatus.toLowerCase() === 'finished'
-                                ? 'bg-teal-50 text-teal-800 border-teal-300'
-                                : treatmentStatus.toLowerCase() === 'in progress'
-                                ? 'bg-indigo-50 text-indigo-800 border-indigo-300'
-                                : 'bg-stone-100 text-stone-600 border-stone-200'
-                            )}
-                          >
-                            <option value="Scheduled">Scheduled</option>
-                            <option value="In Progress">In Progress</option>
-                            <option value="Finished">Finished</option>
-                          </select>
-                        </td>
-
-                        {/* Payment Dropdown */}
-                        <td className="py-3 px-4 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
-                          <select
-                            value={paymentStatus}
-                            onChange={(e) => updatePaymentStatus(b.id, e.target.value)}
-                            className={cx(
-                              'text-[10px] font-bold uppercase rounded-full px-2 py-0.5 border cursor-pointer focus:outline-none',
-                              paymentStatus.toLowerCase() === 'paid'
-                                ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
-                                : 'bg-amber-50 text-amber-800 border-amber-300'
-                            )}
-                          >
-                            <option value="Unpaid">Unpaid</option>
-                            <option value="Paid">Paid</option>
-                          </select>
-                        </td>
-
-                        {/* Revenue */}
-                        <td className="py-3 px-4 whitespace-nowrap text-right font-mono font-bold text-neutral-900 tabular-nums">
-                          {formatCurrency(b.revenue)}
-                        </td>
-
-                        {/* Profit */}
-                        <td className="py-3 px-4 whitespace-nowrap text-right font-mono font-bold text-emerald-600 tabular-nums">
-                          {formatCurrency(b.net_profit)}
-                        </td>
-
-                        {/* Attribution */}
-                        <td className="py-3 px-4 whitespace-nowrap">
-                          {b.commission ? (
-                            <span className="font-mono text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded-full">
-                              #{b.commission.partner_code}
-                            </span>
-                          ) : (
-                            <span className="text-[10px] font-medium text-stone-400">
-                              Direct
-                            </span>
-                          )}
-                        </td>
-
-                        {/* Actions */}
-                        <td className="py-3 px-4 whitespace-nowrap text-right" onClick={(e) => e.stopPropagation()}>
-                          <div className="inline-flex items-center gap-1.5">
-                            <button
-                              type="button"
-                              onClick={() => setTrackingBooking(toCalendarBooking(b))}
-                              className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-800 border border-emerald-300 hover:bg-emerald-100 transition-colors inline-flex items-center gap-1 cursor-pointer"
-                              title="Track schedule"
-                            >
-                              <Compass size={11} className="text-emerald-600" />
-                              <span>Track</span>
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={() => setSelectedBookingId(b.id)}
-                              className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-stone-100 text-stone-700 hover:bg-stone-200 transition-colors cursor-pointer"
-                              title="View details"
-                            >
-                              Details
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* ─── Schedule Tracking History Modal ─── */}
-      <ScheduleTrackingModal
-        booking={trackingBooking}
-        onClose={() => setTrackingBooking(null)}
-      />
-
-      {/* Complete Booking Details Modal (Opened when clicking Booking ID) */}
-      {selectedBooking && (
-        <div 
-          className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-150"
-          onClick={() => setSelectedBookingId(null)}
-        >
-          <div 
-            className="bg-white border border-[#E5E5E5] rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl space-y-0 my-8"
-            onClick={(e) => e.stopPropagation()}
+          <button
+            type="button"
+            onClick={() => setShowMobileCalendar(!showMobileCalendar)}
+            className="px-3.5 py-1.5 rounded-full bg-[#f1f5f9] hover:bg-[#e2e8f0] border border-[#e2e8f0] text-xs font-medium text-[#0f172a] shrink-0 active:scale-95 transition-all cursor-pointer"
           >
-            {/* Modal Header */}
-            <div className="p-4 sm:p-5 border-b border-[#E5E5E5] flex items-center justify-between gap-3 bg-[#FAFAFA]">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="font-mono text-xs font-semibold text-black bg-white px-2.5 py-1 rounded-md border border-[#E5E5E5]">
-                  #{selectedBooking.reference_number || selectedBooking.id.substring(0, 8)}
-                </span>
-                {selectedBooking.reference_number && (
-                  <button
-                    type="button"
-                    onClick={() => handleCopy(selectedBooking.reference_number!)}
-                    className={cx(btn.base, btn.secondary, btn.icon, 'h-7 w-7 text-[#737373]')}
-                    title="Copy reference number"
-                  >
-                    {copiedId === selectedBooking.reference_number ? (
-                      <Check size={12} className="text-emerald-600" />
-                    ) : (
-                      <Copy size={12} />
-                    )}
-                  </button>
-                )}
-                <span className="text-xs text-[#737373] bg-white px-2 py-1 rounded-md border border-[#E5E5E5]">
-                  {selectedBooking.pax} Pax
-                </span>
-                {selectedBooking.time && selectedBooking.time !== '-' && (
-                  <span className="text-xs text-[#737373] bg-white px-2 py-1 rounded-md border border-[#E5E5E5] flex items-center gap-1">
-                    <Clock size={11} className="text-[#737373]" />
-                    {selectedBooking.time}
-                  </span>
-                )}
-              </div>
+            {showMobileCalendar ? 'Hide' : 'Calendar ▾'}
+          </button>
+        </div>
+
+        {/* ═══════════════════════════════════════════════════════════════
+            LEFT CORNER: Modern Compact Calendar Widget (Exact Partner Portal Style)
+           ═══════════════════════════════════════════════════════════════ */}
+        <aside className={`w-full lg:w-[285px] xl:w-[300px] shrink-0 space-y-3.5 lg:sticky lg:top-4 self-start ${showMobileCalendar ? 'block' : 'hidden lg:block'}`}>
+          
+          {/* Calendar Card Box */}
+          <div className="bg-white border border-[#eaecf0] rounded-2xl p-4.5 sm:p-5 shadow-xs">
+            
+            {/* Header: Prev chevron | Calendar Icon + Month Year | Next chevron */}
+            <div className="flex items-center justify-between gap-2 mb-4">
               <button
                 type="button"
-                onClick={() => setSelectedBookingId(null)}
-                className="h-8 w-8 rounded-lg text-[#737373] hover:text-black hover:bg-[#F0F0F0] flex items-center justify-center transition-colors cursor-pointer"
-                aria-label="Close details"
+                onClick={handlePrevMonth}
+                className="w-9 h-9 rounded-xl border border-[#eaecf0] bg-white hover:bg-[#f8fafc] hover:border-[#cbd5e1] flex items-center justify-center text-[#334155] transition-all cursor-pointer shadow-2xs active:scale-95"
+                title="Previous month"
               >
-                <X size={16} />
+                <ChevronLeft size={16} strokeWidth={2.2} />
+              </button>
+
+              <div className="flex items-center gap-2">
+                <CalendarIcon size={17} className="text-[#0f172a]" strokeWidth={2} />
+                <span className="font-bold text-base sm:text-[17px] text-[#0f172a] tracking-tight">
+                  {MONTH_NAMES[currentMonth]} {currentYear}
+                </span>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleNextMonth}
+                className="w-9 h-9 rounded-xl border border-[#eaecf0] bg-white hover:bg-[#f8fafc] hover:border-[#cbd5e1] flex items-center justify-center text-[#334155] transition-all cursor-pointer shadow-2xs active:scale-95"
+                title="Next month"
+              >
+                <ChevronRight size={16} strokeWidth={2.2} />
               </button>
             </div>
 
-            {/* Modal Content */}
-            <div className="p-5 sm:p-6 space-y-5 max-h-[75vh] overflow-y-auto">
-              {/* Customer & Operational Status Controls */}
-              <div className="p-4 rounded-xl border border-[#E5E5E5] bg-white space-y-3.5">
-                <div className="flex items-center justify-between flex-wrap gap-2">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-[#F5F5F5] border border-[#E5E5E5] flex items-center justify-center text-black">
-                      <User size={15} />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-sm text-black">
-                        {selectedBooking.guest_name || 'Guest'}
-                      </h4>
-                      <p className="text-xs text-[#737373]">
-                        {selectedBooking.guest_whatsapp || selectedBooking.guest_email || 'Customer Details'}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Summary Status Badges */}
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-[11px] font-medium px-2 py-0.5 rounded border text-black bg-[#FAFAFA] border-[#E5E5E5]">
-                      {selectedBooking.status || 'Pending'}
-                    </span>
-                    <span className="text-[11px] font-medium px-2 py-0.5 rounded border text-indigo-700 bg-indigo-50 border-indigo-200">
-                      {selectedBooking.treatment_status || 'Scheduled'}
-                    </span>
-                    <span className="text-[11px] font-medium px-2 py-0.5 rounded border text-emerald-700 bg-emerald-50 border-emerald-200">
-                      {selectedBooking.payment_status || 'Unpaid'}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Independent Status Control Panel */}
-                <div className="pt-3 border-t border-[#E5E5E5] grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  {/* 1. Booking Status */}
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-semibold uppercase tracking-wider text-[#737373] block">
-                      Booking Status
-                    </label>
-                    <select
-                      value={selectedBooking.status || 'Pending'}
-                      onChange={(e) => updateBookingStatus(selectedBooking.id, e.target.value)}
-                      className="w-full bg-white border border-[#E5E5E5] rounded-lg px-2.5 py-1.5 text-xs font-medium text-black focus:outline-none focus:border-black cursor-pointer"
-                    >
-                      <option value="Pending">Pending</option>
-                      <option value="Approved">Approved</option>
-                      <option value="Confirmed">Confirmed</option>
-                      <option value="Cancelled">Cancelled</option>
-                    </select>
-                  </div>
-
-                  {/* 2. Treatment Progress */}
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-semibold uppercase tracking-wider text-[#737373] block">
-                      Treatment Progress
-                    </label>
-                    <select
-                      value={selectedBooking.treatment_status || 'Scheduled'}
-                      onChange={(e) => updateTreatmentStatus(selectedBooking.id, e.target.value)}
-                      className="w-full bg-white border border-[#E5E5E5] rounded-lg px-2.5 py-1.5 text-xs font-medium text-black focus:outline-none focus:border-black cursor-pointer"
-                    >
-                      <option value="Scheduled">Scheduled</option>
-                      <option value="Therapist Assigned">Therapist Assigned</option>
-                      <option value="On the Way">On the Way</option>
-                      <option value="Arrived">Arrived</option>
-                      <option value="In Progress">In Progress</option>
-                      <option value="Finished">Finished</option>
-                      <option value="No Show">No Show</option>
-                    </select>
-                  </div>
-
-                  {/* 3. Payment Status & Method */}
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-semibold uppercase tracking-wider text-[#737373] block">
-                      Payment Status & Method
-                    </label>
-                    <div className="grid grid-cols-2 gap-1.5">
-                      <select
-                        value={selectedBooking.payment_status || 'Unpaid'}
-                        onChange={(e) => updatePaymentStatus(selectedBooking.id, e.target.value, selectedBooking.payment_method)}
-                        className="w-full bg-white border border-[#E5E5E5] rounded-lg px-2 py-1.5 text-xs font-medium text-black focus:outline-none focus:border-black cursor-pointer"
-                      >
-                        <option value="Unpaid">Unpaid</option>
-                        <option value="Partially Paid">Partially Paid</option>
-                        <option value="Paid">Paid</option>
-                        <option value="Refunded">Refunded</option>
-                        <option value="Payment Failed">Payment Failed</option>
-                      </select>
-                      <select
-                        value={selectedBooking.payment_method || 'Cash'}
-                        onChange={(e) => updatePaymentStatus(selectedBooking.id, selectedBooking.payment_status || 'Unpaid', e.target.value)}
-                        className="w-full bg-white border border-[#E5E5E5] rounded-lg px-2 py-1.5 text-xs font-medium text-black focus:outline-none focus:border-black cursor-pointer"
-                      >
-                        <option value="Cash">Cash</option>
-                        <option value="Online">Online</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-
-                {selectedBooking.location && (
-                  <div className="text-xs text-[#737373] flex items-center gap-1.5 pt-2 border-t border-[#F0F0F0]">
-                    <MapPin size={13} className="text-[#737373] shrink-0" />
-                    <span>{selectedBooking.location}{selectedBooking.room_number ? `, Room ${selectedBooking.room_number}` : ''}</span>
-                  </div>
-                )}
-              </div>
-
-              {/* Treatments List */}
-              <div className="space-y-2">
-                <span className="text-xs font-semibold uppercase tracking-wider text-[#737373] block">
-                  Treatments & Rituals
+            {/* Weekdays Row: Mon, Tues, Wed, Thurs, Fri, Sat, Sun */}
+            <div className="grid grid-cols-7 gap-1 text-center py-2 border-b border-[#f1f5f9] mb-3">
+              {WEEKDAY_NAMES.map((name) => (
+                <span
+                  key={name}
+                  className="text-[11px] font-semibold text-[#94a3b8] select-none tracking-tight"
+                >
+                  {name}
                 </span>
-                <div className="p-4 rounded-xl border border-[#E5E5E5] bg-[#FAFAFA] space-y-3">
-                  {selectedBooking.items && selectedBooking.items.length > 0 ? (
-                    selectedBooking.items.map((it: any, idx: number) => {
-                      const isCouple = isCouplePackage(it.title);
-                      return (
-                        <div key={idx} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 border-b border-[#E5E5E5] last:pb-0 last:border-b-0">
-                          <div>
-                            <p className="font-semibold text-sm text-black">
-                              {it.title} {isCouple ? '(Couple Package)' : it.guests > 1 ? `(x${it.guests})` : ''}
-                            </p>
-                            <p className="text-xs text-[#737373] mt-0.5">
-                              Duration: {it.duration} Mins • {isCouple ? '2 Therapists Assigned' : `${it.guests || 1} Therapist Assigned`}
-                            </p>
-                          </div>
+              ))}
+            </div>
+
+            {/* Calendar Day Grid (7 columns with Circular Date Pills) */}
+            <div className="grid grid-cols-7 gap-y-2.5 gap-x-1 place-items-center">
+              {calendarDays.map((cell, idx) => {
+                const isSelected = selectedDate === cell.dateStr;
+
+                // Non-current month styling
+                if (!cell.isCurrentMonth) {
+                  return (
+                    <div
+                      key={`pad-${idx}`}
+                      className="w-8 h-8 sm:w-8.5 sm:h-8.5 flex items-center justify-center text-xs text-[#cbd5e1] font-normal select-none"
+                    >
+                      {cell.dayNumber}
+                    </div>
+                  );
+                }
+
+                // Selected Date Style (Vibrant Blue with ring)
+                if (isSelected) {
+                  return (
+                    <button
+                      key={cell.dateStr}
+                      type="button"
+                      onClick={() => setSelectedDate(null)}
+                      title={`${safeFormatDate(cell.dateStr)} (Selected - Click to clear)`}
+                      className="w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-full bg-[#2563eb] text-white font-bold text-xs sm:text-[13px] flex items-center justify-center ring-4 ring-[#2563eb]/25 shadow-xs scale-105 transition-all cursor-pointer"
+                    >
+                      {cell.dayNumber}
+                    </button>
+                  );
+                }
+
+                // Status Circular Pills matching Partner Portal
+                if (cell.statusStyle === 'paid') {
+                  // Soft Blue (Paid Out / Disbursed)
+                  return (
+                    <button
+                      key={cell.dateStr}
+                      type="button"
+                      onClick={() => setSelectedDate(cell.dateStr)}
+                      title={`${cell.bookings.length} Paid booking(s) on ${safeFormatDate(cell.dateStr)}`}
+                      className="w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-full bg-[#e0ecff] text-[#1d4ed8] font-bold text-xs sm:text-[13px] flex items-center justify-center hover:ring-2 hover:ring-[#2563eb]/30 transition-all cursor-pointer"
+                    >
+                      {cell.dayNumber}
+                    </button>
+                  );
+                }
+
+                if (cell.statusStyle === 'confirmed') {
+                  // Soft Green (Confirmed / Finished)
+                  return (
+                    <button
+                      key={cell.dateStr}
+                      type="button"
+                      onClick={() => setSelectedDate(cell.dateStr)}
+                      title={`${cell.bookings.length} Confirmed booking(s) on ${safeFormatDate(cell.dateStr)}`}
+                      className="w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-full bg-[#dcfce7] text-[#15803d] font-bold text-xs sm:text-[13px] flex items-center justify-center hover:ring-2 hover:ring-[#16a34a]/30 transition-all cursor-pointer"
+                    >
+                      {cell.dayNumber}
+                    </button>
+                  );
+                }
+
+                if (cell.statusStyle === 'ongoing') {
+                  // Soft Orange/Amber (In Ritual / Pending)
+                  return (
+                    <button
+                      key={cell.dateStr}
+                      type="button"
+                      onClick={() => setSelectedDate(cell.dateStr)}
+                      title={`${cell.bookings.length} Active booking(s) on ${safeFormatDate(cell.dateStr)}`}
+                      className="w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-full bg-[#fef3c7] text-[#b45309] font-bold text-xs sm:text-[13px] flex items-center justify-center hover:ring-2 hover:ring-[#d97706]/30 transition-all cursor-pointer"
+                    >
+                      {cell.dayNumber}
+                    </button>
+                  );
+                }
+
+                if (cell.statusStyle === 'cancelled') {
+                  // Soft Rose/Red (Cancelled)
+                  return (
+                    <button
+                      key={cell.dateStr}
+                      type="button"
+                      onClick={() => setSelectedDate(cell.dateStr)}
+                      title={`${cell.bookings.length} Cancelled booking(s) on ${safeFormatDate(cell.dateStr)}`}
+                      className="w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-full bg-[#fee2e2] text-[#b91c1c] font-bold text-xs sm:text-[13px] flex items-center justify-center hover:ring-2 hover:ring-[#ef4444]/30 transition-all cursor-pointer"
+                    >
+                      {cell.dayNumber}
+                    </button>
+                  );
+                }
+
+                // Regular Day Number without bookings
+                return (
+                  <button
+                    key={cell.dateStr}
+                    type="button"
+                    onClick={() => setSelectedDate(cell.dateStr)}
+                    className={`w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-full text-xs sm:text-[13px] font-medium flex items-center justify-center transition-all cursor-pointer ${
+                      cell.isToday
+                        ? 'border-2 border-[#0f172a] font-bold text-[#0f172a]'
+                        : 'text-[#334155] hover:bg-[#f1f5f9]'
+                    }`}
+                  >
+                    {cell.dayNumber}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Calendar Legend: 4 Colored Statuses */}
+            <div className="pt-3.5 mt-3.5 border-t border-[#f1f5f9] grid grid-cols-2 gap-2 text-[11px] text-[#64748b]">
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#2563eb] shrink-0" />
+                <span className="font-medium text-[#334155]">Paid Out</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#16a34a] shrink-0" />
+                <span className="font-medium text-[#334155]">Confirmed</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#d97706] shrink-0" />
+                <span className="font-medium text-[#334155]">In Ritual</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#dc2626] shrink-0" />
+                <span className="font-medium text-[#334155]">Cancelled</span>
+              </div>
+            </div>
+
+            {/* Jump to Today Button */}
+            <div className="mt-3.5 pt-2.5 border-t border-[#f1f5f9] flex items-center justify-between text-xs">
+              <span className="text-[11px] text-[#94a3b8] font-mono">
+                Click date to filter
+              </span>
+              <button
+                type="button"
+                onClick={handleJumpToday}
+                className="text-[11px] font-bold text-[#0f172a] hover:underline cursor-pointer"
+              >
+                Today
+              </button>
+            </div>
+          </div>
+
+          {/* CRM Monthly Performance Summary */}
+          <div className="p-4.5 rounded-2xl bg-gradient-to-br from-emerald-50/90 via-teal-50/40 to-white border border-emerald-200/90 shadow-xs space-y-2.5">
+            <div className="flex items-center justify-between">
+              <span className="font-mono text-xs uppercase tracking-wider text-emerald-950 font-bold">
+                {MONTH_NAMES[currentMonth]} Overview
+              </span>
+              <span className="font-mono text-xs font-bold text-emerald-800 bg-emerald-100 border border-emerald-200 px-2 py-0.5 rounded-md">
+                {monthBookings.length} {monthBookings.length === 1 ? 'Booking' : 'Bookings'}
+              </span>
+            </div>
+
+            <div className="space-y-1 pt-1 border-t border-emerald-100">
+              <div className="flex items-baseline justify-between">
+                <span className="text-xs text-emerald-900 font-medium">Month Revenue</span>
+                <span className="font-mono font-bold text-xs text-neutral-900 tabular-nums">
+                  {formatCurrency(monthlyMetrics.totalRevenue)}
+                </span>
+              </div>
+              <div className="flex items-baseline justify-between">
+                <span className="text-xs font-bold text-emerald-950">Month Profit</span>
+                <span className="font-mono font-extrabold text-sm text-emerald-700 tabular-nums">
+                  +{formatCurrency(monthlyMetrics.totalProfit)}
+                </span>
+              </div>
+            </div>
+
+            {selectedDate && (
+              <div className="pt-2 border-t border-emerald-100 flex items-center justify-between text-xs">
+                <span className="text-xs text-emerald-900 truncate">
+                  Filtered: <strong className="text-slate-900">{safeFormatDate(selectedDate)}</strong>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setSelectedDate(null)}
+                  className="text-xs font-mono font-bold text-rose-600 hover:underline cursor-pointer shrink-0 ml-2"
+                >
+                  Reset
+                </button>
+              </div>
+            )}
+          </div>
+        </aside>
+
+        {/* ═══════════════════════════════════════════════════════════════
+            RIGHT AREA: Colorful CRM Metrics + Segmented Filters + Clean Cards
+           ═══════════════════════════════════════════════════════════════ */}
+        <section className="flex-1 min-w-0 space-y-5">
+          
+          {/* ─── Colorful, Bold CRM Metric Strip (Matching Partner Portal Style) ─── */}
+          <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-3.5">
+            
+            {/* 1. Total Bookings Card */}
+            <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-blue-50/90 via-sky-50/40 to-white border border-blue-200/90 shadow-xs hover:border-blue-300 hover:shadow-sm transition-all group overflow-hidden">
+              <div className="flex items-center justify-between">
+                <span className="font-mono text-xs sm:text-[13px] uppercase tracking-wider text-blue-900 font-bold whitespace-nowrap">
+                  TOTAL BOOKINGS
+                </span>
+                <span className="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-xs shadow-blue-500/25 shrink-0">
+                  <Layers size={14} />
+                </span>
+              </div>
+              <span className="font-sans font-extrabold text-2xl sm:text-[32px] text-blue-950 mt-2 block tabular-nums tracking-tight leading-none">
+                {monthlyMetrics.total}
+              </span>
+              <div className="flex items-center justify-start text-xs mt-3 pt-2.5 border-t border-blue-100/80">
+                <span className="font-mono text-xs font-bold text-blue-700 bg-blue-100/90 border border-blue-200 px-2.5 py-1 rounded-md">
+                  {monthlyMetrics.confirmedCount} Confirmed
+                </span>
+              </div>
+            </div>
+
+            {/* 2. Confirmed Revenue Card */}
+            <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-emerald-50/90 via-teal-50/40 to-white border border-emerald-200/90 shadow-xs hover:border-emerald-300 hover:shadow-sm transition-all overflow-hidden">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                  <span className="font-mono text-xs sm:text-[13px] uppercase tracking-wider text-emerald-900 font-bold whitespace-nowrap">
+                    REVENUE
+                  </span>
+                </div>
+              </div>
+              <span className="font-mono font-extrabold text-lg sm:text-[22px] text-emerald-950 mt-2 block tabular-nums tracking-tight leading-none truncate" title={formatCurrency(monthlyMetrics.totalRevenue)}>
+                {formatCurrency(monthlyMetrics.totalRevenue)}
+              </span>
+              <div className="flex items-center justify-start text-xs mt-3 pt-2.5 border-t border-emerald-100/80">
+                <span className="font-mono text-xs font-bold text-emerald-700 bg-emerald-100/90 border border-emerald-200 px-2.5 py-1 rounded-md">
+                  {monthlyMetrics.confirmedCount} Orders
+                </span>
+              </div>
+            </div>
+
+            {/* 3. In Ritual / Pending Card */}
+            <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-amber-50/90 via-orange-50/40 to-white border border-amber-200/90 shadow-xs hover:border-amber-300 hover:shadow-sm transition-all overflow-hidden">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0" />
+                  <span className="font-mono text-xs sm:text-[13px] uppercase tracking-wider text-amber-900 font-bold whitespace-nowrap">
+                    IN RITUAL
+                  </span>
+                </div>
+              </div>
+              <span className="font-sans font-extrabold text-2xl sm:text-[32px] text-amber-950 mt-2 block tabular-nums tracking-tight leading-none">
+                {monthlyMetrics.inRitualCount}
+              </span>
+              <div className="flex items-center justify-start text-xs mt-3 pt-2.5 border-t border-amber-100/80">
+                <span className="font-mono text-xs font-bold text-amber-700 bg-amber-100/90 border border-amber-200 px-2.5 py-1 rounded-md">
+                  {monthlyMetrics.pendingCount} Pending Bookings
+                </span>
+              </div>
+            </div>
+
+            {/* 4. Monthly Profit Card */}
+            <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-indigo-50/90 via-purple-50/40 to-white border border-indigo-200/90 shadow-xs hover:border-indigo-300 hover:shadow-sm transition-all overflow-hidden">
+              <div className="flex items-center justify-between">
+                <span className="font-mono text-xs sm:text-[13px] uppercase tracking-wider text-indigo-900 font-bold whitespace-nowrap">
+                  NET PROFIT
+                </span>
+              </div>
+              <span className="font-mono font-extrabold text-lg sm:text-[22px] text-indigo-950 mt-2 block tabular-nums tracking-tight leading-none truncate" title={formatCurrency(monthlyMetrics.totalProfit)}>
+                {formatCurrency(monthlyMetrics.totalProfit)}
+              </span>
+              <div className="flex items-center justify-start text-xs mt-3 pt-2.5 border-t border-indigo-100/80">
+                <span className="font-mono text-xs font-bold text-indigo-700 bg-indigo-100/90 border border-indigo-200 px-2.5 py-1 rounded-md">
+                  {monthlyMetrics.totalRevenue > 0 ? `${Math.round((monthlyMetrics.totalProfit / monthlyMetrics.totalRevenue) * 100)}% Margin` : 'Net Margin'}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* ─── Search and Segmented Filter Tabs (Bold & Clean) ─── */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+            {/* Filter Pills */}
+            <div className="flex items-center gap-1.5 bg-slate-100 p-1.5 rounded-2xl border border-slate-200 overflow-x-auto no-scrollbar shrink-0">
+              {[
+                { id: 'all', label: 'ALL' },
+                { id: 'confirmed', label: 'CONFIRMED' },
+                { id: 'ongoing', label: 'IN RITUAL' },
+                { id: 'finished', label: 'FINISHED' },
+                { id: 'pending', label: 'PENDING' },
+              ].map((f) => {
+                const isSelected = statusFilter === f.id;
+                let activeClass = 'bg-slate-900 text-white shadow-xs';
+                if (f.id === 'confirmed') activeClass = 'bg-emerald-600 text-white shadow-xs shadow-emerald-500/20';
+                else if (f.id === 'ongoing') activeClass = 'bg-indigo-600 text-white shadow-xs shadow-indigo-500/20';
+                else if (f.id === 'finished') activeClass = 'bg-teal-600 text-white shadow-xs shadow-teal-500/20';
+                else if (f.id === 'pending') activeClass = 'bg-amber-500 text-white shadow-xs shadow-amber-500/20';
+
+                return (
+                  <button
+                    key={f.id}
+                    type="button"
+                    onClick={() => setStatusFilter(f.id as any)}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider font-mono transition-all cursor-pointer whitespace-nowrap ${
+                      isSelected
+                        ? activeClass
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-white/80'
+                    }`}
+                  >
+                    {f.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Search Input */}
+            <div className="relative flex-1 sm:w-64">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94a3b8]" />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search guest, ref, villa..."
+                className="w-full h-9 pl-9 pr-3 rounded-xl bg-white border border-[#e2e8f0] text-xs text-[#0f172a] placeholder:text-[#94a3b8] focus:outline-none focus:border-[#0f172a] focus:ring-2 focus:ring-[#0f172a]/10 shadow-2xs transition-all"
+              />
+            </div>
+          </div>
+
+          {/* ─── Active Calendar Date Filter Ribbon ─── */}
+          {selectedDate && (
+            <div className="flex items-center justify-between bg-[#f0f7ff] border border-[#bfdbfe] px-4 py-2.5 rounded-xl text-xs shadow-2xs text-[#1e40af]">
+              <div className="flex items-center gap-2 flex-wrap">
+                <CalendarIcon size={14} className="text-[#2563eb] shrink-0" />
+                <span className="text-[#475569]">Filtered by appointment date:</span>
+                <span className="font-bold text-[#0f172a] font-mono">
+                  {safeFormatDate(selectedDate)}
+                </span>
+                <span className="bg-[#2563eb] text-white text-[10px] font-mono font-bold px-2 py-0.5 rounded-full">
+                  {filteredBookings.length} {filteredBookings.length === 1 ? 'booking' : 'bookings'}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedDate(null)}
+                className="text-[#2563eb] hover:text-[#1d4ed8] font-mono text-xs flex items-center gap-1 hover:underline cursor-pointer font-medium shrink-0 ml-2"
+              >
+                <span>Show All Dates</span>
+                <X size={13} />
+              </button>
+            </div>
+          )}
+
+          {/* ─── Bookings List: Clean Cards (NO Unnecessary Buttons) ─── */}
+          {isLoading ? (
+            <div className="p-16 text-center rounded-2xl bg-white border border-[#eaecf0] space-y-3 shadow-xs">
+              <div className="w-6 h-6 border-2 border-[#0f172a] border-t-transparent rounded-full animate-spin mx-auto" />
+              <p className="font-mono text-xs text-[#64748b]">Loading bookings...</p>
+            </div>
+          ) : filteredBookings.length === 0 ? (
+            <div className="py-16 text-center rounded-2xl bg-white border border-dashed border-[#e2e8f0] p-6 space-y-2.5 shadow-xs">
+              <CalendarIcon size={28} className="mx-auto text-[#94a3b8]" />
+              <p className="text-sm font-bold text-[#0f172a]">No bookings found</p>
+              <p className="text-xs text-[#64748b] max-w-sm mx-auto leading-relaxed">
+                {selectedDate 
+                  ? `No bookings scheduled for ${safeFormatDate(selectedDate)}.`
+                  : search.trim() 
+                  ? 'No bookings match your search query.' 
+                  : 'Appointments will appear here when guests book online or via partners.'}
+              </p>
+              {selectedDate && (
+                <button
+                  type="button"
+                  onClick={() => setSelectedDate(null)}
+                  className="mt-2 text-xs font-mono font-bold text-[#2563eb] underline hover:opacity-75 cursor-pointer"
+                >
+                  View all dates
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {filteredBookings.map((b) => {
+                const ref = b.reference_number || b.id.substring(0, 8).toUpperCase();
+                const bookingStatus = b.status || 'Pending';
+                const isCancelled = bookingStatus.toLowerCase() === 'cancelled';
+                const paymentStatus = b.payment_status || (b.commission?.payment_verified ? 'Paid' : 'Unpaid');
+                const isPaid = paymentStatus.toLowerCase() === 'paid';
+                const treatmentStatus = b.treatment_status || (b.commission?.service_completed ? 'Finished' : 'Scheduled');
+                const isFinished = treatmentStatus.toLowerCase() === 'finished';
+                const isOngoing = treatmentStatus.toLowerCase() === 'in progress';
+
+                return (
+                  <div
+                    key={b.id}
+                    className="p-4 sm:p-4.5 rounded-2xl bg-white border border-[#eaecf0] space-y-3 hover:border-[#cbd5e1] hover:shadow-xs transition-all shadow-xs overflow-hidden"
+                  >
+                    {/* Top Row: Ref # + Guest Name + Badges + Date */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                      <div className="flex flex-wrap items-center gap-2 min-w-0">
+                        {/* Reference Pill with Copy */}
+                        <div className="flex items-center gap-1 bg-[#f8fafc] border border-[#eaecf0] px-2.5 py-1 rounded-xl">
+                          <Link
+                            href={`/invoice/${ref}`}
+                            target="_blank"
+                            className="font-mono text-xs font-bold text-[#0f172a] hover:underline"
+                          >
+                            #{ref}
+                          </Link>
+                          <button
+                            type="button"
+                            onClick={() => handleCopy(ref)}
+                            className="text-[#94a3b8] hover:text-[#0f172a] p-0.5 cursor-pointer transition-colors"
+                            title="Copy ID"
+                          >
+                            {copiedId === ref ? <Check size={11} className="text-[#16a34a]" /> : <Copy size={11} />}
+                          </button>
                         </div>
-                      );
-                    })
-                  ) : (
-                    <div>
-                      <p className="font-semibold text-sm text-black">{selectedBooking.treatment_name}</p>
-                      <p className="text-xs text-[#737373] mt-0.5">
-                        {selectedBooking.therapists_count} {selectedBooking.therapists_count > 1 ? 'Therapists Assigned' : 'Therapist Assigned'}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
 
-              {/* Financial Breakdown (3-column CRM Box) */}
-              <div className="space-y-2">
-                <span className="text-xs font-semibold uppercase tracking-wider text-[#737373] block">
-                  Financial Breakdown
-                </span>
-                <div className="grid grid-cols-3 divide-x divide-[#E5E5E5] border border-[#E5E5E5] rounded-xl p-3 text-center bg-white">
-                  <div className="flex flex-col justify-center px-2">
-                    <span className="block text-[10px] text-[#737373] font-medium">Revenue</span>
-                    <span className="font-semibold text-sm sm:text-base text-black tabular-nums mt-0.5">
-                      {formatCurrency(selectedBooking.revenue)}
-                    </span>
-                  </div>
-                  <div className="flex flex-col justify-center px-2">
-                    <span className="block text-[10px] text-[#737373] font-medium">
-                      Fees ({selectedBooking.therapists_count} {selectedBooking.therapists_count > 1 ? 'Therapists' : 'Therapist'})
-                    </span>
-                    <span className="font-semibold text-sm sm:text-base text-[#737373] tabular-nums mt-0.5">
-                      {formatCurrency(selectedBooking.therapist_fee_total)}
-                    </span>
-                  </div>
-                  <div className="flex flex-col justify-center px-2">
-                    <span className="block text-[10px] text-[#737373] font-medium">Net Profit</span>
-                    <span className="font-semibold text-sm sm:text-base text-emerald-600 tabular-nums mt-0.5">
-                      {formatCurrency(selectedBooking.net_profit)}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Partner Attribution Box (Affiliate Program or Direct Source) */}
-              <div className="p-3.5 bg-[#FAFAFA] border border-[#E5E5E5] rounded-xl space-y-2">
-                <div className="flex items-center justify-between flex-wrap gap-2">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {selectedBooking.commission ? (
-                      <>
-                        <span className="text-xs font-semibold text-black bg-white border border-[#E5E5E5] px-2 py-0.5 rounded">
-                          Partner: #{selectedBooking.commission.partner_code}
+                        {/* Guest Name & Pax */}
+                        <span className="font-bold text-sm text-[#0f172a] truncate">
+                          {b.guest_name || 'Guest'}
                         </span>
-                        <span className="text-xs font-semibold text-emerald-600 font-mono">
-                          Commission ({selectedBooking.commission.commission_rate_pct || 15}%): +{formatCurrency(selectedBooking.commission.commission_amount || 0)}
-                        </span>
-                        {selectedBooking.commission.status === 'approved' ? (
-                          <span className="text-[11px] font-medium text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded flex items-center gap-1">
-                            <CheckSquare size={11} className="text-emerald-700" /> Approved
-                          </span>
-                        ) : selectedBooking.commission.status === 'paid' ? (
-                          <span className="text-[11px] font-semibold text-white bg-black px-2 py-0.5 rounded flex items-center gap-1">
-                            ✓ Paid Out
-                          </span>
-                        ) : selectedBooking.commission.status === 'cancelled' ? (
-                          <span className="text-[11px] font-medium text-[#737373] bg-[#F5F5F5] px-2 py-0.5 rounded">
-                            Cancelled
-                          </span>
-                        ) : (
-                          <span className="text-[11px] font-medium text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded flex items-center gap-1">
-                            <Clock size={11} className="text-amber-700" /> Pending Review
+                        {b.pax > 1 && (
+                          <span className="text-[11px] text-[#64748b] font-mono">
+                            ({b.pax} pax)
                           </span>
                         )}
-                      </>
-                    ) : (
-                      <span className="text-xs font-medium text-[#737373] bg-white border border-[#E5E5E5] px-2 py-0.5 rounded">
-                        Attribution Source: Direct Booking (Website)
-                      </span>
-                    )}
-                  </div>
 
-                  {selectedBooking.commission && (
-                    <div className="text-[11px] font-mono text-[#737373]">
-                      Eligibility: {selectedBooking.commission.payment_verified && selectedBooking.commission.service_completed ? 'Eligible for Approval' : 'Awaiting Payment & Finish'}
+                        {/* Booking Status Badge */}
+                        {isCancelled ? (
+                          <span className="font-mono text-[10px] font-bold text-rose-800 bg-rose-100/90 border border-rose-300 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                            Cancelled
+                          </span>
+                        ) : bookingStatus.toLowerCase() === 'confirmed' || bookingStatus.toLowerCase() === 'approved' ? (
+                          <span className="font-mono text-[10px] font-bold text-emerald-800 bg-emerald-100/90 border border-emerald-300 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                            Confirmed
+                          </span>
+                        ) : (
+                          <span className="font-mono text-[10px] font-bold text-amber-800 bg-amber-100/90 border border-amber-300 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                            Pending
+                          </span>
+                        )}
+
+                        {/* Treatment Progress Badge */}
+                        {isFinished ? (
+                          <span className="font-mono text-[10px] font-bold text-teal-800 bg-teal-100/90 border border-teal-300 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                            Finished
+                          </span>
+                        ) : isOngoing ? (
+                          <span className="font-mono text-[10px] font-bold text-indigo-800 bg-indigo-100/90 border border-indigo-300 px-2.5 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-pulse" />
+                            In Ritual
+                          </span>
+                        ) : (
+                          <span className="font-mono text-[10px] font-bold text-stone-600 bg-stone-100 border border-stone-200 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                            Scheduled
+                          </span>
+                        )}
+
+                        {/* Payment Status Badge */}
+                        {isPaid ? (
+                          <span className="font-mono text-[10px] font-bold text-white bg-indigo-600 px-2.5 py-0.5 rounded-full uppercase tracking-wider shadow-xs shadow-indigo-500/20">
+                            Paid ({b.payment_method || 'Cash'})
+                          </span>
+                        ) : (
+                          <span className="font-mono text-[10px] font-bold text-amber-800 bg-amber-100/90 border border-amber-300 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                            Unpaid
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Date & Time on Right */}
+                      <div className="font-mono text-xs text-[#64748b] flex items-center gap-1.5 self-start sm:self-auto shrink-0">
+                        <CalendarIcon size={12} className="text-[#94a3b8]" />
+                        <span>{safeFormatDate(b.booking_date)}</span>
+                        {b.time && b.time !== '-' && (
+                          <>
+                            <span className="text-[#cbd5e1]">·</span>
+                            <span className="text-[#0f172a] font-semibold">{b.time}</span>
+                          </>
+                        )}
+                      </div>
                     </div>
-                  )}
-                </div>
-              </div>
+
+                    {/* Middle Row: Treatment + Location + Financial Breakdown */}
+                    <div className="pt-2.5 border-t border-[#f1f5f9] flex flex-col md:flex-row md:items-center justify-between gap-2.5 text-xs">
+                      {/* Left: Treatment Details & Location */}
+                      <div className="min-w-0 space-y-0.5">
+                        <div className="font-bold text-sm text-[#0f172a] truncate uppercase">
+                          {b.treatment_name}
+                        </div>
+                        <div className="flex items-center gap-1.5 text-[11px] text-[#64748b] truncate">
+                          <MapPin size={11} className="text-[#94a3b8] shrink-0" />
+                          <span className="truncate">{b.location || 'Ubud'}</span>
+                          {b.room_number && (
+                            <>
+                              <span className="text-[#cbd5e1]">·</span>
+                              <span className="font-mono">Room {b.room_number}</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Right: Revenue, Profit & Attribution */}
+                      <div className="flex items-center gap-3 font-mono text-xs shrink-0 flex-wrap">
+                        <div>
+                          <span className="text-[#94a3b8] text-[10px] uppercase block">Revenue</span>
+                          <span className="font-bold text-[#0f172a] tabular-nums">
+                            {formatCurrency(b.revenue)}
+                          </span>
+                        </div>
+
+                        <div>
+                          <span className="text-[#94a3b8] text-[10px] uppercase block">Profit</span>
+                          <span className="font-bold text-emerald-600 tabular-nums">
+                            {formatCurrency(b.net_profit)}
+                          </span>
+                        </div>
+
+                        {b.commission && (
+                          <div className="bg-indigo-50/80 border border-indigo-100 px-2 py-0.5 rounded-lg">
+                            <span className="text-indigo-900 text-[10px] uppercase font-bold block">
+                              #{b.commission.partner_code}
+                            </span>
+                            <span className="font-bold text-indigo-700 tabular-nums text-[11px]">
+                              +{formatCurrency(b.commission.commission_amount)}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Bottom Action Row: SINGLE PROMINENT TRACK BUTTON (No duplicate Details button!) */}
+                    <div className="pt-2.5 border-t border-[#f1f5f9] flex items-center justify-between gap-2">
+                      <Link
+                        href={`/invoice/${ref}`}
+                        target="_blank"
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-[#64748b] hover:text-[#0f172a] hover:underline"
+                        title="View invoice"
+                      >
+                        <span>Invoice</span>
+                        <ExternalLink size={11} />
+                      </Link>
+
+                      <div className="flex items-center gap-2">
+                        {/* THE SINGLE PRIMARY ACTION: TRACK (with Admin Milestone Update inside!) */}
+                        <button
+                          type="button"
+                          onClick={() => setTrackingBooking(b)}
+                          className="h-8.5 px-4 rounded-xl bg-slate-900 hover:bg-black text-white text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer active:scale-95 transition-all shadow-xs"
+                          title="Track schedule, view details & update status"
+                        >
+                          <Compass size={13} className="text-amber-300" />
+                          <span>Track</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
+          )}
+        </section>
+      </div>
 
-            {/* Modal Footer / Actions */}
-            <div className="p-4 sm:p-5 border-t border-[#E5E5E5] bg-[#FAFAFA] flex flex-col sm:flex-row items-center justify-between gap-3">
-              <div className="flex items-center gap-2 w-full sm:w-auto">
-                {selectedBooking.reference_number && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      let domain = window.location.origin;
-                      if (selectedBooking.brand === 'bali') {
-                        domain = 'https://www.homespaubud.com';
-                      } else if (selectedBooking.brand === 'therapick') {
-                        domain = 'https://www.booktherapick.com';
-                      } else if (selectedBooking.brand === 'elexoir') {
-                        domain = 'https://www.elexoirhomespaubud.com';
-                      }
-                      window.open(`${domain}/invoice/${selectedBooking.reference_number}`, '_blank');
-                    }}
-                    className={cx(btn.base, btn.secondary, btn.sm, 'text-blue-600 flex-1 sm:flex-none')}
-                  >
-                    <FileText size={14} />
-                    <span>View Invoice</span>
-                  </button>
-                )}
-              </div>
-
-              <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-                <button
-                  type="button"
-                  onClick={() => {
-                    let editTitle = selectedBooking.treatment_name;
-                    let editDur = '';
-                    const editMatch = editTitle.match(/(.*) \((.*)\)$/);
-                    if (editMatch) {
-                      editTitle = editMatch[1];
-                      editDur = editMatch[2];
-                    }
-
-                    setFormItems([{
-                      id: Math.random().toString(36).substring(2, 9),
-                      treatment: editTitle,
-                      duration: editDur,
-                      pax: selectedBooking.pax,
-                      therapists: selectedBooking.therapists_count,
-                      revenue: selectedBooking.revenue,
-                      fee: selectedBooking.therapist_fee_total
-                    }]);
-                    setIsEditing(selectedBooking.id);
-                    setShowForm(true);
-                    setSelectedBookingId(null);
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }}
-                  className={cx(btn.base, btn.secondary, btn.sm)}
-                >
-                  <Edit3 size={14} />
-                  <span>Edit</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleStatusChange(selectedBooking.id, selectedBooking.status?.toLowerCase() === 'cancelled' ? (selectedBooking.commission ? 'Pending' : 'Confirmed') : 'Cancelled')}
-                  className={cx(
-                    btn.base,
-                    btn.secondary,
-                    btn.sm,
-                    selectedBooking.status?.toLowerCase() === 'cancelled'
-                      ? 'text-emerald-700 hover:border-emerald-300'
-                      : 'text-amber-700 hover:border-amber-300'
-                  )}
-                >
-                  {selectedBooking.status?.toLowerCase() === 'cancelled' ? (
-                    <>
-                      <CheckCircle2 size={14} />
-                      <span>Reinstate</span>
-                    </>
-                  ) : (
-                    <>
-                      <XCircle size={14} />
-                      <span>Cancel</span>
-                    </>
-                  )}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    handleDelete(selectedBooking.id);
-                    setSelectedBookingId(null);
-                  }}
-                  className={cx(btn.base, btn.secondary, btn.sm, 'text-red-600 hover:border-red-300')}
-                >
-                  <Trash2 size={14} />
-                  <span>Delete</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setSelectedBookingId(null)}
-                  className={cx(btn.base, btn.primary, btn.sm)}
-                >
-                  Done
-                </button>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      )}
+      {/* ─── Admin Schedule Tracking & Status Milestone Update Modal ─── */}
+      <AdminScheduleTrackingModal
+        booking={trackingBooking}
+        onClose={() => setTrackingBooking(null)}
+        onUpdateBookingStatus={updateBookingStatus}
+        onUpdateTreatmentStatus={updateTreatmentStatus}
+        onUpdatePaymentStatus={updatePaymentStatus}
+      />
     </div>
   );
 }
