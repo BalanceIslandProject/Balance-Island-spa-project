@@ -840,10 +840,9 @@ export default function PartnerBookingsPage() {
                   <table className="w-full text-left text-xs">
                     <thead className="bg-[#fafafa] border-b border-[#ebebeb] font-mono text-[10px] uppercase tracking-[0.071em] text-[#666666]">
                       <tr>
-                        <th className="py-3 px-3.5">Date</th>
-                        <th className="py-3 px-3.5">Invoice</th>
+                        <th className="py-3 px-3.5">Date & Invoice</th>
                         <th className="py-3 px-3.5">Guest</th>
-                        <th className="py-3 px-3.5">Treatment</th>
+                        <th className="py-3 px-3.5">Treatment & Duration</th>
                         <th className="py-3 px-3.5 text-right">Treatment Net</th>
                         <th className="py-3 px-3.5 text-right">Earned</th>
                         <th className="py-3 px-3.5">Status</th>
@@ -858,28 +857,44 @@ export default function PartnerBookingsPage() {
 
                         return (
                           <tr key={b.id || b.booking_id} className="hover:bg-[#fafafa] transition-colors">
-                            <td className="py-3 px-3.5 font-mono text-[11px] text-[#666666] whitespace-nowrap">
-                              {formatFriendlyDate(b.date)}
-                            </td>
-                            <td className="py-3 px-3.5 font-mono text-xs font-bold text-[#171717] whitespace-nowrap">
-                              <div className="flex items-center gap-1.5">
-                                <span>#{b.booking_id}</span>
-                                <button
-                                  type="button"
-                                  onClick={() => handleCopy(b.booking_id)}
-                                  className="text-[#8f8f8f] hover:text-[#171717] p-0.5 cursor-pointer"
-                                  title="Copy invoice code"
-                                >
-                                  {copiedId === b.booking_id ? <Check size={11} className="text-[#297a3a]" /> : <Copy size={11} />}
-                                </button>
+                            {/* Combined Date & Invoice Column */}
+                            <td className="py-3 px-3.5 whitespace-nowrap">
+                              <div className="flex flex-col gap-0.5">
+                                <span className="font-mono text-[11px] text-[#171717] font-medium">
+                                  {formatFriendlyDate(b.date)}
+                                </span>
+                                <div className="flex items-center gap-1.5 font-mono text-xs">
+                                  <span className="font-bold text-[#666666]">#{b.booking_id}</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleCopy(b.booking_id)}
+                                    className="text-[#8f8f8f] hover:text-[#171717] p-0.5 cursor-pointer"
+                                    title="Copy invoice code"
+                                  >
+                                    {copiedId === b.booking_id ? <Check size={11} className="text-[#297a3a]" /> : <Copy size={11} />}
+                                  </button>
+                                </div>
                               </div>
                             </td>
+
+                            {/* Guest Column */}
                             <td className="py-3 px-3.5 font-medium text-[#171717] truncate max-w-[150px]">
                               {b.guest_name || 'Guest Booking'}
                             </td>
-                            <td className="py-3 px-3.5 text-[#666666] truncate max-w-[160px]">
-                              {b.treatment_name || 'Spa Ritual'}
+
+                            {/* Combined Treatment & Duration Column */}
+                            <td className="py-3 px-3.5 max-w-[190px]">
+                              <div className="flex flex-col gap-0.5">
+                                <span className="font-medium text-[#171717] truncate text-xs">
+                                  {b.treatment_name || 'Mobile Spa Treatment'}
+                                </span>
+                                <span className="font-mono text-[10px] text-[#666666] flex items-center gap-1">
+                                  <Clock size={10} className="text-[#9ca3af] shrink-0" />
+                                  <span>{b.duration || '60 Mins'}</span>
+                                </span>
+                              </div>
                             </td>
+
                             <td className="py-3 px-3.5 font-mono text-right text-[#171717] whitespace-nowrap tabular-nums">
                               {formatIDR(b.treatment_amount || b.gross_amount)}
                             </td>
@@ -957,23 +972,35 @@ export default function PartnerBookingsPage() {
                           <button
                             type="button"
                             onClick={() => setTrackingBooking(b)}
-                            className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium text-[#171717] bg-[#fafafa] border border-[#ebebeb] rounded"
+                            className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-mono text-[#171717] bg-[#fafafa] hover:bg-[#ebebeb] border border-[#ebebeb] rounded transition-colors cursor-pointer"
                           >
                             <Clock size={11} className="text-[#666666]" />
                             <span>Track</span>
                           </button>
                         </div>
-                        <span className="font-mono text-xs font-bold text-[#171717] bg-[#fafafa] px-2 py-0.5 rounded border border-[#ebebeb]">
-                          #{b.booking_id}
-                        </span>
+                        <div className="text-right">
+                          <span className="font-mono text-[10px] text-[#666666] block">
+                            {formatFriendlyDate(b.date)}
+                          </span>
+                          <span className="font-mono text-xs font-bold text-[#171717]">
+                            #{b.booking_id}
+                          </span>
+                        </div>
                       </div>
 
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="font-medium text-[#171717]">{b.guest_name || 'Guest'}</span>
+                      <div className="flex items-center justify-between text-xs pt-1 border-t border-[#f3f4f6]">
+                        <div>
+                          <span className="font-medium text-[#171717]">{b.guest_name || 'Guest'}</span>
+                          <span className="text-[11px] text-[#666666] block">{b.treatment_name || 'Mobile Spa Treatment'}</span>
+                          <span className="font-mono text-[10px] text-[#8f8f8f] flex items-center gap-1 mt-0.5">
+                            <Clock size={10} className="text-[#9ca3af]" />
+                            <span>{b.duration || '60 Mins'}</span>
+                          </span>
+                        </div>
                         <Link
                           href={`/invoice/${b.booking_id}`}
                           target="_blank"
-                          className="font-mono text-[11px] text-[#666666] hover:text-black underline flex items-center gap-1"
+                          className="font-mono text-[11px] text-[#666666] hover:text-black underline flex items-center gap-1 shrink-0"
                         >
                           <span>Invoice</span>
                           <ExternalLink size={10} />
@@ -982,7 +1009,7 @@ export default function PartnerBookingsPage() {
 
                       <div className="pt-2 border-t border-[#ebebeb] flex items-center justify-between text-xs">
                         <div>
-                          <span className="font-mono text-[9px] uppercase text-[#666666] block">Treatment</span>
+                          <span className="font-mono text-[9px] uppercase text-[#666666] block">Net Amount</span>
                           <span className="font-mono font-medium text-[#171717]">{formatIDR(b.treatment_amount || b.gross_amount)}</span>
                         </div>
                         <div className="text-right">
@@ -1019,16 +1046,16 @@ export default function PartnerBookingsPage() {
                         <button
                           type="button"
                           onClick={() => setTrackingBooking(b)}
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-[#171717] bg-[#fafafa] hover:bg-[#f0f0f0] border border-[#ebebeb] rounded-[6px] transition-colors cursor-pointer shadow-2xs"
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-mono text-[#171717] bg-[#fafafa] hover:bg-[#ebebeb] border border-[#ebebeb] rounded transition-colors cursor-pointer shadow-2xs"
                         >
                           <Clock size={12} className="text-[#666666]" />
-                          <span>Track Schedule</span>
+                          <span>Track</span>
                         </button>
                       </div>
 
                       <div className="flex items-center gap-1.5 text-xs shrink-0">
-                        <span className="font-mono text-[10px] font-medium uppercase tracking-[0.071em] text-[#666666]">
-                          Invoice:
+                        <span className="font-mono text-[11px] text-[#666666]">
+                          {formatFriendlyDate(b.date)}
                         </span>
                         <span className="font-mono text-xs font-bold text-[#171717] bg-[#fafafa] px-2 py-0.5 rounded-[4px] border border-[#ebebeb]">
                           #{b.booking_id}
@@ -1056,7 +1083,7 @@ export default function PartnerBookingsPage() {
                       >
                         <FileText size={12} className="text-[#666666] group-hover:text-[#171717] transition-colors shrink-0" />
                         <span className="underline decoration-[#ebebeb] group-hover:decoration-[#171717] underline-offset-2 transition-colors">
-                          View Treatment Details
+                          View Invoice
                         </span>
                         <ExternalLink size={10} className="text-[#666666] group-hover:text-[#171717] transition-colors shrink-0" />
                       </Link>
@@ -1065,10 +1092,14 @@ export default function PartnerBookingsPage() {
                     <div className="pt-2.5 border-t border-[#ebebeb] flex items-center justify-between text-xs">
                       <div>
                         <span className="font-mono text-[10px] uppercase font-medium text-[#666666] block">
-                          Treatment
+                          Treatment & Duration
                         </span>
-                        <span className="font-mono font-bold text-xs sm:text-[13px] text-[#171717] tabular-nums">
-                          {formatIDR(b.treatment_amount || b.gross_amount)}
+                        <span className="font-medium text-xs text-[#171717] block">
+                          {b.treatment_name || 'Mobile Spa Treatment'}
+                        </span>
+                        <span className="font-mono text-[10px] text-[#8f8f8f] flex items-center gap-1 mt-0.5">
+                          <Clock size={10} className="text-[#9ca3af]" />
+                          <span>{b.duration || '60 Mins'}</span>
                         </span>
                       </div>
                       <div className="text-right">

@@ -28,6 +28,7 @@ export interface CalendarBooking {
   location?: string;
   room_number?: string;
   treatment_name?: string;
+  duration?: string;
   booking_status?: 'Pending' | 'Confirmed' | 'Ongoing' | 'Completed' | 'Cancelled' | string;
   treatment_status?: 'Scheduled' | 'In Progress' | 'Ongoing' | 'Finished' | 'Finish' | 'No Show' | string;
   payment_status?: 'paid' | 'unpaid' | string;

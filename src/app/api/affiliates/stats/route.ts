@@ -43,7 +43,7 @@ export async function GET(req: NextRequest) {
     if (bookingIds.length > 0) {
       const { data: matchedBookings } = await supabase
         .from('bookings')
-        .select('reference_number, guest_name, booking_date, time, location, room_number, treatment_name, status')
+        .select('reference_number, guest_name, booking_date, time, location, room_number, treatment_name, status, items')
         .in('reference_number', bookingIds);
 
       if (matchedBookings) {
@@ -113,11 +113,33 @@ export async function GET(req: NextRequest) {
         commissionAmount = Math.round((treatmentAmount * commissionRatePct) / 100);
       }
 
+      // Extract or compute duration:
+      let durationStr = '';
+      if (Array.isArray(matched.items) && matched.items.length > 0) {
+        const firstItem = matched.items[0];
+        if (firstItem?.duration) {
+          durationStr = String(firstItem.duration);
+        }
+      }
+      if (!durationStr && matched.treatment_name) {
+        const match = String(matched.treatment_name).match(/\b(\d+)\s*(?:mins?|minutes?|min|m)?\b/i);
+        if (match) {
+          durationStr = match[1];
+        }
+      }
+      if (durationStr && !/mins?|hours?|hr/i.test(durationStr)) {
+        durationStr = `${durationStr} Mins`;
+      }
+      if (!durationStr) {
+        durationStr = '60 Mins';
+      }
+
       return {
         id: comm.id,
         booking_id: comm.booking_id,
         date: appointmentDate,
         time: appointmentTime,
+        duration: durationStr,
         created_at: comm.created_at,
         guest_name: guestName,
         location: matched.location || '',

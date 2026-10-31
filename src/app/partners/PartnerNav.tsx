@@ -71,12 +71,6 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
     { href: '/partners/bookings', label: 'Bookings', icon: CalendarDays },
     { href: '/partners/commissions', label: 'Commissions', icon: Receipt },
     { href: '/partners/payouts', label: 'Payouts', icon: Wallet },
-    { href: '/partners/referrals', label: 'Referral Tools', icon: Share2 },
-  ];
-
-  const analyticsNavItems = [
-    { href: '/partners/dashboard', label: 'Performance', icon: TrendingUp },
-    { href: '/partners/commissions', label: 'Monthly Statements', icon: FileText },
   ];
 
   const supportNavItems = [
@@ -170,31 +164,6 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
                       } ${collapsed ? 'justify-center px-2' : ''}`}
                     >
                       <Icon size={16} className={isActive ? 'text-white' : 'text-[#6b7280]'} />
-                      {!collapsed && <span className="truncate">{item.label}</span>}
-                    </Link>
-                  );
-                })}
-              </div>
-
-              {/* SECTION 2: ANALYTICS & INSIGHTS */}
-              <div className="space-y-1">
-                {!collapsed && (
-                  <div className="px-3 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-[#9ca3af]">
-                    Analytics & Insights
-                  </div>
-                )}
-                {analyticsNavItems.map((item, idx) => {
-                  const Icon = item.icon;
-                  return (
-                    <Link
-                      key={idx}
-                      href={item.href}
-                      title={collapsed ? item.label : undefined}
-                      className={`flex items-center gap-3 px-3 py-2 rounded-[8px] text-[13px] font-medium text-[#4b5563] hover:text-[#111827] hover:bg-[#f3f4f6] transition-colors ${
-                        collapsed ? 'justify-center px-2' : ''
-                      }`}
-                    >
-                      <Icon size={16} className="text-[#6b7280]" />
                       {!collapsed && <span className="truncate">{item.label}</span>}
                     </Link>
                   );
@@ -393,6 +362,43 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
                     );
                   })}
                 </div>
+
+                <div className="pt-2 border-t border-[#e5e7eb] space-y-1">
+                  <div className="px-1 text-[10px] font-semibold uppercase tracking-wider text-[#9ca3af]">
+                    Support & Settings
+                  </div>
+                  {supportNavItems.map((item, idx) => {
+                    const Icon = item.icon;
+                    const isActive = pathname === item.href;
+                    if (item.isExternal) {
+                      return (
+                        <a
+                          key={idx}
+                          href={item.href}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex items-center gap-2.5 p-2 rounded-[6px] text-xs font-medium text-[#4b5563] hover:bg-[#f3f4f6]"
+                        >
+                          <Icon size={14} />
+                          <span>{item.label}</span>
+                        </a>
+                      );
+                    }
+                    return (
+                      <Link
+                        key={idx}
+                        href={item.href}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className={`flex items-center gap-2.5 p-2 rounded-[6px] text-xs font-medium ${
+                          isActive ? 'bg-[#111827] text-white' : 'text-[#4b5563] hover:bg-[#f3f4f6]'
+                        }`}
+                      >
+                        <Icon size={14} />
+                        <span>{item.label}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
               </>
             ) : (
               <div className="space-y-2">
@@ -414,7 +420,7 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
       {session && (
         <nav className="fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-md border-t border-[#e5e7eb] px-2 py-1 md:hidden pb-[max(0.6rem,env(safe-area-inset-bottom))] shadow-xs">
           <div className="grid grid-cols-5 items-center">
-            {mainNavItems.map((item) => {
+            {mainNavItems.concat([{ href: '/partners/profile', label: 'Settings', icon: Settings }]).map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href;
               return (

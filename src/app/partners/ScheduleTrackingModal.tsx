@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { 
   X, 
@@ -8,12 +8,13 @@ import {
   Calendar, 
   Clock, 
   MapPin, 
-  DoorOpen, 
-  CreditCard, 
-  Sparkles, 
+  Check, 
   CheckCircle2, 
-  Wallet,
-  Receipt
+  Wallet, 
+  CreditCard, 
+  Sparkles,
+  Copy,
+  AlertCircle
 } from 'lucide-react';
 import { CalendarBooking } from './FloatingBookingCalendar';
 
@@ -54,6 +55,8 @@ const formatIDR = (val: number | undefined | null) => {
 };
 
 export default function ScheduleTrackingModal({ booking, onClose }: ScheduleTrackingModalProps) {
+  const [copiedId, setCopiedId] = useState(false);
+
   if (!booking) return null;
 
   const isCancelled = booking.commission_status === 'cancelled' || booking.booking_status === 'Cancelled';
@@ -63,110 +66,114 @@ export default function ScheduleTrackingModal({ booking, onClose }: ScheduleTrac
   const isFinished = booking.treatment_status === 'Finish' || booking.treatment_status === 'Finished' || booking.booking_status === 'Completed' || booking.service_completed;
   const isOngoing = booking.treatment_status === 'Ongoing' || booking.treatment_status === 'In Progress' || booking.booking_status === 'Ongoing';
 
-  // Construct events timeline matching Admin Dashboard History style
-  const events = [
+  // Determine current active milestone index (0 to 3)
+  // Step 0: Confirmed (Booked)
+  // Step 1: Payment Settled
+  // Step 2: Treatment Delivered
+  // Step 3: Payout Completed
+  let activeStep = 0;
+  if (isPaidOut) {
+    activeStep = 4; // all done
+  } else if (isApproved || isFinished) {
+    activeStep = 3; // treatment done, awaiting payout
+  } else if (isOngoing) {
+    activeStep = 2; // treatment in progress
+  } else if (isPaid) {
+    activeStep = 2; // payment settled, awaiting appointment
+  } else {
+    activeStep = 1; // booked, payment pending
+  }
+
+  const steps = [
     {
-      title: `Booking #${booking.booking_id} referred`,
-      detail: `${booking.guest_name || 'Guest Booking'} · ${booking.treatment_name || 'Luxury Spa Ritual'}`,
-      date: safeFormatDate(booking.created_at || booking.date),
-      status: isCancelled ? 'Cancelled' : 'Confirmed',
-      statusClass: isCancelled 
-        ? 'text-red-700 bg-red-50 border-red-200' 
-        : 'text-[#171717] bg-[#fafafa] border-[#ebebeb]',
-      icon: Receipt
+      label: 'Confirmed',
+      detail: safeFormatDate(booking.created_at || booking.date),
+      isDone: !isCancelled && activeStep >= 1,
+      isCurrent: !isCancelled && activeStep === 0,
     },
     {
-      title: `Appointment Schedule`,
-      detail: `${safeFormatDate(booking.date)} at ${booking.time || 'Flexible'}${booking.location ? ` · ${booking.location}` : ''}${booking.room_number ? ` (Room ${booking.room_number})` : ''}`,
-      date: safeFormatDate(booking.date),
-      status: booking.time ? `${booking.time}` : 'Scheduled',
-      statusClass: 'text-[#171717] bg-[#fafafa] border-[#ebebeb]',
-      icon: Calendar
+      label: 'Payment',
+      detail: isPaid 
+        ? (booking.payment_method === 'cash' ? 'Cash on Arrival' : 'Paid Online') 
+        : 'Payment Pending',
+      isDone: !isCancelled && (isPaid || activeStep >= 2),
+      isCurrent: !isCancelled && activeStep === 1,
     },
     {
-      title: `Payment Settlement`,
-      detail: `${isPaid ? (booking.payment_method === 'cash' ? 'Paid in Cash upon Therapist Arrival' : 'Paid Online (Verified)') : 'Pending Payment'} · ${formatIDR(booking.treatment_amount || booking.gross_amount)}`,
-      date: safeFormatDate(booking.created_at || booking.date),
-      status: isPaid ? 'Paid' : 'Unpaid',
-      statusClass: isPaid 
-        ? 'text-[#297a3a] bg-[#297a3a]/10 border-[#297a3a]/20' 
-        : 'text-amber-700 bg-amber-50 border-amber-200',
-      icon: CreditCard
-    },
-    {
-      title: `Treatment Delivery`,
-      detail: isFinished
-        ? 'Therapist completed ritual in guest room / villa'
-        : isOngoing
-        ? 'Therapist on-site delivering ritual'
-        : 'Scheduled for in-villa mobile delivery',
-      date: safeFormatDate(booking.date),
-      status: isCancelled 
-        ? 'Cancelled' 
-        : isFinished 
-        ? 'Finished' 
+      label: 'Treatment',
+      detail: isFinished 
+        ? 'Delivered' 
         : isOngoing 
-        ? 'Ongoing' 
-        : 'Scheduled',
-      statusClass: isFinished 
-        ? 'text-[#297a3a] bg-[#297a3a]/10 border-[#297a3a]/20' 
-        : isOngoing 
-        ? 'text-indigo-700 bg-indigo-50 border-indigo-200' 
-        : 'text-[#666666] bg-[#fafafa] border-[#ebebeb]',
-      icon: Sparkles
+        ? 'In Progress' 
+        : (booking.time ? `${booking.time}` : 'Scheduled'),
+      isDone: !isCancelled && (isFinished || activeStep >= 3),
+      isCurrent: !isCancelled && isOngoing,
     },
     {
-      title: `Partner Commission`,
-      detail: `Attributed commission rate: ${booking.commission_rate_pct || 10}% · Amount: ${formatIDR(booking.commission_amount)}`,
-      date: booking.approved_at ? safeFormatDate(booking.approved_at) : safeFormatDate(booking.date),
-      status: isPaidOut ? 'PAID OUT' : isApproved ? 'Approved' : 'Pending',
-      statusClass: isPaidOut 
-        ? 'text-white bg-[#171717] border-[#171717]' 
+      label: 'Payout',
+      detail: isPaidOut 
+        ? 'Disbursed' 
         : isApproved 
-        ? 'text-[#297a3a] bg-[#297a3a]/10 border-[#297a3a]/20' 
-        : 'text-amber-700 bg-amber-50 border-amber-200',
-      icon: Wallet
-    }
+        ? 'Ready to Pay' 
+        : 'In Escrow',
+      isDone: !isCancelled && isPaidOut,
+      isCurrent: !isCancelled && (isApproved || activeStep === 3),
+    },
   ];
 
-  if (isPaidOut) {
-    events.push({
-      title: `Payout Completed`,
-      detail: `Commission transferred to partner account${booking.payout_reference ? ` · Ref: ${booking.payout_reference}` : ''}`,
-      date: booking.paid_at ? safeFormatDate(booking.paid_at) : safeFormatDate(booking.date),
-      status: 'PAID OUT',
-      statusClass: 'text-white bg-[#171717] border-[#171717]',
-      icon: CheckCircle2
-    });
-  }
+  const handleCopyId = () => {
+    if (navigator?.clipboard) {
+      navigator.clipboard.writeText(booking.booking_id);
+      setCopiedId(true);
+      setTimeout(() => setCopiedId(false), 2000);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/40 backdrop-blur-xs animate-in fade-in duration-150">
       <div 
-        className="w-full max-w-lg bg-white rounded-[8px] border border-[#ebebeb] shadow-[0_16px_40px_rgba(0,0,0,0.12)] overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-150"
+        className="w-full max-w-lg bg-white rounded-[10px] border border-[#ebebeb] shadow-[0_20px_50px_rgba(0,0,0,0.15)] overflow-hidden flex flex-col max-h-[92vh] animate-in zoom-in-95 duration-150 font-sans"
         role="dialog"
         aria-modal="true"
         aria-labelledby="schedule-tracking-title"
       >
-        {/* Modal Header */}
-        <div className="p-4 sm:p-5 border-b border-[#ebebeb] flex items-center justify-between shrink-0 bg-[#fafafa]">
+        {/* Header */}
+        <div className="p-4 sm:p-5 border-b border-[#ebebeb] bg-[#fafafa] flex items-center justify-between shrink-0">
           <div>
-            <div className="flex items-center gap-2">
-              <span className="font-mono text-[10px] uppercase tracking-[0.071em] text-[#666666]">
-                Schedule History
-              </span>
-              {isPaidOut && (
-                <span className="font-mono text-[9px] font-semibold text-white bg-[#171717] px-1.5 py-0.5 rounded-[4px] uppercase tracking-wider">
+            <span className="font-mono text-[10px] uppercase tracking-[0.071em] text-[#666666] block font-medium">
+              Booking Tracking Flow
+            </span>
+            <div className="flex items-center gap-2 mt-0.5">
+              <h2 id="schedule-tracking-title" className="text-base font-bold text-[#171717] font-mono tracking-tight">
+                #{booking.booking_id}
+              </h2>
+              <button
+                type="button"
+                onClick={handleCopyId}
+                className="text-[#8f8f8f] hover:text-[#171717] p-1 rounded transition-colors cursor-pointer"
+                title="Copy booking ID"
+              >
+                {copiedId ? <Check size={12} className="text-[#297a3a]" /> : <Copy size={12} />}
+              </button>
+
+              {isPaidOut ? (
+                <span className="font-mono text-[9px] font-semibold text-white bg-[#171717] px-2 py-0.5 rounded uppercase">
                   PAID OUT
+                </span>
+              ) : isApproved ? (
+                <span className="font-mono text-[9px] font-semibold text-[#137333] bg-[#e6f4ea] px-2 py-0.5 rounded uppercase border border-[#ceead6]">
+                  Approved
+                </span>
+              ) : isCancelled ? (
+                <span className="font-mono text-[9px] font-semibold text-[#c5221f] bg-[#fce8e6] px-2 py-0.5 rounded uppercase border border-[#fad2cf]">
+                  Cancelled
+                </span>
+              ) : (
+                <span className="font-mono text-[9px] font-semibold text-[#b06000] bg-[#fef7e0] px-2 py-0.5 rounded uppercase border border-[#feefc3]">
+                  Pending
                 </span>
               )}
             </div>
-            <h2 id="schedule-tracking-title" className="text-base font-semibold text-[#171717] mt-0.5 tracking-tight flex items-center gap-2">
-              <span>Booking #{booking.booking_id}</span>
-            </h2>
-            <p className="text-xs text-[#666666] mt-0.5">
-              {booking.guest_name || 'Guest Booking'}{booking.treatment_name ? ` · ${booking.treatment_name}` : ''}
-            </p>
           </div>
 
           <button
@@ -179,65 +186,151 @@ export default function ScheduleTrackingModal({ booking, onClose }: ScheduleTrac
           </button>
         </div>
 
-        {/* Schedule Summary Strip */}
-        <div className="px-5 py-3 border-b border-[#ebebeb] bg-white grid grid-cols-2 gap-3 text-xs shrink-0">
-          <div>
-            <span className="font-mono text-[10px] uppercase font-medium text-[#666666] block">Treatment Amount</span>
-            <span className="font-mono font-bold text-sm text-[#171717] tabular-nums">
-              {formatIDR(booking.treatment_amount || booking.gross_amount)}
-            </span>
-          </div>
-          <div className="text-right">
-            <span className="font-mono text-[10px] uppercase font-medium text-[#297a3a] block">Commission Earned</span>
-            <span className="font-mono font-bold text-sm text-[#297a3a] tabular-nums">
-              +{formatIDR(booking.commission_amount)}
-            </span>
-          </div>
-        </div>
-
-        {/* Timeline (Identical to Admin Dashboard History Style) */}
-        <div className="p-5 sm:p-6 overflow-y-auto space-y-6 flex-1">
-          <ol className="relative border-l border-[#ebebeb] ml-2 space-y-6">
-            {events.map((ev, i) => (
-              <li key={i} className="pl-6 relative">
-                {/* Node Bullet Circle */}
-                <span 
-                  className={`absolute -left-[5px] top-1.5 w-2.5 h-2.5 rounded-full bg-white border-2 ${
-                    ev.status === 'PAID OUT' 
-                      ? 'border-[#171717] bg-[#171717]' 
-                      : ev.status === 'Paid' || ev.status === 'Finished' || ev.status === 'Approved'
-                      ? 'border-[#297a3a]'
-                      : 'border-[#a8a8a8]'
-                  }`} 
-                  aria-hidden="true" 
+        {/* Content Body */}
+        <div className="p-5 sm:p-6 overflow-y-auto space-y-5 flex-1">
+          
+          {/* Simple 4-Step Progress Track */}
+          {isCancelled ? (
+            <div className="p-3.5 rounded-[8px] bg-red-50 border border-red-200 text-xs text-red-900 flex items-center gap-2.5">
+              <AlertCircle size={16} className="text-red-600 shrink-0" />
+              <span>This booking was cancelled. No commission attributed.</span>
+            </div>
+          ) : (
+            <div className="pt-2 pb-1">
+              <div className="grid grid-cols-4 relative">
+                {/* Connecting Bar */}
+                <div className="absolute top-3.5 left-[12.5%] right-[12.5%] h-0.5 bg-[#ebebeb] z-0" />
+                <div 
+                  className="absolute top-3.5 left-[12.5%] h-0.5 bg-[#297a3a] transition-all duration-300 z-0" 
+                  style={{ 
+                    width: activeStep >= 4 ? '75%' : `${Math.max(0, (activeStep - 1) * 25)}%` 
+                  }}
                 />
-                
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-[13px] font-medium text-[#171717]">{ev.title}</span>
-                  {ev.status && (
-                    <span className={`font-mono text-[10px] font-medium px-2 py-0.5 rounded-[4px] border ${ev.statusClass}`}>
-                      {ev.status}
+
+                {steps.map((st, idx) => (
+                  <div key={idx} className="flex flex-col items-center text-center relative z-10 px-1">
+                    {/* Circle */}
+                    <div 
+                      className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-mono transition-all ${
+                        st.isDone
+                          ? 'bg-[#297a3a] text-white shadow-xs'
+                          : st.isCurrent
+                          ? 'bg-white border-2 border-[#171717] text-[#171717] ring-3 ring-[#171717]/10'
+                          : 'bg-white border border-[#d1d5db] text-[#9ca3af]'
+                      }`}
+                    >
+                      {st.isDone ? (
+                        <Check size={13} strokeWidth={2.5} />
+                      ) : (
+                        <span className="text-[10px] font-bold">{idx + 1}</span>
+                      )}
+                    </div>
+
+                    {/* Step Label */}
+                    <span className={`text-[11px] font-semibold mt-2 ${
+                      st.isDone || st.isCurrent ? 'text-[#171717]' : 'text-[#8f8f8f]'
+                    }`}>
+                      {st.label}
                     </span>
-                  )}
+
+                    {/* Sub / Detail */}
+                    <span className="text-[10px] font-mono text-[#666666] mt-0.5 line-clamp-1">
+                      {st.detail}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Key Appointment & Guest Summary */}
+          <div className="bg-[#fafafa] border border-[#ebebeb] rounded-[8px] p-4 space-y-3 text-xs">
+            <div className="flex items-center justify-between border-b border-[#ebebeb] pb-2.5">
+              <div>
+                <span className="font-mono text-[10px] uppercase text-[#666666] block">Guest Name</span>
+                <span className="font-semibold text-sm text-[#171717]">
+                  {booking.guest_name || 'Guest Booking'}
+                </span>
+              </div>
+              <div className="text-right">
+                <span className="font-mono text-[10px] uppercase text-[#666666] block">Appointment Schedule</span>
+                <span className="font-mono font-medium text-[#171717]">
+                  {safeFormatDate(booking.date)} {booking.time ? `· ${booking.time}` : ''}
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-0.5">
+              <div>
+                <span className="font-mono text-[10px] uppercase text-[#666666] block">Treatment & Duration</span>
+                <span className="font-medium text-[#171717] block">
+                  {booking.treatment_name || 'Mobile Spa Treatment'}
+                </span>
+                <span className="font-mono text-[11px] text-[#666666] flex items-center gap-1 mt-0.5">
+                  <Clock size={11} className="text-[#9ca3af]" />
+                  <span>{booking.duration || '60 Mins'}</span>
+                </span>
+              </div>
+
+              <div>
+                <span className="font-mono text-[10px] uppercase text-[#666666] block">Service Location</span>
+                <span className="font-medium text-[#171717] flex items-center gap-1">
+                  <MapPin size={11} className="text-[#9ca3af] shrink-0" />
+                  <span className="truncate">{booking.location || 'Villa / Hotel in Ubud'}</span>
+                </span>
+                {booking.room_number && (
+                  <span className="font-mono text-[11px] text-[#666666] block mt-0.5">
+                    Room: {booking.room_number}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Financial Breakdown Strip */}
+          <div className="p-4 rounded-[8px] bg-white border border-[#ebebeb] shadow-2xs space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-[#666666]">Eligible Treatment Amount</span>
+              <span className="font-mono font-medium text-[#171717] tabular-nums">
+                {formatIDR(booking.treatment_amount || booking.gross_amount)}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-[#666666]">Attributed Partner Commission ({booking.commission_rate_pct || 10}%)</span>
+              <span className="font-mono font-bold text-xs text-[#297a3a] tabular-nums">
+                +{formatIDR(booking.commission_amount)}
+              </span>
+            </div>
+
+            {/* Status Callout Banner */}
+            <div className="pt-2 border-t border-[#f3f4f6]">
+              {isPaidOut ? (
+                <div className="flex items-center gap-2 text-xs text-[#171717] font-medium">
+                  <CheckCircle2 size={14} className="text-[#297a3a] shrink-0" />
+                  <span>Commission disbursed directly to your registered bank account.</span>
                 </div>
+              ) : isApproved ? (
+                <div className="flex items-center gap-2 text-xs text-[#137333] font-medium">
+                  <CheckCircle2 size={14} className="text-[#297a3a] shrink-0" />
+                  <span>Treatment verified. Commission ready for weekly bank disbursement.</span>
+                </div>
+              ) : isCancelled ? (
+                <div className="flex items-center gap-2 text-xs text-red-700 font-medium">
+                  <AlertCircle size={14} className="text-red-600 shrink-0" />
+                  <span>Appointment was cancelled.</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 text-xs text-[#b06000] font-medium">
+                  <Sparkles size={14} className="text-[#b06000] shrink-0" />
+                  <span>Appointment scheduled. Commission safely held in escrow until ritual delivery.</span>
+                </div>
+              )}
+            </div>
+          </div>
 
-                {ev.detail && (
-                  <div className="text-xs text-[#666666] mt-1 leading-relaxed">
-                    {ev.detail}
-                  </div>
-                )}
-
-                {ev.date && (
-                  <div className="text-[11px] font-mono text-[#8f8f8f] mt-1">
-                    {ev.date}
-                  </div>
-                )}
-              </li>
-            ))}
-          </ol>
         </div>
 
-        {/* Modal Footer */}
+        {/* Footer */}
         <div className="p-4 border-t border-[#ebebeb] bg-[#fafafa] flex items-center justify-between gap-3 shrink-0">
           <Link
             href={`/invoice/${booking.booking_id}`}

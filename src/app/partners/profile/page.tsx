@@ -18,7 +18,9 @@ import {
   Trash2,
   Share2,
   KeyRound,
-  ExternalLink
+  ExternalLink,
+  QrCode,
+  Download
 } from 'lucide-react';
 
 const AVATAR_STORAGE_KEY = 'partner_profile_avatar_local';
@@ -161,23 +163,46 @@ export default function PartnerProfilePage() {
     }
   };
 
+  const partnerCode = partner?.partner_code || '';
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://www.booktherapick.com';
+  const mainOrigin = origin.includes('partners.') 
+    ? origin.replace('partners.', 'www.') 
+    : 'https://www.booktherapick.com';
+  const referralLink = partnerCode ? `${mainOrigin}/?ref=${partnerCode}` : '';
+  const qrCodeUrl = referralLink 
+    ? `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(referralLink)}` 
+    : '';
+
   const handleCopyLink = () => {
-    if (!partner?.partner_code) return;
-    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://www.booktherapick.com';
-    const mainOrigin = origin.includes('partners.') 
-      ? origin.replace('partners.', 'www.') 
-      : 'https://www.booktherapick.com';
-    const link = `${mainOrigin}/?ref=${partner.partner_code}`;
-    navigator.clipboard.writeText(link);
+    if (!referralLink) return;
+    navigator.clipboard.writeText(referralLink);
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 2000);
   };
 
   const handleCopyCode = () => {
-    if (!partner?.partner_code) return;
-    navigator.clipboard.writeText(partner.partner_code);
+    if (!partnerCode) return;
+    navigator.clipboard.writeText(partnerCode);
     setCopiedCode(true);
     setTimeout(() => setCopiedCode(false), 2000);
+  };
+
+  const handleDownloadQR = async () => {
+    if (!qrCodeUrl) return;
+    try {
+      const response = await fetch(qrCodeUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `therapick-partner-qr-${partnerCode || 'code'}.png`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err) {
+      window.open(qrCodeUrl, '_blank');
+    }
   };
 
   const handleLogout = async () => {
@@ -365,29 +390,138 @@ export default function PartnerProfilePage() {
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Quick Link Row */}
-        <div className="mt-4 pt-4 border-t border-[#e5e7eb] flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <div className="flex items-center gap-1.5 text-xs text-[#6b7280]">
-            <Share2 size={13} />
-            <span>Referral Attribution Link:</span>
+      {/* ========================================================
+          REFERRAL LINK & OFFICIAL PARTNER QR CODE
+         ======================================================== */}
+      <div className="bg-white border border-[#e5e7eb] rounded-[10px] p-5 sm:p-6 space-y-5 shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#e5e7eb] pb-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <QrCode size={18} className="text-[#111827]" />
+              <h2 className="text-base font-bold text-[#111827] tracking-tight">
+                Referral Link & Official QR Code
+              </h2>
+            </div>
+            <p className="text-xs text-[#6b7280] mt-0.5">
+              Display your branded QR stand on guest reception desks or share your direct booking attribution link.
+            </p>
           </div>
-          <button
-            type="button"
-            onClick={handleCopyLink}
-            className="flex items-center justify-between sm:justify-start gap-2 px-3 py-1.5 rounded-[6px] bg-[#f9fafb] hover:bg-[#f3f4f6] border border-[#e5e7eb] text-xs font-mono text-[#111827] transition-all cursor-pointer"
-          >
-            <span className="truncate">?ref={partner?.partner_code}</span>
-            {copiedLink ? (
-              <span className="font-mono text-[10px] font-semibold text-[#16a34a] flex items-center gap-1">
-                <Check size={12} /> Copied
+          <span className="font-mono text-[10px] font-semibold text-[#16a34a] bg-[#16a34a]/10 px-2.5 py-1 rounded-[4px] border border-[#16a34a]/20 uppercase shrink-0 self-start sm:self-auto">
+            {partner?.commission_rate_pct || 10}% Attributed Commission
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
+          {/* Left: Official QR Code Box */}
+          <div className="md:col-span-5 flex flex-col items-center p-5 rounded-[8px] bg-[#fafafa] border border-[#e5e7eb] text-center">
+            <div className="bg-white p-3 rounded-[6px] border border-[#e5e7eb] shadow-2xs inline-block">
+              {qrCodeUrl ? (
+                <img
+                  src={qrCodeUrl}
+                  alt={`Therapick Partner QR Code - ${partnerCode}`}
+                  className="w-40 h-40 sm:w-44 sm:h-44 object-contain"
+                />
+              ) : (
+                <div className="w-40 h-40 flex items-center justify-center">
+                  <div className="w-6 h-6 border-2 border-[#111827] border-t-transparent rounded-full animate-spin" />
+                </div>
+              )}
+            </div>
+            <div className="mt-2.5 space-y-0.5">
+              <span className="font-mono text-[10px] font-bold text-[#111827] uppercase tracking-wider block">
+                SCAN TO BOOK THERAPICK
               </span>
-            ) : (
-              <span className="font-mono text-[10px] font-medium text-[#6b7280] flex items-center gap-1">
-                <Copy size={12} /> Copy Full Link
+              <span className="font-mono text-[10px] text-[#6b7280]">
+                Ref Code: {partnerCode || '...'}
               </span>
+            </div>
+            <button
+              type="button"
+              onClick={handleDownloadQR}
+              className="mt-3.5 w-full py-2 px-3 rounded-[6px] bg-[#111827] hover:bg-black text-white font-mono font-medium text-xs uppercase tracking-wider transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+            >
+              <Download size={13} />
+              <span>Download Official QR Stand (PNG)</span>
+            </button>
+          </div>
+
+          {/* Right: Link & Code Controls */}
+          <div className="md:col-span-7 space-y-4">
+            <div>
+              <label className="block text-xs font-semibold text-[#111827] mb-1.5">
+                Your Direct Referral URL
+              </label>
+              <div className="flex items-center gap-2 p-2 rounded-[6px] bg-[#f9fafb] border border-[#e5e7eb]">
+                <input
+                  type="text"
+                  readOnly
+                  value={referralLink || 'Loading link...'}
+                  className="w-full text-xs font-mono text-[#111827] bg-transparent outline-none truncate"
+                />
+                <button
+                  type="button"
+                  onClick={handleCopyLink}
+                  className="p-1.5 px-3 rounded-[4px] bg-[#111827] hover:bg-black text-white text-xs font-mono transition-colors cursor-pointer shrink-0 flex items-center gap-1.5"
+                >
+                  {copiedLink ? (
+                    <>
+                      <Check size={12} className="text-[#16a34a]" />
+                      <span>Copied</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy size={12} />
+                      <span>Copy</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between p-3 rounded-[6px] bg-[#f9fafb] border border-[#e5e7eb] text-xs">
+              <div>
+                <span className="text-[11px] font-mono text-[#6b7280] block uppercase tracking-wider">
+                  Partner Attribution Code
+                </span>
+                <span className="font-mono font-bold text-sm text-[#111827]">
+                  {partnerCode || '...'}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={handleCopyCode}
+                className="px-2.5 py-1 text-xs font-mono text-[#111827] hover:bg-white rounded border border-[#e5e7eb] cursor-pointer"
+              >
+                {copiedCode ? 'Copied' : 'Copy Code'}
+              </button>
+            </div>
+
+            <div className="p-3.5 rounded-[6px] bg-[#fafafa] border border-[#e5e7eb] space-y-1.5 text-xs text-[#6b7280]">
+              <div className="flex items-center gap-1.5 font-medium text-[#111827]">
+                <ShieldCheck size={14} className="text-[#297a3a]" />
+                <span>30-Day Attribution Guarantee</span>
+              </div>
+              <p className="text-[11px] leading-relaxed">
+                Guests who click your link or scan your QR stand receive an automatic 30-day cookie window. Any booking placed within 30 days is credited directly to your partner account.
+              </p>
+            </div>
+
+            {referralLink && (
+              <div className="pt-1">
+                <a
+                  href={referralLink}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1.5 text-xs text-[#4b5563] hover:text-[#111827] font-medium transition-colors"
+                >
+                  <ExternalLink size={12} />
+                  <span>Preview guest booking experience with your attribution</span>
+                </a>
+              </div>
             )}
-          </button>
+          </div>
         </div>
       </div>
 
