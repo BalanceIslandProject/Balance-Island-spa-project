@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { ChevronLeft, ChevronRight, Check, Copy, Plus, RefreshCw, ArrowUpRight, Info, DoorClosed, MapPin, Trash2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Check, Copy, Plus, RefreshCw, ArrowUpRight, Info, DoorClosed, MapPin, Trash2, Search } from 'lucide-react';
 import {
   cx,
   btn,
@@ -101,6 +101,7 @@ export default function AffiliateManagement({ initialSubTab = 'partners' }: { in
   }, [initialSubTab]);
 
   const [partnerStatusFilter, setPartnerStatusFilter] = useState('all');
+  const [affiliateStatusFilter, setAffiliateStatusFilter] = useState<'all' | 'paid_out' | 'cancelled'>('all');
   const [partnerSort, setPartnerSort] = useState('activity');
   const [searchQuery, setSearchQuery] = useState('');
   const [commissionStatusFilter, setCommissionStatusFilter] = useState('all');
@@ -508,6 +509,55 @@ export default function AffiliateManagement({ initialSubTab = 'partners' }: { in
   }, [partners, searchQuery, partnerStatusFilter, partnerSort, metricsById]);
 
   const pagedPartners = filteredPartners.slice((partnerPage - 1) * PAGE_SIZE, partnerPage * PAGE_SIZE);
+
+  // Simplified Affiliates status & filtering logic
+  const getPartnerDisplayStatus = useCallback((p: any, m: any): 'Paid Out' | 'Cancelled' => {
+    if (m?.totalPaidOut > 0 || m?.paidComms > 0) {
+      return 'Paid Out';
+    }
+    return 'Cancelled';
+  }, []);
+
+  const getPartnerTypeLabel = useCallback((p: any) => {
+    if (p?.business_name && p.business_name.trim()) return p.business_name;
+    if (p?.partner_type) {
+      const formatted = p.partner_type.replace(/_/g, ' ');
+      return formatted.charAt(0).toUpperCase() + formatted.slice(1);
+    }
+    return 'Individual';
+  }, []);
+
+  const affiliateFilterCounts = useMemo(() => {
+    let paidOut = 0;
+    let cancelled = 0;
+    for (const p of partners) {
+      const m = metricsById[p.id];
+      const status = getPartnerDisplayStatus(p, m);
+      if (status === 'Paid Out') paidOut++;
+      else cancelled++;
+    }
+    return {
+      all: partners.length,
+      paidOut,
+      cancelled,
+    };
+  }, [partners, metricsById, getPartnerDisplayStatus]);
+
+  const filteredAffiliatePartners = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    return partners.filter((p) => {
+      const m = metricsById[p.id];
+      const status = getPartnerDisplayStatus(p, m);
+      if (affiliateStatusFilter === 'paid_out' && status !== 'Paid Out') return false;
+      if (affiliateStatusFilter === 'cancelled' && status !== 'Cancelled') return false;
+
+      if (!q) return true;
+      const name = fullName(p).toLowerCase();
+      const code = (p.partner_code || '').toLowerCase();
+      const type = getPartnerTypeLabel(p).toLowerCase();
+      return name.includes(q) || code.includes(q) || type.includes(q);
+    });
+  }, [partners, metricsById, affiliateStatusFilter, searchQuery, getPartnerDisplayStatus, getPartnerTypeLabel]);
 
   const applications = useMemo(
     () => partners.filter((p) => p.status === 'pending').sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()),
@@ -1098,292 +1148,290 @@ export default function AffiliateManagement({ initialSubTab = 'partners' }: { in
 
   return (
     <div className="space-y-6 pb-28 md:pb-0 font-sans antialiased text-neutral-900">
-      {/* ─── Crextio CRM Section Header ─── */}
-      <header className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 pb-3 border-b border-stone-200/60">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-900 capitalize">
-              {subTab === 'partners' ? 'Partners' :
-               subTab === 'applications' ? 'Applications' :
-               subTab === 'commissions' ? 'Commissions' :
-               subTab === 'payouts' ? 'Payouts' : 'Settings'}
-            </h1>
-            <CountPill className="text-xs">
-              {subTab === 'partners' ? `${partners.length} total` :
-               subTab === 'applications' ? `${applications.length} queue` :
-               subTab === 'commissions' ? `${commissions.length} items` :
-               subTab === 'payouts' ? `${payouts.length} payouts` : 'Config'}
-            </CountPill>
+      {/* ─── Crextio CRM Section Header (Applications, Commissions, Payouts, Settings) ─── */}
+      {subTab !== 'partners' && (
+        <>
+          <header className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 pb-3 border-b border-stone-200/60">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-900 capitalize">
+                  {subTab === 'applications' ? 'Applications' :
+                   subTab === 'commissions' ? 'Commissions' :
+                   subTab === 'payouts' ? 'Payouts' : 'Settings'}
+                </h1>
+                <CountPill className="text-xs">
+                  {subTab === 'applications' ? `${applications.length} queue` :
+                   subTab === 'commissions' ? `${commissions.length} items` :
+                   subTab === 'payouts' ? `${payouts.length} payouts` : 'Config'}
+                </CountPill>
+              </div>
+              <p className="text-xs text-stone-500">
+                Therapick affiliate & partner network management
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+              {currentDistribution.length > 0 && (
+                <CrmDistributionTrack items={currentDistribution} />
+              )}
+
+              <div className="flex items-center gap-2">
+                <button
+                  id="aff-refresh"
+                  type="button"
+                  onClick={fetchAllData}
+                  disabled={loading}
+                  aria-label="Refresh data"
+                  className={cx(btn.base, btn.secondary, btn.icon)}
+                >
+                  <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+                </button>
+                <button
+                  id="aff-record-payout"
+                  type="button"
+                  onClick={openNewPayout}
+                  className={cx(btn.base, btn.amber, btn.sm, 'gap-1.5')}
+                >
+                  <Plus size={13} />
+                  Record payout
+                </button>
+              </div>
+            </div>
+          </header>
+
+          {/* Summary metrics in Crextio Rounded Cards */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            {[
+              { label: 'Active partners', value: String(statusCounts.active || 0), hint: `${partners.length} registered` },
+              { label: 'Applications', value: String(applications.length), hint: applications.length ? 'Awaiting review' : 'Zero queue' },
+              { label: 'Ready to pay', value: formatIDR(summary.readyToPay), hint: 'Approved & cleared' },
+              { label: 'Paid out', value: formatIDR(summary.paidOut), hint: `${payouts.length} disbursements` },
+            ].map((m) => (
+              <div
+                key={m.label}
+                className="p-4 bg-white/95 border border-stone-200/90 rounded-2xl min-w-0 shadow-2xs space-y-1 hover:border-amber-300 transition-all"
+              >
+                <div className="text-[11px] font-semibold text-stone-500 uppercase tracking-wider truncate">{m.label}</div>
+                <div className="text-lg md:text-xl font-bold text-neutral-900 tabular-nums truncate" title={loading ? '—' : m.value}>{loading ? '—' : m.value}</div>
+                <div className="text-[11px] text-stone-400 truncate">{m.hint}</div>
+              </div>
+            ))}
           </div>
-          <p className="text-xs text-stone-500">
-            Therapick affiliate & partner network management
-          </p>
-        </div>
 
-        <div className="flex flex-wrap items-center gap-3">
-          {currentDistribution.length > 0 && (
-            <CrmDistributionTrack items={currentDistribution} />
-          )}
+          {/* Section navigation in Crextio Segmented Pills */}
+          <Tabs idPrefix="aff-tab" items={subTabs} value={subTab} onChange={(id) => setSubTab(id as SubTab)} />
+        </>
+      )}
 
-          <div className="flex items-center gap-2">
-            <button
-              id="aff-refresh"
-              type="button"
-              onClick={fetchAllData}
-              disabled={loading}
-              aria-label="Refresh data"
-              className={cx(btn.base, btn.secondary, btn.icon)}
-            >
-              <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
-            </button>
-            <button
-              id="aff-record-payout"
-              type="button"
-              onClick={openNewPayout}
-              className={cx(btn.base, btn.amber, btn.sm, 'gap-1.5')}
-            >
-              <Plus size={13} />
-              Record payout
-            </button>
-          </div>
-        </div>
-      </header>
-
-      {/* Summary metrics in Crextio Rounded Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {[
-          { label: 'Active partners', value: String(statusCounts.active || 0), hint: `${partners.length} registered` },
-          { label: 'Applications', value: String(applications.length), hint: applications.length ? 'Awaiting review' : 'Zero queue' },
-          { label: 'Ready to pay', value: formatIDR(summary.readyToPay), hint: 'Approved & cleared' },
-          { label: 'Paid out', value: formatIDR(summary.paidOut), hint: `${payouts.length} disbursements` },
-        ].map((m) => (
-          <div
-            key={m.label}
-            className="p-4 bg-white/95 border border-stone-200/90 rounded-2xl min-w-0 shadow-2xs space-y-1 hover:border-amber-300 transition-all"
-          >
-            <div className="text-[11px] font-semibold text-stone-500 uppercase tracking-wider truncate">{m.label}</div>
-            <div className="text-lg md:text-xl font-bold text-neutral-900 tabular-nums truncate" title={loading ? '—' : m.value}>{loading ? '—' : m.value}</div>
-            <div className="text-[11px] text-stone-400 truncate">{m.hint}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Section navigation in Crextio Segmented Pills */}
-      <Tabs idPrefix="aff-tab" items={subTabs} value={subTab} onChange={(id) => setSubTab(id as SubTab)} />
-
-      {/* ============================ PARTNERS ============================ */}
+      {/* ============================ PARTNERS (AFFILIATES MINIMAL CRM) ============================ */}
       {subTab === 'partners' && (
         <section className="space-y-4" aria-labelledby="aff-partners-title">
-          <h2 id="aff-partners-title" className="sr-only">Partners</h2>
-          <div className="flex flex-col xl:flex-row xl:items-center gap-3 justify-between">
-            <FilterChips
-              idPrefix="aff-partner-status"
-              value={partnerStatusFilter}
-              onChange={setPartnerStatusFilter}
-              options={[
-                { value: 'all', label: 'All', count: statusCounts.all },
-                { value: 'active', label: 'Active', count: statusCounts.active || 0 },
-                { value: 'pending', label: 'Pending', count: statusCounts.pending || 0 },
-                { value: 'suspended', label: 'Suspended', count: statusCounts.suspended || 0 },
-                { value: 'rejected', label: 'Rejected', count: statusCounts.rejected || 0 },
-              ]}
-            />
-            <div className="flex flex-col sm:flex-row gap-2">
-              <SearchInput id="aff-partner-search" value={searchQuery} onChange={setSearchQuery} placeholder="Search name, code, villa…" className="sm:w-64" />
-              <select
-                id="aff-partner-sort"
-                aria-label="Sort partners"
-                value={partnerSort}
-                onChange={(e) => setPartnerSort(e.target.value)}
-                className={cx(selectCls, 'sm:w-44')}
+          <h2 id="aff-partners-title" className="sr-only">Affiliates</h2>
+
+          {/* Controls: Filter Pills & Search */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            {/* Filter Pills */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+              <button
+                type="button"
+                onClick={() => setAffiliateStatusFilter('all')}
+                className={cx(
+                  'px-4 py-2 rounded-full text-xs font-bold transition-all shrink-0 flex items-center gap-1.5',
+                  affiliateStatusFilter === 'all'
+                    ? 'bg-[#fed700] text-slate-900 shadow-xs'
+                    : 'bg-white text-stone-600 hover:text-stone-900 border border-stone-200'
+                )}
               >
-                <option value="activity">Recent activity</option>
-                <option value="commission">Highest commission</option>
-                <option value="newest">Newest</option>
-                <option value="name">Name A–Z</option>
-              </select>
+                All <span className="text-[11px] font-semibold">{affiliateFilterCounts.all}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setAffiliateStatusFilter('paid_out')}
+                className={cx(
+                  'px-4 py-2 rounded-full text-xs font-bold transition-all shrink-0 flex items-center gap-1.5',
+                  affiliateStatusFilter === 'paid_out'
+                    ? 'bg-[#fed700] text-slate-900 shadow-xs'
+                    : 'bg-white text-stone-600 hover:text-stone-900 border border-stone-200'
+                )}
+              >
+                Paid Out <span className="text-[11px] font-semibold">{affiliateFilterCounts.paidOut}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setAffiliateStatusFilter('cancelled')}
+                className={cx(
+                  'px-4 py-2 rounded-full text-xs font-bold transition-all shrink-0 flex items-center gap-1.5',
+                  affiliateStatusFilter === 'cancelled'
+                    ? 'bg-[#fed700] text-slate-900 shadow-xs'
+                    : 'bg-white text-stone-600 hover:text-stone-900 border border-stone-200'
+                )}
+              >
+                Cancelled <span className="text-[11px] font-semibold">{affiliateFilterCounts.cancelled}</span>
+              </button>
+            </div>
+
+            {/* Compact Search Field */}
+            <div className="relative w-full sm:w-72">
+              <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search partner name or code..."
+                className="w-full bg-white border border-stone-200 rounded-xl pl-9 pr-3 py-2 text-xs text-stone-800 placeholder:text-stone-400 focus:outline-hidden focus:border-amber-400 transition-colors shadow-2xs"
+              />
             </div>
           </div>
 
-          {tableShell(
-            <>
-              {/* Desktop */}
-              <div className="hidden md:block overflow-x-auto">
-                <table className="w-full text-[13px]">
-                  <thead className="border-b border-[#E5E5E5]">
+          {/* Table Container */}
+          <div className="bg-white rounded-2xl border border-stone-200/80 shadow-2xs overflow-hidden">
+            {/* Desktop Table */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="border-b border-stone-200/80 bg-stone-50/50">
+                  <tr className="text-[11px] font-semibold uppercase tracking-wider text-stone-500">
+                    <th className="px-6 py-3.5">PARTNER</th>
+                    <th className="px-6 py-3.5">CODE</th>
+                    <th className="px-6 py-3.5">COMMISSION</th>
+                    <th className="px-6 py-3.5">PAID OUT</th>
+                    <th className="px-6 py-3.5">STATUS</th>
+                    <th className="px-6 py-3.5 text-right w-12"></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-stone-100">
+                  {loading ? (
+                    <SkeletonRows cols={6} />
+                  ) : loadError && partners.length === 0 ? (
                     <tr>
-                      <th className={thCls}>Partner</th>
-                      <th className={thCls}>Code</th>
-                      <th className={cx(thCls, 'text-right')}>Commission</th>
-                      <th className={cx(thCls, 'text-right')}>Paid out</th>
-                      <th className={thCls}>Bookings</th>
-                      <th className={thCls}>Status</th>
-                      <th className={cx(thCls, 'text-right')}>Actions</th>
+                      <td colSpan={6} className="p-8 text-center">
+                        <ErrorState message={loadError} onRetry={fetchAllData} />
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {loading ? (
-                      <SkeletonRows cols={7} />
-                    ) : loadError && partners.length === 0 ? (
-                      <tr><td colSpan={7}><ErrorState message={loadError} onRetry={fetchAllData} /></td></tr>
-                    ) : pagedPartners.length === 0 ? (
-                      <tr>
-                        <td colSpan={7}>
-                          <EmptyState
-                            title="No partners found"
-                            description={searchQuery ? `Nothing matches “${searchQuery}”.` : 'No partners in this status.'}
-                            action={
-                              (searchQuery || partnerStatusFilter !== 'all') && (
-                                <button type="button" onClick={() => { setSearchQuery(''); setPartnerStatusFilter('all'); }} className={cx(btn.base, btn.secondary, btn.sm)}>
-                                  Clear filters
-                                </button>
-                              )
-                            }
-                          />
-                        </td>
-                      </tr>
-                    ) : (
-                      pagedPartners.map((p) => {
-                        const m = metricsById[p.id];
-                        const isSelected = selectedPartnerId === p.id;
-                        return (
-                          <tr
-                            key={p.id}
-                            onClick={() => openPartnerModal(p)}
-                            className={cx(
-                              'border-b transition-colors cursor-pointer',
-                              isSelected
-                                ? 'border-amber-400 bg-amber-300 text-neutral-950 font-medium'
-                                : 'border-stone-100 last:border-0 hover:bg-stone-50/70'
-                            )}
-                          >
-                            <td className={tdCls}>
-                              <button type="button" onClick={() => openPartnerModal(p)} className="text-left max-w-[240px] block group" title={`${fullName(p)} — ${p.business_name || 'Individual'}`}>
-                                <span className="block font-medium text-[#171717] truncate group-hover:underline">{fullName(p)}</span>
-                                <span className="block text-xs text-[#737373] truncate">{p.business_name || 'Individual'}</span>
-                              </button>
-                            </td>
-                            <td className={tdCls}>
-                              <div className="flex items-center gap-0.5">
-                                <span className="font-mono text-xs text-[#171717] truncate max-w-[130px]" title={p.partner_code}>{p.partner_code}</span>
-                                <CopyBtn text={p.partner_code} id={`code-${p.id}`} label="Copy referral code" />
-                              </div>
-                            </td>
-                            <td className={cx(tdCls, 'text-right')}>
-                              <div className="font-medium tabular-nums text-[#171717]">{formatIDR(m.totalEarned)}</div>
-                              <div className="text-xs text-[#737373] tabular-nums">
-                                {m.approvedUnpaid > 0 ? `${formatIDR(m.approvedUnpaid)} unpaid` : m.pending > 0 ? `${formatIDR(m.pending)} pending` : 'Settled'}
-                              </div>
-                            </td>
-                            <td className={cx(tdCls, 'text-right')}>
-                              <div className="font-medium tabular-nums text-[#171717]">{formatIDR(m.totalPaidOut)}</div>
-                              <div className="text-xs text-[#737373]">
-                                {m.approvedUnpaid > 0 ? (
-                                  <button type="button" onClick={() => openQuickPayoutForPartner(p)} className="text-black font-medium hover:underline">
-                                    Pay now
-                                  </button>
-                                ) : (
-                                  <button type="button" onClick={() => openPartnerModal(p, 'payouts')} className="hover:text-black hover:underline">
-                                    {m.payouts.length} {m.payouts.length === 1 ? 'payout' : 'payouts'}
-                                  </button>
-                                )}
-                              </div>
-                            </td>
-                            <td className={tdCls}>
-                              <div className="flex items-center gap-2">
-                                <button
-                                  type="button"
-                                  onClick={() => openPartnerModal(p, 'bookings')}
-                                  className={cx(btn.base, btn.secondary, btn.xs)}
-                                  title={m.latestBooking ? `Latest: ${safeFormatDate(m.latestBooking.booking_date || m.latestBooking.created_at)}` : 'No bookings yet'}
-                                >
-                                  Calendar
-                                  <CountPill>{m.bookingsCount}</CountPill>
-                                </button>
-                                <NewIndicator count={m.pendingCount} />
-                              </div>
-                            </td>
-                            <td className={tdCls}><StatusBadge status={p.status} /></td>
-                            <td className={cx(tdCls, 'text-right')}>
-                              <div className="flex items-center justify-end gap-1.5">
-                                <button type="button" onClick={() => openPartnerModal(p)} className={cx(btn.base, btn.secondary, btn.xs)}>
-                                  Details
-                                </button>
-                                {renderStatusActions(p, btn.xs)}
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })
-                    )}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Mobile */}
-              <div className="md:hidden">
-                {loading ? (
-                  <SkeletonList />
-                ) : loadError && partners.length === 0 ? (
-                  <ErrorState message={loadError} onRetry={fetchAllData} />
-                ) : pagedPartners.length === 0 ? (
-                  <EmptyState title="No partners found" description={searchQuery ? `Nothing matches “${searchQuery}”.` : 'No partners in this status.'} />
-                ) : (
-                  <ul className="divide-y divide-[#F0F0F0]">
-                    {pagedPartners.map((p) => {
+                  ) : filteredAffiliatePartners.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="py-12 text-center text-stone-400 text-xs">
+                        No partners found
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredAffiliatePartners.map((p) => {
                       const m = metricsById[p.id];
+                      const status = getPartnerDisplayStatus(p, m);
+                      const partnerType = getPartnerTypeLabel(p);
                       return (
-                        <li key={p.id} className="p-4 space-y-3">
-                          <div className="flex items-start justify-between gap-3">
-                            <button type="button" onClick={() => openPartnerModal(p)} className="text-left min-w-0">
-                              <span className="block font-medium text-[#171717] truncate">{fullName(p)}</span>
-                              <span className="block text-xs text-[#737373] truncate">
-                                {p.business_name || 'Individual'} · <span className="font-mono">{p.partner_code}</span>
-                              </span>
-                            </button>
-                            <StatusBadge status={p.status} />
-                          </div>
-                          <dl className="grid grid-cols-3 gap-2 text-xs">
-                            <div className="min-w-0">
-                              <dt className="text-[#737373] truncate">Commission</dt>
-                              <dd className="font-medium tabular-nums text-[#171717] mt-0.5 truncate" title={formatIDR(m.totalEarned)}>{formatIDR(m.totalEarned)}</dd>
+                        <tr
+                          key={p.id}
+                          onClick={() => openPartnerModal(p)}
+                          className="group hover:bg-stone-50/80 transition-colors cursor-pointer"
+                        >
+                          <td className="px-6 py-4">
+                            <div className="font-semibold text-sm text-neutral-900 group-hover:text-black">
+                              {fullName(p)}
                             </div>
-                            <div className="min-w-0">
-                              <dt className="text-[#737373] truncate">Paid out</dt>
-                              <dd className="font-medium tabular-nums text-[#171717] mt-0.5 truncate" title={formatIDR(m.totalPaidOut)}>{formatIDR(m.totalPaidOut)}</dd>
+                            <div className="text-xs text-stone-400 mt-0.5">
+                              {partnerType}
                             </div>
-                            <div className="min-w-0">
-                              <dt className="text-[#737373] truncate">Bookings</dt>
-                              <dd className="font-medium tabular-nums text-[#171717] mt-0.5 flex items-center gap-1.5 truncate">
-                                {m.bookingsCount}
-                                <NewIndicator count={m.pendingCount} />
-                              </dd>
-                            </div>
-                          </dl>
-                          <div className="flex flex-wrap gap-2">
-                            <button type="button" onClick={() => openPartnerModal(p)} className={cx(btn.base, btn.secondary, btn.sm, 'flex-1')}>
-                              Details
-                            </button>
-                            <button type="button" onClick={() => openPartnerModal(p, 'bookings')} className={cx(btn.base, btn.secondary, btn.sm, 'flex-1')}>
-                              Calendar
-                            </button>
-                            {m.approvedUnpaid > 0 && (
-                              <button type="button" onClick={() => openQuickPayoutForPartner(p)} className={cx(btn.base, btn.secondary, btn.sm, 'flex-1')}>
-                                Pay
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-1.5 font-mono text-xs font-medium text-stone-700">
+                              <span>{p.partner_code}</span>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleCopyText(p.partner_code, `code-${p.id}`);
+                                }}
+                                className="text-stone-400 hover:text-stone-700 p-0.5 rounded transition-colors"
+                                title="Copy code"
+                              >
+                                {copiedId === `code-${p.id}` ? (
+                                  <Check size={13} className="text-emerald-600" />
+                                ) : (
+                                  <Copy size={13} />
+                                )}
                               </button>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 font-semibold text-sm text-neutral-900 tabular-nums">
+                            {formatIDR(m?.totalEarned || 0)}
+                          </td>
+                          <td className="px-6 py-4 font-semibold text-sm text-neutral-900 tabular-nums">
+                            {formatIDR(m?.totalPaidOut || 0)}
+                          </td>
+                          <td className="px-6 py-4">
+                            {status === 'Paid Out' ? (
+                              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-[#ecfdf5] text-[#059669] border border-[#a7f3d0]/60">
+                                <span className="w-1.5 h-1.5 rounded-full bg-[#10b981]" />
+                                Paid Out
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-[#fef2f2] text-[#dc2626] border border-[#fecaca]/60">
+                                <span className="w-1.5 h-1.5 rounded-full bg-[#ef4444]" />
+                                Cancelled
+                              </span>
                             )}
-                            {renderStatusActions(p)}
-                          </div>
-                        </li>
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            <ChevronRight size={16} className="text-stone-400 group-hover:text-stone-700 transition-colors ml-auto" />
+                          </td>
+                        </tr>
                       );
-                    })}
-                  </ul>
-                )}
-              </div>
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
 
-              <Pagination page={partnerPage} total={filteredPartners.length} pageSize={PAGE_SIZE} onChange={setPartnerPage} label="partners" />
-            </>
-          )}
+            {/* Mobile Cards Layout */}
+            <div className="md:hidden divide-y divide-stone-100">
+              {loading ? (
+                <div className="p-4"><SkeletonList /></div>
+              ) : loadError && partners.length === 0 ? (
+                <div className="p-6 text-center"><ErrorState message={loadError} onRetry={fetchAllData} /></div>
+              ) : filteredAffiliatePartners.length === 0 ? (
+                <div className="p-8 text-center text-stone-400 text-xs">No partners found</div>
+              ) : (
+                filteredAffiliatePartners.map((p) => {
+                  const m = metricsById[p.id];
+                  const status = getPartnerDisplayStatus(p, m);
+                  const partnerType = getPartnerTypeLabel(p);
+                  return (
+                    <div
+                      key={p.id}
+                      onClick={() => openPartnerModal(p)}
+                      className="p-4 space-y-1 hover:bg-stone-50/70 transition-colors cursor-pointer"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-semibold text-neutral-900 text-sm truncate">
+                          {fullName(p)}
+                        </span>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className="font-semibold text-neutral-900 text-sm tabular-nums">
+                            {formatIDR(m?.totalPaidOut > 0 ? m.totalPaidOut : (m?.totalEarned || 0))}
+                          </span>
+                          {status === 'Paid Out' ? (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#ecfdf5] text-[#059669] border border-[#a7f3d0]/60">
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#10b981]" />
+                              Paid Out
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#fef2f2] text-[#dc2626] border border-[#fecaca]/60">
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#ef4444]" />
+                              Cancelled
+                            </span>
+                          )}
+                          <ChevronRight size={16} className="text-stone-400 shrink-0" />
+                        </div>
+                      </div>
+                      <div className="text-xs text-stone-400">
+                        {partnerType}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
         </section>
       )}
 
