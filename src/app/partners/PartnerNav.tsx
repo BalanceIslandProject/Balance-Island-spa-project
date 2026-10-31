@@ -69,9 +69,7 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
     { href: '/partners/payouts', label: 'Payouts', icon: Wallet },
   ];
 
-  const supportNavItems = [
-    { href: 'https://wa.me/6285174119423', label: 'WhatsApp Concierge', icon: MessageCircle, isExternal: true },
-    { href: '/partners/terms', label: 'Partner Guidelines', icon: ShieldCheck },
+  const supportNavItems: { href: string; label: string; icon: any; isExternal?: boolean }[] = [
     { href: '/partners/profile', label: 'Settings', icon: Settings },
   ];
 
@@ -170,7 +168,7 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
               <div className="space-y-1">
                 {!collapsed && (
                   <div className="px-3 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-[#9ca3af]">
-                    Support
+                    Settings
                   </div>
                 )}
                 {supportNavItems.map((item, idx) => {
@@ -361,7 +359,7 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
 
                 <div className="pt-2 border-t border-[#e5e7eb] space-y-1">
                   <div className="px-1 text-[10px] font-semibold uppercase tracking-wider text-[#9ca3af]">
-                    Support & Settings
+                    Settings
                   </div>
                   {supportNavItems.map((item, idx) => {
                     const Icon = item.icon;

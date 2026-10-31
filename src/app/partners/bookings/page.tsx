@@ -13,7 +13,8 @@ import {
   ExternalLink, 
   X, 
   List, 
-  LayoutGrid 
+  LayoutGrid,
+  Layers
 } from 'lucide-react';
 import { CalendarBooking } from '../FloatingBookingCalendar';
 import ScheduleTrackingModal from '../ScheduleTrackingModal';
@@ -164,6 +165,35 @@ export default function PartnerBookingsPage() {
     setSelectedDate(todayStr);
   };
 
+  // Aggregate metrics summary for affiliate CRM
+  const metrics = useMemo(() => {
+    const total = bookings.length;
+    let approvedTotal = 0;
+    let pendingTotal = 0;
+    let paidTotal = 0;
+    let paidCount = 0;
+    let approvedCount = 0;
+    let pendingCount = 0;
+
+    for (const b of bookings) {
+      const isCancelled = b.commission_status === 'cancelled' || b.booking_status === 'Cancelled';
+      if (isCancelled) continue;
+      const amt = b.commission_amount || 0;
+      if (b.commission_status === 'paid') {
+        paidTotal += amt;
+        paidCount++;
+      } else if (b.commission_status === 'approved') {
+        approvedTotal += amt;
+        approvedCount++;
+      } else {
+        pendingTotal += amt;
+        pendingCount++;
+      }
+    }
+
+    return { total, approvedTotal, pendingTotal, paidTotal, paidCount, approvedCount, pendingCount };
+  }, [bookings]);
+
   // Calendar grid computation
   const calendarDays = useMemo(() => {
     const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
@@ -298,7 +328,7 @@ export default function PartnerBookingsPage() {
   return (
     <div className="space-y-5 w-full font-sans antialiased pb-16 pt-1 sm:pt-2">
       
-      {/* ─── Main Content Split: Left Compact Calendar + Right Booking List (Primary Focus) ─── */}
+      {/* ─── Main Content Split: Left Compact Calendar + Right Metric Cards & Bookings ─── */}
       <div className="flex flex-col lg:flex-row lg:items-start gap-5 lg:gap-6">
 
         {/* ─── Mobile App Calendar Header Bar (< lg) ─── */}
@@ -326,7 +356,7 @@ export default function PartnerBookingsPage() {
         </div>
 
         {/* ═══════════════════════════════════════════════════════════════
-            LEFT CORNER: Clean Compact Calendar Widget (No Monthly Overview)
+            LEFT CORNER: Clean Compact Calendar Widget
            ═══════════════════════════════════════════════════════════════ */}
         <aside className={`w-full lg:w-[285px] xl:w-[300px] shrink-0 space-y-3 lg:sticky lg:top-4 self-start ${showMobileCalendar ? 'block' : 'hidden lg:block'}`}>
           
@@ -517,10 +547,90 @@ export default function PartnerBookingsPage() {
         </aside>
 
         {/* ═══════════════════════════════════════════════════════════════
-            RIGHT AREA: PRIMARY FOCUS — Filter Tabs + Search + Bookings
+            RIGHT AREA: Metric Cards + Filter Tabs + Search + Bookings
            ═══════════════════════════════════════════════════════════════ */}
         <section className="flex-1 min-w-0 space-y-4">
           
+          {/* ─── Metric Cards Strip (Restored above booking details) ─── */}
+          <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-3.5">
+            {/* Total Bookings Card */}
+            <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-blue-50/90 via-sky-50/40 to-white border border-blue-200/90 shadow-xs hover:border-blue-300 hover:shadow-sm transition-all group overflow-hidden">
+              <div className="flex items-center justify-between">
+                <span className="font-mono text-xs sm:text-[13px] uppercase tracking-wider text-blue-900 font-bold whitespace-nowrap">
+                  TOTAL BOOKINGS
+                </span>
+                <span className="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-xs shadow-blue-500/25 shrink-0">
+                  <Layers size={14} />
+                </span>
+              </div>
+              <span className="font-sans font-extrabold text-2xl sm:text-[32px] text-blue-950 mt-2 block tabular-nums tracking-tight leading-none">
+                {metrics.total}
+              </span>
+              <div className="flex items-center justify-start text-xs mt-3 pt-2.5 border-t border-blue-100/80">
+                <span className="font-mono text-xs font-bold text-blue-700 bg-blue-100/90 border border-blue-200 px-2.5 py-1 rounded-md">
+                  {metrics.approvedCount + metrics.paidCount} Confirmed
+                </span>
+              </div>
+            </div>
+
+            {/* Approved Card */}
+            <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-emerald-50/90 via-teal-50/40 to-white border border-emerald-200/90 shadow-xs hover:border-emerald-300 hover:shadow-sm transition-all overflow-hidden">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                  <span className="font-mono text-xs sm:text-[13px] uppercase tracking-wider text-emerald-900 font-bold whitespace-nowrap">
+                    APPROVED
+                  </span>
+                </div>
+              </div>
+              <span className="font-mono font-extrabold text-xl sm:text-[26px] text-emerald-950 mt-2 block tabular-nums tracking-tight leading-none">
+                {formatIDR(metrics.approvedTotal)}
+              </span>
+              <div className="flex items-center justify-start text-xs mt-3 pt-2.5 border-t border-emerald-100/80">
+                <span className="font-mono text-xs font-bold text-emerald-700 bg-emerald-100/90 border border-emerald-200 px-2.5 py-1 rounded-md">
+                  {metrics.approvedCount} Orders
+                </span>
+              </div>
+            </div>
+
+            {/* Pending Card */}
+            <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-amber-50/90 via-orange-50/40 to-white border border-amber-200/90 shadow-xs hover:border-amber-300 hover:shadow-sm transition-all overflow-hidden">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0" />
+                  <span className="font-mono text-xs sm:text-[13px] uppercase tracking-wider text-amber-900 font-bold whitespace-nowrap">
+                    PENDING
+                  </span>
+                </div>
+              </div>
+              <span className="font-mono font-extrabold text-xl sm:text-[26px] text-amber-950 mt-2 block tabular-nums tracking-tight leading-none">
+                {formatIDR(metrics.pendingTotal)}
+              </span>
+              <div className="flex items-center justify-start text-xs mt-3 pt-2.5 border-t border-amber-100/80">
+                <span className="font-mono text-xs font-bold text-amber-700 bg-amber-100/90 border border-amber-200 px-2.5 py-1 rounded-md">
+                  {metrics.pendingCount} Active
+                </span>
+              </div>
+            </div>
+
+            {/* Paid Out Card */}
+            <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-indigo-50/90 via-purple-50/40 to-white border border-indigo-200/90 shadow-xs hover:border-indigo-300 hover:shadow-sm transition-all overflow-hidden">
+              <div className="flex items-center justify-between">
+                <span className="font-mono text-xs sm:text-[13px] uppercase tracking-wider text-indigo-900 font-bold whitespace-nowrap">
+                  PAID OUT
+                </span>
+              </div>
+              <span className="font-mono font-extrabold text-xl sm:text-[26px] text-indigo-950 mt-2 block tabular-nums tracking-tight leading-none">
+                {formatIDR(metrics.paidTotal)}
+              </span>
+              <div className="flex items-center justify-start text-xs mt-3 pt-2.5 border-t border-indigo-100/80">
+                <span className="font-mono text-xs font-bold text-indigo-700 bg-indigo-100/90 border border-indigo-200 px-2.5 py-1 rounded-md">
+                  {metrics.paidCount} Payouts
+                </span>
+              </div>
+            </div>
+          </div>
+
           {/* ─── Search and Filter Tabs (Segmented Controls) ─── */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
             {/* Filter Pills */}

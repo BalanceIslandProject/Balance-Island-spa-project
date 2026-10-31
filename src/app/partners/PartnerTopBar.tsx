@@ -91,17 +91,6 @@ export default function PartnerTopBar({ session }: { session: PartnerSessionData
           )}
         </button>
 
-        {/* WhatsApp Concierge Support */}
-        <a
-          href="https://wa.me/6285174119423"
-          target="_blank"
-          rel="noreferrer"
-          className="p-1.5 text-[#6b7280] hover:text-[#111827] hover:bg-[#f3f4f6] rounded-[6px] transition-colors border border-transparent hover:border-[#e5e7eb]"
-          title="WhatsApp Partner Concierge"
-          aria-label="WhatsApp Concierge"
-        >
-          <MessageCircle size={16} />
-        </a>
 
         {/* Notifications Bell */}
         <div className="relative">

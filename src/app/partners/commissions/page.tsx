@@ -204,31 +204,6 @@ export default function PartnerCommissionsPage() {
   return (
     <div className="space-y-6 w-full pb-16 font-sans antialiased">
       
-      {/* ─── Top Header (Clean & Minimal) ─── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#eaecf0]">
-        <div>
-          <h1 className="text-2xl sm:text-[28px] font-bold text-[#0f172a] tracking-tight">
-            Commissions
-          </h1>
-          <p className="text-xs text-[#64748b] mt-0.5">
-            Paid out and cancelled partner commissions
-          </p>
-        </div>
-
-        <button
-          type="button"
-          onClick={() => {
-            setLoading(true);
-            loadCommissions();
-          }}
-          disabled={loading}
-          className="inline-flex items-center gap-1.5 h-8.5 px-3.5 rounded-xl border border-[#e2e8f0] bg-white text-xs font-medium text-[#0f172a] hover:bg-[#f8fafc] hover:border-[#cbd5e1] shadow-2xs cursor-pointer self-start sm:self-auto transition-all active:scale-95"
-          title="Refresh commissions"
-        >
-          <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
-          <span>Refresh</span>
-        </button>
-      </div>
 
       {/* ─── Simplified 2-Status KPI Summary Strip (Paid Out & Cancelled Only) ─── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
