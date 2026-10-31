@@ -100,6 +100,13 @@ export default function PartnerCommissionsPage() {
   };
 
   // Preset Date Handlers
+  const handleSetToday = () => {
+    const today = formatDateYMD(new Date());
+    setStartDate(today);
+    setEndDate(today);
+    setActiveDatePreset('today');
+  };
+
   const handleSetThisMonth = () => {
     const now = new Date();
     const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -315,38 +322,89 @@ export default function PartnerCommissionsPage() {
           </div>
         </div>
 
-        {/* Expandable Calendar Panel */}
+        {/* Expandable Date Range Panel (Start From and End Logic) */}
         {showCalendarFilter && (
-          <div className="p-4 rounded-xl bg-[#f8fafc] border border-[#eaecf0] space-y-3 animate-in fade-in-50">
+          <div className="p-4 sm:p-5 rounded-xl bg-[#f8fafc] border border-[#eaecf0] space-y-4 animate-in fade-in-50">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-[#0f172a]">Select Date Range</span>
+              <div className="flex items-center gap-2">
+                <CalendarDays size={15} className="text-[#0f172a]" />
+                <span className="text-xs font-bold text-[#0f172a] uppercase tracking-wider font-mono">
+                  Filter by Date Range
+                </span>
+              </div>
               {hasDateFilter && (
                 <button
                   type="button"
                   onClick={handleResetDate}
-                  className="text-xs text-[#dc2626] hover:underline flex items-center gap-1 cursor-pointer font-medium"
+                  className="text-xs text-[#dc2626] hover:text-[#b91c1c] hover:underline flex items-center gap-1 cursor-pointer font-medium transition-colors"
                 >
-                  <X size={12} />
-                  <span>Clear Filter</span>
+                  <X size={13} />
+                  <span>Reset Dates</span>
                 </button>
               )}
             </div>
 
-            <div className="flex items-center gap-2 flex-wrap">
+            {/* Start From & End Logic Inputs */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              {/* Start From Input */}
+              <div className="space-y-1.5">
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-[#475569] font-mono">
+                  Start From
+                </label>
+                <div className="relative">
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => {
+                      setStartDate(e.target.value);
+                      setActiveDatePreset('custom');
+                    }}
+                    className="w-full h-10 px-3.5 bg-white border border-[#cbd5e1] rounded-xl text-xs font-mono font-medium text-[#0f172a] focus:outline-none focus:border-[#0f172a] focus:ring-2 focus:ring-[#0f172a]/10 shadow-2xs transition-all"
+                  />
+                </div>
+              </div>
+
+              {/* End Date Input */}
+              <div className="space-y-1.5">
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-[#475569] font-mono">
+                  End Date
+                </label>
+                <div className="relative">
+                  <input
+                    type="date"
+                    value={endDate}
+                    min={startDate || undefined}
+                    onChange={(e) => {
+                      setEndDate(e.target.value);
+                      setActiveDatePreset('custom');
+                    }}
+                    className="w-full h-10 px-3.5 bg-white border border-[#cbd5e1] rounded-xl text-xs font-mono font-medium text-[#0f172a] focus:outline-none focus:border-[#0f172a] focus:ring-2 focus:ring-[#0f172a]/10 shadow-2xs transition-all"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Presets Row */}
+            <div className="flex items-center gap-1.5 flex-wrap pt-2.5 border-t border-[#e2e8f0]">
+              <span className="text-[11px] text-[#64748b] font-mono mr-1">Quick Select:</span>
               <button
                 type="button"
-                onClick={handleResetDate}
+                onClick={handleSetToday}
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${
-                  !hasDateFilter ? 'bg-[#0f172a] text-white border-[#0f172a] shadow-xs font-bold' : 'bg-white text-[#64748b] border-[#e2e8f0] hover:bg-[#f8fafc]'
+                  activeDatePreset === 'today' && hasDateFilter
+                    ? 'bg-[#0f172a] text-white border-[#0f172a] shadow-xs font-bold'
+                    : 'bg-white text-[#475569] border-[#e2e8f0] hover:bg-[#f1f5f9]'
                 }`}
               >
-                All Time
+                Today
               </button>
               <button
                 type="button"
                 onClick={handleSetThisMonth}
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${
-                  activeDatePreset === 'this_month' && hasDateFilter ? 'bg-[#0f172a] text-white border-[#0f172a] shadow-xs font-bold' : 'bg-white text-[#64748b] border-[#e2e8f0] hover:bg-[#f8fafc]'
+                  activeDatePreset === 'this_month' && hasDateFilter
+                    ? 'bg-[#0f172a] text-white border-[#0f172a] shadow-xs font-bold'
+                    : 'bg-white text-[#475569] border-[#e2e8f0] hover:bg-[#f1f5f9]'
                 }`}
               >
                 This Month
@@ -355,7 +413,9 @@ export default function PartnerCommissionsPage() {
                 type="button"
                 onClick={handleSetLastMonth}
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${
-                  activeDatePreset === 'last_month' && hasDateFilter ? 'bg-[#0f172a] text-white border-[#0f172a] shadow-xs font-bold' : 'bg-white text-[#64748b] border-[#e2e8f0] hover:bg-[#f8fafc]'
+                  activeDatePreset === 'last_month' && hasDateFilter
+                    ? 'bg-[#0f172a] text-white border-[#0f172a] shadow-xs font-bold'
+                    : 'bg-white text-[#475569] border-[#e2e8f0] hover:bg-[#f1f5f9]'
                 }`}
               >
                 Last Month
@@ -364,10 +424,23 @@ export default function PartnerCommissionsPage() {
                 type="button"
                 onClick={handleSetLast30Days}
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${
-                  activeDatePreset === 'last_30_days' && hasDateFilter ? 'bg-[#0f172a] text-white border-[#0f172a] shadow-xs font-bold' : 'bg-white text-[#64748b] border-[#e2e8f0] hover:bg-[#f8fafc]'
+                  activeDatePreset === 'last_30_days' && hasDateFilter
+                    ? 'bg-[#0f172a] text-white border-[#0f172a] shadow-xs font-bold'
+                    : 'bg-white text-[#475569] border-[#e2e8f0] hover:bg-[#f1f5f9]'
                 }`}
               >
                 Last 30 Days
+              </button>
+              <button
+                type="button"
+                onClick={handleResetDate}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${
+                  !hasDateFilter
+                    ? 'bg-[#0f172a] text-white border-[#0f172a] shadow-xs font-bold'
+                    : 'bg-white text-[#475569] border-[#e2e8f0] hover:bg-[#f1f5f9]'
+                }`}
+              >
+                All Time
               </button>
             </div>
           </div>
@@ -375,7 +448,14 @@ export default function PartnerCommissionsPage() {
 
         {/* Ledger Summary Bar */}
         <div className="pt-2.5 border-t border-[#f1f5f9] flex items-center justify-between text-xs text-[#64748b] flex-wrap gap-2">
-          <span>Showing <strong className="text-[#0f172a]">{filtered.length}</strong> records</span>
+          <span>
+            Showing <strong className="text-[#0f172a]">{filtered.length}</strong> records
+            {hasDateFilter && (
+              <span className="font-mono text-indigo-700 font-semibold ml-1.5">
+                ({startDate || 'Start'} to {endDate || 'Now'})
+              </span>
+            )}
+          </span>
           <span>Filtered Total: <strong className="text-[#16a34a] font-bold font-mono">{formatIDR(totalFilteredCommission)}</strong></span>
         </div>
       </div>

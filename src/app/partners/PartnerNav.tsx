@@ -81,7 +81,7 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
           1. KRAVIO-INSPIRED DESKTOP SIDEBAR
          ======================================================== */}
       <aside 
-        className={`hidden md:flex flex-col bg-white border-r border-[#e5e7eb] sticky top-0 h-screen shrink-0 z-30 self-start transition-all duration-200 ${
+        className={`hidden md:flex flex-col bg-white border-r border-[#e5e7eb] sticky top-0 h-screen max-h-screen shrink-0 z-30 self-start transition-all duration-200 overflow-hidden overscroll-none select-none ${
           collapsed ? 'w-20' : 'w-64 lg:w-68'
         }`}
       >
@@ -132,8 +132,8 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
           </div>
         )}
 
-        {/* Navigation Sections */}
-        <div className="flex-1 px-3 py-3 space-y-6 overflow-y-auto no-scrollbar">
+        {/* Navigation Sections (Locked and non-scrollable) */}
+        <div className="flex-1 px-3 py-3 space-y-6 overflow-hidden select-none">
           {session ? (
             <>
               {/* SECTION 1: MAIN NAVIGATION */}
