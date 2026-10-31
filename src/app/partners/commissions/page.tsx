@@ -22,6 +22,8 @@ import {
   Wallet
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { CalendarBooking } from '../FloatingBookingCalendar';
+import ScheduleTrackingModal from '../ScheduleTrackingModal';
 
 // Sparkline SVG Component (Kravio style)
 function Sparkline({ color = 'green', trend = 'up' }: { color?: 'green' | 'teal' | 'red'; trend?: 'up' | 'down' }) {
@@ -57,6 +59,24 @@ export default function PartnerCommissionsPage() {
   const [showCalendarFilter, setShowCalendarFilter] = useState<boolean>(false);
   const [activeDatePreset, setActiveDatePreset] = useState<string>('all');
   const [loading, setLoading] = useState(true);
+  const [trackingBooking, setTrackingBooking] = useState<CalendarBooking | null>(null);
+
+  const itemAsCalendarBooking = (item: any): CalendarBooking => ({
+    id: String(item.id || item.booking_id),
+    booking_id: item.booking_id,
+    date: item.created_at ? item.created_at.split('T')[0] : '',
+    created_at: item.created_at,
+    guest_name: item.guest_name || 'Guest',
+    treatment_name: item.treatment_name || 'Spa Treatment',
+    treatment_amount: Number(item.eligible_treatment_amount || 0),
+    gross_amount: Number(item.eligible_treatment_amount || 0),
+    commission_rate_pct: Number(item.commission_rate_pct || 10),
+    commission_amount: Number(item.commission_amount || 0),
+    commission_status: item.status || 'pending',
+    payment_status: item.status === 'paid' ? 'paid' : 'unpaid',
+    payment_verified: item.status === 'paid' || item.status === 'approved',
+    booking_status: item.status === 'cancelled' ? 'Cancelled' : 'Confirmed',
+  });
 
   const loadCommissions = async () => {
     try {
@@ -94,12 +114,11 @@ export default function PartnerCommissionsPage() {
     };
   }, []);
 
-  const formatIDR = (val: number) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
+  const formatIDR = (val: number | undefined | null) => {
+    const formatted = new Intl.NumberFormat('id-ID', {
       maximumFractionDigits: 0,
     }).format(val || 0);
+    return `Rp${formatted}`;
   };
 
   const formatDateYMD = (d: Date) => {
@@ -210,8 +229,8 @@ export default function PartnerCommissionsPage() {
           <h1 className="text-xl sm:text-2xl font-bold text-[#111827] tracking-tight">
             Commissions
           </h1>
-          <p className="text-xs sm:text-sm text-[#6b7280] mt-0.5">
-            Audit itemized affiliate commissions, net rates, and disbursement clearances.
+          <p className="text-xs text-[#6b7280] mt-0.5">
+            Itemized commissions, rates, and clearances.
           </p>
         </div>
 
@@ -456,7 +475,7 @@ export default function PartnerCommissionsPage() {
                   <th className="py-3 px-4">Rate</th>
                   <th className="py-3 px-4">Commission</th>
                   <th className="py-3 px-4">Status</th>
-                  <th className="py-3 px-4 text-right">Invoice</th>
+                  <th className="py-3 px-4 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#f3f4f6]">
@@ -512,14 +531,26 @@ export default function PartnerCommissionsPage() {
                         )}
                       </td>
                       <td className="py-3.5 px-4 text-right whitespace-nowrap">
-                        <Link
-                          href={`/invoice/${item.booking_id}`}
-                          target="_blank"
-                          className="text-[#111827] font-semibold hover:underline inline-flex items-center gap-1"
-                        >
-                          <span>Invoice</span>
-                          <ExternalLink size={10} className="text-[#9ca3af]" />
-                        </Link>
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => setTrackingBooking(itemAsCalendarBooking(item))}
+                            className="h-6 px-2 rounded-[4px] bg-[#fafafa] hover:bg-[#ebebeb] border border-[#ebebeb] text-[11px] font-mono text-[#171717] inline-flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
+                            title="Track schedule"
+                          >
+                            <Clock size={10} className="text-[#666666]" />
+                            <span>Track</span>
+                          </button>
+                          <Link
+                            href={`/invoice/${item.booking_id}`}
+                            target="_blank"
+                            className="text-[11px] font-mono text-[#666666] hover:text-[#171717] inline-flex items-center gap-0.5 hover:underline"
+                            title="View invoice"
+                          >
+                            <span>Invoice</span>
+                            <ExternalLink size={10} />
+                          </Link>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -529,6 +560,12 @@ export default function PartnerCommissionsPage() {
           </div>
         )}
       </div>
+
+      {/* Schedule Tracking Modal */}
+      <ScheduleTrackingModal
+        booking={trackingBooking}
+        onClose={() => setTrackingBooking(null)}
+      />
 
     </div>
   );
