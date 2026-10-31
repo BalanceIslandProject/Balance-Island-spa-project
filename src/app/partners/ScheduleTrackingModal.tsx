@@ -122,43 +122,43 @@ export default function ScheduleTrackingModal({ booking, onClose }: ScheduleTrac
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/40 backdrop-blur-xs animate-in fade-in duration-150">
       <div 
-        className="w-full max-w-sm sm:max-w-md bg-white rounded-[10px] border border-[#ebebeb] shadow-[0_16px_40px_rgba(0,0,0,0.12)] overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-150 font-sans"
+        className="w-full max-w-sm sm:max-w-md bg-white rounded-2xl border border-[#eaecf0] shadow-xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-150 font-sans"
         role="dialog"
         aria-modal="true"
         aria-labelledby="tracking-title"
       >
         {/* Header - Compact Web App Style */}
-        <div className="px-3.5 py-2.5 sm:px-4 sm:py-3 border-b border-[#ebebeb] bg-[#fafafa] flex items-center justify-between shrink-0">
+        <div className="px-4 py-3 sm:px-5 sm:py-3.5 border-b border-[#eaecf0] bg-[#f8fafc] flex items-center justify-between shrink-0">
           <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-            <span className="font-mono text-[10px] uppercase font-semibold text-[#8f8f8f] shrink-0">
+            <span className="font-mono text-[10px] uppercase font-bold text-[#64748b] tracking-wider shrink-0">
               Track
             </span>
-            <span className="text-[#ebebeb]">·</span>
-            <div className="flex items-center gap-1 font-mono text-xs font-bold text-[#171717] min-w-0">
+            <span className="text-[#cbd5e1]">·</span>
+            <div className="flex items-center gap-1 font-mono text-xs font-bold text-[#0f172a] min-w-0">
               <span className="truncate">#{booking.booking_id}</span>
               <button
                 type="button"
                 onClick={handleCopyId}
-                className="text-[#8f8f8f] hover:text-[#171717] p-0.5 cursor-pointer shrink-0"
+                className="text-[#94a3b8] hover:text-[#0f172a] p-0.5 cursor-pointer shrink-0 transition-colors"
                 title="Copy ID"
               >
-                {copiedId ? <Check size={11} className="text-[#297a3a]" /> : <Copy size={11} />}
+                {copiedId ? <Check size={11} className="text-[#16a34a]" /> : <Copy size={11} />}
               </button>
             </div>
             {isPaidOut ? (
-              <span className="font-mono text-[9px] font-semibold text-white bg-[#171717] px-1.5 py-0.5 rounded uppercase shrink-0">
+              <span className="font-mono text-[9px] font-bold text-white bg-[#0f172a] px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0 shadow-2xs">
                 PAID OUT
               </span>
             ) : isApproved ? (
-              <span className="font-mono text-[9px] font-semibold text-[#137333] bg-[#e6f4ea] px-1.5 py-0.5 rounded uppercase border border-[#ceead6] shrink-0">
+              <span className="font-mono text-[9px] font-bold text-[#15803d] bg-[#dcfce7] px-2 py-0.5 rounded-full uppercase tracking-wider border border-[#bbf7d0] shrink-0">
                 Approved
               </span>
             ) : isCancelled ? (
-              <span className="font-mono text-[9px] font-semibold text-[#c5221f] bg-[#fce8e6] px-1.5 py-0.5 rounded uppercase border border-[#fad2cf] shrink-0">
+              <span className="font-mono text-[9px] font-bold text-[#b91c1c] bg-[#fee2e2] px-2 py-0.5 rounded-full uppercase tracking-wider border border-[#fecaca] shrink-0">
                 Cancelled
               </span>
             ) : (
-              <span className="font-mono text-[9px] font-semibold text-[#b06000] bg-[#fef7e0] px-1.5 py-0.5 rounded uppercase border border-[#feefc3] shrink-0">
+              <span className="font-mono text-[9px] font-bold text-[#b45309] bg-[#fef3c7] px-2 py-0.5 rounded-full uppercase tracking-wider border border-[#fde68a] shrink-0">
                 Pending
               </span>
             )}
@@ -167,7 +167,7 @@ export default function ScheduleTrackingModal({ booking, onClose }: ScheduleTrac
           <button
             type="button"
             onClick={onClose}
-            className="p-1 text-[#8f8f8f] hover:text-[#171717] hover:bg-white rounded transition-colors cursor-pointer shrink-0 ml-2"
+            className="p-1 text-[#94a3b8] hover:text-[#0f172a] hover:bg-[#e2e8f0] rounded-lg transition-colors cursor-pointer shrink-0 ml-2"
             aria-label="Close"
           >
             <X size={15} />
@@ -175,21 +175,21 @@ export default function ScheduleTrackingModal({ booking, onClose }: ScheduleTrac
         </div>
 
         {/* Content Body */}
-        <div className="p-3.5 sm:p-4 overflow-y-auto space-y-3 flex-1 text-xs">
+        <div className="p-4 sm:p-5 overflow-y-auto space-y-3.5 flex-1 text-xs">
           
           {/* 4-Step Stepper */}
           {isCancelled ? (
-            <div className="p-2.5 rounded-[6px] bg-red-50 border border-red-200 text-xs text-red-900 flex items-center gap-2">
-              <AlertCircle size={14} className="text-red-600 shrink-0" />
+            <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-900 flex items-center gap-2">
+              <AlertCircle size={15} className="text-red-600 shrink-0" />
               <span className="font-medium truncate">Cancelled · Rp0</span>
             </div>
           ) : (
-            <div className="pt-1 pb-1">
+            <div className="pt-1.5 pb-1.5">
               <div className="grid grid-cols-4 relative">
                 {/* Connecting Bar */}
-                <div className="absolute top-3 left-[12.5%] right-[12.5%] h-0.5 bg-[#ebebeb] z-0" />
+                <div className="absolute top-3 left-[12.5%] right-[12.5%] h-0.5 bg-[#eaecf0] z-0" />
                 <div 
-                  className="absolute top-3 left-[12.5%] h-0.5 bg-[#297a3a] transition-all duration-300 z-0" 
+                  className="absolute top-3 left-[12.5%] h-0.5 bg-[#16a34a] transition-all duration-300 z-0" 
                   style={{ 
                     width: activeStep >= 4 ? '75%' : `${Math.max(0, (activeStep - 1) * 25)}%` 
                   }}
@@ -198,26 +198,26 @@ export default function ScheduleTrackingModal({ booking, onClose }: ScheduleTrac
                 {steps.map((st, idx) => (
                   <div key={idx} className="flex flex-col items-center text-center relative z-10 px-0.5 min-w-0">
                     <div 
-                      className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-mono transition-all shrink-0 ${
+                      className={`w-6.5 h-6.5 rounded-full flex items-center justify-center text-[10px] font-mono transition-all shrink-0 ${
                         st.isDone
-                          ? 'bg-[#297a3a] text-white'
+                          ? 'bg-[#16a34a] text-white shadow-xs'
                           : st.isCurrent
-                          ? 'bg-white border-2 border-[#171717] text-[#171717] ring-2 ring-[#171717]/10 font-bold'
-                          : 'bg-white border border-[#d1d5db] text-[#9ca3af]'
+                          ? 'bg-white border-2 border-[#0f172a] text-[#0f172a] ring-4 ring-[#0f172a]/10 font-bold'
+                          : 'bg-white border border-[#cbd5e1] text-[#94a3b8]'
                       }`}
                     >
                       {st.isDone ? (
-                        <Check size={11} strokeWidth={2.5} />
+                        <Check size={12} strokeWidth={2.5} />
                       ) : (
                         <span>{idx + 1}</span>
                       )}
                     </div>
-                    <span className={`text-[11px] font-medium mt-1 truncate max-w-full ${
-                      st.isDone || st.isCurrent ? 'text-[#171717]' : 'text-[#8f8f8f]'
+                    <span className={`text-[11px] font-semibold mt-1.5 truncate max-w-full ${
+                      st.isDone || st.isCurrent ? 'text-[#0f172a]' : 'text-[#94a3b8]'
                     }`}>
                       {st.label}
                     </span>
-                    <span className="text-[10px] font-mono text-[#8f8f8f] truncate max-w-full">
+                    <span className="text-[10px] font-mono text-[#64748b] truncate max-w-full">
                       {st.sub}
                     </span>
                   </div>
@@ -227,17 +227,17 @@ export default function ScheduleTrackingModal({ booking, onClose }: ScheduleTrac
           )}
 
           {/* Details Card - Compact 2-Column Grid */}
-          <div className="p-3 rounded-[8px] bg-[#fafafa] border border-[#ebebeb] space-y-2 overflow-hidden">
-            <div className="grid grid-cols-2 gap-2 pb-2 border-b border-[#ebebeb]">
+          <div className="p-3.5 rounded-xl bg-[#f8fafc] border border-[#eaecf0] space-y-2.5 overflow-hidden">
+            <div className="grid grid-cols-2 gap-2 pb-2.5 border-b border-[#eaecf0]">
               <div className="min-w-0">
-                <span className="font-mono text-[10px] uppercase text-[#8f8f8f] block">Guest</span>
-                <span className="font-semibold text-xs text-[#171717] truncate block">
+                <span className="font-mono text-[10px] uppercase tracking-wider text-[#94a3b8] block font-semibold">Guest</span>
+                <span className="font-bold text-xs text-[#0f172a] truncate block">
                   {booking.guest_name || 'Guest'}
                 </span>
               </div>
               <div className="min-w-0 text-right">
-                <span className="font-mono text-[10px] uppercase text-[#8f8f8f] block">Date</span>
-                <span className="font-mono font-medium text-xs text-[#171717] truncate block">
+                <span className="font-mono text-[10px] uppercase tracking-wider text-[#94a3b8] block font-semibold">Date</span>
+                <span className="font-mono font-medium text-xs text-[#0f172a] truncate block">
                   {safeFormatDate(booking.date)} {booking.time ? `· ${booking.time}` : ''}
                 </span>
               </div>
@@ -245,21 +245,21 @@ export default function ScheduleTrackingModal({ booking, onClose }: ScheduleTrac
 
             <div className="grid grid-cols-2 gap-2">
               <div className="min-w-0">
-                <span className="font-mono text-[10px] uppercase text-[#8f8f8f] block">Treatment</span>
-                <span className="font-medium text-xs text-[#171717] truncate block">
+                <span className="font-mono text-[10px] uppercase tracking-wider text-[#94a3b8] block font-semibold">Treatment</span>
+                <span className="font-medium text-xs text-[#0f172a] truncate block">
                   {booking.treatment_name || 'Spa Ritual'}
                 </span>
-                <span className="font-mono text-[10px] text-[#8f8f8f] truncate block">
+                <span className="font-mono text-[10px] text-[#64748b] truncate block">
                   {booking.duration || '60 Mins'}
                 </span>
               </div>
               <div className="min-w-0 text-right">
-                <span className="font-mono text-[10px] uppercase text-[#8f8f8f] block">Location</span>
-                <span className="font-medium text-xs text-[#171717] truncate block">
+                <span className="font-mono text-[10px] uppercase tracking-wider text-[#94a3b8] block font-semibold">Location</span>
+                <span className="font-medium text-xs text-[#0f172a] truncate block">
                   {booking.location || 'Ubud'}
                 </span>
                 {booking.room_number && (
-                  <span className="font-mono text-[10px] text-[#8f8f8f] truncate block">
+                  <span className="font-mono text-[10px] text-[#64748b] truncate block">
                     Room {booking.room_number}
                   </span>
                 )}
@@ -268,23 +268,23 @@ export default function ScheduleTrackingModal({ booking, onClose }: ScheduleTrac
           </div>
 
           {/* Financials & Status Strip */}
-          <div className="p-3 rounded-[8px] bg-white border border-[#ebebeb] space-y-1.5 shadow-2xs overflow-hidden">
+          <div className="p-3.5 rounded-xl bg-white border border-[#eaecf0] space-y-2 shadow-2xs overflow-hidden">
             <div className="flex items-center justify-between text-xs">
-              <span className="text-[#666666]">Net</span>
-              <span className="font-mono font-semibold text-[#171717] tabular-nums">
+              <span className="text-[#64748b]">Net Treatment</span>
+              <span className="font-mono font-bold text-[#0f172a] tabular-nums">
                 {formatIDR(booking.treatment_amount || booking.gross_amount)}
               </span>
             </div>
             <div className="flex items-center justify-between text-xs">
-              <span className="text-[#666666]">Earned ({booking.commission_rate_pct || 10}%)</span>
-              <span className="font-mono font-bold text-xs text-[#297a3a] tabular-nums">
+              <span className="text-[#64748b]">Earned ({booking.commission_rate_pct || 10}%)</span>
+              <span className="font-mono font-bold text-xs text-[#16a34a] tabular-nums">
                 +{formatIDR(booking.commission_amount)}
               </span>
             </div>
 
-            <div className="pt-1.5 border-t border-[#f3f4f6] flex items-center justify-between text-[11px]">
-              <span className="text-[#8f8f8f]">Status</span>
-              <span className="font-medium text-[#171717]">
+            <div className="pt-2 border-t border-[#f1f5f9] flex items-center justify-between text-[11px]">
+              <span className="text-[#94a3b8]">Status</span>
+              <span className="font-semibold text-[#0f172a]">
                 {isPaidOut 
                   ? 'Disbursed' 
                   : isApproved 
@@ -299,20 +299,20 @@ export default function ScheduleTrackingModal({ booking, onClose }: ScheduleTrac
         </div>
 
         {/* Footer - Clean, Compact Web App */}
-        <div className="px-4 py-2.5 border-t border-[#ebebeb] bg-[#fafafa] flex items-center justify-between shrink-0">
+        <div className="px-5 py-3 border-t border-[#eaecf0] bg-[#f8fafc] flex items-center justify-between shrink-0">
           <Link
             href={`/invoice/${booking.booking_id}`}
             target="_blank"
-            className="inline-flex items-center gap-1 text-xs font-medium text-[#171717] hover:underline"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0f172a] hover:underline"
           >
             <span>Invoice</span>
-            <ExternalLink size={11} className="text-[#8f8f8f]" />
+            <ExternalLink size={12} className="text-[#94a3b8]" />
           </Link>
 
           <button
             type="button"
             onClick={onClose}
-            className="h-7 px-3 rounded-[6px] bg-[#171717] text-white hover:bg-black font-mono text-xs uppercase tracking-wider transition-colors cursor-pointer"
+            className="h-8 px-4 rounded-xl bg-[#0f172a] text-white hover:bg-black font-mono text-xs uppercase tracking-wider transition-colors cursor-pointer shadow-xs active:scale-95"
           >
             Close
           </button>

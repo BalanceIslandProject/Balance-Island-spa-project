@@ -360,16 +360,16 @@ export default function PartnerBookingsPage() {
     <div className="space-y-6 w-full font-sans antialiased pb-16">
       
       {/* ─── Top Header Toolbar ─── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-[#ebebeb]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#eaecf0]">
         <div>
-          <span className="font-mono text-[10px] uppercase tracking-[0.071em] text-[#666666]">
+          <span className="font-mono text-[10px] uppercase tracking-wider text-[#64748b] font-semibold block mb-0.5">
             Partner Portal
           </span>
-          <h1 className="text-xl sm:text-2xl font-semibold text-[#171717] tracking-tight">
+          <h1 className="text-2xl sm:text-[28px] font-bold text-[#0f172a] tracking-tight">
             Bookings
           </h1>
-          <p className="text-xs text-[#666666] mt-0.5">
-            Appointments, treatments, and commissions.
+          <p className="text-xs text-[#64748b] mt-0.5">
+            Track guest appointments, treatments, and commissions in real time
           </p>
         </div>
 
@@ -378,10 +378,10 @@ export default function PartnerBookingsPage() {
             <button
               type="button"
               onClick={() => setSelectedDate(null)}
-              className="inline-flex items-center gap-1 h-8 px-2.5 rounded-[6px] border border-[#ebebeb] bg-[#fafafa] hover:bg-[#f0f0f0] text-xs font-mono text-[#666666] hover:text-[#171717] transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1.5 h-8.5 px-3 rounded-xl border border-[#e2e8f0] bg-white hover:bg-red-50 hover:text-red-600 hover:border-red-200 text-xs font-medium text-[#64748b] transition-all cursor-pointer shadow-2xs active:scale-95"
               title="Show all bookings"
             >
-              <X size={12} />
+              <X size={13} />
               <span>Clear Date</span>
             </button>
           )}
@@ -393,7 +393,7 @@ export default function PartnerBookingsPage() {
               loadData();
             }}
             disabled={loading}
-            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-[6px] border border-[#ebebeb] bg-white text-xs font-mono text-[#171717] hover:bg-[#fafafa] transition-colors cursor-pointer shadow-2xs"
+            className="inline-flex items-center gap-1.5 h-8.5 px-3.5 rounded-xl border border-[#e2e8f0] bg-white text-xs font-medium text-[#0f172a] hover:bg-[#f8fafc] hover:border-[#cbd5e1] transition-all cursor-pointer shadow-2xs active:scale-95"
             title="Refresh bookings"
           >
             <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
@@ -406,51 +406,51 @@ export default function PartnerBookingsPage() {
       <div className="flex flex-col lg:flex-row lg:items-start gap-5 lg:gap-6">
 
         {/* ─── Mobile App Calendar Header Bar (< lg) ─── */}
-        <div className="lg:hidden w-full flex items-center justify-between p-3 rounded-2xl bg-white border border-[#ebebeb] shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
+        <div className="lg:hidden w-full flex items-center justify-between p-3.5 rounded-2xl bg-white border border-[#eaecf0] shadow-xs">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-8 h-8 rounded-xl bg-[#fafafa] border border-[#ebebeb] flex items-center justify-center text-[#171717] shrink-0">
-              <CalendarIcon size={15} />
+            <div className="w-9 h-9 rounded-xl bg-[#f8fafc] border border-[#eaecf0] flex items-center justify-center text-[#0f172a] shrink-0">
+              <CalendarIcon size={16} />
             </div>
             <div className="min-w-0">
-              <div className="font-semibold text-xs text-[#171717] truncate">
+              <div className="font-bold text-xs text-[#0f172a] truncate">
                 {MONTH_NAMES[currentMonth]} {currentYear}
               </div>
-              <div className="text-[11px] text-[#8f8f8f] font-mono truncate">
-                {currentMonthStats.count} bookings · +{formatIDR(currentMonthStats.earned)}
+              <div className="text-[11px] text-[#64748b] font-mono truncate">
+                {currentMonthStats.count} {currentMonthStats.count === 1 ? 'booking' : 'bookings'} · +{formatIDR(currentMonthStats.earned)}
               </div>
             </div>
           </div>
           <button
             type="button"
             onClick={() => setShowMobileCalendar(!showMobileCalendar)}
-            className="px-3 py-1.5 rounded-full bg-[#fafafa] hover:bg-[#ebebeb] border border-[#ebebeb] text-xs font-mono font-medium text-[#171717] shrink-0 active:scale-95 transition-all cursor-pointer"
+            className="px-3.5 py-1.5 rounded-full bg-[#f1f5f9] hover:bg-[#e2e8f0] border border-[#e2e8f0] text-xs font-medium text-[#0f172a] shrink-0 active:scale-95 transition-all cursor-pointer"
           >
-            {showMobileCalendar ? 'Hide' : 'Calendar'}
+            {showMobileCalendar ? 'Hide' : 'Calendar ▾'}
           </button>
         </div>
 
         {/* ═══════════════════════════════════════════════════════════════
             LEFT CORNER: Modern Compact Calendar Widget (Matches Ref Image)
            ═══════════════════════════════════════════════════════════════ */}
-        <aside className={`w-full lg:w-[280px] xl:w-[295px] shrink-0 space-y-3.5 lg:sticky lg:top-4 self-start ${showMobileCalendar ? 'block' : 'hidden lg:block'}`}>
+        <aside className={`w-full lg:w-[285px] xl:w-[300px] shrink-0 space-y-3.5 lg:sticky lg:top-4 self-start ${showMobileCalendar ? 'block' : 'hidden lg:block'}`}>
           
           {/* Calendar Card Box */}
-          <div className="bg-white border border-[#ebebeb] rounded-2xl p-4 sm:p-5 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
+          <div className="bg-white border border-[#eaecf0] rounded-2xl p-4.5 sm:p-5 shadow-xs">
             
             {/* Header: Prev chevron | Calendar Icon + Month Year | Next chevron */}
             <div className="flex items-center justify-between gap-2 mb-4">
               <button
                 type="button"
                 onClick={handlePrevMonth}
-                className="w-9 h-9 rounded-xl border border-[#ebebeb] bg-white hover:bg-[#fafafa] flex items-center justify-center text-[#171717] transition-all cursor-pointer shadow-2xs active:scale-95"
+                className="w-9 h-9 rounded-xl border border-[#eaecf0] bg-white hover:bg-[#f8fafc] hover:border-[#cbd5e1] flex items-center justify-center text-[#334155] transition-all cursor-pointer shadow-2xs active:scale-95"
                 title="Previous month"
               >
                 <ChevronLeft size={16} strokeWidth={2.2} />
               </button>
 
               <div className="flex items-center gap-2">
-                <CalendarIcon size={18} className="text-[#171717]" strokeWidth={2} />
-                <span className="font-semibold text-base sm:text-[17px] text-[#171717] tracking-tight">
+                <CalendarIcon size={17} className="text-[#0f172a]" strokeWidth={2} />
+                <span className="font-bold text-base sm:text-[17px] text-[#0f172a] tracking-tight">
                   {MONTH_NAMES[currentMonth]} {currentYear}
                 </span>
               </div>
@@ -458,7 +458,7 @@ export default function PartnerBookingsPage() {
               <button
                 type="button"
                 onClick={handleNextMonth}
-                className="w-9 h-9 rounded-xl border border-[#ebebeb] bg-white hover:bg-[#fafafa] flex items-center justify-center text-[#171717] transition-all cursor-pointer shadow-2xs active:scale-95"
+                className="w-9 h-9 rounded-xl border border-[#eaecf0] bg-white hover:bg-[#f8fafc] hover:border-[#cbd5e1] flex items-center justify-center text-[#334155] transition-all cursor-pointer shadow-2xs active:scale-95"
                 title="Next month"
               >
                 <ChevronRight size={16} strokeWidth={2.2} />
@@ -466,11 +466,11 @@ export default function PartnerBookingsPage() {
             </div>
 
             {/* Weekdays Row: Mon, Tues, Wed, Thurs, Fri, Sat, Sun */}
-            <div className="grid grid-cols-7 gap-1 text-center py-1.5 border-b border-[#f3f4f6] mb-2.5">
+            <div className="grid grid-cols-7 gap-1 text-center py-2 border-b border-[#f1f5f9] mb-3">
               {WEEKDAY_NAMES.map((name) => (
                 <span
                   key={name}
-                  className="text-[11px] font-medium text-[#8f8f8f] select-none tracking-tight"
+                  className="text-[11px] font-semibold text-[#94a3b8] select-none tracking-tight"
                 >
                   {name}
                 </span>
@@ -481,21 +481,20 @@ export default function PartnerBookingsPage() {
             <div className="grid grid-cols-7 gap-y-2.5 gap-x-1 place-items-center">
               {calendarDays.map((cell, idx) => {
                 const isSelected = selectedDate === cell.dateStr;
-                const hasBookings = cell.bookings.length > 0;
 
                 // Non-current month styling
                 if (!cell.isCurrentMonth) {
                   return (
                     <div
                       key={`pad-${idx}`}
-                      className="w-8 h-8 sm:w-8.5 sm:h-8.5 flex items-center justify-center text-xs text-[#c0c0c0] font-normal select-none"
+                      className="w-8 h-8 sm:w-8.5 sm:h-8.5 flex items-center justify-center text-xs text-[#cbd5e1] font-normal select-none"
                     >
                       {cell.dayNumber}
                     </div>
                   );
                 }
 
-                // Selected Date Style (Deep Indigo / Violet with soft ring, matching day 18 in reference)
+                // Selected Date Style (Vibrant Blue with ring, matching active selection in reference)
                 if (isSelected) {
                   return (
                     <button
@@ -503,7 +502,7 @@ export default function PartnerBookingsPage() {
                       type="button"
                       onClick={() => setSelectedDate(null)}
                       title={`${formatFriendlyDate(cell.dateStr)} (Selected - Click to clear)`}
-                      className="w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-full bg-[#4338ca] text-white font-bold text-xs sm:text-[13px] flex items-center justify-center ring-4 ring-[#4338ca]/20 shadow-xs scale-105 transition-all cursor-pointer"
+                      className="w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-full bg-[#2563eb] text-white font-bold text-xs sm:text-[13px] flex items-center justify-center ring-4 ring-[#2563eb]/25 shadow-xs scale-105 transition-all cursor-pointer"
                     >
                       {cell.dayNumber}
                     </button>
@@ -519,7 +518,7 @@ export default function PartnerBookingsPage() {
                       type="button"
                       onClick={() => setSelectedDate(cell.dateStr)}
                       title={`${cell.bookings.length} Paid Out booking(s) on ${formatFriendlyDate(cell.dateStr)}`}
-                      className="w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-full bg-[#e8f0fe] text-[#1967d2] font-semibold text-xs sm:text-[13px] flex items-center justify-center hover:ring-2 hover:ring-[#1967d2]/30 transition-all cursor-pointer"
+                      className="w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-full bg-[#e0ecff] text-[#1d4ed8] font-bold text-xs sm:text-[13px] flex items-center justify-center hover:ring-2 hover:ring-[#2563eb]/30 transition-all cursor-pointer"
                     >
                       {cell.dayNumber}
                     </button>
@@ -534,7 +533,7 @@ export default function PartnerBookingsPage() {
                       type="button"
                       onClick={() => setSelectedDate(cell.dateStr)}
                       title={`${cell.bookings.length} Approved booking(s) on ${formatFriendlyDate(cell.dateStr)}`}
-                      className="w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-full bg-[#e6f4ea] text-[#137333] font-semibold text-xs sm:text-[13px] flex items-center justify-center hover:ring-2 hover:ring-[#137333]/30 transition-all cursor-pointer"
+                      className="w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-full bg-[#dcfce7] text-[#15803d] font-bold text-xs sm:text-[13px] flex items-center justify-center hover:ring-2 hover:ring-[#16a34a]/30 transition-all cursor-pointer"
                     >
                       {cell.dayNumber}
                     </button>
@@ -549,7 +548,7 @@ export default function PartnerBookingsPage() {
                       type="button"
                       onClick={() => setSelectedDate(cell.dateStr)}
                       title={`${cell.bookings.length} Pending booking(s) on ${formatFriendlyDate(cell.dateStr)}`}
-                      className="w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-full bg-[#fef7e0] text-[#b06000] font-semibold text-xs sm:text-[13px] flex items-center justify-center hover:ring-2 hover:ring-[#b06000]/30 transition-all cursor-pointer"
+                      className="w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-full bg-[#fef3c7] text-[#b45309] font-bold text-xs sm:text-[13px] flex items-center justify-center hover:ring-2 hover:ring-[#d97706]/30 transition-all cursor-pointer"
                     >
                       {cell.dayNumber}
                     </button>
@@ -564,7 +563,7 @@ export default function PartnerBookingsPage() {
                       type="button"
                       onClick={() => setSelectedDate(cell.dateStr)}
                       title={`${cell.bookings.length} Cancelled booking(s) on ${formatFriendlyDate(cell.dateStr)}`}
-                      className="w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-full bg-[#fce8e6] text-[#c5221f] font-semibold text-xs sm:text-[13px] flex items-center justify-center hover:ring-2 hover:ring-[#c5221f]/30 transition-all cursor-pointer"
+                      className="w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-full bg-[#fee2e2] text-[#b91c1c] font-bold text-xs sm:text-[13px] flex items-center justify-center hover:ring-2 hover:ring-[#ef4444]/30 transition-all cursor-pointer"
                     >
                       {cell.dayNumber}
                     </button>
@@ -579,8 +578,8 @@ export default function PartnerBookingsPage() {
                     onClick={() => setSelectedDate(cell.dateStr)}
                     className={`w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-full text-xs sm:text-[13px] font-medium flex items-center justify-center transition-all cursor-pointer ${
                       cell.isToday
-                        ? 'border border-[#171717] font-bold text-[#171717]'
-                        : 'text-[#171717] hover:bg-[#f5f5f5]'
+                        ? 'border-2 border-[#0f172a] font-bold text-[#0f172a]'
+                        : 'text-[#334155] hover:bg-[#f1f5f9]'
                     }`}
                   >
                     {cell.dayNumber}
@@ -590,34 +589,34 @@ export default function PartnerBookingsPage() {
             </div>
 
             {/* Calendar Legend: 4 Colored Statuses Matching Reference Image */}
-            <div className="pt-3.5 mt-3.5 border-t border-[#f3f4f6] grid grid-cols-2 gap-2 text-[11px] text-[#666666]">
+            <div className="pt-3.5 mt-3.5 border-t border-[#f1f5f9] grid grid-cols-2 gap-2 text-[11px] text-[#64748b]">
               <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#1967d2] shrink-0" />
-                <span className="font-medium text-[#171717]">Paid Out</span>
+                <span className="w-2.5 h-2.5 rounded-full bg-[#2563eb] shrink-0" />
+                <span className="font-medium text-[#334155]">Paid Out</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#137333] shrink-0" />
-                <span className="font-medium text-[#171717]">Approved</span>
+                <span className="w-2.5 h-2.5 rounded-full bg-[#16a34a] shrink-0" />
+                <span className="font-medium text-[#334155]">Approved</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#b06000] shrink-0" />
-                <span className="font-medium text-[#171717]">Pending</span>
+                <span className="w-2.5 h-2.5 rounded-full bg-[#d97706] shrink-0" />
+                <span className="font-medium text-[#334155]">Pending</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#c5221f] shrink-0" />
-                <span className="font-medium text-[#171717]">Cancelled</span>
+                <span className="w-2.5 h-2.5 rounded-full bg-[#dc2626] shrink-0" />
+                <span className="font-medium text-[#334155]">Cancelled</span>
               </div>
             </div>
 
             {/* Jump to Today Button */}
-            <div className="mt-3 pt-2.5 border-t border-[#f3f4f6] flex items-center justify-between text-xs">
-              <span className="text-[11px] text-[#8f8f8f] font-mono">
+            <div className="mt-3.5 pt-2.5 border-t border-[#f1f5f9] flex items-center justify-between text-xs">
+              <span className="text-[11px] text-[#94a3b8] font-mono">
                 Click date to filter
               </span>
               <button
                 type="button"
                 onClick={handleJumpToday}
-                className="text-[11px] font-mono font-medium text-[#171717] hover:underline cursor-pointer"
+                className="text-[11px] font-bold text-[#0f172a] hover:underline cursor-pointer"
               >
                 Today
               </button>
@@ -625,32 +624,32 @@ export default function PartnerBookingsPage() {
           </div>
 
           {/* CRM Monthly Quick Performance Summary */}
-          <div className="p-4 rounded-xl bg-white border border-[#ebebeb] shadow-[0_1px_3px_rgba(0,0,0,0.02)] space-y-2.5">
+          <div className="p-4.5 rounded-2xl bg-white border border-[#eaecf0] shadow-xs space-y-2.5">
             <div className="flex items-center justify-between">
-              <span className="font-mono text-[10px] uppercase tracking-[0.071em] text-[#666666]">
+              <span className="font-mono text-[10px] uppercase tracking-wider text-[#64748b] font-semibold">
                 {MONTH_NAMES[currentMonth]} Overview
               </span>
-              <span className="font-mono text-[10px] font-semibold text-[#171717] bg-[#fafafa] px-2 py-0.5 rounded-[4px] border border-[#ebebeb]">
+              <span className="font-mono text-[10px] font-semibold text-[#0f172a] bg-[#f8fafc] px-2 py-0.5 rounded-md border border-[#eaecf0]">
                 {currentMonthStats.count} {currentMonthStats.count === 1 ? 'Booking' : 'Bookings'}
               </span>
             </div>
 
-            <div className="flex items-baseline justify-between pt-1 border-t border-[#f3f4f6]">
-              <span className="text-xs text-[#666666]">Earned</span>
-              <span className="font-mono font-bold text-sm text-[#297a3a] tabular-nums">
+            <div className="flex items-baseline justify-between pt-1 border-t border-[#f1f5f9]">
+              <span className="text-xs text-[#64748b]">Month Commission</span>
+              <span className="font-mono font-bold text-sm text-[#16a34a] tabular-nums">
                 +{formatIDR(currentMonthStats.earned)}
               </span>
             </div>
 
             {selectedDate && (
-              <div className="pt-2 border-t border-[#f3f4f6] flex items-center justify-between text-xs">
-                <span className="text-[11px] text-[#666666] truncate">
-                  Filtered: <strong className="text-[#171717]">{formatFriendlyDate(selectedDate)}</strong>
+              <div className="pt-2 border-t border-[#f1f5f9] flex items-center justify-between text-xs">
+                <span className="text-[11px] text-[#64748b] truncate">
+                  Filtered: <strong className="text-[#0f172a]">{formatFriendlyDate(selectedDate)}</strong>
                 </span>
                 <button
                   type="button"
                   onClick={() => setSelectedDate(null)}
-                  className="text-[11px] font-mono text-[#c5221f] hover:underline cursor-pointer shrink-0 ml-2"
+                  className="text-[11px] font-mono text-[#dc2626] hover:underline cursor-pointer shrink-0 ml-2 font-medium"
                 >
                   Reset
                 </button>
@@ -664,113 +663,113 @@ export default function PartnerBookingsPage() {
            ═══════════════════════════════════════════════════════════════ */}
         <section className="flex-1 min-w-0 space-y-5">
           
-          {/* ─── Engaging Professional Affiliate CRM Metric Strip ─── */}
-          <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
+          {/* ─── Engaging Professional Affiliate CRM Metric Strip (Matches Reference Image) ─── */}
+          <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-3.5">
             
             {/* Total Bookings Card */}
-            <div className="p-3.5 sm:p-4 rounded-[10px] bg-white border border-[#ebebeb] shadow-[0_1px_3px_rgba(0,0,0,0.02)] hover:border-[#171717]/30 transition-all group overflow-hidden">
+            <div className="p-4 sm:p-4.5 rounded-2xl bg-white border border-[#eaecf0] shadow-xs hover:border-[#cbd5e1] hover:shadow-sm transition-all group overflow-hidden">
               <div className="flex items-center justify-between">
-                <span className="font-mono text-[10px] uppercase tracking-[0.071em] text-[#666666] block font-medium truncate">
-                  Total Bookings
+                <span className="font-mono text-[10px] uppercase tracking-wider text-[#64748b] block font-semibold truncate">
+                  TOTAL BOOKINGS
                 </span>
-                <span className="w-6 h-6 rounded-[6px] bg-[#fafafa] border border-[#ebebeb] flex items-center justify-center text-[#171717] text-[11px] group-hover:bg-[#171717] group-hover:text-white transition-colors shrink-0">
-                  <Layers size={12} />
+                <span className="w-7 h-7 rounded-lg bg-[#f8fafc] border border-[#eaecf0] flex items-center justify-center text-[#475569] group-hover:bg-[#0f172a] group-hover:text-white transition-colors shrink-0">
+                  <Layers size={13} />
                 </span>
               </div>
-              <span className="font-mono font-bold text-xl sm:text-[24px] text-[#171717] mt-1 block tabular-nums tracking-tight">
+              <span className="font-sans font-bold text-2xl sm:text-[28px] text-[#0f172a] mt-1.5 block tabular-nums tracking-tight leading-none">
                 {metrics.total}
               </span>
-              <div className="flex items-center justify-between text-[11px] text-[#666666] mt-1 pt-1 border-t border-[#f3f4f6]">
-                <span className="text-[#8f8f8f]">Confirmed</span>
-                <span className="font-mono text-[10px] text-[#171717] font-semibold bg-[#fafafa] px-1.5 py-0.2 rounded border border-[#ebebeb]">
-                  {metrics.approvedCount + metrics.paidCount}
+              <div className="flex items-center justify-between text-[11px] text-[#64748b] mt-2 pt-2 border-t border-[#f1f5f9]">
+                <span className="text-[#94a3b8]">All appointments</span>
+                <span className="font-mono text-[10px] text-[#0f172a] font-semibold bg-[#f1f5f9] px-2 py-0.5 rounded-md border border-[#e2e8f0]">
+                  {metrics.approvedCount + metrics.paidCount} confirmed
                 </span>
               </div>
             </div>
 
             {/* Approved Card */}
-            <div className="p-3.5 sm:p-4 rounded-[10px] bg-white border border-[#ebebeb] shadow-[0_1px_3px_rgba(0,0,0,0.02)] hover:border-[#297a3a]/40 transition-all overflow-hidden">
+            <div className="p-4 sm:p-4.5 rounded-2xl bg-white border border-[#eaecf0] shadow-xs hover:border-[#86efac] hover:shadow-sm transition-all overflow-hidden">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5 min-w-0">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#297a3a] animate-pulse shrink-0" />
-                  <span className="font-mono text-[10px] uppercase tracking-[0.071em] text-[#297a3a] font-semibold truncate">
-                    Approved
+                  <span className="w-2 h-2 rounded-full bg-[#16a34a] animate-pulse shrink-0" />
+                  <span className="font-mono text-[10px] uppercase tracking-wider text-[#15803d] font-bold truncate">
+                    APPROVED
                   </span>
                 </div>
-                <span className="font-mono text-[9px] uppercase font-semibold text-[#137333] bg-[#e6f4ea] px-1.5 py-0.2 rounded-[4px] border border-[#ceead6] shrink-0">
-                  Ready
+                <span className="font-mono text-[9px] uppercase font-bold text-[#15803d] bg-[#dcfce7] px-2 py-0.5 rounded-full border border-[#bbf7d0] shrink-0">
+                  READY TO PAY
                 </span>
               </div>
-              <span className="font-mono font-bold text-xl sm:text-[22px] text-[#171717] mt-1 block tabular-nums tracking-tight truncate">
+              <span className="font-mono font-bold text-xl sm:text-[23px] text-[#0f172a] mt-1.5 block tabular-nums tracking-tight leading-none truncate">
                 {formatIDR(metrics.approvedTotal)}
               </span>
-              <div className="flex items-center justify-between text-[11px] text-[#666666] mt-1 pt-1 border-t border-[#f3f4f6]">
-                <span className="text-[#8f8f8f]">Clearance</span>
-                <span className="font-mono text-[10px] text-[#297a3a] font-semibold">
+              <div className="flex items-center justify-between text-[11px] text-[#64748b] mt-2 pt-2 border-t border-[#f1f5f9]">
+                <span className="text-[#94a3b8]">Ready for bank transfer</span>
+                <span className="font-mono text-[10px] text-[#15803d] font-bold">
                   {metrics.approvedCount} orders
                 </span>
               </div>
             </div>
 
             {/* Pending Card */}
-            <div className="p-3.5 sm:p-4 rounded-[10px] bg-white border border-[#ebebeb] shadow-[0_1px_3px_rgba(0,0,0,0.02)] hover:border-amber-400/40 transition-all overflow-hidden">
+            <div className="p-4 sm:p-4.5 rounded-2xl bg-white border border-[#eaecf0] shadow-xs hover:border-[#fde68a] hover:shadow-sm transition-all overflow-hidden">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5 min-w-0">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
-                  <span className="font-mono text-[10px] uppercase tracking-[0.071em] text-[#b06000] font-semibold truncate">
-                    Pending
+                  <span className="w-2 h-2 rounded-full bg-[#d97706] shrink-0" />
+                  <span className="font-mono text-[10px] uppercase tracking-wider text-[#b45309] font-bold truncate">
+                    PENDING
                   </span>
                 </div>
-                <span className="font-mono text-[9px] uppercase font-semibold text-[#b06000] bg-[#fef7e0] px-1.5 py-0.2 rounded-[4px] border border-[#feefc3] shrink-0">
-                  Escrow
+                <span className="font-mono text-[9px] uppercase font-bold text-[#b45309] bg-[#fef3c7] px-2 py-0.5 rounded-full border border-[#fde68a] shrink-0">
+                  IN ESCROW
                 </span>
               </div>
-              <span className="font-mono font-bold text-xl sm:text-[22px] text-[#171717] mt-1 block tabular-nums tracking-tight truncate">
+              <span className="font-mono font-bold text-xl sm:text-[23px] text-[#0f172a] mt-1.5 block tabular-nums tracking-tight leading-none truncate">
                 {formatIDR(metrics.pendingTotal)}
               </span>
-              <div className="flex items-center justify-between text-[11px] text-[#666666] mt-1 pt-1 border-t border-[#f3f4f6]">
-                <span className="text-[#8f8f8f]">In ritual</span>
-                <span className="font-mono text-[10px] text-[#b06000] font-semibold">
+              <div className="flex items-center justify-between text-[11px] text-[#64748b] mt-2 pt-2 border-t border-[#f1f5f9]">
+                <span className="text-[#94a3b8]">Awaiting ritual completion</span>
+                <span className="font-mono text-[10px] text-[#b45309] font-bold">
                   {metrics.pendingCount} active
                 </span>
               </div>
             </div>
 
             {/* Paid Out Card */}
-            <div className="p-3.5 sm:p-4 rounded-[10px] bg-white border border-[#ebebeb] shadow-[0_1px_3px_rgba(0,0,0,0.02)] hover:border-[#171717]/40 transition-all overflow-hidden">
+            <div className="p-4 sm:p-4.5 rounded-2xl bg-white border border-[#eaecf0] shadow-xs hover:border-[#94a3b8] hover:shadow-sm transition-all overflow-hidden">
               <div className="flex items-center justify-between">
-                <span className="font-mono text-[10px] uppercase tracking-[0.071em] text-[#171717] block font-bold truncate">
+                <span className="font-mono text-[10px] uppercase tracking-wider text-[#0f172a] block font-bold truncate">
                   PAID OUT
                 </span>
-                <span className="font-mono text-[9px] uppercase font-semibold text-white bg-[#171717] px-1.5 py-0.2 rounded-[4px] shadow-2xs shrink-0">
-                  Disbursed
+                <span className="font-mono text-[9px] uppercase font-bold text-white bg-[#0f172a] px-2 py-0.5 rounded-full shadow-2xs shrink-0">
+                  DISBURSED
                 </span>
               </div>
-              <span className="font-mono font-bold text-xl sm:text-[22px] text-[#171717] mt-1 block tabular-nums tracking-tight truncate">
+              <span className="font-mono font-bold text-xl sm:text-[23px] text-[#0f172a] mt-1.5 block tabular-nums tracking-tight leading-none truncate">
                 {formatIDR(metrics.paidTotal)}
               </span>
-              <div className="flex items-center justify-between text-[11px] text-[#666666] mt-1 pt-1 border-t border-[#f3f4f6]">
-                <span className="text-[#8f8f8f]">Settled</span>
-                <span className="font-mono text-[10px] text-[#171717] font-semibold">
+              <div className="flex items-center justify-between text-[11px] text-[#64748b] mt-2 pt-2 border-t border-[#f1f5f9]">
+                <span className="text-[#94a3b8]">Disbursed to bank account</span>
+                <span className="font-mono text-[10px] text-[#0f172a] font-bold">
                   {metrics.paidCount} payouts
                 </span>
               </div>
             </div>
           </div>
 
-          {/* ─── Search and Filter Tabs ─── */}
+          {/* ─── Search and Filter Tabs (Segmented Container from Reference) ─── */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
             {/* Filter Pills */}
-            <div className="flex items-center gap-1 bg-[#fafafa] p-1 rounded-[6px] border border-[#ebebeb] overflow-x-auto no-scrollbar shrink-0">
+            <div className="flex items-center gap-1 bg-[#f1f5f9] p-1 rounded-xl border border-[#e2e8f0] overflow-x-auto no-scrollbar shrink-0">
               {(['all', 'approved', 'pending', 'paid', 'cancelled'] as const).map((s) => (
                 <button
                   key={s}
                   type="button"
                   onClick={() => setStatusFilter(s)}
-                  className={`px-3 py-1.5 rounded-[4px] text-xs font-medium uppercase tracking-[0.071em] font-mono transition-all cursor-pointer whitespace-nowrap ${
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider font-mono transition-all cursor-pointer whitespace-nowrap ${
                     statusFilter === s
-                      ? 'bg-[#171717] text-white shadow-xs'
-                      : 'text-[#666666] hover:text-[#171717]'
+                      ? 'bg-[#0f172a] text-white shadow-xs'
+                      : 'text-[#64748b] hover:text-[#0f172a]'
                   }`}
                 >
                   {s === 'paid' ? 'PAID OUT' : s}
@@ -780,38 +779,38 @@ export default function PartnerBookingsPage() {
 
             {/* View Switcher & Search Input */}
             <div className="flex items-center gap-2">
-              <div className="hidden sm:flex items-center gap-1 border border-[#ebebeb] bg-[#fafafa] p-0.5 rounded-[6px]">
+              <div className="hidden sm:flex items-center gap-1 border border-[#e2e8f0] bg-white p-1 rounded-xl shadow-2xs">
                 <button
                   type="button"
                   onClick={() => setViewMode('table')}
-                  className={`p-1.5 rounded-[4px] transition-colors cursor-pointer ${
-                    viewMode === 'table' ? 'bg-white text-[#171717] shadow-xs' : 'text-[#8f8f8f] hover:text-[#171717]'
+                  className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                    viewMode === 'table' ? 'bg-[#f1f5f9] text-[#0f172a]' : 'text-[#94a3b8] hover:text-[#0f172a]'
                   }`}
                   title="Data Table View"
                 >
-                  <List size={13} />
+                  <List size={14} />
                 </button>
                 <button
                   type="button"
                   onClick={() => setViewMode('cards')}
-                  className={`p-1.5 rounded-[4px] transition-colors cursor-pointer ${
-                    viewMode === 'cards' ? 'bg-white text-[#171717] shadow-xs' : 'text-[#8f8f8f] hover:text-[#171717]'
+                  className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                    viewMode === 'cards' ? 'bg-[#f1f5f9] text-[#0f172a]' : 'text-[#94a3b8] hover:text-[#0f172a]'
                   }`}
                   title="Card Grid View"
                 >
-                  <LayoutGrid size={13} />
+                  <LayoutGrid size={14} />
                 </button>
               </div>
 
               {/* Search Input */}
-              <div className="relative flex-1 sm:w-60">
-                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8f8f8f]" />
+              <div className="relative flex-1 sm:w-64">
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94a3b8]" />
                 <input
                   type="text"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search guest or invoice..."
-                  className="w-full h-8 pl-9 pr-3 rounded-[6px] bg-white border border-[#ebebeb] text-xs text-[#171717] placeholder:text-[#8f8f8f] focus:outline-none focus:border-[#171717] transition-colors"
+                  className="w-full h-9 pl-9 pr-3 rounded-xl bg-white border border-[#e2e8f0] text-xs text-[#0f172a] placeholder:text-[#94a3b8] focus:outline-none focus:border-[#0f172a] focus:ring-2 focus:ring-[#0f172a]/10 shadow-2xs transition-all"
                 />
               </div>
             </div>
@@ -819,39 +818,39 @@ export default function PartnerBookingsPage() {
 
           {/* ─── Active Calendar Date Filter Banner ─── */}
           {selectedDate && (
-            <div className="flex items-center justify-between bg-white border border-[#ebebeb] px-4 py-2.5 rounded-[8px] text-xs shadow-2xs">
-              <div className="flex items-center gap-2">
-                <CalendarIcon size={14} className="text-[#4338ca]" />
-                <span className="text-[#666666]">Filtered by appointment date:</span>
-                <span className="font-semibold text-[#171717] font-mono">
+            <div className="flex items-center justify-between bg-[#f0f7ff] border border-[#bfdbfe] px-4 py-2.5 rounded-xl text-xs shadow-2xs text-[#1e40af]">
+              <div className="flex items-center gap-2 flex-wrap">
+                <CalendarIcon size={14} className="text-[#2563eb] shrink-0" />
+                <span className="text-[#475569]">Filtered by appointment date:</span>
+                <span className="font-bold text-[#0f172a] font-mono">
                   {formatFriendlyDate(selectedDate)}
                 </span>
-                <span className="bg-[#4338ca] text-white text-[10px] font-mono font-medium px-2 py-0.5 rounded-full">
+                <span className="bg-[#2563eb] text-white text-[10px] font-mono font-bold px-2 py-0.5 rounded-full">
                   {filteredBookings.length} {filteredBookings.length === 1 ? 'booking' : 'bookings'}
                 </span>
               </div>
               <button
                 type="button"
                 onClick={() => setSelectedDate(null)}
-                className="text-[#666666] hover:text-[#171717] font-mono text-xs flex items-center gap-1 hover:underline cursor-pointer"
+                className="text-[#2563eb] hover:text-[#1d4ed8] font-mono text-xs flex items-center gap-1 hover:underline cursor-pointer font-medium shrink-0 ml-2"
               >
                 <span>Show All Dates</span>
-                <X size={12} />
+                <X size={13} />
               </button>
             </div>
           )}
 
           {/* ─── Bookings List / Data Table / Grid ─── */}
           {loading ? (
-            <div className="p-16 text-center rounded-[8px] bg-white border border-[#ebebeb] space-y-3">
-              <div className="w-5 h-5 border-2 border-[#171717] border-t-transparent rounded-full animate-spin mx-auto" />
-              <p className="font-mono text-xs text-[#666666]">Loading bookings...</p>
+            <div className="p-16 text-center rounded-2xl bg-white border border-[#eaecf0] space-y-3 shadow-xs">
+              <div className="w-6 h-6 border-2 border-[#0f172a] border-t-transparent rounded-full animate-spin mx-auto" />
+              <p className="font-mono text-xs text-[#64748b]">Loading bookings...</p>
             </div>
           ) : filteredBookings.length === 0 ? (
-            <div className="py-16 text-center rounded-[8px] bg-[#fafafa] border border-dashed border-[#ebebeb] p-6 space-y-2">
-              <CalendarIcon size={24} className="mx-auto text-[#a8a8a8]" />
-              <p className="text-sm font-semibold text-[#171717]">No bookings found</p>
-              <p className="text-xs text-[#666666] max-w-sm mx-auto leading-relaxed">
+            <div className="py-16 text-center rounded-2xl bg-white border border-dashed border-[#e2e8f0] p-6 space-y-2.5 shadow-xs">
+              <CalendarIcon size={28} className="mx-auto text-[#94a3b8]" />
+              <p className="text-sm font-bold text-[#0f172a]">No bookings found</p>
+              <p className="text-xs text-[#64748b] max-w-sm mx-auto leading-relaxed">
                 {selectedDate 
                   ? `No referred bookings found for ${formatFriendlyDate(selectedDate)}.`
                   : search.trim() 
@@ -862,7 +861,7 @@ export default function PartnerBookingsPage() {
                 <button
                   type="button"
                   onClick={() => setSelectedDate(null)}
-                  className="mt-2 text-xs font-mono font-semibold text-[#171717] underline hover:opacity-75 cursor-pointer"
+                  className="mt-2 text-xs font-mono font-bold text-[#2563eb] underline hover:opacity-75 cursor-pointer"
                 >
                   View all dates
                 </button>
@@ -870,105 +869,105 @@ export default function PartnerBookingsPage() {
             </div>
           ) : viewMode === 'table' ? (
             <>
-              {/* Desktop Professional Data Table (>= 768px) matching Commissions layout */}
-              <div className="hidden md:block bg-white border border-[#ebebeb] rounded-[8px] overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
+              {/* Desktop Professional Data Table (>= 768px) matching Reference Image */}
+              <div className="hidden md:block bg-white border border-[#eaecf0] rounded-2xl overflow-hidden shadow-xs">
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs">
-                    <thead className="bg-[#fafafa] border-b border-[#ebebeb] font-mono text-[10px] uppercase tracking-[0.071em] text-[#666666]">
+                    <thead className="bg-[#f8fafc] border-b border-[#eaecf0] font-mono text-[10px] uppercase tracking-wider text-[#64748b]">
                       <tr>
-                        <th className="py-3 px-4">Date</th>
-                        <th className="py-3 px-4">Invoice #</th>
-                        <th className="py-3 px-4 text-right">Treatment Net</th>
-                        <th className="py-3 px-4 text-center">Rate</th>
-                        <th className="py-3 px-4 text-right">Earned</th>
-                        <th className="py-3 px-4 text-center">Status</th>
-                        <th className="py-3 px-4 text-right">Actions</th>
+                        <th className="py-3.5 px-4 font-bold">Date</th>
+                        <th className="py-3.5 px-4 font-bold">Invoice #</th>
+                        <th className="py-3.5 px-4 font-bold text-right">Treatment Net</th>
+                        <th className="py-3.5 px-4 font-bold text-center">Rate</th>
+                        <th className="py-3.5 px-4 font-bold text-right">Earned</th>
+                        <th className="py-3.5 px-4 font-bold text-center">Status</th>
+                        <th className="py-3.5 px-4 font-bold text-right">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-[#ebebeb]">
+                    <tbody className="divide-y divide-[#f1f5f9]">
                       {filteredBookings.map((b) => {
                         const isCancelled = b.commission_status === 'cancelled' || b.booking_status === 'Cancelled';
                         const isPaidOut = b.commission_status === 'paid';
                         const isApproved = b.commission_status === 'approved';
 
                         return (
-                          <tr key={b.id || b.booking_id} className="hover:bg-[#fafafa] transition-colors">
+                          <tr key={b.id || b.booking_id} className="hover:bg-[#f8fafc]/70 transition-colors">
                             {/* Date */}
-                            <td className="py-3.5 px-4 font-mono text-[11px] text-[#666666] whitespace-nowrap">
+                            <td className="py-4 px-4 font-mono text-[11px] text-[#475569] whitespace-nowrap font-medium">
                               {formatFriendlyDate(b.date)}
                             </td>
 
                             {/* Invoice # */}
-                            <td className="py-3.5 px-4 whitespace-nowrap">
-                              <div className="flex items-center gap-1.5 font-mono text-xs font-semibold text-[#171717]">
+                            <td className="py-4 px-4 whitespace-nowrap">
+                              <div className="flex items-center gap-1.5 font-mono text-xs font-bold text-[#0f172a]">
                                 <Link href={`/invoice/${b.booking_id}`} target="_blank" className="hover:underline">
                                   #{b.booking_id}
                                 </Link>
                                 <button
                                   type="button"
                                   onClick={() => handleCopy(b.booking_id)}
-                                  className="text-[#8f8f8f] hover:text-[#171717] p-0.5 cursor-pointer"
-                                  title="Copy code"
+                                  className="text-[#94a3b8] hover:text-[#0f172a] p-0.5 cursor-pointer transition-colors"
+                                  title="Copy ID"
                                 >
-                                  {copiedId === b.booking_id ? <Check size={11} className="text-[#297a3a]" /> : <Copy size={11} />}
+                                  {copiedId === b.booking_id ? <Check size={12} className="text-[#16a34a]" /> : <Copy size={12} />}
                                 </button>
                               </div>
                             </td>
 
                             {/* Treatment Net */}
-                            <td className="py-3.5 px-4 font-mono text-right text-xs text-[#171717] whitespace-nowrap tabular-nums">
+                            <td className="py-4 px-4 font-mono text-right text-xs font-semibold text-[#0f172a] whitespace-nowrap tabular-nums">
                               {formatIDR(b.treatment_amount || b.gross_amount)}
                             </td>
 
                             {/* Rate */}
-                            <td className="py-3.5 px-4 font-mono text-center text-xs text-[#666666] whitespace-nowrap tabular-nums">
+                            <td className="py-4 px-4 font-mono text-center text-xs text-[#64748b] whitespace-nowrap tabular-nums">
                               {b.commission_rate_pct || 10}%
                             </td>
 
                             {/* Earned */}
-                            <td className="py-3.5 px-4 font-mono text-right font-bold text-xs whitespace-nowrap tabular-nums">
-                              <span className={isCancelled ? 'line-through text-[#8f8f8f]' : 'text-[#297a3a]'}>
+                            <td className="py-4 px-4 font-mono text-right font-bold text-xs whitespace-nowrap tabular-nums">
+                              <span className={isCancelled ? 'line-through text-[#94a3b8]' : 'text-[#16a34a]'}>
                                 {isCancelled ? 'Rp0' : `+${formatIDR(b.commission_amount)}`}
                               </span>
                             </td>
 
                             {/* Status */}
-                            <td className="py-3.5 px-4 text-center whitespace-nowrap">
+                            <td className="py-4 px-4 text-center whitespace-nowrap">
                               {isPaidOut ? (
-                                <span className="font-mono text-[9px] font-semibold text-white bg-[#171717] px-2 py-0.5 rounded uppercase">
+                                <span className="font-mono text-[9px] font-bold text-white bg-[#0f172a] px-2.5 py-1 rounded-full uppercase tracking-wider shadow-2xs">
                                   PAID OUT
                                 </span>
                               ) : isApproved ? (
-                                <span className="font-mono text-[9px] font-semibold text-[#137333] bg-[#e6f4ea] px-2 py-0.5 rounded uppercase border border-[#ceead6]">
+                                <span className="font-mono text-[9px] font-bold text-[#15803d] bg-[#dcfce7] px-2.5 py-1 rounded-full uppercase tracking-wider border border-[#bbf7d0]">
                                   Approved
                                 </span>
                               ) : isCancelled ? (
-                                <span className="font-mono text-[9px] font-semibold text-[#c5221f] bg-[#fce8e6] px-2 py-0.5 rounded uppercase border border-[#fad2cf]">
+                                <span className="font-mono text-[9px] font-bold text-[#b91c1c] bg-[#fee2e2] px-2.5 py-1 rounded-full uppercase tracking-wider border border-[#fecaca]">
                                   Cancelled
                                 </span>
                               ) : (
-                                <span className="font-mono text-[9px] font-semibold text-[#b06000] bg-[#fef7e0] px-2 py-0.5 rounded uppercase border border-[#feefc3]">
+                                <span className="font-mono text-[9px] font-bold text-[#b45309] bg-[#fef3c7] px-2.5 py-1 rounded-full uppercase tracking-wider border border-[#fde68a]">
                                   Pending
                                 </span>
                               )}
                             </td>
 
                             {/* Actions: Track button + Invoice */}
-                            <td className="py-3.5 px-4 text-right whitespace-nowrap">
+                            <td className="py-4 px-4 text-right whitespace-nowrap">
                               <div className="flex items-center justify-end gap-2">
                                 <button
                                   type="button"
                                   onClick={() => setTrackingBooking(b)}
-                                  className="h-6.5 px-2.5 rounded-[5px] bg-[#171717] hover:bg-black text-[11px] font-mono text-white inline-flex items-center gap-1 cursor-pointer transition-all shadow-2xs active:scale-95"
+                                  className="h-7 px-3 rounded-lg bg-[#0f172a] hover:bg-black text-[11px] font-medium text-white inline-flex items-center gap-1.5 cursor-pointer transition-all shadow-2xs active:scale-95"
                                   title="Track schedule & booking details"
                                 >
-                                  <Clock size={10} className="text-[#a3a3a3]" />
+                                  <Clock size={11} className="text-[#cbd5e1]" />
                                   <span>Track</span>
                                 </button>
                                 <Link
                                   href={`/invoice/${b.booking_id}`}
                                   target="_blank"
-                                  className="text-[11px] font-mono text-[#666666] hover:text-[#171717] inline-flex items-center gap-0.5 hover:underline"
+                                  className="text-[11px] font-medium text-[#64748b] hover:text-[#0f172a] inline-flex items-center gap-0.5 hover:underline px-1.5 py-1"
                                   title="View invoice"
                                 >
                                   <span>Invoice</span>
@@ -984,8 +983,8 @@ export default function PartnerBookingsPage() {
                 </div>
               </div>
 
-              {/* Mobile App Booking Cards (< 768px) */}
-              <div className="md:hidden space-y-2.5">
+              {/* Mobile App Booking Cards (< 768px) with elevated CRM styling */}
+              <div className="md:hidden space-y-3">
                 {filteredBookings.map((b) => {
                   const isCancelled = b.commission_status === 'cancelled' || b.booking_status === 'Cancelled';
                   const isPaidOut = b.commission_status === 'paid';
@@ -994,7 +993,7 @@ export default function PartnerBookingsPage() {
                   return (
                     <div
                       key={b.id || b.booking_id}
-                      className="p-3.5 rounded-2xl bg-white border border-[#ebebeb] space-y-2.5 shadow-[0_1px_4px_rgba(0,0,0,0.02)] overflow-hidden"
+                      className="p-4 rounded-2xl bg-white border border-[#eaecf0] space-y-3 shadow-xs hover:border-[#cbd5e1] transition-all overflow-hidden"
                     >
                       {/* Top Row: Invoice # + Date + Earned */}
                       <div className="flex items-center justify-between gap-2">
@@ -1002,42 +1001,42 @@ export default function PartnerBookingsPage() {
                           <Link
                             href={`/invoice/${b.booking_id}`}
                             target="_blank"
-                            className="font-mono text-xs font-bold text-[#171717] hover:underline"
+                            className="font-mono text-xs font-bold text-[#0f172a] hover:underline"
                           >
                             #{b.booking_id}
                           </Link>
-                          <span className="text-[#ebebeb]">·</span>
-                          <span className="font-mono text-[11px] text-[#8f8f8f]">
+                          <span className="text-[#cbd5e1]">·</span>
+                          <span className="font-mono text-[11px] text-[#64748b]">
                             {formatFriendlyDate(b.date)}
                           </span>
                         </div>
                         <div className="text-right shrink-0">
-                          <span className={`font-mono font-bold text-xs sm:text-sm tabular-nums ${isCancelled ? 'line-through text-[#8f8f8f]' : 'text-[#297a3a]'}`}>
+                          <span className={`font-mono font-bold text-xs sm:text-sm tabular-nums ${isCancelled ? 'line-through text-[#94a3b8]' : 'text-[#16a34a]'}`}>
                             {isCancelled ? 'Rp0' : `+${formatIDR(b.commission_amount)}`}
                           </span>
                         </div>
                       </div>
 
                       {/* Middle Row: Net & Rate + Status Badge */}
-                      <div className="pt-2 border-t border-[#f3f4f6] flex items-center justify-between text-xs">
-                        <div className="font-mono text-[11px] text-[#666666]">
+                      <div className="pt-2.5 border-t border-[#f1f5f9] flex items-center justify-between text-xs">
+                        <div className="font-mono text-[11px] text-[#64748b]">
                           Net {formatIDR(b.treatment_amount || b.gross_amount)} · {b.commission_rate_pct || 10}%
                         </div>
                         <div className="shrink-0">
                           {isPaidOut ? (
-                            <span className="font-mono text-[9px] font-semibold text-white bg-[#171717] px-2 py-0.5 rounded-[4px] uppercase">
+                            <span className="font-mono text-[9px] font-bold text-white bg-[#0f172a] px-2.5 py-0.5 rounded-full uppercase tracking-wider shadow-2xs">
                               PAID OUT
                             </span>
                           ) : isApproved ? (
-                            <span className="font-mono text-[9px] font-semibold text-[#137333] bg-[#e6f4ea] px-2 py-0.5 rounded-[4px] uppercase border border-[#ceead6]">
+                            <span className="font-mono text-[9px] font-bold text-[#15803d] bg-[#dcfce7] px-2.5 py-0.5 rounded-full uppercase tracking-wider border border-[#bbf7d0]">
                               Approved
                             </span>
                           ) : isCancelled ? (
-                            <span className="font-mono text-[9px] font-semibold text-[#c5221f] bg-[#fce8e6] px-2 py-0.5 rounded-[4px] uppercase border border-[#fad2cf]">
+                            <span className="font-mono text-[9px] font-bold text-[#b91c1c] bg-[#fee2e2] px-2.5 py-0.5 rounded-full uppercase tracking-wider border border-[#fecaca]">
                               Cancelled
                             </span>
                           ) : (
-                            <span className="font-mono text-[9px] font-semibold text-[#b06000] bg-[#fef7e0] px-2 py-0.5 rounded-[4px] uppercase border border-[#feefc3]">
+                            <span className="font-mono text-[9px] font-bold text-[#b45309] bg-[#fef3c7] px-2.5 py-0.5 rounded-full uppercase tracking-wider border border-[#fde68a]">
                               Pending
                             </span>
                           )}
@@ -1045,23 +1044,23 @@ export default function PartnerBookingsPage() {
                       </div>
 
                       {/* Native App Actions Bar: Full-width Track CTA + Invoice Button */}
-                      <div className="pt-2 border-t border-[#f3f4f6] flex items-center gap-2">
+                      <div className="pt-2.5 border-t border-[#f1f5f9] flex items-center gap-2">
                         <button
                           type="button"
                           onClick={() => setTrackingBooking(b)}
-                          className="flex-1 h-8 rounded-xl bg-[#171717] hover:bg-black text-white text-xs font-mono font-medium inline-flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.98] transition-transform shadow-xs"
+                          className="flex-1 h-8.5 rounded-xl bg-[#0f172a] hover:bg-black text-white text-xs font-medium inline-flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.98] transition-transform shadow-xs"
                         >
-                          <Clock size={12} className="text-[#a3a3a3]" />
+                          <Clock size={12} className="text-[#cbd5e1]" />
                           <span>Track</span>
                         </button>
 
                         <Link
                           href={`/invoice/${b.booking_id}`}
                           target="_blank"
-                          className="h-8 px-3 rounded-xl bg-[#f5f5f5] hover:bg-[#ebebeb] text-[#171717] text-xs font-mono font-medium inline-flex items-center justify-center gap-1 active:scale-[0.98] transition-transform"
+                          className="h-8.5 px-3.5 rounded-xl border border-[#e2e8f0] bg-white hover:bg-[#f8fafc] text-[#334155] text-xs font-medium inline-flex items-center justify-center gap-1 active:scale-[0.98] transition-transform shadow-2xs"
                         >
                           <span>Invoice</span>
-                          <ExternalLink size={10} className="text-[#8f8f8f]" />
+                          <ExternalLink size={10} className="text-[#94a3b8]" />
                         </Link>
                       </div>
                     </div>
@@ -1070,7 +1069,7 @@ export default function PartnerBookingsPage() {
               </div>
             </>
           ) : (
-            /* Card Grid View */
+            /* Card Grid View with elevated CRM styling */
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-3.5">
               {filteredBookings.map((b) => {
                 const isCancelled = b.commission_status === 'cancelled' || b.booking_status === 'Cancelled';
@@ -1080,75 +1079,75 @@ export default function PartnerBookingsPage() {
                 return (
                   <div
                     key={b.id || b.booking_id}
-                    className="p-3.5 sm:p-4 rounded-2xl bg-white border border-[#ebebeb] space-y-2.5 hover:border-[#171717]/40 transition-colors shadow-2xs overflow-hidden"
+                    className="p-4 sm:p-4.5 rounded-2xl bg-white border border-[#eaecf0] space-y-3 hover:border-[#cbd5e1] hover:shadow-xs transition-all shadow-xs overflow-hidden"
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-1.5 shrink-0">
+                      <div className="flex items-center gap-2 shrink-0">
                         {isPaidOut ? (
-                          <span className="font-mono text-[9px] font-semibold text-white bg-[#171717] px-1.5 py-0.5 rounded uppercase">
+                          <span className="font-mono text-[9px] font-bold text-white bg-[#0f172a] px-2.5 py-0.5 rounded-full uppercase tracking-wider shadow-2xs">
                             PAID OUT
                           </span>
                         ) : isApproved ? (
-                          <span className="font-mono text-[9px] font-semibold text-[#137333] bg-[#e6f4ea] px-1.5 py-0.5 rounded uppercase border border-[#ceead6]">
+                          <span className="font-mono text-[9px] font-bold text-[#15803d] bg-[#dcfce7] px-2.5 py-0.5 rounded-full uppercase tracking-wider border border-[#bbf7d0]">
                             Approved
                           </span>
                         ) : isCancelled ? (
-                          <span className="font-mono text-[9px] font-semibold text-[#c5221f] bg-[#fce8e6] px-1.5 py-0.5 rounded uppercase border border-[#fad2cf]">
+                          <span className="font-mono text-[9px] font-bold text-[#b91c1c] bg-[#fee2e2] px-2.5 py-0.5 rounded-full uppercase tracking-wider border border-[#fecaca]">
                             Cancelled
                           </span>
                         ) : (
-                          <span className="font-mono text-[9px] font-semibold text-[#b06000] bg-[#fef7e0] px-1.5 py-0.5 rounded uppercase border border-[#feefc3]">
+                          <span className="font-mono text-[9px] font-bold text-[#b45309] bg-[#fef3c7] px-2.5 py-0.5 rounded-full uppercase tracking-wider border border-[#fde68a]">
                             Pending
                           </span>
                         )}
-                        <span className="font-mono text-[11px] text-[#666666]">
+                        <span className="font-mono text-[11px] text-[#64748b]">
                           {formatFriendlyDate(b.date)}
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-1 font-mono text-xs font-semibold text-[#171717] shrink-0">
+                      <div className="flex items-center gap-1 font-mono text-xs font-bold text-[#0f172a] shrink-0">
                         <span>#{b.booking_id}</span>
                         <button
                           type="button"
                           onClick={() => handleCopy(b.booking_id)}
-                          className="text-[#8f8f8f] hover:text-[#171717] p-0.5 cursor-pointer"
+                          className="text-[#94a3b8] hover:text-[#0f172a] p-0.5 cursor-pointer"
                         >
-                          {copiedId === b.booking_id ? <Check size={11} className="text-[#297a3a]" /> : <Copy size={11} />}
+                          {copiedId === b.booking_id ? <Check size={11} className="text-[#16a34a]" /> : <Copy size={11} />}
                         </button>
                       </div>
                     </div>
 
-                    <div className="pt-2 border-t border-[#f3f4f6] flex items-center justify-between text-xs">
+                    <div className="pt-2.5 border-t border-[#f1f5f9] flex items-center justify-between text-xs">
                       <div>
-                        <span className="font-mono text-[9px] uppercase text-[#8f8f8f] block">Net</span>
-                        <span className="font-mono font-medium text-[#171717] tabular-nums">
+                        <span className="font-mono text-[9px] uppercase tracking-wider text-[#94a3b8] block font-semibold">Net</span>
+                        <span className="font-mono font-semibold text-[#0f172a] tabular-nums">
                           {formatIDR(b.treatment_amount || b.gross_amount)} · {b.commission_rate_pct || 10}%
                         </span>
                       </div>
                       <div className="text-right">
-                        <span className="font-mono text-[9px] uppercase text-[#297a3a] block">
+                        <span className="font-mono text-[9px] uppercase tracking-wider text-[#16a34a] block font-bold">
                           Earned
                         </span>
-                        <span className={`font-mono font-bold tabular-nums ${isCancelled ? 'line-through text-[#8f8f8f]' : 'text-[#297a3a]'}`}>
+                        <span className={`font-mono font-bold tabular-nums ${isCancelled ? 'line-through text-[#94a3b8]' : 'text-[#16a34a]'}`}>
                           {isCancelled ? 'Rp0' : `+${formatIDR(b.commission_amount)}`}
                         </span>
                       </div>
                     </div>
 
-                    <div className="pt-2 border-t border-[#f3f4f6] flex items-center justify-between">
+                    <div className="pt-2.5 border-t border-[#f1f5f9] flex items-center justify-between">
                       <button
                         type="button"
                         onClick={() => setTrackingBooking(b)}
-                        className="h-7 px-3 rounded-xl bg-[#171717] hover:bg-black text-white text-xs font-mono font-medium inline-flex items-center gap-1.5 cursor-pointer transition-colors shadow-2xs active:scale-95"
+                        className="h-7 px-3 rounded-lg bg-[#0f172a] hover:bg-black text-white text-xs font-medium inline-flex items-center gap-1.5 cursor-pointer transition-colors shadow-2xs active:scale-95"
                       >
-                        <Clock size={11} className="text-[#a3a3a3]" />
+                        <Clock size={11} className="text-[#cbd5e1]" />
                         <span>Track</span>
                       </button>
 
                       <Link
                         href={`/invoice/${b.booking_id}`}
                         target="_blank"
-                        className="text-xs font-mono text-[#666666] hover:text-[#171717] inline-flex items-center gap-1 hover:underline"
+                        className="text-xs font-medium text-[#64748b] hover:text-[#0f172a] inline-flex items-center gap-1 hover:underline"
                       >
                         <span>Invoice</span>
                         <ExternalLink size={10} />

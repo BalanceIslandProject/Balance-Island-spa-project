@@ -221,15 +221,18 @@ export default function PartnerCommissionsPage() {
   const hasDateFilter = Boolean(startDate || endDate);
 
   return (
-    <div className="space-y-6 w-full pb-12 font-sans">
+    <div className="space-y-6 w-full pb-16 font-sans antialiased">
       
       {/* Title & Short Functional Description */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#eaecf0]">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-[#111827] tracking-tight">
+          <span className="font-mono text-[10px] uppercase tracking-wider text-[#64748b] font-semibold block mb-0.5">
+            Partner Portal
+          </span>
+          <h1 className="text-2xl sm:text-[28px] font-bold text-[#0f172a] tracking-tight">
             Commissions
           </h1>
-          <p className="text-xs text-[#6b7280] mt-0.5">
+          <p className="text-xs text-[#64748b] mt-0.5">
             Itemized commissions, rates, and clearances.
           </p>
         </div>
@@ -241,26 +244,28 @@ export default function PartnerCommissionsPage() {
             loadCommissions();
           }}
           disabled={loading}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] bg-white border border-[#e5e7eb] text-xs font-medium text-[#374151] hover:bg-[#f9fafb] shadow-xs cursor-pointer self-start sm:self-auto"
+          className="inline-flex items-center gap-1.5 h-8.5 px-3.5 rounded-xl border border-[#e2e8f0] bg-white text-xs font-medium text-[#0f172a] hover:bg-[#f8fafc] hover:border-[#cbd5e1] shadow-2xs cursor-pointer self-start sm:self-auto transition-all active:scale-95"
         >
           <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
           <span>Refresh</span>
         </button>
       </div>
 
-      {/* 4-KPI Horizontal Strip (Kravio styled with SVG sparklines) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* 4-KPI Horizontal Strip (Enhanced CRM styled with SVG sparklines) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
         {/* Total Earned */}
-        <div className="bg-white border border-[#e5e7eb] rounded-[10px] p-4.5 space-y-2 shadow-xs">
+        <div className="bg-white border border-[#eaecf0] rounded-2xl p-4.5 space-y-2.5 shadow-xs hover:border-[#cbd5e1] hover:shadow-sm transition-all overflow-hidden">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-[#6b7280]">Total Commission</span>
-            <Receipt size={14} className="text-[#9ca3af]" />
+            <span className="font-mono text-[10px] uppercase tracking-wider text-[#64748b] font-semibold">TOTAL COMMISSION</span>
+            <span className="w-7 h-7 rounded-lg bg-[#f8fafc] border border-[#eaecf0] flex items-center justify-center text-[#475569]">
+              <Receipt size={13} />
+            </span>
           </div>
-          <div className="text-2xl font-bold text-[#111827] font-mono tabular-nums">
+          <div className="text-xl sm:text-[23px] font-bold text-[#0f172a] font-mono tabular-nums leading-none">
             {formatIDR(kpiTotals.totalEarned)}
           </div>
-          <div className="flex items-center justify-between pt-1">
-            <span className="font-mono text-[11px] font-semibold text-[#16a34a] bg-[#16a34a]/10 px-1.5 py-0.5 rounded-[4px]">
+          <div className="flex items-center justify-between pt-2 border-t border-[#f1f5f9]">
+            <span className="font-mono text-[10px] font-bold text-[#16a34a] bg-[#dcfce7] border border-[#bbf7d0] px-2 py-0.5 rounded-full">
               Gross Cumulative
             </span>
             <Sparkline color="green" trend="up" />
@@ -268,16 +273,21 @@ export default function PartnerCommissionsPage() {
         </div>
 
         {/* Approved Commission */}
-        <div className="bg-white border border-[#e5e7eb] rounded-[10px] p-4.5 space-y-2 shadow-xs">
+        <div className="bg-white border border-[#eaecf0] rounded-2xl p-4.5 space-y-2.5 shadow-xs hover:border-[#86efac] hover:shadow-sm transition-all overflow-hidden">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-[#16a34a]">Approved Commission</span>
-            <ShieldCheck size={14} className="text-[#16a34a]" />
+            <div className="flex items-center gap-1.5 min-w-0">
+              <span className="w-2 h-2 rounded-full bg-[#16a34a] animate-pulse shrink-0" />
+              <span className="font-mono text-[10px] uppercase tracking-wider text-[#15803d] font-bold">APPROVED</span>
+            </div>
+            <span className="w-7 h-7 rounded-lg bg-[#dcfce7] border border-[#bbf7d0] flex items-center justify-center text-[#15803d]">
+              <ShieldCheck size={13} />
+            </span>
           </div>
-          <div className="text-2xl font-bold text-[#16a34a] font-mono tabular-nums">
+          <div className="text-xl sm:text-[23px] font-bold text-[#0f172a] font-mono tabular-nums leading-none">
             {formatIDR(kpiTotals.approved)}
           </div>
-          <div className="flex items-center justify-between pt-1">
-            <span className="font-mono text-[11px] font-semibold text-[#16a34a] bg-[#16a34a]/10 px-1.5 py-0.5 rounded-[4px]">
+          <div className="flex items-center justify-between pt-2 border-t border-[#f1f5f9]">
+            <span className="font-mono text-[10px] font-bold text-[#15803d] bg-[#dcfce7] border border-[#bbf7d0] px-2 py-0.5 rounded-full">
               Cleared to Withdraw
             </span>
             <Sparkline color="teal" trend="up" />
@@ -285,16 +295,21 @@ export default function PartnerCommissionsPage() {
         </div>
 
         {/* Pending Commission */}
-        <div className="bg-white border border-[#e5e7eb] rounded-[10px] p-4.5 space-y-2 shadow-xs">
+        <div className="bg-white border border-[#eaecf0] rounded-2xl p-4.5 space-y-2.5 shadow-xs hover:border-[#fde68a] hover:shadow-sm transition-all overflow-hidden">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-amber-700">Pending Commission</span>
-            <Clock size={14} className="text-amber-600" />
+            <div className="flex items-center gap-1.5 min-w-0">
+              <span className="w-2 h-2 rounded-full bg-[#d97706] shrink-0" />
+              <span className="font-mono text-[10px] uppercase tracking-wider text-[#b45309] font-bold">PENDING</span>
+            </div>
+            <span className="w-7 h-7 rounded-lg bg-[#fef3c7] border border-[#fde68a] flex items-center justify-center text-[#b45309]">
+              <Clock size={13} />
+            </span>
           </div>
-          <div className="text-2xl font-bold text-amber-700 font-mono tabular-nums">
+          <div className="text-xl sm:text-[23px] font-bold text-[#0f172a] font-mono tabular-nums leading-none">
             {formatIDR(kpiTotals.pending)}
           </div>
-          <div className="flex items-center justify-between pt-1">
-            <span className="font-mono text-[11px] font-semibold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded-[4px] border border-amber-200">
+          <div className="flex items-center justify-between pt-2 border-t border-[#f1f5f9]">
+            <span className="font-mono text-[10px] font-bold text-[#b45309] bg-[#fef3c7] border border-[#fde68a] px-2 py-0.5 rounded-full">
               In Escrow
             </span>
             <Sparkline color="green" trend="down" />
@@ -302,16 +317,18 @@ export default function PartnerCommissionsPage() {
         </div>
 
         {/* Paid Commission */}
-        <div className="bg-white border border-[#e5e7eb] rounded-[10px] p-4.5 space-y-2 shadow-xs">
+        <div className="bg-white border border-[#eaecf0] rounded-2xl p-4.5 space-y-2.5 shadow-xs hover:border-[#94a3b8] hover:shadow-sm transition-all overflow-hidden">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-[#111827]">Paid Out</span>
-            <Wallet size={14} className="text-[#9ca3af]" />
+            <span className="font-mono text-[10px] uppercase tracking-wider text-[#0f172a] font-bold">PAID OUT</span>
+            <span className="w-7 h-7 rounded-lg bg-[#f8fafc] border border-[#eaecf0] flex items-center justify-center text-[#0f172a]">
+              <Wallet size={13} />
+            </span>
           </div>
-          <div className="text-2xl font-bold text-[#111827] font-mono tabular-nums">
+          <div className="text-xl sm:text-[23px] font-bold text-[#0f172a] font-mono tabular-nums leading-none">
             {formatIDR(kpiTotals.paid)}
           </div>
-          <div className="flex items-center justify-between pt-1">
-            <span className="font-mono text-[11px] font-semibold text-white bg-[#111827] px-1.5 py-0.5 rounded-[4px]">
+          <div className="flex items-center justify-between pt-2 border-t border-[#f1f5f9]">
+            <span className="font-mono text-[10px] font-bold text-white bg-[#0f172a] px-2 py-0.5 rounded-full shadow-2xs">
               Disbursed
             </span>
             <Sparkline color="teal" trend="up" />
@@ -319,13 +336,13 @@ export default function PartnerCommissionsPage() {
         </div>
       </div>
 
-      {/* Kravio Filter Controls Toolbar Card */}
-      <div className="bg-white border border-[#e5e7eb] rounded-[10px] p-3.5 sm:p-4 space-y-3 shadow-xs">
+      {/* CRM Filter Controls Toolbar Card */}
+      <div className="bg-white border border-[#eaecf0] rounded-2xl p-4 sm:p-4.5 space-y-3.5 shadow-xs">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
           
-          {/* Status Tabs */}
+          {/* Status Tabs (Segmented Container) */}
           <div className="overflow-x-auto no-scrollbar">
-            <div className="inline-flex items-center gap-1 p-1 rounded-[8px] bg-[#f3f4f6] text-xs">
+            <div className="inline-flex items-center gap-1 p-1 rounded-xl bg-[#f1f5f9] border border-[#e2e8f0] text-xs">
               {[
                 { key: 'all', label: 'All Commissions' },
                 { key: 'approved', label: 'Approved' },
@@ -337,10 +354,10 @@ export default function PartnerCommissionsPage() {
                   type="button"
                   key={key}
                   onClick={() => setFilterStatus(key)}
-                  className={`px-3 py-1.5 rounded-[6px] text-xs font-medium transition-all cursor-pointer whitespace-nowrap ${
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider font-mono transition-all cursor-pointer whitespace-nowrap ${
                     filterStatus === key
-                      ? 'bg-[#111827] text-white shadow-xs font-semibold'
-                      : 'text-[#6b7280] hover:text-[#111827]'
+                      ? 'bg-[#0f172a] text-white shadow-xs'
+                      : 'text-[#64748b] hover:text-[#0f172a]'
                   }`}
                 >
                   {label}
@@ -351,24 +368,24 @@ export default function PartnerCommissionsPage() {
 
           {/* Search & Date Controls */}
           <div className="flex items-center gap-2">
-            <div className="relative w-full sm:w-56">
-              <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9ca3af] pointer-events-none" />
+            <div className="relative w-full sm:w-60">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94a3b8] pointer-events-none" />
               <input
                 type="text"
                 placeholder="Search guest or invoice..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-8 pr-3 py-1.5 text-xs bg-[#f9fafb] border border-[#e5e7eb] rounded-[6px] text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:border-[#111827]"
+                className="w-full h-9 pl-9 pr-3 text-xs bg-white border border-[#e2e8f0] rounded-xl text-[#0f172a] placeholder:text-[#94a3b8] focus:outline-none focus:border-[#0f172a] focus:ring-2 focus:ring-[#0f172a]/10 shadow-2xs transition-all"
               />
             </div>
 
             <button
               type="button"
               onClick={() => setShowCalendarFilter(!showCalendarFilter)}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[6px] border text-xs font-medium transition-all cursor-pointer whitespace-nowrap ${
+              className={`inline-flex items-center gap-1.5 h-9 px-3.5 rounded-xl border text-xs font-medium transition-all cursor-pointer whitespace-nowrap ${
                 hasDateFilter || showCalendarFilter
-                  ? 'bg-[#111827] text-white border-[#111827]'
-                  : 'bg-white text-[#374151] border-[#e5e7eb] hover:bg-[#f9fafb] shadow-xs'
+                  ? 'bg-[#0f172a] text-white border-[#0f172a] shadow-xs'
+                  : 'bg-white text-[#334155] border-[#e2e8f0] hover:bg-[#f8fafc] hover:border-[#cbd5e1] shadow-2xs'
               }`}
             >
               <CalendarDays size={13} />
@@ -382,14 +399,14 @@ export default function PartnerCommissionsPage() {
 
         {/* Expandable Calendar Panel */}
         {showCalendarFilter && (
-          <div className="p-3.5 rounded-[8px] bg-[#f9fafb] border border-[#e5e7eb] space-y-3 animate-in fade-in-50">
+          <div className="p-4 rounded-xl bg-[#f8fafc] border border-[#eaecf0] space-y-3 animate-in fade-in-50">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-[#111827]">Select Date Range</span>
+              <span className="text-xs font-bold text-[#0f172a]">Select Date Range</span>
               {hasDateFilter && (
                 <button
                   type="button"
                   onClick={handleResetDate}
-                  className="text-xs text-[#6b7280] hover:text-[#111827] flex items-center gap-1 cursor-pointer"
+                  className="text-xs text-[#dc2626] hover:underline flex items-center gap-1 cursor-pointer font-medium"
                 >
                   <X size={12} />
                   <span>Clear Filter</span>
@@ -397,12 +414,12 @@ export default function PartnerCommissionsPage() {
               )}
             </div>
 
-            <div className="flex items-center gap-1.5 flex-wrap">
+            <div className="flex items-center gap-2 flex-wrap">
               <button
                 type="button"
                 onClick={handleResetDate}
-                className={`px-2.5 py-1 rounded-[6px] text-xs font-medium border ${
-                  !hasDateFilter ? 'bg-[#111827] text-white border-[#111827]' : 'bg-white text-[#6b7280] border-[#e5e7eb]'
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+                  !hasDateFilter ? 'bg-[#0f172a] text-white border-[#0f172a] shadow-xs font-bold' : 'bg-white text-[#64748b] border-[#e2e8f0] hover:bg-[#f8fafc]'
                 }`}
               >
                 All Time
@@ -410,8 +427,8 @@ export default function PartnerCommissionsPage() {
               <button
                 type="button"
                 onClick={handleSetThisMonth}
-                className={`px-2.5 py-1 rounded-[6px] text-xs font-medium border ${
-                  activeDatePreset === 'this_month' && hasDateFilter ? 'bg-[#111827] text-white border-[#111827]' : 'bg-white text-[#6b7280] border-[#e5e7eb]'
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+                  activeDatePreset === 'this_month' && hasDateFilter ? 'bg-[#0f172a] text-white border-[#0f172a] shadow-xs font-bold' : 'bg-white text-[#64748b] border-[#e2e8f0] hover:bg-[#f8fafc]'
                 }`}
               >
                 This Month
@@ -419,8 +436,8 @@ export default function PartnerCommissionsPage() {
               <button
                 type="button"
                 onClick={handleSetLastMonth}
-                className={`px-2.5 py-1 rounded-[6px] text-xs font-medium border ${
-                  activeDatePreset === 'last_month' && hasDateFilter ? 'bg-[#111827] text-white border-[#111827]' : 'bg-white text-[#6b7280] border-[#e5e7eb]'
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+                  activeDatePreset === 'last_month' && hasDateFilter ? 'bg-[#0f172a] text-white border-[#0f172a] shadow-xs font-bold' : 'bg-white text-[#64748b] border-[#e2e8f0] hover:bg-[#f8fafc]'
                 }`}
               >
                 Last Month
@@ -428,8 +445,8 @@ export default function PartnerCommissionsPage() {
               <button
                 type="button"
                 onClick={handleSetLast30Days}
-                className={`px-2.5 py-1 rounded-[6px] text-xs font-medium border ${
-                  activeDatePreset === 'last_30_days' && hasDateFilter ? 'bg-[#111827] text-white border-[#111827]' : 'bg-white text-[#6b7280] border-[#e5e7eb]'
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+                  activeDatePreset === 'last_30_days' && hasDateFilter ? 'bg-[#0f172a] text-white border-[#0f172a] shadow-xs font-bold' : 'bg-white text-[#64748b] border-[#e2e8f0] hover:bg-[#f8fafc]'
                 }`}
               >
                 Last 30 Days
@@ -439,24 +456,24 @@ export default function PartnerCommissionsPage() {
         )}
 
         {/* Ledger Summary Bar */}
-        <div className="pt-2 border-t border-[#e5e7eb] flex items-center justify-between text-xs text-[#6b7280] flex-wrap gap-2">
-          <span>Showing <strong className="text-[#111827]">{filtered.length}</strong> records</span>
+        <div className="pt-2.5 border-t border-[#f1f5f9] flex items-center justify-between text-xs text-[#64748b] flex-wrap gap-2">
+          <span>Showing <strong className="text-[#0f172a]">{filtered.length}</strong> records</span>
           <span>Filtered Total: <strong className="text-[#16a34a] font-bold font-mono">{formatIDR(totalFilteredCommission)}</strong></span>
         </div>
       </div>
 
-      {/* Main Ledger Table (Kravio SLA Monitoring Table Style) */}
-      <div className="bg-white border border-[#e5e7eb] rounded-[10px] overflow-hidden shadow-xs">
+      {/* Main Ledger Table (Enhanced CRM Table Style) */}
+      <div className="bg-white border border-[#eaecf0] rounded-2xl overflow-hidden shadow-xs">
         {loading ? (
           <div className="p-16 text-center space-y-3">
-            <div className="w-5 h-5 border-2 border-[#111827] border-t-transparent rounded-full animate-spin mx-auto" />
-            <div className="font-mono text-xs text-[#6b7280]">Loading commission records...</div>
+            <div className="w-6 h-6 border-2 border-[#0f172a] border-t-transparent rounded-full animate-spin mx-auto" />
+            <div className="font-mono text-xs text-[#64748b]">Loading commission records...</div>
           </div>
         ) : filtered.length === 0 ? (
-          <div className="p-12 text-center space-y-2">
-            <Receipt size={24} className="mx-auto text-[#9ca3af]" />
-            <p className="text-sm font-semibold text-[#111827]">No commission records found.</p>
-            <p className="text-xs text-[#6b7280] max-w-sm mx-auto">
+          <div className="p-12 text-center space-y-2.5">
+            <Receipt size={28} className="mx-auto text-[#94a3b8]" />
+            <p className="text-sm font-bold text-[#0f172a]">No commission records found.</p>
+            <p className="text-xs text-[#64748b] max-w-sm mx-auto leading-relaxed">
               Any commissions matching the selected status will appear here.
             </p>
           </div>
@@ -465,83 +482,82 @@ export default function PartnerCommissionsPage() {
             {/* Desktop Table (>= 768px) */}
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-[#f9fafb] border-b border-[#e5e7eb] text-[11px] font-medium text-[#6b7280]">
+                <thead className="bg-[#f8fafc] border-b border-[#eaecf0] font-mono text-[10px] uppercase tracking-wider text-[#64748b]">
                   <tr>
-                    <th className="py-3 px-4 w-8">
-                      <input type="checkbox" className="rounded-[4px] border-[#d1d5db]" readOnly />
+                    <th className="py-3.5 px-4 w-8">
+                      <input type="checkbox" className="rounded-md border-[#cbd5e1] text-[#0f172a]" readOnly />
                     </th>
-                    <th className="py-3 px-4">Date</th>
-                    <th className="py-3 px-4">Invoice #</th>
-                    <th className="py-3 px-4">Treatment Net</th>
-                    <th className="py-3 px-4">Rate</th>
-                    <th className="py-3 px-4">Commission</th>
-                    <th className="py-3 px-4">Status</th>
-                    <th className="py-3 px-4 text-right">Actions</th>
+                    <th className="py-3.5 px-4 font-bold">Date</th>
+                    <th className="py-3.5 px-4 font-bold">Invoice #</th>
+                    <th className="py-3.5 px-4 font-bold text-right">Treatment Net</th>
+                    <th className="py-3.5 px-4 font-bold text-center">Rate</th>
+                    <th className="py-3.5 px-4 font-bold text-right">Commission</th>
+                    <th className="py-3.5 px-4 font-bold text-center">Status</th>
+                    <th className="py-3.5 px-4 font-bold text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#f3f4f6]">
+                <tbody className="divide-y divide-[#f1f5f9]">
                   {filtered.map((item, idx) => {
                     const isPaid = item.status === 'paid';
                     const isApproved = item.status === 'approved';
                     const isCancelled = item.status === 'cancelled';
 
                     return (
-                      <tr key={item.id} className="hover:bg-[#f9fafb] transition-colors">
-                        <td className="py-3.5 px-4">
-                          <input type="checkbox" defaultChecked={idx === 0} className="rounded-[4px] border-[#d1d5db]" />
+                      <tr key={item.id} className="hover:bg-[#f8fafc]/70 transition-colors">
+                        <td className="py-4 px-4">
+                          <input type="checkbox" defaultChecked={idx === 0} className="rounded-md border-[#cbd5e1] text-[#0f172a]" />
                         </td>
-                        <td className="py-3.5 px-4 font-mono text-[#6b7280] whitespace-nowrap">
+                        <td className="py-4 px-4 font-mono text-[11px] text-[#475569] whitespace-nowrap font-medium">
                           {new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                         </td>
-                        <td className="py-3.5 px-4 font-mono font-semibold text-[#111827] whitespace-nowrap">
+                        <td className="py-4 px-4 font-mono text-xs font-bold text-[#0f172a] whitespace-nowrap">
                           <Link href={`/invoice/${item.booking_id}`} target="_blank" className="hover:underline">
                             #{item.booking_id}
                           </Link>
                         </td>
-                        <td className="py-3.5 px-4 font-mono font-medium text-[#111827] whitespace-nowrap">
+                        <td className="py-4 px-4 font-mono text-right text-xs font-semibold text-[#0f172a] whitespace-nowrap tabular-nums">
                           {formatIDR(item.eligible_treatment_amount)}
                         </td>
-                        <td className="py-3.5 px-4 font-mono text-[#6b7280] whitespace-nowrap">
+                        <td className="py-4 px-4 font-mono text-center text-xs text-[#64748b] whitespace-nowrap tabular-nums">
                           {item.commission_rate_pct}%
                         </td>
-                        <td className="py-3.5 px-4 font-mono font-bold text-[#16a34a] whitespace-nowrap">
-                          +{formatIDR(item.commission_amount)}
+                        <td className="py-4 px-4 font-mono text-right font-bold text-xs text-[#16a34a] whitespace-nowrap tabular-nums">
+                          {isCancelled ? 'Rp0' : `+${formatIDR(item.commission_amount)}`}
                         </td>
-                        <td className="py-3.5 px-4 whitespace-nowrap">
+                        <td className="py-4 px-4 text-center whitespace-nowrap">
                           {isCancelled ? (
-                            <span className="font-mono text-[10px] font-semibold text-red-600 bg-red-50 border border-red-200 px-2 py-0.5 rounded-[4px]">
+                            <span className="font-mono text-[9px] font-bold text-[#b91c1c] bg-[#fee2e2] border border-[#fecaca] px-2.5 py-1 rounded-full uppercase tracking-wider">
                               Cancelled
                             </span>
                           ) : isPaid ? (
-                            <span className="font-mono text-[10px] font-semibold text-white bg-[#111827] px-2 py-0.5 rounded-[4px]">
+                            <span className="font-mono text-[9px] font-bold text-white bg-[#0f172a] px-2.5 py-1 rounded-full uppercase tracking-wider shadow-2xs">
                               PAID OUT
                             </span>
                           ) : isApproved ? (
-                            <span className="font-mono text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-[4px] inline-flex items-center gap-1">
-                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                            <span className="font-mono text-[9px] font-bold text-[#15803d] bg-[#dcfce7] border border-[#bbf7d0] px-2.5 py-1 rounded-full uppercase tracking-wider">
                               Approved
                             </span>
                           ) : (
-                            <span className="font-mono text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-[4px]">
+                            <span className="font-mono text-[9px] font-bold text-[#b45309] bg-[#fef3c7] border border-[#fde68a] px-2.5 py-1 rounded-full uppercase tracking-wider">
                               Pending
                             </span>
                           )}
                         </td>
-                        <td className="py-3.5 px-4 text-right whitespace-nowrap">
+                        <td className="py-4 px-4 text-right whitespace-nowrap">
                           <div className="flex items-center justify-end gap-2">
                             <button
                               type="button"
                               onClick={() => setTrackingBooking(itemAsCalendarBooking(item))}
-                              className="h-6.5 px-2.5 rounded-[5px] bg-[#111827] hover:bg-black text-[11px] font-mono text-white inline-flex items-center gap-1 cursor-pointer transition-all shadow-2xs active:scale-95"
+                              className="h-7 px-3 rounded-lg bg-[#0f172a] hover:bg-black text-[11px] font-medium text-white inline-flex items-center gap-1.5 cursor-pointer transition-all shadow-2xs active:scale-95"
                               title="Track schedule & booking details"
                             >
-                              <Clock size={10} className="text-[#9ca3af]" />
+                              <Clock size={11} className="text-[#cbd5e1]" />
                               <span>Track</span>
                             </button>
                             <Link
                               href={`/invoice/${item.booking_id}`}
                               target="_blank"
-                              className="text-[11px] font-mono text-[#6b7280] hover:text-[#111827] inline-flex items-center gap-0.5 hover:underline"
+                              className="text-[11px] font-medium text-[#64748b] hover:text-[#0f172a] inline-flex items-center gap-0.5 hover:underline px-1.5 py-1"
                               title="View invoice"
                             >
                               <span>Invoice</span>
@@ -557,7 +573,7 @@ export default function PartnerCommissionsPage() {
             </div>
 
             {/* Mobile App Commission Cards (< 768px) */}
-            <div className="md:hidden space-y-2.5 p-3">
+            <div className="md:hidden space-y-3 p-3">
               {filtered.map((item) => {
                 const isPaid = item.status === 'paid';
                 const isApproved = item.status === 'approved';
@@ -566,7 +582,7 @@ export default function PartnerCommissionsPage() {
                 return (
                   <div
                     key={item.id}
-                    className="p-3.5 rounded-2xl bg-white border border-[#ebebeb] space-y-2.5 shadow-[0_1px_4px_rgba(0,0,0,0.02)] overflow-hidden"
+                    className="p-4 rounded-2xl bg-white border border-[#eaecf0] space-y-3 shadow-xs hover:border-[#cbd5e1] transition-all overflow-hidden"
                   >
                     {/* Top Row: Invoice # + Date + Commission */}
                     <div className="flex items-center justify-between gap-2">
@@ -574,43 +590,42 @@ export default function PartnerCommissionsPage() {
                         <Link
                           href={`/invoice/${item.booking_id}`}
                           target="_blank"
-                          className="font-mono text-xs font-bold text-[#111827] hover:underline"
+                          className="font-mono text-xs font-bold text-[#0f172a] hover:underline"
                         >
                           #{item.booking_id}
                         </Link>
-                        <span className="text-[#ebebeb]">·</span>
-                        <span className="font-mono text-[11px] text-[#8f8f8f]">
+                        <span className="text-[#cbd5e1]">·</span>
+                        <span className="font-mono text-[11px] text-[#64748b]">
                           {new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                         </span>
                       </div>
                       <div className="text-right shrink-0">
-                        <span className={`font-mono font-bold text-xs sm:text-sm tabular-nums ${isCancelled ? 'line-through text-[#8f8f8f]' : 'text-[#16a34a]'}`}>
+                        <span className={`font-mono font-bold text-xs sm:text-sm tabular-nums ${isCancelled ? 'line-through text-[#94a3b8]' : 'text-[#16a34a]'}`}>
                           +{formatIDR(item.commission_amount)}
                         </span>
                       </div>
                     </div>
 
                     {/* Middle Row: Net & Rate + Status Badge */}
-                    <div className="pt-2 border-t border-[#f3f4f6] flex items-center justify-between text-xs">
-                      <div className="font-mono text-[11px] text-[#6b7280]">
+                    <div className="pt-2.5 border-t border-[#f1f5f9] flex items-center justify-between text-xs">
+                      <div className="font-mono text-[11px] text-[#64748b]">
                         Net {formatIDR(item.eligible_treatment_amount)} · {item.commission_rate_pct}%
                       </div>
                       <div className="shrink-0">
                         {isCancelled ? (
-                          <span className="font-mono text-[9px] font-semibold text-red-600 bg-red-50 border border-red-200 px-2 py-0.5 rounded-[4px]">
+                          <span className="font-mono text-[9px] font-bold text-[#b91c1c] bg-[#fee2e2] border border-[#fecaca] px-2.5 py-0.5 rounded-full uppercase tracking-wider">
                             Cancelled
                           </span>
                         ) : isPaid ? (
-                          <span className="font-mono text-[9px] font-semibold text-white bg-[#111827] px-2 py-0.5 rounded-[4px]">
+                          <span className="font-mono text-[9px] font-bold text-white bg-[#0f172a] px-2.5 py-0.5 rounded-full uppercase tracking-wider shadow-2xs">
                             PAID OUT
                           </span>
                         ) : isApproved ? (
-                          <span className="font-mono text-[9px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-[4px] inline-flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                          <span className="font-mono text-[9px] font-bold text-[#15803d] bg-[#dcfce7] border border-[#bbf7d0] px-2.5 py-0.5 rounded-full uppercase tracking-wider">
                             Approved
                           </span>
                         ) : (
-                          <span className="font-mono text-[9px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-[4px]">
+                          <span className="font-mono text-[9px] font-bold text-[#b45309] bg-[#fef3c7] border border-[#fde68a] px-2.5 py-0.5 rounded-full uppercase tracking-wider">
                             Pending
                           </span>
                         )}
@@ -618,23 +633,23 @@ export default function PartnerCommissionsPage() {
                     </div>
 
                     {/* Native App Actions Bar: Full-width Track CTA + Invoice Button */}
-                    <div className="pt-2 border-t border-[#f3f4f6] flex items-center gap-2">
+                    <div className="pt-2.5 border-t border-[#f1f5f9] flex items-center gap-2">
                       <button
                         type="button"
                         onClick={() => setTrackingBooking(itemAsCalendarBooking(item))}
-                        className="flex-1 h-8 rounded-xl bg-[#111827] hover:bg-black text-white text-xs font-mono font-medium inline-flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.98] transition-transform shadow-xs"
+                        className="flex-1 h-8.5 rounded-xl bg-[#0f172a] hover:bg-black text-white text-xs font-medium inline-flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.98] transition-transform shadow-xs"
                       >
-                        <Clock size={12} className="text-[#9ca3af]" />
+                        <Clock size={12} className="text-[#cbd5e1]" />
                         <span>Track</span>
                       </button>
 
                       <Link
                         href={`/invoice/${item.booking_id}`}
                         target="_blank"
-                        className="h-8 px-3 rounded-xl bg-[#f5f5f5] hover:bg-[#ebebeb] text-[#111827] text-xs font-mono font-medium inline-flex items-center justify-center gap-1 active:scale-[0.98] transition-transform"
+                        className="h-8.5 px-3.5 rounded-xl border border-[#e2e8f0] bg-white hover:bg-[#f8fafc] text-[#334155] text-xs font-medium inline-flex items-center justify-center gap-1 active:scale-[0.98] transition-transform shadow-2xs"
                       >
                         <span>Invoice</span>
-                        <ExternalLink size={10} className="text-[#9ca3af]" />
+                        <ExternalLink size={10} className="text-[#94a3b8]" />
                       </Link>
                     </div>
                   </div>
