@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
     Megaphone, PlusCircle, Store, Settings, LayoutDashboard, 
     UploadCloud, CheckCircle, Plus, Trash2, Edit3, Pin, 
-    ChevronDown, ChevronUp, Calculator, LogOut,
+    ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Calculator, LogOut,
     ArrowRight, ArrowUp, ArrowDown, Compass, ShieldCheck, Check, Ticket, Search, Menu, MoreHorizontal, Calendar, FileText, Heart, Clock, Share2, Layers
 } from 'lucide-react';
 import Link from 'next/link';
@@ -48,6 +48,7 @@ export default function AdminDashboard() {
     } = useSpa();
 
     const [activeTab, setActiveTab] = useState<'campaign' | 'treatment' | 'store' | 'fees' | 'calculator' | 'list' | 'settings' | 'promo' | 'bookings' | 'invoice' | 'affiliates' | 'addons'>('campaign');
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [success, setSuccess] = useState(false);
     
@@ -841,83 +842,138 @@ export default function AdminDashboard() {
     return (
         <div className="text-neutral-900 flex flex-col md:flex-row font-sans w-full min-w-0 gap-5">
             
-            {/* Desktop Minimalist Monochrome Sidebar */}
-            <aside className="hidden md:flex flex-col w-64 bg-white/95 border border-stone-200/90 rounded-2xl p-4 shadow-2xs z-10 shrink-0 self-start space-y-4">
-                <div className="pb-3 border-b border-stone-100 flex flex-col gap-2.5">
-                    <div>
-                        <span className="text-[10px] uppercase font-bold tracking-wider text-stone-400 block">Workspace</span>
-                        <h2 className="text-sm font-bold tracking-tight text-neutral-900">Admin Controls</h2>
-                    </div>
-                    <div>
-                        <label className="text-[10px] font-semibold uppercase tracking-wider text-stone-500 block mb-1">Brand Scope</label>
-                        <select 
-                            id="brandSelect"
-                            value={siteBrandFilter}
-                            onChange={(e) => setSiteBrandFilter(e.target.value)}
-                            className="w-full bg-white border border-stone-200 rounded-full px-3 py-1.5 text-xs font-semibold text-neutral-900 focus:outline-none focus:border-amber-400 cursor-pointer shadow-2xs"
-                        >
-                            <option value="therapick">Therapick</option>
-                            <option value="central">Central Admin</option>
-                            <option value="elexoir">Elexoir Home Spa</option>
-                            <option value="bali">Home Spa Ubud</option>
-                        </select>
-                        <div className="grid grid-cols-2 gap-1 mt-1.5">
-                            {[
-                                { id: 'therapick', label: 'Therapick' },
-                                { id: 'central', label: 'Central' },
-                                { id: 'elexoir', label: 'Elexoir' },
-                                { id: 'bali', label: 'Home Spa' }
-                            ].map(b => (
+            {/* Desktop Minimalist Monochrome Sidebar (Collapsible for Full Screen CRM) */}
+            {isSidebarCollapsed ? (
+                <aside className="hidden md:flex flex-col w-14 bg-white/95 border border-stone-200/90 rounded-2xl p-2.5 shadow-2xs z-10 shrink-0 self-start items-center space-y-3">
+                    <button
+                        type="button"
+                        onClick={() => setIsSidebarCollapsed(false)}
+                        className="w-9 h-9 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-700 flex items-center justify-center transition-colors cursor-pointer"
+                        title="Expand Sidebar"
+                    >
+                        <ChevronRight size={16} />
+                    </button>
+                    <div className="w-8 h-[1px] bg-stone-200" />
+                    <nav className="space-y-1.5 flex flex-col items-center">
+                        {[
+                            ...(siteBrandFilter === 'central' ? [{ id: 'bookings', icon: Calendar, label: 'Booking' }, { id: 'invoice', icon: Ticket, label: 'Invoices' }] : []),
+                            ...(siteBrandFilter === 'therapick' ? [{ id: 'bookings', icon: Calendar, label: 'Bookings' }, { id: 'affiliates', icon: Share2, label: 'Affiliates' }, { id: 'addons', icon: Layers, label: 'Add-on Settings' }] : []),
+                            { id: 'campaign', icon: Megaphone, label: 'Campaign Card' },
+                            { id: 'promo', icon: Ticket, label: 'Promo Codes' },
+                            { id: 'treatment', icon: PlusCircle, label: 'Treatments' },
+                            { id: 'store', icon: Store, label: 'Store Products' },
+                            { id: 'fees', icon: Settings, label: 'Therapist Fees' },
+                            { id: 'calculator', icon: Calculator, label: 'Commission Calc' },
+                            { id: 'list', icon: LayoutDashboard, label: 'Menu Overview' },
+                        ].filter(tab => siteBrandFilter !== 'central' || !['campaign', 'promo'].includes(tab.id)).map((tab) => {
+                            const Icon = tab.icon;
+                            const isActive = activeTab === tab.id;
+                            return (
                                 <button
-                                    key={b.id}
+                                    key={tab.id}
                                     type="button"
-                                    id={`brand-chip-${b.id}`}
-                                    onClick={() => setSiteBrandFilter(b.id)}
-                                    className={`px-2 py-1 rounded-full text-[11px] font-semibold transition-all text-center cursor-pointer ${
-                                        siteBrandFilter === b.id 
-                                            ? 'bg-neutral-900 text-white shadow-2xs' 
-                                            : 'bg-stone-100 text-stone-600 hover:text-neutral-900 hover:bg-stone-200/70'
+                                    onClick={() => setActiveTab(tab.id as any)}
+                                    title={tab.label}
+                                    className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${
+                                        isActive 
+                                        ? 'bg-neutral-900 text-white shadow-xs' 
+                                        : 'text-stone-600 hover:bg-stone-100 hover:text-neutral-900'
                                     }`}
                                 >
-                                    {b.label}
+                                    <Icon size={15} strokeWidth={isActive ? 2.5 : 2} />
                                 </button>
-                            ))}
+                            );
+                        })}
+                    </nav>
+                </aside>
+            ) : (
+                <aside className="hidden md:flex flex-col w-64 bg-white/95 border border-stone-200/90 rounded-2xl p-4 shadow-2xs z-10 shrink-0 self-start space-y-4">
+                    <div className="pb-3 border-b border-stone-100 flex flex-col gap-2.5">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <span className="text-[10px] uppercase font-bold tracking-wider text-stone-400 block">Workspace</span>
+                                <h2 className="text-sm font-bold tracking-tight text-neutral-900">Admin Controls</h2>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setIsSidebarCollapsed(true)}
+                                className="w-7 h-7 rounded-full text-stone-400 hover:text-neutral-900 hover:bg-stone-100 flex items-center justify-center cursor-pointer transition-colors"
+                                title="Collapse Sidebar (Full Screen View)"
+                            >
+                                <ChevronLeft size={14} />
+                            </button>
+                        </div>
+                        <div>
+                            <label className="text-[10px] font-semibold uppercase tracking-wider text-stone-500 block mb-1">Brand Scope</label>
+                            <select 
+                                id="brandSelect"
+                                value={siteBrandFilter}
+                                onChange={(e) => setSiteBrandFilter(e.target.value)}
+                                className="w-full bg-white border border-stone-200 rounded-full px-3 py-1.5 text-xs font-semibold text-neutral-900 focus:outline-none focus:border-amber-400 cursor-pointer shadow-2xs"
+                            >
+                                <option value="therapick">Therapick</option>
+                                <option value="central">Central Admin</option>
+                                <option value="elexoir">Elexoir Home Spa</option>
+                                <option value="bali">Home Spa Ubud</option>
+                            </select>
+                            <div className="grid grid-cols-2 gap-1 mt-1.5">
+                                {[
+                                    { id: 'therapick', label: 'Therapick' },
+                                    { id: 'central', label: 'Central' },
+                                    { id: 'elexoir', label: 'Elexoir' },
+                                    { id: 'bali', label: 'Home Spa' }
+                                ].map(b => (
+                                    <button
+                                        key={b.id}
+                                        type="button"
+                                        id={`brand-chip-${b.id}`}
+                                        onClick={() => setSiteBrandFilter(b.id)}
+                                        className={`px-2 py-1 rounded-full text-[11px] font-semibold transition-all text-center cursor-pointer ${
+                                            siteBrandFilter === b.id 
+                                                ? 'bg-neutral-900 text-white shadow-2xs' 
+                                                : 'bg-stone-100 text-stone-600 hover:text-neutral-900 hover:bg-stone-200/70'
+                                        }`}
+                                    >
+                                        {b.label}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <nav className="flex-1 space-y-1 overflow-y-auto">
-                    {[
-                        ...(siteBrandFilter === 'central' ? [{ id: 'bookings', icon: Calendar, label: 'Booking' }, { id: 'invoice', icon: Ticket, label: 'Invoices' }] : []),
-                        ...(siteBrandFilter === 'therapick' ? [{ id: 'bookings', icon: Calendar, label: 'Bookings' }, { id: 'affiliates', icon: Share2, label: 'Affiliates' }, { id: 'addons', icon: Layers, label: 'Add-on Settings' }] : []),
-                        { id: 'campaign', icon: Megaphone, label: 'Campaign Card' },
-                        { id: 'promo', icon: Ticket, label: 'Promo Codes' },
-                        { id: 'treatment', icon: PlusCircle, label: 'Treatments' },
-                        { id: 'store', icon: Store, label: 'Store Products' },
-                        { id: 'fees', icon: Settings, label: 'Therapist Fees' },
-                        { id: 'calculator', icon: Calculator, label: 'Commission Calc' },
-                        { id: 'list', icon: LayoutDashboard, label: 'Menu Overview' },
-                    ].filter(tab => siteBrandFilter !== 'central' || !['campaign', 'promo'].includes(tab.id)).map((tab) => {
-                        const Icon = tab.icon;
-                        const isActive = activeTab === tab.id;
-                        return (
-                            <button
-                                key={tab.id}
-                                type="button"
-                                onClick={() => setActiveTab(tab.id as any)}
-                                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-full text-xs font-semibold tracking-tight transition-all cursor-pointer ${
-                                    isActive 
-                                    ? 'bg-neutral-900 text-white shadow-xs' 
-                                    : 'text-stone-600 hover:bg-stone-100 hover:text-neutral-900'
-                                }`}
-                            >
-                                <Icon size={14} strokeWidth={isActive ? 2.5 : 2} />
-                                {tab.label}
-                            </button>
-                        );
-                    })}
-                </nav>
-            </aside>
+                    <nav className="flex-1 space-y-1 overflow-y-auto">
+                        {[
+                            ...(siteBrandFilter === 'central' ? [{ id: 'bookings', icon: Calendar, label: 'Booking' }, { id: 'invoice', icon: Ticket, label: 'Invoices' }] : []),
+                            ...(siteBrandFilter === 'therapick' ? [{ id: 'bookings', icon: Calendar, label: 'Bookings' }, { id: 'affiliates', icon: Share2, label: 'Affiliates' }, { id: 'addons', icon: Layers, label: 'Add-on Settings' }] : []),
+                            { id: 'campaign', icon: Megaphone, label: 'Campaign Card' },
+                            { id: 'promo', icon: Ticket, label: 'Promo Codes' },
+                            { id: 'treatment', icon: PlusCircle, label: 'Treatments' },
+                            { id: 'store', icon: Store, label: 'Store Products' },
+                            { id: 'fees', icon: Settings, label: 'Therapist Fees' },
+                            { id: 'calculator', icon: Calculator, label: 'Commission Calc' },
+                            { id: 'list', icon: LayoutDashboard, label: 'Menu Overview' },
+                        ].filter(tab => siteBrandFilter !== 'central' || !['campaign', 'promo'].includes(tab.id)).map((tab) => {
+                            const Icon = tab.icon;
+                            const isActive = activeTab === tab.id;
+                            return (
+                                <button
+                                    key={tab.id}
+                                    type="button"
+                                    onClick={() => setActiveTab(tab.id as any)}
+                                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-full text-xs font-semibold tracking-tight transition-all cursor-pointer ${
+                                        isActive 
+                                        ? 'bg-neutral-900 text-white shadow-xs' 
+                                        : 'text-stone-600 hover:bg-stone-100 hover:text-neutral-900'
+                                    }`}
+                                >
+                                    <Icon size={14} strokeWidth={isActive ? 2.5 : 2} />
+                                    {tab.label}
+                                </button>
+                            );
+                        })}
+                    </nav>
+                </aside>
+            )}
 
             {/* Main Content Area */}
             <main className="flex-1 relative min-w-0 pb-12">

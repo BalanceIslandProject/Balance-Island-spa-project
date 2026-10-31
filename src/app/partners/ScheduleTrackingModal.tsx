@@ -122,44 +122,45 @@ export default function ScheduleTrackingModal({ booking, onClose }: ScheduleTrac
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/40 backdrop-blur-xs animate-in fade-in duration-150">
       <div 
-        className="w-full max-w-sm sm:max-w-md bg-white rounded-2xl border border-[#eaecf0] shadow-xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-150 font-sans"
+        className="w-full max-w-sm sm:max-w-md bg-white rounded-3xl border border-stone-200/90 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.18)] overflow-hidden flex flex-col max-h-[92vh] animate-in zoom-in-95 duration-150 font-sans"
         role="dialog"
         aria-modal="true"
         aria-labelledby="tracking-title"
       >
-        {/* Header - Compact Web App Style */}
-        <div className="px-4 py-3 sm:px-5 sm:py-3.5 border-b border-[#eaecf0] bg-[#f8fafc] flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-            <span className="font-mono text-[10px] uppercase font-bold text-[#64748b] tracking-wider shrink-0">
-              Track
+        {/* Header - Matching Screenshot 1 */}
+        <div className="px-5 py-4 border-b border-stone-100 bg-white flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="font-mono text-[11px] uppercase font-bold text-stone-400 tracking-wider shrink-0">
+              TRACK
             </span>
-            <span className="text-[#cbd5e1]">·</span>
-            <div className="flex items-center gap-1 font-mono text-xs font-bold text-[#0f172a] min-w-0">
+            <span className="text-stone-300">·</span>
+            <div className="flex items-center gap-1.5 font-mono text-sm font-bold text-neutral-900 min-w-0">
               <span className="truncate">#{booking.booking_id}</span>
               <button
                 type="button"
                 onClick={handleCopyId}
-                className="text-[#94a3b8] hover:text-[#0f172a] p-0.5 cursor-pointer shrink-0 transition-colors"
-                title="Copy ID"
+                className="text-stone-400 hover:text-neutral-900 p-1 rounded-md hover:bg-stone-100 cursor-pointer shrink-0 transition-colors"
+                title="Copy reference ID"
+                aria-label="Copy booking reference"
               >
-                {copiedId ? <Check size={11} className="text-[#16a34a]" /> : <Copy size={11} />}
+                {copiedId ? <Check size={12} className="text-emerald-600" /> : <Copy size={12} />}
               </button>
             </div>
             {isPaidOut ? (
-              <span className="font-mono text-[9px] font-bold text-white bg-[#0f172a] px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0 shadow-2xs">
+              <span className="font-mono text-[10px] font-bold text-white bg-neutral-950 px-2.5 py-0.5 rounded-full uppercase tracking-wider shrink-0 shadow-2xs">
                 PAID OUT
               </span>
             ) : isApproved ? (
-              <span className="font-mono text-[9px] font-bold text-[#15803d] bg-[#dcfce7] px-2 py-0.5 rounded-full uppercase tracking-wider border border-[#bbf7d0] shrink-0">
-                Approved
+              <span className="font-mono text-[10px] font-bold text-emerald-800 bg-emerald-100/90 border border-emerald-300 px-2.5 py-0.5 rounded-full uppercase tracking-wider shrink-0">
+                APPROVED
               </span>
             ) : isCancelled ? (
-              <span className="font-mono text-[9px] font-bold text-[#b91c1c] bg-[#fee2e2] px-2 py-0.5 rounded-full uppercase tracking-wider border border-[#fecaca] shrink-0">
-                Cancelled
+              <span className="font-mono text-[10px] font-bold text-rose-800 bg-rose-100/90 border border-rose-300 px-2.5 py-0.5 rounded-full uppercase tracking-wider shrink-0">
+                CANCELLED
               </span>
             ) : (
-              <span className="font-mono text-[9px] font-bold text-[#b45309] bg-[#fef3c7] px-2 py-0.5 rounded-full uppercase tracking-wider border border-[#fde68a] shrink-0">
-                Pending
+              <span className="font-mono text-[10px] font-bold text-amber-900 bg-amber-100/90 border border-amber-300 px-2.5 py-0.5 rounded-full uppercase tracking-wider shrink-0">
+                PENDING
               </span>
             )}
           </div>
@@ -167,29 +168,29 @@ export default function ScheduleTrackingModal({ booking, onClose }: ScheduleTrac
           <button
             type="button"
             onClick={onClose}
-            className="p-1 text-[#94a3b8] hover:text-[#0f172a] hover:bg-[#e2e8f0] rounded-lg transition-colors cursor-pointer shrink-0 ml-2"
-            aria-label="Close"
+            className="p-1.5 text-stone-400 hover:text-neutral-900 hover:bg-stone-100 rounded-full transition-colors cursor-pointer shrink-0 ml-2"
+            aria-label="Close modal"
           >
-            <X size={15} />
+            <X size={16} />
           </button>
         </div>
 
         {/* Content Body */}
-        <div className="p-4 sm:p-5 overflow-y-auto space-y-3.5 flex-1 text-xs">
+        <div className="p-5 sm:p-6 overflow-y-auto space-y-5 flex-1">
           
-          {/* 4-Step Stepper */}
+          {/* 4-Step Stepper - Eye-Catching & Simple */}
           {isCancelled ? (
-            <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-900 flex items-center gap-2">
-              <AlertCircle size={15} className="text-red-600 shrink-0" />
-              <span className="font-medium truncate">Cancelled · Rp0</span>
+            <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-xs text-rose-900 flex items-center gap-2.5">
+              <AlertCircle size={16} className="text-rose-600 shrink-0" />
+              <span className="font-semibold truncate">Booking Cancelled · No Commission Disbursed</span>
             </div>
           ) : (
-            <div className="pt-1.5 pb-1.5">
+            <div className="py-2">
               <div className="grid grid-cols-4 relative">
-                {/* Connecting Bar */}
-                <div className="absolute top-3 left-[12.5%] right-[12.5%] h-0.5 bg-[#eaecf0] z-0" />
+                {/* Connecting Track Line */}
+                <div className="absolute top-3.5 left-[12.5%] right-[12.5%] h-[2.5px] bg-stone-200 z-0" />
                 <div 
-                  className="absolute top-3 left-[12.5%] h-0.5 bg-[#16a34a] transition-all duration-300 z-0" 
+                  className="absolute top-3.5 left-[12.5%] h-[2.5px] bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)] transition-all duration-300 z-0" 
                   style={{ 
                     width: activeStep >= 4 ? '75%' : `${Math.max(0, (activeStep - 1) * 25)}%` 
                   }}
@@ -198,26 +199,28 @@ export default function ScheduleTrackingModal({ booking, onClose }: ScheduleTrac
                 {steps.map((st, idx) => (
                   <div key={idx} className="flex flex-col items-center text-center relative z-10 px-0.5 min-w-0">
                     <div 
-                      className={`w-6.5 h-6.5 rounded-full flex items-center justify-center text-[10px] font-mono transition-all shrink-0 ${
+                      className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-mono transition-all shrink-0 ${
                         st.isDone
-                          ? 'bg-[#16a34a] text-white shadow-xs'
+                          ? 'bg-emerald-500 text-white shadow-xs ring-4 ring-emerald-50'
                           : st.isCurrent
-                          ? 'bg-white border-2 border-[#0f172a] text-[#0f172a] ring-4 ring-[#0f172a]/10 font-bold'
-                          : 'bg-white border border-[#cbd5e1] text-[#94a3b8]'
+                          ? 'bg-emerald-500 text-white ring-4 ring-emerald-200 shadow-sm animate-pulse'
+                          : 'bg-white border-2 border-stone-300 text-stone-400'
                       }`}
                     >
                       {st.isDone ? (
-                        <Check size={12} strokeWidth={2.5} />
+                        <Check size={14} strokeWidth={3} />
+                      ) : st.isCurrent ? (
+                        <Check size={14} strokeWidth={3} />
                       ) : (
-                        <span>{idx + 1}</span>
+                        <span className="font-bold text-[11px]">{idx + 1}</span>
                       )}
                     </div>
-                    <span className={`text-[11px] font-semibold mt-1.5 truncate max-w-full ${
-                      st.isDone || st.isCurrent ? 'text-[#0f172a]' : 'text-[#94a3b8]'
+                    <span className={`text-xs font-bold mt-2 truncate max-w-full ${
+                      st.isDone || st.isCurrent ? 'text-neutral-900' : 'text-stone-400'
                     }`}>
                       {st.label}
                     </span>
-                    <span className="text-[10px] font-mono text-[#64748b] truncate max-w-full">
+                    <span className="text-[11px] font-mono text-stone-500 truncate max-w-full mt-0.5">
                       {st.sub}
                     </span>
                   </div>
@@ -226,95 +229,104 @@ export default function ScheduleTrackingModal({ booking, onClose }: ScheduleTrac
             </div>
           )}
 
-          {/* Details Card - Compact 2-Column Grid */}
-          <div className="p-3.5 rounded-xl bg-[#f8fafc] border border-[#eaecf0] space-y-2.5 overflow-hidden">
-            <div className="grid grid-cols-2 gap-2 pb-2.5 border-b border-[#eaecf0]">
+          {/* Unified Details & Financials Card - Matching Screenshot 1 */}
+          <div className="p-4 sm:p-5 rounded-2xl bg-stone-50/90 border border-stone-200/70 space-y-3.5 overflow-hidden">
+            {/* Top Row: Guest & Date */}
+            <div className="grid grid-cols-2 gap-3">
               <div className="min-w-0">
-                <span className="font-mono text-[10px] uppercase tracking-wider text-[#94a3b8] block font-semibold">Guest</span>
-                <span className="font-bold text-xs text-[#0f172a] truncate block">
+                <span className="font-mono text-[10px] uppercase tracking-wider text-stone-400 block font-bold">
+                  GUEST
+                </span>
+                <span className="font-bold text-sm text-neutral-900 truncate block mt-0.5">
                   {booking.guest_name || 'Guest'}
                 </span>
               </div>
               <div className="min-w-0 text-right">
-                <span className="font-mono text-[10px] uppercase tracking-wider text-[#94a3b8] block font-semibold">Date</span>
-                <span className="font-mono font-medium text-xs text-[#0f172a] truncate block">
-                  {safeFormatDate(booking.date)} {booking.time ? `· ${booking.time}` : ''}
+                <span className="font-mono text-[10px] uppercase tracking-wider text-stone-400 block font-bold">
+                  DATE
+                </span>
+                <span className="font-bold text-sm text-neutral-900 truncate block mt-0.5">
+                  {safeFormatDate(booking.date)}
                 </span>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2">
+            {/* Middle Row: Treatment & Location */}
+            <div className="grid grid-cols-2 gap-3">
               <div className="min-w-0">
-                <span className="font-mono text-[10px] uppercase tracking-wider text-[#94a3b8] block font-semibold">Treatment</span>
-                <span className="font-medium text-xs text-[#0f172a] truncate block">
-                  {booking.treatment_name || 'Spa Ritual'}
+                <span className="font-mono text-[10px] uppercase tracking-wider text-stone-400 block font-bold">
+                  TREATMENT
                 </span>
-                <span className="font-mono text-[10px] text-[#64748b] truncate block">
+                <span className="font-bold text-xs sm:text-sm text-neutral-900 truncate block mt-0.5 uppercase">
+                  {booking.treatment_name || 'HONEYMOON PACKAGE (120)'}
+                </span>
+                <span className="font-mono text-xs text-stone-500 truncate block mt-0.5">
                   {booking.duration || '60 Mins'}
                 </span>
               </div>
               <div className="min-w-0 text-right">
-                <span className="font-mono text-[10px] uppercase tracking-wider text-[#94a3b8] block font-semibold">Location</span>
-                <span className="font-medium text-xs text-[#0f172a] truncate block">
+                <span className="font-mono text-[10px] uppercase tracking-wider text-stone-400 block font-bold">
+                  LOCATION
+                </span>
+                <span className="font-bold text-xs sm:text-sm text-neutral-900 truncate block mt-0.5">
                   {booking.location || 'Ubud'}
                 </span>
                 {booking.room_number && (
-                  <span className="font-mono text-[10px] text-[#64748b] truncate block">
+                  <span className="font-mono text-xs text-stone-500 truncate block mt-0.5">
                     Room {booking.room_number}
                   </span>
                 )}
               </div>
             </div>
-          </div>
 
-          {/* Financials & Status Strip */}
-          <div className="p-3.5 rounded-xl bg-white border border-[#eaecf0] space-y-2 shadow-2xs overflow-hidden">
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-[#64748b]">Net Treatment</span>
-              <span className="font-mono font-bold text-[#0f172a] tabular-nums">
-                {formatIDR(booking.treatment_amount || booking.gross_amount)}
-              </span>
-            </div>
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-[#64748b]">Earned ({booking.commission_rate_pct || 10}%)</span>
-              <span className="font-mono font-bold text-xs text-[#16a34a] tabular-nums">
-                +{formatIDR(booking.commission_amount)}
-              </span>
-            </div>
-
-            <div className="pt-2 border-t border-[#f1f5f9] flex items-center justify-between text-[11px]">
-              <span className="text-[#94a3b8]">Status</span>
-              <span className="font-semibold text-[#0f172a]">
-                {isPaidOut 
-                  ? 'Disbursed' 
-                  : isApproved 
-                  ? 'Approved' 
-                  : isCancelled 
-                  ? 'Cancelled' 
-                  : 'In Escrow'}
-              </span>
+            {/* Divider Line */}
+            <div className="border-t border-stone-200/70 pt-3 space-y-2">
+              <div className="flex items-center justify-between text-xs sm:text-sm">
+                <span className="text-stone-500 font-medium">Net Treatment</span>
+                <span className="font-mono font-bold text-neutral-900 tabular-nums">
+                  {formatIDR(booking.treatment_amount || booking.gross_amount)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-xs sm:text-sm">
+                <span className="text-stone-500 font-medium">Earned ({booking.commission_rate_pct || 10}%)</span>
+                <span className="font-mono font-bold text-emerald-600 tabular-nums">
+                  +{formatIDR(booking.commission_amount)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-xs sm:text-sm pt-1">
+                <span className="text-stone-500 font-medium">Status</span>
+                <span className="font-semibold text-neutral-900">
+                  {isPaidOut 
+                    ? 'Disbursed' 
+                    : isApproved 
+                    ? 'Approved' 
+                    : isCancelled 
+                    ? 'Cancelled' 
+                    : 'Pending'}
+                </span>
+              </div>
             </div>
           </div>
 
         </div>
 
-        {/* Footer - Clean, Compact Web App */}
-        <div className="px-5 py-3 border-t border-[#eaecf0] bg-[#f8fafc] flex items-center justify-between shrink-0">
+        {/* Footer - Matching Screenshot 1 */}
+        <div className="px-5 py-3.5 border-t border-stone-100 bg-white flex items-center justify-between shrink-0">
           <Link
             href={`/invoice/${booking.booking_id}`}
             target="_blank"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0f172a] hover:underline"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-neutral-800 hover:text-black hover:underline cursor-pointer"
           >
             <span>Invoice</span>
-            <ExternalLink size={12} className="text-[#94a3b8]" />
+            <ExternalLink size={13} className="text-stone-400" />
           </Link>
 
           <button
             type="button"
             onClick={onClose}
-            className="h-8 px-4 rounded-xl bg-[#0f172a] text-white hover:bg-black font-mono text-xs uppercase tracking-wider transition-colors cursor-pointer shadow-xs active:scale-95"
+            className="h-9 px-6 rounded-xl bg-neutral-900 text-white hover:bg-black font-mono text-xs uppercase font-bold tracking-wider transition-all cursor-pointer shadow-xs active:scale-95"
           >
-            Close
+            CLOSE
           </button>
         </div>
       </div>

@@ -27,9 +27,14 @@ import {
   User,
   Lock,
   MapPin,
-  ExternalLink
+  ExternalLink,
+  Compass,
+  LayoutGrid,
+  Table
 } from 'lucide-react';
 import { Treatment, TherapistFee } from '@/context/SpaContext';
+import ScheduleTrackingModal from '@/app/partners/ScheduleTrackingModal';
+import { CalendarBooking } from '@/app/partners/FloatingBookingCalendar';
 import { 
   cx, 
   btn, 
@@ -75,6 +80,30 @@ const toLocalDateString = (date: Date) => {
   const m = String(date.getMonth() + 1).padStart(2, '0');
   const d = String(date.getDate()).padStart(2, '0');
   return `${y}-${m}-${d}`;
+};
+
+const safeFormatDate = (rawDate: string | undefined | null) => {
+  if (!rawDate) return '';
+  try {
+    const cleanStr = String(rawDate).includes('T') ? String(rawDate).split('T')[0] : String(rawDate);
+    const parts = cleanStr.split('-');
+    if (parts.length === 3) {
+      const year = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const day = parseInt(parts[2], 10);
+      if (!isNaN(year) && !isNaN(month) && !isNaN(day)) {
+        const d = new Date(year, month, day);
+        return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+      }
+    }
+    const d = new Date(rawDate);
+    if (!isNaN(d.getTime())) {
+      return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+    }
+  } catch {
+    // fallback
+  }
+  return String(rawDate);
 };
 
 // Robust Couple Package Identifier: already priced for 2 persons
@@ -182,6 +211,36 @@ export default function TherapickBookingManagement({
     () => monthBookings.find(b => b.id === selectedBookingId) || null,
     [monthBookings, selectedBookingId]
   );
+
+  const [viewMode, setViewMode] = useState<'agenda' | 'table'>('agenda');
+  const [trackingBooking, setTrackingBooking] = useState<CalendarBooking | null>(null);
+
+  const toCalendarBooking = (b: Booking): CalendarBooking => {
+    const comm = b.commission;
+    return {
+      id: b.id,
+      booking_id: b.reference_number || b.id.substring(0, 8).toUpperCase(),
+      date: b.booking_date,
+      time: b.time && b.time !== '-' ? b.time : undefined,
+      created_at: b.created_at,
+      guest_name: b.guest_name || 'Guest',
+      location: b.location || 'Ubud',
+      room_number: b.room_number,
+      treatment_name: b.treatment_name,
+      duration: b.items?.[0]?.duration,
+      booking_status: b.status,
+      treatment_status: b.treatment_status,
+      payment_status: (b.payment_status || '').toLowerCase() === 'paid' ? 'paid' : 'unpaid',
+      payment_method: b.payment_method,
+      payment_verified: (b.payment_status || '').toLowerCase() === 'paid',
+      service_completed: (b.treatment_status || '').toLowerCase() === 'finished',
+      gross_amount: b.revenue,
+      treatment_amount: b.revenue,
+      commission_rate_pct: comm?.commission_rate_pct || 10,
+      commission_amount: comm?.commission_amount || 0,
+      commission_status: comm?.status || 'pending',
+    };
+  };
 
   useEffect(() => {
     if (therapistFees && therapistFees.length > 0) {
@@ -408,6 +467,31 @@ export default function TherapickBookingManagement({
       return true;
     });
   }, [dailyBookings, statusFilter, bookingSearch]);
+
+  const filteredMonthBookings = useMemo(() => {
+    return monthBookings.filter(b => {
+      if (statusFilter !== 'all') {
+        const bStatus = (b.status || '').toLowerCase();
+        const tStatus = (b.treatment_status || '').toLowerCase();
+        if (statusFilter === 'confirmed' && bStatus !== 'confirmed') return false;
+        if (statusFilter === 'pending' && bStatus !== 'pending' && b.status) return false;
+        if (statusFilter === 'finished' && tStatus !== 'finished') return false;
+        if (statusFilter === 'ongoing' && tStatus !== 'in progress' && tStatus !== 'ongoing') return false;
+      }
+      if (bookingSearch.trim()) {
+        const q = bookingSearch.toLowerCase();
+        return (
+          (b.guest_name || '').toLowerCase().includes(q) ||
+          (b.treatment_name || '').toLowerCase().includes(q) ||
+          (b.reference_number || '').toLowerCase().includes(q) ||
+          (b.id || '').toLowerCase().includes(q) ||
+          (b.location || '').toLowerCase().includes(q) ||
+          (b.affiliate_code || '').toLowerCase().includes(q)
+        );
+      }
+      return true;
+    });
+  }, [monthBookings, statusFilter, bookingSearch]);
 
   const updateFormItem = (index: number, field: string, value: any) => {
     const newItems = [...formItems];
@@ -779,11 +863,11 @@ export default function TherapickBookingManagement({
   );
 
   return (
-    <div className="space-y-6 pb-28 md:pb-0 font-sans antialiased">
-      {/* ─── Crextio CRM Section Header & Distribution Track ─── */}
-      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 pb-3 border-b border-stone-200/60">
+    <div className="space-y-5 pb-28 md:pb-6 font-sans antialiased w-full">
+      {/* ─── Crextio CRM Section Header, View Switcher & Distribution ─── */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-3 border-b border-stone-200/70">
         <div className="space-y-1">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-900">Bookings</h1>
             <CountPill className="text-xs">{monthBookings.length} total</CountPill>
           </div>
@@ -793,6 +877,36 @@ export default function TherapickBookingManagement({
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
+          {/* CRM View Switcher */}
+          <div className="inline-flex items-center gap-1 bg-stone-100 p-1 rounded-full border border-stone-200/80 shadow-2xs">
+            <button
+              type="button"
+              onClick={() => setViewMode('agenda')}
+              className={cx(
+                'px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5',
+                viewMode === 'agenda'
+                  ? 'bg-neutral-900 text-white shadow-xs'
+                  : 'text-stone-600 hover:text-neutral-900 hover:bg-white/60'
+              )}
+            >
+              <Calendar size={13} />
+              <span>Day Agenda</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('table')}
+              className={cx(
+                'px-3.5 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5',
+                viewMode === 'table'
+                  ? 'bg-neutral-900 text-white shadow-xs'
+                  : 'text-stone-600 hover:text-neutral-900 hover:bg-white/60'
+              )}
+            >
+              <Table size={13} />
+              <span>Master CRM Table</span>
+            </button>
+          </div>
+
           <CrmDistributionTrack items={bookingDistribution} />
 
           <div className="flex items-center gap-2">
@@ -824,190 +938,359 @@ export default function TherapickBookingManagement({
         </div>
       </div>
 
-      {/* Financial Metrics Strip: Daily & Monthly (Revenue, Profit, Commission Paid) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-        {/* Daily Financials */}
-        <div className="bg-white/95 border border-stone-200/90 rounded-2xl p-4 md:p-5 shadow-2xs">
-          <div className="flex items-center justify-between pb-2.5 mb-3 border-b border-stone-100">
-            <span className="text-[11px] font-bold text-stone-500 uppercase tracking-wider">
-              Daily Financials · <span className="text-neutral-900 font-bold">{new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-            </span>
+      {/* ─── 4-Card Crextio CRM KPI Metric Ribbon ─── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+        {/* Card 1: Today's Appointments */}
+        <div className="bg-white/95 border border-stone-200/90 rounded-2xl p-3.5 sm:p-4 shadow-2xs">
+          <span className="text-[10px] uppercase font-bold tracking-wider text-stone-400 block truncate">
+            {new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} Appointments
+          </span>
+          <div className="text-xl sm:text-2xl font-bold text-neutral-900 mt-1 tabular-nums">
+            {dailyBookings.length} <span className="text-xs text-stone-500 font-normal">Bookings</span>
           </div>
-          <div className="grid grid-cols-3 gap-2 sm:gap-4">
-            <div className="min-w-0">
-              <div className="text-[11px] sm:text-xs text-[#737373] font-medium truncate">Daily revenue</div>
-              <div className="text-sm sm:text-lg md:text-xl font-bold text-black mt-1 tabular-nums truncate" title={formatCurrency(totalDailyRevenue)}>
-                {formatCurrency(totalDailyRevenue)}
-              </div>
-            </div>
-            <div className="min-w-0">
-              <div className="text-[11px] sm:text-xs text-[#737373] font-medium truncate">Daily profit</div>
-              <div className="text-sm sm:text-lg md:text-xl font-bold text-emerald-600 mt-1 tabular-nums truncate" title={formatCurrency(totalDailyProfit)}>
-                {formatCurrency(totalDailyProfit)}
-              </div>
-            </div>
-            <div className="min-w-0">
-              <div className="text-[11px] sm:text-xs text-[#737373] font-medium truncate">Commission paid</div>
-              <div className="text-sm sm:text-lg md:text-xl font-bold text-indigo-600 mt-1 tabular-nums truncate" title={formatCurrency(totalDailyCommission)}>
-                {formatCurrency(totalDailyCommission)}
-              </div>
-            </div>
+          <div className="text-[11px] text-stone-500 mt-1 flex items-center gap-2 truncate">
+            <span>{dailyBookings.reduce((sum, b) => sum + (b.pax || 1), 0)} Guests</span>
+            <span>·</span>
+            <span className="text-emerald-700 font-semibold">{dailyBookings.filter(b => (b.status || '').toLowerCase() === 'confirmed').length} Confirmed</span>
           </div>
         </div>
 
-        {/* Monthly Financials */}
-        <div className="bg-white border border-[#E5E5E5] rounded-xl p-4 md:p-5">
-          <div className="flex items-center justify-between pb-2.5 mb-3 border-b border-[#F0F0F0]">
-            <span className="text-xs font-semibold text-[#737373] uppercase tracking-wider">
-              Monthly Financials · <span className="text-black font-semibold">{monthNames[month]} {year}</span>
-            </span>
+        {/* Card 2: Daily Revenue & Profit */}
+        <div className="bg-white/95 border border-stone-200/90 rounded-2xl p-3.5 sm:p-4 shadow-2xs">
+          <span className="text-[10px] uppercase font-bold tracking-wider text-stone-400 block truncate">
+            Daily Revenue & Profit
+          </span>
+          <div className="text-xl sm:text-2xl font-bold text-neutral-900 mt-1 tabular-nums truncate" title={formatCurrency(totalDailyRevenue)}>
+            {formatCurrency(totalDailyRevenue)}
           </div>
-          <div className="grid grid-cols-3 gap-2 sm:gap-4">
-            <div className="min-w-0">
-              <div className="text-[11px] sm:text-xs text-[#737373] font-medium truncate">Monthly revenue</div>
-              <div className="text-sm sm:text-lg md:text-xl font-bold text-black mt-1 tabular-nums truncate" title={formatCurrency(totalMonthlyRevenue)}>
-                {formatCurrency(totalMonthlyRevenue)}
-              </div>
-            </div>
-            <div className="min-w-0">
-              <div className="text-[11px] sm:text-xs text-[#737373] font-medium truncate">Monthly profit</div>
-              <div className="text-sm sm:text-lg md:text-xl font-bold text-emerald-600 mt-1 tabular-nums truncate" title={formatCurrency(totalMonthlyProfit)}>
-                {formatCurrency(totalMonthlyProfit)}
-              </div>
-            </div>
-            <div className="min-w-0">
-              <div className="text-[11px] sm:text-xs text-[#737373] font-medium truncate">Commission paid</div>
-              <div className="text-sm sm:text-lg md:text-xl font-bold text-indigo-600 mt-1 tabular-nums truncate" title={formatCurrency(totalMonthlyCommission)}>
-                {formatCurrency(totalMonthlyCommission)}
-              </div>
-            </div>
+          <div className="text-[11px] text-emerald-600 font-semibold mt-1 flex items-center gap-1.5 tabular-nums truncate">
+            <span>Profit: {formatCurrency(totalDailyProfit)}</span>
+            {totalDailyRevenue > 0 && (
+              <span className="text-[10px] font-mono bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.2 rounded-full">
+                {Math.round((totalDailyProfit / totalDailyRevenue) * 100)}%
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Card 3: Monthly Financials */}
+        <div className="bg-white/95 border border-stone-200/90 rounded-2xl p-3.5 sm:p-4 shadow-2xs">
+          <span className="text-[10px] uppercase font-bold tracking-wider text-stone-400 block truncate">
+            Monthly Revenue · {monthNames[month].toUpperCase()}
+          </span>
+          <div className="text-xl sm:text-2xl font-bold text-neutral-900 mt-1 tabular-nums truncate" title={formatCurrency(totalMonthlyRevenue)}>
+            {formatCurrency(totalMonthlyRevenue)}
+          </div>
+          <div className="text-[11px] text-emerald-600 font-semibold mt-1 flex items-center gap-1.5 tabular-nums truncate">
+            <span>Profit: {formatCurrency(totalMonthlyProfit)}</span>
+            <span className="text-stone-400 font-normal">({monthBookings.length} total)</span>
+          </div>
+        </div>
+
+        {/* Card 4: Partner Attribution & Commission */}
+        <div className="bg-white/95 border border-stone-200/90 rounded-2xl p-3.5 sm:p-4 shadow-2xs">
+          <span className="text-[10px] uppercase font-bold tracking-wider text-stone-400 block truncate">
+            Commissions & Escrow
+          </span>
+          <div className="text-xl sm:text-2xl font-bold text-indigo-700 mt-1 tabular-nums truncate" title={formatCurrency(totalMonthlyCommission)}>
+            {formatCurrency(totalMonthlyCommission)}
+          </div>
+          <div className="text-[11px] text-stone-500 mt-1 flex items-center gap-1.5 truncate">
+            <span>{monthBookings.filter(b => b.commission).length} Attributed Bookings</span>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Col: Calendar & Financial Summaries */}
-        <div className="lg:col-span-1 space-y-4">
-          <div className="bg-white border border-[#E5E5E5] rounded-xl p-5">
-            <div className="flex items-center justify-between gap-2 mb-4">
+      {/* ─── Search & Status Filters Bar ─── */}
+      <div className="bg-white/95 border border-stone-200/90 rounded-2xl p-3 sm:p-3.5 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        {/* Filter Pills */}
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+          {[
+            { id: 'all', label: 'All', count: monthBookings.length },
+            { id: 'confirmed', label: 'Confirmed', count: monthBookings.filter(b => (b.status || '').toLowerCase() === 'confirmed').length },
+            { id: 'ongoing', label: 'In Ritual', count: monthBookings.filter(b => (b.treatment_status || '').toLowerCase() === 'in progress').length, pulse: true },
+            { id: 'finished', label: 'Finished', count: monthBookings.filter(b => (b.treatment_status || '').toLowerCase() === 'finished').length },
+            { id: 'pending', label: 'Pending', count: monthBookings.filter(b => !b.status || (b.status || '').toLowerCase() === 'pending').length },
+          ].map(f => {
+            const isActive = statusFilter === f.id;
+            return (
               <button
+                key={f.id}
                 type="button"
-                onClick={handlePrevMonth}
-                className={cx(btn.base, btn.secondary, btn.icon, 'h-8 w-8')}
-                title="Previous month"
-                aria-label="Previous month"
+                onClick={() => setStatusFilter(f.id as any)}
+                className={cx(
+                  'px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5',
+                  isActive
+                    ? 'bg-amber-300 text-neutral-950 shadow-2xs font-bold'
+                    : 'bg-stone-100 text-stone-600 hover:text-neutral-900 hover:bg-stone-200/70'
+                )}
               >
-                <ChevronLeft size={16} />
+                {f.pulse && f.count > 0 && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-pulse" />
+                )}
+                <span>{f.label}</span>
+                <span className={cx(
+                  'font-mono text-[10px] px-1.5 py-0.2 rounded-full',
+                  isActive ? 'bg-neutral-900 text-white' : 'bg-white text-stone-600'
+                )}>
+                  {f.count}
+                </span>
               </button>
-              <h3 className="font-semibold text-sm md:text-base text-black">
-                {monthNames[month]} {year}
-              </h3>
-              <button
-                type="button"
-                onClick={handleNextMonth}
-                className={cx(btn.base, btn.secondary, btn.icon, 'h-8 w-8')}
-                title="Next month"
-                aria-label="Next month"
-              >
-                <ChevronRight size={16} />
-              </button>
-            </div>
+            );
+          })}
+        </div>
 
-            <div className="grid grid-cols-7 gap-1 text-center mb-1.5">
-              {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((d) => (
-                <div key={d} className="text-[11px] font-medium text-[#737373] uppercase py-1">
-                  {d}
-                </div>
-              ))}
-            </div>
+        {/* Search Input */}
+        <div className="w-full sm:w-64 shrink-0">
+          <SearchInput
+            id="crm-booking-search"
+            value={bookingSearch}
+            onChange={setBookingSearch}
+            placeholder="Search guest, ref, villa..."
+          />
+        </div>
+      </div>
 
-            <div className="grid grid-cols-7 gap-1">
-              {Array.from({ length: firstDay }).map((_, i) => (
-                <div key={`empty-${i}`} className="h-9 w-full" />
-              ))}
-              {Array.from({ length: daysInMonth }).map((_, i) => {
-                const day = i + 1;
-                const d = new Date(year, month, day);
-                const isoString = toLocalDateString(d);
-                const isSelected = isoString === selectedDate;
-                const isToday = isoString === toLocalDateString(new Date());
-                
-                const bookingsForThisDay = monthBookings.filter((b) => b.booking_date === isoString && b.status?.toLowerCase() !== 'cancelled');
-                const paxCount = bookingsForThisDay.reduce((sum, b) => sum + b.pax, 0);
-                const dayRev = bookingsForThisDay.reduce((sum, b) => sum + (b.revenue || 0), 0);
-                const dayProfit = bookingsForThisDay.reduce((sum, b) => sum + (b.net_profit || 0), 0);
-                const dayComm = bookingsForThisDay.reduce((sum, b) => {
-                  const c = b.commission;
-                  return (c && (c.status === 'approved' || c.status === 'paid')) ? sum + Number(c.commission_amount || 0) : sum;
-                }, 0);
-
-                return (
-                  <div key={day} className="relative flex justify-center">
+      {/* ─── Add / Edit Booking Form Modal / Drawer ─── */}
+      {showForm && (
+        <div className="bg-white border border-stone-200/90 rounded-2xl p-5 sm:p-6 relative space-y-5 shadow-lg">
+          <button
+            type="button"
+            onClick={() => setShowForm(false)}
+            className={cx(btn.base, btn.secondary, btn.icon, 'absolute top-4 right-4')}
+            aria-label="Close form"
+          >
+            <X size={16} />
+          </button>
+          <h4 className="font-bold text-base text-neutral-900">{isEditing ? 'Edit booking' : 'New booking'}</h4>
+          
+          <form onSubmit={handleSave} className="space-y-5">
+            <div className="space-y-4">
+              {formItems.map((item, index) => (
+                <div key={item.id} className="relative bg-stone-50/70 border border-stone-200 p-4 rounded-xl space-y-4">
+                  {formItems.length > 1 && !isEditing && (
                     <button
                       type="button"
-                      onClick={() => selectDate(day)}
-                      title={bookingsForThisDay.length > 0 
-                        ? `${isoString} · ${bookingsForThisDay.length} bookings (${paxCount} pax)\nRevenue: ${formatCurrency(dayRev)}\nProfit: ${formatCurrency(dayProfit)}\nCommission: ${formatCurrency(dayComm)}`
-                        : isoString}
-                      className={cx(
-                        'h-9 w-full rounded-lg flex items-center justify-center text-xs transition-all relative font-medium',
-                        isSelected
-                          ? 'bg-black text-white font-semibold shadow-sm'
-                          : isToday
-                          ? 'border border-black text-black font-semibold'
-                          : 'hover:bg-[#FAFAFA] text-[#171717]'
-                      )}
+                      onClick={() => removeFormItem(index)}
+                      className={cx(btn.base, btn.secondary, btn.icon, 'h-7 w-7 absolute -top-2 -right-2 text-red-600 hover:border-red-300')}
+                      title="Remove item"
                     >
-                      {day}
-                      {paxCount > 0 && (
-                        <span
-                          className={cx(
-                            'absolute top-1 right-1 w-1.5 h-1.5 rounded-full',
-                            isSelected ? 'bg-emerald-400' : 'bg-emerald-600'
-                          )}
-                        />
-                      )}
+                      <Trash2 size={13} />
                     </button>
+                  )}
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs text-stone-600 block mb-1.5 font-medium">Select treatment {index + 1}</label>
+                      <select required value={item.treatment} onChange={e => updateFormItem(index, 'treatment', e.target.value)} className={selectCls}>
+                        <option value="">-- Choose Treatment --</option>
+                        {treatments.map(t => (
+                          <option key={t.id} value={t.title}>{t.title}</option>
+                        ))}
+                        <option value="Custom Treatment">Custom Treatment</option>
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label className="text-xs text-stone-600 block mb-1.5 font-medium">Duration</label>
+                      <select required disabled={!item.treatment} value={item.duration} onChange={e => updateFormItem(index, 'duration', e.target.value)} className={cx(selectCls, 'disabled:opacity-50')}>
+                        <option value="">-- Select Duration --</option>
+                        {item.treatment === 'Custom Treatment' ? (
+                          <option value="Custom">Custom Duration</option>
+                        ) : (
+                          treatments.find(t => t.title === item.treatment)?.options?.map(opt => (
+                            <option key={opt.duration} value={opt.duration}>{opt.duration} - {opt.price}</option>
+                          ))
+                        )}
+                      </select>
+                    </div>
                   </div>
-                );
-              })}
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs text-stone-600 block mb-1.5 font-medium">Number of pax</label>
+                      <input type="number" min="1" required value={item.pax} onChange={e => updateFormItem(index, 'pax', parseInt(e.target.value) || 1)} className={inputCls} />
+                    </div>
+                    <div>
+                      <label className="text-xs text-stone-600 block mb-1.5 font-medium">Number of therapists</label>
+                      <input type="number" min="1" required value={item.therapists} onChange={e => updateFormItem(index, 'therapists', parseInt(e.target.value) || 1)} className={inputCls} />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-3 border-t border-stone-200">
+                    <div>
+                      <label className="text-xs text-stone-600 block mb-1.5 font-medium">Revenue (IDR)</label>
+                      <input type="number" required value={item.revenue} onChange={e => updateFormItem(index, 'revenue', parseInt(e.target.value) || 0)} className={cx(inputCls, 'tabular-nums')} />
+                    </div>
+                    <div>
+                      <label className="text-xs text-stone-600 block mb-1.5 font-medium">Therapist fee (IDR)</label>
+                      <input type="number" required value={item.fee} onChange={e => updateFormItem(index, 'fee', parseInt(e.target.value) || 0)} className={cx(inputCls, 'tabular-nums text-stone-600')} />
+                    </div>
+                    <div>
+                      <label className="text-xs text-stone-600 block mb-1.5 font-medium">Net profit (IDR)</label>
+                      <div className="h-9 px-3 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-800 text-xs font-semibold flex items-center tabular-nums">
+                        {formatCurrency(item.revenue - item.fee)}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
 
-            {/* Selected Date Financial Summary under Calendar */}
-            <div className="mt-4 pt-3.5 border-t border-[#F0F0F0] space-y-2">
-              <div className="flex items-center justify-between text-xs">
-                <span className="font-semibold text-black">
-                  {new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} Financials
-                </span>
-                <span className="text-[11px] text-[#737373]">
-                  {dailyBookings.length} {dailyBookings.length === 1 ? 'booking' : 'bookings'}
-                </span>
+            {!isEditing && (
+              <button type="button" onClick={addFormItem} className={cx(btn.base, btn.secondary, btn.sm, 'w-full')}>
+                <Plus size={14} /> Add another treatment
+              </button>
+            )}
+
+            <div className="pt-4 border-t border-stone-200 flex flex-col sm:flex-row justify-between items-center gap-4">
+              {formItems.length > 1 && (
+                <div className="text-xs text-stone-600">
+                  Total profit:{' '}
+                  <span className="font-semibold text-emerald-600 text-sm tabular-nums">
+                    {formatCurrency(formItems.reduce((acc, item) => acc + (item.revenue - item.fee), 0))}
+                  </span>
+                </div>
+              )}
+              <div className="flex-1" />
+              <div className="flex gap-2 w-full sm:w-auto">
+                <button type="button" onClick={() => setShowForm(false)} className={cx(btn.base, btn.secondary, btn.sm, 'flex-1 sm:flex-none')}>
+                  Cancel
+                </button>
+                <button type="submit" className={cx(btn.base, btn.primary, btn.sm, 'flex-1 sm:flex-none')}>
+                  <Save size={14} /> Save booking
+                </button>
               </div>
-              <div className="grid grid-cols-3 gap-1.5 text-center bg-[#FAFAFA] rounded-lg p-2.5 border border-[#E5E5E5]">
-                <div className="min-w-0">
-                  <div className="text-[10px] text-[#737373] font-medium uppercase truncate">Revenue</div>
-                  <div className="text-xs font-semibold text-black mt-0.5 tabular-nums truncate" title={formatCurrency(totalDailyRevenue)}>{formatCurrency(totalDailyRevenue)}</div>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* ─── CRM VIEW 1: DAY AGENDA (SPLIT CALENDAR + DAY STREAM) ─── */}
+      {viewMode === 'agenda' && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-start">
+          {/* Left Col: Calendar & Financial Summaries */}
+          <div className="lg:col-span-1 space-y-4">
+            <div className="bg-white/95 border border-stone-200/90 rounded-2xl p-4 sm:p-5 shadow-2xs">
+              <div className="flex items-center justify-between gap-2 mb-4">
+                <button
+                  type="button"
+                  onClick={handlePrevMonth}
+                  className={cx(btn.base, btn.secondary, btn.icon, 'h-8 w-8')}
+                  title="Previous month"
+                  aria-label="Previous month"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <h3 className="font-bold text-sm md:text-base text-neutral-900">
+                  {monthNames[month]} {year}
+                </h3>
+                <button
+                  type="button"
+                  onClick={handleNextMonth}
+                  className={cx(btn.base, btn.secondary, btn.icon, 'h-8 w-8')}
+                  title="Next month"
+                  aria-label="Next month"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-7 gap-1 text-center mb-1.5">
+                {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((d) => (
+                  <div key={d} className="text-[11px] font-bold text-stone-400 uppercase py-1">
+                    {d}
+                  </div>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-7 gap-1">
+                {Array.from({ length: firstDay }).map((_, i) => (
+                  <div key={`empty-${i}`} className="h-9 w-full" />
+                ))}
+                {Array.from({ length: daysInMonth }).map((_, i) => {
+                  const day = i + 1;
+                  const d = new Date(year, month, day);
+                  const isoString = toLocalDateString(d);
+                  const isSelected = isoString === selectedDate;
+                  const isToday = isoString === toLocalDateString(new Date());
+                  
+                  const bookingsForThisDay = monthBookings.filter((b) => b.booking_date === isoString && b.status?.toLowerCase() !== 'cancelled');
+                  const paxCount = bookingsForThisDay.reduce((sum, b) => sum + b.pax, 0);
+                  const dayRev = bookingsForThisDay.reduce((sum, b) => sum + (b.revenue || 0), 0);
+                  const dayProfit = bookingsForThisDay.reduce((sum, b) => sum + (b.net_profit || 0), 0);
+                  const dayComm = bookingsForThisDay.reduce((sum, b) => {
+                    const c = b.commission;
+                    return (c && (c.status === 'approved' || c.status === 'paid')) ? sum + Number(c.commission_amount || 0) : sum;
+                  }, 0);
+
+                  return (
+                    <div key={day} className="relative flex justify-center">
+                      <button
+                        type="button"
+                        onClick={() => selectDate(day)}
+                        title={bookingsForThisDay.length > 0 
+                          ? `${isoString} · ${bookingsForThisDay.length} bookings (${paxCount} pax)\nRevenue: ${formatCurrency(dayRev)}\nProfit: ${formatCurrency(dayProfit)}\nCommission: ${formatCurrency(dayComm)}`
+                          : isoString}
+                        className={cx(
+                          'h-9 w-full rounded-xl flex items-center justify-center text-xs transition-all relative font-medium cursor-pointer',
+                          isSelected
+                            ? 'bg-neutral-900 text-white font-bold shadow-xs'
+                            : isToday
+                            ? 'border-2 border-amber-400 text-neutral-900 font-bold bg-amber-50/40'
+                            : 'hover:bg-stone-100 text-neutral-900'
+                        )}
+                      >
+                        {day}
+                        {paxCount > 0 && (
+                          <span
+                            className={cx(
+                              'absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full',
+                              isSelected ? 'bg-amber-300' : 'bg-emerald-500'
+                            )}
+                          />
+                        )}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Selected Date Financial Summary under Calendar */}
+              <div className="mt-4 pt-3.5 border-t border-stone-200/80 space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-bold text-neutral-900">
+                    {new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })} Summary
+                  </span>
+                  <span className="text-[11px] text-stone-500 font-mono">
+                    {dailyBookings.length} {dailyBookings.length === 1 ? 'booking' : 'bookings'}
+                  </span>
                 </div>
-                <div className="min-w-0">
-                  <div className="text-[10px] text-[#737373] font-medium uppercase truncate">Profit</div>
-                  <div className="text-xs font-semibold text-emerald-600 mt-0.5 tabular-nums truncate" title={formatCurrency(totalDailyProfit)}>{formatCurrency(totalDailyProfit)}</div>
-                </div>
-                <div className="min-w-0">
-                  <div className="text-[10px] text-[#737373] font-medium uppercase truncate">Commission</div>
-                  <div className="text-xs font-semibold text-indigo-600 mt-0.5 tabular-nums truncate" title={formatCurrency(totalDailyCommission)}>{formatCurrency(totalDailyCommission)}</div>
+                <div className="grid grid-cols-3 gap-1.5 text-center bg-stone-50 rounded-xl p-2.5 border border-stone-200/80">
+                  <div className="min-w-0">
+                    <div className="text-[10px] text-stone-500 font-bold uppercase truncate">Revenue</div>
+                    <div className="text-xs font-bold text-neutral-900 mt-0.5 tabular-nums truncate" title={formatCurrency(totalDailyRevenue)}>{formatCurrency(totalDailyRevenue)}</div>
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-[10px] text-stone-500 font-bold uppercase truncate">Profit</div>
+                    <div className="text-xs font-bold text-emerald-600 mt-0.5 tabular-nums truncate" title={formatCurrency(totalDailyProfit)}>{formatCurrency(totalDailyProfit)}</div>
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-[10px] text-stone-500 font-bold uppercase truncate">Commission</div>
+                    <div className="text-xs font-bold text-indigo-600 mt-0.5 tabular-nums truncate" title={formatCurrency(totalDailyCommission)}>{formatCurrency(totalDailyCommission)}</div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Right Col: Bookings for Selected Date */}
-        <div className="lg:col-span-2 space-y-4">
-          <div className="bg-white/95 border border-stone-200/90 rounded-2xl p-3.5 sm:p-4 space-y-3 shadow-2xs">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="flex items-center gap-2 flex-wrap">
+          {/* Right Col: Bookings for Selected Date */}
+          <div className="lg:col-span-2 space-y-3.5">
+            {/* Date Header Strip */}
+            <div className="bg-white/90 border border-stone-200/80 rounded-2xl px-4 py-2.5 flex items-center justify-between gap-3 shadow-2xs">
+              <div className="flex items-center gap-2">
                 {/* Quick Date Jumper: Prev, Today, Next */}
-                <div className="inline-flex items-center gap-1 bg-stone-100 p-1 rounded-full border border-stone-200/80">
+                <div className="inline-flex items-center gap-1 bg-stone-100 p-0.5 rounded-full border border-stone-200">
                   <button 
                     type="button" 
                     onClick={handlePrevDay} 
@@ -1039,353 +1322,422 @@ export default function TherapickBookingManagement({
                   </button>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <h3 className="text-sm font-bold text-neutral-900">
-                    {new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
-                  </h3>
-                  <CountPill>{filteredDailyBookings.length}</CountPill>
-                </div>
+                <h3 className="text-sm font-bold text-neutral-900 ml-1">
+                  {new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
+                </h3>
+                <CountPill>{filteredDailyBookings.length}</CountPill>
               </div>
 
-              {/* Search Pill Input */}
-              <div className="w-full sm:w-56">
-                <SearchInput
-                  id="crm-booking-search"
-                  value={bookingSearch}
-                  onChange={setBookingSearch}
-                  placeholder="Search bookings..."
+              <div className="text-xs text-stone-500 font-mono">
+                {filteredDailyBookings.reduce((sum, b) => sum + (b.pax || 1), 0)} Guests Total
+              </div>
+            </div>
+
+            {isLoading ? (
+              <div className="flex justify-center py-16"><div className="w-8 h-8 border-2 border-neutral-900 border-t-transparent rounded-full animate-spin"></div></div>
+            ) : filteredDailyBookings.length === 0 ? (
+              <div className="bg-white border border-stone-200/90 rounded-2xl shadow-2xs">
+                <EmptyState 
+                  title="No bookings scheduled for this date" 
+                  description={`No appointments logged for ${new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' })}.`}
+                  action={
+                    !showForm && (
+                      <button 
+                        type="button" 
+                        onClick={() => { resetForm(); setShowForm(true); }}
+                        className={cx(btn.base, btn.primary, btn.sm)}
+                      >
+                        <Plus size={14} /> Add booking
+                      </button>
+                    )
+                  }
                 />
               </div>
-            </div>
+            ) : (
+              <div className="space-y-2.5">
+                {filteredDailyBookings.map(booking => {
+                  let title = booking.treatment_name;
+                  const match = title.match(/(.*) \((.*)\)$/);
+                  if (match) {
+                    title = match[1];
+                  }
 
-            {/* Filter Pills Toolbar */}
-            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-2 border-t border-stone-100">
-              {[
-                { id: 'all', label: 'All' },
-                { id: 'confirmed', label: 'Confirmed' },
-                { id: 'ongoing', label: 'In Ritual' },
-                { id: 'finished', label: 'Finished' },
-                { id: 'pending', label: 'Pending' },
-              ].map(f => {
-                const isActive = statusFilter === f.id;
-                return (
-                  <button
-                    key={f.id}
-                    type="button"
-                    onClick={() => setStatusFilter(f.id as any)}
-                    className={cx(
-                      'px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-all cursor-pointer',
-                      isActive
-                        ? 'bg-amber-300 text-neutral-950 font-bold shadow-2xs'
-                        : 'bg-stone-100 text-stone-600 hover:text-neutral-900 hover:bg-stone-200/70'
-                    )}
-                  >
-                    {f.label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+                  const bookingStatus = booking.status || 'Pending';
+                  const isCancelled = bookingStatus.toLowerCase() === 'cancelled';
+                  const paymentStatus = booking.payment_status || (booking.commission?.payment_verified ? 'Paid' : 'Unpaid');
+                  const isPaid = paymentStatus.toLowerCase() === 'paid';
+                  const treatmentStatus = booking.treatment_status || (booking.commission?.service_completed ? 'Finished' : 'Scheduled');
+                  const isSelected = selectedBookingId === booking.id;
 
-          {showForm && (
-            <div className="bg-white border border-[#E5E5E5] rounded-xl p-5 sm:p-6 relative space-y-5">
-              <button
-                type="button"
-                onClick={() => setShowForm(false)}
-                className={cx(btn.base, btn.secondary, btn.icon, 'absolute top-4 right-4')}
-                aria-label="Close form"
-              >
-                <X size={16} />
-              </button>
-              <h4 className="font-semibold text-base text-black">{isEditing ? 'Edit booking' : 'New booking'}</h4>
-              
-              <form onSubmit={handleSave} className="space-y-5">
-                <div className="space-y-4">
-                  {formItems.map((item, index) => (
-                    <div key={item.id} className="relative bg-[#FAFAFA] border border-[#E5E5E5] p-4 rounded-xl space-y-4">
-                      {formItems.length > 1 && !isEditing && (
+                  return (
+                    <div 
+                      key={booking.id} 
+                      onClick={() => setSelectedBookingId(booking.id)}
+                      className={cx(
+                        'rounded-2xl p-3.5 sm:p-4 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer',
+                        isSelected
+                          ? 'bg-amber-300 text-neutral-950 font-medium border border-amber-400 shadow-sm'
+                          : isCancelled
+                          ? 'bg-rose-50/40 border border-rose-200'
+                          : 'bg-white/95 border border-stone-200/90 hover:border-amber-300 hover:bg-stone-50/50 shadow-2xs'
+                      )}
+                    >
+                      {/* Left: Booking ID + Guest + Badges + Treatment */}
+                      <div className="min-w-0 space-y-1.5 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          {/* Booking ID Pill */}
+                          <span
+                            className={cx(
+                              'font-mono text-xs font-bold px-2 py-0.5 rounded-full border transition-colors inline-flex items-center gap-1',
+                              isSelected
+                                ? 'bg-neutral-900 text-white border-neutral-900'
+                                : 'bg-stone-100 text-neutral-900 border-stone-200'
+                            )}
+                          >
+                            <span>#{booking.reference_number || booking.id.substring(0, 8)}</span>
+                          </span>
+
+                          {/* Customer Name */}
+                          <span className={cx(
+                            'font-bold text-sm truncate',
+                            isSelected ? 'text-neutral-950' : 'text-neutral-900'
+                          )}>
+                            {booking.guest_name || 'Guest'}
+                          </span>
+
+                          {/* 1. Booking Status Badge */}
+                          <span className={cx(
+                            'text-[10px] font-semibold px-2 py-0.5 rounded-full border',
+                            isSelected
+                              ? 'bg-white/90 text-neutral-900 border-neutral-900/20'
+                              : bookingStatus.toLowerCase() === 'cancelled'
+                              ? 'text-rose-700 bg-rose-50 border-rose-200'
+                              : bookingStatus.toLowerCase() === 'pending'
+                              ? 'text-amber-800 bg-amber-50 border-amber-200'
+                              : bookingStatus.toLowerCase() === 'approved'
+                              ? 'text-emerald-800 bg-emerald-50 border-emerald-200'
+                              : 'text-sky-800 bg-sky-50 border-sky-200'
+                          )}>
+                            {bookingStatus}
+                          </span>
+
+                          {/* 2. Treatment Progress Badge */}
+                          <span className={cx(
+                            'text-[10px] font-semibold px-2 py-0.5 rounded-full border flex items-center gap-1',
+                            isSelected
+                              ? 'bg-white/90 text-neutral-900 border-neutral-900/20'
+                              : treatmentStatus.toLowerCase() === 'finished'
+                              ? 'text-teal-800 bg-teal-50 border-teal-200'
+                              : treatmentStatus.toLowerCase() === 'in progress'
+                              ? 'text-indigo-800 bg-indigo-50 border-indigo-200'
+                              : 'text-stone-600 bg-stone-100 border-stone-200'
+                          )}>
+                            {treatmentStatus.toLowerCase() === 'in progress' && (
+                              <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+                            )}
+                            {treatmentStatus}
+                          </span>
+
+                          {/* 3. Payment Status Badge */}
+                          <span className={cx(
+                            'text-[10px] font-semibold px-2 py-0.5 rounded-full border',
+                            isSelected
+                              ? 'bg-white/90 text-neutral-900 border-neutral-900/20'
+                              : isPaid
+                              ? 'text-emerald-800 bg-emerald-50 border-emerald-200'
+                              : 'text-amber-800 bg-amber-50 border-amber-200'
+                          )}>
+                            {paymentStatus}
+                          </span>
+
+                          {/* 4. Attribution Badge */}
+                          {booking.commission ? (
+                            <div className="inline-flex items-center gap-1">
+                              <span className={cx(
+                                'text-[10px] font-mono font-medium px-2 py-0.5 rounded-full border',
+                                isSelected ? 'bg-white/90 text-neutral-900 border-neutral-900/20' : 'bg-white text-neutral-900 border-stone-200'
+                              )}>
+                                #{booking.commission.partner_code}
+                              </span>
+                              <span className={cx(
+                                'text-[10px] font-bold px-2 py-0.5 rounded-full tabular-nums',
+                                isSelected ? 'bg-neutral-900 text-white' : 'text-indigo-700 bg-indigo-50 border border-indigo-200'
+                              )}>
+                                +{formatCurrency(booking.commission.commission_amount || 0)}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className={cx(
+                              'text-[10px] font-medium px-2 py-0.5 rounded-full border',
+                              isSelected ? 'bg-white/90 text-neutral-900 border-neutral-900/20' : 'text-stone-600 bg-stone-100 border-stone-200'
+                            )}>
+                              Direct
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Treatment Name & Location */}
+                        <div className="flex items-center gap-2 text-xs truncate">
+                          <span className={cx(
+                            'font-semibold truncate',
+                            isSelected ? 'text-neutral-900' : 'text-neutral-800'
+                          )}>
+                            {title}
+                          </span>
+                          <span className={isSelected ? 'text-neutral-700' : 'text-stone-400'}>·</span>
+                          <span className={cx(
+                            'font-mono text-[11px] truncate',
+                            isSelected ? 'text-neutral-800' : 'text-stone-500'
+                          )}>
+                            {booking.location || 'Ubud'}{booking.room_number ? `, Room ${booking.room_number}` : ''}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Right: Actions CTA (Track + Details) */}
+                      <div className="shrink-0 flex items-center gap-1.5 self-end sm:self-auto">
+                        {/* Eye-catching Track Button */}
                         <button
                           type="button"
-                          onClick={() => removeFormItem(index)}
-                          className={cx(btn.base, btn.secondary, btn.icon, 'h-7 w-7 absolute -top-2 -right-2 text-red-600 hover:border-red-300')}
-                          title="Remove item"
-                        >
-                          <Trash2 size={13} />
-                        </button>
-                      )}
-                      
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div>
-                          <label className="text-xs text-[#737373] block mb-1.5 font-medium">Select treatment {index + 1}</label>
-                          <select required value={item.treatment} onChange={e => updateFormItem(index, 'treatment', e.target.value)} className={selectCls}>
-                            <option value="">-- Choose Treatment --</option>
-                            {treatments.map(t => (
-                              <option key={t.id} value={t.title}>{t.title}</option>
-                            ))}
-                            <option value="Custom Treatment">Custom Treatment</option>
-                          </select>
-                        </div>
-                        
-                        <div>
-                          <label className="text-xs text-[#737373] block mb-1.5 font-medium">Duration</label>
-                          <select required disabled={!item.treatment} value={item.duration} onChange={e => updateFormItem(index, 'duration', e.target.value)} className={cx(selectCls, 'disabled:opacity-50')}>
-                            <option value="">-- Select Duration --</option>
-                            {item.treatment === 'Custom Treatment' ? (
-                              <option value="Custom">Custom Duration</option>
-                            ) : (
-                              treatments.find(t => t.title === item.treatment)?.options?.map(opt => (
-                                <option key={opt.duration} value={opt.duration}>{opt.duration} - {opt.price}</option>
-                              ))
-                            )}
-                          </select>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div>
-                          <label className="text-xs text-[#737373] block mb-1.5 font-medium">Number of pax</label>
-                          <input type="number" min="1" required value={item.pax} onChange={e => updateFormItem(index, 'pax', parseInt(e.target.value) || 1)} className={inputCls} />
-                        </div>
-                        <div>
-                          <label className="text-xs text-[#737373] block mb-1.5 font-medium">Number of therapists</label>
-                          <input type="number" min="1" required value={item.therapists} onChange={e => updateFormItem(index, 'therapists', parseInt(e.target.value) || 1)} className={inputCls} />
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-3 border-t border-[#E5E5E5]">
-                        <div>
-                          <label className="text-xs text-[#737373] block mb-1.5 font-medium">Revenue (IDR)</label>
-                          <input type="number" required value={item.revenue} onChange={e => updateFormItem(index, 'revenue', parseInt(e.target.value) || 0)} className={cx(inputCls, 'tabular-nums')} />
-                        </div>
-                        <div>
-                          <label className="text-xs text-[#737373] block mb-1.5 font-medium">Therapist fee (IDR)</label>
-                          <input type="number" required value={item.fee} onChange={e => updateFormItem(index, 'fee', parseInt(e.target.value) || 0)} className={cx(inputCls, 'tabular-nums text-[#737373]')} />
-                        </div>
-                        <div>
-                          <label className="text-xs text-[#737373] block mb-1.5 font-medium">Net profit (IDR)</label>
-                          <div className="h-9 px-3 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-800 text-xs font-semibold flex items-center tabular-nums">
-                            {formatCurrency(item.revenue - item.fee)}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {!isEditing && (
-                  <button type="button" onClick={addFormItem} className={cx(btn.base, btn.secondary, btn.sm, 'w-full')}>
-                    <Plus size={14} /> Add another treatment
-                  </button>
-                )}
-
-                <div className="pt-4 border-t border-[#E5E5E5] flex flex-col sm:flex-row justify-between items-center gap-4">
-                  {formItems.length > 1 && (
-                    <div className="text-xs text-[#737373]">
-                      Total profit:{' '}
-                      <span className="font-semibold text-emerald-600 text-sm tabular-nums">
-                        {formatCurrency(formItems.reduce((acc, item) => acc + (item.revenue - item.fee), 0))}
-                      </span>
-                    </div>
-                  )}
-                  <div className="flex-1" />
-                  <div className="flex gap-2 w-full sm:w-auto">
-                    <button type="button" onClick={() => setShowForm(false)} className={cx(btn.base, btn.secondary, btn.sm, 'flex-1 sm:flex-none')}>
-                      Cancel
-                    </button>
-                    <button type="submit" className={cx(btn.base, btn.primary, btn.sm, 'flex-1 sm:flex-none')}>
-                      <Save size={14} /> Save booking
-                    </button>
-                  </div>
-                </div>
-              </form>
-            </div>
-          )}
-
-          {isLoading ? (
-            <div className="flex justify-center py-12"><div className="w-8 h-8 border-2 border-black border-t-transparent rounded-full animate-spin"></div></div>
-          ) : dailyBookings.length === 0 ? (
-            <div className="bg-white border border-[#E5E5E5] rounded-xl">
-              <EmptyState 
-                title="No bookings scheduled for this date" 
-                description={`No appointments logged for ${new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' })}.`}
-                action={
-                  !showForm && (
-                    <button 
-                      type="button" 
-                      onClick={() => { resetForm(); setShowForm(true); }}
-                      className={cx(btn.base, btn.primary, btn.sm)}
-                    >
-                      <Plus size={14} /> Add booking
-                    </button>
-                  )
-                }
-              />
-            </div>
-          ) : (
-            <div className="space-y-2.5">
-              {filteredDailyBookings.map(booking => {
-                let title = booking.treatment_name;
-                const match = title.match(/(.*) \((.*)\)$/);
-                if (match) {
-                  title = match[1];
-                }
-
-                const bookingStatus = booking.status || 'Pending';
-                const isCancelled = bookingStatus.toLowerCase() === 'cancelled';
-                const paymentStatus = booking.payment_status || (booking.commission?.payment_verified ? 'Paid' : 'Unpaid');
-                const isPaid = paymentStatus.toLowerCase() === 'paid';
-                const treatmentStatus = booking.treatment_status || (booking.commission?.service_completed ? 'Finished' : 'Scheduled');
-                const isSelected = selectedBookingId === booking.id;
-
-                return (
-                  <div 
-                    key={booking.id} 
-                    onClick={() => setSelectedBookingId(booking.id)}
-                    className={cx(
-                      'rounded-2xl p-3.5 sm:p-4 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer',
-                      isSelected
-                        ? 'bg-amber-300 text-neutral-950 font-medium border border-amber-400 shadow-sm'
-                        : isCancelled
-                        ? 'bg-rose-50/30 border border-rose-200'
-                        : 'bg-white/95 border border-stone-200/90 hover:border-amber-300 hover:bg-stone-50/50 shadow-2xs'
-                    )}
-                  >
-                    {/* Left: Clickable Booking ID + Customer Name + Status Badges + Treatment Name */}
-                    <div className="min-w-0 space-y-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        {/* Booking ID Pill */}
-                        <span
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setTrackingBooking(toCalendarBooking(booking));
+                          }}
                           className={cx(
-                            'font-mono text-xs font-bold px-2 py-0.5 rounded-full border transition-colors inline-flex items-center gap-1',
-                            isSelected
-                              ? 'bg-neutral-900 text-white border-neutral-900'
-                              : 'bg-stone-100 text-neutral-900 border-stone-200/80'
+                            btn.base,
+                            isSelected 
+                              ? 'bg-neutral-900 text-white border-neutral-900 shadow-xs' 
+                              : 'bg-emerald-50 text-emerald-800 border border-emerald-300 hover:bg-emerald-100 hover:border-emerald-400',
+                            btn.xs,
+                            'gap-1 rounded-full font-bold transition-all'
                           )}
+                          title="Track appointment schedule and status history"
                         >
-                          <span>#{booking.reference_number || booking.id.substring(0, 8)}</span>
-                        </span>
+                          <Compass size={12} className={isSelected ? 'text-amber-300' : 'text-emerald-600'} />
+                          <span>Track</span>
+                        </button>
 
-                        {/* Customer Name */}
-                        <span className={cx(
-                          'font-bold text-sm truncate',
-                          isSelected ? 'text-neutral-950' : 'text-neutral-900'
-                        )}>
-                          {booking.guest_name || 'Guest'}
-                        </span>
-
-                        {/* 1. Booking Status Badge */}
-                        <span className={cx(
-                          'text-[10px] font-semibold px-2 py-0.5 rounded-full border',
-                          isSelected
-                            ? 'bg-white/90 text-neutral-900 border-neutral-900/20'
-                            : bookingStatus.toLowerCase() === 'cancelled'
-                            ? 'text-rose-700 bg-rose-50 border-rose-200'
-                            : bookingStatus.toLowerCase() === 'pending'
-                            ? 'text-amber-800 bg-amber-50 border-amber-200'
-                            : bookingStatus.toLowerCase() === 'approved'
-                            ? 'text-emerald-800 bg-emerald-50 border-emerald-200'
-                            : 'text-sky-800 bg-sky-50 border-sky-200'
-                        )}>
-                          {bookingStatus}
-                        </span>
-
-                        {/* 2. Treatment Progress Badge */}
-                        <span className={cx(
-                          'text-[10px] font-semibold px-2 py-0.5 rounded-full border flex items-center gap-1',
-                          isSelected
-                            ? 'bg-white/90 text-neutral-900 border-neutral-900/20'
-                            : treatmentStatus.toLowerCase() === 'finished'
-                            ? 'text-teal-800 bg-teal-50 border-teal-200'
-                            : treatmentStatus.toLowerCase() === 'in progress'
-                            ? 'text-indigo-800 bg-indigo-50 border-indigo-200'
-                            : treatmentStatus.toLowerCase() === 'on the way' || treatmentStatus.toLowerCase() === 'arrived'
-                            ? 'text-purple-800 bg-purple-50 border-purple-200'
-                            : 'text-stone-600 bg-stone-100 border-stone-200'
-                        )}>
-                          {treatmentStatus.toLowerCase() === 'in progress' && (
-                            <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedBookingId(booking.id);
+                          }}
+                          className={cx(
+                            btn.base,
+                            isSelected ? 'bg-neutral-900 text-white border-neutral-900 shadow-xs' : btn.secondary,
+                            btn.xs,
+                            'gap-1 rounded-full'
                           )}
-                          {treatmentStatus}
-                        </span>
-
-                        {/* 3. Payment Status Badge */}
-                        <span className={cx(
-                          'text-[10px] font-semibold px-2 py-0.5 rounded-full border',
-                          isSelected
-                            ? 'bg-white/90 text-neutral-900 border-neutral-900/20'
-                            : isPaid
-                            ? 'text-emerald-800 bg-emerald-50 border-emerald-200'
-                            : paymentStatus.toLowerCase() === 'partially paid'
-                            ? 'text-orange-800 bg-orange-50 border-orange-200'
-                            : paymentStatus.toLowerCase() === 'refunded'
-                            ? 'text-purple-800 bg-purple-50 border-purple-200'
-                            : 'text-amber-800 bg-amber-50 border-amber-200'
-                        )}>
-                          {paymentStatus}
-                        </span>
-
-                        {/* 4. Attribution Badge */}
-                        {booking.commission ? (
-                          <div className="inline-flex items-center gap-1">
-                            <span className={cx(
-                              'text-[10px] font-mono font-medium px-2 py-0.5 rounded-full border',
-                              isSelected ? 'bg-white/90 text-neutral-900 border-neutral-900/20' : 'bg-white text-neutral-900 border-stone-200'
-                            )}>
-                              #{booking.commission.partner_code}
-                            </span>
-                            <span className={cx(
-                              'text-[10px] font-bold px-2 py-0.5 rounded-full tabular-nums',
-                              isSelected ? 'bg-neutral-900 text-white' : 'text-indigo-700 bg-indigo-50 border border-indigo-200'
-                            )}>
-                              +{formatCurrency(booking.commission.commission_amount || 0)}
-                            </span>
-                          </div>
-                        ) : (
-                          <span className={cx(
-                            'text-[10px] font-medium px-2 py-0.5 rounded-full border',
-                            isSelected ? 'bg-white/90 text-neutral-900 border-neutral-900/20' : 'text-stone-600 bg-stone-100 border-stone-200'
-                          )}>
-                            Direct
-                          </span>
-                        )}
+                          title="View complete booking details"
+                        >
+                          <span>Details</span>
+                          <ChevronRight size={13} />
+                        </button>
                       </div>
-
-                      {/* Treatment Name */}
-                      <p className={cx(
-                        'text-xs font-medium truncate',
-                        isSelected ? 'text-neutral-800' : 'text-stone-500'
-                      )}>
-                        {title}
-                      </p>
                     </div>
-
-                    {/* Right: Details CTA Button */}
-                    <div className="shrink-0 flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedBookingId(booking.id);
-                        }}
-                        className={cx(
-                          btn.base,
-                          isSelected ? 'bg-neutral-900 text-white border-neutral-900 shadow-xs' : btn.secondary,
-                          btn.xs,
-                          'gap-1 rounded-full'
-                        )}
-                        title="View complete booking details"
-                      >
-                        <span>Details</span>
-                        <ChevronRight size={13} />
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* ─── CRM VIEW 2: MASTER CRM TABLE (EXPANSIVE DATA GRID) ─── */}
+      {viewMode === 'table' && (
+        <div className="bg-white/95 border border-stone-200/90 rounded-2xl overflow-hidden shadow-2xs">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse text-xs">
+              <thead className="bg-stone-50 border-b border-stone-200/80 font-mono text-[10px] uppercase tracking-wider text-stone-500">
+                <tr>
+                  <th className="py-3 px-4 font-bold">Booking Ref</th>
+                  <th className="py-3 px-4 font-bold">Date & Time</th>
+                  <th className="py-3 px-4 font-bold">Guest</th>
+                  <th className="py-3 px-4 font-bold">Treatment</th>
+                  <th className="py-3 px-4 font-bold">Status</th>
+                  <th className="py-3 px-4 font-bold">Progress</th>
+                  <th className="py-3 px-4 font-bold">Payment</th>
+                  <th className="py-3 px-4 font-bold text-right">Revenue</th>
+                  <th className="py-3 px-4 font-bold text-right">Profit</th>
+                  <th className="py-3 px-4 font-bold">Attribution</th>
+                  <th className="py-3 px-4 font-bold text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-stone-100">
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={11} className="py-12 text-center text-stone-400">
+                      <div className="w-6 h-6 border-2 border-neutral-900 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+                      Loading bookings...
+                    </td>
+                  </tr>
+                ) : filteredMonthBookings.length === 0 ? (
+                  <tr>
+                    <td colSpan={11} className="py-12 text-center text-stone-400">
+                      No bookings matching current filter for this month.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredMonthBookings.map((b) => {
+                    const isSelected = selectedBookingId === b.id;
+                    const bookingStatus = b.status || 'Pending';
+                    const treatmentStatus = b.treatment_status || 'Scheduled';
+                    const paymentStatus = b.payment_status || 'Unpaid';
+
+                    return (
+                      <tr
+                        key={b.id}
+                        onClick={() => setSelectedBookingId(b.id)}
+                        className={cx(
+                          'transition-colors cursor-pointer',
+                          isSelected
+                            ? 'bg-amber-100/80 font-medium'
+                            : 'hover:bg-stone-50/80'
+                        )}
+                      >
+                        {/* Ref # */}
+                        <td className="py-3 px-4 font-mono font-bold text-neutral-900 whitespace-nowrap">
+                          #{b.reference_number || b.id.substring(0, 8)}
+                        </td>
+
+                        {/* Date & Time */}
+                        <td className="py-3 px-4 whitespace-nowrap text-stone-600 font-mono text-[11px]">
+                          <div>{safeFormatDate(b.booking_date)}</div>
+                          <div className="text-stone-400 text-[10px]">{b.time || '-'}</div>
+                        </td>
+
+                        {/* Guest */}
+                        <td className="py-3 px-4 whitespace-nowrap font-bold text-neutral-900">
+                          {b.guest_name || 'Guest'}
+                          {b.pax > 1 && <span className="ml-1 text-[10px] text-stone-400 font-normal">({b.pax}p)</span>}
+                        </td>
+
+                        {/* Treatment */}
+                        <td className="py-3 px-4 max-w-[200px] truncate text-neutral-800">
+                          <span className="font-medium truncate block">{b.treatment_name}</span>
+                          <span className="text-[10px] text-stone-400 font-mono">{b.location || 'Ubud'}</span>
+                        </td>
+
+                        {/* Booking Status Dropdown */}
+                        <td className="py-3 px-4 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                          <select
+                            value={bookingStatus}
+                            onChange={(e) => updateBookingStatus(b.id, e.target.value)}
+                            className={cx(
+                              'text-[10px] font-bold uppercase rounded-full px-2 py-0.5 border cursor-pointer focus:outline-none',
+                              bookingStatus.toLowerCase() === 'confirmed'
+                                ? 'bg-sky-50 text-sky-800 border-sky-300'
+                                : bookingStatus.toLowerCase() === 'cancelled'
+                                ? 'bg-rose-50 text-rose-800 border-rose-300'
+                                : 'bg-amber-50 text-amber-800 border-amber-300'
+                            )}
+                          >
+                            <option value="Pending">Pending</option>
+                            <option value="Confirmed">Confirmed</option>
+                            <option value="Approved">Approved</option>
+                            <option value="Cancelled">Cancelled</option>
+                          </select>
+                        </td>
+
+                        {/* Progress Dropdown */}
+                        <td className="py-3 px-4 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                          <select
+                            value={treatmentStatus}
+                            onChange={(e) => updateTreatmentStatus(b.id, e.target.value)}
+                            className={cx(
+                              'text-[10px] font-bold uppercase rounded-full px-2 py-0.5 border cursor-pointer focus:outline-none',
+                              treatmentStatus.toLowerCase() === 'finished'
+                                ? 'bg-teal-50 text-teal-800 border-teal-300'
+                                : treatmentStatus.toLowerCase() === 'in progress'
+                                ? 'bg-indigo-50 text-indigo-800 border-indigo-300'
+                                : 'bg-stone-100 text-stone-600 border-stone-200'
+                            )}
+                          >
+                            <option value="Scheduled">Scheduled</option>
+                            <option value="In Progress">In Progress</option>
+                            <option value="Finished">Finished</option>
+                          </select>
+                        </td>
+
+                        {/* Payment Dropdown */}
+                        <td className="py-3 px-4 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                          <select
+                            value={paymentStatus}
+                            onChange={(e) => updatePaymentStatus(b.id, e.target.value)}
+                            className={cx(
+                              'text-[10px] font-bold uppercase rounded-full px-2 py-0.5 border cursor-pointer focus:outline-none',
+                              paymentStatus.toLowerCase() === 'paid'
+                                ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                                : 'bg-amber-50 text-amber-800 border-amber-300'
+                            )}
+                          >
+                            <option value="Unpaid">Unpaid</option>
+                            <option value="Paid">Paid</option>
+                          </select>
+                        </td>
+
+                        {/* Revenue */}
+                        <td className="py-3 px-4 whitespace-nowrap text-right font-mono font-bold text-neutral-900 tabular-nums">
+                          {formatCurrency(b.revenue)}
+                        </td>
+
+                        {/* Profit */}
+                        <td className="py-3 px-4 whitespace-nowrap text-right font-mono font-bold text-emerald-600 tabular-nums">
+                          {formatCurrency(b.net_profit)}
+                        </td>
+
+                        {/* Attribution */}
+                        <td className="py-3 px-4 whitespace-nowrap">
+                          {b.commission ? (
+                            <span className="font-mono text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded-full">
+                              #{b.commission.partner_code}
+                            </span>
+                          ) : (
+                            <span className="text-[10px] font-medium text-stone-400">
+                              Direct
+                            </span>
+                          )}
+                        </td>
+
+                        {/* Actions */}
+                        <td className="py-3 px-4 whitespace-nowrap text-right" onClick={(e) => e.stopPropagation()}>
+                          <div className="inline-flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => setTrackingBooking(toCalendarBooking(b))}
+                              className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-800 border border-emerald-300 hover:bg-emerald-100 transition-colors inline-flex items-center gap-1 cursor-pointer"
+                              title="Track schedule"
+                            >
+                              <Compass size={11} className="text-emerald-600" />
+                              <span>Track</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => setSelectedBookingId(b.id)}
+                              className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-stone-100 text-stone-700 hover:bg-stone-200 transition-colors cursor-pointer"
+                              title="View details"
+                            >
+                              Details
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Schedule Tracking History Modal ─── */}
+      <ScheduleTrackingModal
+        booking={trackingBooking}
+        onClose={() => setTrackingBooking(null)}
+      />
 
       {/* Complete Booking Details Modal (Opened when clicking Booking ID) */}
       {selectedBooking && (
