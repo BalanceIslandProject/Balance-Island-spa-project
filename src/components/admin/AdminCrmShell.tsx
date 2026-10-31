@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { 
   CalendarDays, 
   Users, 
@@ -24,7 +24,9 @@ import {
   Receipt,
   Store,
   FileText,
-  Calculator
+  Calculator,
+  LayoutDashboard,
+  Sparkles
 } from 'lucide-react';
 import { useSpa } from '@/context/SpaContext';
 
@@ -76,7 +78,7 @@ const BRAND_CONSOLES: BrandConsole[] = [
     badge: 'Elexoir',
     dotColor: '#eab308', // luxury gold
     description: 'Elexoir Luxury Home Spa & Rituals management console',
-    href: '/admin?brand=elexoir',
+    href: '/admin?brand=elexoir&tab=treatment',
   },
   {
     id: 'bali',
@@ -84,7 +86,7 @@ const BRAND_CONSOLES: BrandConsole[] = [
     badge: 'Ubud Spa',
     dotColor: '#10b981', // emerald
     description: 'Home Spa Ubud in-villa treatments & signature collection',
-    href: '/admin?brand=bali',
+    href: '/admin?brand=bali&tab=treatment',
   },
   {
     id: 'central',
@@ -92,13 +94,14 @@ const BRAND_CONSOLES: BrandConsole[] = [
     badge: 'Central',
     dotColor: '#475569', // slate
     description: 'Central operations, invoices, therapist fees & multi-brand overview',
-    href: '/admin?brand=central',
+    href: '/admin?brand=central&tab=treatment',
   },
 ];
 
 export default function AdminCrmShell({ children }: AdminCrmShellProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { siteBrandFilter, setSiteBrandFilter } = useSpa();
 
   // Console Switcher Dropdown State
@@ -108,31 +111,26 @@ export default function AdminCrmShell({ children }: AdminCrmShellProps) {
   // Mobile Drawer State
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
 
-  // URL Brand detection
-  const [urlBrand, setUrlBrand] = useState<string | null>(null);
+  // Sync brand from URL parameter
+  const brandParam = searchParams.get('brand');
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      const b = params.get('brand');
-      if (b && ['therapick', 'elexoir', 'bali', 'central'].includes(b)) {
-        setUrlBrand(b);
-        if (setSiteBrandFilter) setSiteBrandFilter(b);
-      }
+    if (brandParam && ['therapick', 'elexoir', 'bali', 'central'].includes(brandParam)) {
+      if (setSiteBrandFilter) setSiteBrandFilter(brandParam);
     }
-  }, [pathname, setSiteBrandFilter]);
+  }, [brandParam, setSiteBrandFilter]);
 
   // Determine current active brand console
   const activeBrandId = useMemo<'therapick' | 'elexoir' | 'bali' | 'central'>(() => {
-    if (urlBrand && ['therapick', 'elexoir', 'bali', 'central'].includes(urlBrand)) {
-      return urlBrand as any;
+    if (brandParam && ['therapick', 'elexoir', 'bali', 'central'].includes(brandParam)) {
+      return brandParam as any;
     }
     if (siteBrandFilter && ['therapick', 'elexoir', 'bali', 'central'].includes(siteBrandFilter)) {
       return siteBrandFilter as any;
     }
     // Default to therapick on bookings or affiliate routes
     return 'therapick';
-  }, [urlBrand, siteBrandFilter]);
+  }, [brandParam, siteBrandFilter]);
 
   const activeConsole = useMemo(() => {
     return BRAND_CONSOLES.find(c => c.id === activeBrandId) || BRAND_CONSOLES[0];
@@ -169,21 +167,44 @@ export default function AdminCrmShell({ children }: AdminCrmShellProps) {
   // Check active item
   const isItemActive = (href: string) => {
     if (href === '/admin/bookings') {
-      return pathname === '/admin/bookings' || (pathname === '/admin' && !href.includes('tab=') && typeof window !== 'undefined' && !window.location.search.includes('tab='));
+      return pathname === '/admin/bookings' || (pathname === '/admin' && searchParams.get('tab') === 'bookings');
     }
-    if (href === '/admin/partners' || href === '/admin/affiliates') {
-      return pathname === '/admin/partners' || pathname === '/admin/affiliates';
+    if (href === '/admin/affiliates' || href === '/admin/partners') {
+      return pathname === '/admin/affiliates' || pathname === '/admin/partners' || (pathname === '/admin' && searchParams.get('tab') === 'affiliates');
     }
+    if (href === '/admin/applications') {
+      return pathname === '/admin/applications';
+    }
+    if (href === '/admin/commissions') {
+      return pathname === '/admin/commissions';
+    }
+    if (href === '/admin/payouts') {
+      return pathname === '/admin/payouts';
+    }
+    if (href === '/admin/settings') {
+      return pathname === '/admin/settings';
+    }
+    if (href === '/admin/audit-logs') {
+      return pathname === '/admin/audit-logs';
+    }
+
     if (href.includes('tab=')) {
-      if (typeof window !== 'undefined') {
-        const urlParams = new URLSearchParams(window.location.search);
-        const currentTab = urlParams.get('tab');
-        const match = href.match(/tab=([^&]+)/);
-        const itemTab = match ? match[1] : null;
-        return pathname === '/admin' && currentTab === itemTab;
+      if (pathname !== '/admin') return false;
+
+      const tabMatch = href.match(/tab=([^&]+)/);
+      const itemTab = tabMatch ? tabMatch[1] : null;
+
+      const brandMatch = href.match(/brand=([^&]+)/);
+      const itemBrand = brandMatch ? brandMatch[1] : null;
+
+      if (itemBrand && activeBrandId !== itemBrand) {
+        return false;
       }
-      return false;
+
+      const activeTabResolved = searchParams.get('tab') || 'treatment';
+      return activeTabResolved === itemTab;
     }
+
     return pathname === href;
   };
 
@@ -199,11 +220,12 @@ export default function AdminCrmShell({ children }: AdminCrmShellProps) {
           badge: 'Elexoir',
           items: [
             { label: 'Treatments & Rituals', href: '/admin?brand=elexoir&tab=treatment', icon: Layers },
+            { label: 'Menu Overview', href: '/admin?brand=elexoir&tab=list', icon: LayoutDashboard },
             { label: 'Store Products', href: '/admin?brand=elexoir&tab=store', icon: Store },
             { label: 'Campaign Cards', href: '/admin?brand=elexoir&tab=campaign', icon: Megaphone },
             { label: 'Promo Codes', href: '/admin?brand=elexoir&tab=promo', icon: Ticket },
             { label: 'Therapists & Fees', href: '/admin?brand=elexoir&tab=fees', icon: Clock },
-            { label: 'Customers', href: '/admin?brand=elexoir&tab=list', icon: User },
+            { label: 'Commission Calc', href: '/admin?brand=elexoir&tab=calculator', icon: Calculator },
           ]
         },
         {
@@ -226,11 +248,12 @@ export default function AdminCrmShell({ children }: AdminCrmShellProps) {
           badge: 'Ubud Spa',
           items: [
             { label: 'Treatments & Rituals', href: '/admin?brand=bali&tab=treatment', icon: Layers },
+            { label: 'Menu Overview', href: '/admin?brand=bali&tab=list', icon: LayoutDashboard },
             { label: 'Store Products', href: '/admin?brand=bali&tab=store', icon: Store },
             { label: 'Campaign Cards', href: '/admin?brand=bali&tab=campaign', icon: Megaphone },
             { label: 'Promo Codes', href: '/admin?brand=bali&tab=promo', icon: Ticket },
             { label: 'Therapists & Fees', href: '/admin?brand=bali&tab=fees', icon: Clock },
-            { label: 'Customers', href: '/admin?brand=bali&tab=list', icon: User },
+            { label: 'Commission Calc', href: '/admin?brand=bali&tab=calculator', icon: Calculator },
           ]
         },
         {
@@ -253,10 +276,11 @@ export default function AdminCrmShell({ children }: AdminCrmShellProps) {
           badge: 'Central',
           items: [
             { label: 'Bookings Overview', href: '/admin/bookings', icon: CalendarDays },
+            { label: 'Cross-Brand Treatments', href: '/admin?brand=central&tab=treatment', icon: Layers },
+            { label: 'Menu Overview', href: '/admin?brand=central&tab=list', icon: LayoutDashboard },
             { label: 'Invoices & Settlements', href: '/admin?brand=central&tab=invoice', icon: FileText },
             { label: 'Therapist Fees', href: '/admin?brand=central&tab=fees', icon: Clock },
             { label: 'Commission Calculator', href: '/admin?brand=central&tab=calculator', icon: Calculator },
-            { label: 'Cross-Brand Treatments', href: '/admin?brand=central&tab=treatment', icon: Layers },
             { label: 'Multi-Brand Products', href: '/admin?brand=central&tab=store', icon: Store },
           ]
         },
@@ -288,10 +312,13 @@ export default function AdminCrmShell({ children }: AdminCrmShellProps) {
       badge: 'Website',
       items: [
         { label: 'Bookings', href: '/admin/bookings', icon: CalendarDays },
-        { label: 'Treatments', href: '/admin?tab=treatment', icon: Layers },
-        { label: 'Customers', href: '/admin?tab=list', icon: User },
-        { label: 'Promo Codes', href: '/admin?tab=promo', icon: Ticket },
-        { label: 'Therapists & Fees', href: '/admin?tab=fees', icon: Clock },
+        { label: 'Treatments', href: '/admin?brand=therapick&tab=treatment', icon: Layers },
+        { label: 'Menu Overview', href: '/admin?brand=therapick&tab=list', icon: LayoutDashboard },
+        { label: 'Add-on Settings', href: '/admin?brand=therapick&tab=addons', icon: Sparkles },
+        { label: 'Store Products', href: '/admin?brand=therapick&tab=store', icon: Store },
+        { label: 'Promo Codes', href: '/admin?brand=therapick&tab=promo', icon: Ticket },
+        { label: 'Therapists & Fees', href: '/admin?brand=therapick&tab=fees', icon: Clock },
+        { label: 'Commission Calc', href: '/admin?brand=therapick&tab=calculator', icon: Calculator },
       ]
     };
 
@@ -304,7 +331,7 @@ export default function AdminCrmShell({ children }: AdminCrmShellProps) {
         { label: 'Applications', href: '/admin/applications', icon: UserCheck },
         { label: 'Commission Management', href: '/admin/commissions', icon: Receipt },
         { label: 'Payouts', href: '/admin/payouts', icon: Wallet },
-        { label: 'Campaign Cards', href: '/admin?tab=campaign', icon: Megaphone },
+        { label: 'Campaign Cards', href: '/admin?brand=therapick&tab=campaign', icon: Megaphone },
       ]
     };
 
@@ -334,7 +361,6 @@ export default function AdminCrmShell({ children }: AdminCrmShellProps) {
 
   const handleSwitchConsole = (c: BrandConsole) => {
     setConsoleDropdownOpen(false);
-    setUrlBrand(c.id);
     if (setSiteBrandFilter) {
       setSiteBrandFilter(c.id);
     }
@@ -510,6 +536,34 @@ export default function AdminCrmShell({ children }: AdminCrmShellProps) {
         {/* ─── DESKTOP SIDEBAR NAVIGATION (Console Specific & Non-Duplicated) ─── */}
         <aside className="hidden lg:flex flex-col w-60 lg:w-64 shrink-0 py-5 px-3 select-none sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto no-scrollbar">
           
+          {/* Brand Console Switcher Pills in Sidebar (Replaces inner WORKSPACE brand scope) */}
+          <div className="px-1 pb-3">
+            <div className="text-[10px] uppercase font-bold tracking-wider text-stone-600 mb-1.5 px-1 flex items-center justify-between">
+              <span>Brand Console</span>
+              <span className="text-[9px] font-mono font-bold text-stone-500 uppercase">{activeConsole.badge}</span>
+            </div>
+            <div className="grid grid-cols-2 gap-1 bg-stone-100/90 p-1 rounded-xl border border-stone-200/60 shadow-2xs">
+              {BRAND_CONSOLES.map(c => {
+                const isSelected = c.id === activeBrandId;
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => handleSwitchConsole(c)}
+                    className={`px-2 py-1.5 rounded-lg text-[11px] font-bold transition-all text-left flex items-center gap-1.5 cursor-pointer ${
+                      isSelected 
+                        ? 'bg-neutral-900 text-white shadow-xs' 
+                        : 'text-stone-600 hover:text-neutral-900 hover:bg-stone-200/70'
+                    }`}
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: c.dotColor }} />
+                    <span className="truncate">{c.badge}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           {/* Therapick Scope Switcher: All / Website / Affiliates */}
           {activeBrandId === 'therapick' && (
             <div className="px-1 pb-3">
@@ -628,6 +682,37 @@ export default function AdminCrmShell({ children }: AdminCrmShellProps) {
                 >
                   <X size={18} />
                 </button>
+              </div>
+
+              {/* Brand Console Switcher Pills in Mobile Drawer */}
+              <div className="pt-3 pb-1">
+                <div className="text-[10px] uppercase font-bold tracking-wider text-stone-600 mb-1.5 px-1 flex items-center justify-between">
+                  <span>Brand Console</span>
+                  <span className="text-[9px] font-mono font-bold text-stone-500 uppercase">{activeConsole.badge}</span>
+                </div>
+                <div className="grid grid-cols-2 gap-1 bg-stone-100/90 p-1 rounded-xl border border-stone-200/60 shadow-2xs">
+                  {BRAND_CONSOLES.map(c => {
+                    const isSelected = c.id === activeBrandId;
+                    return (
+                      <button
+                        key={c.id}
+                        type="button"
+                        onClick={() => {
+                          setMobileDrawerOpen(false);
+                          handleSwitchConsole(c);
+                        }}
+                        className={`px-2 py-1.5 rounded-lg text-[11px] font-bold transition-all text-left flex items-center gap-1.5 cursor-pointer ${
+                          isSelected 
+                            ? 'bg-neutral-900 text-white shadow-xs' 
+                            : 'text-stone-600 hover:text-neutral-900 hover:bg-stone-200/70'
+                        }`}
+                      >
+                        <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: c.dotColor }} />
+                        <span className="truncate">{c.badge}</span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
               {/* Therapick Scope Switcher on Mobile */}

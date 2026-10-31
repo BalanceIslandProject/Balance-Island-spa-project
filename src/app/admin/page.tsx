@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
     Megaphone, PlusCircle, Store, Settings, LayoutDashboard, 
@@ -9,6 +9,7 @@ import {
     ArrowRight, ArrowUp, ArrowDown, Compass, ShieldCheck, Check, Ticket, Search, Menu, MoreHorizontal, Calendar, FileText, Heart, Clock, Share2, Layers
 } from 'lucide-react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { useSpa, SelectedCampaignTreatment, Treatment, Product, TherapistFee, Campaign, sortCampaigns, DEFAULT_CAMPAIGNS } from '@/context/SpaContext';
 import { supabase } from '@/lib/supabase';
 import BookingManagement from '@/components/BookingManagement';
@@ -29,7 +30,7 @@ const CAMPAIGN_PRESETS = [
     }
 ];
 
-export default function AdminDashboard() {
+function AdminDashboardContent() {
     const triggerRevalidation = async () => {
         try {
             await fetch('/api/revalidate', { method: 'POST', body: JSON.stringify({ action: 'revalidate' }) });
@@ -47,8 +48,9 @@ export default function AdminDashboard() {
         therapists, setTherapists
     } = useSpa();
 
-    const [activeTab, setActiveTab] = useState<'campaign' | 'treatment' | 'store' | 'fees' | 'calculator' | 'list' | 'settings' | 'promo' | 'bookings' | 'invoice' | 'affiliates' | 'addons'>('campaign');
-    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+    const searchParams = useSearchParams();
+    const initialTab = (searchParams.get('tab') as any) || 'treatment';
+    const [activeTab, setActiveTab] = useState<'campaign' | 'treatment' | 'store' | 'fees' | 'calculator' | 'list' | 'settings' | 'promo' | 'bookings' | 'invoice' | 'affiliates' | 'addons'>(initialTab);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [success, setSuccess] = useState(false);
     
@@ -75,19 +77,17 @@ export default function AdminDashboard() {
         fetchFees();
     }, [siteBrandFilter]);
 
+    // Reactive sync with URL params from main sidebar
     useEffect(() => {
-        if (typeof window !== 'undefined') {
-            const params = new URLSearchParams(window.location.search);
-            const brandParam = params.get('brand');
-            const tabParam = params.get('tab');
-            if (brandParam) {
-                setSiteBrandFilter(brandParam);
-            }
-            if (tabParam) {
-                setActiveTab(tabParam as any);
-            }
+        const brandParam = searchParams.get('brand');
+        const tabParam = searchParams.get('tab');
+        if (brandParam && ['therapick', 'central', 'elexoir', 'bali'].includes(brandParam)) {
+            setSiteBrandFilter(brandParam);
         }
-    }, [setSiteBrandFilter]);
+        if (tabParam) {
+            setActiveTab(tabParam as any);
+        }
+    }, [searchParams, setSiteBrandFilter]);
 
 
     // Promo Codes State
@@ -155,18 +155,7 @@ export default function AdminDashboard() {
         return () => { isMounted = false; };
     }, [siteBrandFilter, setTreatments, setProducts, setCampaigns, setCampaign, setTherapists]);
 
-    // Force tab switch if central is selected, or if brand is not therapick while on affiliates
-    useEffect(() => {
-        if (siteBrandFilter === 'central' && (activeTab === 'campaign' || activeTab === 'promo')) {
-            setActiveTab('treatment');
-        }
-        if (siteBrandFilter !== 'therapick' && (activeTab as string) === 'affiliates') {
-            setSiteBrandFilter('therapick');
-        }
-        if (activeTab === 'bookings' && siteBrandFilter !== 'central' && siteBrandFilter !== 'therapick') {
-            setActiveTab('treatment');
-        }
-    }, [siteBrandFilter, activeTab]);
+
 
     const activeBrand = siteBrandFilter === 'central' ? 'elexoir' : siteBrandFilter;
 
@@ -840,213 +829,12 @@ export default function AdminDashboard() {
     };
 
     return (
-        <div className="text-neutral-900 flex flex-col md:flex-row font-sans w-full min-w-0 gap-5">
-            
-            {/* Desktop Minimalist Monochrome Sidebar (Collapsible for Full Screen CRM) */}
-            {isSidebarCollapsed ? (
-                <aside className="hidden md:flex flex-col w-14 bg-white/95 border border-stone-200/90 rounded-2xl p-2.5 shadow-2xs z-10 shrink-0 self-start items-center space-y-3">
-                    <button
-                        type="button"
-                        onClick={() => setIsSidebarCollapsed(false)}
-                        className="w-9 h-9 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-700 flex items-center justify-center transition-colors cursor-pointer"
-                        title="Expand Sidebar"
-                    >
-                        <ChevronRight size={16} />
-                    </button>
-                    <div className="w-8 h-[1px] bg-stone-200" />
-                    <nav className="space-y-1.5 flex flex-col items-center">
-                        {[
-                            ...(siteBrandFilter === 'central' ? [{ id: 'bookings', icon: Calendar, label: 'Booking' }, { id: 'invoice', icon: Ticket, label: 'Invoices' }] : []),
-                            ...(siteBrandFilter === 'therapick' ? [{ id: 'bookings', icon: Calendar, label: 'Bookings' }, { id: 'affiliates', icon: Share2, label: 'Affiliates' }, { id: 'addons', icon: Layers, label: 'Add-on Settings' }] : []),
-                            { id: 'campaign', icon: Megaphone, label: 'Campaign Card' },
-                            { id: 'promo', icon: Ticket, label: 'Promo Codes' },
-                            { id: 'treatment', icon: PlusCircle, label: 'Treatments' },
-                            { id: 'store', icon: Store, label: 'Store Products' },
-                            { id: 'fees', icon: Settings, label: 'Therapist Fees' },
-                            { id: 'calculator', icon: Calculator, label: 'Commission Calc' },
-                            { id: 'list', icon: LayoutDashboard, label: 'Menu Overview' },
-                        ].filter(tab => siteBrandFilter !== 'central' || !['campaign', 'promo'].includes(tab.id)).map((tab) => {
-                            const Icon = tab.icon;
-                            const isActive = activeTab === tab.id;
-                            return (
-                                <button
-                                    key={tab.id}
-                                    type="button"
-                                    onClick={() => setActiveTab(tab.id as any)}
-                                    title={tab.label}
-                                    className={`w-9 h-9 rounded-full flex items-center justify-center transition-all cursor-pointer ${
-                                        isActive 
-                                        ? 'bg-neutral-900 text-white shadow-xs' 
-                                        : 'text-stone-600 hover:bg-stone-100 hover:text-neutral-900'
-                                    }`}
-                                >
-                                    <Icon size={15} strokeWidth={isActive ? 2.5 : 2} />
-                                </button>
-                            );
-                        })}
-                    </nav>
-                </aside>
-            ) : (
-                <aside className="hidden md:flex flex-col w-64 bg-white/95 border border-stone-200/90 rounded-2xl p-4 shadow-2xs z-10 shrink-0 self-start space-y-4">
-                    <div className="pb-3 border-b border-stone-100 flex flex-col gap-2.5">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <span className="text-[10px] uppercase font-bold tracking-wider text-stone-400 block">Workspace</span>
-                                <h2 className="text-sm font-bold tracking-tight text-neutral-900">Admin Controls</h2>
-                            </div>
-                            <button
-                                type="button"
-                                onClick={() => setIsSidebarCollapsed(true)}
-                                className="w-7 h-7 rounded-full text-stone-400 hover:text-neutral-900 hover:bg-stone-100 flex items-center justify-center cursor-pointer transition-colors"
-                                title="Collapse Sidebar (Full Screen View)"
-                            >
-                                <ChevronLeft size={14} />
-                            </button>
-                        </div>
-                        <div>
-                            <label className="text-[10px] font-semibold uppercase tracking-wider text-stone-500 block mb-1">Brand Scope</label>
-                            <select 
-                                id="brandSelect"
-                                value={siteBrandFilter}
-                                onChange={(e) => setSiteBrandFilter(e.target.value)}
-                                className="w-full bg-white border border-stone-200 rounded-full px-3 py-1.5 text-xs font-semibold text-neutral-900 focus:outline-none focus:border-amber-400 cursor-pointer shadow-2xs"
-                            >
-                                <option value="therapick">Therapick</option>
-                                <option value="central">Central Admin</option>
-                                <option value="elexoir">Elexoir Home Spa</option>
-                                <option value="bali">Home Spa Ubud</option>
-                            </select>
-                            <div className="grid grid-cols-2 gap-1 mt-1.5">
-                                {[
-                                    { id: 'therapick', label: 'Therapick' },
-                                    { id: 'central', label: 'Central' },
-                                    { id: 'elexoir', label: 'Elexoir' },
-                                    { id: 'bali', label: 'Home Spa' }
-                                ].map(b => (
-                                    <button
-                                        key={b.id}
-                                        type="button"
-                                        id={`brand-chip-${b.id}`}
-                                        onClick={() => setSiteBrandFilter(b.id)}
-                                        className={`px-2 py-1 rounded-full text-[11px] font-semibold transition-all text-center cursor-pointer ${
-                                            siteBrandFilter === b.id 
-                                                ? 'bg-neutral-900 text-white shadow-2xs' 
-                                                : 'bg-stone-100 text-stone-600 hover:text-neutral-900 hover:bg-stone-200/70'
-                                        }`}
-                                    >
-                                        {b.label}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-
-                    <nav className="flex-1 space-y-1 overflow-y-auto">
-                        {[
-                            ...(siteBrandFilter === 'central' ? [{ id: 'bookings', icon: Calendar, label: 'Booking' }, { id: 'invoice', icon: Ticket, label: 'Invoices' }] : []),
-                            ...(siteBrandFilter === 'therapick' ? [{ id: 'bookings', icon: Calendar, label: 'Bookings' }, { id: 'affiliates', icon: Share2, label: 'Affiliates' }, { id: 'addons', icon: Layers, label: 'Add-on Settings' }] : []),
-                            { id: 'campaign', icon: Megaphone, label: 'Campaign Card' },
-                            { id: 'promo', icon: Ticket, label: 'Promo Codes' },
-                            { id: 'treatment', icon: PlusCircle, label: 'Treatments' },
-                            { id: 'store', icon: Store, label: 'Store Products' },
-                            { id: 'fees', icon: Settings, label: 'Therapist Fees' },
-                            { id: 'calculator', icon: Calculator, label: 'Commission Calc' },
-                            { id: 'list', icon: LayoutDashboard, label: 'Menu Overview' },
-                        ].filter(tab => siteBrandFilter !== 'central' || !['campaign', 'promo'].includes(tab.id)).map((tab) => {
-                            const Icon = tab.icon;
-                            const isActive = activeTab === tab.id;
-                            return (
-                                <button
-                                    key={tab.id}
-                                    type="button"
-                                    onClick={() => setActiveTab(tab.id as any)}
-                                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-full text-xs font-semibold tracking-tight transition-all cursor-pointer ${
-                                        isActive 
-                                        ? 'bg-neutral-900 text-white shadow-xs' 
-                                        : 'text-stone-600 hover:bg-stone-100 hover:text-neutral-900'
-                                    }`}
-                                >
-                                    <Icon size={14} strokeWidth={isActive ? 2.5 : 2} />
-                                    {tab.label}
-                                </button>
-                            );
-                        })}
-                    </nav>
-                </aside>
-            )}
-
-            {/* Main Content Area */}
-            <main className="flex-1 relative min-w-0 pb-12">
-                
-                {/* Sticky Mobile Admin Selector */}
-                <div className="md:hidden sticky top-0 z-40 pt-3 px-4 pb-2 bg-white/95 backdrop-blur-xl border-b border-[#E5E5E5] mb-2">
-                    <div className="bg-white border border-[#E5E5E5] rounded-xl p-2 shadow-xs flex items-center justify-between">
-                        <h2 className="text-[11px] font-medium uppercase tracking-wider text-[#737373] pl-2 truncate">Select Admin Dashboard</h2>
-                        <div className="relative w-36 shrink-0">
-                            <select 
-                                value={siteBrandFilter}
-                                onChange={(e) => setSiteBrandFilter(e.target.value)}
-                                className="w-full bg-black text-white rounded-lg px-2.5 py-1.5 text-xs font-semibold focus:outline-none appearance-none"
-                            >
-                                <option value="therapick">Therapick</option>
-                                <option value="central">Central Admin</option>
-                                <option value="elexoir">Elexoir</option>
-                                <option value="bali">Home Spa Ubud</option>
-                            </select>
-                            <div className="absolute inset-y-0 right-2 flex items-center pointer-events-none">
-                                <ChevronDown size={12} className="text-white/60" />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Mobile Sidebar (Drawer) */}
-                <div id="mobile-sidebar" className="md:hidden fixed inset-0 z-[60] translate-x-full transition-transform duration-300 flex">
-                    <div className="flex-1 bg-black/20 backdrop-blur-sm" onClick={() => document.getElementById('mobile-sidebar')?.classList.add('translate-x-full')}></div>
-                    <div className="w-64 bg-white h-full shadow-2xl flex flex-col border-l border-[#E5E5E5]">
-                        <div className="p-4 border-b border-[#E5E5E5] flex justify-between items-center bg-[#FAFAFA]">
-                            <span className="text-xs font-semibold uppercase tracking-wider text-black">Menu Options</span>
-                            <button onClick={() => document.getElementById('mobile-sidebar')?.classList.add('translate-x-full')} className="p-1.5 text-[#737373] hover:text-black">
-                                <span className="font-bold text-xl leading-none">&times;</span>
-                            </button>
-                        </div>
-                        <nav className="flex-1 p-3 space-y-1.5 overflow-y-auto">
-                            {[
-                                ...(siteBrandFilter === 'central' ? [{ id: 'invoice', icon: Ticket, label: 'Invoices' }] : [
-                                    { id: 'campaign', icon: Megaphone, label: 'Campaign Card' },
-                                    { id: 'promo', icon: Ticket, label: 'Promo Codes' },
-                                ]),
-                                ...(siteBrandFilter === 'therapick' ? [{ id: 'bookings', icon: Calendar, label: 'Bookings' }, { id: 'affiliates', icon: Share2, label: 'Affiliates' }, { id: 'addons', icon: Layers, label: 'Add-on Settings' }] : []),
-                                { id: 'store', icon: Store, label: 'Store Products' },
-                                { id: 'calculator', icon: Calculator, label: 'Commission Calc' },
-                            ].map((tab) => {
-                                const Icon = tab.icon;
-                                const isActive = activeTab === tab.id;
-                                return (
-                                    <button
-                                        key={tab.id}
-                                        onClick={() => {
-                                            setActiveTab(tab.id as any);
-                                            document.getElementById('mobile-sidebar')?.classList.add('translate-x-full');
-                                        }}
-                                        className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium transition-colors ${
-                                            isActive ? 'bg-black text-white' : 'text-[#525252] hover:bg-[#F5F5F5] hover:text-black'
-                                        }`}
-                                    >
-                                        <Icon size={16} strokeWidth={isActive ? 2.5 : 2} />
-                                        {tab.label}
-                                    </button>
-                                );
-                            })}
-                        </nav>
-                    </div>
-                </div>
-
-                <div className={`mx-auto p-4 md:p-8 ${
-                    activeTab === 'affiliates' ? 'w-full max-w-none'
-                    : (activeTab === 'bookings' || activeTab === 'campaign') ? 'max-w-7xl' 
-                    : (activeTab === 'list' || activeTab === 'fees' ? 'max-w-6xl' : 'max-w-4xl')
-                }`}>
+        <div className="w-full text-neutral-900 font-sans pb-12">
+            <div className={`w-full ${
+                activeTab === 'affiliates' ? 'w-full max-w-none'
+                : (activeTab === 'bookings' || activeTab === 'campaign') ? 'max-w-7xl mx-auto' 
+                : (activeTab === 'list' || activeTab === 'fees' ? 'max-w-6xl mx-auto' : 'max-w-5xl mx-auto')
+            }`}>
 
                     {/* CAMPAIGN CARD SETUP TAB */}
                     {activeTab === 'campaign' && (
@@ -2389,23 +2177,22 @@ export default function AdminDashboard() {
                         </div>
                     )}
 
-                    {/* BOOKINGS TAB (CENTRAL ADMIN) */}
-                    {activeTab === 'bookings' && siteBrandFilter === 'central' && (
-                        <BookingManagement treatments={treatments} therapistFees={therapistFees} />
+                    {/* BOOKINGS TAB */}
+                    {activeTab === 'bookings' && (
+                        siteBrandFilter === 'central' ? (
+                            <BookingManagement treatments={treatments} therapistFees={therapistFees} />
+                        ) : (
+                            <TherapickBookingManagement treatments={treatments} therapistFees={therapistFees} />
+                        )
                     )}
 
-                    {/* BOOKINGS TAB (THERAPICK ADMIN) */}
-                    {activeTab === 'bookings' && siteBrandFilter === 'therapick' && (
-                        <TherapickBookingManagement treatments={treatments} therapistFees={therapistFees} />
-                    )}
-
-                    {/* ADD-ON SETTINGS TAB (THERAPICK ADMIN ONLY) */}
-                    {activeTab === 'addons' && siteBrandFilter === 'therapick' && (
+                    {/* ADD-ON SETTINGS TAB */}
+                    {activeTab === 'addons' && (
                         <TherapickAddonSettings />
                     )}
 
-                    {/* INVOICE TAB (CENTRAL ADMIN ONLY) */}
-                    {activeTab === 'invoice' && siteBrandFilter === 'central' && (
+                    {/* INVOICE TAB */}
+                    {activeTab === 'invoice' && (
                         <div className="w-full max-w-xl mx-auto mt-6 animate-in fade-in duration-300">
                             <div className="bg-white border border-[#E5E5E5] p-6 sm:p-8 rounded-xl shadow-xs text-center">
                                 <div className="w-12 h-12 rounded-xl bg-[#FAFAFA] border border-[#E5E5E5] flex items-center justify-center mx-auto mb-4 text-black">
@@ -2479,60 +2266,14 @@ export default function AdminDashboard() {
                         </div>
                     )}
 
-                    {/* AFFILIATE MANAGEMENT TAB (Strictly Therapick Admin Only) */}
-                    {(activeTab as string) === 'affiliates' && siteBrandFilter === 'therapick' && (
+                    {/* AFFILIATE MANAGEMENT TAB */}
+                    {(activeTab as string) === 'affiliates' && (
                         <div className="w-full animate-in fade-in duration-300">
                             <AffiliateManagement />
                         </div>
                     )}
 
                 </div>
-            </main>
-
-            {/* Minimalist Mobile Bottom Navigation Bar (Floating Card) */}
-            <div className="md:hidden fixed bottom-6 left-4 right-4 bg-white/95 backdrop-blur-xl shadow-lg border border-[#E5E5E5] rounded-2xl z-50">
-                <div className="flex items-center justify-between p-1.5 max-w-sm mx-auto">
-                    {(siteBrandFilter === 'central' ? [
-                        { id: 'invoice', icon: FileText, label: 'Invoice' },
-                        { id: 'fees', icon: Settings, label: 'Fees' },
-                        { id: 'bookings', icon: Calendar, label: 'Book' },
-                        { id: 'list', icon: LayoutDashboard, label: 'Menu' },
-                        { id: 'more', icon: MoreHorizontal, label: 'More' }
-                    ] : siteBrandFilter === 'therapick' ? [
-                        { id: 'bookings', icon: Calendar, label: 'Book' },
-                        { id: 'affiliates', icon: Share2, label: 'Affils' },
-                        { id: 'addons', icon: Layers, label: 'Add-ons' },
-                        { id: 'treatment', icon: PlusCircle, label: 'Treats' },
-                        { id: 'more', icon: MoreHorizontal, label: 'More' }
-                    ] : [
-                        { id: 'treatment', icon: PlusCircle, label: 'Treats' },
-                        { id: 'fees', icon: Settings, label: 'Fees' },
-                        { id: 'list', icon: LayoutDashboard, label: 'Menu' },
-                        { id: 'more', icon: MoreHorizontal, label: 'More' }
-                    ]).map((tab) => {
-                        const isActive = activeTab === tab.id;
-                        const Icon = tab.icon;
-                        return (
-                            <button
-                                key={tab.id}
-                                onClick={() => {
-                                    if (tab.id === 'more') {
-                                        document.getElementById('mobile-sidebar')?.classList.remove('translate-x-full');
-                                    } else {
-                                        setActiveTab(tab.id as any);
-                                    }
-                                }}
-                                className={`flex flex-col items-center justify-center flex-1 py-2 rounded-xl transition-all duration-200 ${
-                                    isActive && tab.id !== 'more' ? 'bg-black text-white shadow-xs' : 'text-[#737373] hover:text-black hover:bg-[#F5F5F5]'
-                                }`}
-                            >
-                                <Icon size={18} strokeWidth={isActive && tab.id !== 'more' ? 2.5 : 2} />
-                                <span className="text-[9px] mt-1 font-semibold tracking-wider uppercase">{tab.label}</span>
-                            </button>
-                        );
-                    })}
-                </div>
-            </div>
 
             {/* Hidden File Input for Pinning Images */}
             <input 
@@ -2543,5 +2284,13 @@ export default function AdminDashboard() {
                 className="hidden" 
             />
         </div>
+    );
+}
+
+export default function AdminDashboard() {
+    return (
+        <Suspense fallback={<div className="p-8 text-center text-stone-400">Loading admin console...</div>}>
+            <AdminDashboardContent />
+        </Suspense>
     );
 }
