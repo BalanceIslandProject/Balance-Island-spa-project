@@ -251,65 +251,65 @@ export default function PartnerCommissionsPage() {
         </button>
       </div>
 
-      {/* 4-KPI Horizontal Strip (Enhanced CRM styled with SVG sparklines) */}
+      {/* 4-KPI Horizontal Strip (Colorful CRM Gradients, Bold Typography, No Long Text) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
         {/* Total Earned */}
-        <div className="bg-white border border-[#eaecf0] rounded-2xl p-4.5 space-y-2.5 shadow-xs hover:border-[#cbd5e1] hover:shadow-sm transition-all overflow-hidden">
+        <div className="bg-gradient-to-br from-blue-50/90 via-sky-50/40 to-white border border-blue-200/90 rounded-2xl p-5 space-y-3 shadow-xs hover:border-blue-300 hover:shadow-sm transition-all overflow-hidden">
           <div className="flex items-center justify-between">
-            <span className="font-mono text-[10px] uppercase tracking-wider text-[#64748b] font-semibold">TOTAL COMMISSION</span>
-            <span className="w-7 h-7 rounded-lg bg-[#f8fafc] border border-[#eaecf0] flex items-center justify-center text-[#475569]">
-              <Receipt size={13} />
+            <span className="font-mono text-xs uppercase tracking-wider text-blue-900 font-bold">TOTAL COMMISSION</span>
+            <span className="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-xs shadow-blue-500/20">
+              <Receipt size={14} />
             </span>
           </div>
-          <div className="text-xl sm:text-[23px] font-bold text-[#0f172a] font-mono tabular-nums leading-none">
+          <div className="text-xl sm:text-[25px] font-extrabold text-blue-950 font-mono tabular-nums leading-none">
             {formatIDR(kpiTotals.totalEarned)}
           </div>
-          <div className="flex items-center justify-between pt-2 border-t border-[#f1f5f9]">
-            <span className="font-mono text-[10px] font-bold text-[#16a34a] bg-[#dcfce7] border border-[#bbf7d0] px-2 py-0.5 rounded-full">
-              Gross Cumulative
+          <div className="flex items-center justify-between pt-2.5 border-t border-blue-100/80">
+            <span className="font-mono text-xs font-bold text-blue-700 bg-blue-100/90 border border-blue-200 px-2.5 py-0.5 rounded-full">
+              Cumulative
             </span>
             <Sparkline color="green" trend="up" />
           </div>
         </div>
 
         {/* Approved Commission */}
-        <div className="bg-white border border-[#eaecf0] rounded-2xl p-4.5 space-y-2.5 shadow-xs hover:border-[#86efac] hover:shadow-sm transition-all overflow-hidden">
+        <div className="bg-gradient-to-br from-emerald-50/90 via-teal-50/40 to-white border border-emerald-200/90 rounded-2xl p-5 space-y-3 shadow-xs hover:border-emerald-300 hover:shadow-sm transition-all overflow-hidden">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 min-w-0">
-              <span className="w-2 h-2 rounded-full bg-[#16a34a] animate-pulse shrink-0" />
-              <span className="font-mono text-[10px] uppercase tracking-wider text-[#15803d] font-bold">APPROVED</span>
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+              <span className="font-mono text-xs uppercase tracking-wider text-emerald-900 font-bold">APPROVED</span>
             </div>
-            <span className="w-7 h-7 rounded-lg bg-[#dcfce7] border border-[#bbf7d0] flex items-center justify-center text-[#15803d]">
-              <ShieldCheck size={13} />
+            <span className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-xs shadow-emerald-500/20">
+              <ShieldCheck size={14} />
             </span>
           </div>
-          <div className="text-xl sm:text-[23px] font-bold text-[#0f172a] font-mono tabular-nums leading-none">
+          <div className="text-xl sm:text-[25px] font-extrabold text-emerald-950 font-mono tabular-nums leading-none">
             {formatIDR(kpiTotals.approved)}
           </div>
-          <div className="flex items-center justify-between pt-2 border-t border-[#f1f5f9]">
-            <span className="font-mono text-[10px] font-bold text-[#15803d] bg-[#dcfce7] border border-[#bbf7d0] px-2 py-0.5 rounded-full">
-              Cleared to Withdraw
+          <div className="flex items-center justify-between pt-2.5 border-t border-emerald-100/80">
+            <span className="font-mono text-xs font-bold text-emerald-800 bg-emerald-100/90 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+              Cleared
             </span>
             <Sparkline color="teal" trend="up" />
           </div>
         </div>
 
         {/* Pending Commission */}
-        <div className="bg-white border border-[#eaecf0] rounded-2xl p-4.5 space-y-2.5 shadow-xs hover:border-[#fde68a] hover:shadow-sm transition-all overflow-hidden">
+        <div className="bg-gradient-to-br from-amber-50/90 via-orange-50/40 to-white border border-amber-200/90 rounded-2xl p-5 space-y-3 shadow-xs hover:border-amber-300 hover:shadow-sm transition-all overflow-hidden">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 min-w-0">
-              <span className="w-2 h-2 rounded-full bg-[#d97706] shrink-0" />
-              <span className="font-mono text-[10px] uppercase tracking-wider text-[#b45309] font-bold">PENDING</span>
+              <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0" />
+              <span className="font-mono text-xs uppercase tracking-wider text-amber-900 font-bold">PENDING</span>
             </div>
-            <span className="w-7 h-7 rounded-lg bg-[#fef3c7] border border-[#fde68a] flex items-center justify-center text-[#b45309]">
-              <Clock size={13} />
+            <span className="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center shadow-xs shadow-amber-500/20">
+              <Clock size={14} />
             </span>
           </div>
-          <div className="text-xl sm:text-[23px] font-bold text-[#0f172a] font-mono tabular-nums leading-none">
+          <div className="text-xl sm:text-[25px] font-extrabold text-amber-950 font-mono tabular-nums leading-none">
             {formatIDR(kpiTotals.pending)}
           </div>
-          <div className="flex items-center justify-between pt-2 border-t border-[#f1f5f9]">
-            <span className="font-mono text-[10px] font-bold text-[#b45309] bg-[#fef3c7] border border-[#fde68a] px-2 py-0.5 rounded-full">
+          <div className="flex items-center justify-between pt-2.5 border-t border-amber-100/80">
+            <span className="font-mono text-xs font-bold text-amber-800 bg-amber-100/90 border border-amber-200 px-2.5 py-0.5 rounded-full">
               In Escrow
             </span>
             <Sparkline color="green" trend="down" />
@@ -317,18 +317,18 @@ export default function PartnerCommissionsPage() {
         </div>
 
         {/* Paid Commission */}
-        <div className="bg-white border border-[#eaecf0] rounded-2xl p-4.5 space-y-2.5 shadow-xs hover:border-[#94a3b8] hover:shadow-sm transition-all overflow-hidden">
+        <div className="bg-gradient-to-br from-indigo-50/90 via-purple-50/40 to-white border border-indigo-200/90 rounded-2xl p-5 space-y-3 shadow-xs hover:border-indigo-300 hover:shadow-sm transition-all overflow-hidden">
           <div className="flex items-center justify-between">
-            <span className="font-mono text-[10px] uppercase tracking-wider text-[#0f172a] font-bold">PAID OUT</span>
-            <span className="w-7 h-7 rounded-lg bg-[#f8fafc] border border-[#eaecf0] flex items-center justify-center text-[#0f172a]">
-              <Wallet size={13} />
+            <span className="font-mono text-xs uppercase tracking-wider text-indigo-900 font-bold">PAID OUT</span>
+            <span className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-xs shadow-indigo-500/20">
+              <Wallet size={14} />
             </span>
           </div>
-          <div className="text-xl sm:text-[23px] font-bold text-[#0f172a] font-mono tabular-nums leading-none">
+          <div className="text-xl sm:text-[25px] font-extrabold text-indigo-950 font-mono tabular-nums leading-none">
             {formatIDR(kpiTotals.paid)}
           </div>
-          <div className="flex items-center justify-between pt-2 border-t border-[#f1f5f9]">
-            <span className="font-mono text-[10px] font-bold text-white bg-[#0f172a] px-2 py-0.5 rounded-full shadow-2xs">
+          <div className="flex items-center justify-between pt-2.5 border-t border-indigo-100/80">
+            <span className="font-mono text-xs font-bold text-white bg-indigo-600 px-2.5 py-0.5 rounded-full shadow-xs shadow-indigo-500/20">
               Disbursed
             </span>
             <Sparkline color="teal" trend="up" />
@@ -342,27 +342,36 @@ export default function PartnerCommissionsPage() {
           
           {/* Status Tabs (Segmented Container) */}
           <div className="overflow-x-auto no-scrollbar">
-            <div className="inline-flex items-center gap-1 p-1 rounded-xl bg-[#f1f5f9] border border-[#e2e8f0] text-xs">
+            <div className="inline-flex items-center gap-1.5 p-1.5 rounded-2xl bg-slate-100 border border-slate-200 text-xs">
               {[
                 { key: 'all', label: 'All Commissions' },
                 { key: 'approved', label: 'Approved' },
                 { key: 'pending', label: 'Pending' },
                 { key: 'paid', label: 'PAID OUT' },
                 { key: 'cancelled', label: 'Cancelled' }
-              ].map(({ key, label }) => (
-                <button
-                  type="button"
-                  key={key}
-                  onClick={() => setFilterStatus(key)}
-                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider font-mono transition-all cursor-pointer whitespace-nowrap ${
-                    filterStatus === key
-                      ? 'bg-[#0f172a] text-white shadow-xs'
-                      : 'text-[#64748b] hover:text-[#0f172a]'
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
+              ].map(({ key, label }) => {
+                const isSelected = filterStatus === key;
+                let activeClass = 'bg-slate-900 text-white shadow-xs';
+                if (key === 'approved') activeClass = 'bg-emerald-600 text-white shadow-xs shadow-emerald-500/20';
+                else if (key === 'pending') activeClass = 'bg-amber-500 text-white shadow-xs shadow-amber-500/20';
+                else if (key === 'paid') activeClass = 'bg-indigo-600 text-white shadow-xs shadow-indigo-500/20';
+                else if (key === 'cancelled') activeClass = 'bg-rose-600 text-white shadow-xs shadow-rose-500/20';
+
+                return (
+                  <button
+                    type="button"
+                    key={key}
+                    onClick={() => setFilterStatus(key)}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider font-mono transition-all cursor-pointer whitespace-nowrap ${
+                      isSelected
+                        ? activeClass
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-white/80'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -526,19 +535,19 @@ export default function PartnerCommissionsPage() {
                         </td>
                         <td className="py-4 px-4 text-center whitespace-nowrap">
                           {isCancelled ? (
-                            <span className="font-mono text-[9px] font-bold text-[#b91c1c] bg-[#fee2e2] border border-[#fecaca] px-2.5 py-1 rounded-full uppercase tracking-wider">
+                            <span className="font-mono text-[10px] font-bold text-rose-800 bg-rose-100/90 border border-rose-300 px-3 py-1 rounded-full uppercase tracking-wider">
                               Cancelled
                             </span>
                           ) : isPaid ? (
-                            <span className="font-mono text-[9px] font-bold text-white bg-[#0f172a] px-2.5 py-1 rounded-full uppercase tracking-wider shadow-2xs">
+                            <span className="font-mono text-[10px] font-bold text-white bg-indigo-600 px-3 py-1 rounded-full uppercase tracking-wider shadow-xs shadow-indigo-500/20">
                               PAID OUT
                             </span>
                           ) : isApproved ? (
-                            <span className="font-mono text-[9px] font-bold text-[#15803d] bg-[#dcfce7] border border-[#bbf7d0] px-2.5 py-1 rounded-full uppercase tracking-wider">
+                            <span className="font-mono text-[10px] font-bold text-emerald-800 bg-emerald-100/90 border border-emerald-300 px-3 py-1 rounded-full uppercase tracking-wider">
                               Approved
                             </span>
                           ) : (
-                            <span className="font-mono text-[9px] font-bold text-[#b45309] bg-[#fef3c7] border border-[#fde68a] px-2.5 py-1 rounded-full uppercase tracking-wider">
+                            <span className="font-mono text-[10px] font-bold text-amber-800 bg-amber-100/90 border border-amber-300 px-3 py-1 rounded-full uppercase tracking-wider">
                               Pending
                             </span>
                           )}
@@ -548,20 +557,20 @@ export default function PartnerCommissionsPage() {
                             <button
                               type="button"
                               onClick={() => setTrackingBooking(itemAsCalendarBooking(item))}
-                              className="h-7 px-3 rounded-lg bg-[#0f172a] hover:bg-black text-[11px] font-medium text-white inline-flex items-center gap-1.5 cursor-pointer transition-all shadow-2xs active:scale-95"
+                              className="h-7.5 px-3.5 rounded-xl bg-slate-900 hover:bg-black text-xs font-bold text-white inline-flex items-center gap-1.5 cursor-pointer transition-all shadow-xs active:scale-95"
                               title="Track schedule & booking details"
                             >
-                              <Clock size={11} className="text-[#cbd5e1]" />
+                              <Clock size={12} className="text-slate-300" />
                               <span>Track</span>
                             </button>
                             <Link
                               href={`/invoice/${item.booking_id}`}
                               target="_blank"
-                              className="text-[11px] font-medium text-[#64748b] hover:text-[#0f172a] inline-flex items-center gap-0.5 hover:underline px-1.5 py-1"
+                              className="text-xs font-bold text-slate-600 hover:text-slate-900 inline-flex items-center gap-0.5 hover:underline px-2 py-1"
                               title="View invoice"
                             >
                               <span>Invoice</span>
-                              <ExternalLink size={10} />
+                              <ExternalLink size={11} />
                             </Link>
                           </div>
                         </td>
@@ -613,19 +622,19 @@ export default function PartnerCommissionsPage() {
                       </div>
                       <div className="shrink-0">
                         {isCancelled ? (
-                          <span className="font-mono text-[9px] font-bold text-[#b91c1c] bg-[#fee2e2] border border-[#fecaca] px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                          <span className="font-mono text-[10px] font-bold text-rose-800 bg-rose-100/90 border border-rose-300 px-3 py-1 rounded-full uppercase tracking-wider">
                             Cancelled
                           </span>
                         ) : isPaid ? (
-                          <span className="font-mono text-[9px] font-bold text-white bg-[#0f172a] px-2.5 py-0.5 rounded-full uppercase tracking-wider shadow-2xs">
+                          <span className="font-mono text-[10px] font-bold text-white bg-indigo-600 px-3 py-1 rounded-full uppercase tracking-wider shadow-xs shadow-indigo-500/20">
                             PAID OUT
                           </span>
                         ) : isApproved ? (
-                          <span className="font-mono text-[9px] font-bold text-[#15803d] bg-[#dcfce7] border border-[#bbf7d0] px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                          <span className="font-mono text-[10px] font-bold text-emerald-800 bg-emerald-100/90 border border-emerald-300 px-3 py-1 rounded-full uppercase tracking-wider">
                             Approved
                           </span>
                         ) : (
-                          <span className="font-mono text-[9px] font-bold text-[#b45309] bg-[#fef3c7] border border-[#fde68a] px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                          <span className="font-mono text-[10px] font-bold text-amber-800 bg-amber-100/90 border border-amber-300 px-3 py-1 rounded-full uppercase tracking-wider">
                             Pending
                           </span>
                         )}
@@ -637,16 +646,16 @@ export default function PartnerCommissionsPage() {
                       <button
                         type="button"
                         onClick={() => setTrackingBooking(itemAsCalendarBooking(item))}
-                        className="flex-1 h-8.5 rounded-xl bg-[#0f172a] hover:bg-black text-white text-xs font-medium inline-flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.98] transition-transform shadow-xs"
+                        className="flex-1 h-9 rounded-xl bg-slate-900 hover:bg-black text-white text-xs font-bold inline-flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.98] transition-transform shadow-xs"
                       >
-                        <Clock size={12} className="text-[#cbd5e1]" />
+                        <Clock size={13} className="text-slate-300" />
                         <span>Track</span>
                       </button>
 
                       <Link
                         href={`/invoice/${item.booking_id}`}
                         target="_blank"
-                        className="h-8.5 px-3.5 rounded-xl border border-[#e2e8f0] bg-white hover:bg-[#f8fafc] text-[#334155] text-xs font-medium inline-flex items-center justify-center gap-1 active:scale-[0.98] transition-transform shadow-2xs"
+                        className="h-9 px-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 text-xs font-bold inline-flex items-center justify-center gap-1 active:scale-[0.98] transition-transform shadow-2xs"
                       >
                         <span>Invoice</span>
                         <ExternalLink size={10} className="text-[#94a3b8]" />

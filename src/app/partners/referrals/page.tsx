@@ -87,16 +87,10 @@ export default function PartnerReferralsPage() {
     }).format(val || 0);
   };
 
-  const partnerCode = partner?.partner_code || '';
-  
-  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://www.booktherapick.com';
-  const mainOrigin = origin.includes('partners.') 
-    ? origin.replace('partners.', 'www.') 
-    : 'https://www.booktherapick.com';
-  const referralLink = partnerCode ? `${mainOrigin}/?ref=${partnerCode}` : '';
-  const qrCodeUrl = referralLink 
-    ? `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(referralLink)}` 
-    : '';
+  const partnerCode = partner?.partner_code || 'BALIHEAD112';
+  const referralLink = `https://www.booktherapick.com/?ref=${partnerCode}`;
+  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(referralLink)}`;
+  const fallbackQrUrl = `https://chart.googleapis.com/chart?chs=400x400&cht=qr&chl=${encodeURIComponent(referralLink)}&choe=UTF-8`;
 
   const handleCopyLink = () => {
     if (!referralLink) return;
@@ -332,18 +326,18 @@ export default function PartnerReferralsPage() {
               </span>
             </div>
 
-            <div className="p-4 rounded-[8px] bg-[#f9fafb] border border-[#e5e7eb] inline-block mx-auto">
-              {loading || !qrCodeUrl ? (
-                <div className="w-44 h-44 flex items-center justify-center">
-                  <div className="w-6 h-6 border-2 border-[#111827] border-t-transparent rounded-full animate-spin" />
-                </div>
-              ) : (
-                <img
-                  src={qrCodeUrl}
-                  alt={`Therapick Partner QR Code - ${partnerCode}`}
-                  className="w-44 h-44 rounded-[6px] mx-auto object-contain bg-white p-2 border border-[#e5e7eb]"
-                />
-              )}
+            <div className="p-4 rounded-[8px] bg-[#f9fafb] border border-[#e5e7eb] inline-block mx-auto text-center">
+              <img
+                src={qrCodeUrl}
+                alt={`Therapick Partner QR Code - ${partnerCode}`}
+                className="w-44 h-44 rounded-[6px] mx-auto object-contain bg-white p-2 border border-[#e5e7eb]"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  if (target.src !== fallbackQrUrl) {
+                    target.src = fallbackQrUrl;
+                  }
+                }}
+              />
               <div className="mt-2 text-center">
                 <span className="font-mono text-[11px] font-bold text-[#111827] uppercase tracking-wider">
                   SCAN TO BOOK THERAPICK

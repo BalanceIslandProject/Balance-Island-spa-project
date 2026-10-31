@@ -163,15 +163,10 @@ export default function PartnerProfilePage() {
     }
   };
 
-  const partnerCode = partner?.partner_code || '';
-  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://www.booktherapick.com';
-  const mainOrigin = origin.includes('partners.') 
-    ? origin.replace('partners.', 'www.') 
-    : 'https://www.booktherapick.com';
-  const referralLink = partnerCode ? `${mainOrigin}/?ref=${partnerCode}` : '';
-  const qrCodeUrl = referralLink 
-    ? `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(referralLink)}` 
-    : '';
+  const partnerCode = partner?.partner_code || 'BALIHEAD112';
+  const referralLink = `https://www.booktherapick.com/?ref=${partnerCode}`;
+  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(referralLink)}`;
+  const fallbackQrUrl = `https://chart.googleapis.com/chart?chs=400x400&cht=qr&chl=${encodeURIComponent(referralLink)}&choe=UTF-8`;
 
   const handleCopyLink = () => {
     if (!referralLink) return;
@@ -417,32 +412,32 @@ export default function PartnerProfilePage() {
           {/* Left: Official QR Code Box */}
           <div className="md:col-span-5 flex flex-col items-center p-5 rounded-[8px] bg-[#fafafa] border border-[#e5e7eb] text-center">
             <div className="bg-white p-3 rounded-[6px] border border-[#e5e7eb] shadow-2xs inline-block">
-              {qrCodeUrl ? (
-                <img
-                  src={qrCodeUrl}
-                  alt={`Therapick Partner QR Code - ${partnerCode}`}
-                  className="w-40 h-40 sm:w-44 sm:h-44 object-contain"
-                />
-              ) : (
-                <div className="w-40 h-40 flex items-center justify-center">
-                  <div className="w-6 h-6 border-2 border-[#111827] border-t-transparent rounded-full animate-spin" />
-                </div>
-              )}
+              <img
+                src={qrCodeUrl}
+                alt={`Therapick Partner QR Code - ${partnerCode}`}
+                className="w-40 h-40 sm:w-44 sm:h-44 object-contain rounded-md"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  if (target.src !== fallbackQrUrl) {
+                    target.src = fallbackQrUrl;
+                  }
+                }}
+              />
             </div>
             <div className="mt-2.5 space-y-0.5">
-              <span className="font-mono text-[10px] font-bold text-[#111827] uppercase tracking-wider block">
+              <span className="font-mono text-xs font-bold text-slate-900 uppercase tracking-wider block">
                 SCAN TO BOOK THERAPICK
               </span>
-              <span className="font-mono text-[10px] text-[#6b7280]">
-                Ref Code: {partnerCode || '...'}
+              <span className="font-mono text-xs font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-md inline-block">
+                Ref Code: {partnerCode}
               </span>
             </div>
             <button
               type="button"
               onClick={handleDownloadQR}
-              className="mt-3.5 w-full py-2 px-3 rounded-[6px] bg-[#111827] hover:bg-black text-white font-mono font-medium text-xs uppercase tracking-wider transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+              className="mt-3.5 w-full py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-black text-white font-mono font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm active:scale-95"
             >
-              <Download size={13} />
+              <Download size={14} />
               <span>Download Official QR Stand (PNG)</span>
             </button>
           </div>

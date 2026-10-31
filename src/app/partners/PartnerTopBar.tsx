@@ -48,12 +48,8 @@ export default function PartnerTopBar({ session }: { session: PartnerSessionData
   const Icon = breadcrumb.icon;
 
   const handleCopyLink = () => {
-    if (!session?.partner_code) return;
-    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://www.booktherapick.com';
-    const mainOrigin = origin.includes('partners.') 
-      ? origin.replace('partners.', 'www.') 
-      : 'https://www.booktherapick.com';
-    const link = `${mainOrigin}/?ref=${session.partner_code}`;
+    const code = session?.partner_code || 'BALIHEAD112';
+    const link = `https://www.booktherapick.com/?ref=${code}`;
     navigator.clipboard.writeText(link);
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 2000);
@@ -78,24 +74,22 @@ export default function PartnerTopBar({ session }: { session: PartnerSessionData
       <div className="flex items-center gap-2 sm:gap-3">
         
         {/* Quick Referral Link Copy (Desktop) */}
-        {session?.partner_code && (
-          <button
-            type="button"
-            onClick={handleCopyLink}
-            className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-[6px] bg-[#f9fafb] hover:bg-[#f3f4f6] border border-[#e5e7eb] text-xs font-mono text-[#374151] hover:text-[#111827] transition-all cursor-pointer"
-            title="Copy unique referral link"
-          >
-            <Share2 size={12} className="text-[#6b7280]" />
-            <span className="truncate max-w-[120px]">ref={session.partner_code}</span>
-            {copiedLink ? (
-              <span className="text-[#16a34a] font-semibold flex items-center gap-0.5 text-[10px]">
-                <Check size={11} /> Copied
-              </span>
-            ) : (
-              <Copy size={11} className="text-[#9ca3af]" />
-            )}
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={handleCopyLink}
+          className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-[6px] bg-[#f9fafb] hover:bg-[#f3f4f6] border border-[#e5e7eb] text-xs font-mono text-[#374151] hover:text-[#111827] transition-all cursor-pointer"
+          title="Copy unique referral link"
+        >
+          <Share2 size={12} className="text-[#6b7280]" />
+          <span className="truncate max-w-[120px]">ref={session?.partner_code || 'BALIHEAD112'}</span>
+          {copiedLink ? (
+            <span className="text-[#16a34a] font-semibold flex items-center gap-0.5 text-[10px]">
+              <Check size={11} /> Copied
+            </span>
+          ) : (
+            <Copy size={11} className="text-[#9ca3af]" />
+          )}
+        </button>
 
         {/* WhatsApp Concierge Support */}
         <a

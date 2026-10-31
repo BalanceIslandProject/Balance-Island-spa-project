@@ -624,32 +624,32 @@ export default function PartnerBookingsPage() {
           </div>
 
           {/* CRM Monthly Quick Performance Summary */}
-          <div className="p-4.5 rounded-2xl bg-white border border-[#eaecf0] shadow-xs space-y-2.5">
+          <div className="p-4.5 rounded-2xl bg-gradient-to-br from-emerald-50/90 via-teal-50/40 to-white border border-emerald-200/90 shadow-xs space-y-2.5">
             <div className="flex items-center justify-between">
-              <span className="font-mono text-[10px] uppercase tracking-wider text-[#64748b] font-semibold">
+              <span className="font-mono text-xs uppercase tracking-wider text-emerald-950 font-bold">
                 {MONTH_NAMES[currentMonth]} Overview
               </span>
-              <span className="font-mono text-[10px] font-semibold text-[#0f172a] bg-[#f8fafc] px-2 py-0.5 rounded-md border border-[#eaecf0]">
+              <span className="font-mono text-xs font-bold text-emerald-800 bg-emerald-100 border border-emerald-200 px-2 py-0.5 rounded-md">
                 {currentMonthStats.count} {currentMonthStats.count === 1 ? 'Booking' : 'Bookings'}
               </span>
             </div>
 
-            <div className="flex items-baseline justify-between pt-1 border-t border-[#f1f5f9]">
-              <span className="text-xs text-[#64748b]">Month Commission</span>
-              <span className="font-mono font-bold text-sm text-[#16a34a] tabular-nums">
+            <div className="flex items-baseline justify-between pt-1 border-t border-emerald-100">
+              <span className="text-xs font-bold text-emerald-900">Month Commission</span>
+              <span className="font-mono font-extrabold text-base text-emerald-700 tabular-nums">
                 +{formatIDR(currentMonthStats.earned)}
               </span>
             </div>
 
             {selectedDate && (
-              <div className="pt-2 border-t border-[#f1f5f9] flex items-center justify-between text-xs">
-                <span className="text-[11px] text-[#64748b] truncate">
-                  Filtered: <strong className="text-[#0f172a]">{formatFriendlyDate(selectedDate)}</strong>
+              <div className="pt-2 border-t border-emerald-100 flex items-center justify-between text-xs">
+                <span className="text-xs text-emerald-900 truncate">
+                  Filtered: <strong className="text-slate-900">{formatFriendlyDate(selectedDate)}</strong>
                 </span>
                 <button
                   type="button"
                   onClick={() => setSelectedDate(null)}
-                  className="text-[11px] font-mono text-[#dc2626] hover:underline cursor-pointer shrink-0 ml-2 font-medium"
+                  className="text-xs font-mono font-bold text-rose-600 hover:underline cursor-pointer shrink-0 ml-2"
                 >
                   Reset
                 </button>
@@ -663,118 +663,127 @@ export default function PartnerBookingsPage() {
            ═══════════════════════════════════════════════════════════════ */}
         <section className="flex-1 min-w-0 space-y-5">
           
-          {/* ─── Engaging Professional Affiliate CRM Metric Strip (Matches Reference Image) ─── */}
+          {/* ─── Colorful, Bold Affiliate CRM Metric Strip (No long text) ─── */}
           <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-3.5">
             
             {/* Total Bookings Card */}
-            <div className="p-4 sm:p-4.5 rounded-2xl bg-white border border-[#eaecf0] shadow-xs hover:border-[#cbd5e1] hover:shadow-sm transition-all group overflow-hidden">
+            <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-blue-50/90 via-sky-50/40 to-white border border-blue-200/90 shadow-xs hover:border-blue-300 hover:shadow-sm transition-all group overflow-hidden">
               <div className="flex items-center justify-between">
-                <span className="font-mono text-[10px] uppercase tracking-wider text-[#64748b] block font-semibold truncate">
+                <span className="font-mono text-xs uppercase tracking-wider text-blue-900 font-bold truncate">
                   TOTAL BOOKINGS
                 </span>
-                <span className="w-7 h-7 rounded-lg bg-[#f8fafc] border border-[#eaecf0] flex items-center justify-center text-[#475569] group-hover:bg-[#0f172a] group-hover:text-white transition-colors shrink-0">
-                  <Layers size={13} />
+                <span className="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-xs shadow-blue-500/25 shrink-0">
+                  <Layers size={14} />
                 </span>
               </div>
-              <span className="font-sans font-bold text-2xl sm:text-[28px] text-[#0f172a] mt-1.5 block tabular-nums tracking-tight leading-none">
+              <span className="font-sans font-extrabold text-2xl sm:text-[30px] text-blue-950 mt-2 block tabular-nums tracking-tight leading-none">
                 {metrics.total}
               </span>
-              <div className="flex items-center justify-between text-[11px] text-[#64748b] mt-2 pt-2 border-t border-[#f1f5f9]">
-                <span className="text-[#94a3b8]">All appointments</span>
-                <span className="font-mono text-[10px] text-[#0f172a] font-semibold bg-[#f1f5f9] px-2 py-0.5 rounded-md border border-[#e2e8f0]">
-                  {metrics.approvedCount + metrics.paidCount} confirmed
+              <div className="flex items-center justify-between text-xs mt-3 pt-2.5 border-t border-blue-100/80">
+                <span className="font-bold text-slate-700">Total Bookings</span>
+                <span className="font-mono text-xs font-bold text-blue-700 bg-blue-100/90 border border-blue-200 px-2 py-0.5 rounded-md">
+                  {metrics.approvedCount + metrics.paidCount} Confirmed
                 </span>
               </div>
             </div>
 
             {/* Approved Card */}
-            <div className="p-4 sm:p-4.5 rounded-2xl bg-white border border-[#eaecf0] shadow-xs hover:border-[#86efac] hover:shadow-sm transition-all overflow-hidden">
+            <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-emerald-50/90 via-teal-50/40 to-white border border-emerald-200/90 shadow-xs hover:border-emerald-300 hover:shadow-sm transition-all overflow-hidden">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5 min-w-0">
-                  <span className="w-2 h-2 rounded-full bg-[#16a34a] animate-pulse shrink-0" />
-                  <span className="font-mono text-[10px] uppercase tracking-wider text-[#15803d] font-bold truncate">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                  <span className="font-mono text-xs uppercase tracking-wider text-emerald-900 font-bold truncate">
                     APPROVED
                   </span>
                 </div>
-                <span className="font-mono text-[9px] uppercase font-bold text-[#15803d] bg-[#dcfce7] px-2 py-0.5 rounded-full border border-[#bbf7d0] shrink-0">
+                <span className="font-mono text-[10px] uppercase font-bold text-white bg-emerald-600 px-2.5 py-0.5 rounded-full shadow-xs shadow-emerald-500/20 shrink-0">
                   READY TO PAY
                 </span>
               </div>
-              <span className="font-mono font-bold text-xl sm:text-[23px] text-[#0f172a] mt-1.5 block tabular-nums tracking-tight leading-none truncate">
+              <span className="font-mono font-extrabold text-xl sm:text-[25px] text-emerald-950 mt-2 block tabular-nums tracking-tight leading-none truncate">
                 {formatIDR(metrics.approvedTotal)}
               </span>
-              <div className="flex items-center justify-between text-[11px] text-[#64748b] mt-2 pt-2 border-t border-[#f1f5f9]">
-                <span className="text-[#94a3b8]">Ready for bank transfer</span>
-                <span className="font-mono text-[10px] text-[#15803d] font-bold">
-                  {metrics.approvedCount} orders
+              <div className="flex items-center justify-between text-xs mt-3 pt-2.5 border-t border-emerald-100/80">
+                <span className="font-bold text-emerald-900">Transfer</span>
+                <span className="font-mono text-xs font-bold text-emerald-700 bg-emerald-100/90 border border-emerald-200 px-2 py-0.5 rounded-md">
+                  {metrics.approvedCount} Orders
                 </span>
               </div>
             </div>
 
             {/* Pending Card */}
-            <div className="p-4 sm:p-4.5 rounded-2xl bg-white border border-[#eaecf0] shadow-xs hover:border-[#fde68a] hover:shadow-sm transition-all overflow-hidden">
+            <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-amber-50/90 via-orange-50/40 to-white border border-amber-200/90 shadow-xs hover:border-amber-300 hover:shadow-sm transition-all overflow-hidden">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5 min-w-0">
-                  <span className="w-2 h-2 rounded-full bg-[#d97706] shrink-0" />
-                  <span className="font-mono text-[10px] uppercase tracking-wider text-[#b45309] font-bold truncate">
+                  <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0" />
+                  <span className="font-mono text-xs uppercase tracking-wider text-amber-900 font-bold truncate">
                     PENDING
                   </span>
                 </div>
-                <span className="font-mono text-[9px] uppercase font-bold text-[#b45309] bg-[#fef3c7] px-2 py-0.5 rounded-full border border-[#fde68a] shrink-0">
+                <span className="font-mono text-[10px] uppercase font-bold text-white bg-amber-500 px-2.5 py-0.5 rounded-full shadow-xs shadow-amber-500/20 shrink-0">
                   IN ESCROW
                 </span>
               </div>
-              <span className="font-mono font-bold text-xl sm:text-[23px] text-[#0f172a] mt-1.5 block tabular-nums tracking-tight leading-none truncate">
+              <span className="font-mono font-extrabold text-xl sm:text-[25px] text-amber-950 mt-2 block tabular-nums tracking-tight leading-none truncate">
                 {formatIDR(metrics.pendingTotal)}
               </span>
-              <div className="flex items-center justify-between text-[11px] text-[#64748b] mt-2 pt-2 border-t border-[#f1f5f9]">
-                <span className="text-[#94a3b8]">Awaiting ritual completion</span>
-                <span className="font-mono text-[10px] text-[#b45309] font-bold">
-                  {metrics.pendingCount} active
+              <div className="flex items-center justify-between text-xs mt-3 pt-2.5 border-t border-amber-100/80">
+                <span className="font-bold text-amber-900">In Ritual</span>
+                <span className="font-mono text-xs font-bold text-amber-700 bg-amber-100/90 border border-amber-200 px-2 py-0.5 rounded-md">
+                  {metrics.pendingCount} Active
                 </span>
               </div>
             </div>
 
             {/* Paid Out Card */}
-            <div className="p-4 sm:p-4.5 rounded-2xl bg-white border border-[#eaecf0] shadow-xs hover:border-[#94a3b8] hover:shadow-sm transition-all overflow-hidden">
+            <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-indigo-50/90 via-purple-50/40 to-white border border-indigo-200/90 shadow-xs hover:border-indigo-300 hover:shadow-sm transition-all overflow-hidden">
               <div className="flex items-center justify-between">
-                <span className="font-mono text-[10px] uppercase tracking-wider text-[#0f172a] block font-bold truncate">
+                <span className="font-mono text-xs uppercase tracking-wider text-indigo-900 font-bold truncate">
                   PAID OUT
                 </span>
-                <span className="font-mono text-[9px] uppercase font-bold text-white bg-[#0f172a] px-2 py-0.5 rounded-full shadow-2xs shrink-0">
+                <span className="font-mono text-[10px] uppercase font-bold text-white bg-indigo-600 px-2.5 py-0.5 rounded-full shadow-xs shadow-indigo-500/20 shrink-0">
                   DISBURSED
                 </span>
               </div>
-              <span className="font-mono font-bold text-xl sm:text-[23px] text-[#0f172a] mt-1.5 block tabular-nums tracking-tight leading-none truncate">
+              <span className="font-mono font-extrabold text-xl sm:text-[25px] text-indigo-950 mt-2 block tabular-nums tracking-tight leading-none truncate">
                 {formatIDR(metrics.paidTotal)}
               </span>
-              <div className="flex items-center justify-between text-[11px] text-[#64748b] mt-2 pt-2 border-t border-[#f1f5f9]">
-                <span className="text-[#94a3b8]">Disbursed to bank account</span>
-                <span className="font-mono text-[10px] text-[#0f172a] font-bold">
-                  {metrics.paidCount} payouts
+              <div className="flex items-center justify-between text-xs mt-3 pt-2.5 border-t border-indigo-100/80">
+                <span className="font-bold text-indigo-900">Settled</span>
+                <span className="font-mono text-xs font-bold text-indigo-700 bg-indigo-100/90 border border-indigo-200 px-2 py-0.5 rounded-md">
+                  {metrics.paidCount} Payouts
                 </span>
               </div>
             </div>
           </div>
 
-          {/* ─── Search and Filter Tabs (Segmented Container from Reference) ─── */}
+          {/* ─── Search and Filter Tabs (Colorful & Bold Segmented Controls) ─── */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
             {/* Filter Pills */}
-            <div className="flex items-center gap-1 bg-[#f1f5f9] p-1 rounded-xl border border-[#e2e8f0] overflow-x-auto no-scrollbar shrink-0">
-              {(['all', 'approved', 'pending', 'paid', 'cancelled'] as const).map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => setStatusFilter(s)}
-                  className={`px-3.5 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider font-mono transition-all cursor-pointer whitespace-nowrap ${
-                    statusFilter === s
-                      ? 'bg-[#0f172a] text-white shadow-xs'
-                      : 'text-[#64748b] hover:text-[#0f172a]'
-                  }`}
-                >
-                  {s === 'paid' ? 'PAID OUT' : s}
-                </button>
-              ))}
+            <div className="flex items-center gap-1.5 bg-slate-100 p-1.5 rounded-2xl border border-slate-200 overflow-x-auto no-scrollbar shrink-0">
+              {(['all', 'approved', 'pending', 'paid', 'cancelled'] as const).map((s) => {
+                const isSelected = statusFilter === s;
+                let activeClass = 'bg-slate-900 text-white shadow-xs';
+                if (s === 'approved') activeClass = 'bg-emerald-600 text-white shadow-xs shadow-emerald-500/20';
+                else if (s === 'pending') activeClass = 'bg-amber-500 text-white shadow-xs shadow-amber-500/20';
+                else if (s === 'paid') activeClass = 'bg-indigo-600 text-white shadow-xs shadow-indigo-500/20';
+                else if (s === 'cancelled') activeClass = 'bg-rose-600 text-white shadow-xs shadow-rose-500/20';
+
+                return (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => setStatusFilter(s)}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider font-mono transition-all cursor-pointer whitespace-nowrap ${
+                      isSelected
+                        ? activeClass
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-white/80'
+                    }`}
+                  >
+                    {s === 'paid' ? 'PAID OUT' : s}
+                  </button>
+                );
+              })}
             </div>
 
             {/* View Switcher & Search Input */}
@@ -934,19 +943,19 @@ export default function PartnerBookingsPage() {
                             {/* Status */}
                             <td className="py-4 px-4 text-center whitespace-nowrap">
                               {isPaidOut ? (
-                                <span className="font-mono text-[9px] font-bold text-white bg-[#0f172a] px-2.5 py-1 rounded-full uppercase tracking-wider shadow-2xs">
+                                <span className="font-mono text-[10px] font-bold text-white bg-indigo-600 px-3 py-1 rounded-full uppercase tracking-wider shadow-xs shadow-indigo-500/20">
                                   PAID OUT
                                 </span>
                               ) : isApproved ? (
-                                <span className="font-mono text-[9px] font-bold text-[#15803d] bg-[#dcfce7] px-2.5 py-1 rounded-full uppercase tracking-wider border border-[#bbf7d0]">
+                                <span className="font-mono text-[10px] font-bold text-emerald-800 bg-emerald-100/90 px-3 py-1 rounded-full uppercase tracking-wider border border-emerald-300">
                                   Approved
                                 </span>
                               ) : isCancelled ? (
-                                <span className="font-mono text-[9px] font-bold text-[#b91c1c] bg-[#fee2e2] px-2.5 py-1 rounded-full uppercase tracking-wider border border-[#fecaca]">
+                                <span className="font-mono text-[10px] font-bold text-rose-800 bg-rose-100/90 px-3 py-1 rounded-full uppercase tracking-wider border border-rose-300">
                                   Cancelled
                                 </span>
                               ) : (
-                                <span className="font-mono text-[9px] font-bold text-[#b45309] bg-[#fef3c7] px-2.5 py-1 rounded-full uppercase tracking-wider border border-[#fde68a]">
+                                <span className="font-mono text-[10px] font-bold text-amber-800 bg-amber-100/90 px-3 py-1 rounded-full uppercase tracking-wider border border-amber-300">
                                   Pending
                                 </span>
                               )}
@@ -958,20 +967,20 @@ export default function PartnerBookingsPage() {
                                 <button
                                   type="button"
                                   onClick={() => setTrackingBooking(b)}
-                                  className="h-7 px-3 rounded-lg bg-[#0f172a] hover:bg-black text-[11px] font-medium text-white inline-flex items-center gap-1.5 cursor-pointer transition-all shadow-2xs active:scale-95"
+                                  className="h-7.5 px-3.5 rounded-xl bg-slate-900 hover:bg-black text-xs font-bold text-white inline-flex items-center gap-1.5 cursor-pointer transition-all shadow-xs active:scale-95"
                                   title="Track schedule & booking details"
                                 >
-                                  <Clock size={11} className="text-[#cbd5e1]" />
+                                  <Clock size={12} className="text-slate-300" />
                                   <span>Track</span>
                                 </button>
                                 <Link
                                   href={`/invoice/${b.booking_id}`}
                                   target="_blank"
-                                  className="text-[11px] font-medium text-[#64748b] hover:text-[#0f172a] inline-flex items-center gap-0.5 hover:underline px-1.5 py-1"
+                                  className="text-xs font-bold text-slate-600 hover:text-slate-900 inline-flex items-center gap-0.5 hover:underline px-2 py-1"
                                   title="View invoice"
                                 >
                                   <span>Invoice</span>
-                                  <ExternalLink size={10} />
+                                  <ExternalLink size={11} />
                                 </Link>
                               </div>
                             </td>
@@ -1024,19 +1033,19 @@ export default function PartnerBookingsPage() {
                         </div>
                         <div className="shrink-0">
                           {isPaidOut ? (
-                            <span className="font-mono text-[9px] font-bold text-white bg-[#0f172a] px-2.5 py-0.5 rounded-full uppercase tracking-wider shadow-2xs">
+                            <span className="font-mono text-[10px] font-bold text-white bg-indigo-600 px-3 py-1 rounded-full uppercase tracking-wider shadow-xs shadow-indigo-500/20">
                               PAID OUT
                             </span>
                           ) : isApproved ? (
-                            <span className="font-mono text-[9px] font-bold text-[#15803d] bg-[#dcfce7] px-2.5 py-0.5 rounded-full uppercase tracking-wider border border-[#bbf7d0]">
+                            <span className="font-mono text-[10px] font-bold text-emerald-800 bg-emerald-100/90 px-3 py-1 rounded-full uppercase tracking-wider border border-emerald-300">
                               Approved
                             </span>
                           ) : isCancelled ? (
-                            <span className="font-mono text-[9px] font-bold text-[#b91c1c] bg-[#fee2e2] px-2.5 py-0.5 rounded-full uppercase tracking-wider border border-[#fecaca]">
+                            <span className="font-mono text-[10px] font-bold text-rose-800 bg-rose-100/90 px-3 py-1 rounded-full uppercase tracking-wider border border-rose-300">
                               Cancelled
                             </span>
                           ) : (
-                            <span className="font-mono text-[9px] font-bold text-[#b45309] bg-[#fef3c7] px-2.5 py-0.5 rounded-full uppercase tracking-wider border border-[#fde68a]">
+                            <span className="font-mono text-[10px] font-bold text-amber-800 bg-amber-100/90 px-3 py-1 rounded-full uppercase tracking-wider border border-amber-300">
                               Pending
                             </span>
                           )}
@@ -1048,16 +1057,16 @@ export default function PartnerBookingsPage() {
                         <button
                           type="button"
                           onClick={() => setTrackingBooking(b)}
-                          className="flex-1 h-8.5 rounded-xl bg-[#0f172a] hover:bg-black text-white text-xs font-medium inline-flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.98] transition-transform shadow-xs"
+                          className="flex-1 h-9 rounded-xl bg-slate-900 hover:bg-black text-white text-xs font-bold inline-flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.98] transition-transform shadow-xs"
                         >
-                          <Clock size={12} className="text-[#cbd5e1]" />
+                          <Clock size={13} className="text-slate-300" />
                           <span>Track</span>
                         </button>
 
                         <Link
                           href={`/invoice/${b.booking_id}`}
                           target="_blank"
-                          className="h-8.5 px-3.5 rounded-xl border border-[#e2e8f0] bg-white hover:bg-[#f8fafc] text-[#334155] text-xs font-medium inline-flex items-center justify-center gap-1 active:scale-[0.98] transition-transform shadow-2xs"
+                          className="h-9 px-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 text-xs font-bold inline-flex items-center justify-center gap-1 active:scale-[0.98] transition-transform shadow-2xs"
                         >
                           <span>Invoice</span>
                           <ExternalLink size={10} className="text-[#94a3b8]" />

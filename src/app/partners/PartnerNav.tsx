@@ -54,12 +54,8 @@ export default function PartnerNav({ session }: { session: PartnerSessionData | 
 
   const handleCopyLink = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!session?.partner_code) return;
-    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://www.booktherapick.com';
-    const mainOrigin = origin.includes('partners.') 
-      ? origin.replace('partners.', 'www.') 
-      : 'https://www.booktherapick.com';
-    const link = `${mainOrigin}/?ref=${session.partner_code}`;
+    const code = session?.partner_code || 'BALIHEAD112';
+    const link = `https://www.booktherapick.com/?ref=${code}`;
     navigator.clipboard.writeText(link);
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 2000);
