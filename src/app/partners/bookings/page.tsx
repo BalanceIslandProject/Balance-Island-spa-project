@@ -42,6 +42,7 @@ export default function PartnerBookingsPage() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [trackingBooking, setTrackingBooking] = useState<CalendarBooking | null>(null);
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
+  const [showMobileCalendar, setShowMobileCalendar] = useState(false);
   
   // Date filtering and calendar navigation
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -402,12 +403,36 @@ export default function PartnerBookingsPage() {
       </div>
 
       {/* ─── Main Content Split: Left Corner Calendar + Right Booking Details ─── */}
-      <div className="flex flex-col lg:flex-row lg:items-start gap-6">
+      <div className="flex flex-col lg:flex-row lg:items-start gap-5 lg:gap-6">
+
+        {/* ─── Mobile App Calendar Header Bar (< lg) ─── */}
+        <div className="lg:hidden w-full flex items-center justify-between p-3 rounded-2xl bg-white border border-[#ebebeb] shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-8 h-8 rounded-xl bg-[#fafafa] border border-[#ebebeb] flex items-center justify-center text-[#171717] shrink-0">
+              <CalendarIcon size={15} />
+            </div>
+            <div className="min-w-0">
+              <div className="font-semibold text-xs text-[#171717] truncate">
+                {MONTH_NAMES[currentMonth]} {currentYear}
+              </div>
+              <div className="text-[11px] text-[#8f8f8f] font-mono truncate">
+                {currentMonthStats.count} bookings · +{formatIDR(currentMonthStats.earned)}
+              </div>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowMobileCalendar(!showMobileCalendar)}
+            className="px-3 py-1.5 rounded-full bg-[#fafafa] hover:bg-[#ebebeb] border border-[#ebebeb] text-xs font-mono font-medium text-[#171717] shrink-0 active:scale-95 transition-all cursor-pointer"
+          >
+            {showMobileCalendar ? 'Hide' : 'Calendar'}
+          </button>
+        </div>
 
         {/* ═══════════════════════════════════════════════════════════════
             LEFT CORNER: Modern Compact Calendar Widget (Matches Ref Image)
            ═══════════════════════════════════════════════════════════════ */}
-        <aside className="w-full lg:w-[280px] xl:w-[295px] shrink-0 space-y-3.5 lg:sticky lg:top-4 self-start">
+        <aside className={`w-full lg:w-[280px] xl:w-[295px] shrink-0 space-y-3.5 lg:sticky lg:top-4 self-start ${showMobileCalendar ? 'block' : 'hidden lg:block'}`}>
           
           {/* Calendar Card Box */}
           <div className="bg-white border border-[#ebebeb] rounded-2xl p-4 sm:p-5 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
@@ -851,14 +876,13 @@ export default function PartnerBookingsPage() {
                   <table className="w-full text-left text-xs">
                     <thead className="bg-[#fafafa] border-b border-[#ebebeb] font-mono text-[10px] uppercase tracking-[0.071em] text-[#666666]">
                       <tr>
-                        <th className="py-3 px-3.5">Date</th>
-                        <th className="py-3 px-3.5">Invoice #</th>
-                        <th className="py-3 px-3.5">Guest & Treatment</th>
-                        <th className="py-3 px-3.5 text-right">Treatment Net</th>
-                        <th className="py-3 px-3.5 text-center">Rate</th>
-                        <th className="py-3 px-3.5 text-right">Earned</th>
-                        <th className="py-3 px-3.5 text-center">Status</th>
-                        <th className="py-3 px-3.5 text-right">Actions</th>
+                        <th className="py-3 px-4">Date</th>
+                        <th className="py-3 px-4">Invoice #</th>
+                        <th className="py-3 px-4 text-right">Treatment Net</th>
+                        <th className="py-3 px-4 text-center">Rate</th>
+                        <th className="py-3 px-4 text-right">Earned</th>
+                        <th className="py-3 px-4 text-center">Status</th>
+                        <th className="py-3 px-4 text-right">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#ebebeb]">
@@ -870,13 +894,13 @@ export default function PartnerBookingsPage() {
                         return (
                           <tr key={b.id || b.booking_id} className="hover:bg-[#fafafa] transition-colors">
                             {/* Date */}
-                            <td className="py-3 px-3.5 font-mono text-[11px] text-[#666666] whitespace-nowrap">
+                            <td className="py-3.5 px-4 font-mono text-[11px] text-[#666666] whitespace-nowrap">
                               {formatFriendlyDate(b.date)}
                             </td>
 
                             {/* Invoice # */}
-                            <td className="py-3 px-3.5 whitespace-nowrap">
-                              <div className="flex items-center gap-1 font-mono text-xs font-semibold text-[#171717]">
+                            <td className="py-3.5 px-4 whitespace-nowrap">
+                              <div className="flex items-center gap-1.5 font-mono text-xs font-semibold text-[#171717]">
                                 <Link href={`/invoice/${b.booking_id}`} target="_blank" className="hover:underline">
                                   #{b.booking_id}
                                 </Link>
@@ -891,40 +915,25 @@ export default function PartnerBookingsPage() {
                               </div>
                             </td>
 
-                            {/* Guest & Treatment (Stacked like Commissions) */}
-                            <td className="py-3 px-3.5 min-w-[150px] max-w-[220px]">
-                              <div className="font-semibold text-xs text-[#171717] truncate">
-                                {b.guest_name || 'Guest'}
-                              </div>
-                              <div className="text-[11px] text-[#666666] truncate flex items-center gap-1 mt-0.5">
-                                <span className="truncate">{b.treatment_name || 'Spa Treatment'}</span>
-                                {b.duration && (
-                                  <span className="font-mono text-[10px] text-[#8f8f8f] shrink-0">
-                                    ({b.duration})
-                                  </span>
-                                )}
-                              </div>
-                            </td>
-
                             {/* Treatment Net */}
-                            <td className="py-3 px-3.5 font-mono text-right text-xs text-[#171717] whitespace-nowrap tabular-nums">
+                            <td className="py-3.5 px-4 font-mono text-right text-xs text-[#171717] whitespace-nowrap tabular-nums">
                               {formatIDR(b.treatment_amount || b.gross_amount)}
                             </td>
 
                             {/* Rate */}
-                            <td className="py-3 px-3.5 font-mono text-center text-xs text-[#666666] whitespace-nowrap tabular-nums">
+                            <td className="py-3.5 px-4 font-mono text-center text-xs text-[#666666] whitespace-nowrap tabular-nums">
                               {b.commission_rate_pct || 10}%
                             </td>
 
                             {/* Earned */}
-                            <td className="py-3 px-3.5 font-mono text-right font-bold text-xs whitespace-nowrap tabular-nums">
+                            <td className="py-3.5 px-4 font-mono text-right font-bold text-xs whitespace-nowrap tabular-nums">
                               <span className={isCancelled ? 'line-through text-[#8f8f8f]' : 'text-[#297a3a]'}>
                                 {isCancelled ? 'Rp0' : `+${formatIDR(b.commission_amount)}`}
                               </span>
                             </td>
 
                             {/* Status */}
-                            <td className="py-3 px-3.5 text-center whitespace-nowrap">
+                            <td className="py-3.5 px-4 text-center whitespace-nowrap">
                               {isPaidOut ? (
                                 <span className="font-mono text-[9px] font-semibold text-white bg-[#171717] px-2 py-0.5 rounded uppercase">
                                   PAID OUT
@@ -945,15 +954,15 @@ export default function PartnerBookingsPage() {
                             </td>
 
                             {/* Actions: Track button + Invoice */}
-                            <td className="py-3 px-3.5 text-right whitespace-nowrap">
-                              <div className="flex items-center justify-end gap-1.5">
+                            <td className="py-3.5 px-4 text-right whitespace-nowrap">
+                              <div className="flex items-center justify-end gap-2">
                                 <button
                                   type="button"
                                   onClick={() => setTrackingBooking(b)}
-                                  className="h-6 px-2 rounded-[4px] bg-[#fafafa] hover:bg-[#ebebeb] border border-[#ebebeb] text-[11px] font-mono text-[#171717] inline-flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
-                                  title="Track schedule"
+                                  className="h-6.5 px-2.5 rounded-[5px] bg-[#171717] hover:bg-black text-[11px] font-mono text-white inline-flex items-center gap-1 cursor-pointer transition-all shadow-2xs active:scale-95"
+                                  title="Track schedule & booking details"
                                 >
-                                  <Clock size={10} className="text-[#666666]" />
+                                  <Clock size={10} className="text-[#a3a3a3]" />
                                   <span>Track</span>
                                 </button>
                                 <Link
@@ -975,7 +984,7 @@ export default function PartnerBookingsPage() {
                 </div>
               </div>
 
-              {/* Mobile Responsive Booking Cards (< 768px) */}
+              {/* Mobile App Booking Cards (< 768px) */}
               <div className="md:hidden space-y-2.5">
                 {filteredBookings.map((b) => {
                   const isCancelled = b.commission_status === 'cancelled' || b.booking_status === 'Cancelled';
@@ -985,87 +994,74 @@ export default function PartnerBookingsPage() {
                   return (
                     <div
                       key={b.id || b.booking_id}
-                      className="p-3.5 rounded-[8px] bg-white border border-[#ebebeb] space-y-2.5 shadow-2xs overflow-hidden"
+                      className="p-3.5 rounded-2xl bg-white border border-[#ebebeb] space-y-2.5 shadow-[0_1px_4px_rgba(0,0,0,0.02)] overflow-hidden"
                     >
+                      {/* Top Row: Invoice # + Date + Earned */}
                       <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-1.5 shrink-0">
-                          {isPaidOut ? (
-                            <span className="font-mono text-[9px] font-semibold text-white bg-[#171717] px-1.5 py-0.5 rounded uppercase">
-                              PAID OUT
-                            </span>
-                          ) : isApproved ? (
-                            <span className="font-mono text-[9px] font-semibold text-[#137333] bg-[#e6f4ea] px-1.5 py-0.5 rounded uppercase border border-[#ceead6]">
-                              Approved
-                            </span>
-                          ) : isCancelled ? (
-                            <span className="font-mono text-[9px] font-semibold text-[#c5221f] bg-[#fce8e6] px-1.5 py-0.5 rounded uppercase border border-[#fad2cf]">
-                              Cancelled
-                            </span>
-                          ) : (
-                            <span className="font-mono text-[9px] font-semibold text-[#b06000] bg-[#fef7e0] px-1.5 py-0.5 rounded uppercase border border-[#feefc3]">
-                              Pending
-                            </span>
-                          )}
-                          <span className="font-mono text-[11px] text-[#666666]">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <Link
+                            href={`/invoice/${b.booking_id}`}
+                            target="_blank"
+                            className="font-mono text-xs font-bold text-[#171717] hover:underline"
+                          >
+                            #{b.booking_id}
+                          </Link>
+                          <span className="text-[#ebebeb]">·</span>
+                          <span className="font-mono text-[11px] text-[#8f8f8f]">
                             {formatFriendlyDate(b.date)}
                           </span>
                         </div>
-
-                        <div className="flex items-center gap-1 font-mono text-xs font-semibold text-[#171717] shrink-0">
-                          <span>#{b.booking_id}</span>
-                          <button
-                            type="button"
-                            onClick={() => handleCopy(b.booking_id)}
-                            className="text-[#8f8f8f] hover:text-[#171717] p-0.5 cursor-pointer"
-                          >
-                            {copiedId === b.booking_id ? <Check size={11} className="text-[#297a3a]" /> : <Copy size={11} />}
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className="pt-2 border-t border-[#f3f4f6] min-w-0">
-                        <div className="font-semibold text-xs text-[#171717] truncate">
-                          {b.guest_name || 'Guest'}
-                        </div>
-                        <div className="text-[11px] text-[#666666] truncate mt-0.5">
-                          {b.treatment_name || 'Spa Treatment'}{b.duration ? ` · ${b.duration}` : ''}
-                        </div>
-                      </div>
-
-                      <div className="pt-2 border-t border-[#f3f4f6] flex items-center justify-between text-xs">
-                        <div className="min-w-0">
-                          <span className="font-mono text-[9px] uppercase text-[#8f8f8f] block">Net</span>
-                          <span className="font-mono font-medium text-[#171717] tabular-nums">
-                            {formatIDR(b.treatment_amount || b.gross_amount)}
-                          </span>
-                        </div>
-                        <div className="text-right min-w-0">
-                          <span className="font-mono text-[9px] uppercase text-[#297a3a] block">
-                            Earned ({b.commission_rate_pct || 10}%)
-                          </span>
-                          <span className={`font-mono font-bold tabular-nums ${isCancelled ? 'line-through text-[#8f8f8f]' : 'text-[#297a3a]'}`}>
+                        <div className="text-right shrink-0">
+                          <span className={`font-mono font-bold text-xs sm:text-sm tabular-nums ${isCancelled ? 'line-through text-[#8f8f8f]' : 'text-[#297a3a]'}`}>
                             {isCancelled ? 'Rp0' : `+${formatIDR(b.commission_amount)}`}
                           </span>
                         </div>
                       </div>
 
-                      <div className="pt-2 border-t border-[#f3f4f6] flex items-center justify-between">
+                      {/* Middle Row: Net & Rate + Status Badge */}
+                      <div className="pt-2 border-t border-[#f3f4f6] flex items-center justify-between text-xs">
+                        <div className="font-mono text-[11px] text-[#666666]">
+                          Net {formatIDR(b.treatment_amount || b.gross_amount)} · {b.commission_rate_pct || 10}%
+                        </div>
+                        <div className="shrink-0">
+                          {isPaidOut ? (
+                            <span className="font-mono text-[9px] font-semibold text-white bg-[#171717] px-2 py-0.5 rounded-[4px] uppercase">
+                              PAID OUT
+                            </span>
+                          ) : isApproved ? (
+                            <span className="font-mono text-[9px] font-semibold text-[#137333] bg-[#e6f4ea] px-2 py-0.5 rounded-[4px] uppercase border border-[#ceead6]">
+                              Approved
+                            </span>
+                          ) : isCancelled ? (
+                            <span className="font-mono text-[9px] font-semibold text-[#c5221f] bg-[#fce8e6] px-2 py-0.5 rounded-[4px] uppercase border border-[#fad2cf]">
+                              Cancelled
+                            </span>
+                          ) : (
+                            <span className="font-mono text-[9px] font-semibold text-[#b06000] bg-[#fef7e0] px-2 py-0.5 rounded-[4px] uppercase border border-[#feefc3]">
+                              Pending
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Native App Actions Bar: Full-width Track CTA + Invoice Button */}
+                      <div className="pt-2 border-t border-[#f3f4f6] flex items-center gap-2">
                         <button
                           type="button"
                           onClick={() => setTrackingBooking(b)}
-                          className="h-6.5 px-2.5 rounded-[4px] bg-[#fafafa] hover:bg-[#ebebeb] border border-[#ebebeb] text-xs font-mono text-[#171717] inline-flex items-center gap-1 cursor-pointer transition-colors"
+                          className="flex-1 h-8 rounded-xl bg-[#171717] hover:bg-black text-white text-xs font-mono font-medium inline-flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.98] transition-transform shadow-xs"
                         >
-                          <Clock size={11} className="text-[#666666]" />
+                          <Clock size={12} className="text-[#a3a3a3]" />
                           <span>Track</span>
                         </button>
 
                         <Link
                           href={`/invoice/${b.booking_id}`}
                           target="_blank"
-                          className="text-xs font-mono text-[#666666] hover:text-[#171717] inline-flex items-center gap-1 hover:underline"
+                          className="h-8 px-3 rounded-xl bg-[#f5f5f5] hover:bg-[#ebebeb] text-[#171717] text-xs font-mono font-medium inline-flex items-center justify-center gap-1 active:scale-[0.98] transition-transform"
                         >
                           <span>Invoice</span>
-                          <ExternalLink size={10} />
+                          <ExternalLink size={10} className="text-[#8f8f8f]" />
                         </Link>
                       </div>
                     </div>
@@ -1084,7 +1080,7 @@ export default function PartnerBookingsPage() {
                 return (
                   <div
                     key={b.id || b.booking_id}
-                    className="p-3.5 sm:p-4 rounded-[8px] bg-white border border-[#ebebeb] space-y-2.5 hover:border-[#171717]/40 transition-colors shadow-2xs overflow-hidden"
+                    className="p-3.5 sm:p-4 rounded-2xl bg-white border border-[#ebebeb] space-y-2.5 hover:border-[#171717]/40 transition-colors shadow-2xs overflow-hidden"
                   >
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-1.5 shrink-0">
@@ -1122,25 +1118,16 @@ export default function PartnerBookingsPage() {
                       </div>
                     </div>
 
-                    <div className="pt-2 border-t border-[#f3f4f6] min-w-0">
-                      <div className="font-semibold text-xs text-[#171717] truncate">
-                        {b.guest_name || 'Guest'}
-                      </div>
-                      <div className="text-[11px] text-[#666666] truncate mt-0.5">
-                        {b.treatment_name || 'Spa Treatment'}{b.duration ? ` · ${b.duration}` : ''}
-                      </div>
-                    </div>
-
                     <div className="pt-2 border-t border-[#f3f4f6] flex items-center justify-between text-xs">
                       <div>
                         <span className="font-mono text-[9px] uppercase text-[#8f8f8f] block">Net</span>
                         <span className="font-mono font-medium text-[#171717] tabular-nums">
-                          {formatIDR(b.treatment_amount || b.gross_amount)}
+                          {formatIDR(b.treatment_amount || b.gross_amount)} · {b.commission_rate_pct || 10}%
                         </span>
                       </div>
                       <div className="text-right">
                         <span className="font-mono text-[9px] uppercase text-[#297a3a] block">
-                          Earned ({b.commission_rate_pct || 10}%)
+                          Earned
                         </span>
                         <span className={`font-mono font-bold tabular-nums ${isCancelled ? 'line-through text-[#8f8f8f]' : 'text-[#297a3a]'}`}>
                           {isCancelled ? 'Rp0' : `+${formatIDR(b.commission_amount)}`}
@@ -1152,9 +1139,9 @@ export default function PartnerBookingsPage() {
                       <button
                         type="button"
                         onClick={() => setTrackingBooking(b)}
-                        className="h-6.5 px-2.5 rounded-[4px] bg-[#fafafa] hover:bg-[#ebebeb] border border-[#ebebeb] text-xs font-mono text-[#171717] inline-flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
+                        className="h-7 px-3 rounded-xl bg-[#171717] hover:bg-black text-white text-xs font-mono font-medium inline-flex items-center gap-1.5 cursor-pointer transition-colors shadow-2xs active:scale-95"
                       >
-                        <Clock size={11} className="text-[#666666]" />
+                        <Clock size={11} className="text-[#a3a3a3]" />
                         <span>Track</span>
                       </button>
 

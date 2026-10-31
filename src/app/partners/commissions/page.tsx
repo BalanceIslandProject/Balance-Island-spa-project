@@ -461,103 +461,187 @@ export default function PartnerCommissionsPage() {
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-[#f9fafb] border-b border-[#e5e7eb] text-[11px] font-medium text-[#6b7280]">
-                <tr>
-                  <th className="py-3 px-4 w-8">
-                    <input type="checkbox" className="rounded-[4px] border-[#d1d5db]" readOnly />
-                  </th>
-                  <th className="py-3 px-4">Date</th>
-                  <th className="py-3 px-4">Invoice #</th>
-                  <th className="py-3 px-4">Guest & Treatment</th>
-                  <th className="py-3 px-4">Treatment Net</th>
-                  <th className="py-3 px-4">Rate</th>
-                  <th className="py-3 px-4">Commission</th>
-                  <th className="py-3 px-4">Status</th>
-                  <th className="py-3 px-4 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#f3f4f6]">
-                {filtered.map((item, idx) => {
-                  const isPaid = item.status === 'paid';
-                  const isApproved = item.status === 'approved';
-                  const isCancelled = item.status === 'cancelled';
+          <>
+            {/* Desktop Table (>= 768px) */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-[#f9fafb] border-b border-[#e5e7eb] text-[11px] font-medium text-[#6b7280]">
+                  <tr>
+                    <th className="py-3 px-4 w-8">
+                      <input type="checkbox" className="rounded-[4px] border-[#d1d5db]" readOnly />
+                    </th>
+                    <th className="py-3 px-4">Date</th>
+                    <th className="py-3 px-4">Invoice #</th>
+                    <th className="py-3 px-4">Treatment Net</th>
+                    <th className="py-3 px-4">Rate</th>
+                    <th className="py-3 px-4">Commission</th>
+                    <th className="py-3 px-4">Status</th>
+                    <th className="py-3 px-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#f3f4f6]">
+                  {filtered.map((item, idx) => {
+                    const isPaid = item.status === 'paid';
+                    const isApproved = item.status === 'approved';
+                    const isCancelled = item.status === 'cancelled';
 
-                  return (
-                    <tr key={item.id} className="hover:bg-[#f9fafb] transition-colors">
-                      <td className="py-3.5 px-4">
-                        <input type="checkbox" defaultChecked={idx === 0} className="rounded-[4px] border-[#d1d5db]" />
-                      </td>
-                      <td className="py-3.5 px-4 font-mono text-[#6b7280] whitespace-nowrap">
-                        {new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
-                      </td>
-                      <td className="py-3.5 px-4 font-mono font-semibold text-[#111827] whitespace-nowrap">
-                        <Link href={`/invoice/${item.booking_id}`} target="_blank" className="hover:underline">
+                    return (
+                      <tr key={item.id} className="hover:bg-[#f9fafb] transition-colors">
+                        <td className="py-3.5 px-4">
+                          <input type="checkbox" defaultChecked={idx === 0} className="rounded-[4px] border-[#d1d5db]" />
+                        </td>
+                        <td className="py-3.5 px-4 font-mono text-[#6b7280] whitespace-nowrap">
+                          {new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </td>
+                        <td className="py-3.5 px-4 font-mono font-semibold text-[#111827] whitespace-nowrap">
+                          <Link href={`/invoice/${item.booking_id}`} target="_blank" className="hover:underline">
+                            #{item.booking_id}
+                          </Link>
+                        </td>
+                        <td className="py-3.5 px-4 font-mono font-medium text-[#111827] whitespace-nowrap">
+                          {formatIDR(item.eligible_treatment_amount)}
+                        </td>
+                        <td className="py-3.5 px-4 font-mono text-[#6b7280] whitespace-nowrap">
+                          {item.commission_rate_pct}%
+                        </td>
+                        <td className="py-3.5 px-4 font-mono font-bold text-[#16a34a] whitespace-nowrap">
+                          +{formatIDR(item.commission_amount)}
+                        </td>
+                        <td className="py-3.5 px-4 whitespace-nowrap">
+                          {isCancelled ? (
+                            <span className="font-mono text-[10px] font-semibold text-red-600 bg-red-50 border border-red-200 px-2 py-0.5 rounded-[4px]">
+                              Cancelled
+                            </span>
+                          ) : isPaid ? (
+                            <span className="font-mono text-[10px] font-semibold text-white bg-[#111827] px-2 py-0.5 rounded-[4px]">
+                              PAID OUT
+                            </span>
+                          ) : isApproved ? (
+                            <span className="font-mono text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-[4px] inline-flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                              Approved
+                            </span>
+                          ) : (
+                            <span className="font-mono text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-[4px]">
+                              Pending
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-3.5 px-4 text-right whitespace-nowrap">
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setTrackingBooking(itemAsCalendarBooking(item))}
+                              className="h-6.5 px-2.5 rounded-[5px] bg-[#111827] hover:bg-black text-[11px] font-mono text-white inline-flex items-center gap-1 cursor-pointer transition-all shadow-2xs active:scale-95"
+                              title="Track schedule & booking details"
+                            >
+                              <Clock size={10} className="text-[#9ca3af]" />
+                              <span>Track</span>
+                            </button>
+                            <Link
+                              href={`/invoice/${item.booking_id}`}
+                              target="_blank"
+                              className="text-[11px] font-mono text-[#6b7280] hover:text-[#111827] inline-flex items-center gap-0.5 hover:underline"
+                              title="View invoice"
+                            >
+                              <span>Invoice</span>
+                              <ExternalLink size={10} />
+                            </Link>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile App Commission Cards (< 768px) */}
+            <div className="md:hidden space-y-2.5 p-3">
+              {filtered.map((item) => {
+                const isPaid = item.status === 'paid';
+                const isApproved = item.status === 'approved';
+                const isCancelled = item.status === 'cancelled';
+
+                return (
+                  <div
+                    key={item.id}
+                    className="p-3.5 rounded-2xl bg-white border border-[#ebebeb] space-y-2.5 shadow-[0_1px_4px_rgba(0,0,0,0.02)] overflow-hidden"
+                  >
+                    {/* Top Row: Invoice # + Date + Commission */}
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <Link
+                          href={`/invoice/${item.booking_id}`}
+                          target="_blank"
+                          className="font-mono text-xs font-bold text-[#111827] hover:underline"
+                        >
                           #{item.booking_id}
                         </Link>
-                      </td>
-                      <td className="py-3.5 px-4">
-                        <div className="font-semibold text-[#111827]">{item.guest_name}</div>
-                        <div className="text-[11px] text-[#6b7280] truncate max-w-[180px]">{item.treatment_name || 'Spa Treatment'}</div>
-                      </td>
-                      <td className="py-3.5 px-4 font-mono font-medium text-[#111827] whitespace-nowrap">
-                        {formatIDR(item.eligible_treatment_amount)}
-                      </td>
-                      <td className="py-3.5 px-4 font-mono text-[#6b7280] whitespace-nowrap">
-                        {item.commission_rate_pct}%
-                      </td>
-                      <td className="py-3.5 px-4 font-mono font-bold text-[#16a34a] whitespace-nowrap">
-                        +{formatIDR(item.commission_amount)}
-                      </td>
-                      <td className="py-3.5 px-4 whitespace-nowrap">
+                        <span className="text-[#ebebeb]">·</span>
+                        <span className="font-mono text-[11px] text-[#8f8f8f]">
+                          {new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </span>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <span className={`font-mono font-bold text-xs sm:text-sm tabular-nums ${isCancelled ? 'line-through text-[#8f8f8f]' : 'text-[#16a34a]'}`}>
+                          +{formatIDR(item.commission_amount)}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Middle Row: Net & Rate + Status Badge */}
+                    <div className="pt-2 border-t border-[#f3f4f6] flex items-center justify-between text-xs">
+                      <div className="font-mono text-[11px] text-[#6b7280]">
+                        Net {formatIDR(item.eligible_treatment_amount)} · {item.commission_rate_pct}%
+                      </div>
+                      <div className="shrink-0">
                         {isCancelled ? (
-                          <span className="font-mono text-[10px] font-semibold text-red-600 bg-red-50 border border-red-200 px-2 py-0.5 rounded-[4px]">
+                          <span className="font-mono text-[9px] font-semibold text-red-600 bg-red-50 border border-red-200 px-2 py-0.5 rounded-[4px]">
                             Cancelled
                           </span>
                         ) : isPaid ? (
-                          <span className="font-mono text-[10px] font-semibold text-white bg-[#111827] px-2 py-0.5 rounded-[4px]">
+                          <span className="font-mono text-[9px] font-semibold text-white bg-[#111827] px-2 py-0.5 rounded-[4px]">
                             PAID OUT
                           </span>
                         ) : isApproved ? (
-                          <span className="font-mono text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-[4px] inline-flex items-center gap-1">
+                          <span className="font-mono text-[9px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-[4px] inline-flex items-center gap-1">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                             Approved
                           </span>
                         ) : (
-                          <span className="font-mono text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-[4px]">
+                          <span className="font-mono text-[9px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-[4px]">
                             Pending
                           </span>
                         )}
-                      </td>
-                      <td className="py-3.5 px-4 text-right whitespace-nowrap">
-                        <div className="flex items-center justify-end gap-1.5">
-                          <button
-                            type="button"
-                            onClick={() => setTrackingBooking(itemAsCalendarBooking(item))}
-                            className="h-6 px-2 rounded-[4px] bg-[#fafafa] hover:bg-[#ebebeb] border border-[#ebebeb] text-[11px] font-mono text-[#171717] inline-flex items-center gap-1 cursor-pointer transition-colors shadow-2xs"
-                            title="Track schedule"
-                          >
-                            <Clock size={10} className="text-[#666666]" />
-                            <span>Track</span>
-                          </button>
-                          <Link
-                            href={`/invoice/${item.booking_id}`}
-                            target="_blank"
-                            className="text-[11px] font-mono text-[#666666] hover:text-[#171717] inline-flex items-center gap-0.5 hover:underline"
-                            title="View invoice"
-                          >
-                            <span>Invoice</span>
-                            <ExternalLink size={10} />
-                          </Link>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                      </div>
+                    </div>
+
+                    {/* Native App Actions Bar: Full-width Track CTA + Invoice Button */}
+                    <div className="pt-2 border-t border-[#f3f4f6] flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setTrackingBooking(itemAsCalendarBooking(item))}
+                        className="flex-1 h-8 rounded-xl bg-[#111827] hover:bg-black text-white text-xs font-mono font-medium inline-flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.98] transition-transform shadow-xs"
+                      >
+                        <Clock size={12} className="text-[#9ca3af]" />
+                        <span>Track</span>
+                      </button>
+
+                      <Link
+                        href={`/invoice/${item.booking_id}`}
+                        target="_blank"
+                        className="h-8 px-3 rounded-xl bg-[#f5f5f5] hover:bg-[#ebebeb] text-[#111827] text-xs font-mono font-medium inline-flex items-center justify-center gap-1 active:scale-[0.98] transition-transform"
+                      >
+                        <span>Invoice</span>
+                        <ExternalLink size={10} className="text-[#9ca3af]" />
+                      </Link>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </>
         )}
       </div>
 
