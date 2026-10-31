@@ -69,11 +69,9 @@ export default function BookingManagement({
         .lte('booking_date', endOfYear);
 
       if (data) {
-        // STRICT DATA ISOLATION: Central Admin is solely for Elexoir and Home Spa (bali) domains.
-        // Therapick bookings are strictly excluded.
+        // STRICT DATA ISOLATION: Central Admin has booking records ONLY for Elexoir and Ubud Home Spa (bali).
         const centralData = data.filter((b: any) => {
-          if (b.brand === 'therapick') return false;
-          return b.brand === 'elexoir' || b.brand === 'bali' || !b.brand;
+          return b.brand === 'elexoir' || b.brand === 'bali';
         });
 
         const stats = Array.from({ length: 12 }, (_, i) => ({
@@ -131,11 +129,9 @@ export default function BookingManagement({
         console.error("Error fetching bookings", error);
       }
 
-      // STRICT DATA ISOLATION: Central Admin is solely for Elexoir and Home Spa (bali) domains.
-      // Therapick bookings are strictly excluded.
+      // STRICT DATA ISOLATION: Central Admin has booking records ONLY for Elexoir and Ubud Home Spa (bali).
       const centralData = (data || []).filter((b: any) => {
-        if (b.brand === 'therapick') return false;
-        return b.brand === 'elexoir' || b.brand === 'bali' || !b.brand;
+        return b.brand === 'elexoir' || b.brand === 'bali';
       });
 
       setMonthBookings(centralData);
@@ -147,9 +143,9 @@ export default function BookingManagement({
 
   const filteredMonthBookings = useMemo(() => {
     return monthBookings.filter(b => {
-      if (domainFilter === 'elexoir') return b.brand === 'elexoir' || (!b.brand && b.brand !== 'therapick');
+      if (domainFilter === 'elexoir') return b.brand === 'elexoir';
       if (domainFilter === 'bali') return b.brand === 'bali';
-      return true; // 'all' central domains
+      return b.brand === 'elexoir' || b.brand === 'bali';
     });
   }, [monthBookings, domainFilter]);
 

@@ -275,22 +275,13 @@ export default function AdminCrmShell({ children }: AdminCrmShellProps) {
           title: 'CENTRAL OPERATIONS',
           badge: 'Central',
           items: [
-            { label: 'Bookings Overview', href: '/admin/bookings', icon: CalendarDays },
+            { label: 'Bookings Overview', href: '/admin?brand=central&tab=bookings', icon: CalendarDays },
             { label: 'Cross-Brand Treatments', href: '/admin?brand=central&tab=treatment', icon: Layers },
             { label: 'Menu Overview', href: '/admin?brand=central&tab=list', icon: LayoutDashboard },
             { label: 'Invoices & Settlements', href: '/admin?brand=central&tab=invoice', icon: FileText },
             { label: 'Therapist Fees', href: '/admin?brand=central&tab=fees', icon: Clock },
             { label: 'Commission Calculator', href: '/admin?brand=central&tab=calculator', icon: Calculator },
             { label: 'Multi-Brand Products', href: '/admin?brand=central&tab=store', icon: Store },
-          ]
-        },
-        {
-          id: 'affiliates',
-          title: 'AFFILIATES & PARTNERS',
-          badge: 'Partners',
-          items: [
-            { label: 'Affiliate Directory', href: '/admin/affiliates', icon: Users },
-            { label: 'Payout Disbursements', href: '/admin/payouts', icon: Wallet },
           ]
         },
         {
@@ -388,7 +379,7 @@ export default function AdminCrmShell({ children }: AdminCrmShellProps) {
           </button>
 
           {/* Current Brand Display */}
-          <Link href={activeConsole.href} className="flex items-center gap-2">
+          <Link href={activeConsole.href} className="flex items-center gap-2 mr-1">
             <span 
               className="w-2.5 h-2.5 rounded-full shrink-0 shadow-2xs transition-colors duration-300" 
               style={{ backgroundColor: activeConsole.dotColor }}
@@ -398,96 +389,69 @@ export default function AdminCrmShell({ children }: AdminCrmShellProps) {
             </span>
           </Link>
 
-          {/* Admin Console Switcher Dropdown */}
-          <div className="relative" ref={consoleDropdownRef}>
+          {/* BRAND CONSOLE SWITCHER (Desktop: Moved directly into header, replacing Admin Console) */}
+          <div className="hidden sm:flex items-center gap-1 bg-stone-100/90 p-1 rounded-full border border-stone-200/80 shadow-2xs ml-1">
+            {BRAND_CONSOLES.map((c) => {
+              const isSelected = c.id === activeBrandId;
+              return (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => handleSwitchConsole(c)}
+                  className={`px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                    isSelected
+                      ? 'bg-neutral-900 text-white shadow-xs'
+                      : 'text-stone-600 hover:text-neutral-900 hover:bg-stone-200/70'
+                  }`}
+                  title={c.description}
+                >
+                  <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: c.dotColor }} />
+                  <span>{c.badge}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Mobile Brand Console Dropdown */}
+          <div className="sm:hidden relative" ref={consoleDropdownRef}>
             <button
               type="button"
               onClick={() => setConsoleDropdownOpen(!consoleDropdownOpen)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-stone-100/90 hover:bg-stone-200/90 border border-stone-200 text-xs font-semibold text-neutral-800 transition-all cursor-pointer shadow-2xs active:scale-95"
-              aria-expanded={consoleDropdownOpen}
-              aria-haspopup="true"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-stone-100 border border-stone-200 text-xs font-bold text-neutral-800 transition-all cursor-pointer shadow-2xs"
             >
-              <span>Admin Console</span>
+              <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: activeConsole.dotColor }} />
+              <span>{activeConsole.badge}</span>
               <ChevronDown 
-                size={13} 
+                size={12} 
                 className={`text-stone-500 transition-transform duration-200 ${consoleDropdownOpen ? 'rotate-180' : ''}`} 
               />
             </button>
 
-            {/* Dropdown Menu */}
             {consoleDropdownOpen && (
-              <div className="absolute left-0 top-full mt-1.5 w-76 sm:w-84 bg-white border border-[#eaecf0] rounded-2xl p-2 shadow-xl z-50 animate-in fade-in-50 zoom-in-95">
-                <div className="px-3 py-2 text-[10px] font-mono font-bold uppercase tracking-wider text-stone-600 border-b border-stone-100">
-                  Switch Admin Console
+              <div className="absolute left-0 top-full mt-1.5 w-60 bg-white border border-[#eaecf0] rounded-2xl p-2 shadow-xl z-50 animate-in fade-in-50 zoom-in-95">
+                <div className="px-3 py-1.5 text-[10px] font-mono font-bold uppercase tracking-wider text-stone-600 border-b border-stone-100">
+                  Select Brand Console
                 </div>
-
-                {/* The 4 Admin Consoles: THERAPICK, ELEXOIR, UBUD HOME SPA, CENTRAL ADMIN */}
                 <div className="py-1 space-y-1">
                   {BRAND_CONSOLES.map((c) => {
                     const isSelected = c.id === activeBrandId;
-
                     return (
                       <button
                         key={c.id}
                         type="button"
                         onClick={() => handleSwitchConsole(c)}
-                        className={`w-full text-left p-2.5 rounded-xl transition-all cursor-pointer flex items-start gap-2.5 ${
-                          isSelected 
-                            ? 'bg-stone-100 text-neutral-900 font-semibold' 
-                            : 'hover:bg-stone-50 text-stone-700'
+                        className={`w-full text-left p-2 rounded-xl transition-all cursor-pointer flex items-center justify-between text-xs font-bold ${
+                          isSelected ? 'bg-stone-100 text-neutral-900' : 'hover:bg-stone-50 text-stone-700'
                         }`}
                       >
-                        <span 
-                          className="w-2.5 h-2.5 rounded-full shrink-0 mt-1" 
-                          style={{ backgroundColor: c.dotColor }}
-                        />
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold uppercase tracking-wide truncate">{c.name}</span>
-                            <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-stone-200/80 text-stone-700">
-                              {c.badge}
-                            </span>
-                          </div>
-                          <p className="text-[11px] text-stone-600 line-clamp-1 mt-0.5">
-                            {c.description}
-                          </p>
-                        </div>
-                        {isSelected && (
-                          <Check size={14} className="text-neutral-900 shrink-0 mt-0.5" />
-                        )}
+                        <span className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full" style={{ backgroundColor: c.dotColor }} />
+                          {c.name}
+                        </span>
+                        {isSelected && <Check size={14} className="text-neutral-900" />}
                       </button>
                     );
                   })}
-                </div>
-
-                {/* External Portals Divider */}
-                <div className="border-t border-stone-100 my-1" />
-                <div className="px-3 py-1.5 text-[10px] font-mono font-bold uppercase tracking-wider text-stone-600">
-                  Portals & Live Sites
-                </div>
-                <div className="py-0.5 space-y-1">
-                  <Link
-                    href="/partners/dashboard"
-                    target="_blank"
-                    onClick={() => setConsoleDropdownOpen(false)}
-                    className="w-full text-left p-2 rounded-xl hover:bg-stone-50 text-stone-700 transition-all flex items-center justify-between text-xs"
-                  >
-                    <span className="font-semibold text-neutral-900">Partner Portal (Live)</span>
-                    <span className="text-[10px] text-stone-600 flex items-center gap-1">
-                      Portal <ExternalLink size={11} />
-                    </span>
-                  </Link>
-                  <Link
-                    href="/"
-                    target="_blank"
-                    onClick={() => setConsoleDropdownOpen(false)}
-                    className="w-full text-left p-2 rounded-xl hover:bg-stone-50 text-stone-700 transition-all flex items-center justify-between text-xs"
-                  >
-                    <span className="font-semibold text-neutral-900">Customer Live Store</span>
-                    <span className="text-[10px] text-stone-600 flex items-center gap-1">
-                      Storefront <ExternalLink size={11} />
-                    </span>
-                  </Link>
                 </div>
               </div>
             )}
@@ -535,34 +499,6 @@ export default function AdminCrmShell({ children }: AdminCrmShellProps) {
         
         {/* ─── DESKTOP SIDEBAR NAVIGATION (Console Specific & Non-Duplicated) ─── */}
         <aside className="hidden lg:flex flex-col w-60 lg:w-64 shrink-0 py-5 px-3 select-none sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto no-scrollbar">
-          
-          {/* Brand Console Switcher Pills in Sidebar (Replaces inner WORKSPACE brand scope) */}
-          <div className="px-1 pb-3">
-            <div className="text-[10px] uppercase font-bold tracking-wider text-stone-600 mb-1.5 px-1 flex items-center justify-between">
-              <span>Brand Console</span>
-              <span className="text-[9px] font-mono font-bold text-stone-500 uppercase">{activeConsole.badge}</span>
-            </div>
-            <div className="grid grid-cols-2 gap-1 bg-stone-100/90 p-1 rounded-xl border border-stone-200/60 shadow-2xs">
-              {BRAND_CONSOLES.map(c => {
-                const isSelected = c.id === activeBrandId;
-                return (
-                  <button
-                    key={c.id}
-                    type="button"
-                    onClick={() => handleSwitchConsole(c)}
-                    className={`px-2 py-1.5 rounded-lg text-[11px] font-bold transition-all text-left flex items-center gap-1.5 cursor-pointer ${
-                      isSelected 
-                        ? 'bg-neutral-900 text-white shadow-xs' 
-                        : 'text-stone-600 hover:text-neutral-900 hover:bg-stone-200/70'
-                    }`}
-                  >
-                    <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: c.dotColor }} />
-                    <span className="truncate">{c.badge}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
 
           {/* Therapick Scope Switcher: All / Website / Affiliates */}
           {activeBrandId === 'therapick' && (
