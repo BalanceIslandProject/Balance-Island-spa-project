@@ -12,7 +12,6 @@ import {
   AlertCircle,
   Timer,
   DoorClosed,
-  User,
   Calendar as CalendarIcon,
   Sparkles,
   ChevronDown,
@@ -239,51 +238,35 @@ export default function ScheduleTrackingModal({ booking, onClose }: ScheduleTrac
               onClick={() => toggleSection('guest')}
               className="w-full flex items-center justify-between text-left text-xs font-semibold text-[#0F172A] cursor-pointer px-0.5"
             >
-              <div className="flex items-center gap-2">
-                <User size={15} className="text-[#0E2319]" />
-                <span>Guest Information</span>
-              </div>
+              <span>Guest Information</span>
               {openSections.guest ? <ChevronUp size={14} className="text-[#94A3B8]" /> : <ChevronDown size={14} className="text-[#94A3B8]" />}
             </button>
 
             {openSections.guest && (
-              <div className="p-3.5 sm:p-4 rounded-[8px] bg-white border border-[#E2E8F0] shadow-2xs grid grid-cols-3 gap-2 text-xs">
-                {/* Col 1: Name & Date */}
-                <div className="space-y-2 min-w-0">
-                  <div>
-                    <span className="text-[10px] text-[#94A3B8] uppercase font-mono block">Name</span>
-                    <span className="font-semibold text-[#0F172A] truncate block mt-0.5">{booking.guest_name || 'Guest'}</span>
-                  </div>
-                  <div>
-                    <span className="text-[10px] text-[#94A3B8] uppercase font-mono block">Date</span>
-                    <span className="text-[#475569] block mt-0.5 truncate">{safeFormatDate(booking.date)}</span>
-                  </div>
+              <div className="p-3.5 sm:p-4 rounded-[8px] bg-white border border-[#E2E8F0] shadow-2xs space-y-2.5 text-xs">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-[#64748B]">Name</span>
+                  <span className="font-semibold text-[#0F172A] text-right">{booking.guest_name || 'Guest'}</span>
                 </div>
-
-                {/* Col 2: Time & Duration */}
-                <div className="space-y-2 border-x border-[#F1F5F9] px-2 text-center min-w-0">
-                  <div>
-                    <span className="text-[10px] text-[#94A3B8] uppercase font-mono block">Time</span>
-                    <span className="font-bold text-[#0F172A] block mt-0.5">{booking.time || 'Scheduled'}</span>
-                  </div>
-                  <div>
-                    <span className="text-[10px] text-[#94A3B8] uppercase font-mono block">Duration</span>
-                    <span className="text-[#475569] block mt-0.5">{durationStr}</span>
-                  </div>
+                <div className="flex items-start justify-between gap-3">
+                  <span className="text-[#64748B] shrink-0">Location</span>
+                  <span className="font-medium text-[#0F172A] text-right break-words max-w-[70%]">
+                    {booking.location || 'Private Villa / Resort in Bali'}
+                  </span>
                 </div>
-
-                {/* Col 3: Location & Room */}
-                <div className="space-y-2 pl-1 min-w-0">
-                  <div>
-                    <span className="text-[10px] text-[#94A3B8] uppercase font-mono block">Location</span>
-                    <span className="font-medium text-[#0F172A] truncate block mt-0.5">{booking.location || 'Private Villa'}</span>
+                {booking.room_number && booking.room_number !== '-' && (
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-[#64748B]">Room</span>
+                    <span className="font-semibold text-[#0F172A] text-right">{booking.room_number}</span>
                   </div>
-                  {booking.room_number && booking.room_number !== '-' && (
-                    <div>
-                      <span className="text-[10px] text-[#94A3B8] uppercase font-mono block">Room</span>
-                      <span className="text-[#475569] block mt-0.5">{booking.room_number}</span>
-                    </div>
-                  )}
+                )}
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-[#64748B]">Time</span>
+                  <span className="font-semibold text-[#0F172A] text-right">{booking.time || 'Scheduled'}</span>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-[#64748B]">Date</span>
+                  <span className="font-medium text-[#0F172A] text-right">{safeFormatDate(booking.date)}</span>
                 </div>
               </div>
             )}
