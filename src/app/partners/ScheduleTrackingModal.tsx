@@ -8,15 +8,35 @@ import {
   Clock, 
   MapPin, 
   Check, 
-  CheckCircle2, 
   Copy,
-  AlertCircle
+  AlertCircle,
+  Timer,
+  DoorClosed,
+  User,
+  Calendar as CalendarIcon,
+  Sparkles
 } from 'lucide-react';
 import { CalendarBooking } from './FloatingBookingCalendar';
 
 interface ScheduleTrackingModalProps {
   booking: CalendarBooking | null;
   onClose: () => void;
+}
+
+export function cleanTreatmentName(name?: string | null): string {
+  if (!name) return 'Signature Ritual';
+  return name.replace(/\s*\(\s*\d+\s*(?:mins?|minutes?|m)?\s*\)/gi, '').trim();
+}
+
+export function extractDuration(name?: string | null, fallback?: string | null): string {
+  if (fallback && String(fallback).trim()) {
+    const s = String(fallback).trim();
+    return /mins?|minutes?|hours?|hr/i.test(s) ? s : `${s} Mins`;
+  }
+  if (!name) return '60 Mins';
+  const match = name.match(/\((\d+)\s*(?:mins?|minutes?|m)?\)/i);
+  if (match) return `${match[1]} Mins`;
+  return '60 Mins';
 }
 
 const safeFormatDate = (rawDate: string | undefined | null) => {
@@ -30,12 +50,12 @@ const safeFormatDate = (rawDate: string | undefined | null) => {
       const day = parseInt(parts[2], 10);
       if (!isNaN(year) && !isNaN(month) && !isNaN(day)) {
         const d = new Date(year, month, day);
-        return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+        return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
       }
     }
     const d = new Date(rawDate);
     if (!isNaN(d.getTime())) {
-      return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+      return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
     }
   } catch {
     // fallback
@@ -68,9 +88,7 @@ export default function ScheduleTrackingModal({ booking, onClose }: ScheduleTrac
     activeStep = 4;
   } else if (isApproved || isFinished) {
     activeStep = 3;
-  } else if (isOngoing) {
-    activeStep = 2;
-  } else if (isPaid) {
+  } else if (isOngoing || isPaid) {
     activeStep = 2;
   } else {
     activeStep = 1;
@@ -119,15 +137,18 @@ export default function ScheduleTrackingModal({ booking, onClose }: ScheduleTrac
     }
   };
 
+  const cleanTreatment = cleanTreatmentName(booking.treatment_name);
+  const durationStr = extractDuration(booking.treatment_name, booking.duration);
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/40 backdrop-blur-xs animate-in fade-in duration-150">
       <div 
-        className="w-full max-w-sm sm:max-w-md bg-white rounded-3xl border border-stone-200/90 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.18)] overflow-hidden flex flex-col max-h-[92vh] animate-in zoom-in-95 duration-150 font-sans"
+        className="w-full max-w-sm sm:max-w-md bg-white rounded-2xl border border-stone-200/90 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.18)] overflow-hidden flex flex-col max-h-[92vh] animate-in zoom-in-95 duration-150 font-sans"
         role="dialog"
         aria-modal="true"
         aria-labelledby="tracking-title"
       >
-        {/* Header - Matching Screenshot 1 */}
+        {/* Header */}
         <div className="px-5 py-4 border-b border-stone-100 bg-white flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2 min-w-0">
             <span className="font-mono text-[11px] uppercase font-bold text-stone-400 tracking-wider shrink-0">
@@ -176,11 +197,11 @@ export default function ScheduleTrackingModal({ booking, onClose }: ScheduleTrac
         </div>
 
         {/* Content Body */}
-        <div className="p-5 sm:p-6 overflow-y-auto space-y-5 flex-1">
+        <div className="p-5 sm:p-6 overflow-y-auto space-y-4 flex-1">
           
-          {/* 4-Step Stepper - Eye-Catching & Simple */}
+          {/* 4-Step Stepper */}
           {isCancelled ? (
-            <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-xs text-rose-900 flex items-center gap-2.5">
+            <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-900 flex items-center gap-2.5">
               <AlertCircle size={16} className="text-rose-600 shrink-0" />
               <span className="font-semibold truncate">Booking Cancelled · No Commission Disbursed</span>
             </div>
@@ -207,9 +228,7 @@ export default function ScheduleTrackingModal({ booking, onClose }: ScheduleTrac
                           : 'bg-white border-2 border-stone-300 text-stone-400'
                       }`}
                     >
-                      {st.isDone ? (
-                        <Check size={14} strokeWidth={3} />
-                      ) : st.isCurrent ? (
+                      {st.isDone || st.isCurrent ? (
                         <Check size={14} strokeWidth={3} />
                       ) : (
                         <span className="font-bold text-[11px]">{idx + 1}</span>
@@ -229,57 +248,87 @@ export default function ScheduleTrackingModal({ booking, onClose }: ScheduleTrac
             </div>
           )}
 
-          {/* Unified Details & Financials Card - Matching Screenshot 1 */}
-          <div className="p-4 sm:p-5 rounded-2xl bg-stone-50/90 border border-stone-200/70 space-y-3.5 overflow-hidden">
-            {/* Top Row: Guest & Date */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="min-w-0">
-                <span className="font-mono text-[10px] uppercase tracking-wider text-stone-400 block font-bold">
-                  GUEST
-                </span>
-                <span className="font-bold text-sm text-neutral-900 truncate block mt-0.5">
-                  {booking.guest_name || 'Guest'}
-                </span>
+          {/* Details & Financials Card with Icons: Treatment, Time, Duration, Location, Room */}
+          <div className="p-4 sm:p-5 rounded-xl bg-stone-50/90 border border-stone-200/70 space-y-3.5">
+            
+            {/* 1. Treatment - Fully readable without ellipsis '...' and without '(120)' */}
+            <div className="pb-3 border-b border-stone-200/70">
+              <div className="flex items-center gap-1.5 text-stone-400 font-mono text-[10px] uppercase tracking-wider font-bold mb-1">
+                <Sparkles size={13} className="text-[#0f172a]" />
+                <span>TREATMENT</span>
               </div>
-              <div className="min-w-0 text-right">
-                <span className="font-mono text-[10px] uppercase tracking-wider text-stone-400 block font-bold">
-                  DATE
-                </span>
-                <span className="font-bold text-sm text-neutral-900 truncate block mt-0.5">
-                  {safeFormatDate(booking.date)}
-                </span>
+              <div className="font-bold text-sm sm:text-[15px] text-neutral-900 leading-snug break-words uppercase">
+                {cleanTreatment}
               </div>
             </div>
 
-            {/* Middle Row: Treatment & Location */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="min-w-0">
-                <span className="font-mono text-[10px] uppercase tracking-wider text-stone-400 block font-bold">
-                  TREATMENT
-                </span>
-                <span className="font-bold text-xs sm:text-sm text-neutral-900 truncate block mt-0.5 uppercase">
-                  {booking.treatment_name || 'HONEYMOON PACKAGE (120)'}
-                </span>
-                <span className="font-mono text-xs text-stone-500 truncate block mt-0.5">
-                  {booking.duration || '60 Mins'}
-                </span>
+            {/* 2. Key Details Grid: Time, Duration, Location, Room, Guest, Date */}
+            <div className="grid grid-cols-2 gap-3.5 pt-0.5">
+              
+              {/* Left Column: Time & Duration, Guest */}
+              <div className="space-y-3">
+                {/* Time & Duration */}
+                <div>
+                  <div className="flex items-center gap-1.5 text-stone-400 font-mono text-[10px] uppercase tracking-wider font-bold mb-1">
+                    <Clock size={12} className="text-[#0f172a]" />
+                    <span>TIME & DURATION</span>
+                  </div>
+                  <div className="font-bold text-xs sm:text-sm text-neutral-900 flex items-center flex-wrap gap-1.5">
+                    <span>{booking.time || '14:00'}</span>
+                    <span className="text-stone-300">·</span>
+                    <span className="font-mono text-xs text-stone-600 font-medium inline-flex items-center gap-1">
+                      <Timer size={11} className="text-stone-400" />
+                      {durationStr}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Guest */}
+                <div>
+                  <div className="flex items-center gap-1.5 text-stone-400 font-mono text-[10px] uppercase tracking-wider font-bold mb-1">
+                    <User size={12} className="text-[#0f172a]" />
+                    <span>GUEST</span>
+                  </div>
+                  <div className="font-bold text-xs sm:text-sm text-neutral-900 truncate">
+                    {booking.guest_name || 'Guest'}
+                  </div>
+                </div>
               </div>
-              <div className="min-w-0 text-right">
-                <span className="font-mono text-[10px] uppercase tracking-wider text-stone-400 block font-bold">
-                  LOCATION
-                </span>
-                <span className="font-bold text-xs sm:text-sm text-neutral-900 truncate block mt-0.5">
-                  {booking.location || 'Ubud'}
-                </span>
-                {booking.room_number && (
-                  <span className="font-mono text-xs text-stone-500 truncate block mt-0.5">
-                    Room {booking.room_number}
-                  </span>
-                )}
+
+              {/* Right Column: Location & Room, Date */}
+              <div className="space-y-3">
+                {/* Location & Room */}
+                <div>
+                  <div className="flex items-center gap-1.5 text-stone-400 font-mono text-[10px] uppercase tracking-wider font-bold mb-1">
+                    <MapPin size={12} className="text-[#0f172a]" />
+                    <span>LOCATION & ROOM</span>
+                  </div>
+                  <div className="font-bold text-xs sm:text-sm text-neutral-900 break-words leading-tight">
+                    {booking.location || 'Ubud Villa'}
+                  </div>
+                  {booking.room_number && booking.room_number !== '-' && (
+                    <div className="font-mono text-xs text-stone-600 flex items-center gap-1 mt-1">
+                      <DoorClosed size={11} className="text-stone-400 shrink-0" />
+                      <span>Room {booking.room_number}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Date */}
+                <div>
+                  <div className="flex items-center gap-1.5 text-stone-400 font-mono text-[10px] uppercase tracking-wider font-bold mb-1">
+                    <CalendarIcon size={12} className="text-[#0f172a]" />
+                    <span>DATE</span>
+                  </div>
+                  <div className="font-bold text-xs sm:text-sm text-neutral-900">
+                    {safeFormatDate(booking.date)}
+                  </div>
+                </div>
               </div>
+
             </div>
 
-            {/* Divider Line */}
+            {/* Financial Breakdown */}
             <div className="border-t border-stone-200/70 pt-3 space-y-2">
               <div className="flex items-center justify-between text-xs sm:text-sm">
                 <span className="text-stone-500 font-medium">Net Treatment</span>
@@ -288,7 +337,7 @@ export default function ScheduleTrackingModal({ booking, onClose }: ScheduleTrac
                 </span>
               </div>
               <div className="flex items-center justify-between text-xs sm:text-sm">
-                <span className="text-stone-500 font-medium">Earned ({booking.commission_rate_pct || 10}%)</span>
+                <span className="text-stone-500 font-medium">Earned ({booking.commission_rate_pct || 15}%)</span>
                 <span className="font-mono font-bold text-emerald-600 tabular-nums">
                   +{formatIDR(booking.commission_amount)}
                 </span>
@@ -310,7 +359,7 @@ export default function ScheduleTrackingModal({ booking, onClose }: ScheduleTrac
 
         </div>
 
-        {/* Footer - Matching Screenshot 1 */}
+        {/* Footer */}
         <div className="px-5 py-3.5 border-t border-stone-100 bg-white flex items-center justify-between shrink-0">
           <Link
             href={`/invoice/${booking.booking_id}`}

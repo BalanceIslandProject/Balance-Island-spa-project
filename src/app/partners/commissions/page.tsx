@@ -3,51 +3,29 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { 
-  ExternalLink, 
   Receipt, 
-  CalendarDays, 
+  XCircle, 
+  Search, 
   X, 
-  Calendar as CalendarIcon,
-  ChevronDown,
-  RefreshCw,
-  Search,
-  Clock,
+  ChevronRight,
   Wallet,
-  XCircle,
-  CheckCircle2
+  Clock,
+  Timer,
+  MapPin,
+  DoorClosed,
+  User,
+  Activity
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { CalendarBooking } from '../FloatingBookingCalendar';
-import ScheduleTrackingModal from '../ScheduleTrackingModal';
+import ScheduleTrackingModal, { cleanTreatmentName, extractDuration } from '../ScheduleTrackingModal';
 
 export default function PartnerCommissionsPage() {
   const [commissions, setCommissions] = useState<any[]>([]);
-  // Only two treatment statuses: 'all' (both Paid Out and Cancelled), 'paid', 'cancelled'
+  const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState<'all' | 'paid' | 'cancelled'>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [startDate, setStartDate] = useState<string>('');
-  const [endDate, setEndDate] = useState<string>('');
-  const [showCalendarFilter, setShowCalendarFilter] = useState<boolean>(false);
-  const [activeDatePreset, setActiveDatePreset] = useState<string>('all');
-  const [loading, setLoading] = useState(true);
   const [trackingBooking, setTrackingBooking] = useState<CalendarBooking | null>(null);
-
-  const itemAsCalendarBooking = (item: any): CalendarBooking => ({
-    id: String(item.id || item.booking_id),
-    booking_id: item.booking_id,
-    date: item.created_at ? item.created_at.split('T')[0] : '',
-    created_at: item.created_at,
-    guest_name: item.guest_name || 'Guest',
-    treatment_name: item.treatment_name || 'Spa Treatment',
-    treatment_amount: Number(item.eligible_treatment_amount || 0),
-    gross_amount: Number(item.eligible_treatment_amount || 0),
-    commission_rate_pct: Number(item.commission_rate_pct || 10),
-    commission_amount: Number(item.commission_amount || 0),
-    commission_status: item.status || 'pending',
-    payment_status: item.status === 'paid' ? 'paid' : 'unpaid',
-    payment_verified: item.status === 'paid',
-    booking_status: item.status === 'cancelled' ? 'Cancelled' : 'Confirmed',
-  });
 
   const loadCommissions = async () => {
     try {
@@ -66,22 +44,14 @@ export default function PartnerCommissionsPage() {
   useEffect(() => {
     loadCommissions();
 
-    // Supabase Realtime Subscription
     const channel = supabase
       .channel('partner_commissions_realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'affiliate_commissions' }, () => {
-        loadCommissions();
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, () => {
-        loadCommissions();
-      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'affiliate_commissions' }, () => loadCommissions())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, () => loadCommissions())
       .subscribe();
-
-    const interval = setInterval(loadCommissions, 8000);
 
     return () => {
       supabase.removeChannel(channel);
-      clearInterval(interval);
     };
   }, []);
 
@@ -92,465 +62,329 @@ export default function PartnerCommissionsPage() {
     return `Rp${formatted}`;
   };
 
-  const formatDateYMD = (d: Date) => {
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+  const formatDate = (dateStr?: string) => {
+    if (!dateStr) return '';
+    try {
+      const clean = dateStr.includes('T') ? dateStr.split('T')[0] : dateStr;
+      const [y, m, d] = clean.split('-').map(Number);
+      if (y && m && d) {
+        const dt = new Date(y, m - 1, d);
+        return dt.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+      }
+    } catch {
+      // fallback
+    }
+    return dateStr;
   };
 
-  // Preset Date Handlers
-  const handleSetToday = () => {
-    const today = formatDateYMD(new Date());
-    setStartDate(today);
-    setEndDate(today);
-    setActiveDatePreset('today');
-  };
+  const { totalPaidOut, paidBookingsCount, cancelledCount, totalCancelledAmount } = useMemo(() => {
+    let paid = 0;
+    let paidCount = 0;
+    let cancelled = 0;
+    let cancelledAmt = 0;
 
-  const handleSetThisMonth = () => {
-    const now = new Date();
-    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
-    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-    setStartDate(formatDateYMD(firstDay));
-    setEndDate(formatDateYMD(lastDay));
-    setActiveDatePreset('this_month');
-  };
+    commissions.forEach((c) => {
+      const isCancelled = c.status === 'cancelled' || c.status === 'declined';
+      const isPaid = c.status === 'paid' || Boolean(c.payment_verified);
 
-  const handleSetLastMonth = () => {
-    const now = new Date();
-    const firstDay = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    const lastDay = new Date(now.getFullYear(), now.getMonth(), 0);
-    setStartDate(formatDateYMD(firstDay));
-    setEndDate(formatDateYMD(lastDay));
-    setActiveDatePreset('last_month');
-  };
+      if (isCancelled) {
+        cancelled += 1;
+        cancelledAmt += Number(c.commission_amount || 0);
+      } else if (isPaid) {
+        paid += Number(c.commission_amount || 0);
+        paidCount += 1;
+      }
+    });
 
-  const handleSetLast30Days = () => {
-    const now = new Date();
-    const past = new Date();
-    past.setDate(now.getDate() - 30);
-    setStartDate(formatDateYMD(past));
-    setEndDate(formatDateYMD(now));
-    setActiveDatePreset('last_30_days');
-  };
-
-  const handleResetDate = () => {
-    setStartDate('');
-    setEndDate('');
-    setActiveDatePreset('all');
-  };
-
-  // Strictly filter for the TWO relevant treatment statuses: 'paid' and 'cancelled'
-  const relevantCommissions = useMemo(() => {
-    return commissions.filter((c) => c.status === 'paid' || c.status === 'cancelled');
+    return {
+      totalPaidOut: paid,
+      paidBookingsCount: paidCount,
+      cancelledCount: cancelled,
+      totalCancelledAmount: cancelledAmt,
+    };
   }, [commissions]);
 
-  // Two-status KPI summary: Paid Out & Cancelled
-  const kpiTotals = useMemo(() => {
-    let paidTotal = 0;
-    let paidCount = 0;
-    let cancelledCount = 0;
+  const filteredCommissions = useMemo(() => {
+    return commissions.filter((c) => {
+      const isCancelled = c.status === 'cancelled' || c.status === 'declined';
+      const isPaid = c.status === 'paid' || Boolean(c.payment_verified);
 
-    for (const c of relevantCommissions) {
-      if (c.status === 'paid') {
-        paidTotal += Number(c.commission_amount || 0);
-        paidCount++;
-      } else if (c.status === 'cancelled') {
-        cancelledCount++;
-      }
-    }
+      if (filterStatus === 'paid' && !isPaid) return false;
+      if (filterStatus === 'cancelled' && !isCancelled) return false;
 
-    return { paidTotal, paidCount, cancelledCount };
-  }, [relevantCommissions]);
-
-  // Combined Filtering (Status + Search + Date)
-  const filtered = useMemo(() => {
-    return relevantCommissions.filter((c) => {
-      // 1. Status Filter
-      if (filterStatus !== 'all' && c.status !== filterStatus) {
-        return false;
-      }
-
-      // 2. Search Query
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
-        const guest = (c.guest_name || '').toLowerCase();
-        const ref = (c.booking_id || '').toLowerCase();
-        const treatment = (c.treatment_name || '').toLowerCase();
-        if (!guest.includes(q) && !ref.includes(q) && !treatment.includes(q)) {
+        const bId = (c.booking_id || '').toLowerCase();
+        const tName = (c.treatment_name || '').toLowerCase();
+        const inv = (c.invoice_id || '').toLowerCase();
+        if (!bId.includes(q) && !tName.includes(q) && !inv.includes(q)) {
           return false;
-        }
-      }
-
-      // 3. Date Range
-      if (startDate || endDate) {
-        const commissionDate = new Date(c.created_at);
-        if (startDate) {
-          const start = new Date(`${startDate}T00:00:00`);
-          if (commissionDate < start) return false;
-        }
-        if (endDate) {
-          const end = new Date(`${endDate}T23:59:59`);
-          if (commissionDate > end) return false;
         }
       }
 
       return true;
     });
-  }, [relevantCommissions, filterStatus, searchQuery, startDate, endDate]);
+  }, [commissions, filterStatus, searchQuery]);
 
-  const totalFilteredCommission = useMemo(() => {
-    return filtered.reduce((sum, c) => {
-      if (c.status === 'cancelled') return sum;
-      return sum + Number(c.commission_amount || 0);
-    }, 0);
-  }, [filtered]);
-
-  const hasDateFilter = Boolean(startDate || endDate);
+  const itemAsCalendarBooking = (item: any): CalendarBooking => ({
+    id: String(item.id || item.booking_id),
+    booking_id: item.booking_id,
+    date: item.booking_date || (item.created_at ? item.created_at.split('T')[0] : ''),
+    time: item.time || '',
+    duration: extractDuration(item.treatment_name, item.duration),
+    location: item.location || '',
+    room_number: item.room_number || '',
+    created_at: item.created_at,
+    guest_name: item.guest_name || 'Guest',
+    treatment_name: cleanTreatmentName(item.treatment_name),
+    treatment_amount: Number(item.eligible_treatment_amount || 0),
+    gross_amount: Number(item.eligible_treatment_amount || 0),
+    commission_rate_pct: Number(item.commission_rate_pct || 15),
+    commission_amount: Number(item.commission_amount || 0),
+    commission_status: item.status || 'pending',
+    payment_status: item.status === 'paid' ? 'paid' : 'unpaid',
+    payment_verified: item.status === 'paid',
+    booking_status: item.status === 'cancelled' ? 'Cancelled' : 'Confirmed',
+  });
 
   return (
-    <div className="space-y-6 w-full pb-16 font-sans antialiased">
+    <div className="space-y-6 w-full font-sans">
       
+      {/* 1. HEADER */}
+      <div>
+        <h1 className="text-2xl sm:text-3xl font-semibold text-[#0f172a] tracking-tight">
+          Commissions
+        </h1>
+        <p className="text-sm text-[#64748b] mt-1">
+          View your commission records.
+        </p>
+      </div>
 
-      {/* ─── Simplified 2-Status KPI Summary Strip (Paid Out & Cancelled Only) ─── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-        
-        {/* Card 1: Paid Out */}
-        <div className="bg-gradient-to-br from-indigo-50/90 via-purple-50/40 to-white border border-indigo-200/90 rounded-2xl p-4 sm:p-5 space-y-3 shadow-xs hover:border-indigo-300 hover:shadow-sm transition-all overflow-hidden">
-          <div className="flex items-center justify-between">
-            <span className="font-mono text-xs sm:text-[13px] uppercase tracking-wider text-indigo-900 font-bold whitespace-nowrap">
-              PAID OUT
-            </span>
-            <span className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-xs shadow-indigo-500/20 shrink-0">
-              <Wallet size={14} />
-            </span>
-          </div>
-          <div className="text-2xl sm:text-[30px] font-extrabold text-indigo-950 font-mono tabular-nums leading-none">
-            {formatIDR(kpiTotals.paidTotal)}
-          </div>
-          <div className="flex items-center justify-start text-xs pt-2.5 border-t border-indigo-100/80">
-            <span className="font-mono text-xs font-bold text-indigo-700 bg-indigo-100/90 border border-indigo-200 px-2.5 py-0.5 rounded-md">
-              {kpiTotals.paidCount} {kpiTotals.paidCount === 1 ? 'Settled Treatment' : 'Settled Treatments'}
-            </span>
+      {/* 2. TOP SUMMARY CARDS (Paid Out & Cancelled) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {/* Paid Out Card */}
+        <div className="bg-white rounded-xl border border-[#e2e8f0] p-5 shadow-xs flex items-center justify-between">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-8 h-8 rounded-[8px] bg-[#eff6ff] text-[#2563eb] flex items-center justify-center">
+                <Wallet size={16} />
+              </div>
+              <span className="text-xs font-medium text-[#64748b]">Paid Out</span>
+            </div>
+            <div className="text-xl sm:text-2xl font-bold text-[#0f172a]">
+              {formatIDR(totalPaidOut)}
+            </div>
+            <div className="text-xs text-[#64748b] mt-1">
+              {paidBookingsCount} {paidBookingsCount === 1 ? 'booking' : 'bookings'}
+            </div>
           </div>
         </div>
 
-        {/* Card 2: Cancelled */}
-        <div className="bg-gradient-to-br from-rose-50/90 via-orange-50/30 to-white border border-rose-200/90 rounded-2xl p-4 sm:p-5 space-y-3 shadow-xs hover:border-rose-300 hover:shadow-sm transition-all overflow-hidden">
-          <div className="flex items-center justify-between">
-            <span className="font-mono text-xs sm:text-[13px] uppercase tracking-wider text-rose-900 font-bold whitespace-nowrap">
-              CANCELLED
-            </span>
-            <span className="w-8 h-8 rounded-xl bg-rose-600 text-white flex items-center justify-center shadow-xs shadow-rose-500/20 shrink-0">
-              <XCircle size={14} />
-            </span>
-          </div>
-          <div className="text-2xl sm:text-[30px] font-extrabold text-rose-950 font-sans tabular-nums leading-none">
-            {kpiTotals.cancelledCount}
-          </div>
-          <div className="flex items-center justify-start text-xs pt-2.5 border-t border-rose-100/80">
-            <span className="font-mono text-xs font-bold text-rose-700 bg-rose-100/90 border border-rose-200 px-2.5 py-0.5 rounded-md">
-              Rp0 Voided Commission
-            </span>
+        {/* Cancelled Card */}
+        <div className="bg-white rounded-xl border border-[#e2e8f0] p-5 shadow-xs flex items-center justify-between">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-8 h-8 rounded-[8px] bg-[#fef2f2] text-[#dc2626] flex items-center justify-center">
+                <XCircle size={16} />
+              </div>
+              <span className="text-xs font-medium text-[#64748b]">Cancelled</span>
+            </div>
+            <div className="text-xl sm:text-2xl font-bold text-[#0f172a]">
+              {cancelledCount}
+            </div>
+            <div className="text-xs text-[#64748b] mt-1">
+              {formatIDR(totalCancelledAmount)}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* ─── CRM Filter Controls: 2-Status Tabs + Search & Date ─── */}
-      <div className="bg-white border border-[#eaecf0] rounded-2xl p-4 sm:p-4.5 space-y-3.5 shadow-xs">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-          
-          {/* Status Tabs: ONLY ALL, PAID OUT, CANCELLED */}
-          <div className="overflow-x-auto no-scrollbar">
-            <div className="inline-flex items-center gap-1.5 p-1.5 rounded-2xl bg-slate-100 border border-slate-200 text-xs">
-              {[
-                { key: 'all' as const, label: 'All Records' },
-                { key: 'paid' as const, label: 'Paid Out' },
-                { key: 'cancelled' as const, label: 'Cancelled' }
-              ].map(({ key, label }) => {
-                const isSelected = filterStatus === key;
-                let activeClass = 'bg-slate-900 text-white shadow-xs';
-                if (key === 'paid') activeClass = 'bg-indigo-600 text-white shadow-xs shadow-indigo-500/20';
-                else if (key === 'cancelled') activeClass = 'bg-rose-600 text-white shadow-xs shadow-rose-500/20';
+      {/* 3. FILTERS & SEARCH ROW */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => setFilterStatus('all')}
+            className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer ${
+              filterStatus === 'all'
+                ? 'bg-[#0f172a] text-white shadow-xs'
+                : 'bg-white text-[#64748b] border border-[#e2e8f0] hover:text-[#0f172a] hover:bg-[#f8fafc]'
+            }`}
+          >
+            All {commissions.length > 0 && <span className="ml-1 opacity-80">{commissions.length}</span>}
+          </button>
+          <button
+            type="button"
+            onClick={() => setFilterStatus('paid')}
+            className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer ${
+              filterStatus === 'paid'
+                ? 'bg-[#0f172a] text-white shadow-xs'
+                : 'bg-white text-[#64748b] border border-[#e2e8f0] hover:text-[#0f172a] hover:bg-[#f8fafc]'
+            }`}
+          >
+            Paid Out {paidBookingsCount > 0 && <span className="ml-1 opacity-80">{paidBookingsCount}</span>}
+          </button>
+          <button
+            type="button"
+            onClick={() => setFilterStatus('cancelled')}
+            className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer ${
+              filterStatus === 'cancelled'
+                ? 'bg-[#0f172a] text-white shadow-xs'
+                : 'bg-white text-[#64748b] border border-[#e2e8f0] hover:text-[#0f172a] hover:bg-[#f8fafc]'
+            }`}
+          >
+            Cancelled {cancelledCount > 0 && <span className="ml-1 opacity-80">{cancelledCount}</span>}
+          </button>
+        </div>
 
-                return (
-                  <button
-                    type="button"
-                    key={key}
-                    onClick={() => setFilterStatus(key)}
-                    className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider font-mono transition-all cursor-pointer whitespace-nowrap ${
-                      isSelected
-                        ? activeClass
-                        : 'text-slate-600 hover:text-slate-900 hover:bg-white/80'
-                    }`}
-                  >
-                    {label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Search & Date Controls */}
-          <div className="flex items-center gap-2">
-            <div className="relative w-full sm:w-60">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94a3b8] pointer-events-none" />
-              <input
-                type="text"
-                placeholder="Search guest or invoice..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full h-9 pl-9 pr-3 text-xs bg-white border border-[#e2e8f0] rounded-xl text-[#0f172a] placeholder:text-[#94a3b8] focus:outline-none focus:border-[#0f172a] focus:ring-2 focus:ring-[#0f172a]/10 shadow-2xs transition-all"
-              />
-            </div>
-
+        <div className="relative w-full sm:w-72">
+          <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#94a3b8] pointer-events-none" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search booking or invoice..."
+            className="w-full pl-9 pr-8 py-2 bg-white border border-[#e2e8f0] rounded-[8px] text-xs text-[#0f172a] placeholder:text-[#94a3b8] focus:outline-none focus:border-[#0f172a] transition-colors"
+          />
+          {searchQuery && (
             <button
               type="button"
-              onClick={() => setShowCalendarFilter(!showCalendarFilter)}
-              className={`inline-flex items-center gap-1.5 h-9 px-3.5 rounded-xl border text-xs font-medium transition-all cursor-pointer whitespace-nowrap ${
-                hasDateFilter || showCalendarFilter
-                  ? 'bg-[#0f172a] text-white border-[#0f172a] shadow-xs'
-                  : 'bg-white text-[#334155] border-[#e2e8f0] hover:bg-[#f8fafc] hover:border-[#cbd5e1] shadow-2xs'
-              }`}
+              onClick={() => setSearchQuery('')}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#94a3b8] hover:text-[#0f172a]"
             >
-              <CalendarDays size={13} />
-              <span>
-                {hasDateFilter ? `${startDate || 'Start'} → ${endDate || 'End'}` : 'Filter by Date'}
-              </span>
-              <ChevronDown size={13} className={`transition-transform duration-200 ${showCalendarFilter ? 'rotate-180' : ''}`} />
+              <X size={13} />
             </button>
-          </div>
-        </div>
-
-        {/* Expandable Date Range Panel (Start From and End Logic) */}
-        {showCalendarFilter && (
-          <div className="p-4 sm:p-5 rounded-xl bg-[#f8fafc] border border-[#eaecf0] space-y-4 animate-in fade-in-50">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <CalendarDays size={15} className="text-[#0f172a]" />
-                <span className="text-xs font-bold text-[#0f172a] uppercase tracking-wider font-mono">
-                  Filter by Date Range
-                </span>
-              </div>
-              {hasDateFilter && (
-                <button
-                  type="button"
-                  onClick={handleResetDate}
-                  className="text-xs text-[#dc2626] hover:text-[#b91c1c] hover:underline flex items-center gap-1 cursor-pointer font-medium transition-colors"
-                >
-                  <X size={13} />
-                  <span>Reset Dates</span>
-                </button>
-              )}
-            </div>
-
-            {/* Start From & End Logic Inputs */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-              {/* Start From Input */}
-              <div className="space-y-1.5">
-                <label className="block text-[11px] font-bold uppercase tracking-wider text-[#475569] font-mono">
-                  Start From
-                </label>
-                <div className="relative">
-                  <input
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => {
-                      setStartDate(e.target.value);
-                      setActiveDatePreset('custom');
-                    }}
-                    className="w-full h-10 px-3.5 bg-white border border-[#cbd5e1] rounded-xl text-xs font-mono font-medium text-[#0f172a] focus:outline-none focus:border-[#0f172a] focus:ring-2 focus:ring-[#0f172a]/10 shadow-2xs transition-all"
-                  />
-                </div>
-              </div>
-
-              {/* End Date Input */}
-              <div className="space-y-1.5">
-                <label className="block text-[11px] font-bold uppercase tracking-wider text-[#475569] font-mono">
-                  End Date
-                </label>
-                <div className="relative">
-                  <input
-                    type="date"
-                    value={endDate}
-                    min={startDate || undefined}
-                    onChange={(e) => {
-                      setEndDate(e.target.value);
-                      setActiveDatePreset('custom');
-                    }}
-                    className="w-full h-10 px-3.5 bg-white border border-[#cbd5e1] rounded-xl text-xs font-mono font-medium text-[#0f172a] focus:outline-none focus:border-[#0f172a] focus:ring-2 focus:ring-[#0f172a]/10 shadow-2xs transition-all"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Quick Presets Row */}
-            <div className="flex items-center gap-1.5 flex-wrap pt-2.5 border-t border-[#e2e8f0]">
-              <span className="text-[11px] text-[#64748b] font-mono mr-1">Quick Select:</span>
-              <button
-                type="button"
-                onClick={handleSetToday}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${
-                  activeDatePreset === 'today' && hasDateFilter
-                    ? 'bg-[#0f172a] text-white border-[#0f172a] shadow-xs font-bold'
-                    : 'bg-white text-[#475569] border-[#e2e8f0] hover:bg-[#f1f5f9]'
-                }`}
-              >
-                Today
-              </button>
-              <button
-                type="button"
-                onClick={handleSetThisMonth}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${
-                  activeDatePreset === 'this_month' && hasDateFilter
-                    ? 'bg-[#0f172a] text-white border-[#0f172a] shadow-xs font-bold'
-                    : 'bg-white text-[#475569] border-[#e2e8f0] hover:bg-[#f1f5f9]'
-                }`}
-              >
-                This Month
-              </button>
-              <button
-                type="button"
-                onClick={handleSetLastMonth}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${
-                  activeDatePreset === 'last_month' && hasDateFilter
-                    ? 'bg-[#0f172a] text-white border-[#0f172a] shadow-xs font-bold'
-                    : 'bg-white text-[#475569] border-[#e2e8f0] hover:bg-[#f1f5f9]'
-                }`}
-              >
-                Last Month
-              </button>
-              <button
-                type="button"
-                onClick={handleSetLast30Days}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${
-                  activeDatePreset === 'last_30_days' && hasDateFilter
-                    ? 'bg-[#0f172a] text-white border-[#0f172a] shadow-xs font-bold'
-                    : 'bg-white text-[#475569] border-[#e2e8f0] hover:bg-[#f1f5f9]'
-                }`}
-              >
-                Last 30 Days
-              </button>
-              <button
-                type="button"
-                onClick={handleResetDate}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${
-                  !hasDateFilter
-                    ? 'bg-[#0f172a] text-white border-[#0f172a] shadow-xs font-bold'
-                    : 'bg-white text-[#475569] border-[#e2e8f0] hover:bg-[#f1f5f9]'
-                }`}
-              >
-                All Time
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Ledger Summary Bar */}
-        <div className="pt-2.5 border-t border-[#f1f5f9] flex items-center justify-between text-xs text-[#64748b] flex-wrap gap-2">
-          <span>
-            Showing <strong className="text-[#0f172a]">{filtered.length}</strong> records
-            {hasDateFilter && (
-              <span className="font-mono text-indigo-700 font-semibold ml-1.5">
-                ({startDate || 'Start'} to {endDate || 'Now'})
-              </span>
-            )}
-          </span>
-          <span>Filtered Total: <strong className="text-[#16a34a] font-bold font-mono">{formatIDR(totalFilteredCommission)}</strong></span>
+          )}
         </div>
       </div>
 
-      {/* ─── Main Ledger Table ─── */}
-      <div className="bg-white border border-[#eaecf0] rounded-2xl overflow-hidden shadow-xs">
-        {loading ? (
-          <div className="p-16 text-center space-y-3">
-            <div className="w-6 h-6 border-2 border-[#0f172a] border-t-transparent rounded-full animate-spin mx-auto" />
-            <div className="font-mono text-xs text-[#64748b]">Loading commission records...</div>
-          </div>
-        ) : filtered.length === 0 ? (
-          <div className="p-12 text-center space-y-2.5">
-            <Receipt size={28} className="mx-auto text-[#94a3b8]" />
-            <p className="text-sm font-bold text-[#0f172a]">No commission records found.</p>
-            <p className="text-xs text-[#64748b] max-w-sm mx-auto leading-relaxed">
-              Paid out and cancelled commissions will appear here.
-            </p>
-          </div>
-        ) : (
-          <>
-            {/* Desktop Table (>= 768px) */}
-            <div className="hidden md:block overflow-x-auto">
+      {/* 4. COMMISSIONS LIST: DESKTOP TABLE & MOBILE CARDS */}
+      {loading ? (
+        <div className="bg-white rounded-xl border border-[#e2e8f0] p-10 text-center text-xs text-[#94a3b8]">
+          Loading commissions ledger...
+        </div>
+      ) : filteredCommissions.length === 0 ? (
+        <div className="bg-white rounded-xl border border-[#e2e8f0] p-10 text-center space-y-2">
+          <p className="text-sm font-semibold text-[#0f172a]">No commission records</p>
+          <p className="text-xs text-[#64748b]">
+            {searchQuery || filterStatus !== 'all' 
+              ? 'Try adjusting your search query or status filter.'
+              : 'Referral commissions will be automatically tracked here as guests book.'}
+          </p>
+        </div>
+      ) : (
+        <>
+          {/* DESKTOP TABLE */}
+          <div className="hidden md:block bg-white rounded-xl border border-[#e2e8f0] overflow-hidden shadow-xs">
+            <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-[#f8fafc] border-b border-[#eaecf0] font-mono text-[10px] uppercase tracking-wider text-[#64748b]">
-                  <tr>
-                    <th className="py-3.5 px-4 font-bold">Date</th>
-                    <th className="py-3.5 px-4 font-bold">Invoice #</th>
-                    <th className="py-3.5 px-4 font-bold text-right">Treatment Net</th>
-                    <th className="py-3.5 px-4 font-bold text-center">Rate</th>
-                    <th className="py-3.5 px-4 font-bold text-right">Commission</th>
-                    <th className="py-3.5 px-4 font-bold text-center">Status</th>
-                    <th className="py-3.5 px-4 font-bold text-right">Actions</th>
+                <thead>
+                  <tr className="border-b border-[#f1f5f9] bg-[#f8fafc]/50 text-[#94a3b8] font-medium uppercase tracking-wider text-[11px]">
+                    <th className="py-3.5 px-5">Date</th>
+                    <th className="py-3.5 px-4">Booking ID</th>
+                    <th className="py-3.5 px-4">Treatment</th>
+                    <th className="py-3.5 px-4">Rate</th>
+                    <th className="py-3.5 px-4">Commission</th>
+                    <th className="py-3.5 px-4">Status</th>
+                    <th className="py-3.5 px-5 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#f1f5f9]">
-                  {filtered.map((item) => {
-                    const isPaid = item.status === 'paid';
-                    const isCancelled = item.status === 'cancelled';
+                  {filteredCommissions.map((comm) => {
+                    const isCancelled = comm.status === 'cancelled' || comm.status === 'declined';
+                    const isPaid = comm.status === 'paid' || Boolean(comm.payment_verified);
+                    const isApproved = comm.status === 'approved';
+                    const cleanTreatment = cleanTreatmentName(comm.treatment_name);
+                    const durationStr = extractDuration(comm.treatment_name, comm.duration);
 
                     return (
-                      <tr key={item.id} className="hover:bg-[#f8fafc]/70 transition-colors">
-                        <td className="py-4 px-4 font-mono text-[11px] text-[#475569] whitespace-nowrap font-medium">
-                          {new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      <tr key={comm.id || comm.booking_id} className="hover:bg-[#f8fafc] transition-colors">
+                        {/* Date */}
+                        <td className="py-3.5 px-5 text-[#64748b] whitespace-nowrap">
+                          {formatDate(comm.created_at)}
                         </td>
-                        <td className="py-4 px-4 font-mono text-xs font-bold text-[#0f172a] whitespace-nowrap">
-                          <Link href={`/invoice/${item.booking_id}`} target="_blank" className="hover:underline">
-                            #{item.booking_id}
-                          </Link>
+
+                        {/* Booking ID */}
+                        <td className="py-3.5 px-4 font-mono font-medium text-[#0f172a] whitespace-nowrap">
+                          #{comm.booking_id}
                         </td>
-                        <td className="py-4 px-4 font-mono text-right text-xs font-semibold text-[#0f172a] whitespace-nowrap tabular-nums">
-                          {formatIDR(item.eligible_treatment_amount)}
+
+                        {/* Treatment with Clean Name and Icons */}
+                        <td className="py-3.5 px-4">
+                          <div className="text-[#0f172a] font-medium max-w-[240px]">
+                            {cleanTreatment}
+                          </div>
+                          {/* Icons for Time, Duration, Location, Room */}
+                          <div className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[11px] text-[#94a3b8] mt-1">
+                            {comm.time && (
+                              <span className="inline-flex items-center gap-0.5">
+                                <Clock size={11} className="text-[#94a3b8]" />
+                                <span>{comm.time}</span>
+                              </span>
+                            )}
+                            {durationStr && (
+                              <span className="inline-flex items-center gap-0.5">
+                                <Timer size={11} className="text-[#94a3b8]" />
+                                <span>{durationStr}</span>
+                              </span>
+                            )}
+                            {comm.location && (
+                              <span className="inline-flex items-center gap-0.5 max-w-[130px] truncate">
+                                <MapPin size={11} className="text-[#94a3b8]" />
+                                <span className="truncate">{comm.location}</span>
+                              </span>
+                            )}
+                            {comm.room_number && comm.room_number !== '-' && (
+                              <span className="inline-flex items-center gap-0.5">
+                                <DoorClosed size={11} className="text-[#94a3b8]" />
+                                <span>Room {comm.room_number}</span>
+                              </span>
+                            )}
+                          </div>
                         </td>
-                        <td className="py-4 px-4 font-mono text-center text-xs text-[#64748b] whitespace-nowrap tabular-nums">
-                          {item.commission_rate_pct}%
+
+                        {/* Rate */}
+                        <td className="py-3.5 px-4 font-mono text-[#64748b]">
+                          {comm.commission_rate_pct || 15}%
                         </td>
-                        <td className="py-4 px-4 font-mono text-right font-bold text-xs text-[#16a34a] whitespace-nowrap tabular-nums">
-                          {isCancelled ? 'Rp0' : `+${formatIDR(item.commission_amount)}`}
+
+                        {/* Commission Amount */}
+                        <td className="py-3.5 px-4 font-semibold text-[#0f172a] whitespace-nowrap">
+                          {formatIDR(comm.commission_amount)}
                         </td>
-                        <td className="py-4 px-4 text-center whitespace-nowrap">
-                          {isCancelled ? (
-                            <span className="font-mono text-[10px] font-bold text-rose-800 bg-rose-100/90 border border-rose-300 px-3 py-1 rounded-full uppercase tracking-wider">
-                              Cancelled
+
+                        {/* Status */}
+                        <td className="py-3.5 px-4 whitespace-nowrap">
+                          {isPaid ? (
+                            <span className="inline-flex items-center gap-1 font-medium text-[11px] text-[#15803d] bg-[#dcfce7] px-2 py-0.5 rounded-full">
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#16a34a]" /> Paid Out
                             </span>
-                          ) : isPaid ? (
-                            <span className="font-mono text-[10px] font-bold text-white bg-indigo-600 px-3 py-1 rounded-full uppercase tracking-wider shadow-xs shadow-indigo-500/20">
-                              PAID OUT
+                          ) : isCancelled ? (
+                            <span className="inline-flex items-center gap-1 font-medium text-[11px] text-[#b91c1c] bg-[#fee2e2] px-2 py-0.5 rounded-full">
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#dc2626]" /> Cancelled
+                            </span>
+                          ) : isApproved ? (
+                            <span className="inline-flex items-center gap-1 font-medium text-[11px] text-[#1d4ed8] bg-[#dbeafe] px-2 py-0.5 rounded-full">
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#2563eb]" /> Approved
                             </span>
                           ) : (
-                            <span className="font-mono text-[10px] font-bold text-slate-700 bg-slate-100 px-3 py-1 rounded-full uppercase tracking-wider">
-                              {item.status}
+                            <span className="inline-flex items-center gap-1 font-medium text-[11px] text-[#b45309] bg-[#fef3c7] px-2 py-0.5 rounded-full">
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#d97706]" /> Pending
                             </span>
                           )}
                         </td>
-                        <td className="py-4 px-4 text-right whitespace-nowrap">
-                          <div className="flex items-center justify-end gap-2">
-                            <button
-                              type="button"
-                              onClick={() => setTrackingBooking(itemAsCalendarBooking(item))}
-                              className="h-7.5 px-3.5 rounded-xl bg-slate-900 hover:bg-black text-xs font-bold text-white inline-flex items-center gap-1.5 cursor-pointer transition-all shadow-xs active:scale-95"
-                              title="Track schedule & booking details"
-                            >
-                              <Clock size={12} className="text-slate-300" />
-                              <span>Track</span>
-                            </button>
-                            <Link
-                              href={`/invoice/${item.booking_id}`}
-                              target="_blank"
-                              className="text-xs font-bold text-slate-600 hover:text-slate-900 inline-flex items-center gap-0.5 hover:underline px-2 py-1"
-                              title="View invoice"
-                            >
-                              <span>Invoice</span>
-                              <ExternalLink size={11} />
-                            </Link>
-                          </div>
+
+                        {/* Action: Track Button with Icon */}
+                        <td className="py-3.5 px-5 text-right whitespace-nowrap">
+                          <button
+                            type="button"
+                            onClick={() => setTrackingBooking(itemAsCalendarBooking(comm))}
+                            className="inline-flex items-center gap-1 px-3 py-1 rounded-[6px] bg-[#0f172a] hover:bg-[#1e293b] text-white text-xs font-medium transition-colors cursor-pointer"
+                          >
+                            <Activity size={12} className="text-white/80" />
+                            <span>Track</span>
+                            <ChevronRight size={12} />
+                          </button>
                         </td>
                       </tr>
                     );
@@ -558,96 +392,113 @@ export default function PartnerCommissionsPage() {
                 </tbody>
               </table>
             </div>
+          </div>
 
-            {/* Mobile App Commission Cards (< 768px) */}
-            <div className="md:hidden space-y-3 p-3">
-              {filtered.map((item) => {
-                const isPaid = item.status === 'paid';
-                const isCancelled = item.status === 'cancelled';
+          {/* MOBILE CARDS */}
+          <div className="md:hidden space-y-3">
+            {filteredCommissions.map((comm) => {
+              const isCancelled = comm.status === 'cancelled' || comm.status === 'declined';
+              const isPaid = comm.status === 'paid' || Boolean(comm.payment_verified);
+              const isApproved = comm.status === 'approved';
+              const cleanTreatment = cleanTreatmentName(comm.treatment_name);
+              const durationStr = extractDuration(comm.treatment_name, comm.duration);
 
-                return (
-                  <div
-                    key={item.id}
-                    className="p-4 rounded-2xl bg-white border border-[#eaecf0] space-y-3 shadow-xs hover:border-[#cbd5e1] transition-all overflow-hidden"
-                  >
-                    {/* Top Row: Invoice # + Date + Commission */}
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-1.5 min-w-0">
-                        <Link
-                          href={`/invoice/${item.booking_id}`}
-                          target="_blank"
-                          className="font-mono text-xs font-bold text-[#0f172a] hover:underline"
-                        >
-                          #{item.booking_id}
-                        </Link>
-                        <span className="text-[#cbd5e1]">·</span>
-                        <span className="font-mono text-[11px] text-[#64748b]">
-                          {new Date(item.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
-                        </span>
+              return (
+                <div
+                  key={comm.id || comm.booking_id}
+                  className="bg-white rounded-xl border border-[#e2e8f0] p-4 shadow-xs space-y-3"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <div className="text-[11px] text-[#94a3b8] font-mono">
+                        {formatDate(comm.created_at)}
                       </div>
-                      <div className="text-right shrink-0">
-                        <span className={`font-mono font-bold text-xs sm:text-sm tabular-nums ${isCancelled ? 'line-through text-[#94a3b8]' : 'text-[#16a34a]'}`}>
-                          {isCancelled ? 'Rp0' : `+${formatIDR(item.commission_amount)}`}
-                        </span>
+                      <div className="text-sm font-semibold text-[#0f172a] mt-0.5 leading-snug">
+                        <span className="font-mono text-xs">#{comm.booking_id}</span> · {cleanTreatment}
                       </div>
-                    </div>
 
-                    {/* Middle Row: Net & Rate + Status Badge */}
-                    <div className="pt-2.5 border-t border-[#f1f5f9] flex items-center justify-between text-xs">
-                      <div className="font-mono text-[11px] text-[#64748b]">
-                        Net {formatIDR(item.eligible_treatment_amount)} · {item.commission_rate_pct}%
-                      </div>
-                      <div className="shrink-0">
-                        {isCancelled ? (
-                          <span className="font-mono text-[10px] font-bold text-rose-800 bg-rose-100/90 border border-rose-300 px-3 py-1 rounded-full uppercase tracking-wider">
-                            Cancelled
+                      {/* Metadata Icons: Time, Duration, Location, Room */}
+                      <div className="flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-[11px] text-[#94a3b8] mt-1.5">
+                        {comm.time && (
+                          <span className="inline-flex items-center gap-1">
+                            <Clock size={11} className="text-[#94a3b8]" />
+                            <span>{comm.time}</span>
                           </span>
-                        ) : isPaid ? (
-                          <span className="font-mono text-[10px] font-bold text-white bg-indigo-600 px-3 py-1 rounded-full uppercase tracking-wider shadow-xs shadow-indigo-500/20">
-                            PAID OUT
+                        )}
+                        {durationStr && (
+                          <span className="inline-flex items-center gap-1">
+                            <Timer size={11} className="text-[#94a3b8]" />
+                            <span>{durationStr}</span>
                           </span>
-                        ) : (
-                          <span className="font-mono text-[10px] font-bold text-slate-700 bg-slate-100 px-3 py-1 rounded-full uppercase tracking-wider">
-                            {item.status}
+                        )}
+                        {comm.location && (
+                          <span className="inline-flex items-center gap-1 truncate max-w-[140px]">
+                            <MapPin size={11} className="text-[#94a3b8]" />
+                            <span className="truncate">{comm.location}</span>
+                          </span>
+                        )}
+                        {comm.room_number && comm.room_number !== '-' && (
+                          <span className="inline-flex items-center gap-1">
+                            <DoorClosed size={11} className="text-[#94a3b8]" />
+                            <span>Room {comm.room_number}</span>
                           </span>
                         )}
                       </div>
                     </div>
 
-                    {/* Native App Actions Bar: Full-width Track CTA + Invoice Button */}
-                    <div className="pt-2.5 border-t border-[#f1f5f9] flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setTrackingBooking(itemAsCalendarBooking(item))}
-                        className="flex-1 h-9 rounded-xl bg-slate-900 hover:bg-black text-white text-xs font-bold inline-flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.98] transition-transform shadow-xs"
-                      >
-                        <Clock size={13} className="text-slate-300" />
-                        <span>Track</span>
-                      </button>
+                    <button
+                      type="button"
+                      onClick={() => setTrackingBooking(itemAsCalendarBooking(comm))}
+                      className="inline-flex items-center gap-1 px-3 py-1 rounded-[6px] bg-[#0f172a] text-white text-xs font-medium shrink-0"
+                    >
+                      <Activity size={12} className="text-white/80" />
+                      <span>Track</span>
+                      <ChevronRight size={12} />
+                    </button>
+                  </div>
 
-                      <Link
-                        href={`/invoice/${item.booking_id}`}
-                        target="_blank"
-                        className="h-9 px-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 text-xs font-bold inline-flex items-center justify-center gap-1 active:scale-[0.98] transition-transform shadow-2xs"
-                      >
-                        <span>Invoice</span>
-                        <ExternalLink size={10} className="text-[#94a3b8]" />
-                      </Link>
+                  <div className="flex items-center justify-between pt-2 border-t border-[#f1f5f9]">
+                    <div>
+                      <div className="text-[10px] text-[#94a3b8] uppercase font-mono">Commission</div>
+                      <div className="text-sm font-bold text-[#0f172a]">
+                        {formatIDR(comm.commission_amount)}
+                      </div>
+                    </div>
+
+                    <div>
+                      {isPaid ? (
+                        <span className="inline-flex items-center gap-1 font-medium text-[11px] text-[#15803d] bg-[#dcfce7] px-2 py-0.5 rounded-full">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#16a34a]" /> Paid Out
+                        </span>
+                      ) : isCancelled ? (
+                        <span className="inline-flex items-center gap-1 font-medium text-[11px] text-[#b91c1c] bg-[#fee2e2] px-2 py-0.5 rounded-full">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#dc2626]" /> Cancelled
+                        </span>
+                      ) : isApproved ? (
+                        <span className="inline-flex items-center gap-1 font-medium text-[11px] text-[#1d4ed8] bg-[#dbeafe] px-2 py-0.5 rounded-full">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#2563eb]" /> Approved
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 font-medium text-[11px] text-[#b45309] bg-[#fef3c7] px-2 py-0.5 rounded-full">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#d97706]" /> Pending
+                        </span>
+                      )}
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          </>
-        )}
-      </div>
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
 
       {/* Schedule Tracking Modal */}
-      <ScheduleTrackingModal
-        booking={trackingBooking}
-        onClose={() => setTrackingBooking(null)}
-      />
-
+      {trackingBooking && (
+        <ScheduleTrackingModal
+          booking={trackingBooking}
+          onClose={() => setTrackingBooking(null)}
+        />
+      )}
     </div>
   );
 }

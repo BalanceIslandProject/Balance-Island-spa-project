@@ -1,44 +1,32 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { 
   User, 
+  Copy, 
+  Check, 
+  Download, 
+  QrCode, 
+  X, 
+  Landmark, 
   ShieldCheck, 
-  Building2, 
-  CheckCircle2, 
-  AlertCircle,
-  LogOut,
-  Copy,
-  Check,
-  MessageCircle,
-  Lock,
-  Landmark,
-  Camera,
-  Trash2,
-  Share2,
-  KeyRound,
-  ExternalLink,
-  QrCode,
-  Download
+  Phone,
+  Building,
+  CheckCircle2
 } from 'lucide-react';
 
-const AVATAR_STORAGE_KEY = 'partner_profile_avatar_local';
-
-export default function PartnerProfilePage() {
-  const router = useRouter();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
+export default function PartnerSettingsPage() {
+  const [partner, setPartner] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [loggingOut, setLoggingOut] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
-  const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [downloadingQr, setDownloadingQr] = useState(false);
 
-  const [partner, setPartner] = useState<any>(null);
-  const [localAvatar, setLocalAvatar] = useState<string | null>(null);
-
+  // Edit Profile Modal
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
   const [formData, setFormData] = useState({
     first_name: '',
     last_name: '',
@@ -50,15 +38,6 @@ export default function PartnerProfilePage() {
   });
 
   useEffect(() => {
-    try {
-      const savedPhoto = localStorage.getItem(AVATAR_STORAGE_KEY);
-      if (savedPhoto) {
-        setLocalAvatar(savedPhoto);
-      }
-    } catch (e) {
-      console.error('Error loading avatar from local storage:', e);
-    }
-
     async function loadProfile() {
       try {
         const res = await fetch('/api/affiliates/auth/me');
@@ -85,146 +64,64 @@ export default function PartnerProfilePage() {
     loadProfile();
   }, []);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!file.type.startsWith('image/')) {
-      alert('Please select a valid image file (PNG, JPG, WebP).');
-      return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      alert('Please choose an image under 5MB.');
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const dataUrl = event.target?.result as string;
-      if (dataUrl) {
-        const img = new Image();
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          const maxDim = 400;
-          let width = img.width;
-          let height = img.height;
-          if (width > height) {
-            if (width > maxDim) {
-              height = Math.round((height * maxDim) / width);
-              width = maxDim;
-            }
-          } else {
-            if (height > maxDim) {
-              width = Math.round((width * maxDim) / height);
-              height = maxDim;
-            }
-          }
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          if (ctx) {
-            ctx.drawImage(img, 0, 0, width, height);
-            const compressed = canvas.toDataURL('image/jpeg', 0.85);
-            try {
-              localStorage.setItem(AVATAR_STORAGE_KEY, compressed);
-              setLocalAvatar(compressed);
-            } catch (storageErr) {
-              try {
-                localStorage.setItem(AVATAR_STORAGE_KEY, dataUrl);
-                setLocalAvatar(dataUrl);
-              } catch (fallbackErr) {
-                alert('Local device storage is full. Could not save photo.');
-              }
-            }
-          }
-        };
-        img.src = dataUrl;
-      }
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handleRemoveAvatar = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    try {
-      localStorage.removeItem(AVATAR_STORAGE_KEY);
-      setLocalAvatar(null);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-    } catch (err) {
-      console.error('Error removing local avatar:', err);
-    }
-  };
-
-  const partnerCode = partner?.partner_code || 'BALIHEAD112';
-  const referralLink = `https://www.booktherapick.com/?ref=${partnerCode}`;
+  const partnerCode = partner?.partner_code || 'MIKODRIV721';
+  const partnerName = partner?.first_name 
+    ? `${partner.first_name} ${partner.last_name || ''}`.trim() 
+    : 'Miko Arta';
+  const commissionRate = partner?.commission_rate_pct || 15;
+  const referralLink = `https://www.booktherapick.com/ref=${partnerCode}`;
   const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(referralLink)}`;
-  const fallbackQrUrl = `https://chart.googleapis.com/chart?chs=400x400&cht=qr&chl=${encodeURIComponent(referralLink)}&choe=UTF-8`;
+
+  const partnerInitials = partner?.first_name 
+    ? `${partner.first_name[0] || 'M'}${partner.last_name?.[0] || 'A'}`.toUpperCase()
+    : 'MA';
+
+  const formatJoinedDate = (createdStr?: string) => {
+    if (!createdStr) return 'Joined 25 Oct 2026';
+    try {
+      const d = new Date(createdStr);
+      return `Joined ${d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`;
+    } catch {
+      return 'Joined 25 Oct 2026';
+    }
+  };
 
   const handleCopyLink = () => {
-    if (!referralLink) return;
     navigator.clipboard.writeText(referralLink);
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 2000);
   };
 
   const handleCopyCode = () => {
-    if (!partnerCode) return;
     navigator.clipboard.writeText(partnerCode);
     setCopiedCode(true);
     setTimeout(() => setCopiedCode(false), 2000);
   };
 
   const handleDownloadQR = async () => {
-    if (!qrCodeUrl) return;
+    setDownloadingQr(true);
     try {
       const response = await fetch(qrCodeUrl);
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `therapick-partner-qr-${partnerCode || 'code'}.png`;
+      a.download = `therapick-qr-${partnerCode}.png`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-    } catch (err) {
-      window.open(qrCodeUrl, '_blank');
-    }
-  };
-
-  const handleLogout = async () => {
-    try {
-      setLoggingOut(true);
-      await fetch('/api/affiliates/auth/logout', { method: 'POST' });
-      router.push('/partners/login');
-      router.refresh();
     } catch (e) {
-      console.error('Logout error:', e);
+      window.open(qrCodeUrl, '_blank');
     } finally {
-      setLoggingOut(false);
+      setDownloadingQr(false);
     }
   };
 
-  const handleSave = async (e: React.FormEvent) => {
+  const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSaving(true);
-    setStatusMsg(null);
-
+    setSavingProfile(true);
     try {
-      const payout_details = {
-        bank_name: formData.bank_name || 'BCA',
-        account_number: formData.account_number,
-        account_holder: formData.account_holder,
-      };
-
       const res = await fetch('/api/affiliates/auth/me', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -232,532 +129,321 @@ export default function PartnerProfilePage() {
           first_name: formData.first_name,
           last_name: formData.last_name,
           business_name: formData.business_name,
-          phone: formData.whatsapp,
           whatsapp: formData.whatsapp,
-          payout_method: 'bank_transfer',
-          payout_details,
+          phone: formData.whatsapp,
+          payout_details: {
+            bank_name: formData.bank_name,
+            account_number: formData.account_number,
+            account_holder: formData.account_holder,
+          },
         }),
       });
-
       const data = await res.json();
-      if (!res.ok || !data.success) {
-        setStatusMsg({ type: 'error', text: data.message || 'Failed to save changes.' });
-      } else {
-        setStatusMsg({ type: 'success', text: 'Partner profile updated successfully.' });
-        setPartner(data.partner);
+      if (data.success) {
+        setPartner((prev: any) => ({
+          ...prev,
+          first_name: formData.first_name,
+          last_name: formData.last_name,
+          business_name: formData.business_name,
+          whatsapp: formData.whatsapp,
+          phone: formData.whatsapp,
+          payout_details: {
+            bank_name: formData.bank_name,
+            account_number: formData.account_number,
+            account_holder: formData.account_holder,
+          },
+        }));
+        setSaveSuccess(true);
+        setTimeout(() => {
+          setSaveSuccess(false);
+          setShowEditModal(false);
+        }, 1200);
       }
-    } catch (err: any) {
-      setStatusMsg({ type: 'error', text: err.message || 'An error occurred while saving.' });
+    } catch (err) {
+      console.error('Error saving profile:', err);
     } finally {
-      setSaving(false);
+      setSavingProfile(false);
     }
   };
 
-  if (loading) {
-    return (
-      <div className="py-24 text-center space-y-3">
-        <div className="w-6 h-6 border-2 border-[#111827] border-t-transparent rounded-full animate-spin mx-auto" />
-        <div className="text-xs text-[#6b7280] font-mono">Loading partner profile...</div>
-      </div>
-    );
-  }
-
-  const initials = `${formData.first_name?.[0] || partner?.first_name?.[0] || 'P'}${formData.last_name?.[0] || partner?.last_name?.[0] || ''}`.toUpperCase();
-
   return (
-    <div className="w-full max-w-4xl mx-auto space-y-5 pb-12 font-sans">
+    <div className="space-y-6 w-full font-sans">
       
-      {/* Title */}
+      {/* 1. HEADER */}
       <div>
-        <h1 className="text-xl sm:text-2xl font-bold text-[#111827] tracking-tight">
-          Partner Settings & Profile
+        <h1 className="text-2xl sm:text-3xl font-semibold text-[#0f172a] tracking-tight">
+          Settings / Profile
         </h1>
-        <p className="text-xs sm:text-sm text-[#6b7280] mt-0.5">
-          Manage your partner profile, Indonesian bank transfer destination, and account security.
+        <p className="text-sm text-[#64748b] mt-1">
+          Manage your profile and referral link.
         </p>
       </div>
 
-      {/* Hero Profile Identity Card */}
-      <div className="bg-white border border-[#e5e7eb] rounded-[10px] p-5 sm:p-6 shadow-xs">
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          onChange={handleAvatarChange}
-          className="hidden"
-          aria-label="Upload profile photo"
-        />
+      {/* 2. THREE CARDS (Partner Profile, Referral Link & Code, QR Code) */}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+        
+        {/* CARD 1: PARTNER PROFILE */}
+        <div className="col-span-1 md:col-span-12 lg:col-span-4 bg-white rounded-xl border border-[#e2e8f0] p-5 shadow-xs space-y-4">
+          <h2 className="text-sm font-semibold text-[#0f172a]">
+            Partner Profile
+          </h2>
 
-        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-          <div className="flex items-start gap-4">
-            
-            {/* Avatar */}
-            <div className="relative shrink-0">
-              <div 
-                onClick={() => fileInputRef.current?.click()}
-                className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[#111827] text-white font-bold text-lg sm:text-2xl flex items-center justify-center border border-[#e5e7eb] cursor-pointer overflow-hidden group relative transition-transform"
-                title="Tap to change profile photo"
-              >
-                {localAvatar ? (
-                  <img
-                    src={localAvatar}
-                    alt="Partner profile"
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <span>{initials || 'P'}</span>
-                )}
-
-                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
-                  <Camera size={16} />
-                </div>
-              </div>
+          <div className="flex items-start gap-3.5">
+            {/* Avatar Circle */}
+            <div className="w-13 h-13 rounded-full bg-[#0f172a] text-white font-bold text-base flex items-center justify-center shrink-0">
+              {partnerInitials}
             </div>
 
-            {/* Details */}
-            <div className="space-y-1.5 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-base sm:text-lg font-bold text-[#111827] tracking-tight truncate">
-                  {formData.first_name || 'Partner'} {formData.last_name || ''}
-                </h2>
-                <span className="inline-flex items-center gap-1 font-mono text-[10px] font-semibold text-[#16a34a] bg-[#16a34a]/10 px-2 py-0.5 rounded-[4px] border border-[#16a34a]/20 uppercase">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#16a34a] animate-pulse" />
-                  {partner?.status || 'Active'}
+            {/* Profile Info */}
+            <div className="min-w-0 flex-1 space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-sm sm:text-base text-[#0f172a] truncate">
+                  {partnerName}
+                </span>
+                <span className="inline-flex items-center gap-1 font-medium text-[10px] text-[#15803d] bg-[#dcfce7] px-2 py-0.5 rounded-full shrink-0">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#16a34a]" /> Active
                 </span>
               </div>
 
-              <div className="flex items-center gap-1.5 text-xs text-[#6b7280] truncate font-medium">
-                <Building2 size={13} className="text-[#9ca3af] shrink-0" />
-                <span className="truncate">{formData.business_name || 'Hospitality Partner'}</span>
+              <div className="font-mono text-xs text-[#64748b]">
+                {partnerCode}
               </div>
 
-              <div className="flex items-center gap-2 flex-wrap text-xs text-[#6b7280] font-mono">
-                <span className="text-[#111827] bg-[#f3f4f6] px-2 py-0.5 rounded-[4px] font-semibold">
-                  {partner?.commission_rate_pct || 10}% Commission
-                </span>
-                <span>•</span>
-                <span className="truncate">{partner?.email}</span>
-              </div>
-
-              <div className="pt-1 flex items-center gap-2 text-xs">
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="font-medium text-[#111827] hover:underline cursor-pointer inline-flex items-center gap-1"
-                >
-                  <Camera size={11} className="text-[#6b7280]" />
-                  <span>{localAvatar ? 'Change Photo' : 'Upload Photo'}</span>
-                </button>
-                {localAvatar && (
-                  <>
-                    <span className="text-[#e5e7eb]">•</span>
-                    <button
-                      type="button"
-                      onClick={handleRemoveAvatar}
-                      className="font-medium text-red-600 hover:underline cursor-pointer inline-flex items-center gap-1"
-                    >
-                      <Trash2 size={11} />
-                      <span>Remove</span>
-                    </button>
-                  </>
-                )}
+              <div className="text-xs text-[#64748b] pt-0.5">
+                {commissionRate}% commission • {formatJoinedDate(partner?.created_at)}
               </div>
             </div>
           </div>
 
-          {/* Quick Partner Code */}
-          <div className="flex sm:flex-col items-center sm:items-end justify-between gap-2 border-t sm:border-t-0 pt-3 sm:pt-0 border-[#e5e7eb]">
-            <span className="font-mono text-[10px] uppercase tracking-wider text-[#6b7280]">
-              Partner Code
-            </span>
-            <div className="flex items-center gap-1.5">
-              <span className="font-mono font-bold text-sm text-[#111827] bg-[#f9fafb] px-2.5 py-1 rounded-[6px] border border-[#e5e7eb]">
-                {partner?.partner_code || '...'}
-              </span>
+          <div className="pt-2 border-t border-[#f1f5f9]">
+            <button
+              type="button"
+              onClick={() => setShowEditModal(true)}
+              className="w-full py-2 px-3 text-xs font-medium text-[#0f172a] bg-[#f8fafc] hover:bg-[#f1f5f9] border border-[#e2e8f0] rounded-[8px] transition-colors cursor-pointer"
+            >
+              Edit Profile
+            </button>
+          </div>
+        </div>
+
+        {/* CARD 2: REFERRAL LINK & CODE */}
+        <div className="col-span-1 md:col-span-7 lg:col-span-5 bg-white rounded-xl border border-[#e2e8f0] p-5 shadow-xs space-y-4">
+          <h2 className="text-sm font-semibold text-[#0f172a]">
+            Referral Link & Code
+          </h2>
+
+          {/* Referral Link Field */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-[#64748b] block">
+              Referral Link
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                readOnly
+                value={referralLink}
+                className="flex-1 px-3 py-2 text-xs bg-[#f8fafc] border border-[#e2e8f0] rounded-[8px] text-[#0f172a] font-mono truncate focus:outline-none select-all"
+              />
               <button
                 type="button"
-                onClick={handleCopyCode}
-                className="p-1.5 rounded-[6px] bg-[#f9fafb] hover:bg-[#f3f4f6] border border-[#e5e7eb] text-[#111827] cursor-pointer"
-                title="Copy partner code"
+                onClick={handleCopyLink}
+                className="px-3.5 py-2 rounded-[8px] bg-[#0f172a] hover:bg-[#1e293b] text-white text-xs font-medium transition-colors shrink-0 flex items-center gap-1 cursor-pointer"
               >
-                {copiedCode ? <Check size={12} className="text-[#16a34a]" /> : <Copy size={12} />}
+                {copiedLink ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
+                <span>{copiedLink ? 'Copied' : 'Copy'}</span>
               </button>
             </div>
           </div>
+
+          {/* Partner Code Field */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-[#64748b] block">
+              Partner Code
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                readOnly
+                value={partnerCode}
+                className="flex-1 px-3 py-2 text-xs bg-[#f8fafc] border border-[#e2e8f0] rounded-[8px] text-[#0f172a] font-mono tracking-wider truncate focus:outline-none select-all"
+              />
+              <button
+                type="button"
+                onClick={handleCopyCode}
+                className="px-3.5 py-2 rounded-[8px] bg-[#0f172a] hover:bg-[#1e293b] text-white text-xs font-medium transition-colors shrink-0 flex items-center gap-1 cursor-pointer"
+              >
+                {copiedCode ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
+                <span>{copiedCode ? 'Copied' : 'Copy'}</span>
+              </button>
+            </div>
+          </div>
+
+          <p className="text-[11px] text-[#94a3b8] leading-relaxed pt-1 border-t border-[#f1f5f9]">
+            Guests who visit with your link or code get 30-day referral attribution.
+          </p>
         </div>
+
+        {/* CARD 3: QR CODE */}
+        <div className="col-span-1 md:col-span-5 lg:col-span-3 bg-white rounded-xl border border-[#e2e8f0] p-5 shadow-xs space-y-4 flex flex-col items-center text-center">
+          <h2 className="text-sm font-semibold text-[#0f172a] self-start">
+            QR Code
+          </h2>
+
+          <div className="p-3 bg-white border border-[#e2e8f0] rounded-[10px] shadow-xs">
+            <img
+              src={qrCodeUrl}
+              alt={`Therapick Partner QR - ${partnerCode}`}
+              className="w-32 h-32 object-contain"
+            />
+          </div>
+
+          <button
+            type="button"
+            onClick={handleDownloadQR}
+            disabled={downloadingQr}
+            className="w-full py-2 px-3 rounded-[8px] bg-[#0f172a] hover:bg-[#1e293b] text-white text-xs font-medium transition-colors flex items-center justify-center gap-1.5 shadow-xs cursor-pointer"
+          >
+            <Download size={13} />
+            <span>{downloadingQr ? 'Downloading...' : 'Download QR'}</span>
+          </button>
+        </div>
+
       </div>
 
       {/* ========================================================
-          REFERRAL LINK & OFFICIAL PARTNER QR CODE
+          MODAL: EDIT PARTNER PROFILE
          ======================================================== */}
-      <div className="bg-white border border-[#e5e7eb] rounded-[10px] p-5 sm:p-6 space-y-5 shadow-xs">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#e5e7eb] pb-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <QrCode size={18} className="text-[#111827]" />
-              <h2 className="text-base font-bold text-[#111827] tracking-tight">
-                Referral Link & Official QR Code
-              </h2>
-            </div>
-            <p className="text-xs text-[#6b7280] mt-0.5">
-              Display your branded QR stand on guest reception desks or share your direct booking attribution link.
-            </p>
-          </div>
-          <span className="font-mono text-[10px] font-semibold text-[#16a34a] bg-[#16a34a]/10 px-2.5 py-1 rounded-[4px] border border-[#16a34a]/20 uppercase shrink-0 self-start sm:self-auto">
-            {partner?.commission_rate_pct || 10}% Attributed Commission
-          </span>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
-          {/* Left: Official QR Code Box */}
-          <div className="md:col-span-5 flex flex-col items-center p-5 rounded-[8px] bg-[#fafafa] border border-[#e5e7eb] text-center">
-            <div className="bg-white p-3 rounded-[6px] border border-[#e5e7eb] shadow-2xs inline-block">
-              <img
-                src={qrCodeUrl}
-                alt={`Therapick Partner QR Code - ${partnerCode}`}
-                className="w-40 h-40 sm:w-44 sm:h-44 object-contain rounded-md"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  if (target.src !== fallbackQrUrl) {
-                    target.src = fallbackQrUrl;
-                  }
-                }}
-              />
-            </div>
-            <div className="mt-2.5 space-y-0.5">
-              <span className="font-mono text-xs font-bold text-slate-900 uppercase tracking-wider block">
-                SCAN TO BOOK THERAPICK
-              </span>
-              <span className="font-mono text-xs font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-md inline-block">
-                Ref Code: {partnerCode}
-              </span>
-            </div>
-            <button
-              type="button"
-              onClick={handleDownloadQR}
-              className="mt-3.5 w-full py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-black text-white font-mono font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm active:scale-95"
-            >
-              <Download size={14} />
-              <span>Download Official QR Stand (PNG)</span>
-            </button>
-          </div>
-
-          {/* Right: Link & Code Controls */}
-          <div className="md:col-span-7 space-y-4">
-            <div>
-              <label className="block text-xs font-semibold text-[#111827] mb-1.5">
-                Your Direct Referral URL
-              </label>
-              <div className="flex items-center gap-2 p-2 rounded-[6px] bg-[#f9fafb] border border-[#e5e7eb]">
-                <input
-                  type="text"
-                  readOnly
-                  value={referralLink || 'Loading link...'}
-                  className="w-full text-xs font-mono text-[#111827] bg-transparent outline-none truncate"
-                />
-                <button
-                  type="button"
-                  onClick={handleCopyLink}
-                  className="p-1.5 px-3 rounded-[4px] bg-[#111827] hover:bg-black text-white text-xs font-mono transition-colors cursor-pointer shrink-0 flex items-center gap-1.5"
-                >
-                  {copiedLink ? (
-                    <>
-                      <Check size={12} className="text-[#16a34a]" />
-                      <span>Copied</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy size={12} />
-                      <span>Copy</span>
-                    </>
-                  )}
-                </button>
+      {showEditModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-in fade-in duration-150">
+          <div className="w-full max-w-lg bg-white rounded-xl border border-[#e2e8f0] shadow-2xl p-6 space-y-4 animate-in zoom-in-95 max-h-[90vh] overflow-y-auto font-sans">
+            <div className="flex items-center justify-between pb-3 border-b border-[#f1f5f9]">
+              <div className="flex items-center gap-2">
+                <User size={18} className="text-[#0f172a]" />
+                <h3 className="font-semibold text-sm text-[#0f172a]">Edit Partner Profile</h3>
               </div>
-            </div>
-
-            <div className="flex items-center justify-between p-3 rounded-[6px] bg-[#f9fafb] border border-[#e5e7eb] text-xs">
-              <div>
-                <span className="text-[11px] font-mono text-[#6b7280] block uppercase tracking-wider">
-                  Partner Attribution Code
-                </span>
-                <span className="font-mono font-bold text-sm text-[#111827]">
-                  {partnerCode || '...'}
-                </span>
-              </div>
-              <button
+              <button 
                 type="button"
-                onClick={handleCopyCode}
-                className="px-2.5 py-1 text-xs font-mono text-[#111827] hover:bg-white rounded border border-[#e5e7eb] cursor-pointer"
+                onClick={() => setShowEditModal(false)}
+                className="text-[#94a3b8] hover:text-[#0f172a]"
               >
-                {copiedCode ? 'Copied' : 'Copy Code'}
+                <X size={16} />
               </button>
             </div>
 
-            <div className="p-3.5 rounded-[6px] bg-[#fafafa] border border-[#e5e7eb] space-y-1.5 text-xs text-[#6b7280]">
-              <div className="flex items-center gap-1.5 font-medium text-[#111827]">
-                <ShieldCheck size={14} className="text-[#297a3a]" />
-                <span>30-Day Attribution Guarantee</span>
-              </div>
-              <p className="text-[11px] leading-relaxed">
-                Guests who click your link or scan your QR stand receive an automatic 30-day cookie window. Any booking placed within 30 days is credited directly to your partner account.
-              </p>
-            </div>
-
-            {referralLink && (
-              <div className="pt-1">
-                <a
-                  href={referralLink}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1.5 text-xs text-[#4b5563] hover:text-[#111827] font-medium transition-colors"
-                >
-                  <ExternalLink size={12} />
-                  <span>Preview guest booking experience with your attribution</span>
-                </a>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {statusMsg && (
-        <div
-          className={`p-3.5 rounded-[8px] border text-xs flex items-center gap-2.5 animate-in fade-in-50 ${
-            statusMsg.type === 'success'
-              ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
-              : 'border-red-200 bg-red-50 text-red-950'
-          }`}
-        >
-          {statusMsg.type === 'success' ? (
-            <CheckCircle2 size={15} className="text-[#16a34a] shrink-0" />
-          ) : (
-            <AlertCircle size={15} className="text-red-600 shrink-0" />
-          )}
-          <span className="font-semibold">{statusMsg.text}</span>
-        </div>
-      )}
-
-      {/* Main Settings Form */}
-      <form onSubmit={handleSave} className="space-y-5">
-        
-        {/* Section 1: Contact Information */}
-        <div className="bg-white border border-[#e5e7eb] rounded-[10px] p-5 sm:p-6 space-y-4 shadow-xs">
-          <div className="flex items-start gap-2.5 border-b border-[#e5e7eb] pb-3">
-            <User size={18} className="text-[#111827] shrink-0 mt-0.5" />
-            <div>
-              <h3 className="text-sm font-semibold text-[#111827]">
-                Contact & Business Information
-              </h3>
-              <p className="text-xs text-[#6b7280]">
-                Your identity and registered partner details
-              </p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-medium text-[#374151] mb-1.5">First Name</label>
-              <input
-                type="text"
-                name="first_name"
-                value={formData.first_name}
-                onChange={handleChange}
-                placeholder="First name"
-                className="w-full px-3 py-2 rounded-[6px] border border-[#e5e7eb] text-xs font-medium text-[#111827] bg-white focus:outline-none focus:border-[#111827]"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-[#374151] mb-1.5">Last Name</label>
-              <input
-                type="text"
-                name="last_name"
-                value={formData.last_name}
-                onChange={handleChange}
-                placeholder="Last name"
-                className="w-full px-3 py-2 rounded-[6px] border border-[#e5e7eb] text-xs font-medium text-[#111827] bg-white focus:outline-none focus:border-[#111827]"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs font-medium text-[#374151] mb-1.5">Villa, Hotel, or Business Name</label>
-            <input
-              type="text"
-              name="business_name"
-              value={formData.business_name}
-              onChange={handleChange}
-              placeholder="e.g. Villa Mandala Ubud"
-              className="w-full px-3 py-2 rounded-[6px] border border-[#e5e7eb] text-xs font-medium text-[#111827] bg-white focus:outline-none focus:border-[#111827]"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-medium text-[#374151] mb-1.5">WhatsApp Number</label>
-            <input
-              type="tel"
-              name="whatsapp"
-              value={formData.whatsapp}
-              onChange={handleChange}
-              placeholder="+62 812 3456 7890"
-              className="w-full px-3 py-2 rounded-[6px] border border-[#e5e7eb] text-xs font-medium text-[#111827] bg-white focus:outline-none focus:border-[#111827]"
-            />
-            <p className="text-[11px] text-[#6b7280] mt-1">
-              Used for automated guest booking alerts and finance settlements. Include country code (+62).
-            </p>
-          </div>
-        </div>
-
-        {/* Section 2: Bank Transfer Payout Destination */}
-        <div className="bg-white border border-[#e5e7eb] rounded-[10px] p-5 sm:p-6 space-y-4 shadow-xs">
-          <div className="flex items-start gap-2.5 border-b border-[#e5e7eb] pb-3">
-            <Landmark size={18} className="text-[#111827] shrink-0 mt-0.5" />
-            <div>
-              <h3 className="text-sm font-semibold text-[#111827]">
-                Bank Transfer Payout Destination
-              </h3>
-              <p className="text-xs text-[#6b7280]">
-                Where you receive your weekly or on-demand affiliate earnings via direct bank transfer
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-3.5 p-4 rounded-[8px] bg-[#f9fafb] border border-[#e5e7eb]">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-medium text-[#374151] mb-1.5">Bank Name</label>
-                <div className="relative">
+            <form onSubmit={handleSaveProfile} className="space-y-4 text-xs">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="font-medium text-[#475569] block mb-1">First Name</label>
                   <input
                     type="text"
-                    name="bank_name"
-                    value={formData.bank_name}
-                    onChange={handleChange}
-                    placeholder="BCA, Mandiri, BNI, BRI, etc."
-                    className="w-full px-3 py-2 rounded-[6px] border border-[#e5e7eb] text-xs font-semibold text-[#111827] bg-white focus:outline-none focus:border-[#111827]"
+                    required
+                    value={formData.first_name}
+                    onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+                    className="w-full px-3 py-2 bg-white border border-[#e2e8f0] rounded-[8px] focus:outline-none focus:border-[#0f172a]"
                   />
                 </div>
-                <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-                  {['BCA', 'Mandiri', 'BNI', 'BRI'].map((bank) => (
-                    <button
-                      type="button"
-                      key={bank}
-                      onClick={() => setFormData((prev) => ({ ...prev, bank_name: bank }))}
-                      className={`px-2.5 py-0.5 rounded-[4px] text-xs font-mono transition-all cursor-pointer border ${
-                        formData.bank_name?.toUpperCase() === bank
-                          ? 'bg-[#111827] text-white border-[#111827] font-semibold'
-                          : 'bg-white border-[#e5e7eb] text-[#6b7280] hover:text-[#111827]'
-                      }`}
-                    >
-                      {bank}
-                    </button>
-                  ))}
+                <div>
+                  <label className="font-medium text-[#475569] block mb-1">Last Name</label>
+                  <input
+                    type="text"
+                    value={formData.last_name}
+                    onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+                    className="w-full px-3 py-2 bg-white border border-[#e2e8f0] rounded-[8px] focus:outline-none focus:border-[#0f172a]"
+                  />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-[#374151] mb-1.5">Account Number</label>
+                <label className="font-medium text-[#475569] block mb-1">Business Name / Villa</label>
                 <input
                   type="text"
-                  name="account_number"
-                  value={formData.account_number}
-                  onChange={handleChange}
-                  placeholder="e.g. 1234567890"
-                  className="w-full px-3 py-2 rounded-[6px] border border-[#e5e7eb] text-xs font-mono font-medium text-[#111827] bg-white focus:outline-none focus:border-[#111827]"
+                  value={formData.business_name}
+                  onChange={(e) => setFormData({ ...formData, business_name: e.target.value })}
+                  placeholder="e.g. Villa Sanctuary Ubud"
+                  className="w-full px-3 py-2 bg-white border border-[#e2e8f0] rounded-[8px] focus:outline-none focus:border-[#0f172a]"
                 />
               </div>
-            </div>
 
-            <div>
-              <label className="block text-xs font-medium text-[#374151] mb-1.5">Account Holder Full Name</label>
-              <input
-                type="text"
-                name="account_holder"
-                value={formData.account_holder}
-                onChange={handleChange}
-                placeholder="Exact name registered on your bank passbook / mobile app"
-                className="w-full px-3 py-2 rounded-[6px] border border-[#e5e7eb] text-xs font-medium text-[#111827] bg-white focus:outline-none focus:border-[#111827]"
-              />
-            </div>
+              <div>
+                <label className="font-medium text-[#475569] block mb-1">WhatsApp / Phone</label>
+                <input
+                  type="text"
+                  value={formData.whatsapp}
+                  onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value })}
+                  placeholder="+62 812 3456 7890"
+                  className="w-full px-3 py-2 bg-white border border-[#e2e8f0] rounded-[8px] focus:outline-none focus:border-[#0f172a] font-mono"
+                />
+              </div>
+
+              <div className="pt-2 border-t border-[#f1f5f9] space-y-3">
+                <span className="font-semibold text-[#0f172a] block">Bank Account for Payouts</span>
+                
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="font-medium text-[#475569] block mb-1">Bank</label>
+                    <select
+                      value={formData.bank_name}
+                      onChange={(e) => setFormData({ ...formData, bank_name: e.target.value })}
+                      className="w-full px-3 py-2 bg-white border border-[#e2e8f0] rounded-[8px] focus:outline-none focus:border-[#0f172a]"
+                    >
+                      <option value="BCA">BCA</option>
+                      <option value="Mandiri">Bank Mandiri</option>
+                      <option value="BNI">BNI</option>
+                      <option value="BRI">BRI</option>
+                      <option value="CIMB Niaga">CIMB Niaga</option>
+                      <option value="Permata">Bank Permata</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="font-medium text-[#475569] block mb-1">Account Number</label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.account_number}
+                      onChange={(e) => setFormData({ ...formData, account_number: e.target.value })}
+                      className="w-full px-3 py-2 bg-white border border-[#e2e8f0] rounded-[8px] focus:outline-none focus:border-[#0f172a] font-mono"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="font-medium text-[#475569] block mb-1">Account Holder Name</label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.account_holder}
+                    onChange={(e) => setFormData({ ...formData, account_holder: e.target.value })}
+                    className="w-full px-3 py-2 bg-white border border-[#e2e8f0] rounded-[8px] focus:outline-none focus:border-[#0f172a]"
+                  />
+                </div>
+              </div>
+
+              {saveSuccess && (
+                <div className="p-2.5 rounded-[6px] bg-[#f0fdf4] text-[#15803d] text-xs flex items-center gap-1.5 border border-[#bbf7d0]">
+                  <Check size={14} /> Profile updated successfully!
+                </div>
+              )}
+
+              <div className="flex items-center justify-end gap-2 pt-3">
+                <button
+                  type="button"
+                  onClick={() => setShowEditModal(false)}
+                  className="px-3.5 py-2 text-xs font-medium text-[#64748b] hover:bg-[#f8fafc] rounded-[6px]"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingProfile}
+                  className="px-4 py-2 text-xs font-medium bg-[#0f172a] text-white rounded-[6px] hover:bg-[#1e293b] disabled:opacity-50"
+                >
+                  {savingProfile ? 'Saving...' : 'Save Profile'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
-
-        {/* Save Changes Button */}
-        <div>
-          <button
-            type="submit"
-            disabled={saving}
-            className="w-full py-2.5 px-4 rounded-[8px] bg-[#111827] hover:bg-black text-white font-mono font-medium text-xs uppercase tracking-wider transition-colors disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2 shadow-xs"
-          >
-            {saving ? (
-              <>
-                <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                <span>Saving Profile Changes...</span>
-              </>
-            ) : (
-              <span>Save Profile Changes</span>
-            )}
-          </button>
-        </div>
-      </form>
-
-      {/* Section 3: Account Security & Support Actions */}
-      <div className="bg-white border border-[#e5e7eb] rounded-[10px] p-5 sm:p-6 space-y-4 shadow-xs">
-        <div className="flex items-center gap-2 border-b border-[#e5e7eb] pb-3">
-          <ShieldCheck size={16} className="text-[#111827]" />
-          <h3 className="text-sm font-semibold text-[#111827]">Account Security & Support</h3>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <a
-            href="https://wa.me/6285174119423"
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center p-3.5 rounded-[8px] bg-[#f9fafb] hover:bg-[#f3f4f6] border border-[#e5e7eb] text-xs font-medium text-[#111827] transition-colors"
-          >
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-[6px] bg-white text-[#111827] flex items-center justify-center shrink-0 border border-[#e5e7eb]">
-                <MessageCircle size={15} />
-              </div>
-              <div>
-                <span className="font-semibold text-[#111827] block">WhatsApp Partner Support</span>
-                <span className="text-[11px] text-[#6b7280]">Assistance with payouts & tracking</span>
-              </div>
-            </div>
-          </a>
-
-          <div className="flex items-center p-3.5 rounded-[8px] bg-[#f9fafb] border border-[#e5e7eb] text-xs font-medium text-[#111827]">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-[6px] bg-white text-[#111827] flex items-center justify-center shrink-0 border border-[#e5e7eb]">
-                <KeyRound size={15} />
-              </div>
-              <div>
-                <span className="font-semibold text-[#111827] block">Password & Credentials</span>
-                <span className="text-[11px] text-[#6b7280]">Managed via secure partner concierge</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="pt-2 border-t border-[#e5e7eb]">
-          <button
-            type="button"
-            onClick={handleLogout}
-            disabled={loggingOut}
-            className="w-full py-2.5 px-4 rounded-[8px] bg-red-50 hover:bg-red-100 text-red-600 font-mono font-semibold text-xs tracking-wider uppercase border border-red-200 transition-colors flex items-center justify-center gap-2 cursor-pointer"
-          >
-            {loggingOut ? (
-              <>
-                <div className="w-3.5 h-3.5 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
-                <span>Signing out of portal...</span>
-              </>
-            ) : (
-              <>
-                <LogOut size={14} />
-                <span>Sign Out of Partner Account</span>
-              </>
-            )}
-          </button>
-        </div>
-      </div>
+      )}
 
     </div>
   );

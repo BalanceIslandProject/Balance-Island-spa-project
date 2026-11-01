@@ -270,7 +270,11 @@ export default function Home() {
 
             let baseMessage = '';
             if (isTherapick) {
-                const treatmentsList = cartItems.map((item, idx) => {
+                const treatmentsList = cartItems.map((item) => {
+                    const cleanTitle = item.title
+                        .replace(/\s*\(\s*\d+\s*(?:mins?|minutes?|m)?\s*\)/gi, '')
+                        .trim()
+                        .toUpperCase();
                     const isCouple = ['couple', 'honeymoon'].some(k => item.title.toLowerCase().includes(k));
                     const multiplier = isCouple ? (item.guests / 2) : item.guests;
                     const addonsTotal = (item.addons || []).reduce((sum: number, a: any) => sum + (Number(a.price) || 0), 0);
@@ -286,18 +290,22 @@ export default function Home() {
                     }
 
                     if (item.isCampaign && item.discountPercentage && Number(item.discountPercentage) > 0) {
-                        const originalPriceNum = item.price / (1 - (item.discountPercentage / 100));
+                        const originalPriceNum = item.price / (1 - (Number(item.discountPercentage) / 100));
                         const originalPrice = ((originalPriceNum + addonsTotal) * multiplier).toLocaleString('en-US');
                         const priceText = `~IDR ${originalPrice}~ [${item.discountPercentage}% OFF SPA]`;
-                        return `*${idx + 1}. ${item.title.toUpperCase()}*\nDURATION: ${item.duration} MINS\n${guestAndPriceText} ${priceText}${addonsListText}`;
+                        return `*${cleanTitle}*\nDURATION: ${item.duration} MINS\n${guestAndPriceText} ${priceText}${addonsListText}`;
                     }
 
-                    return `*${idx + 1}. ${item.title.toUpperCase()}*\nDURATION: ${item.duration} MINS\n${guestAndPriceText}${addonsListText}`;
+                    return `*${cleanTitle}*\nDURATION: ${item.duration} MINS\n${guestAndPriceText}${addonsListText}`;
                 }).join('\n\n------------------------\n\n');
 
-                baseMessage = `*NEW SPA BOOKING*\n${websiteSource}\n\n*TREATMENTS:*\n${treatmentsList}\n\n*TOTAL PRICE:* IDR ${totalPrice.toLocaleString('en-US')}${promoDetailsText}\n\n*CLIENT DETAILS:*\n• Name: ${formData.name}\n• Date: ${formData.date}\n• Time: ${formData.time}\n• Location/Villa: ${formData.location}\n• Room Number: ${formData.room || 'N/A'}\n• WhatsApp: ${formData.whatsapp || 'N/A'}\n\nHello! I would like to confirm this booking.`;
+                baseMessage = `*NEW SPA BOOKING*\n${websiteSource}\n\n*TREATMENTS:*\n${treatmentsList}\n\n*TOTAL PRICE:* IDR ${totalPrice.toLocaleString('en-US')}${promoDetailsText}\n\n*CLIENT DETAILS:*\n• Name: ${formData.name}\n• Date: ${formData.date}\n• Time: ${formData.time}\n• Location/Villa: ${formData.location}\n• Room Number: ${formData.room || 'N/A'}\n\nHello! I would like to confirm this booking.`;
             } else {
                 const treatmentsList = cartItems.map(item => {
+                    const cleanTitle = item.title
+                        .replace(/\s*\(\s*\d+\s*(?:mins?|minutes?|m)?\s*\)/gi, '')
+                        .trim()
+                        .toUpperCase();
                     const isCouple = ['couple', 'honeymoon'].some(k => item.title.toLowerCase().includes(k));
                     const multiplier = isCouple ? (item.guests / 2) : item.guests;
                     const price = (item.price * multiplier).toLocaleString('en-US');
@@ -320,10 +328,10 @@ export default function Home() {
                         const originalPriceNum = item.price / (1 - (item.discountPercentage / 100));
                         const originalPrice = (originalPriceNum * multiplier).toLocaleString('en-US');
                         const priceText = `~IDR ${originalPrice}~ [${item.discountPercentage}% OFF SPA]`;
-                        return `*${item.title.toUpperCase()}*\nDURATION ${item.duration} MINS\n${guestAndPriceText} ${priceText}${whatsIncludedText}`;
+                        return `*${cleanTitle}*\nDURATION ${item.duration} MINS\n${guestAndPriceText} ${priceText}${whatsIncludedText}`;
                     }
 
-                    return `*${item.title.toUpperCase()}*\nDURATION ${item.duration} MINS\n${guestAndPriceText}${whatsIncludedText}`;
+                    return `*${cleanTitle}*\nDURATION ${item.duration} MINS\n${guestAndPriceText}${whatsIncludedText}`;
                 }).join('\n\n------------------------\n\n');
 
                 baseMessage = `*NEW SPA BOOKING*\n${websiteSource}\n\n*TREATMENTS:*\n${treatmentsList}\n\n*TOTAL PRICE:* IDR ${totalPrice.toLocaleString('en-US')}${promoDetailsText}\n\n*CLIENT DETAILS:*\n• Name: ${formData.name}\n• Date: ${formData.date}\n• Time: ${formData.time}\n• Location/Villa: ${formData.location}\n• Room Number: ${formData.room || 'N/A'}\n\nHello! I would like to confirm this booking.`;

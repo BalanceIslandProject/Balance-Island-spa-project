@@ -160,11 +160,11 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
 
             let baseMessage = '';
             if (isTherapick) {
-                const tableChoice = massageTableCount > 0 
-                    ? `${massageTableCount} Portable Table${massageTableCount > 1 ? 's' : ''} (+IDR ${(massageTableCount * 100000).toLocaleString('en-US')})` 
-                    : 'Standard Setup (No Portable Table)';
-
-                const treatmentsList = cartItems.map((item, idx) => {
+                const treatmentsList = cartItems.map((item) => {
+                    const cleanTitle = item.title
+                        .replace(/\s*\(\s*\d+\s*(?:mins?|minutes?|m)?\s*\)/gi, '')
+                        .trim()
+                        .toUpperCase();
                     const isCouple = ['couple', 'honeymoon'].some(k => item.title.toLowerCase().includes(k));
                     const multiplier = isCouple ? (item.guests / 2) : item.guests;
                     const addonsPrice = (item.addons || []).reduce((acc: number, add: any) => acc + (Number(add.price) || 0), 0);
@@ -172,26 +172,30 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                     const totalItemPrice = (singlePrice * multiplier).toLocaleString('en-US');
 
                     const guestAndPriceText = isCouple 
-                        ? (item.guests === 2 ? `1 COUPLE (2 PERSONS) • IDR ${totalItemPrice}` : `${item.guests / 2} COUPLES (${item.guests} PERSONS) • IDR ${totalItemPrice}`)
-                        : `${item.guests} PERSON${item.guests > 1 ? 'S' : ''} • IDR ${totalItemPrice}`;
+                        ? (item.guests === 2 ? `1 COUPLE (2 Persons)\nIDR ${totalItemPrice}` : `${item.guests / 2} COUPLES (${item.guests} Persons)\nIDR ${totalItemPrice}`)
+                        : `${item.guests} PERSON${item.guests > 1 ? 'S' : ''}\nIDR ${totalItemPrice}`;
 
                     const addonsText = item.addons && item.addons.length > 0
                         ? `\n*ADD-ONS:* ${item.addons.map((a: any) => `${a.title} (+IDR ${Number(a.price).toLocaleString('en-US')})`).join(', ')}`
                         : '';
 
                     if (item.isCampaign && item.discountPercentage && Number(item.discountPercentage) > 0) {
-                        const originalPriceNum = item.price / (1 - (item.discountPercentage / 100));
+                        const originalPriceNum = item.price / (1 - (Number(item.discountPercentage) / 100));
                         const originalPrice = ((originalPriceNum + addonsPrice) * multiplier).toLocaleString('en-US');
                         const priceText = `~IDR ${originalPrice}~ [${item.discountPercentage}% OFF SPA]`;
-                        return `*${idx + 1}. ${item.title.toUpperCase()}*\nDuration: ${item.duration} Mins\n${guestAndPriceText} ${priceText}${addonsText}`;
+                        return `*${cleanTitle}*\nDURATION: ${item.duration} MINS\n${guestAndPriceText} ${priceText}${addonsText}`;
                     }
 
-                    return `*${idx + 1}. ${item.title.toUpperCase()}*\nDuration: ${item.duration} Mins\n${guestAndPriceText}${addonsText}`;
+                    return `*${cleanTitle}*\nDURATION: ${item.duration} MINS\n${guestAndPriceText}${addonsText}`;
                 }).join('\n\n------------------------\n\n');
 
-                baseMessage = `*NEW SPA BOOKING*\n${websiteSource}\n\n*SERVICE AREA:* ${locationName}\n*TREATMENTS:*\n${treatmentsList}\n\n*SETUP PREFERENCE:* ${tableChoice}\n\n*TOTAL PRICE:* IDR ${totalPrice.toLocaleString('en-US')}${promoText}\n\n*CLIENT DETAILS:*\n• Name: ${formData.name}\n• Date: ${formData.date}\n• Time: ${formData.time}\n• Location/Villa: ${formData.location}\n• Room Number: ${formData.room || 'N/A'}\n• WhatsApp: ${formData.whatsapp || 'N/A'}\n\nHello! I would like to confirm this booking.`;
+                baseMessage = `*NEW SPA BOOKING*\n${websiteSource}\n\n*SERVICE AREA:* ${locationName}\n*TREATMENTS:*\n${treatmentsList}\n\n*TOTAL PRICE:* IDR ${totalPrice.toLocaleString('en-US')}${promoText}\n\n*CLIENT DETAILS:*\n• Name: ${formData.name}\n• Date: ${formData.date}\n• Time: ${formData.time}\n• Location/Villa: ${formData.location}\n• Room Number: ${formData.room || 'N/A'}\n\nHello! I would like to confirm this booking.`;
             } else {
                 const treatmentsList = cartItems.map(item => {
+                    const cleanTitle = item.title
+                        .replace(/\s*\(\s*\d+\s*(?:mins?|minutes?|m)?\s*\)/gi, '')
+                        .trim()
+                        .toUpperCase();
                     const isCouple = ['couple', 'honeymoon'].some(k => item.title.toLowerCase().includes(k));
                     const multiplier = isCouple ? (item.guests / 2) : item.guests;
                     const price = (item.price * multiplier).toLocaleString('en-US');
@@ -214,10 +218,10 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                         const originalPriceNum = item.price / (1 - (item.discountPercentage / 100));
                         const originalPrice = (originalPriceNum * multiplier).toLocaleString('en-US');
                         const priceText = `~IDR ${originalPrice}~ [${item.discountPercentage}% OFF SPA]`;
-                        return `*${item.title.toUpperCase()}*\nDURATION ${item.duration} MINS\n${guestAndPriceText} ${priceText}${whatsIncludedText}`;
+                        return `*${cleanTitle}*\nDURATION ${item.duration} MINS\n${guestAndPriceText} ${priceText}${whatsIncludedText}`;
                     }
 
-                    return `*${item.title.toUpperCase()}*\nDURATION ${item.duration} MINS\n${guestAndPriceText}${whatsIncludedText}`;
+                    return `*${cleanTitle}*\nDURATION ${item.duration} MINS\n${guestAndPriceText}${whatsIncludedText}`;
                 }).join('\n\n------------------------\n\n');
 
                 baseMessage = `*NEW SPA BOOKING*\n${websiteSource}\n\n*SERVICE AREA:* ${locationName}\n*TREATMENTS:*\n${treatmentsList}\n\n*TOTAL PRICE:* IDR ${totalPrice.toLocaleString('en-US')}${promoText}\n\n*CLIENT DETAILS:*\n• Name: ${formData.name}\n• Date: ${formData.date}\n• Time: ${formData.time}\n• Location/Villa: ${formData.location}\n• Room Number: ${formData.room || 'N/A'}\n\nHello! I would like to confirm this booking.`;

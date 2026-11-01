@@ -60,7 +60,7 @@ export default function PartnerProgramOverviewPage() {
 
           {partner && (
             <Link
-              href="/partners/dashboard"
+              href="/partners/bookings"
               className="inline-flex items-center gap-1.5 font-mono text-[11px] text-[#297a3a] bg-[#297a3a]/10 border border-[#297a3a]/25 px-2.5 py-1 rounded-full hover:bg-[#297a3a]/15 transition-colors"
             >
               <span>Logged in as {partner.first_name || 'Partner'} (#{partner.partner_code})</span>
@@ -93,19 +93,19 @@ export default function PartnerProgramOverviewPage() {
           {partner ? (
             <button
               type="button"
-              onClick={() => handleNavigate('/partners/dashboard', 'dashboard')}
+              onClick={() => handleNavigate('/partners/bookings', 'bookings')}
               disabled={Boolean(loadingAction)}
               className="inline-flex items-center justify-center gap-2 px-6 h-11 rounded-[6px] bg-[#171717] hover:bg-black text-white font-mono text-xs uppercase tracking-[0.071em] transition-all cursor-pointer disabled:opacity-70 shadow-xs"
             >
-              {loadingAction === 'dashboard' ? (
+              {loadingAction === 'bookings' ? (
                 <>
                   <VercelSpinner className="w-3.5 h-3.5 text-white" />
-                  <span>Opening Dashboard...</span>
+                  <span>Opening Bookings...</span>
                 </>
               ) : (
                 <>
                   <LayoutDashboard size={14} />
-                  <span>Go to Partner Dashboard</span>
+                  <span>Go to Partner Portal</span>
                   <ArrowRight size={13} />
                 </>
               )}

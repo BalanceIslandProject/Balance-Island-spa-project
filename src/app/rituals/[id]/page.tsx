@@ -77,6 +77,8 @@ export default function RitualsDetails() {
         guests: number;
         massageTable?: boolean;
         addons?: any[];
+        isCampaign?: boolean;
+        discountPercentage?: number;
     }[]>([]);
     const [isSelectingMore, setIsSelectingMore] = useState(false);
     const [expandedTreatmentId, setExpandedTreatmentId] = useState<string | null>(null);
@@ -266,11 +268,11 @@ export default function RitualsDetails() {
 
             let baseMessage = '';
             if (isTherapick) {
-                const tableChoice = massageTableCount > 0 
-                    ? `${massageTableCount} Portable Table${massageTableCount > 1 ? 's' : ''} (+IDR ${(massageTableCount * 100000).toLocaleString('en-US')})` 
-                    : 'Standard Setup (No Portable Table)';
-
-                const treatmentsList = cartItems.map((item, idx) => {
+                const treatmentsList = cartItems.map((item) => {
+                    const cleanTitle = item.title
+                        .replace(/\s*\(\s*\d+\s*(?:mins?|minutes?|m)?\s*\)/gi, '')
+                        .trim()
+                        .toUpperCase();
                     const isCouple = ['couple', 'honeymoon'].some(k => item.title.toLowerCase().includes(k));
                     const multiplier = isCouple ? (item.guests / 2) : item.guests;
                     const addonsTotal = (item.addons || []).reduce((sum: number, a: any) => sum + (Number(a.price) || 0), 0);
@@ -285,12 +287,23 @@ export default function RitualsDetails() {
                         addonsListText = `\n*ADD-ONS:* ` + item.addons.map((a: any) => `${a.title} (+IDR ${Number(a.price).toLocaleString('en-US')})`).join(', ');
                     }
 
-                    return `*${idx + 1}. ${item.title.toUpperCase()}*\nDURATION: ${item.duration} MINS\n${guestAndPriceText}${addonsListText}`;
+                    if (item.isCampaign && item.discountPercentage && Number(item.discountPercentage) > 0) {
+                        const originalPriceNum = item.price / (1 - (Number(item.discountPercentage) / 100));
+                        const originalPrice = ((originalPriceNum + addonsTotal) * multiplier).toLocaleString('en-US');
+                        const priceText = `~IDR ${originalPrice}~ [${item.discountPercentage}% OFF SPA]`;
+                        return `*${cleanTitle}*\nDURATION: ${item.duration} MINS\n${guestAndPriceText} ${priceText}${addonsListText}`;
+                    }
+
+                    return `*${cleanTitle}*\nDURATION: ${item.duration} MINS\n${guestAndPriceText}${addonsListText}`;
                 }).join('\n\n------------------------\n\n');
 
-                baseMessage = `*NEW SPA BOOKING*\n${websiteSource}\n\n*TREATMENTS:*\n${treatmentsList}\n\n*SETUP PREFERENCE:* ${tableChoice}\n\n*TOTAL PRICE:* IDR ${currentTotal.toLocaleString('en-US')}${promoDetailsText}\n\n*CLIENT DETAILS:*\n• Name: ${formData.name}\n• Date: ${formData.date}\n• Time: ${formData.time}\n• Location/Villa: ${formData.location}\n• Room Number: ${formData.room || 'N/A'}\n• WhatsApp: ${formData.whatsapp || 'N/A'}\n\nHello! I would like to confirm this booking.`;
+                baseMessage = `*NEW SPA BOOKING*\n${websiteSource}\n\n*TREATMENTS:*\n${treatmentsList}\n\n*TOTAL PRICE:* IDR ${currentTotal.toLocaleString('en-US')}${promoDetailsText}\n\n*CLIENT DETAILS:*\n• Name: ${formData.name}\n• Date: ${formData.date}\n• Time: ${formData.time}\n• Location/Villa: ${formData.location}\n• Room Number: ${formData.room || 'N/A'}\n\nHello! I would like to confirm this booking.`;
             } else {
                 const treatmentsList = cartItems.map(item => {
+                    const cleanTitle = item.title
+                        .replace(/\s*\(\s*\d+\s*(?:mins?|minutes?|m)?\s*\)/gi, '')
+                        .trim()
+                        .toUpperCase();
                     const isCouple = ['couple', 'honeymoon'].some(k => item.title.toLowerCase().includes(k));
                     const multiplier = isCouple ? (item.guests / 2) : item.guests;
                     const price = (item.price * multiplier).toLocaleString('en-US');
@@ -309,7 +322,7 @@ export default function RitualsDetails() {
                         ? (item.guests === 2 ? `1 COUPLE\n2 PERSONS\nIDR ${price}` : `${item.guests / 2} COUPLES\n${item.guests} PERSONS\nIDR ${price}`)
                         : `${item.guests} PERSON${item.guests > 1 ? 'S' : ''} IDR ${price}`;
 
-                    return `*${item.title.toUpperCase()}*\nDURATION ${item.duration} MINS\n${guestAndPriceText}${whatsIncludedText}`;
+                    return `*${cleanTitle}*\nDURATION ${item.duration} MINS\n${guestAndPriceText}${whatsIncludedText}`;
                 }).join('\n\n------------------------\n\n');
 
                 baseMessage = `*NEW SPA BOOKING*\n${websiteSource}\n\n*TREATMENTS:*\n${treatmentsList}\n\n*TOTAL PRICE:* IDR ${currentTotal.toLocaleString('en-US')}${promoDetailsText}\n\n*CLIENT DETAILS:*\n• Name: ${formData.name}\n• Date: ${formData.date}\n• Time: ${formData.time}\n• Location/Villa: ${formData.location}\n• Room Number: ${formData.room || 'N/A'}\n\nHello! I would like to confirm this booking.`;

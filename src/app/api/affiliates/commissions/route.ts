@@ -84,7 +84,12 @@ export async function GET(req: NextRequest) {
         treatment_status: treatmentStatus,
         payment_status: isPaid ? 'paid' : 'unpaid',
         guest_name: b?.guest_name || 'Guest',
-        treatment_name: b?.treatment_name || 'Spa Treatment',
+        treatment_name: b?.treatment_name || c.treatment_name || 'Spa Treatment',
+        location: b?.location || c.location || '',
+        room_number: b?.room_number || c.room_number || '',
+        booking_date: b?.booking_date || '',
+        time: b?.time || '',
+        duration: (Array.isArray(b?.items) && b?.items[0]?.duration) ? String(b.items[0].duration) : '',
       };
     });
 
