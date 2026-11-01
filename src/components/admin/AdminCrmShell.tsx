@@ -29,9 +29,11 @@ import {
   Sparkles
 } from 'lucide-react';
 import { useSpa } from '@/context/SpaContext';
+import { getAdminDomainInfo, AdminConsoleBrand } from '@/lib/domainIsolation';
 
 interface AdminCrmShellProps {
   children: React.ReactNode;
+  serverHost?: string;
 }
 
 export type NavScope = 'all' | 'website' | 'affiliate';
@@ -50,12 +52,8 @@ interface NavSection {
   items: NavItem[];
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// 1. FOUR ADMIN CONSOLES SPECIFIED BY USER:
-// THERAPICK, ELEXOIR, UBUD HOME SPA, CENTRAL ADMIN
-// ─────────────────────────────────────────────────────────────────────────────
 export interface BrandConsole {
-  id: 'therapick' | 'elexoir' | 'bali' | 'central';
+  id: AdminConsoleBrand;
   name: string;
   badge: string;
   dotColor: string;
@@ -63,14 +61,19 @@ export interface BrandConsole {
   href: string;
 }
 
-const BRAND_CONSOLES: BrandConsole[] = [
+// ─────────────────────────────────────────────────────────────────────────────
+// CENTRAL ADMIN CONSOLES:
+// Strictly connects ONLY Central Admin, Elexoir, and Ubud Home Spa.
+// Therapick is completely excluded from Central Admin.
+// ─────────────────────────────────────────────────────────────────────────────
+export const CENTRAL_CONNECTED_CONSOLES: BrandConsole[] = [
   {
-    id: 'therapick',
-    name: 'THERAPICK',
-    badge: 'Therapick',
-    dotColor: '#facc15', // amber
-    description: 'In-villa treatments, booking CRM & affiliate partner network',
-    href: '/admin/bookings',
+    id: 'central',
+    name: 'CENTRAL ADMIN',
+    badge: 'Central',
+    dotColor: '#475569', // slate
+    description: 'Central operations, invoices, therapist fees & dual-brand overview',
+    href: '/admin?brand=central&tab=treatment',
   },
   {
     id: 'elexoir',
@@ -88,52 +91,95 @@ const BRAND_CONSOLES: BrandConsole[] = [
     description: 'Home Spa Ubud in-villa treatments & signature collection',
     href: '/admin?brand=bali&tab=treatment',
   },
-  {
-    id: 'central',
-    name: 'CENTRAL ADMIN',
-    badge: 'Central',
-    dotColor: '#475569', // slate
-    description: 'Central operations, invoices, therapist fees & multi-brand overview',
-    href: '/admin?brand=central&tab=treatment',
-  },
 ];
 
-export default function AdminCrmShell({ children }: AdminCrmShellProps) {
+export const ALL_BRAND_METAS: Record<AdminConsoleBrand, BrandConsole> = {
+  therapick: {
+    id: 'therapick',
+    name: 'THERAPICK',
+    badge: 'Admin System',
+    dotColor: '#facc15', // amber
+    description: 'In-villa treatments, booking CRM & affiliate partner network',
+    href: '/admin/bookings',
+  },
+  elexoir: {
+    id: 'elexoir',
+    name: 'ELEXOIR',
+    badge: 'Admin Console',
+    dotColor: '#eab308', // luxury gold
+    description: 'Elexoir Luxury Home Spa & Rituals management console',
+    href: '/admin?brand=elexoir&tab=treatment',
+  },
+  bali: {
+    id: 'bali',
+    name: 'UBUD HOME SPA',
+    badge: 'Admin Console',
+    dotColor: '#10b981', // emerald
+    description: 'Home Spa Ubud in-villa treatments & signature collection',
+    href: '/admin?brand=bali&tab=treatment',
+  },
+  central: {
+    id: 'central',
+    name: 'CENTRAL ADMIN',
+    badge: 'Central Hub',
+    dotColor: '#475569', // slate
+    description: 'Central operations, invoices, therapist fees & dual-brand overview',
+    href: '/admin?brand=central&tab=treatment',
+  },
+};
+
+export default function AdminCrmShell({ children, serverHost }: AdminCrmShellProps) {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
   const { siteBrandFilter, setSiteBrandFilter } = useSpa();
 
-  // Console Switcher Dropdown State
+  // Console Switcher Dropdown State (Used only in Central Admin)
   const [consoleDropdownOpen, setConsoleDropdownOpen] = useState(false);
   const consoleDropdownRef = useRef<HTMLDivElement>(null);
 
   // Mobile Drawer State
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
 
-  // Sync brand from URL parameter
-  const brandParam = searchParams.get('brand');
-
+  // Client-side host fallback
+  const [clientHost, setClientHost] = useState('');
   useEffect(() => {
-    if (brandParam && ['therapick', 'elexoir', 'bali', 'central'].includes(brandParam)) {
-      if (setSiteBrandFilter) setSiteBrandFilter(brandParam);
+    if (typeof window !== 'undefined') {
+      setClientHost(window.location.host);
     }
-  }, [brandParam, setSiteBrandFilter]);
+  }, []);
 
-  // Determine current active brand console
-  const activeBrandId = useMemo<'therapick' | 'elexoir' | 'bali' | 'central'>(() => {
-    if (brandParam && ['therapick', 'elexoir', 'bali', 'central'].includes(brandParam)) {
-      return brandParam as any;
+  const brandParam = searchParams.get('brand');
+  const effectiveHost = serverHost || clientHost;
+
+  // Resolve domain isolation rules
+  const domainInfo = useMemo(() => {
+    return getAdminDomainInfo(effectiveHost, brandParam);
+  }, [effectiveHost, brandParam]);
+
+  // Determine active brand console
+  const activeBrandId = useMemo<AdminConsoleBrand>(() => {
+    if (domainInfo.isDomainLocked) {
+      return domainInfo.brand;
     }
-    if (siteBrandFilter && ['therapick', 'elexoir', 'bali', 'central'].includes(siteBrandFilter)) {
-      return siteBrandFilter as any;
+    if (brandParam && ['central', 'elexoir', 'bali'].includes(brandParam)) {
+      return brandParam as AdminConsoleBrand;
     }
-    // Default to therapick on bookings or affiliate routes
-    return 'therapick';
-  }, [brandParam, siteBrandFilter]);
+    if (siteBrandFilter && ['central', 'elexoir', 'bali'].includes(siteBrandFilter)) {
+      return siteBrandFilter as AdminConsoleBrand;
+    }
+    return domainInfo.brand;
+  }, [domainInfo, brandParam, siteBrandFilter]);
+
+  // Sync brand with spa context
+  useEffect(() => {
+    if (setSiteBrandFilter && siteBrandFilter !== activeBrandId) {
+      setSiteBrandFilter(activeBrandId);
+    }
+  }, [activeBrandId, setSiteBrandFilter, siteBrandFilter]);
 
   const activeConsole = useMemo(() => {
-    return BRAND_CONSOLES.find(c => c.id === activeBrandId) || BRAND_CONSOLES[0];
+    return ALL_BRAND_METAS[activeBrandId] || ALL_BRAND_METAS.therapick;
   }, [activeBrandId]);
 
   // Detect if on affiliate-specific subroute
@@ -389,79 +435,88 @@ export default function AdminCrmShell({ children }: AdminCrmShellProps) {
             </span>
           </Link>
 
-          {/* BRAND CONSOLE SWITCHER (Desktop: Moved directly into header, replacing Admin Console) */}
-          <div className="hidden sm:flex items-center gap-1 bg-stone-100/90 p-1 rounded-full border border-stone-200/80 shadow-2xs ml-1">
-            {BRAND_CONSOLES.map((c) => {
-              const isSelected = c.id === activeBrandId;
-              return (
-                <button
-                  key={c.id}
-                  type="button"
-                  onClick={() => handleSwitchConsole(c)}
-                  className={`px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                    isSelected
-                      ? 'bg-neutral-900 text-white shadow-xs'
-                      : 'text-stone-600 hover:text-neutral-900 hover:bg-stone-200/70'
-                  }`}
-                  title={c.description}
-                >
-                  <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: c.dotColor }} />
-                  <span>{c.badge}</span>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Mobile Brand Console Dropdown */}
-          <div className="sm:hidden relative" ref={consoleDropdownRef}>
-            <button
-              type="button"
-              onClick={() => setConsoleDropdownOpen(!consoleDropdownOpen)}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-stone-100 border border-stone-200 text-xs font-bold text-neutral-800 transition-all cursor-pointer shadow-2xs"
-            >
-              <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: activeConsole.dotColor }} />
-              <span>{activeConsole.badge}</span>
-              <ChevronDown 
-                size={12} 
-                className={`text-stone-500 transition-transform duration-200 ${consoleDropdownOpen ? 'rotate-180' : ''}`} 
-              />
-            </button>
-
-            {consoleDropdownOpen && (
-              <div className="absolute left-0 top-full mt-1.5 w-60 bg-white border border-[#eaecf0] rounded-2xl p-2 shadow-xl z-50 animate-in fade-in-50 zoom-in-95">
-                <div className="px-3 py-1.5 text-[10px] font-mono font-bold uppercase tracking-wider text-stone-600 border-b border-stone-100">
-                  Select Brand Console
-                </div>
-                <div className="py-1 space-y-1">
-                  {BRAND_CONSOLES.map((c) => {
-                    const isSelected = c.id === activeBrandId;
-                    return (
-                      <button
-                        key={c.id}
-                        type="button"
-                        onClick={() => handleSwitchConsole(c)}
-                        className={`w-full text-left p-2 rounded-xl transition-all cursor-pointer flex items-center justify-between text-xs font-bold ${
-                          isSelected ? 'bg-stone-100 text-neutral-900' : 'hover:bg-stone-50 text-stone-700'
-                        }`}
-                      >
-                        <span className="flex items-center gap-2">
-                          <span className="w-2 h-2 rounded-full" style={{ backgroundColor: c.dotColor }} />
-                          {c.name}
-                        </span>
-                        {isSelected && <Check size={14} className="text-neutral-900" />}
-                      </button>
-                    );
-                  })}
-                </div>
+          {/* Locked Domain: Clean Badge (No Switcher) */}
+          {domainInfo.isDomainLocked ? (
+            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold bg-stone-100 text-stone-700 border border-stone-200/90 shadow-2xs">
+              {domainInfo.badgeText}
+            </span>
+          ) : (
+            <>
+              {/* BRAND CONSOLE SWITCHER (Central Admin: ONLY connects Central, Elexoir, and Ubud Home Spa. Therapick is excluded!) */}
+              <div className="hidden sm:flex items-center gap-1 bg-stone-100/90 p-1 rounded-full border border-stone-200/80 shadow-2xs ml-1">
+                {CENTRAL_CONNECTED_CONSOLES.map((c) => {
+                  const isSelected = c.id === activeBrandId;
+                  return (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => handleSwitchConsole(c)}
+                      className={`px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                        isSelected
+                          ? 'bg-neutral-900 text-white shadow-xs'
+                          : 'text-stone-600 hover:text-neutral-900 hover:bg-stone-200/70'
+                      }`}
+                      title={c.description}
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: c.dotColor }} />
+                      <span>{c.badge}</span>
+                    </button>
+                  );
+                })}
               </div>
-            )}
-          </div>
+
+              {/* Mobile Brand Console Dropdown (Central Admin only) */}
+              <div className="sm:hidden relative" ref={consoleDropdownRef}>
+                <button
+                  type="button"
+                  onClick={() => setConsoleDropdownOpen(!consoleDropdownOpen)}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-stone-100 border border-stone-200 text-xs font-bold text-neutral-800 transition-all cursor-pointer shadow-2xs"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: activeConsole.dotColor }} />
+                  <span>{activeConsole.badge}</span>
+                  <ChevronDown 
+                    size={12} 
+                    className={`text-stone-500 transition-transform duration-200 ${consoleDropdownOpen ? 'rotate-180' : ''}`} 
+                  />
+                </button>
+
+                {consoleDropdownOpen && (
+                  <div className="absolute left-0 top-full mt-1.5 w-60 bg-white border border-[#eaecf0] rounded-2xl p-2 shadow-xl z-50 animate-in fade-in-50 zoom-in-95">
+                    <div className="px-3 py-1.5 text-[10px] font-mono font-bold uppercase tracking-wider text-stone-600 border-b border-stone-100">
+                      Select Console (Dual Brand Hub)
+                    </div>
+                    <div className="py-1 space-y-1">
+                      {CENTRAL_CONNECTED_CONSOLES.map((c) => {
+                        const isSelected = c.id === activeBrandId;
+                        return (
+                          <button
+                            key={c.id}
+                            type="button"
+                            onClick={() => handleSwitchConsole(c)}
+                            className={`w-full text-left p-2 rounded-xl transition-all cursor-pointer flex items-center justify-between text-xs font-bold ${
+                              isSelected ? 'bg-stone-100 text-neutral-900' : 'hover:bg-stone-50 text-stone-700'
+                            }`}
+                          >
+                            <span className="flex items-center gap-2">
+                              <span className="w-2 h-2 rounded-full" style={{ backgroundColor: c.dotColor }} />
+                              {c.name}
+                            </span>
+                            {isSelected && <Check size={14} className="text-neutral-900" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
         </div>
 
         {/* Right: Live Site, Notifications, Administrator Profile */}
         <div className="flex items-center gap-2 sm:gap-2.5">
           <Link
-            href="/"
+            href={domainInfo.liveSiteUrl}
             target="_blank"
             rel="noreferrer"
             className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-stone-200 bg-white hover:bg-stone-50 text-xs font-medium text-stone-700 transition-colors shadow-2xs"
@@ -620,36 +675,38 @@ export default function AdminCrmShell({ children }: AdminCrmShellProps) {
                 </button>
               </div>
 
-              {/* Brand Console Switcher Pills in Mobile Drawer */}
-              <div className="pt-3 pb-1">
-                <div className="text-[10px] uppercase font-bold tracking-wider text-stone-600 mb-1.5 px-1 flex items-center justify-between">
-                  <span>Brand Console</span>
-                  <span className="text-[9px] font-mono font-bold text-stone-500 uppercase">{activeConsole.badge}</span>
+              {/* Brand Console Switcher Pills in Mobile Drawer (Only shown in Central Admin Hub) */}
+              {!domainInfo.isDomainLocked && (
+                <div className="pt-3 pb-1">
+                  <div className="text-[10px] uppercase font-bold tracking-wider text-stone-600 mb-1.5 px-1 flex items-center justify-between">
+                    <span>Central Hub Consoles</span>
+                    <span className="text-[9px] font-mono font-bold text-stone-500 uppercase">{activeConsole.badge}</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-1 bg-stone-100/90 p-1 rounded-xl border border-stone-200/60 shadow-2xs">
+                    {CENTRAL_CONNECTED_CONSOLES.map(c => {
+                      const isSelected = c.id === activeBrandId;
+                      return (
+                        <button
+                          key={c.id}
+                          type="button"
+                          onClick={() => {
+                            setMobileDrawerOpen(false);
+                            handleSwitchConsole(c);
+                          }}
+                          className={`px-2 py-1.5 rounded-lg text-[11px] font-bold transition-all text-left flex items-center gap-1.5 cursor-pointer ${
+                            isSelected 
+                              ? 'bg-neutral-900 text-white shadow-xs' 
+                              : 'text-stone-600 hover:text-neutral-900 hover:bg-stone-200/70'
+                          }`}
+                        >
+                          <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: c.dotColor }} />
+                          <span className="truncate">{c.badge}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-                <div className="grid grid-cols-2 gap-1 bg-stone-100/90 p-1 rounded-xl border border-stone-200/60 shadow-2xs">
-                  {BRAND_CONSOLES.map(c => {
-                    const isSelected = c.id === activeBrandId;
-                    return (
-                      <button
-                        key={c.id}
-                        type="button"
-                        onClick={() => {
-                          setMobileDrawerOpen(false);
-                          handleSwitchConsole(c);
-                        }}
-                        className={`px-2 py-1.5 rounded-lg text-[11px] font-bold transition-all text-left flex items-center gap-1.5 cursor-pointer ${
-                          isSelected 
-                            ? 'bg-neutral-900 text-white shadow-xs' 
-                            : 'text-stone-600 hover:text-neutral-900 hover:bg-stone-200/70'
-                        }`}
-                      >
-                        <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: c.dotColor }} />
-                        <span className="truncate">{c.badge}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
+              )}
 
               {/* Therapick Scope Switcher on Mobile */}
               {activeBrandId === 'therapick' && (
@@ -747,7 +804,7 @@ export default function AdminCrmShell({ children }: AdminCrmShellProps) {
               {/* Mobile Drawer Footer with Live Site */}
               <div className="mt-auto pt-4 border-t border-stone-100">
                 <Link
-                  href="/"
+                  href={domainInfo.liveSiteUrl}
                   target="_blank"
                   rel="noreferrer"
                   className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border border-stone-200 bg-stone-50 text-xs font-medium text-stone-700 hover:bg-stone-100 transition-colors"

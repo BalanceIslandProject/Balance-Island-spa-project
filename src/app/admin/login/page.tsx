@@ -1,15 +1,29 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Lock, Mail, ArrowRight } from 'lucide-react';
+import { getAdminDomainInfo } from '@/lib/domainIsolation';
 
 export default function AdminLogin() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [clientHost, setClientHost] = useState('');
     const router = useRouter();
+    const searchParams = useSearchParams();
+
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            setClientHost(window.location.host);
+        }
+    }, []);
+
+    const brandParam = searchParams.get('brand');
+    const domainInfo = useMemo(() => {
+        return getAdminDomainInfo(clientHost, brandParam);
+    }, [clientHost, brandParam]);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -24,7 +38,8 @@ export default function AdminLogin() {
             });
 
             if (res.ok) {
-                router.push('/admin');
+                const targetUrl = domainInfo.defaultAdminUrl || '/admin';
+                router.push(targetUrl);
                 router.refresh();
             } else {
                 const data = await res.json();
@@ -37,32 +52,51 @@ export default function AdminLogin() {
         }
     };
 
+    const dotColor = 
+        domainInfo.brand === 'therapick' ? '#facc15' :
+        domainInfo.brand === 'elexoir' ? '#eab308' :
+        domainInfo.brand === 'bali' ? '#10b981' : '#475569';
+
+    const loginTitle = 
+        domainInfo.brand === 'therapick' ? 'Therapick Admin' :
+        domainInfo.brand === 'elexoir' ? 'Elexoir Admin' :
+        domainInfo.brand === 'bali' ? 'Home Spa Ubud Admin' : 'Central Admin';
+
+    const loginSubtitle = 
+        domainInfo.brand === 'therapick' ? 'Sign in to access Therapick Admin System' :
+        domainInfo.brand === 'elexoir' ? 'Sign in to access Elexoir Luxury Home Spa console' :
+        domainInfo.brand === 'bali' ? 'Sign in to access Ubud Home Spa console' : 'Dual-brand operations for Elexoir & Home Spa Ubud';
+
     return (
-        <div className="min-h-screen bg-[#FDFBF7] flex items-center justify-center p-4">
-            <div className="w-full max-w-md bg-white rounded-[32px] shadow-[0_20px_40px_rgb(0,0,0,0.08)] p-8 border border-border/50">
+        <div className="min-h-screen bg-[#FDFBF7] flex items-center justify-center p-4 selection:bg-amber-300">
+            <div className="w-full max-w-md bg-white rounded-3xl shadow-xl p-8 border border-stone-200/80">
                 <div className="text-center mb-8">
-                    <h1 className="font-serif text-3xl text-primary font-medium mb-2">Admin Access</h1>
-                    <p className="text-sm text-text-muted">Enter your credentials to continue</p>
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-stone-100 border border-stone-200/80 text-xs font-bold text-neutral-800 mb-3 shadow-2xs">
+                        <span className="w-2 h-2 rounded-full" style={{ backgroundColor: dotColor }} />
+                        <span>{domainInfo.badgeText}</span>
+                    </div>
+                    <h1 className="font-serif text-3xl text-neutral-900 font-medium mb-1.5">{loginTitle}</h1>
+                    <p className="text-xs text-stone-500 max-w-xs mx-auto">{loginSubtitle}</p>
                 </div>
 
                 {error && (
-                    <div className="bg-red-50 text-red-600 p-3 rounded-xl text-sm mb-6 text-center border border-red-100">
+                    <div className="bg-red-50 text-red-600 p-3 rounded-xl text-xs mb-6 text-center border border-red-100 font-medium">
                         {error}
                     </div>
                 )}
 
-                <form onSubmit={handleLogin} className="space-y-5">
+                <form onSubmit={handleLogin} className="space-y-4">
                     <div>
-                        <label className="block text-xs font-bold tracking-widest uppercase text-primary/70 mb-2 ml-1">Email</label>
+                        <label className="block text-[11px] font-mono font-bold tracking-wider uppercase text-stone-600 mb-1.5 ml-1">Email</label>
                         <div className="relative">
-                            <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-                                <Mail className="h-4 w-4 text-text-muted" />
+                            <div className="absolute inset-y-0 left-3.5 flex items-center pointer-events-none text-stone-400">
+                                <Mail className="h-4 w-4" />
                             </div>
                             <input
                                 type="email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                className="w-full bg-surface border border-border/50 rounded-2xl h-[50px] pl-11 pr-4 text-sm text-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                                className="w-full bg-stone-50/60 border border-stone-200 rounded-xl h-11 pl-10 pr-4 text-xs text-neutral-900 focus:outline-none focus:ring-2 focus:ring-neutral-900/10 focus:border-neutral-900 transition-all font-sans"
                                 placeholder="admin@example.com"
                                 required
                             />
@@ -70,16 +104,16 @@ export default function AdminLogin() {
                     </div>
 
                     <div>
-                        <label className="block text-xs font-bold tracking-widest uppercase text-primary/70 mb-2 ml-1">Password</label>
+                        <label className="block text-[11px] font-mono font-bold tracking-wider uppercase text-stone-600 mb-1.5 ml-1">Password</label>
                         <div className="relative">
-                            <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-                                <Lock className="h-4 w-4 text-text-muted" />
+                            <div className="absolute inset-y-0 left-3.5 flex items-center pointer-events-none text-stone-400">
+                                <Lock className="h-4 w-4" />
                             </div>
                             <input
                                 type="password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="w-full bg-surface border border-border/50 rounded-2xl h-[50px] pl-11 pr-4 text-sm text-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                                className="w-full bg-stone-50/60 border border-stone-200 rounded-xl h-11 pl-10 pr-4 text-xs text-neutral-900 focus:outline-none focus:ring-2 focus:ring-neutral-900/10 focus:border-neutral-900 transition-all font-sans"
                                 placeholder="••••••••"
                                 required
                             />
@@ -89,13 +123,14 @@ export default function AdminLogin() {
                     <button
                         type="submit"
                         disabled={isLoading}
-                        className="w-full h-[50px] bg-primary text-white rounded-2xl text-sm font-semibold flex items-center justify-center gap-2 hover:bg-primary/90 transition-all disabled:opacity-70 mt-4"
+                        className="w-full h-11 bg-neutral-900 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-2 hover:bg-neutral-800 transition-all disabled:opacity-70 mt-6 shadow-xs cursor-pointer"
                     >
                         {isLoading ? 'Authenticating...' : 'Sign In'}
-                        {!isLoading && <ArrowRight className="w-4 h-4" />}
+                        {!isLoading && <ArrowRight className="w-3.5 h-3.5" />}
                     </button>
                 </form>
             </div>
         </div>
     );
 }
+

@@ -49,7 +49,9 @@ function AdminDashboardContent() {
     } = useSpa();
 
     const searchParams = useSearchParams();
-    const initialTab = (searchParams.get('tab') as any) || 'treatment';
+    const tabParam = searchParams.get('tab');
+    const brandParam = searchParams.get('brand');
+    const initialTab = (tabParam as any) || (brandParam === 'therapick' || siteBrandFilter === 'therapick' ? 'bookings' : 'treatment');
     const [activeTab, setActiveTab] = useState<'campaign' | 'treatment' | 'store' | 'fees' | 'calculator' | 'list' | 'settings' | 'promo' | 'bookings' | 'invoice' | 'affiliates' | 'addons'>(initialTab);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [success, setSuccess] = useState(false);
@@ -79,15 +81,17 @@ function AdminDashboardContent() {
 
     // Reactive sync with URL params from main sidebar
     useEffect(() => {
-        const brandParam = searchParams.get('brand');
-        const tabParam = searchParams.get('tab');
-        if (brandParam && ['therapick', 'central', 'elexoir', 'bali'].includes(brandParam)) {
-            setSiteBrandFilter(brandParam);
+        const brand = searchParams.get('brand');
+        const tab = searchParams.get('tab');
+        if (brand && ['therapick', 'central', 'elexoir', 'bali'].includes(brand)) {
+            setSiteBrandFilter(brand);
         }
-        if (tabParam) {
-            setActiveTab(tabParam as any);
+        if (tab) {
+            setActiveTab(tab as any);
+        } else if (brand === 'therapick' || (!brand && siteBrandFilter === 'therapick')) {
+            setActiveTab('bookings');
         }
-    }, [searchParams, setSiteBrandFilter]);
+    }, [searchParams, setSiteBrandFilter, siteBrandFilter]);
 
 
     // Promo Codes State
@@ -464,7 +468,8 @@ function AdminDashboardContent() {
         if (!promoForm.code) return;
         setIsPromoFormLoading(true);
         try {
-            const inserts = ['elexoir', 'bali', 'therapick'].map(b => ({
+            const targetBrands = siteBrandFilter === 'central' ? ['elexoir', 'bali'] : [siteBrandFilter || 'elexoir'];
+            const inserts = targetBrands.map(b => ({
                 code: promoForm.code.trim().toUpperCase(),
                 discount_type: promoForm.discount_type,
                 discount_value: promoForm.discount_value,
@@ -599,7 +604,7 @@ function AdminDashboardContent() {
                     if (editingCampaignId) {
                         await supabase.from('campaigns').update(campaignData).eq('id', editingCampaignId);
                     } else {
-                        const brands = ['elexoir', 'bali', 'therapick'];
+                        const brands = siteBrandFilter === 'central' ? ['elexoir', 'bali'] : [siteBrandFilter || 'elexoir'];
                         const inserts = brands.map(b => ({
                             ...baseCampaignData,
                             brand: b,
@@ -638,7 +643,8 @@ function AdminDashboardContent() {
                     await supabase.from('treatments').update(treatmentData).eq('id', editingTreatmentId);
                     setTreatments(prev => prev.map(t => t.id === editingTreatmentId ? { ...t, ...treatmentData } : t));
                 } else {
-                    const inserts = ['elexoir', 'bali', 'therapick'].map(b => ({ ...treatmentData, brand: b }));
+                    const targetBrands = siteBrandFilter === 'central' ? ['elexoir', 'bali'] : [siteBrandFilter || 'elexoir'];
+                    const inserts = targetBrands.map(b => ({ ...treatmentData, brand: b }));
                     const { data } = await supabase.from('treatments').insert(inserts).select();
                     if (data && data.length > 0) {
                         const currentBrandTreatment = data.find((t: any) => t.brand === activeBrand) || data[0];
@@ -671,7 +677,8 @@ function AdminDashboardContent() {
                     await supabase.from('products').update(productData).eq('id', editingProductId);
                     setProducts(prev => prev.map(p => p.id === editingProductId ? { ...p, ...productData } : p));
                 } else {
-                    const inserts = ['elexoir', 'bali', 'therapick'].map(b => ({ ...productData, brand: b }));
+                    const targetBrands = siteBrandFilter === 'central' ? ['elexoir', 'bali'] : [siteBrandFilter || 'elexoir'];
+                    const inserts = targetBrands.map(b => ({ ...productData, brand: b }));
                     const { data } = await supabase.from('products').insert(inserts).select();
                     if (data && data.length > 0) {
                         const currentBrandProduct = data.find((p: any) => p.brand === activeBrand) || data[0];
