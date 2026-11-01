@@ -395,10 +395,26 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
         };
       });
 
+      const enrichedPayouts = rawPayouts.map((py: any) => {
+        const partner = partnerIdMap.get(py.partner_id) || rawPartners.find((p: any) => p.id === py.partner_id || p.partner_code === py.partner_code);
+        const pName = partner ? (`${partner.first_name || ''} ${partner.last_name || ''}`.trim() || partner.business_name) : (py.partner_code || 'Partner');
+        return {
+          ...py,
+          partner_name: pName,
+          partner_business: partner?.business_name || '',
+          partner_email: partner?.email || '',
+          partner_bank: partner?.payout_details?.bank_name || 'BCA',
+          partner_account: partner?.payout_details?.account_number || '',
+          partner_holder: partner?.payout_details?.account_holder || pName,
+          reference: py.payout_reference || py.payment_reference || '',
+          method: py.payout_method || 'bank_transfer',
+        };
+      });
+
       setBookings(enrichedBookings);
       setCommissions(rawComms);
       setPartners(enrichedPartners);
-      setPayouts(rawPayouts);
+      setPayouts(enrichedPayouts);
       if (therapistsRes.data) setTherapists(therapistsRes.data);
       if (treatmentsRes.data) setTreatments(treatmentsRes.data);
       if (feesRes.data) setTherapistFees(feesRes.data);
