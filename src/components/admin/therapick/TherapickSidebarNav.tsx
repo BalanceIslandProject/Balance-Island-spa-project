@@ -25,19 +25,21 @@ export default function TherapickSidebarNav() {
 
   const currentTab = searchParams.get('tab') || (pathname === '/admin/bookings' ? 'bookings' : pathname === '/admin/partners' ? 'partners' : pathname === '/admin/commissions' ? 'commission' : pathname === '/admin/payouts' ? 'payouts' : pathname === '/admin/settings' ? 'settings' : 'overview');
 
-  // Website System Navigation (10 Items)
+  // Website System Navigation (10 Items from Mockup)
   const websitePrimaryItems: NavItemDef[] = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard, href: '/admin?brand=therapick&tab=overview' },
     { id: 'bookings', label: 'Bookings', icon: CalendarDays, href: '/admin?brand=therapick&tab=bookings' },
     { id: 'calendar', label: 'Calendar', icon: Calendar, href: '/admin?brand=therapick&tab=calendar' },
-    { id: 'therapists', label: 'Therapist Fee', icon: DollarSign, href: '/admin?brand=therapick&tab=therapists' },
+    { id: 'therapists', label: 'Therapists', icon: User, href: '/admin?brand=therapick&tab=therapists' },
     { id: 'services', label: 'Services', icon: Layers, href: '/admin?brand=therapick&tab=services' },
     { id: 'customers', label: 'Customers', icon: Users, href: '/admin?brand=therapick&tab=customers' },
     { id: 'revenue', label: 'Revenue & Profit', icon: TrendingUp, href: '/admin?brand=therapick&tab=revenue' },
     { id: 'payments', label: 'Payments', icon: Wallet, href: '/admin?brand=therapick&tab=payments' },
+    { id: 'reports', label: 'Reports', icon: FileText, href: '/admin?brand=therapick&tab=reports' },
+    { id: 'settings', label: 'Settings', icon: Settings, href: '/admin?brand=therapick&tab=settings' },
   ];
 
-  // Affiliate System Navigation (8 Items)
+  // Affiliate System Navigation (8 Items from Mockup)
   const affiliatePrimaryItems: NavItemDef[] = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard, href: '/admin?brand=therapick&tab=overview' },
     { id: 'partners', label: 'Partners', icon: Users, href: '/admin?brand=therapick&tab=partners' },
@@ -45,12 +47,11 @@ export default function TherapickSidebarNav() {
     { id: 'calendar', label: 'Calendar', icon: Calendar, href: '/admin?brand=therapick&tab=calendar' },
     { id: 'commission', label: 'Commission', icon: Receipt, href: '/admin?brand=therapick&tab=commission' },
     { id: 'payouts', label: 'Payouts', icon: Wallet, href: '/admin?brand=therapick&tab=payouts' },
-  ];
-
-  const secondaryItems: NavItemDef[] = [
     { id: 'reports', label: 'Reports', icon: FileText, href: '/admin?brand=therapick&tab=reports' },
     { id: 'settings', label: 'Settings', icon: Settings, href: '/admin?brand=therapick&tab=settings' },
   ];
+
+  const secondaryItems: NavItemDef[] = [];
 
   const primaryItems = system === 'website' ? websitePrimaryItems : affiliatePrimaryItems;
 
@@ -147,11 +148,13 @@ export function TherapickMobileDrawerLinks({ onClose }: { onClose: () => void })
     { id: 'overview', label: 'Overview', icon: LayoutDashboard, href: '/admin?brand=therapick&tab=overview' },
     { id: 'bookings', label: 'Bookings', icon: CalendarDays, href: '/admin?brand=therapick&tab=bookings' },
     { id: 'calendar', label: 'Calendar', icon: Calendar, href: '/admin?brand=therapick&tab=calendar' },
-    { id: 'therapists', label: 'Therapist Fee', icon: DollarSign, href: '/admin?brand=therapick&tab=therapists' },
+    { id: 'therapists', label: 'Therapists', icon: User, href: '/admin?brand=therapick&tab=therapists' },
     { id: 'services', label: 'Services', icon: Layers, href: '/admin?brand=therapick&tab=services' },
     { id: 'customers', label: 'Customers', icon: Users, href: '/admin?brand=therapick&tab=customers' },
     { id: 'revenue', label: 'Revenue & Profit', icon: TrendingUp, href: '/admin?brand=therapick&tab=revenue' },
     { id: 'payments', label: 'Payments', icon: Wallet, href: '/admin?brand=therapick&tab=payments' },
+    { id: 'reports', label: 'Reports', icon: FileText, href: '/admin?brand=therapick&tab=reports' },
+    { id: 'settings', label: 'Settings', icon: Settings, href: '/admin?brand=therapick&tab=settings' },
   ];
 
   const affiliatePrimaryItems = [
@@ -161,12 +164,11 @@ export function TherapickMobileDrawerLinks({ onClose }: { onClose: () => void })
     { id: 'calendar', label: 'Calendar', icon: Calendar, href: '/admin?brand=therapick&tab=calendar' },
     { id: 'commission', label: 'Commission', icon: Receipt, href: '/admin?brand=therapick&tab=commission' },
     { id: 'payouts', label: 'Payouts', icon: Wallet, href: '/admin?brand=therapick&tab=payouts' },
-  ];
-
-  const secondaryItems = [
     { id: 'reports', label: 'Reports', icon: FileText, href: '/admin?brand=therapick&tab=reports' },
     { id: 'settings', label: 'Settings', icon: Settings, href: '/admin?brand=therapick&tab=settings' },
   ];
+
+  const secondaryItems: any[] = [];
 
   const items = system === 'website' ? websitePrimaryItems : affiliatePrimaryItems;
 

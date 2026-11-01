@@ -42,6 +42,7 @@ export default function TherapickServicesView() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'published' | 'pinned' | 'draft'>('all');
+  const [viewLayout, setViewLayout] = useState<'table' | 'grid'>('table');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Modal State for Add / Edit
@@ -277,10 +278,10 @@ export default function TherapickServicesView() {
 
           <button
             onClick={openAddModal}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#0F172A] hover:bg-neutral-800 text-white text-xs font-bold shadow-xs hover:shadow transition-all cursor-pointer"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#FACC15] hover:bg-amber-400 text-neutral-950 text-xs font-bold shadow-xs hover:shadow transition-all cursor-pointer"
           >
-            <Plus size={15} className="text-[#facc15]" />
-            <span>Add Treatment</span>
+            <Plus size={15} />
+            <span>Add Service</span>
           </button>
         </div>
       </div>
@@ -418,20 +419,133 @@ export default function TherapickServicesView() {
             </button>
           ))}
         </div>
+
+        {/* View Layout Toggle */}
+        <div className="flex items-center justify-between pt-2 border-t border-stone-100 text-xs">
+          <span className="text-stone-500 font-medium">
+            Showing {filteredTreatments.length} treatments
+          </span>
+          <div className="flex items-center gap-1 bg-stone-100 p-0.5 rounded-lg text-[11px] font-semibold">
+            <button
+              type="button"
+              onClick={() => setViewLayout('table')}
+              className={`px-2.5 py-1 rounded-md transition-all cursor-pointer ${
+                viewLayout === 'table' ? 'bg-white text-neutral-900 shadow-2xs font-bold' : 'text-stone-500'
+              }`}
+            >
+              Table View
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewLayout('grid')}
+              className={`px-2.5 py-1 rounded-md transition-all cursor-pointer ${
+                viewLayout === 'grid' ? 'bg-white text-neutral-900 shadow-2xs font-bold' : 'text-stone-500'
+              }`}
+            >
+              Card View
+            </button>
+          </div>
+        </div>
       </div>
 
-      {/* Treatments Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {filteredTreatments.length === 0 ? (
-          <div className="lg:col-span-2 bg-white rounded-2xl p-12 text-center border border-stone-200/90 shadow-2xs">
-            <Layers size={32} className="mx-auto text-stone-300 mb-3" />
-            <h3 className="text-sm font-bold text-neutral-900">No treatments found</h3>
-            <p className="text-xs text-stone-500 mt-1">
-              Try adjusting your search criteria or create a new treatment.
-            </p>
+      {/* ─────────────────────────────────────────────────────────────
+          TABLE VIEW (MATCHING MOCKUP IMAGE 2 BOTTOM LEFT)
+         ───────────────────────────────────────────────────────────── */}
+      {viewLayout === 'table' ? (
+        <div className="bg-white rounded-2xl border border-stone-200/90 shadow-2xs overflow-hidden">
+          <div className="overflow-x-auto no-scrollbar">
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="border-b border-stone-200 bg-stone-50/50 text-[11px] font-mono uppercase font-bold text-stone-400">
+                  <th className="py-3 px-4">Service</th>
+                  <th className="py-3 px-4">Duration</th>
+                  <th className="py-3 px-4">Price</th>
+                  <th className="py-3 px-4 text-center">Status</th>
+                  <th className="py-3 px-4 text-right"></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-stone-100">
+                {filteredTreatments.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="py-12 text-center text-stone-400">
+                      No services match your filters.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredTreatments.map(t => {
+                    const opts = Array.isArray(t.options) ? t.options : [];
+                    const durationsList = opts.map(o => String(o.duration || '').replace(/min/i, '').trim()).filter(Boolean);
+                    const durationText = durationsList.length > 0 ? `${durationsList.join(' / ')} min` : '90 min';
+
+                    const prices = opts.map(o => Number(String(o.price || '0').replace(/\D/g, '')) || 0).filter(p => p > 0);
+                    const minPrice = prices.length > 0 ? Math.min(...prices) : 350000;
+                    const maxPrice = prices.length > 0 ? Math.max(...prices) : 350000;
+                    const priceText = minPrice === maxPrice 
+                      ? `Rp${minPrice.toLocaleString('id-ID')}` 
+                      : `Rp${minPrice.toLocaleString('id-ID')} – Rp${maxPrice.toLocaleString('id-ID')}`;
+
+                    const isLive = t.is_published !== false;
+                    const isSpotlight = Boolean(t.is_pinned);
+
+                    return (
+                      <tr
+                        key={t.id}
+                        onClick={() => openEditModal(t)}
+                        className="hover:bg-stone-50/70 transition-colors cursor-pointer group"
+                      >
+                        <td className="py-3.5 px-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-amber-100/70 text-amber-900 flex items-center justify-center shrink-0">
+                              <Sparkles size={18} className="text-amber-700" />
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold text-neutral-900 text-xs sm:text-sm group-hover:text-amber-800 transition-colors">
+                                  {t.title}
+                                </span>
+                                {isSpotlight && (
+                                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 font-bold">
+                                    Spotlight
+                                  </span>
+                                )}
+                              </div>
+                              <span className="text-[11px] text-stone-400 capitalize">
+                                {t.category || 'Massage'}
+                              </span>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-3.5 px-4 font-mono font-medium text-stone-600">
+                          {durationText}
+                        </td>
+                        <td className="py-3.5 px-4 font-mono font-bold text-neutral-900">
+                          {priceText}
+                        </td>
+                        <td className="py-3.5 px-4 text-center">
+                          <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold ${
+                            isLive 
+                              ? 'bg-emerald-100 text-emerald-800' 
+                              : 'bg-stone-100 text-stone-600'
+                          }`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${isLive ? 'bg-emerald-500' : 'bg-stone-400'}`} />
+                            <span>{isLive ? 'Active' : 'Draft'}</span>
+                          </span>
+                        </td>
+                        <td className="py-3.5 px-4 text-right text-stone-400 font-bold group-hover:text-neutral-900">
+                          &gt;
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
           </div>
-        ) : (
-          filteredTreatments.map(treatment => {
+        </div>
+      ) : (
+        /* Treatments Grid */
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {filteredTreatments.map(treatment => {
             const options = Array.isArray(treatment.options) ? treatment.options : [];
             const isLive = treatment.is_published !== false;
             const isSpotlight = Boolean(treatment.is_pinned);
@@ -547,9 +661,9 @@ export default function TherapickServicesView() {
                 </div>
               </div>
             );
-          })
-        )}
-      </div>
+          })}
+        </div>
+      )}
 
       {/* Add / Edit Treatment Modal */}
       {modalState.isOpen && (
