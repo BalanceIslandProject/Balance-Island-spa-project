@@ -665,24 +665,36 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
 
       // If affiliate booking, also create commission entry
       if (bookingData.affiliate_code) {
-        const partner = partners.find(p => p.referral_code === bookingData.affiliate_code);
+        const cleanAffiliateCode = String(bookingData.affiliate_code).trim().toUpperCase();
+        const partner = partners.find(p => 
+          (p.partner_code && p.partner_code.toUpperCase() === cleanAffiliateCode) || 
+          (p.referral_code && p.referral_code.toUpperCase() === cleanAffiliateCode)
+        );
         const rate = partner?.commission_rate_pct || 15;
-        const commAmount = Math.round((Number(bookingData.revenue || 0) * rate) / 100);
+        const gross = Number(bookingData.revenue || bookingData.total_price || 0);
+        const commAmount = Math.round((gross * rate) / 100);
 
-        await supabase.from('affiliate_commissions').insert([{
-          partner_id: partner?.id || null,
-          booking_id: data.reference_number || data.id,
-          reference_number: `COMM-${Date.now()}`,
-          booking_date: bookingData.booking_date,
-          guest_name: bookingData.guest_name,
-          booking_amount: bookingData.revenue,
-          commission_rate_pct: rate,
-          commission_amount: commAmount,
-          status: 'pending',
-          payment_verified: bookingData.payment_status === 'Paid',
-          service_completed: false,
-          created_at: new Date().toISOString()
-        }]);
+        try {
+          await supabase.from('affiliate_commissions').insert([{
+            partner_id: partner?.id || null,
+            partner_code: partner?.partner_code || cleanAffiliateCode,
+            booking_id: data.reference_number || data.id,
+            booking_amount_gross: gross,
+            eligible_treatment_amount: gross,
+            transport_fee: 0,
+            tip_amount: 0,
+            discount_amount: 0,
+            commission_rate_pct: rate,
+            commission_amount: commAmount,
+            status: 'pending',
+            payment_verified: bookingData.payment_status === 'Paid',
+            service_completed: false,
+            notes: `Created from Therapick Admin Dashboard for booking #${data.reference_number || data.id}`,
+            created_at: new Date().toISOString()
+          }]);
+        } catch (commErr) {
+          console.error('Failed to create affiliate commission from admin modal:', commErr);
+        }
       }
 
       await refreshData();

@@ -222,13 +222,15 @@ export async function recordBookingAffiliation(
 
   try {
     // 1. Verify that partner exists and is currently active
+    const cleanPartnerCode = cookieData.partner_code.trim().toUpperCase();
     const { data: partner, error: partnerError } = await supabase
       .from('affiliate_partners')
       .select('id, partner_code, commission_rate_pct, status')
-      .eq('partner_code', cookieData.partner_code.toUpperCase())
-      .single();
+      .ilike('partner_code', cleanPartnerCode)
+      .maybeSingle();
 
     if (partnerError || !partner || (partner.status !== 'active' && partner.status !== 'approved')) {
+      console.warn('Affiliate partner lookup returned inactive or not found for code:', cleanPartnerCode, partnerError);
       return false;
     }
 
@@ -252,32 +254,34 @@ export async function recordBookingAffiliation(
 
     const firstTouchAt = cookieData.timestamp ? new Date(cookieData.timestamp).toISOString() : new Date().toISOString();
 
-    // 3. Record Attribution (if not already recorded)
-    const { data: existingAttr } = await supabase
-      .from('affiliate_attributions')
-      .select('id')
-      .eq('booking_id', bookingId)
-      .limit(1);
+    // 3. Record Attribution (Non-blocking: any schema or RLS issue in attributions table will not break commission creation)
+    try {
+      const { data: existingAttr } = await supabase
+        .from('affiliate_attributions')
+        .select('id')
+        .eq('booking_id', bookingId)
+        .limit(1);
 
-    if (!existingAttr || existingAttr.length === 0) {
-      await supabase.from('affiliate_attributions').insert([
-        {
-          partner_id: partner.id,
-          partner_code: partner.partner_code,
-          booking_id: bookingId,
-          customer_name: formData.name || null,
-          customer_email: formData.email || null,
-          customer_phone: formData.phone || formData.whatsapp || null,
-          first_touch_at: firstTouchAt,
-          last_touch_at: new Date().toISOString(),
-          attribution_method: 'referral_link',
-          attribution_status: 'active',
-        },
-      ]);
+      if (!existingAttr || existingAttr.length === 0) {
+        await supabase.from('affiliate_attributions').insert([
+          {
+            partner_id: partner.id,
+            partner_code: partner.partner_code,
+            booking_id: bookingId,
+            customer_name: formData?.name || null,
+            customer_email: formData?.email || null,
+            customer_phone: formData?.phone || formData?.whatsapp || null,
+            first_touch_at: firstTouchAt,
+            last_touch_at: new Date().toISOString(),
+          },
+        ]);
+      }
+    } catch (attrErr) {
+      console.warn('Non-fatal: failed to insert into affiliate_attributions:', attrErr);
     }
 
-    // 4. Record Pending Commission (Strictly unverified and service uncompleted until admin verifies)
-    await supabase.from('affiliate_commissions').insert([
+    // 4. Record Pending Commission (Strictly using validated columns of affiliate_commissions)
+    const { error: commError } = await supabase.from('affiliate_commissions').insert([
       {
         partner_id: partner.id,
         partner_code: partner.partner_code,
@@ -288,15 +292,18 @@ export async function recordBookingAffiliation(
         tip_amount: calculation.tipAmount,
         discount_amount: calculation.discountAmount,
         commission_rate_pct: calculation.commissionRatePct,
-        commission_rate_snapshot: calculation.commissionRatePct,
         commission_amount: calculation.commissionAmount,
-        currency: 'IDR',
         status: 'pending',
         payment_verified: false,
         service_completed: false,
         notes: `Auto-attributed for BookTherapick booking #${bookingId}`,
       },
     ]);
+
+    if (commError) {
+      console.error('CRITICAL: Failed to insert affiliate commission:', commError);
+      return false;
+    }
 
     // 5. Synchronize bookings table with validated affiliate ID & code
     try {
@@ -312,7 +319,6 @@ export async function recordBookingAffiliation(
       console.warn('Non-fatal: failed to backfill affiliate_id on bookings row:', syncErr);
     }
 
-    // Retain 7-day cookie for subsequent bookings within attribution window
     return true;
   } catch (err) {
     console.error('Error recording affiliate attribution:', err);

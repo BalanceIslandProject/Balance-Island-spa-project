@@ -74,7 +74,7 @@ export default function Home() {
 
 
     // Show only if there is at least one pinned treatment in the database
-    const showPinnedTreatments = treatments.some(t => t.is_pinned);
+    const showPinnedTreatments = (treatments || []).some(t => t.is_pinned);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
 
     const scrollLeft = () => {
@@ -199,13 +199,15 @@ export default function Home() {
     }, [restoreAction, history]);
 
     const filteredAndSortedTreatments = React.useMemo(() => {
-        let result = treatments.filter(t => {
-            const matchesCategory = activeCategory === 'all' || t.category.toLowerCase() === activeCategory.toLowerCase();
-            const matchesSearch = t.title.toLowerCase().includes(searchQuery.toLowerCase()) || t.desc.toLowerCase().includes(searchQuery.toLowerCase());
+        let result = (treatments || []).filter(t => {
+            if (!t) return false;
+            const matchesCategory = activeCategory === 'all' || (t.category && t.category.toLowerCase() === activeCategory.toLowerCase());
+            const matchesSearch = (t.title && t.title.toLowerCase().includes(searchQuery.toLowerCase())) || 
+                                  (t.desc && t.desc.toLowerCase().includes(searchQuery.toLowerCase()));
 
             const getLowestPrice = (options: any[]) => {
                 if (!options || options.length === 0) return 0;
-                return Math.min(...options.map(o => parseInt(o.price.replace(/,/g, '') || '0')));
+                return Math.min(...options.map(o => parseInt(String(o?.price || '0').replace(/[^0-9]/g, '') || '0', 10)));
             };
 
             const matchesPrice = getLowestPrice(t.options) <= maxPrice;
@@ -217,7 +219,7 @@ export default function Home() {
         result.sort((a, b) => {
             const getLowestPrice = (options: any[]) => {
                 if (!options || options.length === 0) return 0;
-                return Math.min(...options.map(o => parseInt(o.price.replace(/,/g, '') || '0')));
+                return Math.min(...options.map(o => parseInt(String(o?.price || '0').replace(/[^0-9]/g, '') || '0', 10)));
             };
             return getLowestPrice(a.options) - getLowestPrice(b.options);
         });
@@ -690,7 +692,7 @@ export default function Home() {
                                                 <h4 className="font-bold text-gray-900 text-[13px] mb-3">{treatment.title}</h4>
                                                 <div className="flex items-center justify-between bg-white rounded-full p-1 pl-3 mt-auto border border-gray-100">
                                                     <span className="font-semibold text-gray-900 text-[12px]">
-                                                        IDR {parseInt((treatment.options[0]?.price || '0').replace(/,/g, '')).toLocaleString('en-US')}
+                                                        IDR {parseInt(String(treatment.options?.[0]?.price || '0').replace(/[^0-9]/g, '') || '0', 10).toLocaleString('en-US')}
                                                     </span>
                                                     <div className="w-7 h-7 rounded-full bg-[#1D1D1F] text-white flex items-center justify-center hover:bg-black transition-colors shrink-0 shadow-sm">
                                                         <Plus size={14} strokeWidth={2.5} />
@@ -835,7 +837,7 @@ export default function Home() {
                                                     <Clock className="w-3.5 h-3.5" /> {item.options[0]?.duration} MINS
                                                 </div>
                                                 <div className="flex items-center justify-between bg-white/80 backdrop-blur-sm rounded-full p-1 pl-4 border border-gray-100">
-                                                    <span className="font-semibold text-gray-900 text-[14px]">IDR {parseInt(item.options[0]?.price.replace(/,/g, '') || '0').toLocaleString('en-US')}</span>
+                                                    <span className="font-semibold text-gray-900 text-[14px]">IDR {parseInt(String(item.options?.[0]?.price || '0').replace(/[^0-9]/g, '') || '0', 10).toLocaleString('en-US')}</span>
                                                     <div className="w-10 h-10 rounded-full bg-[#1D1D1F] text-white flex items-center justify-center group-hover:bg-black transition-colors shrink-0 shadow-sm">
                                                         <Plus size={20} strokeWidth={2.5} />
                                                     </div>
@@ -889,7 +891,7 @@ export default function Home() {
 
                                                 {/* Price and Add Button */}
                                                 <div className="flex items-center justify-between bg-white rounded-full p-1 pl-3 mt-auto border border-gray-100">
-                                                    <span className="font-semibold text-gray-900 text-[13px]">Rp {parseInt(product.price.replace(/,/g, '')).toLocaleString('id-ID')}</span>
+                                                    <span className="font-semibold text-gray-900 text-[13px]">Rp {parseInt(String(product?.price || '0').replace(/[^0-9]/g, '') || '0', 10).toLocaleString('id-ID')}</span>
                                                     <div className="w-8 h-8 rounded-full bg-[#1D1D1F] text-white flex items-center justify-center hover:bg-black transition-colors shrink-0 shadow-sm">
                                                         <Plus size={16} strokeWidth={2.5} />
                                                     </div>
@@ -1260,7 +1262,7 @@ export default function Home() {
                                                                                         treatmentId: t.id,
                                                                                         title: t.title,
                                                                                         duration: opt.duration,
-                                                                                        price: parseInt(opt.price.replace(/,/g, '') || '0'),
+                                                                                        price: parseInt(String(opt?.price || '0').replace(/[^0-9]/g, '') || '0', 10),
                                                                                         guests: isCouple ? 2 : 1,
                                                                                         isCampaign: false
                                                                                     }]);
@@ -1270,7 +1272,7 @@ export default function Home() {
                                                                                 className="w-full flex items-center justify-between p-3 rounded-xl border border-border hover:border-primary/50 hover:bg-primary/5 transition-all group"
                                                                             >
                                                                                 <span className="text-sm font-bold text-primary group-hover:text-primary transition-colors">{opt.duration} Mins</span>
-                                                                                <span className="text-sm font-serif text-primary">IDR {parseInt(opt.price.replace(/,/g, '') || '0').toLocaleString('en-US')}</span>
+                                                                                <span className="text-sm font-serif text-primary">IDR {parseInt(String(opt?.price || '0').replace(/[^0-9]/g, '') || '0', 10).toLocaleString('en-US')}</span>
                                                                             </button>
                                                                         ))}
                                                                     </div>

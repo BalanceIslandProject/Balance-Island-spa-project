@@ -41,16 +41,26 @@ export async function GET(req: NextRequest) {
     const bookingIds = commissions.map((c) => c.booking_id).filter(Boolean);
     let bookingsMap: Record<string, any> = {};
     if (bookingIds.length > 0) {
-      const { data: matchedBookings } = await supabase
-        .from('bookings')
-        .select('reference_number, guest_name, booking_date, time, location, room_number, treatment_name, status, items')
-        .in('reference_number', bookingIds);
+      const [byRefRes, byIdRes] = await Promise.all([
+        supabase
+          .from('bookings')
+          .select('id, reference_number, guest_name, booking_date, time, location, room_number, treatment_name, status, items, payment_method')
+          .in('reference_number', bookingIds),
+        supabase
+          .from('bookings')
+          .select('id, reference_number, guest_name, booking_date, time, location, room_number, treatment_name, status, items, payment_method')
+          .in('id', bookingIds.filter(id => typeof id === 'string' && id.includes('-'))),
+      ]);
 
-      if (matchedBookings) {
-        for (const b of matchedBookings) {
-          if (b.reference_number) {
-            bookingsMap[b.reference_number] = b;
-          }
+      const matchedBookings = [...(byRefRes.data || []), ...(byIdRes.data || [])];
+      for (const b of matchedBookings) {
+        if (b.reference_number) {
+          bookingsMap[b.reference_number] = b;
+          bookingsMap[b.reference_number.toUpperCase()] = b;
+          bookingsMap[b.reference_number.toLowerCase()] = b;
+        }
+        if (b.id) {
+          bookingsMap[b.id] = b;
         }
       }
     }

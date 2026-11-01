@@ -13,8 +13,16 @@ export const saveBookingToSupabase = async (
         const treatmentName = cartItems.map(i => i.title).join(', ');
         const maxPax = cartItems.reduce((max, item) => Math.max(max, item.guests), 1);
 
+        // Strictly detect if user is on BookTherapick domain or brand
+        const isTherapickSite = siteBrandFilter === 'therapick' || 
+            (typeof window !== 'undefined' && (
+                window.location.hostname.includes('therapick') || 
+                window.location.hostname.includes('booktherapick')
+            ));
+        const effectiveBrand = isTherapickSite ? 'therapick' : siteBrandFilter;
+
         // Determine booking source (Affiliate Partner Code or Direct)
-        const affiliateCookie = (siteBrandFilter === 'therapick') ? getAffiliateCookie() : null;
+        const affiliateCookie = isTherapickSite ? getAffiliateCookie() : null;
         const affiliateCode = affiliateCookie?.partner_code 
             ? affiliateCookie.partner_code.toUpperCase() 
             : null;
@@ -40,7 +48,7 @@ export const saveBookingToSupabase = async (
             net_profit: totalPrice,
             status: 'Pending',
             items: JSON.parse(itemsJson),
-            brand: siteBrandFilter
+            brand: effectiveBrand
         };
 
         // Try inserting with additive metadata columns if schema is migrated
@@ -67,8 +75,8 @@ export const saveBookingToSupabase = async (
         }
 
         // Strictly associate affiliate attribution at booking creation time
-        if (siteBrandFilter === 'therapick' && affiliateCode) {
-            await recordBookingAffiliation(bookingId, formData, cartItems, totalPrice, siteBrandFilter);
+        if (isTherapickSite && affiliateCode) {
+            await recordBookingAffiliation(bookingId, formData, cartItems, totalPrice, 'therapick');
         }
 
         return { success: true, affiliateCode };

@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
     const { data: partner } = await supabase
       .from('affiliate_partners')
       .select('id, partner_code, status')
-      .eq('partner_code', normalizedCode)
+      .ilike('partner_code', normalizedCode)
       .in('status', ['active', 'approved'])
       .maybeSingle();
 
@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
       const { data: refRow } = await supabase
         .from('partner_referrals')
         .select('partner_id, referral_code, is_active, affiliate_partners(id, partner_code, status)')
-        .eq('referral_code', normalizedCode)
+        .ilike('referral_code', normalizedCode)
         .eq('is_active', true)
         .maybeSingle();
 
@@ -60,17 +60,21 @@ export async function POST(req: NextRequest) {
     const ipHash = crypto.createHash('sha256').update(ip).digest('hex').substring(0, 32);
     const userAgent = req.headers.get('user-agent') || '';
 
-    // Record click asynchronously
-    await supabase.from('affiliate_clicks').insert([
-      {
-        partner_id: partnerId,
-        partner_code: resolvedCode,
-        visitor_ip_hash: ipHash,
-        user_agent: userAgent.substring(0, 255),
-        referrer_url: String(referrer).substring(0, 500),
-        landing_path: String(landingPath).substring(0, 255),
-      },
-    ]);
+    // Record click asynchronously (safe against RLS restrictions)
+    try {
+      await supabase.from('affiliate_clicks').insert([
+        {
+          partner_id: partnerId,
+          partner_code: resolvedCode,
+          visitor_ip_hash: ipHash,
+          user_agent: userAgent.substring(0, 255),
+          referrer_url: String(referrer).substring(0, 500),
+          landing_path: String(landingPath).substring(0, 255),
+        },
+      ]);
+    } catch (clickErr) {
+      console.warn('Non-fatal: could not log click to affiliate_clicks:', clickErr);
+    }
 
     return NextResponse.json({
       success: true,
