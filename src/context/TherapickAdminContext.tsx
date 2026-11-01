@@ -887,6 +887,8 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
     let reference_number = '';
     let notes = '';
     let payout_date = '';
+    let payout_method = 'bank_transfer';
+    let proof_document_url = '';
 
     if (typeof payoutDataOrPartnerId === 'string') {
       partner_id = payoutDataOrPartnerId;
@@ -897,9 +899,11 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
     } else if (payoutDataOrPartnerId && typeof payoutDataOrPartnerId === 'object') {
       partner_id = payoutDataOrPartnerId.partner_id;
       amount = payoutDataOrPartnerId.amount;
-      reference_number = payoutDataOrPartnerId.reference_number || `PAY-${Date.now().toString().slice(-6)}`;
+      reference_number = payoutDataOrPartnerId.reference_number || payoutDataOrPartnerId.reference || `PAY-${Date.now().toString().slice(-6)}`;
       notes = payoutDataOrPartnerId.notes || '';
       payout_date = payoutDataOrPartnerId.payout_date || payoutDataOrPartnerId.date || '';
+      payout_method = payoutDataOrPartnerId.payout_method || payoutDataOrPartnerId.method || 'bank_transfer';
+      proof_document_url = payoutDataOrPartnerId.proof_document_url || payoutDataOrPartnerId.receipt_url || '';
     }
 
     try {
@@ -909,9 +913,11 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
         body: JSON.stringify({
           partner_id,
           amount,
-          payout_method: 'bank_transfer',
+          payout_method,
           notes: notes ? `${reference_number} - ${notes}` : reference_number,
-          payout_date: payout_date || undefined
+          payout_date: payout_date || undefined,
+          proof_document_url: proof_document_url || undefined,
+          payment_reference: reference_number
         })
       });
 

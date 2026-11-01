@@ -10,15 +10,17 @@ export const DEFAULT_PAYOUT_CONFIG: PayoutWeeklyScheduleConfig = {
   min_payout_threshold: 100000, // IDR 100,000
   manual_approval_required: true,
   default_commission_rate_pct: 15,
-  payment_method: 'bank_transfer',
-  notifications: {
-    upcoming_run_reminder: true,
-    batch_approval_alert: true,
-    transfer_status_alert: true,
-  },
+  payment_methods: [
+    'Bank Transfer (BCA)',
+    'Bank Transfer (Mandiri)',
+    'Bank Transfer (BNI)',
+    'Other Bank',
+    'Cash',
+    'Other'
+  ],
 };
 
-const STORAGE_KEY = 'therapick_payout_schedule_config_v2';
+const STORAGE_KEY = 'therapick_payout_schedule_config_v3';
 
 /**
  * Load payout configuration from localStorage or default
@@ -32,7 +34,7 @@ export function loadPayoutConfig(): PayoutWeeklyScheduleConfig {
     return {
       ...DEFAULT_PAYOUT_CONFIG,
       ...parsed,
-      frequency: 'weekly_7_days', // enforce fixed 7-day frequency
+      frequency: 'weekly_7_days', // strictly enforce 7-day recurring cycle
       timezone: 'Asia/Makassar',
     };
   } catch {
@@ -46,7 +48,6 @@ export function loadPayoutConfig(): PayoutWeeklyScheduleConfig {
 export function savePayoutConfig(config: PayoutWeeklyScheduleConfig): void {
   if (typeof window === 'undefined') return;
   try {
-    // Strictly preserve 7-day rule
     const validated: PayoutWeeklyScheduleConfig = {
       ...config,
       frequency: 'weekly_7_days',
@@ -100,67 +101,8 @@ export function calculateNextScheduledDate(firstPayoutDateStr: string, refDate =
   }
 }
 
-export interface UpcomingCycle {
-  cycleIndex: number;
-  reference: string;
-  dateStr: string;
-  formattedDate: string;
-  dayOfWeek: string;
-  cutoffTime: string;
-  status: 'active' | 'upcoming';
-}
-
 /**
- * Returns a list of upcoming 7-day cycles (strictly 7-day intervals)
- */
-export function getUpcomingWeeklyCycles(config: PayoutWeeklyScheduleConfig, count = 5): UpcomingCycle[] {
-  const nextDate = calculateNextScheduledDate(config.first_payout_date);
-  const cycles: UpcomingCycle[] = [];
-
-  let curDateStr = nextDate;
-  const now = new Date();
-  const year = now.getFullYear();
-
-  for (let i = 1; i <= count; i++) {
-    const [y, m, d] = curDateStr.split('-').map(Number);
-    const dObj = new Date(y, m - 1, d);
-
-    // Compute approximate week number for reference
-    const firstJan = new Date(y, 0, 1);
-    const daysSince = Math.floor((dObj.getTime() - firstJan.getTime()) / (24 * 60 * 60 * 1000));
-    const weekNum = Math.ceil((daysSince + firstJan.getDay() + 1) / 7);
-
-    const formattedDate = dObj.toLocaleDateString('en-GB', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-      timeZone: 'Asia/Makassar',
-    });
-
-    const dayOfWeek = dObj.toLocaleDateString('en-GB', {
-      weekday: 'long',
-      timeZone: 'Asia/Makassar',
-    });
-
-    cycles.push({
-      cycleIndex: i,
-      reference: `PR-${y}-W${String(weekNum).padStart(2, '0')}`,
-      dateStr: curDateStr,
-      formattedDate,
-      dayOfWeek,
-      cutoffTime: `${config.weekly_cutoff_time || '23:59'} WITA`,
-      status: i === 1 ? 'active' : 'upcoming',
-    });
-
-    // Strictly advance by exactly 7 calendar days
-    curDateStr = addDays(curDateStr, 7);
-  }
-
-  return cycles;
-}
-
-/**
- * IDR Currency Formatter
+ * Format Indonesian Rupiah e.g. Rp 210.000
  */
 export function formatIDR(val: number | string | undefined | null): string {
   const num = Number(val) || 0;
@@ -210,16 +152,3 @@ export function formatWitaDateTime(dateVal?: string | Date | null): string {
     return String(dateVal);
   }
 }
-
-/**
- * Advances the schedule config to the next 7-day cycle
- */
-export function advanceToNextCycle(config: PayoutWeeklyScheduleConfig): PayoutWeeklyScheduleConfig {
-  const currentNext = config.next_scheduled_date || config.first_payout_date;
-  const newNext = addDays(currentNext, 7);
-  return {
-    ...config,
-    next_scheduled_date: newNext,
-  };
-}
-

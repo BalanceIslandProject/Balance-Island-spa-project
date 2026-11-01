@@ -1,443 +1,309 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
   Wallet, 
-  Clock, 
   CheckCircle2, 
-  AlertCircle, 
-  Calendar, 
-  ArrowRight, 
+  Users, 
+  Search, 
   ChevronRight, 
   Building2, 
-  Layers, 
-  Receipt,
-  Scale,
-  ShieldCheck,
-  Sparkles,
-  ExternalLink
+  Calendar,
+  Filter,
+  ArrowRight
 } from 'lucide-react';
-import { PayoutTab, PayoutWeeklyScheduleConfig, PayoutRun, PayoutTransaction } from '@/types/payouts';
-import { formatIDR, formatWitaDate, getUpcomingWeeklyCycles } from '@/lib/payoutScheduler';
+import { PartnerPayoutRow, PayoutWeeklyScheduleConfig } from '@/types/payouts';
+import { formatIDR, formatWitaDate } from '@/lib/payoutScheduler';
 
 interface PayoutsOverviewTabProps {
-  partners: any[];
-  payouts: any[];
-  commissions: any[];
+  partnerRows: PartnerPayoutRow[];
   config: PayoutWeeklyScheduleConfig;
-  payoutRuns: PayoutRun[];
-  transactions: PayoutTransaction[];
-  onChangeTab: (tab: PayoutTab) => void;
-  onSelectPartner: (partner: any) => void;
-  onOpenCreateBatch: () => void;
+  onSelectPartnerForDrawer: (partner: PartnerPayoutRow) => void;
+  onOpenRecordPayment: (partner: PartnerPayoutRow) => void;
 }
 
 export default function PayoutsOverviewTab({
-  partners,
-  payouts,
-  commissions,
+  partnerRows,
   config,
-  payoutRuns,
-  transactions,
-  onChangeTab,
-  onSelectPartner,
-  onOpenCreateBatch
+  onSelectPartnerForDrawer,
+  onOpenRecordPayment
 }: PayoutsOverviewTabProps) {
-  const minThreshold = config.min_payout_threshold || 100000;
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'Unpaid' | 'Partially Paid' | 'Paid'>('all');
 
-  // 1. Available to Pay: Sum of available balances for partners meeting minimum threshold
-  const partnersWithBalance = partners.filter(p => (Number(p.available_balance) || 0) > 0);
-  const eligiblePartners = partners.filter(p => (Number(p.available_balance) || 0) >= minThreshold);
-  const rolloverPartners = partners.filter(p => (Number(p.available_balance) || 0) > 0 && (Number(p.available_balance) || 0) < minThreshold);
+  // Summary Metrics
+  const totalUnpaid = useMemo(() => {
+    return partnerRows.reduce((sum, p) => sum + (p.unpaid || 0), 0);
+  }, [partnerRows]);
 
-  const totalAvailableToPay = eligiblePartners.reduce((sum, p) => sum + Number(p.available_balance || 0), 0);
-  const totalRolloverBalance = rolloverPartners.reduce((sum, p) => sum + Number(p.available_balance || 0), 0);
-  const totalAllAvailable = partnersWithBalance.reduce((sum, p) => sum + Number(p.available_balance || 0), 0);
+  const totalPaid = useMemo(() => {
+    return partnerRows.reduce((sum, p) => sum + (p.paid || 0), 0);
+  }, [partnerRows]);
 
-  // 2. Pending Clearance: Commissions awaiting service completion or payment
-  const pendingComms = commissions.filter(c => 
-    c.status === 'pending' || 
-    (!c.service_completed && c.status !== 'cancelled' && c.status !== 'paid') ||
-    (!c.payment_verified && c.status !== 'cancelled' && c.status !== 'paid')
-  );
-  const pendingClearanceAmount = pendingComms.reduce((sum, c) => sum + (Number(c.commission_amount) || 0), 0);
+  const partnersAwaitingCount = useMemo(() => {
+    return partnerRows.filter(p => p.unpaid > 0).length;
+  }, [partnerRows]);
 
-  // 3. Paid This Month: Successfully transferred payouts in the current calendar month
-  const now = new Date();
-  const currentYear = now.getFullYear();
-  const currentMonth = now.getMonth();
+  // Filtered Partner Rows
+  const filteredRows = useMemo(() => {
+    return partnerRows.filter(p => {
+      const q = search.trim().toLowerCase();
+      if (q) {
+        const matchesName = p.name.toLowerCase().includes(q);
+        const matchesBiz = (p.business_name || '').toLowerCase().includes(q);
+        const matchesCode = (p.referral_code || p.partner_code || '').toLowerCase().includes(q);
+        if (!matchesName && !matchesBiz && !matchesCode) return false;
+      }
 
-  const thisMonthPayouts = payouts.filter(p => {
-    if (!p.created_at && !p.processed_at) return false;
-    const d = new Date(p.processed_at || p.created_at);
-    return d.getFullYear() === currentYear && d.getMonth() === currentMonth;
-  });
-  const totalPaidThisMonth = thisMonthPayouts.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+      if (statusFilter !== 'all' && p.status !== statusFilter) {
+        return false;
+      }
 
-  // 4. On Hold: Cancelled bookings, disputed commissions, or pending review
-  const onHoldComms = commissions.filter(c => c.status === 'cancelled' || c.status === 'on_hold');
-  const onHoldAmount = onHoldComms.reduce((sum, c) => sum + (Number(c.commission_amount) || 0), 0);
-
-  // Upcoming cycles (strictly 7 days)
-  const upcomingCycles = getUpcomingWeeklyCycles(config, 3);
-  const nextCycle = upcomingCycles[0] || {
-    reference: 'PR-2026-W45',
-    dateStr: config.next_scheduled_date,
-    formattedDate: formatWitaDate(config.next_scheduled_date),
-    dayOfWeek: 'Thursday',
-    cutoffTime: `${config.weekly_cutoff_time || '23:59'} WITA`,
-  };
+      return true;
+    });
+  }, [partnerRows, search, statusFilter]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-in fade-in duration-200">
       
-      {/* 4 Financial Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* 3 Summary Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         
-        {/* 1. Available to Pay */}
-        <div className="bg-white p-5 rounded-2xl border border-stone-200/90 shadow-2xs hover:shadow-xs transition-shadow">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-emerald-800">
-              Available to Pay
-            </span>
-            <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center">
-              <Wallet size={14} />
-            </div>
-          </div>
-          <div className="text-2xl font-extrabold text-neutral-900 mt-2 font-mono">
-            {formatIDR(totalAvailableToPay)}
-          </div>
-          <div className="text-xs text-stone-500 mt-1 flex items-center justify-between">
-            <span>{eligiblePartners.length} eligible partners (≥ {formatIDR(minThreshold)})</span>
-          </div>
-          {totalRolloverBalance > 0 && (
-            <div className="mt-2 pt-2 border-t border-stone-100 text-[11px] text-amber-700 font-medium">
-              + {formatIDR(totalRolloverBalance)} in rollover balances
-            </div>
-          )}
-        </div>
-
-        {/* 2. Pending Clearance */}
-        <div className="bg-white p-5 rounded-2xl border border-stone-200/90 shadow-2xs hover:shadow-xs transition-shadow">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-amber-800">
-              Pending Clearance
-            </span>
-            <div className="w-7 h-7 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center">
-              <Clock size={14} />
-            </div>
-          </div>
-          <div className="text-2xl font-extrabold text-amber-950 mt-2 font-mono">
-            {formatIDR(pendingClearanceAmount)}
-          </div>
-          <div className="text-xs text-amber-800/80 mt-1">
-            {pendingComms.length} bookings awaiting completion / payment
-          </div>
-        </div>
-
-        {/* 3. Paid This Month */}
-        <div className="bg-white p-5 rounded-2xl border border-stone-200/90 shadow-2xs hover:shadow-xs transition-shadow">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-blue-800">
-              Paid This Month
-            </span>
-            <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center">
-              <CheckCircle2 size={14} />
-            </div>
-          </div>
-          <div className="text-2xl font-extrabold text-neutral-900 mt-2 font-mono">
-            {formatIDR(totalPaidThisMonth)}
-          </div>
-          <div className="text-xs text-stone-500 mt-1">
-            {thisMonthPayouts.length} disbursements successfully settled
-          </div>
-        </div>
-
-        {/* 4. On Hold / Review */}
-        <div className="bg-white p-5 rounded-2xl border border-stone-200/90 shadow-2xs hover:shadow-xs transition-shadow">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-stone-600">
-              On Hold / Disputed
-            </span>
-            <div className="w-7 h-7 rounded-lg bg-stone-100 text-stone-600 flex items-center justify-center">
-              <AlertCircle size={14} />
-            </div>
-          </div>
-          <div className="text-2xl font-extrabold text-neutral-900 mt-2 font-mono">
-            {formatIDR(onHoldAmount)}
-          </div>
-          <div className="text-xs text-stone-500 mt-1">
-            {onHoldComms.length} items requiring review or cancelled
-          </div>
-        </div>
-
-      </div>
-
-      {/* Next Payout Run Highlight Card (Weekly 7-Day Schedule) */}
-      <div className="bg-white rounded-2xl p-6 border border-stone-200/90 shadow-2xs">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          
-          <div className="space-y-3">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="font-mono text-xs font-bold px-2.5 py-1 rounded-lg bg-[#0F172A] text-white">
-                {nextCycle.reference}
-              </span>
-              <span className="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-amber-50 text-amber-900 border border-amber-200">
-                Weekly Cycle · Every 7 Days Only
-              </span>
-              <span className="text-[11px] font-mono text-stone-500">
-                Cutoff: {nextCycle.cutoffTime}
-              </span>
-            </div>
-
-            <div>
-              <h3 className="text-lg font-extrabold text-neutral-900">
-                Next Scheduled Payout Run: {nextCycle.formattedDate}
-              </h3>
-              <p className="text-xs text-stone-500 mt-0.5 max-w-2xl leading-relaxed">
-                Eligible commissions automatically accumulate over the fixed 7-day cycle. Balances meeting the {formatIDR(minThreshold)} threshold will be grouped for corporate bank transfer approval.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-4 text-xs pt-1">
-              <div className="flex items-center gap-1.5 text-stone-600">
-                <Building2 size={14} className="text-stone-400" />
-                <span>Method: <strong>Indonesian Bank Transfer (BCA)</strong></span>
-              </div>
-              <div className="flex items-center gap-1.5 text-stone-600">
-                <ShieldCheck size={14} className="text-emerald-600" />
-                <span>Approval: <strong>Manual Admin Authorization Required</strong></span>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-col sm:flex-row lg:flex-col items-start lg:items-end justify-between gap-3 shrink-0 pt-4 lg:pt-0 border-t lg:border-t-0 border-stone-100">
-            <div className="text-left lg:text-right">
-              <span className="text-[11px] font-mono uppercase font-bold text-stone-400">Estimated Batch Amount</span>
-              <div className="text-2xl font-extrabold text-neutral-950 font-mono">
-                {formatIDR(totalAvailableToPay)}
-              </div>
-              <span className="text-[11px] text-stone-500">
-                {eligiblePartners.length} partners ready for batching
-              </span>
-            </div>
-
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <button
-                type="button"
-                onClick={onOpenCreateBatch}
-                className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer"
-              >
-                <Layers size={14} />
-                <span>Review Payout Batch</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => onChangeTab('settings')}
-                className="px-3 py-2.5 rounded-xl border border-stone-200 bg-white hover:bg-stone-50 text-xs font-bold text-stone-700 transition-colors cursor-pointer shrink-0"
-              >
-                Settings
-              </button>
-            </div>
-          </div>
-
-        </div>
-      </div>
-
-      {/* Partners Ready for Payout Compact List */}
-      <div className="bg-white rounded-2xl p-5 border border-stone-200/90 shadow-2xs space-y-4">
-        <div className="flex items-center justify-between pb-2 border-b border-stone-100">
+        {/* Card 1: Total Unpaid */}
+        <div className="bg-white rounded-2xl p-5 border border-stone-200/90 shadow-2xs flex items-center justify-between">
           <div>
-            <h3 className="text-sm font-bold text-neutral-900">Partners Ready for Payout</h3>
-            <p className="text-xs text-stone-500">
-              Active partners with accumulated eligible commissions.
-            </p>
+            <div className="text-xs font-bold text-stone-500">Total Unpaid</div>
+            <div className="text-xl sm:text-2xl font-extrabold text-neutral-950 font-mono mt-1">
+              {formatIDR(totalUnpaid)}
+            </div>
+            <div className="text-[11px] text-stone-400 mt-1">Outstanding eligible commission</div>
           </div>
-          <button
-            type="button"
-            onClick={() => onChangeTab('earnings')}
-            className="text-xs font-bold text-neutral-900 hover:text-amber-600 flex items-center gap-1 transition-colors cursor-pointer"
-          >
-            <span>View All Partner Earnings</span>
-            <ChevronRight size={14} />
-          </button>
+          <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-700 border border-emerald-100 flex items-center justify-center shrink-0">
+            <Wallet size={22} />
+          </div>
         </div>
 
-        {partnersWithBalance.length === 0 ? (
-          <div className="py-8 text-center text-xs text-stone-400">
-            No partners currently have an available payout balance.
+        {/* Card 2: Total Paid */}
+        <div className="bg-white rounded-2xl p-5 border border-stone-200/90 shadow-2xs flex items-center justify-between">
+          <div>
+            <div className="text-xs font-bold text-stone-500">Total Paid</div>
+            <div className="text-xl sm:text-2xl font-extrabold text-neutral-950 font-mono mt-1">
+              {formatIDR(totalPaid)}
+            </div>
+            <div className="text-[11px] text-stone-400 mt-1">Recorded manual disbursements</div>
           </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse min-w-[700px]">
-              <thead>
-                <tr className="border-b border-stone-200 bg-stone-50/60 text-[10px] font-bold font-mono uppercase tracking-wider text-stone-500">
-                  <th className="py-2.5 px-3">Partner Name</th>
-                  <th className="py-2.5 px-3">Property / Type</th>
-                  <th className="py-2.5 px-3">Available Balance</th>
-                  <th className="py-2.5 px-3">7-Day Run Status</th>
-                  <th className="py-2.5 px-3 text-right">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-stone-100 text-xs">
-                {partnersWithBalance.slice(0, 5).map(p => {
-                  const bal = Number(p.available_balance || 0);
-                  const ready = bal >= minThreshold;
+          <div className="w-12 h-12 rounded-2xl bg-sky-50 text-sky-700 border border-sky-100 flex items-center justify-center shrink-0">
+            <CheckCircle2 size={22} />
+          </div>
+        </div>
 
-                  return (
-                    <tr 
-                      key={p.id}
-                      onClick={() => onSelectPartner(p)}
-                      className="hover:bg-stone-50/70 transition-colors cursor-pointer"
-                    >
-                      <td className="py-3 px-3">
-                        <div className="font-bold text-neutral-900">{p.name}</div>
-                        <div className="text-[10px] text-stone-400 font-mono">{p.partner_code || p.referral_code}</div>
-                      </td>
-                      <td className="py-3 px-3">
-                        <span className="font-medium text-stone-700">{p.business_name || 'Individual'}</span>
-                      </td>
-                      <td className="py-3 px-3 font-mono font-bold text-neutral-900">
-                        {formatIDR(bal)}
-                      </td>
-                      <td className="py-3 px-3">
-                        {ready ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
-                            <CheckCircle2 size={11} /> Eligible for Run
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
-                            <Clock size={11} /> Rolls Over (&lt; {formatIDR(minThreshold)})
-                          </span>
-                        )}
-                      </td>
-                      <td className="py-3 px-3 text-right">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onSelectPartner(p);
-                          }}
-                          className="px-3 py-1 rounded-lg bg-stone-100 hover:bg-neutral-900 hover:text-white text-stone-700 text-xs font-bold transition-all cursor-pointer"
-                        >
-                          View Ledger
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+        {/* Card 3: Partners Awaiting Payment */}
+        <div className="bg-white rounded-2xl p-5 border border-stone-200/90 shadow-2xs flex items-center justify-between">
+          <div>
+            <div className="text-xs font-bold text-stone-500">Partners Awaiting Payment</div>
+            <div className="text-xl sm:text-2xl font-extrabold text-neutral-950 font-mono mt-1">
+              {partnersAwaitingCount}
+            </div>
+            <div className="text-[11px] text-stone-400 mt-1">With unpaid eligible commission</div>
           </div>
-        )}
+          <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-800 border border-amber-200/80 flex items-center justify-center shrink-0">
+            <Users size={22} />
+          </div>
+        </div>
+
       </div>
 
-      {/* Split Row: Recent Payout Runs & Recent Transactions Preview */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      {/* Partner Payouts Table Card */}
+      <div className="bg-white rounded-2xl border border-stone-200/90 shadow-2xs overflow-hidden">
         
-        {/* Recent Payout Runs Card */}
-        <div className="bg-white rounded-2xl p-5 border border-stone-200/90 shadow-2xs space-y-3">
-          <div className="flex items-center justify-between pb-2 border-b border-stone-100">
-            <div className="flex items-center gap-2">
-              <Layers size={16} className="text-stone-500" />
-              <h3 className="text-sm font-bold text-neutral-900">Recent Payout Runs</h3>
-            </div>
-            <button
-              type="button"
-              onClick={() => onChangeTab('runs')}
-              className="text-xs font-bold text-neutral-900 hover:text-amber-600 flex items-center gap-1 transition-colors cursor-pointer"
-            >
-              <span>View All</span>
-              <ChevronRight size={14} />
-            </button>
+        {/* Table Header Bar */}
+        <div className="p-4 sm:p-5 border-b border-stone-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-stone-50/40">
+          <div>
+            <h3 className="text-base font-extrabold text-neutral-900 tracking-tight">Partner Payouts</h3>
+            <p className="text-xs text-stone-500 mt-0.5">Eligible commission balances and expected weekly disbursement schedules.</p>
           </div>
 
-          {payoutRuns.length === 0 ? (
-            <div className="py-8 text-center text-xs text-stone-400">
-              No payout runs created yet. Click "Review Payout Batch" to prepare the first run.
+          <div className="flex items-center gap-2.5">
+            {/* Search */}
+            <div className="relative flex-1 sm:w-56">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
+              <input
+                type="text"
+                placeholder="Search partner..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                className="w-full text-xs font-medium bg-white border border-stone-200 rounded-xl pl-8 pr-3 py-2 text-neutral-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all shadow-2xs"
+              />
+            </div>
+
+            {/* Status Filter */}
+            <select
+              value={statusFilter}
+              onChange={e => setStatusFilter(e.target.value as any)}
+              className="text-xs font-semibold bg-white border border-stone-200 rounded-xl px-3 py-2 text-neutral-900 focus:outline-none focus:ring-2 focus:ring-amber-400 cursor-pointer shadow-2xs"
+            >
+              <option value="all">All Status</option>
+              <option value="Unpaid">Unpaid</option>
+              <option value="Partially Paid">Partially Paid</option>
+              <option value="Paid">Paid</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Desktop Table View */}
+        <div className="hidden md:block overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-stone-200 bg-stone-50/70 text-[11px] font-bold font-mono uppercase tracking-wider text-stone-500">
+                <th className="py-3.5 px-5">Partner</th>
+                <th className="py-3.5 px-4 font-mono">Earned</th>
+                <th className="py-3.5 px-4 font-mono">Paid</th>
+                <th className="py-3.5 px-4 font-mono">Unpaid</th>
+                <th className="py-3.5 px-4">Next Payout</th>
+                <th className="py-3.5 px-4 text-center">Status</th>
+                <th className="py-3.5 px-5 text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-stone-100 text-xs">
+              {filteredRows.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="py-12 text-center text-stone-400">
+                    No partners matching the selected filters.
+                  </td>
+                </tr>
+              ) : (
+                filteredRows.map(p => (
+                  <tr 
+                    key={p.id}
+                    onClick={() => onSelectPartnerForDrawer(p)}
+                    className="hover:bg-amber-50/30 transition-colors cursor-pointer group"
+                  >
+                    {/* Partner Name & Business */}
+                    <td className="py-4 px-5">
+                      <div className="font-bold text-neutral-950 text-sm group-hover:text-amber-800 transition-colors">
+                        {p.name}
+                      </div>
+                      <div className="text-[11px] text-stone-500 mt-0.5">
+                        {p.business_name || 'Individual Partner'}
+                      </div>
+                    </td>
+
+                    {/* Earned */}
+                    <td className="py-4 px-4 font-mono font-bold text-neutral-900">
+                      {formatIDR(p.earned)}
+                    </td>
+
+                    {/* Paid */}
+                    <td className="py-4 px-4 font-mono text-stone-600">
+                      {formatIDR(p.paid)}
+                    </td>
+
+                    {/* Unpaid (Bold Green) */}
+                    <td className="py-4 px-4 font-mono font-extrabold text-emerald-700 text-sm">
+                      {formatIDR(p.unpaid)}
+                    </td>
+
+                    {/* Next Payout */}
+                    <td className="py-4 px-4 font-medium text-stone-700">
+                      {formatWitaDate(p.next_payout_date)}
+                    </td>
+
+                    {/* Status */}
+                    <td className="py-4 px-4 text-center">
+                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
+                        p.status === 'Paid'
+                          ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                          : p.status === 'Partially Paid'
+                          ? 'bg-sky-50 text-sky-800 border border-sky-200'
+                          : 'bg-amber-50 text-amber-900 border border-amber-200'
+                      }`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${
+                          p.status === 'Paid' ? 'bg-emerald-500' :
+                          p.status === 'Partially Paid' ? 'bg-sky-500' : 'bg-amber-500'
+                        }`} />
+                        <span>{p.status}</span>
+                      </span>
+                    </td>
+
+                    {/* Action */}
+                    <td className="py-4 px-5 text-right">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onOpenRecordPayment(p);
+                        }}
+                        disabled={p.unpaid <= 0}
+                        className="px-3.5 py-1.5 rounded-xl bg-neutral-950 hover:bg-neutral-800 text-white text-xs font-bold transition-all shadow-xs cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                      >
+                        Record Payment
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Dedicated Mobile Cards Layout */}
+        <div className="block md:hidden divide-y divide-stone-100">
+          {filteredRows.length === 0 ? (
+            <div className="py-10 text-center text-stone-400 text-xs">
+              No partners matching search criteria.
             </div>
           ) : (
-            <div className="space-y-2">
-              {payoutRuns.slice(0, 3).map(run => (
-                <div
-                  key={run.id}
-                  onClick={() => onChangeTab('runs')}
-                  className="p-3 bg-stone-50/70 hover:bg-stone-100/70 rounded-xl border border-stone-200/70 transition-colors cursor-pointer flex items-center justify-between text-xs"
-                >
+            filteredRows.map(p => (
+              <div 
+                key={p.id}
+                onClick={() => onSelectPartnerForDrawer(p)}
+                className="p-4 space-y-3 hover:bg-stone-50/60 active:bg-amber-50/40 transition-colors"
+              >
+                <div className="flex items-start justify-between">
                   <div>
-                    <div className="font-mono font-bold text-neutral-900">{run.run_reference}</div>
-                    <div className="text-[11px] text-stone-500 mt-0.5">
-                      Scheduled: {formatWitaDate(run.scheduled_date)} · {run.partner_count} partners
-                    </div>
+                    <h4 className="font-extrabold text-neutral-900 text-sm">{p.name}</h4>
+                    <p className="text-xs text-stone-500">{p.business_name || 'Individual Partner'}</p>
                   </div>
-                  <div className="text-right">
-                    <div className="font-mono font-bold text-neutral-900">{formatIDR(run.total_amount)}</div>
-                    <span className="inline-block text-[10px] font-bold px-2 py-0.2 rounded-full uppercase bg-emerald-100 text-emerald-800">
-                      {run.status.replace('_', ' ')}
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                    p.status === 'Paid' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-900'
+                  }`}>
+                    {p.status}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-stone-100">
+                  <div>
+                    <span className="text-[10px] text-stone-400 uppercase font-mono block">Unpaid Balance</span>
+                    <span className="font-bold font-mono text-emerald-700 text-sm">
+                      {formatIDR(p.unpaid)}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-stone-400 uppercase font-mono block">Next Payout</span>
+                    <span className="font-semibold text-neutral-800">
+                      {formatWitaDate(p.next_payout_date)}
                     </span>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
 
-        {/* Recent Transactions Card */}
-        <div className="bg-white rounded-2xl p-5 border border-stone-200/90 shadow-2xs space-y-3">
-          <div className="flex items-center justify-between pb-2 border-b border-stone-100">
-            <div className="flex items-center gap-2">
-              <Receipt size={16} className="text-stone-500" />
-              <h3 className="text-sm font-bold text-neutral-900">Recent Transactions</h3>
-            </div>
-            <button
-              type="button"
-              onClick={() => onChangeTab('transactions')}
-              className="text-xs font-bold text-neutral-900 hover:text-amber-600 flex items-center gap-1 transition-colors cursor-pointer"
-            >
-              <span>View Ledger</span>
-              <ChevronRight size={14} />
-            </button>
-          </div>
-
-          {transactions.length === 0 ? (
-            <div className="py-8 text-center text-xs text-stone-400">
-              No financial transactions recorded yet.
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {transactions.slice(0, 4).map(txn => (
-                <div
-                  key={txn.id}
-                  onClick={() => onChangeTab('transactions')}
-                  className="p-3 bg-stone-50/70 hover:bg-stone-100/70 rounded-xl border border-stone-200/70 transition-colors cursor-pointer flex items-center justify-between text-xs"
-                >
-                  <div className="min-w-0 pr-2">
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono font-bold text-neutral-900">{txn.id}</span>
-                      <span className={`text-[9px] font-mono font-bold uppercase px-1.5 py-0.2 rounded ${
-                        txn.direction === 'credit' ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800'
-                      }`}>
-                        {txn.type.replace('_', ' ')}
-                      </span>
-                    </div>
-                    <div className="text-[11px] text-stone-500 truncate mt-0.5">
-                      {txn.partner_name} {txn.booking_reference ? `· #${txn.booking_reference}` : ''}
-                    </div>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <div className={`font-mono font-bold ${
-                      txn.direction === 'credit' ? 'text-emerald-700' : 'text-neutral-900'
-                    }`}>
-                      {txn.direction === 'credit' ? '+' : '-'} {formatIDR(txn.amount)}
-                    </div>
-                    <div className="text-[10px] text-stone-400">
-                      {formatWitaDate(txn.timestamp)}
-                    </div>
-                  </div>
+                <div className="pt-2 flex items-center justify-between gap-2">
+                  <span className="text-[11px] text-stone-400 font-mono">
+                    Paid: {formatIDR(p.paid)}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onOpenRecordPayment(p);
+                    }}
+                    disabled={p.unpaid <= 0}
+                    className="px-4 py-2 rounded-xl bg-neutral-950 text-white text-xs font-bold disabled:opacity-40 cursor-pointer"
+                  >
+                    Record Payment
+                  </button>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))
           )}
         </div>
 

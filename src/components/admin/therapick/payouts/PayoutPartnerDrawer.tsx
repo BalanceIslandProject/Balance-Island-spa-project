@@ -3,335 +3,332 @@
 import React, { useState } from 'react';
 import { 
   X, 
-  Building2, 
   User, 
-  ShieldCheck, 
+  Building2, 
+  CheckCircle2, 
   Wallet, 
   Receipt, 
-  Clock, 
   Calendar, 
-  ArrowUpRight, 
-  CheckCircle2, 
-  AlertCircle,
-  ExternalLink,
-  ChevronRight
+  Clock, 
+  CreditCard,
+  ChevronRight,
+  ExternalLink
 } from 'lucide-react';
-import { formatIDR, formatWitaDate, formatWitaDateTime } from '@/lib/payoutScheduler';
-import { PayoutWeeklyScheduleConfig } from '@/types/payouts';
+import { PartnerPayoutRow, PaymentRecord, PayoutWeeklyScheduleConfig } from '@/types/payouts';
+import { formatIDR, formatWitaDate } from '@/lib/payoutScheduler';
 
 interface PayoutPartnerDrawerProps {
-  partner: any | null;
+  partner: PartnerPayoutRow | null;
+  isOpen: boolean;
   onClose: () => void;
   commissions: any[];
-  payouts: any[];
+  payments: PaymentRecord[];
   config: PayoutWeeklyScheduleConfig;
-  onTriggerPayout: (partner: any) => void;
+  onOpenRecordPayment: (partner: PartnerPayoutRow) => void;
 }
 
 export default function PayoutPartnerDrawer({
   partner,
+  isOpen,
   onClose,
   commissions,
-  payouts,
+  payments,
   config,
-  onTriggerPayout
+  onOpenRecordPayment
 }: PayoutPartnerDrawerProps) {
-  const [activeTab, setActiveTab] = useState<'commissions' | 'payouts' | 'adjustments'>('commissions');
+  const [activeTab, setActiveTab] = useState<'overview' | 'commissions' | 'payments'>('overview');
 
-  if (!partner) return null;
+  if (!isOpen || !partner) return null;
 
-  const partnerComms = commissions.filter(c => 
+  // Filter commissions & payments for this partner
+  const partnerCommissions = commissions.filter(c => 
     c.partner_id === partner.id || 
-    (c.partner_code && partner.partner_code && c.partner_code.toUpperCase() === partner.partner_code.toUpperCase())
+    (c.partner_code && partner.partner_code && c.partner_code.toUpperCase() === partner.partner_code.toUpperCase()) ||
+    (c.partner_name && partner.name && c.partner_name.toLowerCase() === partner.name.toLowerCase())
   );
 
-  const partnerPayouts = payouts.filter(p => 
-    p.partner_id === partner.id || 
-    (p.partner_code && partner.partner_code && p.partner_code.toUpperCase() === partner.partner_code.toUpperCase())
+  const partnerPayments = payments.filter(p => 
+    p.partner_id === partner.id ||
+    (p.partner_name && partner.name && p.partner_name.toLowerCase() === partner.name.toLowerCase())
   );
-
-  const availableBalance = Number(partner.available_balance || 0);
-  const isEligible = availableBalance >= (config.min_payout_threshold || 100000);
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end">
+    <div className="fixed inset-0 z-50 flex justify-end animate-in fade-in duration-200">
       {/* Backdrop */}
       <div 
         className="fixed inset-0 bg-neutral-950/40 backdrop-blur-xs transition-opacity"
         onClick={onClose}
       />
 
-      {/* Slide-over Panel */}
-      <div className="relative w-full max-w-xl bg-white h-full shadow-2xl flex flex-col z-50 overflow-y-auto animate-in slide-in-from-right duration-300">
+      {/* Drawer Panel */}
+      <div className="relative w-full max-w-xl bg-white h-full shadow-2xl flex flex-col z-10 overflow-hidden animate-in slide-in-from-right duration-300">
         
-        {/* Header */}
-        <div className="sticky top-0 bg-white/95 backdrop-blur-md px-6 py-4 border-b border-stone-200/90 flex items-center justify-between z-10">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-mono font-bold text-stone-500 uppercase">
-                {partner.partner_code || partner.referral_code || partner.id.slice(0, 8)}
-              </span>
-              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                isEligible
-                  ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                  : 'bg-amber-50 text-amber-800 border border-amber-200'
-              }`}>
-                <span className="w-1.5 h-1.5 rounded-full bg-current" />
-                <span>{isEligible ? 'Eligible for Payout' : 'Rolls Over (< Min)'}</span>
-              </span>
+        {/* Drawer Header (Matching Mockup) */}
+        <div className="p-5 border-b border-stone-100 flex items-center justify-between bg-white sticky top-0 z-20">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-neutral-900 text-amber-400 flex items-center justify-center font-bold text-sm shrink-0">
+              <User size={18} />
             </div>
-            <h2 className="text-lg font-bold text-neutral-900 mt-0.5">
-              {partner.name || `${partner.first_name || ''} ${partner.last_name || ''}`.trim() || 'Partner Ledger'}
-            </h2>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="font-extrabold text-neutral-950 text-base leading-tight">{partner.name}</h3>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                  Active
+                </span>
+              </div>
+              <p className="text-xs text-stone-500 mt-0.5">{partner.business_name || 'Affiliate Partner'}</p>
+            </div>
           </div>
 
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => onOpenRecordPayment(partner)}
+              disabled={partner.unpaid <= 0}
+              className="px-3.5 py-2 rounded-xl bg-[#facc15] hover:bg-[#eab308] text-neutral-950 text-xs font-extrabold flex items-center gap-1.5 shadow-xs transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <CheckCircle2 size={13} className="text-neutral-950" />
+              <span>Record Payment</span>
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="p-1.5 rounded-xl text-stone-400 hover:text-neutral-900 hover:bg-stone-100 transition-colors cursor-pointer"
+            >
+              <X size={18} />
+            </button>
+          </div>
+        </div>
+
+        {/* 3 Sub-Tabs Bar */}
+        <div className="px-5 pt-3 border-b border-stone-100 flex items-center gap-2 bg-stone-50/50">
           <button
             type="button"
-            onClick={onClose}
-            className="p-1.5 rounded-xl text-stone-400 hover:text-neutral-900 hover:bg-stone-100 transition-colors cursor-pointer"
+            onClick={() => setActiveTab('overview')}
+            className={`pb-2.5 px-3 text-xs font-bold transition-all border-b-2 cursor-pointer ${
+              activeTab === 'overview'
+                ? 'border-amber-400 text-neutral-950'
+                : 'border-transparent text-stone-500 hover:text-neutral-900'
+            }`}
           >
-            <X size={18} />
+            Overview
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('commissions')}
+            className={`pb-2.5 px-3 text-xs font-bold transition-all border-b-2 cursor-pointer flex items-center gap-1.5 ${
+              activeTab === 'commissions'
+                ? 'border-amber-400 text-neutral-950'
+                : 'border-transparent text-stone-500 hover:text-neutral-900'
+            }`}
+          >
+            <span>Commission History</span>
+            <span className="px-1.5 py-0.2 rounded-md bg-stone-200 text-stone-700 text-[10px] font-mono">
+              {partnerCommissions.length}
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('payments')}
+            className={`pb-2.5 px-3 text-xs font-bold transition-all border-b-2 cursor-pointer flex items-center gap-1.5 ${
+              activeTab === 'payments'
+                ? 'border-amber-400 text-neutral-950'
+                : 'border-transparent text-stone-500 hover:text-neutral-900'
+            }`}
+          >
+            <span>Payment History</span>
+            <span className="px-1.5 py-0.2 rounded-md bg-stone-200 text-stone-700 text-[10px] font-mono">
+              {partnerPayments.length}
+            </span>
           </button>
         </div>
 
         {/* Content Body */}
-        <div className="p-6 space-y-6">
+        <div className="p-6 overflow-y-auto flex-1 space-y-5">
           
-          {/* Quick Balance Card */}
-          <div className="bg-stone-50/80 border border-stone-200/90 rounded-2xl p-4.5 space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-stone-600">
-                Available Commission
-              </span>
-              <span className="text-[11px] font-mono text-stone-500">
-                Cycle: Weekly (Every 7 Days)
-              </span>
-            </div>
-
-            <div className="flex items-baseline justify-between">
-              <div>
-                <div className="text-2xl font-extrabold text-neutral-900 font-mono">
-                  {formatIDR(availableBalance)}
+          {/* TAB 1: OVERVIEW */}
+          {activeTab === 'overview' && (
+            <div className="space-y-5">
+              
+              {/* 3 Summary Cards */}
+              <div className="grid grid-cols-3 gap-3">
+                <div className="p-3.5 rounded-2xl bg-stone-50 border border-stone-200/80">
+                  <span className="text-[10px] font-bold uppercase text-stone-400 block font-mono">Total Earned</span>
+                  <span className="font-extrabold font-mono text-neutral-900 text-sm mt-0.5 block">
+                    {formatIDR(partner.earned)}
+                  </span>
                 </div>
-                <div className="text-xs text-stone-500 mt-0.5">
-                  {isEligible ? (
-                    <span className="text-emerald-700 font-medium flex items-center gap-1">
-                      <CheckCircle2 size={12} /> Scheduled for {formatWitaDate(config.next_scheduled_date)}
+                <div className="p-3.5 rounded-2xl bg-stone-50 border border-stone-200/80">
+                  <span className="text-[10px] font-bold uppercase text-stone-400 block font-mono">Total Paid</span>
+                  <span className="font-extrabold font-mono text-neutral-900 text-sm mt-0.5 block">
+                    {formatIDR(partner.paid)}
+                  </span>
+                </div>
+                <div className="p-3.5 rounded-2xl bg-amber-50/80 border border-amber-200/80">
+                  <span className="text-[10px] font-bold uppercase text-amber-800 block font-mono">Unpaid Balance</span>
+                  <span className="font-extrabold font-mono text-emerald-700 text-sm mt-0.5 block">
+                    {formatIDR(partner.unpaid)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Information Rows */}
+              <div className="p-4 rounded-2xl bg-white border border-stone-200/80 space-y-3 text-xs shadow-2xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-stone-500 flex items-center gap-1.5">
+                    <Calendar size={13} className="text-stone-400" />
+                    Next Payout
+                  </span>
+                  <span className="font-bold text-neutral-900">{formatWitaDate(partner.next_payout_date)}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-stone-500 flex items-center gap-1.5">
+                    <Clock size={13} className="text-stone-400" />
+                    Payout Cycle
+                  </span>
+                  <span className="font-semibold text-neutral-900">Every 7 Days</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-stone-500 flex items-center gap-1.5">
+                    <User size={13} className="text-stone-400" />
+                    Joined
+                  </span>
+                  <span className="font-semibold text-neutral-900">{partner.joined_date || '12 Sep 2026'}</span>
+                </div>
+                {partner.account_number && (
+                  <div className="flex items-center justify-between pt-2 border-t border-stone-100">
+                    <span className="text-stone-500 flex items-center gap-1.5">
+                      <CreditCard size={13} className="text-stone-400" />
+                      Disbursement Account
                     </span>
-                  ) : (
-                    <span className="text-amber-700 font-medium flex items-center gap-1">
-                      <AlertCircle size={12} /> Rolls over until minimum {formatIDR(config.min_payout_threshold)}
+                    <span className="font-mono font-bold text-neutral-900">
+                      {partner.bank_name || 'BCA'} · {partner.account_number}
                     </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Recent Commissions Card */}
+              <div className="p-4 rounded-2xl bg-white border border-stone-200/80 space-y-3 shadow-2xs">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-bold text-neutral-900 text-xs">Recent Commissions</h4>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('commissions')}
+                    className="text-[11px] font-bold text-amber-700 hover:text-amber-800 cursor-pointer"
+                  >
+                    View All
+                  </button>
+                </div>
+
+                <div className="space-y-2">
+                  {partnerCommissions.slice(0, 3).map(comm => (
+                    <div key={comm.id} className="p-2.5 rounded-xl bg-stone-50/70 border border-stone-100 flex items-center justify-between text-xs">
+                      <div>
+                        <div className="font-bold text-neutral-900">{comm.booking_reference || `#${comm.id.slice(0, 6)}`}</div>
+                        <div className="text-[10px] text-stone-400">{comm.service_name || 'Spa Package'} · {formatWitaDate(comm.created_at)}</div>
+                      </div>
+                      <span className="font-bold font-mono text-emerald-700">
+                        {formatIDR(comm.commission_amount)}
+                      </span>
+                    </div>
+                  ))}
+                  {partnerCommissions.length === 0 && (
+                    <p className="text-xs text-stone-400 py-3 text-center">No recent commissions recorded.</p>
                   )}
                 </div>
               </div>
 
-              {availableBalance > 0 && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    onClose();
-                    onTriggerPayout(partner);
-                  }}
-                  className="px-3.5 py-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
-                >
-                  <Wallet size={13} />
-                  <span>Disburse Now</span>
-                </button>
-              )}
-            </div>
-
-            <div className="grid grid-cols-3 gap-2 pt-3 border-t border-stone-200/80 text-xs">
-              <div>
-                <span className="text-stone-400 block text-[10px] uppercase font-mono">Total Earned</span>
-                <span className="font-bold text-neutral-900 font-mono">
-                  {formatIDR(partner.commission_earned || 0)}
-                </span>
-              </div>
-              <div>
-                <span className="text-stone-400 block text-[10px] uppercase font-mono">Total Disbursed</span>
-                <span className="font-bold text-neutral-900 font-mono">
-                  {formatIDR(partner.paid_amount || 0)}
-                </span>
-              </div>
-              <div>
-                <span className="text-stone-400 block text-[10px] uppercase font-mono">Commission Rate</span>
-                <span className="font-bold text-neutral-900 font-mono">
-                  {partner.commission_rate_pct || config.default_commission_rate_pct || 15}%
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Bank Destination Card */}
-          <div className="bg-white border border-stone-200/90 rounded-2xl p-4.5 space-y-2.5 shadow-2xs">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-stone-600 flex items-center gap-1.5">
-                <Building2 size={13} className="text-stone-400" />
-                Verified Bank Account
-              </span>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
-                <ShieldCheck size={11} />
-                Verified Destination
-              </span>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2 text-xs pt-1">
-              <div>
-                <span className="text-stone-400 block text-[10px] uppercase font-mono">Bank Name</span>
-                <span className="font-bold text-neutral-900">
-                  {partner.payout_details?.bank_name || partner.bank_name || 'BCA (Bank Central Asia)'}
-                </span>
-              </div>
-              <div>
-                <span className="text-stone-400 block text-[10px] uppercase font-mono">Account Holder</span>
-                <span className="font-bold text-neutral-900 truncate block">
-                  {partner.payout_details?.account_holder || partner.bank_holder || partner.name}
-                </span>
-              </div>
-              <div className="col-span-2">
-                <span className="text-stone-400 block text-[10px] uppercase font-mono">Account Number</span>
-                <span className="font-mono font-bold text-neutral-900">
-                  {partner.payout_details?.account_number || partner.bank_number || '7720-1928-4491'}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Navigation Sub-Tabs */}
-          <div className="border-b border-stone-200 flex items-center gap-4 text-xs font-bold">
-            <button
-              type="button"
-              onClick={() => setActiveTab('commissions')}
-              className={`pb-2 border-b-2 transition-all cursor-pointer ${
-                activeTab === 'commissions'
-                  ? 'border-neutral-900 text-neutral-950 font-bold'
-                  : 'border-transparent text-stone-400 hover:text-stone-700'
-              }`}
-            >
-              Commissions ({partnerComms.length})
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab('payouts')}
-              className={`pb-2 border-b-2 transition-all cursor-pointer ${
-                activeTab === 'payouts'
-                  ? 'border-neutral-900 text-neutral-950 font-bold'
-                  : 'border-transparent text-stone-400 hover:text-stone-700'
-              }`}
-            >
-              Payout History ({partnerPayouts.length})
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab('adjustments')}
-              className={`pb-2 border-b-2 transition-all cursor-pointer ${
-                activeTab === 'adjustments'
-                  ? 'border-neutral-900 text-neutral-950 font-bold'
-                  : 'border-transparent text-stone-400 hover:text-stone-700'
-              }`}
-            >
-              Adjustments & Refunds
-            </button>
-          </div>
-
-          {/* Sub-Tab Content */}
-          {activeTab === 'commissions' && (
-            <div className="space-y-2">
-              {partnerComms.length === 0 ? (
-                <div className="py-8 text-center text-xs text-stone-400">
-                  No commission entries recorded for this partner.
-                </div>
-              ) : (
-                partnerComms.map((c, idx) => (
-                  <div 
-                    key={c.id || idx}
-                    className="p-3 bg-stone-50/70 border border-stone-200/70 rounded-xl flex items-center justify-between text-xs"
-                  >
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono font-bold text-neutral-900">
-                          #{c.booking_id || c.reference_number || 'BOOKING'}
-                        </span>
-                        <span className={`px-2 py-0.2 rounded-full text-[10px] font-bold ${
-                          c.status === 'paid'
-                            ? 'bg-emerald-100 text-emerald-800'
-                            : c.status === 'approved'
-                            ? 'bg-blue-100 text-blue-800'
-                            : 'bg-amber-100 text-amber-800'
-                        }`}>
-                          {c.status || 'Pending'}
-                        </span>
-                      </div>
-                      <div className="text-[11px] text-stone-500 mt-0.5">
-                        {formatWitaDate(c.created_at)} · Gross: {formatIDR(c.booking_amount_gross || c.eligible_treatment_amount)}
-                      </div>
-                    </div>
-
-                    <div className="text-right">
-                      <div className="font-bold font-mono text-neutral-900">
-                        {formatIDR(c.commission_amount)}
-                      </div>
-                      <div className="text-[10px] text-stone-400">
-                        Rate: {c.commission_rate_pct || 15}%
-                      </div>
-                    </div>
-                  </div>
-                ))
-              )}
             </div>
           )}
 
-          {activeTab === 'payouts' && (
-            <div className="space-y-2">
-              {partnerPayouts.length === 0 ? (
-                <div className="py-8 text-center text-xs text-stone-400">
-                  No historical payouts disbursed yet.
-                </div>
-              ) : (
-                partnerPayouts.map((p, idx) => (
-                  <div 
-                    key={p.id || idx}
-                    className="p-3 bg-stone-50/70 border border-stone-200/70 rounded-xl flex items-center justify-between text-xs"
-                  >
-                    <div>
-                      <div className="font-mono font-bold text-neutral-900">
-                        {p.payout_reference || p.reference || 'PAY-REF'}
-                      </div>
-                      <div className="text-[11px] text-stone-500 mt-0.5">
-                        {formatWitaDate(p.processed_at || p.created_at)} · {p.method || 'Bank Transfer'}
-                      </div>
-                      {p.notes && (
-                        <div className="text-[10px] text-stone-400 mt-0.5 truncate max-w-[280px]">
-                          Note: {p.notes}
-                        </div>
-                      )}
-                    </div>
+          {/* TAB 2: COMMISSION HISTORY */}
+          {activeTab === 'commissions' && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between text-xs text-stone-500 pb-2 border-b border-stone-100">
+                <span>Showing <strong>{partnerCommissions.length}</strong> attributed treatments</span>
+                <span className="font-mono font-bold text-neutral-900">Total: {formatIDR(partner.earned)}</span>
+              </div>
 
-                    <div className="text-right">
-                      <div className="font-bold font-mono text-emerald-800">
-                        {formatIDR(p.amount)}
-                      </div>
-                      <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700">
-                        <CheckCircle2 size={10} /> Disbursed
+              <div className="space-y-2">
+                {partnerCommissions.map(comm => (
+                  <div key={comm.id} className="p-3.5 rounded-xl bg-white border border-stone-200/90 shadow-2xs space-y-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-mono font-bold text-neutral-950">
+                        {comm.booking_reference || `#${comm.id.slice(0, 8)}`}
+                      </span>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                        comm.status === 'paid' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                      }`}>
+                        {comm.status === 'paid' ? 'Settled' : 'Eligible'}
                       </span>
                     </div>
+
+                    <div className="flex items-baseline justify-between text-xs">
+                      <span className="text-stone-600">{comm.service_name || 'Balinese Traditional Ritual'}</span>
+                      <span className="font-mono font-extrabold text-emerald-700 text-sm">
+                        {formatIDR(comm.commission_amount)}
+                      </span>
+                    </div>
+
+                    <div className="text-[10px] text-stone-400 font-mono pt-1 border-t border-stone-100">
+                      Attributed on {formatWitaDate(comm.created_at)}
+                    </div>
                   </div>
-                ))
-              )}
+                ))}
+
+                {partnerCommissions.length === 0 && (
+                  <div className="py-12 text-center text-stone-400 text-xs">
+                    No commission history recorded for this partner yet.
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
-          {activeTab === 'adjustments' && (
-            <div className="py-6 text-center text-xs text-stone-400 space-y-1">
-              <p>No refund deductions or dispute adjustments recorded.</p>
-              <p className="text-[11px] text-stone-400">
-                All bookings for this partner have settled cleanly without chargebacks.
-              </p>
+          {/* TAB 3: PAYMENT HISTORY */}
+          {activeTab === 'payments' && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between text-xs text-stone-500 pb-2 border-b border-stone-100">
+                <span>Showing <strong>{partnerPayments.length}</strong> recorded manual disbursements</span>
+                <span className="font-mono font-bold text-neutral-900">Total Paid: {formatIDR(partner.paid)}</span>
+              </div>
+
+              <div className="space-y-2">
+                {partnerPayments.map(p => (
+                  <div key={p.id} className="p-3.5 rounded-xl bg-white border border-stone-200/90 shadow-2xs space-y-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-mono font-bold text-neutral-950">{p.id}</span>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                        Recorded
+                      </span>
+                    </div>
+
+                    <div className="flex items-baseline justify-between text-xs">
+                      <span className="text-stone-600 font-medium">{p.method} · {p.reference || 'Manual Ref'}</span>
+                      <span className="font-mono font-extrabold text-neutral-900 text-sm">
+                        {formatIDR(p.amount)}
+                      </span>
+                    </div>
+
+                    <div className="text-[10px] text-stone-400 font-mono pt-1 border-t border-stone-100 flex items-center justify-between">
+                      <span>Transferred on {formatWitaDate(p.date)}</span>
+                      {p.notes && <span className="text-stone-500 truncate max-w-[150px]">{p.notes}</span>}
+                    </div>
+                  </div>
+                ))}
+
+                {partnerPayments.length === 0 && (
+                  <div className="py-12 text-center text-stone-400 text-xs">
+                    No payment history recorded for this partner yet.
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
         </div>
+
       </div>
     </div>
   );
