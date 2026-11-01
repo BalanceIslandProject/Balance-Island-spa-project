@@ -12,13 +12,20 @@ export function proxy(request: NextRequest) {
 
     // 1. SUBDOMAIN ROUTING FOR PARTNERS PORTAL (partners.booktherapick.com / partners.localhost)
     if (isPartnersSubdomain) {
-        // Allow static assets, Next internals, and API routes to pass through directly
+        // Allow static assets, Next internals, API routes, and public invoice views to pass through directly
         if (
             path.startsWith('/_next') ||
             path.startsWith('/api') ||
+            path.startsWith('/invoice') ||
             path.includes('.')
         ) {
             return NextResponse.next();
+        }
+
+        // Handle direct /partners/invoice link fallback
+        if (path.startsWith('/partners/invoice')) {
+            const cleanInvoicePath = path.replace(/^\/partners/, '');
+            return NextResponse.redirect(new URL(cleanInvoicePath, request.url));
         }
 
         // Map root / or any subpath to /partners/...

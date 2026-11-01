@@ -23,21 +23,42 @@ function InvoicePage() {
                 return;
             }
 
-            // 1. Try to fetch from Supabase first using reference_number
+            const rawId = Array.isArray(params?.id) ? params.id[0] : (params?.id || '');
+            const targetId = decodeURIComponent(rawId).trim();
+
+            // 1. Try to fetch from Supabase bookings table using case-insensitive reference number or id
             try {
-                const { data, error } = await supabase
+                let { data, error } = await supabase
                     .from('bookings')
                     .select('*')
-                    .eq('reference_number', params.id)
-                    .single();
+                    .ilike('reference_number', targetId)
+                    .maybeSingle();
 
-                if (data && !error) {
+                if (!data && targetId.includes('-')) {
+                    const idRes = await supabase
+                        .from('bookings')
+                        .select('*')
+                        .eq('id', targetId)
+                        .maybeSingle();
+                    data = idRes.data;
+                }
+
+                if (data) {
                     // Map the Supabase row back to BookingHistory format
                     setBooking({
-                        id: data.reference_number,
+                        id: data.reference_number || targetId,
                         date: data.created_at || new Date().toISOString(),
                         status: data.status?.toLowerCase() || 'confirmed',
-                        items: Array.isArray(data.items) ? data.items : [],
+                        items: Array.isArray(data.items) && data.items.length > 0 ? data.items : [
+                            {
+                                id: 'item-1',
+                                treatmentId: 'treatment-1',
+                                title: data.treatment_name || 'Signature Ritual',
+                                duration: '60',
+                                price: data.total_price || data.revenue || 0,
+                                guests: data.pax || 1
+                            }
+                        ],
                         totalPrice: data.total_price || data.revenue || 0,
                         customerDetails: {
                             name: data.guest_name || '',
@@ -50,8 +71,44 @@ function InvoicePage() {
                     setIsLoading(false);
                     return;
                 }
+
+                // 2. Fallback to affiliate_commissions if booking was an affiliate record
+                const { data: comm } = await supabase
+                    .from('affiliate_commissions')
+                    .select('*')
+                    .ilike('booking_id', targetId)
+                    .maybeSingle();
+
+                if (comm) {
+                    const gross = Number(comm.booking_amount_gross || comm.eligible_treatment_amount || 0);
+                    setBooking({
+                        id: comm.booking_id || targetId,
+                        date: comm.created_at || new Date().toISOString(),
+                        status: comm.service_completed ? 'confirmed' : 'confirmed',
+                        items: [
+                            {
+                                id: 'item-1',
+                                treatmentId: 'treatment-1',
+                                title: comm.treatment_name || 'Signature Ritual',
+                                duration: '60',
+                                price: gross,
+                                guests: 1
+                            }
+                        ],
+                        totalPrice: gross,
+                        customerDetails: {
+                            name: comm.customer_name || 'Guest',
+                            date: comm.booking_date || (comm.created_at ? comm.created_at.split('T')[0] : ''),
+                            time: comm.booking_time || '14:00',
+                            location: comm.location || 'Villa',
+                            room: comm.room_number || ''
+                        }
+                    });
+                    setIsLoading(false);
+                    return;
+                }
             } catch (err) {
-                console.error("Error fetching from supabase", err);
+                console.error("Error fetching invoice from supabase:", err);
             }
 
             // 2. Fallback to 'd' URL parameter
