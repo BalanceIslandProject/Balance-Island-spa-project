@@ -1,7 +1,5 @@
 import React from 'react';
-import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
-import TherapickBookingManagement from '@/components/TherapickBookingManagement';
+import TherapickMasterView from '@/components/admin/therapick/TherapickMasterView';
 
 export const metadata = {
   title: 'Bookings & Attribution | Therapick Admin',
@@ -9,5 +7,5 @@ export const metadata = {
 };
 
 export default function AdminBookingsPage() {
-  return <TherapickBookingManagement />;
+  return <TherapickMasterView forcedTab="bookings" />;
 }

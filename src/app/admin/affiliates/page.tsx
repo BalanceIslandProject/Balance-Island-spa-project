@@ -1,5 +1,5 @@
 import React from 'react';
-import AffiliateManagement from '@/components/admin/AffiliateManagement';
+import TherapickMasterView from '@/components/admin/therapick/TherapickMasterView';
 
 export const metadata = {
   title: 'Affiliates | Therapick Admin Console',
@@ -7,5 +7,5 @@ export const metadata = {
 };
 
 export default function AdminAffiliatesPage() {
-  return <AffiliateManagement initialSubTab="partners" />;
+  return <TherapickMasterView forcedTab="partners" />;
 }

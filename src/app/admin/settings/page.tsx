@@ -1,7 +1,5 @@
 import React from 'react';
-import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
-import AffiliateManagement from '@/components/admin/AffiliateManagement';
+import TherapickMasterView from '@/components/admin/therapick/TherapickMasterView';
 
 export const metadata = {
   title: 'Partner Program Settings | Therapick Admin',
@@ -9,5 +7,5 @@ export const metadata = {
 };
 
 export default function AdminSettingsPage() {
-  return <AffiliateManagement initialSubTab="settings" />;
+  return <TherapickMasterView forcedTab="settings" />;
 }

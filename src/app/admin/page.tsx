@@ -16,6 +16,7 @@ import BookingManagement from '@/components/BookingManagement';
 import TherapickBookingManagement from '@/components/TherapickBookingManagement';
 import AffiliateManagement from '@/components/admin/AffiliateManagement';
 import TherapickAddonSettings from '@/components/admin/TherapickAddonSettings';
+import TherapickMasterView from '@/components/admin/therapick/TherapickMasterView';
 import { cx, btn, inputCls, selectCls, thCls, tdCls, StatusBadge, CountPill, EmptyState, SearchInput } from '@/components/admin/affiliate/ui';
 
 // Quick Preset Campaigns for Trip & Spa Deals
@@ -31,14 +32,8 @@ const CAMPAIGN_PRESETS = [
 ];
 
 function AdminDashboardContent() {
-    const triggerRevalidation = async () => {
-        try {
-            await fetch('/api/revalidate', { method: 'POST', body: JSON.stringify({ action: 'revalidate' }) });
-        } catch(e) {
-            console.error('Revalidation failed:', e);
-        }
-    };
-
+    const searchParams = useSearchParams();
+    const brandParam = searchParams.get('brand');
     const { 
         treatments, setTreatments, 
         campaign, setCampaign,
@@ -48,9 +43,20 @@ function AdminDashboardContent() {
         therapists, setTherapists
     } = useSpa();
 
-    const searchParams = useSearchParams();
+    // Therapick Admin System Redesign: render dedicated master view
+    if (brandParam === 'therapick' || (!brandParam && siteBrandFilter === 'therapick')) {
+        return <TherapickMasterView />;
+    }
+
+    const triggerRevalidation = async () => {
+        try {
+            await fetch('/api/revalidate', { method: 'POST', body: JSON.stringify({ action: 'revalidate' }) });
+        } catch(e) {
+            console.error('Revalidation failed:', e);
+        }
+    };
+
     const tabParam = searchParams.get('tab');
-    const brandParam = searchParams.get('brand');
     const initialTab = (tabParam as any) || (brandParam === 'therapick' || siteBrandFilter === 'therapick' ? 'bookings' : 'treatment');
     const [activeTab, setActiveTab] = useState<'campaign' | 'treatment' | 'store' | 'fees' | 'calculator' | 'list' | 'settings' | 'promo' | 'bookings' | 'invoice' | 'affiliates' | 'addons'>(initialTab);
     const [isSubmitting, setIsSubmitting] = useState(false);

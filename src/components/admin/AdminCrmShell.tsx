@@ -30,6 +30,11 @@ import {
 } from 'lucide-react';
 import { useSpa } from '@/context/SpaContext';
 import { getAdminDomainInfo, AdminConsoleBrand } from '@/lib/domainIsolation';
+import { TherapickAdminProvider } from '@/context/TherapickAdminContext';
+import TherapickSystemSwitcher from '@/components/admin/therapick/TherapickSystemSwitcher';
+import TherapickSidebarNav, { TherapickMobileDrawerLinks } from '@/components/admin/therapick/TherapickSidebarNav';
+import TherapickMobileBottomNav from '@/components/admin/therapick/TherapickMobileBottomNav';
+import TherapickTopNavControls from '@/components/admin/therapick/TherapickTopNavControls';
 
 interface AdminCrmShellProps {
   children: React.ReactNode;
@@ -404,6 +409,108 @@ export default function AdminCrmShell({ children, serverHost }: AdminCrmShellPro
     router.push(c.href);
   };
 
+  // ─────────────────────────────────────────────────────────────────────────────
+  // THERAPICK ADMIN REDESIGN SYSTEM:
+  // Complete separation of Website vs Affiliate, persistent switcher, dark navy sidebar,
+  // mobile bottom nav, realtime notifications, drawers & modals.
+  // ─────────────────────────────────────────────────────────────────────────────
+  if (activeBrandId === 'therapick') {
+    return (
+      <TherapickAdminProvider>
+        <div className="min-h-screen w-full bg-[#fbf9f5] text-neutral-900 font-sans antialiased flex flex-col selection:bg-amber-300 selection:text-neutral-950 pb-16 lg:pb-0">
+          
+          {/* 1. TOP BAR */}
+          <header className="sticky top-0 z-40 w-full bg-white/95 backdrop-blur-md border-b border-[#eaecf0] px-4 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between">
+            <div className="flex items-center gap-2.5 sm:gap-3.5">
+              <button
+                type="button"
+                onClick={() => setMobileDrawerOpen(true)}
+                className="lg:hidden p-1.5 -ml-1 text-stone-700 hover:text-neutral-900 hover:bg-stone-100 rounded-lg transition-colors cursor-pointer"
+                aria-label="Open navigation menu"
+              >
+                <Menu size={20} />
+              </button>
+
+              <Link href="/admin?brand=therapick&tab=overview" className="flex items-center gap-2 mr-1">
+                <span className="w-2.5 h-2.5 rounded-full shrink-0 shadow-2xs bg-[#facc15]" />
+                <span className="font-extrabold tracking-wider text-sm sm:text-base text-neutral-900 uppercase font-sans">
+                  THERAPICK
+                </span>
+              </Link>
+
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold bg-stone-100 text-stone-700 border border-stone-200/90 shadow-2xs">
+                Admin System
+              </span>
+            </div>
+
+            {/* Right: Live site, Notifications with unread badge, TP avatar */}
+            <TherapickTopNavControls liveSiteUrl={domainInfo.liveSiteUrl || 'https://booktherapick.com'} />
+          </header>
+
+          {/* 2. PERSISTENT GLOBAL SYSTEM SWITCHER (Website vs Affiliate) */}
+          <TherapickSystemSwitcher />
+
+          {/* 3. MAIN BODY (DARK NAVY SIDEBAR + CONTENT VIEWPORT) */}
+          <div className="flex-1 flex w-full max-w-[1600px] mx-auto min-h-0">
+            {/* Desktop Dark Navy Sidebar */}
+            <TherapickSidebarNav />
+
+            {/* Mobile Navigation Drawer */}
+            {mobileDrawerOpen && (
+              <div className="lg:hidden fixed inset-0 z-50 flex">
+                <div 
+                  className="fixed inset-0 bg-black/40 backdrop-blur-xs transition-opacity"
+                  onClick={() => setMobileDrawerOpen(false)}
+                />
+                <div className="relative w-72 max-w-[85vw] bg-[#0F172A] text-slate-200 h-full shadow-2xl flex flex-col p-4 z-50 overflow-y-auto">
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#facc15]" />
+                      <span className="font-extrabold tracking-wider text-sm text-white uppercase">
+                        THERAPICK
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setMobileDrawerOpen(false)}
+                      className="p-1 text-slate-400 hover:text-white rounded-lg cursor-pointer"
+                    >
+                      <X size={18} />
+                    </button>
+                  </div>
+
+                  <div className="py-4">
+                    <TherapickMobileDrawerLinks onClose={() => setMobileDrawerOpen(false)} />
+                  </div>
+
+                  <div className="mt-auto pt-4 border-t border-slate-800">
+                    <Link
+                      href={domainInfo.liveSiteUrl || 'https://booktherapick.com'}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border border-slate-700 bg-slate-800/80 text-xs font-medium text-slate-300 hover:bg-slate-700 transition-colors"
+                    >
+                      <span>Open Live Website</span>
+                      <ExternalLink size={12} className="text-slate-400" />
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Main Content Area */}
+            <main className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8 overflow-x-hidden">
+              {children}
+            </main>
+          </div>
+
+          {/* 4. MOBILE BOTTOM NAVIGATION */}
+          <TherapickMobileBottomNav />
+        </div>
+      </TherapickAdminProvider>
+    );
+  }
+
   return (
     <div className="min-h-screen w-full bg-[#fbfaf7] text-neutral-900 font-sans antialiased flex flex-col selection:bg-amber-300 selection:text-neutral-950">
       
@@ -555,53 +662,6 @@ export default function AdminCrmShell({ children, serverHost }: AdminCrmShellPro
         {/* ─── DESKTOP SIDEBAR NAVIGATION (Console Specific & Non-Duplicated) ─── */}
         <aside className="hidden lg:flex flex-col w-60 lg:w-64 shrink-0 py-5 px-3 select-none sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto no-scrollbar">
 
-          {/* Therapick Scope Switcher: All / Website / Affiliates */}
-          {activeBrandId === 'therapick' && (
-            <div className="px-1 pb-3">
-              <div className="bg-stone-100/90 p-1 rounded-xl flex items-center gap-1 border border-stone-200/60 shadow-2xs">
-                <button
-                  type="button"
-                  onClick={() => setTherapickScope('all')}
-                  className={`flex-1 py-1.5 px-2 rounded-lg text-[11px] font-semibold text-center transition-all cursor-pointer ${
-                    therapickScope === 'all'
-                      ? 'bg-white text-neutral-900 shadow-xs font-bold'
-                      : 'text-stone-500 hover:text-neutral-900'
-                  }`}
-                >
-                  All
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setTherapickScope('website');
-                    if (isAffiliateRoute) router.push('/admin/bookings');
-                  }}
-                  className={`flex-1 py-1.5 px-2 rounded-lg text-[11px] font-semibold text-center transition-all cursor-pointer ${
-                    therapickScope === 'website'
-                      ? 'bg-white text-neutral-900 shadow-xs font-bold'
-                      : 'text-stone-500 hover:text-neutral-900'
-                  }`}
-                >
-                  Website
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setTherapickScope('affiliate');
-                    if (!isAffiliateRoute) router.push('/admin/affiliates');
-                  }}
-                  className={`flex-1 py-1.5 px-2 rounded-lg text-[11px] font-semibold text-center transition-all cursor-pointer ${
-                    therapickScope === 'affiliate'
-                      ? 'bg-white text-neutral-900 shadow-xs font-bold'
-                      : 'text-stone-500 hover:text-neutral-900'
-                  }`}
-                >
-                  Affiliates
-                </button>
-              </div>
-            </div>
-          )}
-
           {/* Navigation Sections */}
           <div className="space-y-4 pb-6">
             {consoleSections.map((section) => (
@@ -704,59 +764,6 @@ export default function AdminCrmShell({ children, serverHost }: AdminCrmShellPro
                         </button>
                       );
                     })}
-                  </div>
-                </div>
-              )}
-
-              {/* Therapick Scope Switcher on Mobile */}
-              {activeBrandId === 'therapick' && (
-                <div className="py-3">
-                  <div className="bg-stone-100/90 p-1 rounded-xl flex items-center gap-1 border border-stone-200/60 shadow-2xs">
-                    <button
-                      type="button"
-                      onClick={() => setTherapickScope('all')}
-                      className={`flex-1 py-1.5 px-2 rounded-lg text-[11px] font-semibold text-center transition-all cursor-pointer ${
-                        therapickScope === 'all'
-                          ? 'bg-white text-neutral-900 shadow-xs font-bold'
-                          : 'text-stone-500 hover:text-neutral-900'
-                      }`}
-                    >
-                      All
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setTherapickScope('website');
-                        if (isAffiliateRoute) {
-                          setMobileDrawerOpen(false);
-                          router.push('/admin/bookings');
-                        }
-                      }}
-                      className={`flex-1 py-1.5 px-2 rounded-lg text-[11px] font-semibold text-center transition-all cursor-pointer ${
-                        therapickScope === 'website'
-                          ? 'bg-white text-neutral-900 shadow-xs font-bold'
-                          : 'text-stone-500 hover:text-neutral-900'
-                      }`}
-                    >
-                      Website
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setTherapickScope('affiliate');
-                        if (!isAffiliateRoute) {
-                          setMobileDrawerOpen(false);
-                          router.push('/admin/affiliates');
-                        }
-                      }}
-                      className={`flex-1 py-1.5 px-2 rounded-lg text-[11px] font-semibold text-center transition-all cursor-pointer ${
-                        therapickScope === 'affiliate'
-                          ? 'bg-white text-neutral-900 shadow-xs font-bold'
-                          : 'text-stone-500 hover:text-neutral-900'
-                      }`}
-                    >
-                      Affiliates
-                    </button>
                   </div>
                 </div>
               )}
