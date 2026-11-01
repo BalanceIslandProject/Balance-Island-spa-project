@@ -5,38 +5,13 @@ import Link from 'next/link';
 import { 
   Wallet, 
   Landmark, 
-  Banknote, 
-  ArrowUpRight, 
   X, 
   Check, 
   ChevronRight,
-  ExternalLink,
   ShieldCheck,
   CheckCircle2
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-
-// Sparkline SVG Component matching the mockup's subtle trend line
-function Sparkline({ color = 'blue' }: { color?: 'blue' | 'green' }) {
-  const strokeColor = color === 'blue' ? '#3b82f6' : '#16a34a';
-  const fillGradientId = `payout-sparkline-${color}`;
-
-  const pathD = 'M 0 26 Q 20 28, 35 18 T 65 14 T 85 8 T 100 4';
-  const areaD = `${pathD} L 100 32 L 0 32 Z`;
-
-  return (
-    <svg viewBox="0 0 100 32" className="w-20 h-7 overflow-visible opacity-90" preserveAspectRatio="none">
-      <defs>
-        <linearGradient id={fillGradientId} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={strokeColor} stopOpacity="0.18" />
-          <stop offset="100%" stopColor={strokeColor} stopOpacity="0.0" />
-        </linearGradient>
-      </defs>
-      <path d={areaD} fill={`url(#${fillGradientId})`} />
-      <path d={pathD} fill="none" stroke={strokeColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
 
 export default function PartnerPayoutsPage() {
   const [payouts, setPayouts] = useState<any[]>([]);
@@ -48,6 +23,7 @@ export default function PartnerPayoutsPage() {
   const [selectedPayout, setSelectedPayout] = useState<any | null>(null);
   const [showEditBank, setShowEditBank] = useState(false);
   const [showRequestPayout, setShowRequestPayout] = useState(false);
+  const [payoutSuccessMsg, setPayoutSuccessMsg] = useState(false);
   
   // Bank Form State
   const [bankFormData, setBankFormData] = useState({
@@ -123,12 +99,13 @@ export default function PartnerPayoutsPage() {
   }, [payouts]);
 
   const availableBalance = stats?.availableForPayout || 0;
+  const minPayout = 500000;
 
   // Masked bank account
-  const rawAccount = partner?.payout_details?.account_number || '1234';
+  const rawAccount = partner?.payout_details?.account_number || '••••';
   const maskedAccount = rawAccount.length > 4 
     ? `•••• ${rawAccount.slice(-4)}` 
-    : `•••• ${rawAccount}`;
+    : rawAccount;
 
   const bankName = partner?.payout_details?.bank_name || 'BCA';
 
@@ -162,251 +139,273 @@ export default function PartnerPayoutsPage() {
     }
   };
 
+  const handleConfirmPayoutRequest = async () => {
+    setPayoutSuccessMsg(true);
+    setTimeout(() => {
+      setPayoutSuccessMsg(false);
+      setShowRequestPayout(false);
+    }, 2000);
+  };
+
   return (
-    <div className="space-y-6 w-full font-sans">
+    <div className="space-y-6 w-full font-sans max-w-[1400px] mx-auto pb-8">
       
-      {/* 1. HEADER */}
+      {/* ========================================================
+          1. PAGE HEADER (MATCHING MOCKUP SCREEN 5)
+         ======================================================== */}
       <div>
-        <h1 className="text-2xl sm:text-3xl font-semibold text-[#0f172a] tracking-tight">
+        <h1 className="text-2xl sm:text-[28px] font-semibold text-[#0F172A] tracking-tight leading-tight">
           Payouts
         </h1>
-        <p className="text-sm text-[#64748b] mt-1">
-          Manage your balance and payout history.
+        <p className="text-[13px] text-[#64748B] mt-0.5">
+          Withdraw your commission earnings.
         </p>
       </div>
 
-      {/* 2. TOP 3 CARDS ROW */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* ========================================================
+          2. FINANCIAL SUMMARY CARDS (4 METRICS)
+         ======================================================== */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         
-        {/* Card 1: Available Balance */}
-        <div className="bg-white rounded-xl border border-[#e2e8f0] p-5 shadow-xs flex flex-col justify-between">
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-8 h-8 rounded-[8px] bg-[#f0fdf4] text-[#16a34a] flex items-center justify-center">
-                <Banknote size={17} />
-              </div>
-              <span className="text-xs font-medium text-[#64748b]">Available Balance</span>
-            </div>
-            <div className="text-2xl sm:text-3xl font-bold text-[#0f172a]">
-              {formatIDR(availableBalance)}
-            </div>
-            <div className="text-xs text-[#64748b] mt-1">
-              Ready to withdraw
-            </div>
+        {/* AVAILABLE BALANCE */}
+        <div className="bg-white rounded-[12px] border border-[#E2E8F0] p-5 shadow-2xs space-y-2">
+          <div className="text-[13px] font-medium text-[#64748B]">
+            Available Balance
           </div>
-
-          <div className="pt-4">
-            <button
-              type="button"
-              onClick={() => setShowRequestPayout(true)}
-              disabled={availableBalance <= 0}
-              className={`w-full py-2 px-3 rounded-[8px] text-xs font-medium transition-colors cursor-pointer ${
-                availableBalance > 0
-                  ? 'bg-[#0f172a] hover:bg-[#1e293b] text-white shadow-xs'
-                  : 'bg-[#f1f5f9] text-[#94a3b8] cursor-not-allowed'
-              }`}
-            >
-              Request Payout
-            </button>
+          <div className="text-[22px] sm:text-[24px] font-semibold text-[#0F172A] tracking-tight tabular-nums">
+            {formatIDR(availableBalance)}
+          </div>
+          <div className="text-[12px] text-[#059669] font-medium flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#059669]" />
+            Ready to withdraw
           </div>
         </div>
 
-        {/* Card 2: Total Paid Out */}
-        <div className="bg-white rounded-xl border border-[#e2e8f0] p-5 shadow-xs flex flex-col justify-between relative overflow-hidden">
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-8 h-8 rounded-[8px] bg-[#eff6ff] text-[#2563eb] flex items-center justify-center">
-                <Wallet size={17} />
-              </div>
-              <span className="text-xs font-medium text-[#64748b]">Total Paid Out</span>
-            </div>
-            <div className="text-2xl sm:text-3xl font-bold text-[#0f172a]">
-              {formatIDR(totalPaidOut)}
-            </div>
-            <div className="text-xs text-[#64748b] mt-1">
-              {payouts.length} {payouts.length === 1 ? 'payout' : 'payouts'}
-            </div>
+        {/* TOTAL WITHDRAWN */}
+        <div className="bg-white rounded-[12px] border border-[#E2E8F0] p-5 shadow-2xs space-y-2">
+          <div className="text-[13px] font-medium text-[#64748B]">
+            Total Withdrawn
           </div>
-
-          <div className="pt-4 flex items-end justify-end">
-            <Sparkline color="blue" />
+          <div className="text-[22px] sm:text-[24px] font-semibold text-[#0F172A] tracking-tight tabular-nums">
+            {formatIDR(totalPaidOut)}
+          </div>
+          <div className="text-[12px] text-[#64748B]">
+            Lifetime transfers
           </div>
         </div>
 
-        {/* Card 3: Bank Account */}
-        <div className="bg-white rounded-xl border border-[#e2e8f0] p-5 shadow-xs flex flex-col justify-between">
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-8 h-8 rounded-[8px] bg-[#f8fafc] text-[#475569] flex items-center justify-center">
-                <Landmark size={17} />
-              </div>
-              <span className="text-xs font-medium text-[#64748b]">Bank Account</span>
-            </div>
-            <div className="text-xl sm:text-2xl font-bold text-[#0f172a]">
-              {bankName}
-            </div>
-            <div className="text-xs text-[#64748b] font-mono mt-1">
-              {maskedAccount}
-            </div>
+        {/* PENDING REQUEST */}
+        <div className="bg-white rounded-[12px] border border-[#E2E8F0] p-5 shadow-2xs space-y-2">
+          <div className="text-[13px] font-medium text-[#64748B]">
+            Pending Request
           </div>
-
-          <div className="pt-4">
-            <button
-              type="button"
-              onClick={() => setShowEditBank(true)}
-              className="w-full py-2 px-3 rounded-[8px] text-xs font-medium bg-[#f8fafc] hover:bg-[#f1f5f9] text-[#0f172a] border border-[#e2e8f0] transition-colors cursor-pointer"
-            >
-              Edit Bank
-            </button>
+          <div className="text-[22px] sm:text-[24px] font-semibold text-[#0F172A] tracking-tight tabular-nums">
+            Rp0
+          </div>
+          <div className="text-[12px] text-[#94A3B8]">
+            No pending transfers
           </div>
         </div>
+
+        {/* MIN. PAYOUT */}
+        <div className="bg-white rounded-[12px] border border-[#E2E8F0] p-5 shadow-2xs space-y-2">
+          <div className="text-[13px] font-medium text-[#64748B]">
+            Min. Payout
+          </div>
+          <div className="text-[22px] sm:text-[24px] font-semibold text-[#0F172A] tracking-tight tabular-nums">
+            {formatIDR(minPayout)}
+          </div>
+          <div className="text-[12px] text-[#94A3B8]">
+            Bank transfer threshold
+          </div>
+        </div>
+
       </div>
 
-      {/* 3. DISBURSEMENT HISTORY */}
-      <div className="space-y-3">
-        <h2 className="text-base font-semibold text-[#0f172a]">
-          Disbursement History
-        </h2>
+      {/* ========================================================
+          3. PRIMARY ACTION: REQUEST PAYOUT BUTTON
+         ======================================================== */}
+      <div>
+        <button
+          type="button"
+          onClick={() => setShowRequestPayout(true)}
+          disabled={availableBalance < minPayout}
+          className={`w-full py-3.5 px-4 rounded-[8px] text-sm font-semibold transition-all shadow-xs cursor-pointer ${
+            availableBalance >= minPayout
+              ? 'bg-[#0E2319] hover:bg-[#163625] text-white'
+              : 'bg-[#0E2319]/80 hover:bg-[#0E2319] text-white'
+          }`}
+        >
+          Request Payout
+        </button>
+      </div>
 
-        {loading ? (
-          <div className="bg-white rounded-xl border border-[#e2e8f0] p-10 text-center text-xs text-[#94a3b8]">
-            Loading disbursement history...
-          </div>
-        ) : payouts.length === 0 ? (
-          <div className="bg-white rounded-xl border border-[#e2e8f0] p-10 text-center space-y-2">
-            <p className="text-sm font-semibold text-[#0f172a]">No disbursements yet</p>
-            <p className="text-xs text-[#64748b]">
-              Approved commissions will be disbursed automatically to your registered bank account.
-            </p>
-          </div>
-        ) : (
-          <>
-            {/* DESKTOP TABLE */}
-            <div className="hidden md:block bg-white rounded-xl border border-[#e2e8f0] overflow-hidden shadow-xs">
-              <table className="w-full text-left text-xs">
-                <thead>
-                  <tr className="border-b border-[#f1f5f9] bg-[#f8fafc]/50 text-[#94a3b8] font-medium uppercase tracking-wider text-[11px]">
-                    <th className="py-3.5 px-5">Date</th>
-                    <th className="py-3.5 px-4">Reference</th>
-                    <th className="py-3.5 px-4">Amount</th>
-                    <th className="py-3.5 px-4">Method</th>
-                    <th className="py-3.5 px-4">Status</th>
-                    <th className="py-3.5 px-5 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#f1f5f9]">
-                  {payouts.map((p) => {
-                    return (
-                      <tr key={p.id || p.payout_reference} className="hover:bg-[#f8fafc] transition-colors">
-                        <td className="py-3.5 px-5 text-[#64748b] whitespace-nowrap">
-                          {formatDate(p.created_at)}
-                        </td>
-                        <td className="py-3.5 px-4 font-mono font-medium text-[#0f172a] whitespace-nowrap">
-                          #{p.payout_reference || 'PAYOUT001'}
-                        </td>
-                        <td className="py-3.5 px-4 font-bold text-[#0f172a] whitespace-nowrap">
-                          {formatIDR(p.amount)}
-                        </td>
-                        <td className="py-3.5 px-4 text-[#64748b] whitespace-nowrap">
-                          Bank Transfer
-                        </td>
-                        <td className="py-3.5 px-4 whitespace-nowrap">
-                          <span className="inline-flex items-center gap-1 font-medium text-[11px] text-[#15803d] bg-[#dcfce7] px-2 py-0.5 rounded-full">
-                            <span className="w-1.5 h-1.5 rounded-full bg-[#16a34a]" /> Completed
-                          </span>
-                        </td>
-                        <td className="py-3.5 px-5 text-right whitespace-nowrap">
-                          <button
-                            type="button"
-                            onClick={() => setSelectedPayout(p)}
-                            className="inline-flex items-center gap-1 px-3 py-1 rounded-[6px] bg-[#0f172a] hover:bg-[#1e293b] text-white text-xs font-medium transition-colors cursor-pointer"
-                          >
-                            <span>Track</span>
-                            <ChevronRight size={12} />
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+      {/* ========================================================
+          4. PAYOUT HISTORY TABLE
+         ======================================================== */}
+      <div className="bg-white rounded-[12px] border border-[#E2E8F0] p-5 sm:p-6 shadow-2xs space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-[15px] font-semibold text-[#0F172A]">
+            Payout History
+          </h2>
+          <button
+            type="button"
+            onClick={() => setShowEditBank(true)}
+            className="text-xs font-semibold text-[#0E2319] hover:underline cursor-pointer flex items-center gap-1"
+          >
+            <span>Bank: {bankName} ({maskedAccount})</span>
+          </button>
+        </div>
 
-            {/* MOBILE CARDS (md:hidden) */}
-            <div className="md:hidden space-y-3">
-              {payouts.map((p) => (
-                <div
-                  key={p.id || p.payout_reference}
-                  className="bg-white rounded-xl border border-[#e2e8f0] p-4 shadow-xs space-y-3"
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <div className="text-[11px] text-[#94a3b8] font-mono">
-                        {formatDate(p.created_at)}
-                      </div>
-                      <div className="text-sm font-semibold text-[#0f172a] font-mono mt-0.5">
-                        #{p.payout_reference || 'PAYOUT001'}
-                      </div>
-                    </div>
-
-                    <button
-                      type="button"
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead>
+              <tr className="border-b border-[#F1F5F9] text-[11px] font-semibold text-[#64748B] uppercase tracking-wider">
+                <th className="pb-3 pr-4">Reference</th>
+                <th className="pb-3 px-4">Amount</th>
+                <th className="pb-3 px-4">Request Date</th>
+                <th className="pb-3 pl-4 text-right">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#F1F5F9]">
+              {loading ? (
+                <tr>
+                  <td colSpan={4} className="py-8 text-center text-[#94A3B8]">
+                    Loading payout history...
+                  </td>
+                </tr>
+              ) : payouts.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="py-8 text-center text-[#94A3B8]">
+                    No payouts disbursed yet. Your balance will be displayed when bookings complete.
+                  </td>
+                </tr>
+              ) : (
+                payouts.map((p) => {
+                  const ref = p.payout_reference || `WD-${p.id?.slice(0, 4) || '0045'}`;
+                  return (
+                    <tr 
+                      key={p.id} 
                       onClick={() => setSelectedPayout(p)}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-[6px] bg-[#0f172a] text-white text-xs font-medium shrink-0"
+                      className="hover:bg-[#F8FAFC] transition-colors cursor-pointer"
                     >
-                      <span>Track</span>
-                      <ChevronRight size={12} />
-                    </button>
-                  </div>
-
-                  <div className="flex items-center justify-between pt-2 border-t border-[#f1f5f9]">
-                    <div>
-                      <div className="text-[10px] text-[#94a3b8] uppercase font-mono">Amount Disbursed</div>
-                      <div className="text-sm font-bold text-[#0f172a]">
+                      <td className="py-3.5 pr-4 font-mono font-semibold text-[#0F172A]">
+                        {ref}
+                      </td>
+                      <td className="py-3.5 px-4 font-semibold text-[#0F172A] tabular-nums">
                         {formatIDR(p.amount)}
-                      </div>
-                    </div>
-
-                    <span className="inline-flex items-center gap-1 font-medium text-[11px] text-[#15803d] bg-[#dcfce7] px-2 py-0.5 rounded-full">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#16a34a]" /> Completed
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
+                      </td>
+                      <td className="py-3.5 px-4 text-[#64748B]">
+                        {formatDate(p.created_at)}
+                      </td>
+                      <td className="py-3.5 pl-4 text-right">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-[4px] text-[10px] font-medium bg-[#ECFDF5] text-[#059669]">
+                          Paid
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
+
+      {/* ========================================================
+          MODAL: REQUEST PAYOUT
+         ======================================================== */}
+      {showRequestPayout && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-in fade-in duration-150">
+          <div className="w-full max-w-md bg-white rounded-[12px] border border-[#E2E8F0] shadow-2xl p-6 space-y-4 animate-in zoom-in-95">
+            <div className="flex items-center justify-between pb-3 border-b border-[#F1F5F9]">
+              <div className="flex items-center gap-2">
+                <Wallet size={18} className="text-[#0E2319]" />
+                <h3 className="font-semibold text-sm text-[#0F172A]">Request Commission Payout</h3>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setShowRequestPayout(false)}
+                className="text-[#94A3B8] hover:text-[#0F172A] cursor-pointer"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <div className="p-3.5 rounded-[8px] bg-[#ECFDF5] border border-[#A7F3D0]">
+                <div className="text-[#059669] font-medium text-xs">Available for Withdrawal</div>
+                <div className="text-2xl font-bold text-[#059669] mt-1 tabular-nums">{formatIDR(availableBalance)}</div>
+              </div>
+
+              <div className="space-y-2 text-[#475569] leading-relaxed">
+                <p>
+                  Funds will be transferred directly to your verified bank account:
+                </p>
+                <div className="p-3 rounded-[6px] bg-[#F8FAFC] border border-[#E2E8F0] space-y-1 font-mono text-[11px]">
+                  <div>Bank: <strong className="text-[#0F172A]">{bankName}</strong></div>
+                  <div>Account: <strong className="text-[#0F172A]">{partner?.payout_details?.account_number || 'Not Set'}</strong></div>
+                  <div>Name: <strong className="text-[#0F172A]">{partner?.payout_details?.account_holder || partner?.first_name || 'Partner'}</strong></div>
+                </div>
+              </div>
+
+              {payoutSuccessMsg && (
+                <div className="p-3 rounded-[6px] bg-[#ECFDF5] border border-[#A7F3D0] text-[#059669] text-xs flex items-center gap-2">
+                  <CheckCircle2 size={16} className="text-[#059669] shrink-0" />
+                  <span>Payout request submitted! Transfer will disburse shortly.</span>
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowRequestPayout(false)}
+                className="px-3.5 py-2 text-xs font-medium text-[#64748B] hover:bg-[#F8FAFC] rounded-[6px] cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmPayoutRequest}
+                className="px-4 py-2 text-xs font-semibold bg-[#0E2319] text-white rounded-[6px] hover:bg-[#163625] cursor-pointer shadow-xs"
+              >
+                Confirm Request
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ========================================================
           MODAL: EDIT BANK DETAILS
          ======================================================== */}
       {showEditBank && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-in fade-in duration-150">
-          <div className="w-full max-w-md bg-white rounded-xl border border-[#e2e8f0] shadow-2xl p-6 space-y-4 animate-in zoom-in-95">
-            <div className="flex items-center justify-between pb-3 border-b border-[#f1f5f9]">
+          <div className="w-full max-w-md bg-white rounded-[12px] border border-[#E2E8F0] shadow-2xl p-6 space-y-4 animate-in zoom-in-95">
+            <div className="flex items-center justify-between pb-3 border-b border-[#F1F5F9]">
               <div className="flex items-center gap-2">
-                <Landmark size={18} className="text-[#0f172a]" />
-                <h3 className="font-semibold text-sm text-[#0f172a]">Registered Bank Account</h3>
+                <Landmark size={18} className="text-[#0E2319]" />
+                <h3 className="font-semibold text-sm text-[#0F172A]">Destination Bank Account</h3>
               </div>
               <button 
                 type="button"
                 onClick={() => setShowEditBank(false)}
-                className="text-[#94a3b8] hover:text-[#0f172a]"
+                className="text-[#94A3B8] hover:text-[#0F172A] cursor-pointer"
               >
                 <X size={16} />
               </button>
             </div>
 
-            <form onSubmit={handleSaveBank} className="space-y-3.5">
+            <form onSubmit={handleSaveBank} className="space-y-3.5 text-xs">
               <div>
-                <label className="text-xs font-medium text-[#475569] block mb-1">
+                <label className="font-medium text-[#475569] block mb-1">
                   Bank Name
                 </label>
                 <select
                   value={bankFormData.bank_name}
                   onChange={(e) => setBankFormData({ ...bankFormData, bank_name: e.target.value })}
-                  className="w-full px-3 py-2 text-xs bg-white border border-[#e2e8f0] rounded-[8px] focus:outline-none focus:border-[#0f172a]"
+                  className="w-full px-3 py-2 bg-white border border-[#E2E8F0] rounded-[6px] focus:outline-none focus:border-[#0E2319]"
                 >
                   <option value="BCA">BCA (Bank Central Asia)</option>
                   <option value="Mandiri">Bank Mandiri</option>
@@ -414,12 +413,11 @@ export default function PartnerPayoutsPage() {
                   <option value="BRI">BRI (Bank Rakyat Indonesia)</option>
                   <option value="CIMB Niaga">CIMB Niaga</option>
                   <option value="Permata">Bank Permata</option>
-                  <option value="BSI">BSI (Bank Syariah Indonesia)</option>
                 </select>
               </div>
 
               <div>
-                <label className="text-xs font-medium text-[#475569] block mb-1">
+                <label className="font-medium text-[#475569] block mb-1">
                   Account Number
                 </label>
                 <input
@@ -428,12 +426,12 @@ export default function PartnerPayoutsPage() {
                   value={bankFormData.account_number}
                   onChange={(e) => setBankFormData({ ...bankFormData, account_number: e.target.value })}
                   placeholder="e.g. 08256285"
-                  className="w-full px-3 py-2 text-xs bg-white border border-[#e2e8f0] rounded-[8px] focus:outline-none focus:border-[#0f172a] font-mono"
+                  className="w-full px-3 py-2 bg-white border border-[#E2E8F0] rounded-[6px] focus:outline-none focus:border-[#0E2319] font-mono"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-medium text-[#475569] block mb-1">
+                <label className="font-medium text-[#475569] block mb-1">
                   Account Holder Name
                 </label>
                 <input
@@ -442,12 +440,12 @@ export default function PartnerPayoutsPage() {
                   value={bankFormData.account_holder}
                   onChange={(e) => setBankFormData({ ...bankFormData, account_holder: e.target.value })}
                   placeholder="e.g. Putu Edo Santika"
-                  className="w-full px-3 py-2 text-xs bg-white border border-[#e2e8f0] rounded-[8px] focus:outline-none focus:border-[#0f172a]"
+                  className="w-full px-3 py-2 bg-white border border-[#E2E8F0] rounded-[6px] focus:outline-none focus:border-[#0E2319]"
                 />
               </div>
 
               {bankSaveSuccess && (
-                <div className="p-2.5 rounded-[6px] bg-[#f0fdf4] text-[#15803d] text-xs flex items-center gap-1.5 border border-[#bbf7d0]">
+                <div className="p-2.5 rounded-[6px] bg-[#ECFDF5] text-[#059669] text-xs flex items-center gap-1.5 border border-[#A7F3D0]">
                   <Check size={14} /> Bank details saved successfully!
                 </div>
               )}
@@ -456,14 +454,14 @@ export default function PartnerPayoutsPage() {
                 <button
                   type="button"
                   onClick={() => setShowEditBank(false)}
-                  className="px-3.5 py-2 text-xs font-medium text-[#64748b] hover:bg-[#f8fafc] rounded-[6px] transition-colors"
+                  className="px-3.5 py-2 text-xs font-medium text-[#64748B] hover:bg-[#F8FAFC] rounded-[6px] cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={savingBank}
-                  className="px-4 py-2 text-xs font-medium bg-[#0f172a] text-white rounded-[6px] hover:bg-[#1e293b] transition-colors disabled:opacity-50"
+                  className="px-4 py-2 text-xs font-semibold bg-[#0E2319] text-white rounded-[6px] hover:bg-[#163625] cursor-pointer shadow-xs disabled:opacity-50"
                 >
                   {savingBank ? 'Saving...' : 'Save Changes'}
                 </button>
@@ -478,125 +476,52 @@ export default function PartnerPayoutsPage() {
          ======================================================== */}
       {selectedPayout && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-in fade-in duration-150">
-          <div className="w-full max-w-md bg-white rounded-xl border border-[#e2e8f0] shadow-2xl p-6 space-y-4 animate-in zoom-in-95">
-            <div className="flex items-center justify-between pb-3 border-b border-[#f1f5f9]">
+          <div className="w-full max-w-md bg-white rounded-[12px] border border-[#E2E8F0] shadow-2xl p-6 space-y-4 animate-in zoom-in-95">
+            <div className="flex items-center justify-between pb-3 border-b border-[#F1F5F9]">
               <div>
-                <div className="text-[10px] font-mono uppercase text-[#94a3b8] font-bold">DISBURSEMENT</div>
-                <h3 className="font-bold text-sm text-[#0f172a]">#{selectedPayout.payout_reference || 'PAYOUT001'}</h3>
+                <div className="text-[10px] font-mono uppercase text-[#94A3B8] font-bold">DISBURSEMENT</div>
+                <h3 className="font-bold text-sm text-[#0F172A]">#{selectedPayout.payout_reference || 'PAYOUT001'}</h3>
               </div>
               <button 
                 type="button"
                 onClick={() => setSelectedPayout(null)}
-                className="text-[#94a3b8] hover:text-[#0f172a]"
+                className="text-[#94A3B8] hover:text-[#0F172A] cursor-pointer"
               >
                 <X size={16} />
               </button>
             </div>
 
             <div className="space-y-3 text-xs">
-              <div className="flex items-center justify-between p-3 rounded-[8px] bg-[#f8fafc] border border-[#e2e8f0]">
-                <span className="text-[#64748b]">Total Amount Disbursed</span>
-                <span className="font-bold text-sm text-[#0f172a]">{formatIDR(selectedPayout.amount)}</span>
+              <div className="flex items-center justify-between p-3.5 rounded-[8px] bg-[#F8FAFC] border border-[#E2E8F0]">
+                <span className="text-[#64748B]">Total Amount Disbursed</span>
+                <span className="font-bold text-base text-[#0F172A] tabular-nums">{formatIDR(selectedPayout.amount)}</span>
               </div>
 
-              <div className="space-y-2 pt-1">
+              <div className="space-y-2 pt-1 text-xs">
                 <div className="flex items-center justify-between">
-                  <span className="text-[#64748b]">Disbursement Date</span>
-                  <span className="font-medium text-[#0f172a]">{formatDate(selectedPayout.created_at)}</span>
+                  <span className="text-[#64748B]">Disbursement Date</span>
+                  <span className="font-medium text-[#0F172A]">{formatDate(selectedPayout.created_at)}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-[#64748b]">Payment Method</span>
-                  <span className="font-medium text-[#0f172a]">Bank Transfer</span>
+                  <span className="text-[#64748B]">Payment Method</span>
+                  <span className="font-medium text-[#0F172A]">Bank Transfer</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-[#64748b]">Transfer Status</span>
-                  <span className="inline-flex items-center gap-1 font-medium text-[11px] text-[#15803d] bg-[#dcfce7] px-2 py-0.5 rounded-full">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#16a34a]" /> Completed
+                  <span className="text-[#64748B]">Status</span>
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-[4px] text-[10px] font-medium bg-[#ECFDF5] text-[#059669]">
+                    Completed
                   </span>
                 </div>
               </div>
-
-              {selectedPayout.items && selectedPayout.items.length > 0 && (
-                <div className="pt-2 border-t border-[#f1f5f9] space-y-2">
-                  <span className="text-[11px] font-semibold text-[#0f172a] block">Itemized Bookings</span>
-                  <div className="max-h-36 overflow-y-auto space-y-1.5">
-                    {selectedPayout.items.map((it: any, idx: number) => (
-                      <div key={idx} className="flex items-center justify-between p-2 rounded-[6px] bg-[#f8fafc] text-[11px]">
-                        <div>
-                          <span className="font-mono font-medium text-[#0f172a]">#{it.booking_id}</span>
-                          <span className="text-[#64748b] ml-1.5">{it.treatment_name || 'Treatment'}</span>
-                        </div>
-                        <span className="font-bold text-[#0f172a]">{formatIDR(it.commission_amount)}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
 
             <div className="pt-2">
               <button
                 type="button"
                 onClick={() => setSelectedPayout(null)}
-                className="w-full py-2 bg-[#0f172a] text-white rounded-[6px] text-xs font-medium hover:bg-[#1e293b]"
+                className="w-full py-2 bg-[#0E2319] text-white rounded-[6px] text-xs font-semibold hover:bg-[#163625] cursor-pointer"
               >
                 Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ========================================================
-          MODAL: REQUEST PAYOUT
-         ======================================================== */}
-      {showRequestPayout && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-in fade-in duration-150">
-          <div className="w-full max-w-md bg-white rounded-xl border border-[#e2e8f0] shadow-2xl p-6 space-y-4 animate-in zoom-in-95">
-            <div className="flex items-center justify-between pb-3 border-b border-[#f1f5f9]">
-              <div className="flex items-center gap-2">
-                <Banknote size={18} className="text-[#16a34a]" />
-                <h3 className="font-semibold text-sm text-[#0f172a]">Request Commission Payout</h3>
-              </div>
-              <button 
-                type="button"
-                onClick={() => setShowRequestPayout(false)}
-                className="text-[#94a3b8] hover:text-[#0f172a]"
-              >
-                <X size={16} />
-              </button>
-            </div>
-
-            <div className="space-y-3 text-xs">
-              <div className="p-3.5 rounded-[8px] bg-[#f0fdf4] border border-[#bbf7d0]">
-                <div className="text-[#15803d] font-semibold text-xs">Available for Withdrawal</div>
-                <div className="text-xl font-bold text-[#15803d] mt-1">{formatIDR(availableBalance)}</div>
-              </div>
-
-              <div className="space-y-2 text-[#475569] leading-relaxed">
-                <p>
-                  Payouts will be processed directly to your registered <strong>{bankName} ({maskedAccount})</strong> account within 24-48 business hours.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-end gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => setShowRequestPayout(false)}
-                className="px-3.5 py-2 text-xs font-medium text-[#64748b] hover:bg-[#f8fafc] rounded-[6px]"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  alert('Payout request submitted successfully! Our finance team will disburse your earnings.');
-                  setShowRequestPayout(false);
-                }}
-                className="px-4 py-2 text-xs font-medium bg-[#0f172a] text-white rounded-[6px] hover:bg-[#1e293b]"
-              >
-                Confirm Request
               </button>
             </div>
           </div>

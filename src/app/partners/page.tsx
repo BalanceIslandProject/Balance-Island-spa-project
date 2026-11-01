@@ -29,14 +29,14 @@ export default function PartnerProgramOverviewPage() {
         const res = await fetch('/api/affiliates/auth/me');
         const data = await res.json();
         if (data.success && data.partner) {
-          setPartner(data.partner);
+          router.replace('/partners/overview');
         }
       } catch {
         // Unauthenticated visitor
       }
     }
     checkAuth();
-  }, []);
+  }, [router]);
 
   const handleNavigate = (path: string, actionKey: string) => {
     setLoadingAction(actionKey);

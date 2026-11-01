@@ -56,7 +56,7 @@ export default function PartnerLoginPage() {
         return;
       }
 
-      router.push('/partners/dashboard');
+      router.push('/partners/overview');
       router.refresh();
     } catch (err: any) {
       setErrorMsg(err.message || 'Network error occurred. Please try again.');
@@ -91,7 +91,7 @@ export default function PartnerLoginPage() {
 
           <div className="pt-2 flex flex-col gap-2.5">
             <Link
-              href="/partners/dashboard"
+              href="/partners/overview"
               className="w-full h-10 rounded-[6px] bg-[#171717] hover:bg-black text-white font-mono text-xs uppercase tracking-[0.071em] transition-all flex items-center justify-center gap-2 shadow-xs"
             >
               <LayoutDashboard size={14} />
