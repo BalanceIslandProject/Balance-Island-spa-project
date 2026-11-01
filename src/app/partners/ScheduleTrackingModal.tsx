@@ -5,20 +5,12 @@ import Link from 'next/link';
 import { 
   X, 
   ExternalLink, 
-  Clock, 
-  MapPin, 
   Check, 
   Copy,
   AlertCircle,
-  Timer,
-  DoorClosed,
   Calendar as CalendarIcon,
-  Sparkles,
   ChevronDown,
-  ChevronUp,
-  Receipt,
-  Activity,
-  CreditCard
+  ChevronUp
 } from 'lucide-react';
 import { CalendarBooking } from './FloatingBookingCalendar';
 
@@ -81,7 +73,6 @@ export default function ScheduleTrackingModal({ booking, onClose }: ScheduleTrac
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
     guest: true,
     treatment: true,
-    location: true,
     timeline: true,
     commission: true,
   });
@@ -279,10 +270,7 @@ export default function ScheduleTrackingModal({ booking, onClose }: ScheduleTrac
               onClick={() => toggleSection('treatment')}
               className="w-full flex items-center justify-between text-left text-xs font-semibold text-[#0F172A] cursor-pointer px-0.5"
             >
-              <div className="flex items-center gap-2">
-                <Sparkles size={15} className="text-[#0E2319]" />
-                <span>Treatment Details</span>
-              </div>
+              <span>Treatment Details</span>
               {openSections.treatment ? <ChevronUp size={14} className="text-[#94A3B8]" /> : <ChevronDown size={14} className="text-[#94A3B8]" />}
             </button>
 
@@ -306,49 +294,14 @@ export default function ScheduleTrackingModal({ booking, onClose }: ScheduleTrac
             )}
           </div>
 
-          {/* SECTION 3: SERVICE LOCATION */}
-          <div className="space-y-2">
-            <button
-              type="button"
-              onClick={() => toggleSection('location')}
-              className="w-full flex items-center justify-between text-left text-xs font-semibold text-[#0F172A] cursor-pointer px-0.5"
-            >
-              <div className="flex items-center gap-2">
-                <MapPin size={15} className="text-[#0E2319]" />
-                <span>Service Location</span>
-              </div>
-              {openSections.location ? <ChevronUp size={14} className="text-[#94A3B8]" /> : <ChevronDown size={14} className="text-[#94A3B8]" />}
-            </button>
-
-            {openSections.location && (
-              <div className="p-3.5 sm:p-4 rounded-[8px] bg-white border border-[#E2E8F0] shadow-2xs space-y-2.5 text-xs">
-                <div className="flex items-start justify-between gap-3">
-                  <span className="text-[#64748B] shrink-0">Accommodation Address:</span>
-                  <span className="font-medium text-[#0F172A] text-right break-words max-w-[65%] leading-relaxed">
-                    {booking.location || 'Private Villa / Resort in Bali'}
-                  </span>
-                </div>
-                {booking.room_number && booking.room_number !== '-' && (
-                  <div className="pt-2 border-t border-[#F1F5F9] flex items-center justify-between gap-3">
-                    <span className="text-[#64748B]">Room / Villa Unit:</span>
-                    <span className="font-semibold text-[#0F172A] text-right">{booking.room_number}</span>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* SECTION 4: STATUS & TIMELINE */}
+          {/* SECTION 3: STATUS & TIMELINE */}
           <div className="space-y-2">
             <button
               type="button"
               onClick={() => toggleSection('timeline')}
               className="w-full flex items-center justify-between text-left text-xs font-semibold text-[#0F172A] cursor-pointer px-0.5"
             >
-              <div className="flex items-center gap-2">
-                <Activity size={15} className="text-[#0E2319]" />
-                <span>Status & Timeline</span>
-              </div>
+              <span>Status & Timeline</span>
               {openSections.timeline ? <ChevronUp size={14} className="text-[#94A3B8]" /> : <ChevronDown size={14} className="text-[#94A3B8]" />}
             </button>
 
@@ -390,17 +343,14 @@ export default function ScheduleTrackingModal({ booking, onClose }: ScheduleTrac
             )}
           </div>
 
-          {/* SECTION 5: COMMISSION INFORMATION */}
+          {/* SECTION 4: COMMISSION INFORMATION */}
           <div className="space-y-2">
             <button
               type="button"
               onClick={() => toggleSection('commission')}
               className="w-full flex items-center justify-between text-left text-xs font-semibold text-[#0F172A] cursor-pointer px-0.5"
             >
-              <div className="flex items-center gap-2">
-                <Receipt size={15} className="text-[#0E2319]" />
-                <span>Commission Information</span>
-              </div>
+              <span>Commission Information</span>
               {openSections.commission ? <ChevronUp size={14} className="text-[#94A3B8]" /> : <ChevronDown size={14} className="text-[#94A3B8]" />}
             </button>
 

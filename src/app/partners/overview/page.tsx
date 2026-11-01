@@ -17,7 +17,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { cleanTreatmentName } from '../ScheduleTrackingModal';
+import ScheduleTrackingModal, { cleanTreatmentName } from '../ScheduleTrackingModal';
 
 export default function PartnerOverviewPage() {
   const [loading, setLoading] = useState(true);
@@ -27,6 +27,7 @@ export default function PartnerOverviewPage() {
   const [showTimeframeDropdown, setShowTimeframeDropdown] = useState(false);
   const [partner, setPartner] = useState<any>(null);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [trackingBooking, setTrackingBooking] = useState<any | null>(null);
 
   const loadData = async () => {
     try {
@@ -85,6 +86,56 @@ export default function PartnerOverviewPage() {
     return rawDate;
   };
 
+  // Date range label
+  const currentDateLabel = useMemo(() => {
+    const now = new Date();
+    if (timeframe === 'all') {
+      return 'All Time';
+    }
+    if (timeframe === 'last-30') {
+      const past = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      return `${past.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${now.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+    }
+    // this-month
+    const month = now.toLocaleDateString('en-US', { month: 'short' });
+    const year = now.getFullYear();
+    const lastDay = new Date(year, now.getMonth() + 1, 0).getDate();
+    return `${month} 1 - ${month} ${lastDay}, ${year}`;
+  }, [timeframe]);
+
+  // Filter bookings by timeframe
+  const filteredBookings = useMemo(() => {
+    const bList = calendarBookings || [];
+    if (timeframe === 'all') return bList;
+
+    const now = new Date();
+    const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+
+    if (timeframe === 'this-month') {
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+      return bList.filter((b) => {
+        const dStr = b.date || b.created_at;
+        if (!dStr) return false;
+        const d = new Date(dStr.includes('T') ? dStr : `${dStr}T00:00:00`);
+        return !isNaN(d.getTime()) && d >= startOfMonth && d <= endOfMonth;
+      });
+    }
+
+    if (timeframe === 'last-30') {
+      const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      thirtyDaysAgo.setHours(0, 0, 0, 0);
+      return bList.filter((b) => {
+        const dStr = b.date || b.created_at;
+        if (!dStr) return false;
+        const d = new Date(dStr.includes('T') ? dStr : `${dStr}T00:00:00`);
+        return !isNaN(d.getTime()) && d >= thirtyDaysAgo && d <= endOfDay;
+      });
+    }
+
+    return bList;
+  }, [calendarBookings, timeframe]);
+
   // Metrics calculation
   const {
     totalBookingsCount,
@@ -98,56 +149,81 @@ export default function PartnerOverviewPage() {
     recentBookings,
     recentCommissions
   } = useMemo(() => {
-    const bList = calendarBookings || [];
     let up = 0;
     let comp = 0;
     let canc = 0;
+    let totalComm = 0;
+    let pendingComm = 0;
+    let approvedComm = 0;
+    let paidComm = 0;
 
-    bList.forEach((b) => {
+    filteredBookings.forEach((b) => {
       const bStatus = (b.booking_status || '').toLowerCase();
       const cStatus = (b.commission_status || '').toLowerCase();
-      if (bStatus === 'cancelled' || cStatus === 'cancelled') {
+      const isCanc = bStatus === 'cancelled' || cStatus === 'cancelled';
+      const amt = Number(b.commission_amount || 0);
+
+      if (isCanc) {
         canc++;
       } else if (bStatus === 'completed' || b.service_completed) {
         comp++;
       } else {
         up++;
       }
+
+      if (!isCanc) {
+        totalComm += amt;
+        if (cStatus === 'paid') {
+          paidComm += amt;
+        } else if (cStatus === 'approved') {
+          approvedComm += amt;
+        } else {
+          pendingComm += amt;
+        }
+      }
     });
 
-    const pending = Number(stats?.pendingCommission || 0);
-    const approved = Number(stats?.approvedCommission || 0);
-    const paid = Number(stats?.paidCommission || 0);
-    const earnings = approved + paid + pending;
+    const earnings = timeframe === 'all' 
+      ? (totalComm || (Number(stats?.approvedCommission || 0) + Number(stats?.paidCommission || 0) + Number(stats?.pendingCommission || 0)))
+      : totalComm;
+    const available = timeframe === 'all' ? (Number(stats?.approvedCommission || 0) || approvedComm) : approvedComm;
+    const pending = timeframe === 'all' ? (Number(stats?.pendingCommission || 0) || pendingComm) : pendingComm;
+    const paid = timeframe === 'all' ? (Number(stats?.paidCommission || 0) || paidComm) : paidComm;
 
-    // Latest 4 bookings
-    const sorted = [...bList].sort((a, b) => {
+    // Latest 4 bookings across the partner account
+    const sorted = [...(calendarBookings || [])].sort((a, b) => {
       const dateA = new Date(a.date || a.created_at || 0).getTime();
       const dateB = new Date(b.date || b.created_at || 0).getTime();
       return dateB - dateA;
     });
 
     return {
-      totalBookingsCount: bList.length,
+      totalBookingsCount: filteredBookings.length,
       upcomingCount: up,
       completedCount: comp,
       cancelledCount: canc,
       totalEarnings: earnings,
-      availableBalance: approved,
+      availableBalance: available,
       pendingCommission: pending,
       totalPaidOut: paid,
       recentBookings: sorted.slice(0, 4),
       recentCommissions: sorted.filter((b) => b.commission_amount > 0).slice(0, 4),
     };
-  }, [calendarBookings, stats]);
+  }, [filteredBookings, calendarBookings, stats, timeframe]);
 
-  // Date range label
-  const currentDateLabel = useMemo(() => {
+  // Dynamic tick dates for performance chart
+  const chartTicks = useMemo(() => {
     const now = new Date();
     const month = now.toLocaleDateString('en-US', { month: 'short' });
-    const year = now.getFullYear();
-    const lastDay = new Date(year, now.getMonth() + 1, 0).getDate();
-    return `${month} 1 - ${month} ${lastDay}, ${year}`;
+    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    const step = Math.max(1, Math.floor(lastDay / 4));
+    return [
+      `${month} 1`,
+      `${month} ${Math.min(lastDay, 1 + step)}`,
+      `${month} ${Math.min(lastDay, 1 + step * 2)}`,
+      `${month} ${Math.min(lastDay, 1 + step * 3)}`,
+      `${month} ${lastDay}`,
+    ];
   }, []);
 
   const handleCopyLink = () => {
@@ -294,8 +370,7 @@ export default function PartnerOverviewPage() {
           </div>
 
           <div className="inline-flex items-center gap-1 px-3 py-1.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-[6px] text-xs font-medium text-[#475569]">
-            <span>This Month</span>
-            <ChevronDown size={13} className="text-[#94A3B8]" />
+            <span>{timeframe === 'this-month' ? 'This Month' : timeframe === 'last-30' ? 'Last 30 Days' : 'All Time'}</span>
           </div>
         </div>
 
@@ -345,38 +420,36 @@ export default function PartnerOverviewPage() {
 
             {/* Date axis ticks */}
             <div className="flex justify-between text-[11px] text-[#94A3B8] font-mono pt-2 border-t border-[#F1F5F9]">
-              <span>Oct 1</span>
-              <span>Oct 8</span>
-              <span>Oct 15</span>
-              <span>Oct 22</span>
-              <span>Oct 29</span>
+              {chartTicks.map((tick, idx) => (
+                <span key={idx}>{tick}</span>
+              ))}
             </div>
           </div>
 
           {/* Right Status Breakdown */}
-          <div className="lg:col-span-3 flex lg:flex-col justify-around lg:justify-center gap-3 lg:gap-3 lg:border-l lg:border-[#F1F5F9] lg:pl-6 text-xs">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#10B981]" />
-                <span className="text-[#64748B]">Upcoming</span>
+          <div className="lg:col-span-3 grid grid-cols-3 sm:flex sm:justify-around lg:flex-col lg:justify-center gap-2 sm:gap-3 pt-3 lg:pt-0 border-t lg:border-t-0 lg:border-l border-[#F1F5F9] lg:pl-6 text-xs">
+            <div className="flex flex-col sm:flex-row items-center sm:justify-between gap-1 sm:gap-3 p-2 sm:p-0 rounded-[6px] bg-[#F8FAFC] sm:bg-transparent text-center sm:text-left">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <span className="w-2 h-2 rounded-full bg-[#10B981] shrink-0" />
+                <span className="text-[#64748B] text-[11px] sm:text-xs">Upcoming</span>
               </div>
-              <span className="font-semibold text-[#0F172A] tabular-nums">{upcomingCount}</span>
+              <span className="font-semibold text-[#0F172A] tabular-nums text-xs">{upcomingCount}</span>
             </div>
 
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#0E2319]" />
-                <span className="text-[#64748B]">Completed</span>
+            <div className="flex flex-col sm:flex-row items-center sm:justify-between gap-1 sm:gap-3 p-2 sm:p-0 rounded-[6px] bg-[#F8FAFC] sm:bg-transparent text-center sm:text-left">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <span className="w-2 h-2 rounded-full bg-[#0E2319] shrink-0" />
+                <span className="text-[#64748B] text-[11px] sm:text-xs">Completed</span>
               </div>
-              <span className="font-semibold text-[#0F172A] tabular-nums">{completedCount}</span>
+              <span className="font-semibold text-[#0F172A] tabular-nums text-xs">{completedCount}</span>
             </div>
 
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#EF4444]" />
-                <span className="text-[#64748B]">Cancelled</span>
+            <div className="flex flex-col sm:flex-row items-center sm:justify-between gap-1 sm:gap-3 p-2 sm:p-0 rounded-[6px] bg-[#F8FAFC] sm:bg-transparent text-center sm:text-left">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <span className="w-2 h-2 rounded-full bg-[#EF4444] shrink-0" />
+                <span className="text-[#64748B] text-[11px] sm:text-xs">Cancelled</span>
               </div>
-              <span className="font-semibold text-[#0F172A] tabular-nums">{cancelledCount}</span>
+              <span className="font-semibold text-[#0F172A] tabular-nums text-xs">{cancelledCount}</span>
             </div>
           </div>
 
@@ -412,9 +485,14 @@ export default function PartnerOverviewPage() {
                 const isCancelled = b.booking_status === 'Cancelled' || b.commission_status === 'cancelled';
 
                 return (
-                  <div key={b.id || idx} className="py-3 flex items-center justify-between gap-3 first:pt-1 last:pb-1 text-xs">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <span className="text-[#64748B] font-mono shrink-0 w-12">
+                  <div 
+                    key={b.id || idx} 
+                    onClick={() => setTrackingBooking(b)}
+                    className="py-3 flex items-center justify-between gap-3 first:pt-1 last:pb-1 text-xs cursor-pointer hover:bg-[#F8FAFC] -mx-2 px-2 rounded-[6px] transition-colors"
+                    title="Click to view booking tracking"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <span className="text-[#64748B] font-mono shrink-0 w-12 text-[11px]">
                         {dateStr}
                       </span>
                       <span className="font-medium text-[#0F172A] truncate">
@@ -422,9 +500,13 @@ export default function PartnerOverviewPage() {
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-3 shrink-0">
+                    <div className="flex items-center gap-2.5 shrink-0">
                       <span className="font-semibold text-[#0F172A] tabular-nums">
-                        +{formatIDR(b.commission_amount)}
+                        {isCancelled ? (
+                          <span className="text-[#94A3B8] line-through font-normal">Rp0</span>
+                        ) : (
+                          `+${formatIDR(b.commission_amount)}`
+                        )}
                       </span>
                       <span className={`px-2 py-0.5 rounded-[4px] text-[10px] font-medium ${
                         isCompleted
@@ -465,29 +547,45 @@ export default function PartnerOverviewPage() {
             {recentCommissions.length > 0 ? (
               recentCommissions.map((c, idx) => {
                 const ref = c.booking_id ? `#${c.booking_id}` : `#${c.id?.slice(0, 6)}`;
-                const isApproved = c.commission_status === 'approved' || c.commission_status === 'paid';
                 const isPaid = c.commission_status === 'paid';
+                const isApproved = c.commission_status === 'approved';
+                const isCancelled = c.commission_status === 'cancelled' || c.booking_status === 'Cancelled';
+                const title = cleanTreatmentName(c.treatment_name);
 
                 return (
-                  <div key={c.id || idx} className="py-3 flex items-center justify-between gap-3 first:pt-1 last:pb-1 text-xs">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <span className="font-mono font-semibold text-[#0F172A] shrink-0">
+                  <div 
+                    key={c.id || idx} 
+                    onClick={() => setTrackingBooking(c)}
+                    className="py-3 flex items-center justify-between gap-3 first:pt-1 last:pb-1 text-xs cursor-pointer hover:bg-[#F8FAFC] -mx-2 px-2 rounded-[6px] transition-colors"
+                    title="Click to view commission tracking"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <span className="font-mono font-semibold text-[#0F172A] shrink-0 text-xs">
                         {ref}
+                      </span>
+                      <span className="text-[#64748B] truncate text-xs">
+                        {title}
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-3 shrink-0">
+                    <div className="flex items-center gap-2.5 shrink-0">
                       <span className="font-semibold text-[#0F172A] tabular-nums">
-                        +{formatIDR(c.commission_amount)}
+                        {isCancelled ? (
+                          <span className="text-[#94A3B8] line-through font-normal">Rp0</span>
+                        ) : (
+                          `+${formatIDR(c.commission_amount)}`
+                        )}
                       </span>
                       <span className={`px-2 py-0.5 rounded-[4px] text-[10px] font-medium capitalize ${
-                        isPaid
+                        isCancelled
+                          ? 'bg-[#FEF2F2] text-[#DC2626]'
+                          : isPaid
                           ? 'bg-[#ECFDF5] text-[#059669]'
                           : isApproved
                           ? 'bg-[#ECFDF5] text-[#059669]'
                           : 'bg-[#FFFBEB] text-[#D97706]'
                       }`}>
-                        {c.commission_status || 'Pending'}
+                        {isCancelled ? 'Cancelled' : c.commission_status || 'Pending'}
                       </span>
                     </div>
                   </div>
@@ -506,26 +604,26 @@ export default function PartnerOverviewPage() {
       {/* ========================================================
           5. QUICK ACTIONS FOOTER BAR
          ======================================================== */}
-      <div className="bg-white rounded-[12px] border border-[#E2E8F0] p-4 shadow-2xs flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-[#0E2319]/10 text-[#0E2319] flex items-center justify-center">
+      <div className="bg-white rounded-[12px] border border-[#E2E8F0] p-4 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="w-8 h-8 rounded-full bg-[#0E2319]/10 text-[#0E2319] flex items-center justify-center shrink-0">
             <Share2 size={15} />
           </div>
-          <div>
-            <div className="text-xs font-semibold text-[#0F172A]">
+          <div className="min-w-0">
+            <div className="text-xs font-semibold text-[#0F172A] truncate">
               Referral Link: {partner?.partner_code ? `ref=${partner.partner_code}` : 'Live'}
             </div>
-            <div className="text-[11px] text-[#64748B]">
+            <div className="text-[11px] text-[#64748B] truncate sm:whitespace-normal">
               Share your custom link with villa guests and hotel guests.
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
           <button
             type="button"
             onClick={handleCopyLink}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#F8FAFC] hover:bg-[#F1F5F9] border border-[#E2E8F0] rounded-[6px] text-xs font-medium text-[#0F172A] transition-colors cursor-pointer"
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-[#F8FAFC] hover:bg-[#F1F5F9] border border-[#E2E8F0] rounded-[6px] text-xs font-medium text-[#0F172A] transition-colors cursor-pointer"
           >
             {copiedLink ? <Check size={13} className="text-[#059669]" /> : <Copy size={13} />}
             <span>{copiedLink ? 'Copied' : 'Copy Link'}</span>
@@ -533,13 +631,21 @@ export default function PartnerOverviewPage() {
 
           <Link
             href="/partners/payouts"
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-[#0E2319] hover:bg-[#163625] text-white rounded-[6px] text-xs font-medium transition-colors"
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-[#0E2319] hover:bg-[#163625] text-white rounded-[6px] text-xs font-medium transition-colors"
           >
             <Wallet size={13} />
             <span>Request Payout</span>
           </Link>
         </div>
       </div>
+
+      {/* Tracking Modal */}
+      {trackingBooking && (
+        <ScheduleTrackingModal
+          booking={trackingBooking}
+          onClose={() => setTrackingBooking(null)}
+        />
+      )}
 
     </div>
   );
