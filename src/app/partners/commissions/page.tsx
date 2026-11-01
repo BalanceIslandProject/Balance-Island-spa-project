@@ -23,7 +23,7 @@ const MONTH_NAMES = [
 export default function PartnerCommissionsPage() {
   const [commissions, setCommissions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'approved' | 'paid'>('all');
+  const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'approved' | 'paid' | 'cancelled'>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [trackingBooking, setTrackingBooking] = useState<CalendarBooking | null>(null);
   const [currentMonth, setCurrentMonth] = useState(() => new Date().getMonth());
@@ -89,10 +89,14 @@ export default function PartnerCommissionsPage() {
     let pendingCount = 0;
     let approvedCount = 0;
     let paidCount = 0;
+    let cancelledCount = 0;
 
     commissions.forEach((c) => {
-      const isCancelled = c.status === 'cancelled' || c.status === 'declined';
-      if (isCancelled) return;
+      const isCancelled = c.status === 'cancelled' || c.status === 'declined' || c.booking_status?.toLowerCase() === 'cancelled';
+      if (isCancelled) {
+        cancelledCount++;
+        return;
+      }
 
       const amt = Number(c.commission_amount || 0);
       if (c.status === 'paid') {
@@ -119,6 +123,7 @@ export default function PartnerCommissionsPage() {
         pending: pendingCount,
         approved: approvedCount,
         paid: paidCount,
+        cancelled: cancelledCount,
       },
     };
   }, [commissions]);
@@ -127,10 +132,17 @@ export default function PartnerCommissionsPage() {
   const filteredCommissions = useMemo(() => {
     return commissions.filter((c) => {
       const status = (c.status || 'pending').toLowerCase();
+      const isCancelled = status === 'cancelled' || status === 'declined' || c.booking_status?.toLowerCase() === 'cancelled';
 
-      if (filterStatus === 'pending' && status !== 'pending') return false;
-      if (filterStatus === 'approved' && status !== 'approved') return false;
-      if (filterStatus === 'paid' && status !== 'paid') return false;
+      if (filterStatus === 'pending') {
+        if (isCancelled || status !== 'pending') return false;
+      } else if (filterStatus === 'approved') {
+        if (isCancelled || status !== 'approved') return false;
+      } else if (filterStatus === 'paid') {
+        if (isCancelled || status !== 'paid') return false;
+      } else if (filterStatus === 'cancelled') {
+        if (!isCancelled) return false;
+      }
 
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
@@ -286,6 +298,7 @@ export default function PartnerCommissionsPage() {
               { key: 'pending', label: 'Pending', count: counts.pending },
               { key: 'approved', label: 'Approved', count: counts.approved },
               { key: 'paid', label: 'Paid', count: counts.paid },
+              { key: 'cancelled', label: 'Cancelled', count: counts.cancelled },
             ].map((tab) => {
               const isActive = filterStatus === tab.key;
               return (
@@ -362,7 +375,7 @@ export default function PartnerCommissionsPage() {
                   const title = cleanTreatmentName(c.treatment_name);
                   const isPaid = c.status === 'paid';
                   const isApproved = c.status === 'approved';
-                  const isCancelled = c.status === 'cancelled' || c.status === 'declined';
+                  const isCancelled = c.status === 'cancelled' || c.status === 'declined' || c.booking_status?.toLowerCase() === 'cancelled';
 
                   return (
                     <tr key={c.id} className="hover:bg-[#F8FAFC] transition-colors">
@@ -375,20 +388,24 @@ export default function PartnerCommissionsPage() {
                       <td className="py-3.5 px-4 text-[#64748B]">
                         {formatDate(c.booking_date || c.created_at)}
                       </td>
-                      <td className="py-3.5 px-4 text-right font-semibold text-[#0F172A] tabular-nums">
-                        {formatIDR(c.commission_amount)}
+                      <td className="py-3.5 px-4 text-right font-semibold tabular-nums">
+                        {isCancelled ? (
+                          <span className="text-[#94A3B8] line-through font-normal">Rp0</span>
+                        ) : (
+                          <span className="text-[#0F172A]">{formatIDR(c.commission_amount)}</span>
+                        )}
                       </td>
                       <td className="py-3.5 px-4 text-center">
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-[4px] text-[10px] font-medium capitalize ${
-                          isPaid
+                          isCancelled
+                            ? 'bg-[#FEF2F2] text-[#DC2626]'
+                            : isPaid
                             ? 'bg-[#ECFDF5] text-[#059669]'
                             : isApproved
                             ? 'bg-[#ECFDF5] text-[#059669]'
-                            : isCancelled
-                            ? 'bg-[#FEF2F2] text-[#DC2626]'
                             : 'bg-[#FFFBEB] text-[#D97706]'
                         }`}>
-                          {c.status || 'Pending'}
+                          {isCancelled ? 'Cancelled' : c.status || 'Pending'}
                         </span>
                       </td>
                       <td className="py-3.5 pl-4 text-right">

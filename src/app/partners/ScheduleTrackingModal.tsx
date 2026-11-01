@@ -172,9 +172,10 @@ export default function ScheduleTrackingModal({ booking, onClose }: ScheduleTrac
         aria-labelledby="tracking-title"
       >
         {/* Drawer Header */}
-        <div className="p-5 border-b border-[#F1F5F9] bg-white flex items-start justify-between shrink-0">
-          <div className="space-y-1 min-w-0 flex-1 pr-2">
-            <div className="flex items-center gap-2 flex-wrap">
+        <div className="p-4 sm:p-5 border-b border-[#E2E8F0] bg-white shrink-0 space-y-2.5">
+          {/* Top Row: Reference, Status Badge & Close Button */}
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 flex-wrap min-w-0">
               <span className="font-mono text-sm font-bold text-[#0F172A]">
                 #{booking.booking_id}
               </span>
@@ -183,6 +184,7 @@ export default function ScheduleTrackingModal({ booking, onClose }: ScheduleTrac
                 onClick={handleCopyId}
                 className="text-[#94A3B8] hover:text-[#0F172A] p-1 rounded-md hover:bg-[#F1F5F9] cursor-pointer transition-colors"
                 title="Copy Reference"
+                aria-label="Copy booking reference"
               >
                 {copiedId ? <Check size={12} className="text-[#059669]" /> : <Copy size={12} />}
               </button>
@@ -206,33 +208,36 @@ export default function ScheduleTrackingModal({ booking, onClose }: ScheduleTrac
               )}
             </div>
 
-            <h2 id="tracking-title" className="text-base sm:text-lg font-bold text-[#0F172A] leading-snug break-words">
-              {cleanTreatment}
-            </h2>
-            <p className="text-xs text-[#64748B]">
-              {safeFormatDate(booking.date)} • {durationStr}
-            </p>
+            <button
+              type="button"
+              onClick={onClose}
+              className="p-1.5 -mr-1 text-[#94A3B8] hover:text-[#0F172A] hover:bg-[#F1F5F9] rounded-full transition-colors cursor-pointer shrink-0"
+              aria-label="Close details"
+            >
+              <X size={18} />
+            </button>
           </div>
 
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-1.5 text-[#94A3B8] hover:text-[#0F172A] hover:bg-[#F1F5F9] rounded-full transition-colors cursor-pointer shrink-0"
-            aria-label="Close details"
-          >
-            <X size={18} />
-          </button>
+          {/* Full-width Title Row: Highly readable on mobile devices even with long treatment names */}
+          <div className="w-full">
+            <h2 
+              id="tracking-title" 
+              className="text-base sm:text-lg font-bold text-[#0F172A] leading-snug break-words tracking-tight uppercase"
+            >
+              {cleanTreatment}
+            </h2>
+          </div>
         </div>
 
-        {/* Drawer Body: 5 Grouped Sections */}
-        <div className="flex-1 overflow-y-auto p-5 space-y-4 divide-y divide-[#F1F5F9]">
+        {/* Drawer Body: White Cards on Clean Paper Canvas */}
+        <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 bg-[#F8FAFC]">
           
-          {/* SECTION 1: GUEST INFORMATION (3-COLUMN LAYOUT) */}
-          <div className="space-y-3">
+          {/* SECTION 1: GUEST INFORMATION */}
+          <div className="space-y-2">
             <button
               type="button"
               onClick={() => toggleSection('guest')}
-              className="w-full flex items-center justify-between text-left text-xs font-semibold text-[#0F172A] cursor-pointer"
+              className="w-full flex items-center justify-between text-left text-xs font-semibold text-[#0F172A] cursor-pointer px-0.5"
             >
               <div className="flex items-center gap-2">
                 <User size={15} className="text-[#0E2319]" />
@@ -242,7 +247,7 @@ export default function ScheduleTrackingModal({ booking, onClose }: ScheduleTrac
             </button>
 
             {openSections.guest && (
-              <div className="p-3.5 rounded-[8px] bg-[#F8FAFC] border border-[#E2E8F0] grid grid-cols-3 gap-2 text-xs">
+              <div className="p-3.5 sm:p-4 rounded-[8px] bg-white border border-[#E2E8F0] shadow-2xs grid grid-cols-3 gap-2 text-xs">
                 {/* Col 1: Name & Date */}
                 <div className="space-y-2 min-w-0">
                   <div>
@@ -251,12 +256,12 @@ export default function ScheduleTrackingModal({ booking, onClose }: ScheduleTrac
                   </div>
                   <div>
                     <span className="text-[10px] text-[#94A3B8] uppercase font-mono block">Date</span>
-                    <span className="text-[#475569] block mt-0.5">{safeFormatDate(booking.date)}</span>
+                    <span className="text-[#475569] block mt-0.5 truncate">{safeFormatDate(booking.date)}</span>
                   </div>
                 </div>
 
                 {/* Col 2: Time & Duration */}
-                <div className="space-y-2 border-x border-[#E2E8F0] px-2 text-center min-w-0">
+                <div className="space-y-2 border-x border-[#F1F5F9] px-2 text-center min-w-0">
                   <div>
                     <span className="text-[10px] text-[#94A3B8] uppercase font-mono block">Time</span>
                     <span className="font-bold text-[#0F172A] block mt-0.5">{booking.time || 'Scheduled'}</span>
@@ -285,11 +290,11 @@ export default function ScheduleTrackingModal({ booking, onClose }: ScheduleTrac
           </div>
 
           {/* SECTION 2: TREATMENT DETAILS */}
-          <div className="pt-4 space-y-3">
+          <div className="space-y-2">
             <button
               type="button"
               onClick={() => toggleSection('treatment')}
-              className="w-full flex items-center justify-between text-left text-xs font-semibold text-[#0F172A] cursor-pointer"
+              className="w-full flex items-center justify-between text-left text-xs font-semibold text-[#0F172A] cursor-pointer px-0.5"
             >
               <div className="flex items-center gap-2">
                 <Sparkles size={15} className="text-[#0E2319]" />
@@ -299,14 +304,16 @@ export default function ScheduleTrackingModal({ booking, onClose }: ScheduleTrac
             </button>
 
             {openSections.treatment && (
-              <div className="p-3.5 rounded-[8px] bg-[#F8FAFC] border border-[#E2E8F0] space-y-2 text-xs">
-                <div className="flex items-center justify-between">
-                  <span className="text-[#64748B]">Ritual</span>
-                  <span className="font-semibold text-[#0F172A]">{cleanTreatment}</span>
+              <div className="p-3.5 sm:p-4 rounded-[8px] bg-white border border-[#E2E8F0] shadow-2xs space-y-2.5 text-xs">
+                <div className="flex items-start justify-between gap-3">
+                  <span className="text-[#64748B] shrink-0">Ritual</span>
+                  <span className="font-semibold text-[#0F172A] text-right break-words max-w-[70%] leading-snug">
+                    {cleanTreatment}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-[#64748B]">Duration</span>
-                  <span className="text-[#0F172A]">{durationStr}</span>
+                  <span className="text-[#0F172A] font-medium">{durationStr}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-[#64748B]">Service Delivery</span>
@@ -317,11 +324,11 @@ export default function ScheduleTrackingModal({ booking, onClose }: ScheduleTrac
           </div>
 
           {/* SECTION 3: SERVICE LOCATION */}
-          <div className="pt-4 space-y-3">
+          <div className="space-y-2">
             <button
               type="button"
               onClick={() => toggleSection('location')}
-              className="w-full flex items-center justify-between text-left text-xs font-semibold text-[#0F172A] cursor-pointer"
+              className="w-full flex items-center justify-between text-left text-xs font-semibold text-[#0F172A] cursor-pointer px-0.5"
             >
               <div className="flex items-center gap-2">
                 <MapPin size={15} className="text-[#0E2319]" />
@@ -331,17 +338,17 @@ export default function ScheduleTrackingModal({ booking, onClose }: ScheduleTrac
             </button>
 
             {openSections.location && (
-              <div className="p-3.5 rounded-[8px] bg-[#F8FAFC] border border-[#E2E8F0] space-y-2 text-xs">
-                <div>
-                  <span className="text-[11px] text-[#64748B] block">Accommodation Address:</span>
-                  <p className="font-medium text-[#0F172A] mt-0.5 leading-relaxed">
+              <div className="p-3.5 sm:p-4 rounded-[8px] bg-white border border-[#E2E8F0] shadow-2xs space-y-2.5 text-xs">
+                <div className="flex items-start justify-between gap-3">
+                  <span className="text-[#64748B] shrink-0">Accommodation Address:</span>
+                  <span className="font-medium text-[#0F172A] text-right break-words max-w-[65%] leading-relaxed">
                     {booking.location || 'Private Villa / Resort in Bali'}
-                  </p>
+                  </span>
                 </div>
                 {booking.room_number && booking.room_number !== '-' && (
-                  <div className="pt-1 border-t border-[#E2E8F0] flex items-center justify-between">
+                  <div className="pt-2 border-t border-[#F1F5F9] flex items-center justify-between gap-3">
                     <span className="text-[#64748B]">Room / Villa Unit:</span>
-                    <span className="font-semibold text-[#0F172A]">{booking.room_number}</span>
+                    <span className="font-semibold text-[#0F172A] text-right">{booking.room_number}</span>
                   </div>
                 )}
               </div>
@@ -349,11 +356,11 @@ export default function ScheduleTrackingModal({ booking, onClose }: ScheduleTrac
           </div>
 
           {/* SECTION 4: STATUS & TIMELINE */}
-          <div className="pt-4 space-y-3">
+          <div className="space-y-2">
             <button
               type="button"
               onClick={() => toggleSection('timeline')}
-              className="w-full flex items-center justify-between text-left text-xs font-semibold text-[#0F172A] cursor-pointer"
+              className="w-full flex items-center justify-between text-left text-xs font-semibold text-[#0F172A] cursor-pointer px-0.5"
             >
               <div className="flex items-center gap-2">
                 <Activity size={15} className="text-[#0E2319]" />
@@ -363,7 +370,7 @@ export default function ScheduleTrackingModal({ booking, onClose }: ScheduleTrac
             </button>
 
             {openSections.timeline && (
-              <div className="p-3.5 rounded-[8px] bg-[#F8FAFC] border border-[#E2E8F0]">
+              <div className="p-3.5 sm:p-4 rounded-[8px] bg-white border border-[#E2E8F0] shadow-2xs">
                 {isCancelled ? (
                   <div className="p-3 rounded-[6px] bg-red-50 border border-red-200 text-xs text-red-800 flex items-center gap-2">
                     <AlertCircle size={15} className="text-red-600 shrink-0" />
@@ -401,11 +408,11 @@ export default function ScheduleTrackingModal({ booking, onClose }: ScheduleTrac
           </div>
 
           {/* SECTION 5: COMMISSION INFORMATION */}
-          <div className="pt-4 space-y-3">
+          <div className="space-y-2">
             <button
               type="button"
               onClick={() => toggleSection('commission')}
-              className="w-full flex items-center justify-between text-left text-xs font-semibold text-[#0F172A] cursor-pointer"
+              className="w-full flex items-center justify-between text-left text-xs font-semibold text-[#0F172A] cursor-pointer px-0.5"
             >
               <div className="flex items-center gap-2">
                 <Receipt size={15} className="text-[#0E2319]" />
@@ -415,7 +422,7 @@ export default function ScheduleTrackingModal({ booking, onClose }: ScheduleTrac
             </button>
 
             {openSections.commission && (
-              <div className="p-3.5 rounded-[8px] bg-[#F8FAFC] border border-[#E2E8F0] space-y-2 text-xs">
+              <div className="p-3.5 sm:p-4 rounded-[8px] bg-white border border-[#E2E8F0] shadow-2xs space-y-2.5 text-xs">
                 <div className="flex items-center justify-between">
                   <span className="text-[#64748B]">Gross Treatment</span>
                   <span className="font-medium text-[#0F172A] tabular-nums">
@@ -428,15 +435,17 @@ export default function ScheduleTrackingModal({ booking, onClose }: ScheduleTrac
                     {booking.commission_rate_pct || 15}%
                   </span>
                 </div>
-                <div className="flex items-center justify-between pt-1 border-t border-[#E2E8F0]">
+                <div className="flex items-center justify-between pt-2 border-t border-[#F1F5F9]">
                   <span className="font-semibold text-[#0F172A]">Earned Commission</span>
-                  <span className="font-bold text-[#059669] text-sm tabular-nums">
-                    +{formatIDR(booking.commission_amount)}
+                  <span className={`font-bold text-sm tabular-nums ${isCancelled ? 'text-[#DC2626]' : 'text-[#059669]'}`}>
+                    {isCancelled ? 'Rp0 (Cancelled)' : `+${formatIDR(booking.commission_amount)}`}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-[#64748B]">Payout Status</span>
-                  <span className="font-semibold text-[#0F172A] capitalize">
+                  <span className={`font-semibold capitalize ${
+                    isCancelled ? 'text-[#DC2626]' : isPaidOut || isApproved ? 'text-[#059669]' : 'text-[#D97706]'
+                  }`}>
                     {isPaidOut ? 'Disbursed' : isApproved ? 'Approved' : isCancelled ? 'Cancelled' : 'Pending'}
                   </span>
                 </div>
