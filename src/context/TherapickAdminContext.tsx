@@ -366,10 +366,37 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
           } : undefined
         };
       });
+      // Enrich Partners with performance metrics and safe defaults
+      const enrichedPartners = rawPartners.map((p: any) => {
+        const partnerBookings = (enrichedBookings as any[]).filter((b: any) => 
+          (b.affiliate_code && b.affiliate_code.toUpperCase() === (p.referral_code || '').toUpperCase()) ||
+          b.partner_info?.id === p.id ||
+          b.commission?.partner_id === p.id
+        );
+        const partnerComms = rawComms.filter((c: any) => c.partner_id === p.id);
+        const partnerPayouts = rawPayouts.filter((py: any) => py.partner_id === p.id);
+
+        const totalRev = partnerBookings.reduce((sum, b) => sum + (Number(b.revenue || b.total_amount) || 0), 0);
+        const totalComm = partnerComms.reduce((sum, c) => sum + (Number(c.commission_amount) || 0), 0);
+        const totalPaid = partnerPayouts
+          .filter((py: any) => py.status === 'completed' || py.status === 'paid' || py.status === 'Processed')
+          .reduce((sum: number, py: any) => sum + (Number(py.amount) || 0), 0);
+        const availableBal = Math.max(0, totalComm - totalPaid);
+
+        return {
+          ...p,
+          name: `${p.first_name || ''} ${p.last_name || ''}`.trim() || p.business_name || 'Partner',
+          total_bookings: partnerBookings.length,
+          affiliate_revenue: totalRev,
+          commission_earned: totalComm,
+          paid_amount: totalPaid,
+          available_balance: availableBal,
+        };
+      });
 
       setBookings(enrichedBookings);
       setCommissions(rawComms);
-      setPartners(rawPartners);
+      setPartners(enrichedPartners);
       setPayouts(rawPayouts);
       if (therapistsRes.data) setTherapists(therapistsRes.data);
       if (treatmentsRes.data) setTreatments(treatmentsRes.data);

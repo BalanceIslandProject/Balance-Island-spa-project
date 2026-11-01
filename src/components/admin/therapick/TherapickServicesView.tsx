@@ -456,56 +456,45 @@ export default function TherapickServicesView() {
           <div className="overflow-x-auto no-scrollbar">
             <table className="w-full text-left text-xs">
               <thead>
-                <tr className="border-b border-stone-200 bg-stone-50/50 text-[11px] font-mono uppercase font-bold text-stone-400">
+                <tr className="border-b border-stone-200 bg-stone-50/50 text-[11px] font-mono uppercase font-bold text-stone-500">
                   <th className="py-3 px-4">Service</th>
-                  <th className="py-3 px-4">Duration</th>
-                  <th className="py-3 px-4">Price</th>
+                  <th className="py-3 px-4">Duration & Pricing Tiers</th>
                   <th className="py-3 px-4 text-center">Status</th>
-                  <th className="py-3 px-4 text-right"></th>
+                  <th className="py-3 px-4 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-stone-100">
                 {filteredTreatments.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="py-12 text-center text-stone-400">
+                    <td colSpan={4} className="py-12 text-center text-stone-400">
                       No services match your filters.
                     </td>
                   </tr>
                 ) : (
                   filteredTreatments.map(t => {
                     const opts = Array.isArray(t.options) ? t.options : [];
-                    const durationsList = opts.map(o => String(o.duration || '').replace(/min/i, '').trim()).filter(Boolean);
-                    const durationText = durationsList.length > 0 ? `${durationsList.join(' / ')} min` : '90 min';
-
-                    const prices = opts.map(o => Number(String(o.price || '0').replace(/\D/g, '')) || 0).filter(p => p > 0);
-                    const minPrice = prices.length > 0 ? Math.min(...prices) : 350000;
-                    const maxPrice = prices.length > 0 ? Math.max(...prices) : 350000;
-                    const priceText = minPrice === maxPrice 
-                      ? `Rp${minPrice.toLocaleString('id-ID')}` 
-                      : `Rp${minPrice.toLocaleString('id-ID')} – Rp${maxPrice.toLocaleString('id-ID')}`;
-
                     const isLive = t.is_published !== false;
                     const isSpotlight = Boolean(t.is_pinned);
 
                     return (
                       <tr
                         key={t.id}
-                        onClick={() => openEditModal(t)}
-                        className="hover:bg-stone-50/70 transition-colors cursor-pointer group"
+                        className="hover:bg-amber-50/20 transition-colors group"
                       >
+                        {/* Service Title & Category */}
                         <td className="py-3.5 px-4">
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-amber-100/70 text-amber-900 flex items-center justify-center shrink-0">
+                            <div className="w-10 h-10 rounded-xl bg-amber-100/80 text-amber-900 flex items-center justify-center shrink-0 border border-amber-200/60">
                               <Sparkles size={18} className="text-amber-700" />
                             </div>
                             <div>
                               <div className="flex items-center gap-2">
-                                <span className="font-bold text-neutral-900 text-xs sm:text-sm group-hover:text-amber-800 transition-colors">
+                                <span className="font-bold text-neutral-900 text-xs sm:text-sm group-hover:text-amber-900 transition-colors">
                                   {t.title}
                                 </span>
                                 {isSpotlight && (
-                                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 font-bold">
-                                    Spotlight
+                                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#facc15] text-neutral-950 font-bold shadow-2xs">
+                                    ★ Spotlight
                                   </span>
                                 )}
                               </div>
@@ -515,12 +504,31 @@ export default function TherapickServicesView() {
                             </div>
                           </div>
                         </td>
-                        <td className="py-3.5 px-4 font-mono font-medium text-stone-600">
-                          {durationText}
+
+                        {/* Duration & Price Tiers */}
+                        <td className="py-3.5 px-4">
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            {opts.map((opt, i) => {
+                              const numPrice = Number(String(opt.price || '0').replace(/\D/g, '')) || 0;
+                              return (
+                                <span
+                                  key={i}
+                                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-stone-50 border border-stone-200/80 font-mono text-xs"
+                                >
+                                  <span className="font-bold text-neutral-800">
+                                    {opt.duration}{String(opt.duration).includes('min') ? '' : 'm'}
+                                  </span>
+                                  <span className="text-stone-300">•</span>
+                                  <span className="font-bold text-neutral-900">
+                                    Rp {numPrice.toLocaleString('id-ID')}
+                                  </span>
+                                </span>
+                              );
+                            })}
+                          </div>
                         </td>
-                        <td className="py-3.5 px-4 font-mono font-bold text-neutral-900">
-                          {priceText}
-                        </td>
+
+                        {/* Status */}
                         <td className="py-3.5 px-4 text-center">
                           <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold ${
                             isLive 
@@ -531,8 +539,27 @@ export default function TherapickServicesView() {
                             <span>{isLive ? 'Active' : 'Draft'}</span>
                           </span>
                         </td>
-                        <td className="py-3.5 px-4 text-right text-stone-400 font-bold group-hover:text-neutral-900">
-                          &gt;
+
+                        {/* Actions */}
+                        <td className="py-3.5 px-4 text-right">
+                          <div className="flex items-center justify-end gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => openEditModal(t)}
+                              className="px-2.5 py-1 rounded-lg bg-stone-100 hover:bg-[#facc15] text-neutral-900 text-xs font-bold transition-all cursor-pointer flex items-center gap-1"
+                            >
+                              <Edit3 size={12} />
+                              <span>Edit</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDelete(t)}
+                              className="p-1.5 rounded-lg text-stone-300 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                              title="Delete Treatment"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );

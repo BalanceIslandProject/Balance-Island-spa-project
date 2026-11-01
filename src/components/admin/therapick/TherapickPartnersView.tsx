@@ -190,70 +190,78 @@ export default function TherapickPartnersView() {
                   </td>
                 </tr>
               ) : (
-                filteredPartners.map(p => (
-                  <tr
-                    key={p.id}
-                    onClick={() => setSelectedPartner(p)}
-                    className="hover:bg-amber-50/30 transition-colors cursor-pointer group"
-                  >
-                    {/* Partner & Business */}
-                    <td className="py-3.5 px-4">
-                      <div className="font-bold text-neutral-900 flex items-center gap-1.5">
-                        <span>{p.name}</span>
-                      </div>
-                      <div className="text-[11px] text-stone-500 flex items-center gap-1">
-                        <Building2 size={11} className="text-stone-400 shrink-0" />
-                        <span>{p.business_name || 'Individual Concierge'}</span>
-                      </div>
-                    </td>
+                filteredPartners.map(p => {
+                  const partnerName = p.name || `${p.first_name || ''} ${p.last_name || ''}`.trim() || p.business_name || 'Partner';
+                  const bookingCount = p.total_bookings ?? 0;
+                  const revNum = Number(p.affiliate_revenue) || 0;
+                  const commNum = Number(p.commission_earned) || 0;
+                  const balNum = Number(p.available_balance) || 0;
+                  const paidNum = Number(p.paid_amount) || 0;
 
-                    {/* Referral Code */}
-                    <td className="py-3.5 px-4" onClick={e => e.stopPropagation()}>
-                      <button
-                        type="button"
-                        onClick={e => copyReferral(p.referral_code, e)}
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-stone-100 hover:bg-stone-200/80 font-mono font-bold text-xs text-neutral-800 transition-colors cursor-pointer"
-                        title="Copy Referral Link"
-                      >
-                        <span>{p.referral_code}</span>
-                        {copiedCode === p.referral_code ? (
-                          <Check size={12} className="text-emerald-600" />
-                        ) : (
-                          <Copy size={12} className="text-stone-400" />
-                        )}
-                      </button>
-                    </td>
+                  return (
+                    <tr
+                      key={p.id}
+                      onClick={() => setSelectedPartner(p)}
+                      className="hover:bg-amber-50/30 transition-colors cursor-pointer group"
+                    >
+                      {/* Partner & Business */}
+                      <td className="py-3.5 px-4">
+                        <div className="font-bold text-neutral-900 flex items-center gap-1.5">
+                          <span>{partnerName}</span>
+                        </div>
+                        <div className="text-[11px] text-stone-500 flex items-center gap-1">
+                          <Building2 size={11} className="text-stone-400 shrink-0" />
+                          <span>{p.business_name || 'Individual Concierge'}</span>
+                        </div>
+                      </td>
 
-                    {/* Bookings */}
-                    <td className="py-3.5 px-4 text-center">
-                      <span className="font-bold font-mono text-neutral-900 bg-stone-100 px-2.5 py-1 rounded-full text-xs">
-                        {p.total_bookings}
-                      </span>
-                    </td>
+                      {/* Referral Code */}
+                      <td className="py-3.5 px-4" onClick={e => e.stopPropagation()}>
+                        <button
+                          type="button"
+                          onClick={e => copyReferral(p.referral_code, e)}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-stone-100 hover:bg-stone-200/80 font-mono font-bold text-xs text-neutral-800 transition-colors cursor-pointer"
+                          title="Copy Referral Link"
+                        >
+                          <span>{p.referral_code}</span>
+                          {copiedCode === p.referral_code ? (
+                            <Check size={12} className="text-emerald-600" />
+                          ) : (
+                            <Copy size={12} className="text-stone-400" />
+                          )}
+                        </button>
+                      </td>
 
-                    {/* Affiliate Revenue */}
-                    <td className="py-3.5 px-4">
-                      <div className="font-bold font-mono text-neutral-900">
-                        Rp {p.affiliate_revenue.toLocaleString('id-ID')}
-                      </div>
-                    </td>
+                      {/* Bookings */}
+                      <td className="py-3.5 px-4 text-center">
+                        <span className="font-bold font-mono text-neutral-900 bg-stone-100 px-2.5 py-1 rounded-full text-xs">
+                          {bookingCount}
+                        </span>
+                      </td>
 
-                    {/* Commission */}
-                    <td className="py-3.5 px-4">
-                      <div className="font-bold font-mono text-amber-700">
-                        Rp {p.commission_earned.toLocaleString('id-ID')}
-                      </div>
-                    </td>
+                      {/* Affiliate Revenue */}
+                      <td className="py-3.5 px-4">
+                        <div className="font-bold font-mono text-neutral-900">
+                          Rp {revNum.toLocaleString('id-ID')}
+                        </div>
+                      </td>
 
-                    {/* Available Balance */}
-                    <td className="py-3.5 px-4">
-                      <div className="font-bold font-mono text-emerald-700">
-                        Rp {(p.available_balance || 0).toLocaleString('id-ID')}
-                      </div>
-                      <div className="text-[10px] text-stone-400">
-                        Paid: Rp {(p.paid_amount || 0).toLocaleString('id-ID')}
-                      </div>
-                    </td>
+                      {/* Commission */}
+                      <td className="py-3.5 px-4">
+                        <div className="font-bold font-mono text-amber-700">
+                          Rp {commNum.toLocaleString('id-ID')}
+                        </div>
+                      </td>
+
+                      {/* Available Balance */}
+                      <td className="py-3.5 px-4">
+                        <div className="font-bold font-mono text-emerald-700">
+                          Rp {balNum.toLocaleString('id-ID')}
+                        </div>
+                        <div className="text-[10px] text-stone-400">
+                          Paid: Rp {paidNum.toLocaleString('id-ID')}
+                        </div>
+                      </td>
 
                     {/* Status Badge */}
                     <td className="py-3.5 px-4">
@@ -306,8 +314,9 @@ export default function TherapickPartnersView() {
                       </div>
                     </td>
                   </tr>
-                ))
-              )}
+                );
+              })
+            )}
             </tbody>
           </table>
         </div>

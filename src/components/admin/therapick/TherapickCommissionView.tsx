@@ -206,7 +206,7 @@ export default function TherapickCommissionView() {
                       </td>
 
                       <td className="py-3.5 px-4 font-mono font-bold text-neutral-900">
-                        Rp {p.affiliate_revenue.toLocaleString('id-ID')}
+                        Rp {(Number(p.affiliate_revenue) || 0).toLocaleString('id-ID')}
                       </td>
 
                       <td className="py-3.5 px-4 font-mono text-stone-600">
@@ -214,7 +214,7 @@ export default function TherapickCommissionView() {
                       </td>
 
                       <td className="py-3.5 px-4 font-mono font-bold text-amber-700">
-                        Rp {p.commission_earned.toLocaleString('id-ID')}
+                        Rp {(Number(p.commission_earned) || 0).toLocaleString('id-ID')}
                       </td>
 
                       <td className="py-3.5 px-4 font-mono text-stone-500">
