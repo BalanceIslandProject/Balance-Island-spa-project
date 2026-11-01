@@ -262,70 +262,69 @@ export default function ScheduleTrackingModal({ booking, onClose }: ScheduleTrac
               </div>
             </div>
 
-            {/* 2. Key Details Grid: Time, Duration, Location, Room, Guest, Date */}
-            <div className="grid grid-cols-2 gap-3.5 pt-0.5">
+            {/* 2. Guest Details (3-Column Layout matching Review Booking on Main Website) */}
+            <div className="pt-0.5 space-y-2">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-stone-400 font-mono pb-1 border-b border-stone-200/50">
+                GUEST DETAILS
+              </div>
               
-              {/* Left Column: Time & Duration, Guest */}
-              <div className="space-y-3">
-                {/* Time & Duration */}
-                <div>
-                  <div className="flex items-center gap-1.5 text-stone-400 font-mono text-[10px] uppercase tracking-wider font-bold mb-1">
-                    <Clock size={12} className="text-[#0f172a]" />
-                    <span>TIME & DURATION</span>
+              <div className="grid grid-cols-3 gap-2 sm:gap-4 items-center pt-1">
+                {/* Column 1: Name & Date */}
+                <div className="flex flex-col gap-3 min-w-0">
+                  <div className="min-w-0">
+                    <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-wider text-stone-400 font-mono mb-1">
+                      <User size={11} className="text-[#0f172a]" /> Name
+                    </span>
+                    <span className="text-xs sm:text-sm text-neutral-900 font-bold truncate block">
+                      {booking.guest_name || 'Guest'}
+                    </span>
                   </div>
-                  <div className="font-bold text-xs sm:text-sm text-neutral-900 flex items-center flex-wrap gap-1.5">
-                    <span>{booking.time || '14:00'}</span>
-                    <span className="text-stone-300">·</span>
-                    <span className="font-mono text-xs text-stone-600 font-medium inline-flex items-center gap-1">
-                      <Timer size={11} className="text-stone-400" />
-                      {durationStr}
+                  <div className="min-w-0">
+                    <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-wider text-stone-400 font-mono mb-1">
+                      <CalendarIcon size={11} className="text-[#0f172a]" /> Date
+                    </span>
+                    <span className="text-xs sm:text-sm text-neutral-900 font-medium block">
+                      {safeFormatDate(booking.date)}
                     </span>
                   </div>
                 </div>
 
-                {/* Guest */}
-                <div>
-                  <div className="flex items-center gap-1.5 text-stone-400 font-mono text-[10px] uppercase tracking-wider font-bold mb-1">
-                    <User size={12} className="text-[#0f172a]" />
-                    <span>GUEST</span>
-                  </div>
-                  <div className="font-bold text-xs sm:text-sm text-neutral-900 truncate">
-                    {booking.guest_name || 'Guest'}
-                  </div>
+                {/* Column 2: Time (Center with vertical dividers) */}
+                <div className="flex flex-col items-center justify-center text-center border-x border-stone-200/70 px-1 sm:px-2 h-full py-1">
+                  <span className="flex items-center justify-center gap-1 text-[9px] font-bold uppercase tracking-wider text-stone-400 font-mono mb-1">
+                    <Clock size={11} className="text-[#0f172a]" /> Time
+                  </span>
+                  <span className="text-base sm:text-xl text-neutral-900 font-serif font-bold tracking-tight">
+                    {booking.time || '14:00'}
+                  </span>
+                  <span className="font-mono text-[10px] sm:text-xs text-stone-500 font-medium inline-flex items-center gap-1 mt-1">
+                    <Timer size={10} className="text-stone-400" />
+                    {durationStr}
+                  </span>
                 </div>
-              </div>
 
-              {/* Right Column: Location & Room, Date */}
-              <div className="space-y-3">
-                {/* Location & Room */}
-                <div>
-                  <div className="flex items-center gap-1.5 text-stone-400 font-mono text-[10px] uppercase tracking-wider font-bold mb-1">
-                    <MapPin size={12} className="text-[#0f172a]" />
-                    <span>LOCATION & ROOM</span>
-                  </div>
-                  <div className="font-bold text-xs sm:text-sm text-neutral-900 break-words leading-tight">
-                    {booking.location || 'Ubud Villa'}
+                {/* Column 3: Location & Room */}
+                <div className="flex flex-col gap-3 min-w-0">
+                  <div className="min-w-0">
+                    <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-wider text-stone-400 font-mono mb-1">
+                      <MapPin size={11} className="text-[#0f172a]" /> Location
+                    </span>
+                    <span className="text-xs sm:text-sm text-neutral-900 font-bold leading-tight break-words line-clamp-2 block">
+                      {booking.location || 'Ubud Villa'}
+                    </span>
                   </div>
                   {booking.room_number && booking.room_number !== '-' && (
-                    <div className="font-mono text-xs text-stone-600 flex items-center gap-1 mt-1">
-                      <DoorClosed size={11} className="text-stone-400 shrink-0" />
-                      <span>Room {booking.room_number}</span>
+                    <div className="min-w-0">
+                      <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-wider text-stone-400 font-mono mb-1">
+                        <DoorClosed size={11} className="text-[#0f172a]" /> Room
+                      </span>
+                      <span className="text-xs sm:text-sm text-neutral-900 font-medium truncate block">
+                        {booking.room_number}
+                      </span>
                     </div>
                   )}
                 </div>
-
-                {/* Date */}
-                <div>
-                  <div className="flex items-center gap-1.5 text-stone-400 font-mono text-[10px] uppercase tracking-wider font-bold mb-1">
-                    <CalendarIcon size={12} className="text-[#0f172a]" />
-                    <span>DATE</span>
-                  </div>
-                  <div className="font-bold text-xs sm:text-sm text-neutral-900">
-                    {safeFormatDate(booking.date)}
-                  </div>
-                </div>
               </div>
-
             </div>
 
             {/* Financial Breakdown */}

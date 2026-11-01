@@ -1141,10 +1141,6 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                                         <span className="text-sm text-primary font-medium">{formData.name}</span>
                                                     </div>
                                                     <div>
-                                                        <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-text-muted mb-1"><Phone className="w-3 h-3"/> WhatsApp</span>
-                                                        <span className="text-sm text-primary font-medium">{formData.whatsapp}</span>
-                                                    </div>
-                                                    <div>
                                                         <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-text-muted mb-1"><Calendar className="w-3 h-3"/> Date</span>
                                                         <span className="text-sm text-primary font-medium">{formData.date}</span>
                                                     </div>
