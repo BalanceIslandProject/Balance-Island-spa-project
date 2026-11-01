@@ -38,29 +38,42 @@ export async function GET(req: NextRequest) {
     const totalBookings = commissions.length;
 
     // Fetch related bookings to get scheduled dates, customer names, and appointment times
-    const bookingIds = commissions.map((c) => c.booking_id).filter(Boolean);
+    const rawBookingIds = commissions.map((c) => c.booking_id).filter(Boolean);
+    const bookingIds = Array.from(new Set([
+      ...rawBookingIds,
+      ...rawBookingIds.map(id => String(id).replace(/^#/, '')),
+      ...rawBookingIds.map(id => `#${String(id).replace(/^#/, '')}`),
+    ]));
+
     let bookingsMap: Record<string, any> = {};
     if (bookingIds.length > 0) {
       const [byRefRes, byIdRes] = await Promise.all([
         supabase
           .from('bookings')
-          .select('id, reference_number, guest_name, booking_date, time, location, room_number, treatment_name, status, items, payment_method')
+          .select('id, reference_number, guest_name, booking_date, time, location, room_number, treatment_name, status, treatment_status, items, payment_method')
           .in('reference_number', bookingIds),
         supabase
           .from('bookings')
-          .select('id, reference_number, guest_name, booking_date, time, location, room_number, treatment_name, status, items, payment_method')
+          .select('id, reference_number, guest_name, booking_date, time, location, room_number, treatment_name, status, treatment_status, items, payment_method')
           .in('id', bookingIds.filter(id => typeof id === 'string' && id.includes('-'))),
       ]);
 
       const matchedBookings = [...(byRefRes.data || []), ...(byIdRes.data || [])];
       for (const b of matchedBookings) {
         if (b.reference_number) {
-          bookingsMap[b.reference_number] = b;
-          bookingsMap[b.reference_number.toUpperCase()] = b;
-          bookingsMap[b.reference_number.toLowerCase()] = b;
+          const raw = String(b.reference_number);
+          const clean = raw.replace(/^#/, '');
+          bookingsMap[raw] = b;
+          bookingsMap[clean] = b;
+          bookingsMap[`#${clean}`] = b;
+          bookingsMap[raw.toUpperCase()] = b;
+          bookingsMap[clean.toUpperCase()] = b;
+          bookingsMap[raw.toLowerCase()] = b;
+          bookingsMap[clean.toLowerCase()] = b;
         }
         if (b.id) {
           bookingsMap[b.id] = b;
+          bookingsMap[String(b.id).toUpperCase()] = b;
         }
       }
     }
@@ -85,10 +98,17 @@ export async function GET(req: NextRequest) {
       const guestName = matched.guest_name || attr.customer_name || 'Guest';
 
       const rawBookingStatus = (matched.status || 'Pending').trim();
+      const rawTreatmentStatus = (matched.treatment_status || '').trim();
       const isPaid = Boolean(comm.payment_verified);
-      const isCancelled = rawBookingStatus.toLowerCase() === 'cancelled' || comm.status === 'cancelled' || comm.status === 'declined';
-      const isCompleted = Boolean(comm.service_completed) || rawBookingStatus.toLowerCase() === 'completed';
-      const isOngoing = rawBookingStatus.toLowerCase() === 'ongoing';
+      const isCancelled = rawBookingStatus.toLowerCase() === 'cancelled' || 
+        rawTreatmentStatus.toLowerCase() === 'cancelled' ||
+        comm.status === 'cancelled' || 
+        comm.status === 'declined';
+      const isCompleted = Boolean(comm.service_completed) || 
+        rawBookingStatus.toLowerCase() === 'completed' || 
+        rawTreatmentStatus.toLowerCase() === 'finished';
+      const isOngoing = rawBookingStatus.toLowerCase() === 'ongoing' || 
+        rawTreatmentStatus.toLowerCase() === 'in progress';
       const isConfirmed = rawBookingStatus.toLowerCase() === 'confirmed';
 
       let displayBookingStatus = 'Pending';
@@ -96,6 +116,8 @@ export async function GET(req: NextRequest) {
       else if (isCompleted) displayBookingStatus = 'Completed';
       else if (isOngoing) displayBookingStatus = 'Ongoing';
       else if (isConfirmed) displayBookingStatus = 'Confirmed';
+
+      const displayTreatmentStatus = rawTreatmentStatus || (isCompleted ? 'Finished' : isOngoing ? 'In Progress' : 'Scheduled');
 
       // Detect payment method (cash / online)
       let paymentMethod = '';
@@ -156,6 +178,7 @@ export async function GET(req: NextRequest) {
         room_number: matched.room_number || '',
         treatment_name: matched.treatment_name || 'Mobile Spa Treatment',
         booking_status: displayBookingStatus,
+        treatment_status: displayTreatmentStatus,
         payment_status: isPaid ? 'paid' : 'unpaid',
         payment_method: paymentMethod,
         payment_verified: isPaid,

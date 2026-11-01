@@ -60,6 +60,7 @@ export async function POST(req: NextRequest) {
       proof_document_url = '',
       notes = '',
       commission_ids = [],
+      payout_date = '',
     } = body;
 
     if (!partner_id || !amount) {
@@ -82,8 +83,27 @@ export async function POST(req: NextRequest) {
     const rand = Math.random().toString(36).substring(2, 6).toUpperCase();
     const payoutReference = `PAY${pCode || 'REF'}${rand}`;
 
-    // 1. Insert payout record with additive specification fields
-    const nowIso = new Date().toISOString();
+    // 1. Determine ISO date for payout record
+    let targetDateIso = new Date().toISOString();
+    if (payout_date) {
+      try {
+        const d = new Date(payout_date);
+        if (!isNaN(d.getTime())) {
+          targetDateIso = d.toISOString();
+        }
+      } catch (e) {
+        // fallback
+      }
+    }
+
+    const mergedDetails = {
+      ...payout_details,
+      settlement_date: payout_date || targetDateIso.split('T')[0],
+    };
+
+    const finalNotes = notes || `Settlement Date: ${payout_date || targetDateIso.split('T')[0]}`;
+
+    // Insert payout record with additive specification fields
     const { data: newPayout, error: payoutErr } = await supabase
       .from('affiliate_payouts')
       .insert([
@@ -97,12 +117,13 @@ export async function POST(req: NextRequest) {
           currency,
           status: 'completed',
           payout_method,
-          payout_details,
+          payout_details: mergedDetails,
           proof_document_url,
-          notes,
-          processed_at: nowIso,
-          paid_at: nowIso,
-          approved_at: nowIso,
+          notes: finalNotes,
+          processed_at: targetDateIso,
+          paid_at: targetDateIso,
+          created_at: targetDateIso,
+          approved_at: targetDateIso,
           approved_by: 'admin',
         },
       ])
@@ -147,9 +168,9 @@ export async function POST(req: NextRequest) {
         .from('affiliate_commissions')
         .update({
           status: 'paid',
-          paid_at: nowIso,
+          paid_at: targetDateIso,
           payout_id: newPayout.id,
-          updated_at: nowIso,
+          updated_at: targetDateIso,
         })
         .in('id', commIds);
 

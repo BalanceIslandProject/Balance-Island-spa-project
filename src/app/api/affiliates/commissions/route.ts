@@ -43,19 +43,29 @@ export async function GET(req: NextRequest) {
         .select('*');
 
       (bookings || []).forEach((b: any) => {
-        if (b.reference_number) bookingsMap.set(b.reference_number.toUpperCase(), b);
-        if (b.id) bookingsMap.set(String(b.id).toUpperCase(), b);
+        if (b.reference_number) {
+          const raw = String(b.reference_number).toUpperCase();
+          const clean = raw.replace(/^#/, '');
+          bookingsMap.set(raw, b);
+          bookingsMap.set(clean, b);
+          bookingsMap.set(`#${clean}`, b);
+        }
+        if (b.id) {
+          bookingsMap.set(String(b.id).toUpperCase(), b);
+        }
       });
     }
 
     const enriched = commList.map((c: any) => {
       const bKey = String(c.booking_id || '').toUpperCase();
-      const b = bookingsMap.get(bKey);
+      const cleanBKey = bKey.replace(/^#/, '');
+      const b = bookingsMap.get(bKey) || bookingsMap.get(cleanBKey) || bookingsMap.get(`#${cleanBKey}`);
       
       const bStatus = (b?.status || '').trim();
-      const isCancelled = c.status === 'cancelled' || bStatus.toLowerCase() === 'cancelled';
-      const isOngoing = bStatus.toLowerCase() === 'ongoing' || (c.notes || '').toLowerCase().includes('ongoing');
-      const isCompleted = Boolean(c.service_completed) || bStatus.toLowerCase() === 'completed';
+      const tStatus = (b?.treatment_status || '').trim();
+      const isCancelled = c.status === 'cancelled' || bStatus.toLowerCase() === 'cancelled' || tStatus.toLowerCase() === 'cancelled';
+      const isOngoing = bStatus.toLowerCase() === 'ongoing' || tStatus.toLowerCase() === 'in progress' || (c.notes || '').toLowerCase().includes('ongoing');
+      const isCompleted = Boolean(c.service_completed) || bStatus.toLowerCase() === 'completed' || tStatus.toLowerCase() === 'finished';
 
       let displayBookingStatus = 'Pending';
       if (isCancelled) displayBookingStatus = 'Cancelled';
@@ -63,10 +73,10 @@ export async function GET(req: NextRequest) {
       else if (isOngoing) displayBookingStatus = 'Ongoing';
       else if (bStatus) displayBookingStatus = bStatus;
 
-      let treatmentStatus = 'Awaiting Treatment';
+      let treatmentStatus = tStatus || 'Scheduled';
       if (isCancelled) treatmentStatus = 'Cancelled';
-      else if (isCompleted) treatmentStatus = 'Finish';
-      else if (isOngoing) treatmentStatus = 'Ongoing';
+      else if (isCompleted) treatmentStatus = 'Finished';
+      else if (isOngoing) treatmentStatus = 'In Progress';
 
       const isPaid = c.payment_verified || b?.payment_status === 'paid' || b?.payment_status === 'Paid';
 

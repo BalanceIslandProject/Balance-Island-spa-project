@@ -529,8 +529,14 @@ export default function PartnerPayoutsPage() {
               <div className="space-y-2 pt-1 text-xs">
                 <div className="flex items-center justify-between">
                   <span className="text-[#64748B]">Disbursement Date</span>
-                  <span className="font-medium text-[#0F172A]">{formatDate(selectedPayout.created_at)}</span>
+                  <span className="font-medium text-[#0F172A]">{formatDate(selectedPayout.paid_at || selectedPayout.created_at)}</span>
                 </div>
+                {selectedPayout.notes && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-[#64748B]">Settlement Note</span>
+                    <span className="font-medium text-[#0F172A] text-right max-w-[220px] truncate">{selectedPayout.notes}</span>
+                  </div>
+                )}
                 <div className="flex items-center justify-between">
                   <span className="text-[#64748B]">Payment Method</span>
                   <span className="font-medium text-[#0F172A]">Bank Transfer</span>

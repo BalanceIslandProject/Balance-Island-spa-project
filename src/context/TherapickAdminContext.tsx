@@ -128,8 +128,9 @@ interface TherapickAdminContextType {
   updatePaymentStatus: (id: string, newStatus: string, method?: string) => Promise<void>;
   updatePartnerStatus: (id: string, newStatus: string) => Promise<void>;
   deletePartner: (id: string) => Promise<void>;
+  deleteBooking: (id: string) => Promise<{ success: boolean; error?: string }>;
   createBooking: (bookingData: any) => Promise<{ success: boolean; error?: string }>;
-  createPayout: (payoutDataOrPartnerId: any, amount?: number, reference_number?: string, notes?: string) => Promise<{ success: boolean; error?: string }>;
+  createPayout: (payoutDataOrPartnerId: any, amount?: number, reference_number?: string, notes?: string, payout_date?: string) => Promise<{ success: boolean; error?: string }>;
   saveTherapistFee: (treatmentId: string, duration: string, fee: string) => Promise<{ success: boolean; error?: string }>;
   deleteTherapistFee: (feeId: string) => Promise<{ success: boolean; error?: string }>;
   togglePinTreatment: (treatmentId: string, isPinned: boolean) => Promise<{ success: boolean; error?: string }>;
@@ -603,8 +604,41 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
   }, []);
 
+  // Helper to sync affiliate commissions live across all possible ID variations
+  const syncAffiliateCommission = async (booking: any, updates: Record<string, any>) => {
+    if (!booking) return;
+    const id = booking.id;
+    const rawRef = String(booking.reference_number || '').trim();
+    const cleanRef = rawRef.replace(/^#/, '');
+
+    const matchFilters: string[] = [];
+    if (id) matchFilters.push(`booking_id.eq.${id}`);
+    if (rawRef) matchFilters.push(`booking_id.eq.${rawRef}`);
+    if (cleanRef) {
+      matchFilters.push(`booking_id.eq.${cleanRef}`);
+      matchFilters.push(`booking_id.eq.#${cleanRef}`);
+      matchFilters.push(`booking_id.ilike.%${cleanRef}%`);
+    }
+
+    if (matchFilters.length > 0) {
+      try {
+        await supabase
+          .from('affiliate_commissions')
+          .update({
+            ...updates,
+            updated_at: new Date().toISOString()
+          })
+          .or(matchFilters.join(','));
+      } catch (err) {
+        console.error('Failed to sync affiliate commission:', err);
+      }
+    }
+  };
+
   // Action: Update Booking Status
   const updateBookingStatus = async (id: string, newStatus: string) => {
+    const booking = bookings.find(b => b.id === id);
+
     try {
       await fetch('/api/admin/bookings/status', {
         method: 'PATCH',
@@ -614,10 +648,28 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
     } catch (e) {
       console.error('API booking status failed:', e);
     }
-    await supabase.from('bookings').update({ status: newStatus }).eq('id', id);
-    setBookings(prev => prev.map(b => b.id === id ? { ...b, status: newStatus } : b));
+
+    const payload: any = { status: newStatus };
+    if (newStatus === 'Cancelled') {
+      payload.treatment_status = 'Cancelled';
+    } else if (newStatus === 'Completed') {
+      payload.treatment_status = 'Finished';
+    }
+
+    await supabase.from('bookings').update(payload).eq('id', id);
+
+    // Sync to affiliate commission if exists
+    if (newStatus.toLowerCase() === 'cancelled') {
+      await syncAffiliateCommission(booking, { status: 'cancelled', service_completed: false });
+    } else if (newStatus.toLowerCase() === 'completed') {
+      await syncAffiliateCommission(booking, { service_completed: true, status: 'approved' });
+    } else if (newStatus.toLowerCase() === 'confirmed') {
+      await syncAffiliateCommission(booking, { status: 'approved' });
+    }
+
+    setBookings(prev => prev.map(b => b.id === id ? { ...b, ...payload } : b));
     if (selectedBooking && selectedBooking.id === id) {
-      setSelectedBooking(prev => prev ? { ...prev, status: newStatus } : null);
+      setSelectedBooking(prev => prev ? { ...prev, ...payload } : null);
     }
     refreshData();
   };
@@ -625,6 +677,7 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
   // Action: Update Treatment Status
   const updateTreatmentStatus = async (id: string, newStatus: string) => {
     const booking = bookings.find(b => b.id === id);
+
     try {
       await fetch('/api/admin/bookings/status', {
         method: 'PATCH',
@@ -634,17 +687,30 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
     } catch (e) {
       console.error('API treatment status failed:', e);
     }
-    await supabase.from('bookings').update({ treatment_status: newStatus }).eq('id', id);
-    const ref = booking?.reference_number || booking?.id;
-    if (ref) {
-      await supabase.from('affiliate_commissions').update({
-        service_completed: newStatus === 'Finished',
-        updated_at: new Date().toISOString(),
-      }).ilike('booking_id', ref);
+
+    const payload: any = { treatment_status: newStatus };
+    if (newStatus === 'Finished') {
+      payload.status = 'Completed';
+    } else if (newStatus === 'In Progress') {
+      payload.status = 'Ongoing';
     }
-    setBookings(prev => prev.map(b => b.id === id ? { ...b, treatment_status: newStatus } : b));
+
+    await supabase.from('bookings').update(payload).eq('id', id);
+
+    if (newStatus === 'Finished') {
+      await syncAffiliateCommission(booking, { 
+        service_completed: true, 
+        status: (booking?.payment_status === 'Paid' || payload.status === 'Completed') ? 'approved' : 'pending' 
+      });
+    } else if (newStatus === 'In Progress') {
+      await syncAffiliateCommission(booking, { notes: 'Treatment In Progress' });
+    } else if (newStatus === 'Cancelled') {
+      await syncAffiliateCommission(booking, { status: 'cancelled', service_completed: false });
+    }
+
+    setBookings(prev => prev.map(b => b.id === id ? { ...b, ...payload } : b));
     if (selectedBooking && selectedBooking.id === id) {
-      setSelectedBooking(prev => prev ? { ...prev, treatment_status: newStatus } : null);
+      setSelectedBooking(prev => prev ? { ...prev, ...payload } : null);
     }
     refreshData();
   };
@@ -670,19 +736,54 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
     }
 
     await supabase.from('bookings').update(payload).eq('id', id);
-    const ref = booking?.reference_number || booking?.id;
-    if (ref) {
-      await supabase.from('affiliate_commissions').update({
-        payment_verified: newStatus === 'Paid',
-        status: newStatus === 'Paid' ? 'approved' : 'pending',
-        updated_at: new Date().toISOString(),
-      }).ilike('booking_id', ref);
+
+    if (newStatus === 'Paid') {
+      await syncAffiliateCommission(booking, { payment_verified: true, status: 'approved' });
+    } else {
+      await syncAffiliateCommission(booking, { payment_verified: false });
     }
+
     setBookings(prev => prev.map(b => b.id === id ? { ...b, ...payload } : b));
     if (selectedBooking && selectedBooking.id === id) {
       setSelectedBooking(prev => prev ? { ...prev, ...payload } : null);
     }
     refreshData();
+  };
+
+  // Action: Delete Booking
+  const deleteBooking = async (id: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const booking = bookings.find(b => b.id === id);
+      const rawRef = String(booking?.reference_number || '').trim();
+      const cleanRef = rawRef.replace(/^#/, '');
+
+      const matchFilters: string[] = [];
+      if (id) matchFilters.push(`booking_id.eq.${id}`);
+      if (rawRef) matchFilters.push(`booking_id.eq.${rawRef}`);
+      if (cleanRef) {
+        matchFilters.push(`booking_id.eq.${cleanRef}`);
+        matchFilters.push(`booking_id.eq.#${cleanRef}`);
+      }
+
+      if (matchFilters.length > 0) {
+        try {
+          await supabase.from('affiliate_commissions').delete().or(matchFilters.join(','));
+        } catch (commErr) {
+          console.error('Failed to delete linked commission:', commErr);
+        }
+      }
+      const { error } = await supabase.from('bookings').delete().eq('id', id);
+      if (error) throw error;
+      setBookings(prev => prev.filter(b => b.id !== id));
+      if (selectedBooking && selectedBooking.id === id) {
+        setSelectedBooking(null);
+      }
+      await refreshData();
+      return { success: true };
+    } catch (err: any) {
+      console.error('Delete booking error:', err);
+      return { success: false, error: err.message || 'Failed to delete booking' };
+    }
   };
 
   // Action: Create New Booking
@@ -762,23 +863,27 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
     payoutDataOrPartnerId: any,
     amountArg?: number,
     referenceArg?: string,
-    notesArg?: string
+    notesArg?: string,
+    payoutDateArg?: string
   ): Promise<{ success: boolean; error?: string }> => {
     let partner_id = '';
     let amount = 0;
     let reference_number = '';
     let notes = '';
+    let payout_date = '';
 
     if (typeof payoutDataOrPartnerId === 'string') {
       partner_id = payoutDataOrPartnerId;
       amount = amountArg || 0;
       reference_number = referenceArg || `PAY-${Date.now().toString().slice(-6)}`;
       notes = notesArg || '';
+      payout_date = payoutDateArg || '';
     } else if (payoutDataOrPartnerId && typeof payoutDataOrPartnerId === 'object') {
       partner_id = payoutDataOrPartnerId.partner_id;
       amount = payoutDataOrPartnerId.amount;
       reference_number = payoutDataOrPartnerId.reference_number || `PAY-${Date.now().toString().slice(-6)}`;
       notes = payoutDataOrPartnerId.notes || '';
+      payout_date = payoutDataOrPartnerId.payout_date || payoutDataOrPartnerId.date || '';
     }
 
     try {
@@ -789,13 +894,14 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
           partner_id,
           amount,
           payout_method: 'bank_transfer',
-          notes: `${reference_number} - ${notes}`
+          notes: notes ? `${reference_number} - ${notes}` : reference_number,
+          payout_date: payout_date || undefined
         })
       });
 
       const json = await res.json();
       if (!res.ok || !json.success) {
-        throw new Error(json.error || 'Failed to disburse payout');
+        throw new Error(json.error || json.message || 'Failed to disburse payout');
       }
 
       await refreshData();
@@ -999,6 +1105,7 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
         updatePaymentStatus,
         updatePartnerStatus,
         deletePartner,
+        deleteBooking,
         createBooking,
         createPayout,
         saveTherapistFee,
