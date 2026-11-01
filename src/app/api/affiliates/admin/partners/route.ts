@@ -55,10 +55,6 @@ export async function PATCH(req: NextRequest) {
 
     if (status !== undefined) {
       updates.status = status;
-      if (status === 'active' || status === 'approved') {
-        updates.approved_at = nowIso;
-        updates.approved_by = 'admin';
-      }
     }
     if (commission_rate_pct !== undefined) updates.commission_rate_pct = Number(commission_rate_pct);
     if (notes !== undefined) updates.notes = notes;
@@ -67,7 +63,7 @@ export async function PATCH(req: NextRequest) {
       .from('affiliate_partners')
       .update(updates)
       .eq('id', id)
-      .select('id, partner_code, first_name, last_name, business_name, email, phone, whatsapp, partner_type, status, commission_rate_pct, notes, approved_at, approved_by')
+      .select('id, partner_code, first_name, last_name, business_name, email, phone, whatsapp, partner_type, status, commission_rate_pct, notes')
       .single();
 
     if (error) {
@@ -126,6 +122,14 @@ export async function DELETE(req: NextRequest) {
     if (!id) {
       return NextResponse.json({ success: false, message: 'Partner ID required' }, { status: 400 });
     }
+
+    // Clean up associated commissions and payouts first so foreign keys don't block deletion
+    try {
+      await supabase.from('affiliate_commissions').delete().eq('partner_id', id);
+    } catch (_) {}
+    try {
+      await supabase.from('affiliate_payouts').delete().eq('partner_id', id);
+    } catch (_) {}
 
     const { error } = await supabase
       .from('affiliate_partners')

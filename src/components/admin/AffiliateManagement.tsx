@@ -804,6 +804,9 @@ export default function AffiliateManagement({ initialSubTab = 'partners' }: { in
           <button type="button" disabled={actionLoading} onClick={(e) => { e.stopPropagation(); askStatus(p, 'reject'); }} className={cx(btn.base, btn.secondary, size)}>
             Reject
           </button>
+          <button type="button" disabled={actionLoading} onClick={(e) => { e.stopPropagation(); askStatus(p, 'suspend'); }} className={cx(btn.base, btn.secondary, size)}>
+            Suspend
+          </button>
           <button type="button" disabled={actionLoading} onClick={(e) => { e.stopPropagation(); askStatus(p, 'approve'); }} className={cx(btn.base, btn.primary, size)}>
             Approve
           </button>
@@ -3139,7 +3142,8 @@ export default function AffiliateManagement({ initialSubTab = 'partners' }: { in
         tone={
           confirmState?.kind === 'cancel-booking' ||
           confirmState?.kind === 'decline-commission' ||
-          confirmState?.kind === 'partner-delete'
+          confirmState?.kind === 'partner-delete' ||
+          (confirmState?.kind === 'partner-status' && (confirmState.verb === 'suspend' || confirmState.verb === 'reject'))
             ? 'danger'
             : 'default'
         }
