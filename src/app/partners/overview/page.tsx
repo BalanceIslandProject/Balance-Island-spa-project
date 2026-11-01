@@ -14,13 +14,15 @@ import {
   Copy,
   TrendingUp,
   Clock,
-  Sparkles
+  Sparkles,
+  RotateCw
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import ScheduleTrackingModal, { cleanTreatmentName } from '../ScheduleTrackingModal';
 
 export default function PartnerOverviewPage() {
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [stats, setStats] = useState<any>(null);
   const [calendarBookings, setCalendarBookings] = useState<any[]>([]);
   const [timeframe, setTimeframe] = useState<'this-month' | 'last-30' | 'all'>('this-month');
@@ -50,8 +52,20 @@ export default function PartnerOverviewPage() {
     }
   };
 
+  const handleManualRefresh = async () => {
+    if (refreshing) return;
+    setRefreshing(true);
+    await loadData();
+    setTimeout(() => setRefreshing(false), 600);
+  };
+
   useEffect(() => {
     loadData();
+
+    const onGlobalRefresh = () => {
+      loadData();
+    };
+    window.addEventListener('partner:refresh', onGlobalRefresh);
 
     const channel = supabase
       .channel('partner_overview_realtime')
@@ -60,6 +74,7 @@ export default function PartnerOverviewPage() {
       .subscribe();
 
     return () => {
+      window.removeEventListener('partner:refresh', onGlobalRefresh);
       supabase.removeChannel(channel);
     };
   }, []);
@@ -238,29 +253,41 @@ export default function PartnerOverviewPage() {
     <div className="space-y-6 w-full font-sans max-w-[1400px] mx-auto pb-8">
       
       {/* ========================================================
-          1. PAGE HEADER (MATCHING MOCKUP)
+          1. APP CONTROLS BAR (CLEAN APP-STYLE ACTION BAR)
          ======================================================== */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl sm:text-[28px] font-semibold text-[#0F172A] tracking-tight leading-tight">
-            Overview
-          </h1>
-          <p className="text-[13px] text-[#64748B] mt-0.5">
-            Your performance at a glance.
-          </p>
+      <div className="flex items-center justify-between gap-2.5">
+        <div className="flex items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200/60 text-emerald-800 text-[11px] font-medium">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            Live Analytics
+          </span>
         </div>
 
-        {/* Date Selector Dropdown Button */}
-        <div className="relative self-start sm:self-auto">
+        <div className="flex items-center gap-2">
+          {/* Refresh Button */}
           <button
             type="button"
-            onClick={() => setShowTimeframeDropdown(!showTimeframeDropdown)}
-            className="inline-flex items-center gap-2 px-3.5 py-2 bg-white border border-[#E2E8F0] rounded-[8px] text-[13px] font-medium text-[#0F172A] hover:bg-[#F8FAFC] shadow-2xs transition-colors cursor-pointer"
+            onClick={handleManualRefresh}
+            disabled={refreshing}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:py-2 bg-white border border-[#E2E8F0] rounded-[8px] text-[12px] sm:text-[13px] font-medium text-[#0F172A] hover:bg-[#F8FAFC] shadow-2xs transition-all active:scale-95 cursor-pointer disabled:opacity-50"
+            title="Refresh overview data"
+            aria-label="Refresh overview data"
           >
-            <Calendar size={14} className="text-[#64748B]" />
-            <span>{currentDateLabel}</span>
-            <ChevronDown size={14} className="text-[#94A3B8]" />
+            <RotateCw size={13} className={`text-[#64748B] ${refreshing ? 'animate-spin text-[#0E2319]' : ''}`} />
+            <span className="hidden sm:inline">Refresh</span>
           </button>
+
+          {/* Date Selector Dropdown Button */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setShowTimeframeDropdown(!showTimeframeDropdown)}
+              className="inline-flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:py-2 bg-white border border-[#E2E8F0] rounded-[8px] text-[12px] sm:text-[13px] font-medium text-[#0F172A] hover:bg-[#F8FAFC] shadow-2xs transition-colors cursor-pointer"
+            >
+              <Calendar size={13} className="text-[#64748B]" />
+              <span>{currentDateLabel}</span>
+              <ChevronDown size={13} className="text-[#94A3B8]" />
+            </button>
 
           {showTimeframeDropdown && (
             <div className="absolute right-0 mt-1.5 w-48 bg-white border border-[#E2E8F0] rounded-[8px] shadow-lg py-1 z-30 text-xs">
@@ -287,6 +314,7 @@ export default function PartnerOverviewPage() {
               </button>
             </div>
           )}
+          </div>
         </div>
       </div>
 

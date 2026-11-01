@@ -40,7 +40,7 @@ export default async function PartnersLayout({
     <div className="min-h-screen md:h-screen md:overflow-hidden bg-[#f8f9fa] text-[#0f172a] flex flex-col md:flex-row font-sans selection:bg-[#0f172a] selection:text-white antialiased relative">
       <PartnerNav session={session} />
       <div className="flex-1 flex flex-col min-w-0 w-full h-full md:h-screen md:overflow-hidden">
-        <main className="flex-1 min-w-0 w-full h-full md:overflow-y-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-7 pb-24 md:pb-12 overscroll-contain">
+        <main className="flex-1 min-w-0 w-full h-full md:overflow-y-auto px-3.5 sm:px-6 lg:px-8 py-3.5 sm:py-6 pb-24 md:pb-12 overscroll-contain">
           <div className="w-full max-w-[1440px] mx-auto">
             {children}
           </div>

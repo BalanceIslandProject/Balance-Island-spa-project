@@ -14,7 +14,8 @@ import {
   LogOut, 
   Bell, 
   Check, 
-  X
+  X,
+  RotateCw
 } from 'lucide-react';
 
 interface PartnerNavProps {
@@ -26,6 +27,17 @@ export default function PartnerNav({ session }: PartnerNavProps) {
   const router = useRouter();
   const [loggingOut, setLoggingOut] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleRefresh = () => {
+    if (refreshing) return;
+    setRefreshing(true);
+    router.refresh();
+    window.dispatchEvent(new Event('partner:refresh'));
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 750);
+  };
 
   const handleLogout = async () => {
     try {
@@ -189,7 +201,19 @@ export default function PartnerNav({ session }: PartnerNavProps) {
         </Link>
 
         {session && (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2">
+            {/* Refresh Button */}
+            <button
+              type="button"
+              onClick={handleRefresh}
+              disabled={refreshing}
+              className="p-1.5 text-[#64748B] hover:text-[#0F172A] rounded-[6px] hover:bg-[#F1F5F9] transition-colors cursor-pointer disabled:opacity-50"
+              title="Refresh app data"
+              aria-label="Refresh app data"
+            >
+              <RotateCw size={17} strokeWidth={1.8} className={refreshing ? 'animate-spin text-[#0E2319]' : ''} />
+            </button>
+
             {/* Notification Bell */}
             <div className="relative">
               <button

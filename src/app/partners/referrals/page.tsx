@@ -148,29 +148,30 @@ export default function PartnerReferralsPage() {
   return (
     <div className="space-y-6 w-full font-sans pb-12">
       
-      {/* Title & Short Functional Description */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-[#111827] tracking-tight">
-            Referral Tools & QR Hub
-          </h1>
-          <p className="text-xs sm:text-sm text-[#6b7280] mt-0.5">
-            Share branded links, download high-res guest QR stands, and monitor attribution conversion rates.
-          </p>
+      {/* App Controls Bar */}
+      <div className="flex items-center justify-between gap-2.5">
+        <div className="flex items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200/60 text-emerald-800 text-[11px] font-medium">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            Referral & QR Hub
+          </span>
         </div>
 
-        <button
-          type="button"
-          onClick={() => {
-            setLoading(true);
-            loadData();
-          }}
-          disabled={loading}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] bg-white border border-[#e5e7eb] text-xs font-medium text-[#374151] hover:bg-[#f9fafb] shadow-xs cursor-pointer self-start sm:self-auto"
-        >
-          <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
-          <span>Refresh</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              setLoading(true);
+              loadData();
+            }}
+            disabled={loading}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:py-2 bg-white border border-[#E2E8F0] rounded-[8px] text-[12px] sm:text-[13px] font-medium text-[#0F172A] hover:bg-[#F8FAFC] shadow-2xs transition-all active:scale-95 cursor-pointer disabled:opacity-50"
+            title="Refresh referral data"
+          >
+            <RefreshCw size={13} className={loading ? 'animate-spin text-[#0E2319]' : 'text-[#64748B]'} />
+            <span className="hidden sm:inline">Refresh</span>
+          </button>
+        </div>
       </div>
 
       {/* 4-KPI Overview Strip with Sparklines */}

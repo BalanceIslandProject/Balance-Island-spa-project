@@ -8,7 +8,8 @@ import {
   Receipt, 
   Wallet, 
   CheckCircle2, 
-  AlertCircle 
+  AlertCircle,
+  RotateCw
 } from 'lucide-react';
 import { cleanTreatmentName } from '../ScheduleTrackingModal';
 
@@ -29,6 +30,7 @@ interface HistoryEvent {
 
 export default function PartnerHistoryPage() {
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [filterType, setFilterType] = useState<'all' | 'booking' | 'commission' | 'payout'>('all');
   const [currentMonth, setCurrentMonth] = useState(() => new Date().getMonth());
   const [currentYear, setCurrentYear] = useState(() => new Date().getFullYear());
@@ -60,31 +62,45 @@ export default function PartnerHistoryPage() {
     return dateStr;
   };
 
-  useEffect(() => {
-    async function loadData() {
-      try {
-        const [statsRes, commsRes, payoutsRes] = await Promise.all([
-          fetch('/api/affiliates/stats').then((r) => r.json()),
-          fetch('/api/affiliates/commissions').then((r) => r.json()),
-          fetch('/api/affiliates/payouts').then((r) => r.json()),
-        ]);
+  const loadData = async () => {
+    try {
+      const [statsRes, commsRes, payoutsRes] = await Promise.all([
+        fetch('/api/affiliates/stats').then((r) => r.json()),
+        fetch('/api/affiliates/commissions').then((r) => r.json()),
+        fetch('/api/affiliates/payouts').then((r) => r.json()),
+      ]);
 
-        if (statsRes.success) {
-          setCalendarBookings(statsRes.calendarBookings || []);
-        }
-        if (commsRes.success) {
-          setCommissions(commsRes.commissions || []);
-        }
-        if (payoutsRes.success) {
-          setPayouts(payoutsRes.payouts || []);
-        }
-      } catch (e) {
-        console.error('Failed to load history data:', e);
-      } finally {
-        setLoading(false);
+      if (statsRes.success) {
+        setCalendarBookings(statsRes.calendarBookings || []);
       }
+      if (commsRes.success) {
+        setCommissions(commsRes.commissions || []);
+      }
+      if (payoutsRes.success) {
+        setPayouts(payoutsRes.payouts || []);
+      }
+    } catch (e) {
+      console.error('Failed to load history data:', e);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const handleManualRefresh = async () => {
+    if (refreshing) return;
+    setRefreshing(true);
+    await loadData();
+    setTimeout(() => setRefreshing(false), 600);
+  };
+
+  useEffect(() => {
     loadData();
+
+    const onGlobalRefresh = () => {
+      loadData();
+    };
+    window.addEventListener('partner:refresh', onGlobalRefresh);
+    return () => window.removeEventListener('partner:refresh', onGlobalRefresh);
   }, []);
 
   // Compile unified activity history
@@ -156,29 +172,40 @@ export default function PartnerHistoryPage() {
     <div className="space-y-6 w-full font-sans max-w-[1400px] mx-auto pb-8">
       
       {/* ========================================================
-          1. PAGE HEADER (MATCHING MOCKUP SCREEN 6)
+          1. APP CONTROLS BAR (CLEAN APP-STYLE ACTION BAR)
          ======================================================== */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl sm:text-[28px] font-semibold text-[#0F172A] tracking-tight leading-tight">
-            History
-          </h1>
-          <p className="text-[13px] text-[#64748B] mt-0.5">
-            All your activity in one place.
-          </p>
+      <div className="flex items-center justify-between gap-2.5">
+        <div className="flex items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 text-[11px] font-medium font-mono">
+            {filteredEvents.length} Events
+          </span>
         </div>
 
-        {/* Month Selector Button */}
-        <div className="relative self-start sm:self-auto">
+        <div className="flex items-center gap-2">
+          {/* Refresh Button */}
           <button
             type="button"
-            onClick={() => setShowMonthDropdown(!showMonthDropdown)}
-            className="inline-flex items-center gap-2 px-3.5 py-2 bg-white border border-[#E2E8F0] rounded-[8px] text-[13px] font-medium text-[#0F172A] hover:bg-[#F8FAFC] shadow-2xs transition-colors cursor-pointer"
+            onClick={handleManualRefresh}
+            disabled={refreshing}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:py-2 bg-white border border-[#E2E8F0] rounded-[8px] text-[12px] sm:text-[13px] font-medium text-[#0F172A] hover:bg-[#F8FAFC] shadow-2xs transition-all active:scale-95 cursor-pointer disabled:opacity-50"
+            title="Refresh activity history"
+            aria-label="Refresh activity history"
           >
-            <CalendarIcon size={14} className="text-[#64748B]" />
-            <span>{MONTH_NAMES[currentMonth]} {currentYear}</span>
-            <ChevronDown size={14} className="text-[#94A3B8]" />
+            <RotateCw size={13} className={`text-[#64748B] ${refreshing ? 'animate-spin text-[#0E2319]' : ''}`} />
+            <span className="hidden sm:inline">Refresh</span>
           </button>
+
+          {/* Month Selector Button */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setShowMonthDropdown(!showMonthDropdown)}
+              className="inline-flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:py-2 bg-white border border-[#E2E8F0] rounded-[8px] text-[12px] sm:text-[13px] font-medium text-[#0F172A] hover:bg-[#F8FAFC] shadow-2xs transition-colors cursor-pointer"
+            >
+              <CalendarIcon size={13} className="text-[#64748B]" />
+              <span>{MONTH_NAMES[currentMonth]} {currentYear}</span>
+              <ChevronDown size={13} className="text-[#94A3B8]" />
+            </button>
 
           {showMonthDropdown && (
             <div className="absolute right-0 mt-1.5 w-48 bg-white border border-[#E2E8F0] rounded-[8px] shadow-lg py-1 z-30 max-h-60 overflow-y-auto text-xs">
@@ -197,6 +224,7 @@ export default function PartnerHistoryPage() {
               ))}
             </div>
           )}
+          </div>
         </div>
       </div>
 
