@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname, useSearchParams, useRouter } from 'next/navigation';
 import { 
   LayoutDashboard, CalendarDays, Calendar, Users, Layers, 
-  TrendingUp, Wallet, FileText, Settings, User, Receipt, Sparkles 
+  TrendingUp, Wallet, FileText, Settings, User, Receipt, Sparkles, DollarSign 
 } from 'lucide-react';
 import { useTherapickAdmin } from '@/context/TherapickAdminContext';
 
@@ -30,7 +30,7 @@ export default function TherapickSidebarNav() {
     { id: 'overview', label: 'Overview', icon: LayoutDashboard, href: '/admin?brand=therapick&tab=overview' },
     { id: 'bookings', label: 'Bookings', icon: CalendarDays, href: '/admin?brand=therapick&tab=bookings' },
     { id: 'calendar', label: 'Calendar', icon: Calendar, href: '/admin?brand=therapick&tab=calendar' },
-    { id: 'therapists', label: 'Therapists', icon: User, href: '/admin?brand=therapick&tab=therapists' },
+    { id: 'therapists', label: 'Therapist Fee', icon: DollarSign, href: '/admin?brand=therapick&tab=therapists' },
     { id: 'services', label: 'Services', icon: Layers, href: '/admin?brand=therapick&tab=services' },
     { id: 'customers', label: 'Customers', icon: Users, href: '/admin?brand=therapick&tab=customers' },
     { id: 'revenue', label: 'Revenue & Profit', icon: TrendingUp, href: '/admin?brand=therapick&tab=revenue' },
@@ -147,7 +147,7 @@ export function TherapickMobileDrawerLinks({ onClose }: { onClose: () => void })
     { id: 'overview', label: 'Overview', icon: LayoutDashboard, href: '/admin?brand=therapick&tab=overview' },
     { id: 'bookings', label: 'Bookings', icon: CalendarDays, href: '/admin?brand=therapick&tab=bookings' },
     { id: 'calendar', label: 'Calendar', icon: Calendar, href: '/admin?brand=therapick&tab=calendar' },
-    { id: 'therapists', label: 'Therapists', icon: User, href: '/admin?brand=therapick&tab=therapists' },
+    { id: 'therapists', label: 'Therapist Fee', icon: DollarSign, href: '/admin?brand=therapick&tab=therapists' },
     { id: 'services', label: 'Services', icon: Layers, href: '/admin?brand=therapick&tab=services' },
     { id: 'customers', label: 'Customers', icon: Users, href: '/admin?brand=therapick&tab=customers' },
     { id: 'revenue', label: 'Revenue & Profit', icon: TrendingUp, href: '/admin?brand=therapick&tab=revenue' },

@@ -130,6 +130,12 @@ interface TherapickAdminContextType {
   deletePartner: (id: string) => Promise<void>;
   createBooking: (bookingData: any) => Promise<{ success: boolean; error?: string }>;
   createPayout: (payoutDataOrPartnerId: any, amount?: number, reference_number?: string, notes?: string) => Promise<{ success: boolean; error?: string }>;
+  saveTherapistFee: (treatmentId: string, duration: string, fee: string) => Promise<{ success: boolean; error?: string }>;
+  deleteTherapistFee: (feeId: string) => Promise<{ success: boolean; error?: string }>;
+  togglePinTreatment: (treatmentId: string, isPinned: boolean) => Promise<{ success: boolean; error?: string }>;
+  togglePublishTreatment: (treatmentId: string, isPublished: boolean) => Promise<{ success: boolean; error?: string }>;
+  saveTreatment: (treatmentData: Partial<Treatment> & { id?: string }) => Promise<{ success: boolean; error?: string; data?: any }>;
+  deleteTreatment: (treatmentId: string) => Promise<{ success: boolean; error?: string }>;
 }
 
 
@@ -291,7 +297,7 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
         supabase.from('affiliate_partners').select('*').order('created_at', { ascending: false }),
         supabase.from('affiliate_payouts').select('*').order('created_at', { ascending: false }),
         supabase.from('therapists').select('*').eq('brand', 'therapick').order('name'),
-        supabase.from('treatments').select('*').eq('brand', 'therapick').eq('is_published', true),
+        supabase.from('treatments').select('*').eq('brand', 'therapick').order('created_at', { ascending: false }),
         supabase.from('therapist_fees').select('*').eq('brand', 'therapick')
       ]);
 
@@ -773,6 +779,120 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
     }
   };
 
+  // Action: Save / Upsert Therapist Fee
+  const saveTherapistFee = async (treatmentId: string, duration: string, fee: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const cleanFee = String(fee || '').trim();
+      const existingFee = therapistFees.find(f => f.treatment_id === treatmentId && String(f.duration).trim() === String(duration).trim());
+      if (existingFee) {
+        const { error } = await supabase.from('therapist_fees').update({ fee: cleanFee, updated_at: new Date().toISOString() }).eq('id', existingFee.id);
+        if (error) throw error;
+        setTherapistFees(prev => prev.map(f => f.id === existingFee.id ? { ...f, fee: cleanFee } : f));
+      } else {
+        const { data, error } = await supabase.from('therapist_fees').insert([{
+          treatment_id: treatmentId,
+          duration: String(duration).trim(),
+          fee: cleanFee,
+          brand: 'therapick',
+          created_at: new Date().toISOString()
+        }]).select();
+        if (error) throw error;
+        if (data && data[0]) {
+          setTherapistFees(prev => [...prev, data[0] as TherapistFee]);
+        }
+      }
+      return { success: true };
+    } catch (err: any) {
+      console.error('Save therapist fee error:', err);
+      return { success: false, error: err.message || 'Failed to save fee' };
+    }
+  };
+
+  // Action: Delete Therapist Fee
+  const deleteTherapistFee = async (feeId: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const { error } = await supabase.from('therapist_fees').delete().eq('id', feeId);
+      if (error) throw error;
+      setTherapistFees(prev => prev.filter(f => f.id !== feeId));
+      return { success: true };
+    } catch (err: any) {
+      console.error('Delete therapist fee error:', err);
+      return { success: false, error: err.message || 'Failed to delete fee' };
+    }
+  };
+
+  // Action: Toggle Pin to Hero Spotlight
+  const togglePinTreatment = async (treatmentId: string, isPinned: boolean): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const { error } = await supabase.from('treatments').update({
+        is_pinned: isPinned,
+        updated_at: new Date().toISOString()
+      }).eq('id', treatmentId);
+      if (error) throw error;
+      setTreatments(prev => prev.map(t => t.id === treatmentId ? { ...t, is_pinned: isPinned } : t));
+      return { success: true };
+    } catch (err: any) {
+      console.error('Toggle pin error:', err);
+      return { success: false, error: err.message || 'Failed to toggle pin' };
+    }
+  };
+
+  // Action: Toggle Published / Live Status
+  const togglePublishTreatment = async (treatmentId: string, isPublished: boolean): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const { error } = await supabase.from('treatments').update({
+        is_published: isPublished,
+        updated_at: new Date().toISOString()
+      }).eq('id', treatmentId);
+      if (error) throw error;
+      setTreatments(prev => prev.map(t => t.id === treatmentId ? { ...t, is_published: isPublished } : t));
+      return { success: true };
+    } catch (err: any) {
+      console.error('Toggle publish error:', err);
+      return { success: false, error: err.message || 'Failed to toggle published status' };
+    }
+  };
+
+  // Action: Save / Create Treatment
+  const saveTreatment = async (treatmentData: Partial<Treatment> & { id?: string }): Promise<{ success: boolean; error?: string; data?: any }> => {
+    try {
+      if (treatmentData.id) {
+        const { error } = await supabase.from('treatments').update({
+          ...treatmentData,
+          brand: 'therapick',
+          updated_at: new Date().toISOString()
+        }).eq('id', treatmentData.id);
+        if (error) throw error;
+      } else {
+        const { data, error } = await supabase.from('treatments').insert([{
+          ...treatmentData,
+          brand: 'therapick',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }]).select();
+        if (error) throw error;
+      }
+      await refreshData();
+      return { success: true };
+    } catch (err: any) {
+      console.error('Save treatment error:', err);
+      return { success: false, error: err.message || 'Failed to save treatment' };
+    }
+  };
+
+  // Action: Delete Treatment
+  const deleteTreatment = async (treatmentId: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const { error } = await supabase.from('treatments').delete().eq('id', treatmentId);
+      if (error) throw error;
+      setTreatments(prev => prev.filter(t => t.id !== treatmentId));
+      return { success: true };
+    } catch (err: any) {
+      console.error('Delete treatment error:', err);
+      return { success: false, error: err.message || 'Failed to delete treatment' };
+    }
+  };
+
   // Therapists & Services Lists
   const therapistsList = therapists.length > 0 ? therapists : [
     { id: 't1', name: 'Wayan S.', rating: 4.9, completed_bookings: 38, specialization: 'Balinese Traditional & Deep Tissue', status: 'active' },
@@ -782,19 +902,24 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
     { id: 't5', name: 'Nyoman D.', rating: 4.7, completed_bookings: 21, specialization: 'Facial & Head Acupressure', status: 'active' }
   ];
 
-  const servicesList = treatments.length > 0 ? treatments.map(t => ({
-    id: t.id,
-    name: t.title || (t as any).name,
-    duration: (t as any).duration || (t as any).duration_minutes || 90,
-    price: (t as any).price || (t as any).price_idr || 375000
-  })) : [
-    { id: 's1', name: 'Balinese Traditional Massage', duration: 90, price: 375000 },
-    { id: 's2', name: 'Deep Tissue Massage', duration: 90, price: 450000 },
-    { id: 's3', name: 'Aromatherapy Relaxation', duration: 120, price: 540000 },
-    { id: 's4', name: 'Therapick Rejuvenation Package', duration: 120, price: 600000 },
-    { id: 's5', name: 'Express Foot Reflexology', duration: 60, price: 250000 },
-    { id: 's6', name: 'Organic Facial Treatment', duration: 90, price: 375000 }
-  ];
+  const servicesList = treatments.map(t => {
+    const firstOpt = Array.isArray(t.options) && t.options.length > 0 ? t.options[0] : null;
+    const lowestPrice = Array.isArray(t.options) && t.options.length > 0 
+      ? Math.min(...t.options.map((o: any) => Number(String(o?.price || '0').replace(/\D/g, '')) || 0))
+      : 375000;
+    return {
+      id: t.id,
+      name: t.title || (t as any).name,
+      category: t.category || 'Massage',
+      duration: firstOpt?.duration || 90,
+      price: lowestPrice,
+      options: t.options || [],
+      is_published: t.is_published !== false,
+      is_pinned: Boolean(t.is_pinned),
+      desc: t.desc || '',
+      raw: t
+    };
+  });
 
   return (
     <TherapickAdminContext.Provider
@@ -848,7 +973,13 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
         updatePartnerStatus,
         deletePartner,
         createBooking,
-        createPayout
+        createPayout,
+        saveTherapistFee,
+        deleteTherapistFee,
+        togglePinTreatment,
+        togglePublishTreatment,
+        saveTreatment,
+        deleteTreatment
       }}
     >
       {children}
