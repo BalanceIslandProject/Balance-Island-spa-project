@@ -2,20 +2,19 @@
 
 import React, { useState, useMemo } from 'react';
 import { 
-  Sparkles, Layers, Search, Plus, Star, Eye, EyeOff, 
-  Edit3, Trash2, CheckCircle2, Clock, DollarSign, X, 
-  RefreshCw, Check, AlertCircle, ArrowUpRight
+  Search, PlusCircle, Pin, Edit3, Trash2, Check, RefreshCw, X, Plus, Layers
 } from 'lucide-react';
 import { useTherapickAdmin } from '@/context/TherapickAdminContext';
 import { Treatment, TreatmentOption } from '@/context/SpaContext';
 
-interface EditModalState {
+interface ModalState {
   isOpen: boolean;
   isNew: boolean;
   id?: string;
   title: string;
   category: string;
   desc: string;
+  benefits: string[];
   options: TreatmentOption[];
   is_pinned: boolean;
   is_published: boolean;
@@ -30,7 +29,6 @@ const DEFAULT_OPTIONS: TreatmentOption[] = [
 export default function TherapickServicesView() {
   const { 
     treatments, 
-    therapistFees,
     togglePinTreatment, 
     togglePublishTreatment, 
     saveTreatment, 
@@ -39,128 +37,41 @@ export default function TherapickServicesView() {
     loading 
   } = useTherapickAdmin();
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'published' | 'pinned' | 'draft'>('all');
-  const [viewLayout, setViewLayout] = useState<'table' | 'grid'>('table');
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
-
-  // Modal State for Add / Edit
-  const [modalState, setModalState] = useState<EditModalState>({
+  const [menuSearch, setMenuSearch] = useState('');
+  const [modalState, setModalState] = useState<ModalState>({
     isOpen: false,
     isNew: false,
     title: '',
     category: 'Massage',
     desc: '',
+    benefits: [''],
     options: [...DEFAULT_OPTIONS],
     is_pinned: false,
     is_published: true
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const showToast = (msg: string) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3000);
-  };
-
-  // Derive unique categories from real treatments
-  const categories = useMemo(() => {
-    const set = new Set<string>();
-    treatments.forEach(t => {
-      if (t.category) set.add(t.category);
-    });
-    return Array.from(set);
-  }, [treatments]);
-
-  // Map therapist fees for quick lookup
-  const feeMap = useMemo(() => {
-    const map = new Map<string, string>();
-    therapistFees.forEach(f => {
-      const normDur = String(f.duration || '').replace(/min/i, '').trim();
-      map.set(`${f.treatment_id}-${normDur}`, f.fee);
-      map.set(`${f.treatment_id}-${f.duration}`, f.fee);
-    });
-    return map;
-  }, [therapistFees]);
-
-  // Metrics summary
-  const metrics = useMemo(() => {
-    const published = treatments.filter(t => t.is_published !== false);
-    const pinned = treatments.filter(t => Boolean(t.is_pinned));
-    return {
-      total: treatments.length,
-      published: published.length,
-      pinned: pinned.length,
-      categoriesCount: categories.length
-    };
-  }, [treatments, categories]);
-
   // Filtered treatments
   const filteredTreatments = useMemo(() => {
-    return treatments.filter(t => {
-      const titleMatch = (t.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (t.desc || '').toLowerCase().includes(searchQuery.toLowerCase());
-      const catMatch = selectedCategory === 'all' || (t.category && t.category.toLowerCase() === selectedCategory.toLowerCase());
-
-      if (!titleMatch || !catMatch) return false;
-
-      if (statusFilter === 'published') return t.is_published !== false;
-      if (statusFilter === 'draft') return t.is_published === false;
-      if (statusFilter === 'pinned') return Boolean(t.is_pinned);
-
-      return true;
-    });
-  }, [treatments, searchQuery, selectedCategory, statusFilter]);
-
-  // Toggle Spotlight Pin
-  const handleTogglePin = async (treatment: Treatment) => {
-    const newPinned = !treatment.is_pinned;
-    const res = await togglePinTreatment(treatment.id, newPinned);
-    if (res.success) {
-      showToast(newPinned ? `"${treatment.title}" pinned to Hero Spotlight.` : `Removed from Hero Spotlight.`);
-    } else {
-      showToast(res.error || 'Failed to update spotlight status');
-    }
-  };
-
-  // Toggle Live Published Status
-  const handleTogglePublish = async (treatment: Treatment) => {
-    const newPublished = treatment.is_published === false ? true : false;
-    const res = await togglePublishTreatment(treatment.id, newPublished);
-    if (res.success) {
-      showToast(newPublished ? `"${treatment.title}" is now Live on Website.` : `"${treatment.title}" set to Draft.`);
-    } else {
-      showToast(res.error || 'Failed to update published status');
-    }
-  };
-
-  // Delete Treatment
-  const handleDelete = async (treatment: Treatment) => {
-    if (!confirm(`Are you sure you want to delete "${treatment.title}" from the catalog? This will remove it from the live website.`)) {
-      return;
-    }
-    const res = await deleteTreatment(treatment.id);
-    if (res.success) {
-      showToast(`Treatment "${treatment.title}" deleted.`);
-    } else {
-      showToast(res.error || 'Failed to delete treatment');
-    }
-  };
+    return treatments.filter(t => 
+      t.title.toLowerCase().includes(menuSearch.toLowerCase()) || 
+      (t.category && t.category.toLowerCase().includes(menuSearch.toLowerCase()))
+    );
+  }, [treatments, menuSearch]);
 
   // Open Edit Modal
-  const openEditModal = (treatment: Treatment) => {
+  const openEditModal = (t: Treatment) => {
     setModalState({
       isOpen: true,
       isNew: false,
-      id: treatment.id,
-      title: treatment.title,
-      category: treatment.category || 'Massage',
-      desc: treatment.desc || '',
-      options: Array.isArray(treatment.options) && treatment.options.length > 0 
-        ? treatment.options.map(o => ({ duration: String(o.duration || '60'), price: String(o.price || '350000') }))
-        : [...DEFAULT_OPTIONS],
-      is_pinned: Boolean(treatment.is_pinned),
-      is_published: treatment.is_published !== false
+      id: t.id,
+      title: t.title,
+      category: t.category || 'Massage',
+      desc: t.desc || '',
+      benefits: Array.isArray(t.benefits) && t.benefits.length > 0 ? t.benefits : [''],
+      options: Array.isArray(t.options) && t.options.length > 0 ? t.options : [...DEFAULT_OPTIONS],
+      is_pinned: Boolean(t.is_pinned),
+      is_published: t.is_published !== false
     });
   };
 
@@ -172,49 +83,22 @@ export default function TherapickServicesView() {
       title: '',
       category: 'Massage',
       desc: '',
+      benefits: [''],
       options: [...DEFAULT_OPTIONS],
       is_pinned: false,
       is_published: true
     });
   };
 
-  // Save Modal Form
-  const handleSaveModal = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!modalState.title.trim()) {
-      showToast('Please enter a treatment title.');
-      return;
-    }
-
-    setIsSubmitting(true);
-    const cleanOptions = modalState.options.map(opt => ({
-      duration: String(opt.duration || '60').trim(),
-      price: String(opt.price || '0').replace(/\D/g, '')
-    }));
-
-    const payload: Partial<Treatment> & { id?: string } = {
-      ...(modalState.id ? { id: modalState.id } : {}),
-      title: modalState.title.trim().toUpperCase(),
-      category: modalState.category.trim(),
-      desc: modalState.desc.trim(),
-      options: cleanOptions,
-      is_pinned: modalState.is_pinned,
-      is_published: modalState.is_published,
-      bgPattern: 'leaves'
-    };
-
-    const res = await saveTreatment(payload);
-    setIsSubmitting(false);
-
-    if (res.success) {
-      showToast(modalState.isNew ? 'New treatment added to live catalog!' : 'Treatment updated successfully!');
-      setModalState(prev => ({ ...prev, isOpen: false }));
-    } else {
-      showToast(res.error || 'Failed to save treatment');
-    }
+  // Option handlers
+  const handleOptionChange = (idx: number, field: 'duration' | 'price', val: string) => {
+    setModalState(prev => {
+      const next = [...prev.options];
+      next[idx] = { ...next[idx], [field]: val };
+      return { ...prev, options: next };
+    });
   };
 
-  // Option row management in modal
   const handleAddOption = () => {
     setModalState(prev => ({
       ...prev,
@@ -222,621 +106,406 @@ export default function TherapickServicesView() {
     }));
   };
 
-  const handleRemoveOption = (index: number) => {
+  const handleRemoveOption = (idx: number) => {
     setModalState(prev => ({
       ...prev,
-      options: prev.options.filter((_, i) => i !== index)
+      options: prev.options.filter((_, i) => i !== idx)
     }));
   };
 
-  const handleOptionChange = (index: number, field: 'duration' | 'price', value: string) => {
+  // Benefit handlers
+  const handleBenefitChange = (idx: number, val: string) => {
     setModalState(prev => {
-      const next = [...prev.options];
-      next[index] = { ...next[index], [field]: value };
-      return { ...prev, options: next };
+      const next = [...prev.benefits];
+      next[idx] = val;
+      return { ...prev, benefits: next };
     });
   };
 
+  const handleAddBenefit = () => {
+    setModalState(prev => ({
+      ...prev,
+      benefits: [...prev.benefits, '']
+    }));
+  };
+
+  const handleRemoveBenefit = (idx: number) => {
+    setModalState(prev => ({
+      ...prev,
+      benefits: prev.benefits.filter((_, i) => i !== idx)
+    }));
+  };
+
+  // Save Treatment
+  const handleSaveModal = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!modalState.title.trim()) return;
+
+    setIsSubmitting(true);
+    try {
+      const res = await saveTreatment({
+        id: modalState.id,
+        title: modalState.title.trim().toUpperCase(),
+        category: modalState.category,
+        desc: modalState.desc,
+        benefits: modalState.benefits.filter(b => b.trim().length > 0),
+        options: modalState.options,
+        is_pinned: modalState.is_pinned,
+        is_published: modalState.is_published,
+        brand: 'therapick'
+      });
+
+      if (res.success) {
+        setModalState(prev => ({ ...prev, isOpen: false }));
+        await refreshData();
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Delete Treatment
+  const handleDelete = async (t: Treatment) => {
+    if (!confirm(`Are you sure you want to delete "${t.title}" from Therapick treatments?`)) {
+      return;
+    }
+    const res = await deleteTreatment(t.id);
+    if (res.success) {
+      await refreshData();
+    }
+  };
+
+  // Toggle Pin
+  const handleTogglePin = async (t: Treatment) => {
+    await togglePinTreatment(t.id, !t.is_pinned);
+  };
+
   return (
-    <div className="space-y-6 animate-in fade-in duration-200">
+    <div className="space-y-6 animate-in fade-in duration-300">
       
-      {/* Toast Notification */}
-      {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 bg-[#0F172A] text-white text-xs font-semibold px-4 py-3 rounded-xl shadow-2xl border border-stone-700 flex items-center gap-2.5 animate-in slide-in-from-bottom-3">
-          <CheckCircle2 size={16} className="text-[#facc15]" />
-          <span>{toastMessage}</span>
-        </div>
-      )}
-
-      {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* ─────────────────────────────────────────────────────────────
+          PAGE HEADER (MATCHING IMAGE 2)
+         ───────────────────────────────────────────────────────────── */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b border-[#E5E5E5]">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="text-[11px] font-mono uppercase tracking-wider text-amber-700 font-bold bg-amber-100/70 px-2 py-0.5 rounded">
-              Website System
-            </span>
-            <span className="text-[11px] text-stone-400 font-mono">Live Database</span>
-          </div>
-          <h1 className="text-xl sm:text-2xl font-extrabold text-neutral-900 tracking-tight mt-1 flex items-center gap-2">
-            <Layers className="text-amber-500" size={24} />
-            Live Treatment Catalog
+          <h1 className="text-xl md:text-2xl font-semibold tracking-tight text-black">
+            Treatment Catalog
           </h1>
-          <p className="text-xs sm:text-sm text-stone-500 mt-0.5">
-            Real treatments directly active on booktherapick.com. Manage pricing options, hero spotlight, and service details.
+          <p className="text-[13px] text-[#737373] mt-0.5">
+            Browse, search, edit, or pin spa rituals and pricing packages.
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5 self-start sm:self-auto">
-          <button
-            onClick={() => refreshData()}
-            disabled={loading}
-            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-stone-200 hover:border-amber-400 text-neutral-800 text-xs font-semibold shadow-2xs hover:shadow-xs transition-all cursor-pointer"
-          >
-            <RefreshCw size={14} className={loading ? 'animate-spin text-amber-600' : 'text-stone-500'} />
-            <span className="hidden sm:inline">Sync</span>
-          </button>
-
-          <button
-            onClick={openAddModal}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#FACC15] hover:bg-amber-400 text-neutral-950 text-xs font-bold shadow-xs hover:shadow transition-all cursor-pointer"
-          >
-            <Plus size={15} />
-            <span>Add Service</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Metrics Row */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <div className="bg-white rounded-2xl p-4 border border-stone-200/90 shadow-2xs">
-          <div className="flex items-center justify-between text-stone-400 mb-1.5">
-            <span className="text-[11px] font-mono uppercase font-bold tracking-wider">Catalog Treatments</span>
-            <Layers size={14} className="text-stone-400" />
-          </div>
-          <div className="text-2xl font-extrabold text-neutral-900 font-mono">
-            {metrics.total}
-          </div>
-          <p className="text-[11px] text-stone-500 mt-1">
-            Registered in Therapick catalog
-          </p>
-        </div>
-
-        <div className="bg-white rounded-2xl p-4 border border-stone-200/90 shadow-2xs">
-          <div className="flex items-center justify-between text-stone-400 mb-1.5">
-            <span className="text-[11px] font-mono uppercase font-bold tracking-wider">Live on Website</span>
-            <Eye size={14} className="text-emerald-500" />
-          </div>
-          <div className="text-2xl font-extrabold text-emerald-700 font-mono">
-            {metrics.published} <span className="text-xs font-normal text-stone-400 font-sans">/ {metrics.total}</span>
-          </div>
-          <p className="text-[11px] text-stone-500 mt-1">
-            Visible to clients online
-          </p>
-        </div>
-
-        <div className="bg-white rounded-2xl p-4 border border-stone-200/90 shadow-2xs">
-          <div className="flex items-center justify-between text-stone-400 mb-1.5">
-            <span className="text-[11px] font-mono uppercase font-bold tracking-wider">Hero Spotlight</span>
-            <Star size={14} className="text-amber-500 fill-amber-500" />
-          </div>
-          <div className="text-2xl font-extrabold text-neutral-900 font-mono">
-            {metrics.pinned}
-          </div>
-          <p className="text-[11px] text-stone-500 mt-1">
-            Featured at top of homepage
-          </p>
-        </div>
-
-        <div className="bg-white rounded-2xl p-4 border border-stone-200/90 shadow-2xs">
-          <div className="flex items-center justify-between text-stone-400 mb-1.5">
-            <span className="text-[11px] font-mono uppercase font-bold tracking-wider">Categories</span>
-            <Sparkles size={14} className="text-amber-500" />
-          </div>
-          <div className="text-2xl font-extrabold text-neutral-900 font-mono">
-            {metrics.categoriesCount}
-          </div>
-          <p className="text-[11px] text-stone-500 mt-1">
-            Specialized service types
-          </p>
-        </div>
-      </div>
-
-      {/* Filter and Search Bar */}
-      <div className="bg-white rounded-2xl p-4 border border-stone-200/90 shadow-2xs space-y-3">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-          {/* Search Input */}
-          <div className="relative flex-1">
-            <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400" />
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          <div className="w-full sm:w-64 relative">
+            <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#A3A3A3]" />
             <input
               type="text"
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Search treatments by title or description..."
-              className="w-full pl-9 pr-4 py-2 rounded-xl border border-stone-200 bg-stone-50/50 text-xs text-neutral-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:border-amber-400 transition-all placeholder:text-stone-400"
+              placeholder="Search treatments..."
+              value={menuSearch}
+              onChange={e => setMenuSearch(e.target.value)}
+              className="w-full bg-white border border-[#E5E5E5] rounded-lg pl-9 pr-3 py-2 text-xs text-black placeholder:text-[#A3A3A3] focus:outline-none focus:border-black transition-colors"
             />
           </div>
 
-          {/* Status Tabs */}
-          <div className="flex items-center gap-1 bg-stone-100 p-1 rounded-xl shrink-0 text-xs">
-            <button
-              onClick={() => setStatusFilter('all')}
-              className={`px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
-                statusFilter === 'all' ? 'bg-white text-neutral-900 shadow-2xs' : 'text-stone-500 hover:text-stone-900'
-              }`}
-            >
-              All ({treatments.length})
-            </button>
-            <button
-              onClick={() => setStatusFilter('published')}
-              className={`px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
-                statusFilter === 'published' ? 'bg-white text-emerald-800 shadow-2xs' : 'text-stone-500 hover:text-stone-900'
-              }`}
-            >
-              Live ({metrics.published})
-            </button>
-            <button
-              onClick={() => setStatusFilter('pinned')}
-              className={`px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
-                statusFilter === 'pinned' ? 'bg-white text-amber-800 shadow-2xs' : 'text-stone-500 hover:text-stone-900'
-              }`}
-            >
-              Spotlight ({metrics.pinned})
-            </button>
-            <button
-              onClick={() => setStatusFilter('draft')}
-              className={`px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
-                statusFilter === 'draft' ? 'bg-white text-stone-800 shadow-2xs' : 'text-stone-500 hover:text-stone-900'
-              }`}
-            >
-              Drafts ({metrics.total - metrics.published})
-            </button>
-          </div>
-        </div>
-
-        {/* Category Filter Pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-1">
-          <button
-            onClick={() => setSelectedCategory('all')}
-            className={`px-3 py-1 rounded-full text-[11px] font-semibold transition-all shrink-0 cursor-pointer ${
-              selectedCategory === 'all'
-                ? 'bg-neutral-900 text-white'
-                : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
-            }`}
+          <button 
+            type="button"
+            onClick={openAddModal}
+            className="px-3.5 py-2 rounded-lg bg-black text-white hover:bg-neutral-800 text-xs font-medium flex items-center justify-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap shadow-xs"
           >
-            All Categories ({treatments.length})
+            <PlusCircle size={15} />
+            <span>Add Treatment</span>
           </button>
-          {categories.map(cat => (
-            <button
-              key={cat}
-              onClick={() => setSelectedCategory(cat)}
-              className={`px-3 py-1 rounded-full text-[11px] font-semibold transition-all shrink-0 capitalize cursor-pointer ${
-                selectedCategory.toLowerCase() === cat.toLowerCase()
-                  ? 'bg-neutral-900 text-white'
-                  : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
-
-        {/* View Layout Toggle */}
-        <div className="flex items-center justify-between pt-2 border-t border-stone-100 text-xs">
-          <span className="text-stone-500 font-medium">
-            Showing {filteredTreatments.length} treatments
-          </span>
-          <div className="flex items-center gap-1 bg-stone-100 p-0.5 rounded-lg text-[11px] font-semibold">
-            <button
-              type="button"
-              onClick={() => setViewLayout('table')}
-              className={`px-2.5 py-1 rounded-md transition-all cursor-pointer ${
-                viewLayout === 'table' ? 'bg-white text-neutral-900 shadow-2xs font-bold' : 'text-stone-500'
-              }`}
-            >
-              Table View
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewLayout('grid')}
-              className={`px-2.5 py-1 rounded-md transition-all cursor-pointer ${
-                viewLayout === 'grid' ? 'bg-white text-neutral-900 shadow-2xs font-bold' : 'text-stone-500'
-              }`}
-            >
-              Card View
-            </button>
-          </div>
         </div>
       </div>
 
       {/* ─────────────────────────────────────────────────────────────
-          TABLE VIEW (MATCHING MOCKUP IMAGE 2 BOTTOM LEFT)
+          METRICS STRIP (MATCHING IMAGE 2)
          ───────────────────────────────────────────────────────────── */}
-      {viewLayout === 'table' ? (
-        <div className="bg-white rounded-2xl border border-stone-200/90 shadow-2xs overflow-hidden">
-          <div className="overflow-x-auto no-scrollbar">
-            <table className="w-full text-left text-xs">
-              <thead>
-                <tr className="border-b border-stone-200 bg-stone-50/50 text-[11px] font-mono uppercase font-bold text-stone-500">
-                  <th className="py-3 px-4">Service</th>
-                  <th className="py-3 px-4">Duration & Pricing Tiers</th>
-                  <th className="py-3 px-4 text-center">Status</th>
-                  <th className="py-3 px-4 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-stone-100">
-                {filteredTreatments.length === 0 ? (
-                  <tr>
-                    <td colSpan={4} className="py-12 text-center text-stone-400">
-                      No services match your filters.
-                    </td>
-                  </tr>
-                ) : (
-                  filteredTreatments.map(t => {
-                    const opts = Array.isArray(t.options) ? t.options : [];
-                    const isLive = t.is_published !== false;
-                    const isSpotlight = Boolean(t.is_pinned);
-
-                    return (
-                      <tr
-                        key={t.id}
-                        className="hover:bg-amber-50/20 transition-colors group"
-                      >
-                        {/* Service Title & Category */}
-                        <td className="py-3.5 px-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-amber-100/80 text-amber-900 flex items-center justify-center shrink-0 border border-amber-200/60">
-                              <Sparkles size={18} className="text-amber-700" />
-                            </div>
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <span className="font-bold text-neutral-900 text-xs sm:text-sm group-hover:text-amber-900 transition-colors">
-                                  {t.title}
-                                </span>
-                                {isSpotlight && (
-                                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#facc15] text-neutral-950 font-bold shadow-2xs">
-                                    ★ Spotlight
-                                  </span>
-                                )}
-                              </div>
-                              <span className="text-[11px] text-stone-400 capitalize">
-                                {t.category || 'Massage'}
-                              </span>
-                            </div>
-                          </div>
-                        </td>
-
-                        {/* Duration & Price Tiers */}
-                        <td className="py-3.5 px-4">
-                          <div className="flex flex-wrap items-center gap-1.5">
-                            {opts.map((opt, i) => {
-                              const numPrice = Number(String(opt.price || '0').replace(/\D/g, '')) || 0;
-                              return (
-                                <span
-                                  key={i}
-                                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-stone-50 border border-stone-200/80 font-mono text-xs"
-                                >
-                                  <span className="font-bold text-neutral-800">
-                                    {opt.duration}{String(opt.duration).includes('min') ? '' : 'm'}
-                                  </span>
-                                  <span className="text-stone-300">•</span>
-                                  <span className="font-bold text-neutral-900">
-                                    Rp {numPrice.toLocaleString('id-ID')}
-                                  </span>
-                                </span>
-                              );
-                            })}
-                          </div>
-                        </td>
-
-                        {/* Status */}
-                        <td className="py-3.5 px-4 text-center">
-                          <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold ${
-                            isLive 
-                              ? 'bg-emerald-100 text-emerald-800' 
-                              : 'bg-stone-100 text-stone-600'
-                          }`}>
-                            <span className={`w-1.5 h-1.5 rounded-full ${isLive ? 'bg-emerald-500' : 'bg-stone-400'}`} />
-                            <span>{isLive ? 'Active' : 'Draft'}</span>
-                          </span>
-                        </td>
-
-                        {/* Actions */}
-                        <td className="py-3.5 px-4 text-right">
-                          <div className="flex items-center justify-end gap-1.5">
-                            <button
-                              type="button"
-                              onClick={() => openEditModal(t)}
-                              className="px-2.5 py-1 rounded-lg bg-stone-100 hover:bg-[#facc15] text-neutral-900 text-xs font-bold transition-all cursor-pointer flex items-center gap-1"
-                            >
-                              <Edit3 size={12} />
-                              <span>Edit</span>
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleDelete(t)}
-                              className="p-1.5 rounded-lg text-stone-300 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
-                              title="Delete Treatment"
-                            >
-                              <Trash2 size={13} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
+      <div className="grid grid-cols-2 lg:grid-cols-4 border border-[#E5E5E5] rounded-xl divide-y sm:divide-y-0 sm:divide-x divide-[#E5E5E5] bg-white overflow-hidden shadow-xs">
+        <div className="p-4 sm:p-5">
+          <div className="text-[11px] font-semibold uppercase tracking-wider text-[#737373]">
+            Total Treatments
           </div>
+          <div className="text-xl sm:text-2xl font-semibold tracking-tight text-black mt-1">
+            {treatments.length}
+          </div>
+          <div className="text-[11px] text-[#737373] mt-0.5">In current catalog</div>
         </div>
-      ) : (
-        /* Treatments Grid */
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {filteredTreatments.map(treatment => {
-            const options = Array.isArray(treatment.options) ? treatment.options : [];
-            const isLive = treatment.is_published !== false;
-            const isSpotlight = Boolean(treatment.is_pinned);
+
+        <div className="p-4 sm:p-5">
+          <div className="text-[11px] font-semibold uppercase tracking-wider text-[#737373]">
+            Pinned Most Booked
+          </div>
+          <div className="text-xl sm:text-2xl font-semibold tracking-tight text-black mt-1">
+            {treatments.filter(t => t.is_pinned).length}
+          </div>
+          <div className="text-[11px] text-[#737373] mt-0.5">Featured on booking menu</div>
+        </div>
+
+        <div className="p-4 sm:p-5">
+          <div className="text-[11px] font-semibold uppercase tracking-wider text-[#737373]">
+            Categories
+          </div>
+          <div className="text-xl sm:text-2xl font-semibold tracking-tight text-black mt-1">
+            {new Set(treatments.map(t => t.category)).size}
+          </div>
+          <div className="text-[11px] text-[#737373] mt-0.5">Unique ritual types</div>
+        </div>
+
+        <div className="p-4 sm:p-5">
+          <div className="text-[11px] font-semibold uppercase tracking-wider text-[#737373]">
+            Brand Scope
+          </div>
+          <div className="text-xl sm:text-2xl font-semibold tracking-tight text-black mt-1 flex items-center gap-1.5 capitalize">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#facc15]" />
+            <span>Therapick</span>
+          </div>
+          <div className="text-[11px] text-[#737373] mt-0.5">Active catalogue</div>
+        </div>
+      </div>
+
+      {/* ─────────────────────────────────────────────────────────────
+          GRID OF TREATMENTS (EXACTLY MATCHING IMAGE 2)
+         ───────────────────────────────────────────────────────────── */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        {filteredTreatments.length === 0 ? (
+          <div className="col-span-full bg-white border border-[#E5E5E5] rounded-xl p-12 text-center text-[#737373]">
+            <Layers size={28} className="mx-auto mb-2 text-[#A3A3A3]" />
+            <p className="font-semibold text-black">No treatments match your search</p>
+            <p className="text-xs text-[#737373] mt-1">Try another keyword or create a new treatment.</p>
+          </div>
+        ) : (
+          filteredTreatments.map(t => {
+            const options = Array.isArray(t.options) ? t.options : [];
 
             return (
-              <div
-                key={treatment.id}
-                className="bg-white rounded-2xl p-5 border border-stone-200/90 shadow-2xs hover:border-amber-400 transition-all flex flex-col justify-between space-y-4"
+              <div 
+                key={t.id} 
+                className="bg-white border border-[#E5E5E5] rounded-xl p-5 shadow-xs hover:border-[#D4D4D4] transition-all flex flex-col justify-between"
               >
                 <div>
-                  {/* Top Bar: Category Pill & Action Controls */}
-                  <div className="flex items-start justify-between gap-2 mb-2.5">
-                    <span className="text-[10px] font-mono uppercase font-bold tracking-wider px-2.5 py-0.5 rounded bg-stone-100 text-stone-700">
-                      {treatment.category || 'Treatment'}
+                  <div className="flex justify-between items-start gap-2 mb-2">
+                    <h4 className="font-semibold text-black text-sm uppercase pr-2">
+                      {t.title}
+                    </h4>
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-[#F5F5F5] text-[#525252] border border-[#E5E5E5] capitalize shrink-0">
+                      {t.category || 'Package'}
                     </span>
-
-                    <div className="flex items-center gap-1.5">
-                      {/* Spotlight Pin Toggle */}
-                      <button
-                        type="button"
-                        onClick={() => handleTogglePin(treatment)}
-                        title={isSpotlight ? 'Remove from Hero Spotlight' : 'Pin to Hero Spotlight'}
-                        className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold font-mono transition-all cursor-pointer ${
-                          isSpotlight
-                            ? 'bg-amber-100 text-amber-900 border border-amber-300'
-                            : 'bg-stone-100 text-stone-500 hover:text-amber-800 hover:bg-amber-50'
-                        }`}
-                      >
-                        <Star size={12} className={isSpotlight ? 'fill-amber-500 text-amber-600' : 'text-stone-400'} />
-                        <span>{isSpotlight ? 'Spotlight' : 'Pin'}</span>
-                      </button>
-
-                      {/* Publish / Draft Toggle */}
-                      <button
-                        type="button"
-                        onClick={() => handleTogglePublish(treatment)}
-                        title={isLive ? 'Set to Draft' : 'Publish to Website'}
-                        className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold font-mono transition-all cursor-pointer ${
-                          isLive
-                            ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                            : 'bg-stone-200 text-stone-600'
-                        }`}
-                      >
-                        {isLive ? <Eye size={12} /> : <EyeOff size={12} />}
-                        <span>{isLive ? 'Live' : 'Draft'}</span>
-                      </button>
-                    </div>
                   </div>
-
-                  {/* Title & Description */}
-                  <h3 className="text-base font-extrabold text-neutral-900 tracking-tight">
-                    {treatment.title}
-                  </h3>
-                  <p className="text-xs text-stone-500 line-clamp-2 mt-1 leading-relaxed">
-                    {treatment.desc || 'Signature in-villa therapeutic treatment crafted with traditional Balinese wellness techniques.'}
+                  <p className="text-xs text-[#737373] line-clamp-2 mb-4 leading-relaxed">
+                    {t.desc || 'Enjoy a relaxing wellness experience designed to soothe the body and mind.'}
                   </p>
                 </div>
 
-                {/* Duration & Pricing Options Table */}
-                <div className="space-y-1.5 pt-3 border-t border-stone-100">
-                  <div className="text-[10px] font-mono uppercase font-bold tracking-wider text-stone-400 mb-1">
-                    Duration & Pricing Tiers
+                <div className="space-y-4">
+                  <div className="border border-[#E5E5E5] rounded-lg overflow-hidden bg-white">
+                    <table className="w-full text-left text-xs">
+                      <thead className="bg-[#FAFAFA] border-b border-[#E5E5E5]">
+                        <tr>
+                          <th className="py-2 px-3 text-[10px] font-semibold uppercase tracking-wider text-[#737373]">
+                            Duration
+                          </th>
+                          <th className="py-2 px-3 text-[10px] font-semibold uppercase tracking-wider text-[#737373] text-right">
+                            Price (IDR)
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[#E5E5E5]">
+                        {options.map((o, idx) => {
+                          const num = parseInt(String(o.price || '0').replace(/,/g, '') || '0', 10);
+                          const formattedPrice = !isNaN(num) && num > 0 ? num.toLocaleString('en-US') : '0';
+
+                          return (
+                            <tr key={idx} className="hover:bg-[#FAFAFA] transition-colors">
+                              <td className="py-2.5 px-3 font-medium text-black">
+                                {o.duration} mins
+                              </td>
+                              <td className="py-2.5 px-3 font-semibold text-black text-right font-mono">
+                                {formattedPrice}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                    {options.map((opt, idx) => {
-                      const durStr = String(opt.duration || '').trim();
-                      const normDur = durStr.replace(/min/i, '').trim();
-                      const numPrice = Number(String(opt.price || '0').replace(/\D/g, '')) || 0;
-                      const fee = feeMap.get(`${treatment.id}-${durStr}`) || feeMap.get(`${treatment.id}-${normDur}`);
 
-                      return (
-                        <div key={idx} className="bg-stone-50 rounded-xl p-2.5 border border-stone-200/70">
-                          <div className="flex items-center justify-between text-stone-500 text-[11px] mb-1">
-                            <span className="font-mono font-bold text-neutral-900">
-                              {durStr} {durStr.toLowerCase().includes('min') ? '' : 'Min'}
-                            </span>
-                            <Clock size={11} className="text-stone-400" />
-                          </div>
-                          <div className="text-xs font-mono font-extrabold text-neutral-900">
-                            Rp {numPrice.toLocaleString('id-ID')}
-                          </div>
-                          <div className="text-[10px] font-mono text-stone-400 mt-1 flex items-center justify-between">
-                            <span>Wage:</span>
-                            <span className={fee ? 'text-emerald-700 font-bold' : 'text-amber-700 font-medium'}>
-                              {fee ? `Rp ${Number(fee).toLocaleString('id-ID')}` : 'Not set'}
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    })}
+                  {/* Bottom Action Bar (Pin, Edit, Delete) */}
+                  <div className="flex gap-2 pt-1 items-center">
+                    {/* Pin / Most Booked button */}
+                    <button
+                      type="button"
+                      onClick={() => handleTogglePin(t)}
+                      className={`p-2 rounded-lg transition-colors shrink-0 cursor-pointer ${
+                        t.is_pinned 
+                          ? 'bg-black text-white shadow-xs' 
+                          : 'bg-white border border-[#E5E5E5] text-black hover:bg-[#F5F5F5]'
+                      }`}
+                      title={t.is_pinned ? "Unpin from Most Booked" : "Pin to Most Booked"}
+                    >
+                      <Pin size={13} className={t.is_pinned ? "fill-white" : ""} />
+                    </button>
+
+                    {/* Thumbnail if pinned and available */}
+                    {t.is_pinned && t.pinned_image && (
+                      <img 
+                        src={t.pinned_image} 
+                        alt="Pinned" 
+                        className="w-7 h-7 object-cover rounded-lg shrink-0 border border-[#E5E5E5]" 
+                      />
+                    )}
+
+                    {/* Edit button */}
+                    <button
+                      type="button"
+                      onClick={() => openEditModal(t)}
+                      className="flex-1 py-1.5 px-3 rounded-lg border border-[#E5E5E5] bg-white hover:bg-[#F5F5F5] text-xs font-medium text-black flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                    >
+                      <Edit3 size={13} />
+                      <span>Edit</span>
+                    </button>
+
+                    {/* Delete button */}
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(t)}
+                      className="p-2 rounded-lg border border-[#E5E5E5] bg-white text-[#737373] hover:text-rose-600 hover:border-rose-200 transition-colors cursor-pointer"
+                      title="Delete Treatment"
+                    >
+                      <Trash2 size={13} />
+                    </button>
                   </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex items-center justify-end gap-2 pt-2 border-t border-stone-100">
-                  <button
-                    type="button"
-                    onClick={() => openEditModal(treatment)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-stone-100 hover:bg-stone-200 text-neutral-800 text-xs font-bold transition-all cursor-pointer"
-                  >
-                    <Edit3 size={12} />
-                    <span>Edit Treatment</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleDelete(treatment)}
-                    className="p-1.5 rounded-lg text-stone-400 hover:text-rose-600 hover:bg-rose-50 transition-all cursor-pointer"
-                    title="Delete Treatment"
-                  >
-                    <Trash2 size={13} />
-                  </button>
                 </div>
               </div>
             );
-          })}
-        </div>
-      )}
+          })
+        )}
+      </div>
 
-      {/* Add / Edit Treatment Modal */}
+      {/* ─────────────────────────────────────────────────────────────
+          ADD / EDIT TREATMENT MODAL
+         ───────────────────────────────────────────────────────────── */}
       {modalState.isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
-          <div className="bg-white w-full max-w-xl rounded-2xl shadow-2xl border border-stone-200 overflow-hidden flex flex-col max-h-[90vh]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white w-full max-w-xl rounded-xl shadow-2xl border border-[#E5E5E5] overflow-hidden flex flex-col max-h-[90vh]">
             
-            {/* Modal Header */}
-            <div className="px-6 py-4 border-b border-stone-100 flex items-center justify-between bg-stone-50/50">
+            {/* Header */}
+            <div className="px-6 py-4 border-b border-[#E5E5E5] flex items-center justify-between bg-[#FAFAFA]">
               <div>
-                <h2 className="text-base font-bold text-neutral-900">
-                  {modalState.isNew ? 'Add New Treatment' : 'Edit Treatment'}
+                <h2 className="text-base font-semibold text-black">
+                  {modalState.isNew ? 'Add Spa Treatment' : 'Edit Treatment'}
                 </h2>
-                <p className="text-xs text-stone-500">
-                  Configure live service details, pricing tiers, and visibility on booktherapick.com.
+                <p className="text-xs text-[#737373]">
+                  {modalState.isNew ? 'Create a new massage or package for Therapick website.' : 'Update pricing tiers and description.'}
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setModalState(prev => ({ ...prev, isOpen: false }))}
-                className="p-1.5 rounded-lg text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-all cursor-pointer"
+                className="p-1 rounded-lg text-[#737373] hover:text-black hover:bg-[#F5F5F5]"
               >
                 <X size={18} />
               </button>
             </div>
 
-            {/* Modal Form */}
+            {/* Form */}
             <form onSubmit={handleSaveModal} className="p-6 overflow-y-auto space-y-4">
-              {/* Title */}
               <div>
-                <label className="block text-xs font-bold text-neutral-700 uppercase tracking-wider mb-1">
-                  Treatment Title *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={modalState.title}
+                <label className="text-xs font-medium text-[#171717] mb-1.5 block">Treatment Title *</label>
+                <input 
+                  type="text" 
+                  required 
+                  placeholder="e.g. Traditional Balinese Massage" 
+                  value={modalState.title} 
                   onChange={e => setModalState(prev => ({ ...prev, title: e.target.value }))}
-                  placeholder="e.g. BALINESE TRADITIONAL MASSAGE"
-                  className="w-full px-3.5 py-2 rounded-xl border border-stone-200 bg-stone-50/50 text-xs font-semibold text-neutral-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:border-amber-400"
+                  className="w-full bg-white border border-[#E5E5E5] rounded-lg px-3 py-2 text-xs text-black placeholder:text-[#A3A3A3] focus:outline-none focus:border-black transition-colors"
                 />
               </div>
 
-              {/* Category */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-neutral-700 uppercase tracking-wider mb-1">
-                    Category *
-                  </label>
-                  <select
-                    value={modalState.category}
+                  <label className="text-xs font-medium text-[#171717] mb-1.5 block">Category</label>
+                  <select 
+                    value={modalState.category} 
                     onChange={e => setModalState(prev => ({ ...prev, category: e.target.value }))}
-                    className="w-full px-3.5 py-2 rounded-xl border border-stone-200 bg-white text-xs font-semibold text-neutral-900 focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:border-amber-400"
+                    className="w-full bg-white border border-[#E5E5E5] rounded-lg px-3 py-2 text-xs text-black focus:outline-none focus:border-black transition-colors"
                   >
                     <option value="Massage">Massage</option>
-                    <option value="Facial">Facial</option>
                     <option value="Package">Package</option>
+                    <option value="Facial">Facial</option>
+                    <option value="Ritual">Ritual</option>
                     <option value="Body Scrub">Body Scrub</option>
-                    <option value="Treatment">Treatment</option>
                   </select>
                 </div>
 
-                {/* Published & Spotlight Toggles */}
-                <div className="flex items-center gap-3 pt-6">
-                  <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-neutral-800">
-                    <input
-                      type="checkbox"
-                      checked={modalState.is_published}
-                      onChange={e => setModalState(prev => ({ ...prev, is_published: e.target.checked }))}
-                      className="w-4 h-4 rounded text-amber-500 focus:ring-amber-400 border-stone-300"
-                    />
-                    <span>Live Published</span>
-                  </label>
-
-                  <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-neutral-800">
+                <div className="flex items-center gap-4 pt-6">
+                  <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-[#171717]">
                     <input
                       type="checkbox"
                       checked={modalState.is_pinned}
                       onChange={e => setModalState(prev => ({ ...prev, is_pinned: e.target.checked }))}
-                      className="w-4 h-4 rounded text-amber-500 focus:ring-amber-400 border-stone-300"
+                      className="w-4 h-4 rounded border-[#E5E5E5] text-black focus:ring-black"
                     />
-                    <span>Spotlight Pin</span>
+                    <span>Most Booked Pin</span>
                   </label>
                 </div>
               </div>
 
-              {/* Description */}
-              <div>
-                <label className="block text-xs font-bold text-neutral-700 uppercase tracking-wider mb-1">
-                  Description
-                </label>
-                <textarea
-                  rows={3}
-                  value={modalState.desc}
-                  onChange={e => setModalState(prev => ({ ...prev, desc: e.target.value }))}
-                  placeholder="Detailed treatment description, techniques, and organic ingredients used..."
-                  className="w-full px-3.5 py-2 rounded-xl border border-stone-200 bg-stone-50/50 text-xs text-neutral-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:border-amber-400"
-                />
-              </div>
-
-              {/* Duration & Price Tiers */}
-              <div className="space-y-2 pt-2 border-t border-stone-100">
+              {/* Duration & Pricing Options */}
+              <div className="space-y-3 pt-2 border-t border-[#E5E5E5]">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-neutral-700 uppercase tracking-wider">
-                    Duration & Pricing Options
-                  </label>
-                  <button
-                    type="button"
+                  <div>
+                    <h4 className="text-xs font-semibold uppercase tracking-wider text-[#737373]">Duration & Pricing</h4>
+                    <p className="text-[11px] text-[#A3A3A3] mt-0.5">Define duration options and prices in IDR</p>
+                  </div>
+                  <button 
+                    type="button" 
                     onClick={handleAddOption}
-                    className="text-xs font-bold text-amber-700 hover:text-amber-900 cursor-pointer flex items-center gap-1"
+                    className="text-xs font-medium text-black border border-[#E5E5E5] bg-white hover:bg-[#F5F5F5] px-2.5 py-1 rounded-md flex items-center gap-1 cursor-pointer"
                   >
-                    <Plus size={13} />
-                    <span>Add Tier</span>
+                    <Plus size={13} /> Add Option
                   </button>
                 </div>
 
                 <div className="space-y-2">
-                  {modalState.options.map((opt, i) => (
-                    <div key={i} className="flex items-center gap-2">
-                      <div className="w-1/3">
+                  {modalState.options.map((opt, idx) => (
+                    <div key={idx} className="flex items-center gap-2">
+                      <div className="w-32 relative">
                         <input
-                          type="text"
+                          type="number"
+                          required
+                          placeholder="60"
                           value={opt.duration}
-                          onChange={e => handleOptionChange(i, 'duration', e.target.value)}
-                          placeholder="e.g. 60 or 90 Min"
-                          className="w-full px-3 py-1.5 rounded-lg border border-stone-200 bg-stone-50/50 text-xs font-mono font-semibold text-neutral-900"
+                          onChange={e => handleOptionChange(idx, 'duration', e.target.value)}
+                          className="w-full bg-white border border-[#E5E5E5] rounded-lg pl-3 pr-10 py-1.5 text-xs text-black focus:outline-none focus:border-black font-mono"
                         />
+                        <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-[#737373] pointer-events-none">
+                          MINS
+                        </span>
                       </div>
+
                       <div className="flex-1 relative">
-                        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-mono text-stone-400 font-bold">
+                        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-medium text-[#737373] pointer-events-none">
                           Rp
                         </span>
                         <input
                           type="text"
+                          required
+                          placeholder="450,000"
                           value={opt.price}
-                          onChange={e => handleOptionChange(i, 'price', e.target.value)}
-                          placeholder="e.g. 350000"
-                          className="w-full pl-8 pr-3 py-1.5 rounded-lg border border-stone-200 bg-stone-50/50 text-xs font-mono font-semibold text-neutral-900"
+                          onChange={e => handleOptionChange(idx, 'price', e.target.value)}
+                          className="w-full bg-white border border-[#E5E5E5] rounded-lg pl-8 pr-3 py-1.5 text-xs text-black focus:outline-none focus:border-black font-mono"
                         />
                       </div>
+
                       {modalState.options.length > 1 && (
                         <button
                           type="button"
-                          onClick={() => handleRemoveOption(i)}
-                          className="p-1.5 text-stone-400 hover:text-rose-600 transition-all cursor-pointer"
+                          onClick={() => handleRemoveOption(idx)}
+                          className="p-1.5 text-[#737373] hover:text-rose-600 transition-colors"
                         >
-                          <X size={14} />
+                          <Trash2 size={14} />
                         </button>
                       )}
                     </div>
@@ -844,21 +513,34 @@ export default function TherapickServicesView() {
                 </div>
               </div>
 
-              {/* Modal Footer */}
-              <div className="pt-4 border-t border-stone-100 flex items-center justify-end gap-2.5">
+              {/* Description */}
+              <div className="pt-2 border-t border-[#E5E5E5]">
+                <label className="text-xs font-medium text-[#171717] mb-1.5 block">Description</label>
+                <textarea
+                  rows={3}
+                  required
+                  placeholder="Write details about the treatment, technique, and wellness effects..."
+                  value={modalState.desc}
+                  onChange={e => setModalState(prev => ({ ...prev, desc: e.target.value }))}
+                  className="w-full bg-white border border-[#E5E5E5] rounded-lg px-3 py-2 text-xs text-black placeholder:text-[#A3A3A3] focus:outline-none focus:border-black transition-colors resize-none leading-relaxed"
+                />
+              </div>
+
+              {/* Footer */}
+              <div className="pt-4 border-t border-[#E5E5E5] flex justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setModalState(prev => ({ ...prev, isOpen: false }))}
-                  className="px-4 py-2 rounded-xl border border-stone-200 text-stone-600 hover:bg-stone-50 text-xs font-bold transition-all cursor-pointer"
+                  className="px-3.5 py-2 text-xs font-medium border border-[#E5E5E5] bg-white hover:bg-[#F5F5F5] rounded-lg transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-5 py-2 rounded-xl bg-[#0F172A] hover:bg-neutral-800 text-white text-xs font-bold shadow-xs transition-all flex items-center gap-2 cursor-pointer"
+                  className="px-4 py-2 text-xs font-medium bg-black text-white hover:bg-neutral-800 rounded-lg shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
                 >
-                  {isSubmitting ? <RefreshCw size={14} className="animate-spin text-[#facc15]" /> : <Check size={14} />}
+                  {isSubmitting ? <RefreshCw size={13} className="animate-spin text-[#facc15]" /> : <Check size={13} />}
                   <span>{modalState.isNew ? 'Create Treatment' : 'Save Changes'}</span>
                 </button>
               </div>
