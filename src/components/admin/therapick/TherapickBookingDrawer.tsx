@@ -173,8 +173,16 @@ export default function TherapickBookingDrawer() {
                 <span className="font-bold text-neutral-900 text-right">{b.treatment_name || 'Signature Ritual'}</span>
               </div>
               <div className="flex items-center justify-between">
+                <span className="text-stone-500">Duration</span>
+                <span className="font-medium text-neutral-900">{b.duration_minutes ? `${b.duration_minutes} min` : '90 min'}</span>
+              </div>
+              <div className="flex items-center justify-between">
                 <span className="text-stone-500">Date & Time</span>
-                <span className="font-semibold text-neutral-900">{b.booking_date} at {b.time}</span>
+                <span className="font-semibold text-neutral-900">{b.booking_date} at {b.time || '14:00'}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-stone-500">Assigned Therapist</span>
+                <span className="font-semibold text-neutral-900">{b.therapist_name || (b as any).assigned_therapist_name || 'Unassigned'}</span>
               </div>
             </div>
 
@@ -249,68 +257,109 @@ export default function TherapickBookingDrawer() {
 
           {/* Attribution Source */}
           <div className="bg-white border border-stone-200/90 rounded-2xl p-4 space-y-2.5 shadow-2xs">
-            <div className="text-[11px] font-mono font-bold uppercase tracking-wider text-stone-600">Booking Source</div>
+            <div className="text-[11px] font-mono font-bold uppercase tracking-wider text-stone-600">Referring Partner & Attribution</div>
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2.5">
                 {isAffiliate ? (
-                  <div className="w-7 h-7 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center">
-                    <Users size={14} />
+                  <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-900 flex items-center justify-center font-bold text-xs">
+                    <Users size={16} />
                   </div>
                 ) : (
-                  <div className="w-7 h-7 rounded-lg bg-blue-100 text-blue-800 flex items-center justify-center">
-                    <Globe size={14} />
+                  <div className="w-8 h-8 rounded-xl bg-blue-100 text-blue-900 flex items-center justify-center font-bold text-xs">
+                    <Globe size={16} />
                   </div>
                 )}
                 <div>
                   <div className="text-xs font-bold text-neutral-900">
                     {isAffiliate ? ((b as any).partner_info?.business || (b as any).partner_name || b.affiliate_code || 'Affiliate Partner') : 'Direct Website Booking'}
                   </div>
-                  <div className="text-[10px] text-stone-500">
-                    {isAffiliate ? `Referral Code: ${b.affiliate_code || 'YES'}` : 'booktherapick.com'}
+                  <div className="text-[10px] text-stone-500 font-mono">
+                    {isAffiliate ? `Referral Code: ${b.affiliate_code || (b as any).partner_info?.code || 'DIRECT'}` : 'booktherapick.com'}
                   </div>
                 </div>
               </div>
 
               <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                isAffiliate ? 'bg-amber-100 text-amber-900' : 'bg-blue-100 text-blue-900'
+                isAffiliate ? 'bg-amber-100 text-amber-900 border border-amber-200' : 'bg-blue-100 text-blue-900 border border-blue-200'
               }`}>
                 {isAffiliate ? 'Affiliate Attributed' : 'Website Direct'}
               </span>
             </div>
           </div>
 
-          {/* Financial Breakdown */}
+          {/* Financial Breakdown & Commission Rules */}
           <div className="bg-stone-50/80 border border-stone-200/70 rounded-2xl p-4.5 space-y-3">
-            <div className="text-[11px] font-mono font-bold uppercase tracking-wider text-stone-600">Financial Breakdown</div>
+            <div className="text-[11px] font-mono font-bold uppercase tracking-wider text-stone-600">Financial Breakdown & Commission</div>
             
             <div className="space-y-2 text-xs">
               <div className="flex items-center justify-between">
-                <span className="text-stone-500">Booking Revenue</span>
-                <span className="font-bold text-neutral-900">{formatIDR(b.revenue)}</span>
+                <span className="text-stone-500">Booking Amount</span>
+                <span className="font-bold text-neutral-900 font-mono">{formatIDR(b.revenue || b.total_amount)}</span>
               </div>
               <div className="flex items-center justify-between text-rose-600">
                 <span>Therapist Fee Total</span>
-                <span>- {formatIDR(therapistFee)}</span>
+                <span className="font-mono">- {formatIDR(therapistFee)}</span>
               </div>
               {isAffiliate && (
-                <div className="flex items-center justify-between text-amber-700">
-                  <span>Partner Commission (15%)</span>
-                  <span>- {formatIDR(commAmount)}</span>
+                <div className="flex items-center justify-between text-amber-800 font-medium">
+                  <span>Affiliate Commission (15%)</span>
+                  <span className="font-bold font-mono">- {formatIDR(commAmount)}</span>
                 </div>
               )}
               <div className="pt-2 border-t border-stone-200 flex items-center justify-between text-sm font-bold text-neutral-950">
                 <span>Net Profit</span>
-                <span className="text-emerald-700">{formatIDR(netProfit)}</span>
+                <span className="text-emerald-700 font-mono">{formatIDR(netProfit)}</span>
               </div>
             </div>
+
+            {isAffiliate && (
+              <div className="p-2.5 rounded-xl bg-amber-50/80 border border-amber-200/70 text-[11px] text-amber-900 leading-relaxed">
+                <strong>Commission Policy:</strong> Partner commission (15%) becomes payable in the weekly 7-day disbursement cycle once the session is completed and customer payment is verified.
+              </div>
+            )}
 
             <div className="pt-2 border-t border-stone-200 flex items-center justify-between text-xs">
               <span className="text-stone-500">Payment Status</span>
               <span className={`font-bold px-2 py-0.5 rounded-full text-[10px] ${
-                b.payment_status === 'Paid' ? 'bg-emerald-100 text-emerald-900' : 'bg-stone-200 text-stone-800'
+                b.payment_status === 'Paid' ? 'bg-emerald-100 text-emerald-900 border border-emerald-200' : 'bg-stone-200 text-stone-800'
               }`}>
                 {b.payment_status || 'Unpaid'} ({b.payment_method || 'Online'})
               </span>
+            </div>
+          </div>
+
+          {/* Booking Activity History */}
+          <div className="bg-white border border-stone-200/90 rounded-2xl p-4 space-y-3 shadow-2xs">
+            <div className="text-[11px] font-mono font-bold uppercase tracking-wider text-stone-600">Booking Activity History</div>
+            <div className="space-y-3 text-xs">
+              <div className="flex items-start gap-2.5">
+                <div className="w-2 h-2 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
+                <div>
+                  <div className="font-semibold text-neutral-900">Booking Created & Attributed</div>
+                  <div className="text-[10px] text-stone-400 font-mono">{b.created_at ? new Date(b.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Initial creation'}</div>
+                </div>
+              </div>
+              <div className="flex items-start gap-2.5">
+                <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${(b.status || '').toLowerCase() === 'confirmed' || (b.status || '').toLowerCase() === 'completed' ? 'bg-emerald-500' : 'bg-stone-300'}`} />
+                <div>
+                  <div className="font-semibold text-neutral-900">Admin Confirmation</div>
+                  <div className="text-[10px] text-stone-400 font-mono">{(b.status || '').toLowerCase() === 'confirmed' || (b.status || '').toLowerCase() === 'completed' ? 'Confirmed by admin' : 'Awaiting confirmation'}</div>
+                </div>
+              </div>
+              <div className="flex items-start gap-2.5">
+                <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${(b.treatment_status || '').toLowerCase() === 'finished' ? 'bg-emerald-500' : 'bg-stone-300'}`} />
+                <div>
+                  <div className="font-semibold text-neutral-900">Treatment Execution</div>
+                  <div className="text-[10px] text-stone-400 font-mono">{b.treatment_status || 'Scheduled'}</div>
+                </div>
+              </div>
+              <div className="flex items-start gap-2.5">
+                <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${b.payment_status === 'Paid' ? 'bg-emerald-500' : 'bg-stone-300'}`} />
+                <div>
+                  <div className="font-semibold text-neutral-900">Payment & Settlement</div>
+                  <div className="text-[10px] text-stone-400 font-mono">{b.payment_status === 'Paid' ? 'Payment Verified' : 'Unsettled'}</div>
+                </div>
+              </div>
             </div>
           </div>
 
