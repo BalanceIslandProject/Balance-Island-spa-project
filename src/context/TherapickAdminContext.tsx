@@ -890,6 +890,8 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
     let payout_method = 'bank_transfer';
     let proof_document_url = '';
 
+    let commission_ids: string[] = [];
+
     if (typeof payoutDataOrPartnerId === 'string') {
       partner_id = payoutDataOrPartnerId;
       amount = amountArg || 0;
@@ -904,6 +906,7 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
       payout_date = payoutDataOrPartnerId.payout_date || payoutDataOrPartnerId.date || '';
       payout_method = payoutDataOrPartnerId.payout_method || payoutDataOrPartnerId.method || 'bank_transfer';
       proof_document_url = payoutDataOrPartnerId.proof_document_url || payoutDataOrPartnerId.receipt_url || '';
+      commission_ids = Array.isArray(payoutDataOrPartnerId.commission_ids) ? payoutDataOrPartnerId.commission_ids : [];
     }
 
     try {
@@ -917,7 +920,8 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
           notes: notes ? `${reference_number} - ${notes}` : reference_number,
           payout_date: payout_date || undefined,
           proof_document_url: proof_document_url || undefined,
-          payment_reference: reference_number
+          payment_reference: reference_number,
+          commission_ids: commission_ids.length > 0 ? commission_ids : undefined,
         })
       });
 

@@ -85,30 +85,30 @@ export default function PayoutPartnerDrawer({
               type="button"
               onClick={() => onOpenRecordPayment(partner)}
               disabled={partner.unpaid <= 0}
-              className="h-8 px-3 rounded-[6px] bg-[#171717] hover:bg-[#262626] text-white text-xs font-medium flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+              className="px-3.5 py-2 rounded-xl bg-[#facc15] hover:bg-[#eab308] text-neutral-950 text-xs font-extrabold flex items-center gap-1.5 shadow-xs transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              <CheckCircle2 size={13} />
+              <CheckCircle2 size={13} className="text-neutral-950" />
               <span>Record Payment</span>
             </button>
             <button
               type="button"
               onClick={onClose}
-              className="w-7 h-7 rounded-[6px] text-[#666666] hover:text-[#171717] hover:bg-[#fafafa] flex items-center justify-center transition-colors cursor-pointer"
+              className="p-1.5 rounded-xl text-stone-400 hover:text-neutral-900 hover:bg-stone-100 transition-colors cursor-pointer"
             >
-              <X size={16} />
+              <X size={18} />
             </button>
           </div>
         </div>
 
         {/* 3 Sub-Tabs Bar */}
-        <div className="px-5 pt-3 border-b border-[#ebebeb] flex items-center gap-2 bg-[#fafafa]">
+        <div className="px-5 pt-3 border-b border-stone-100 flex items-center gap-2 bg-stone-50/50">
           <button
             type="button"
             onClick={() => setActiveTab('overview')}
-            className={`pb-2.5 px-3 text-xs font-medium transition-all border-b-2 cursor-pointer ${
+            className={`pb-2.5 px-3 text-xs font-bold transition-all border-b-2 cursor-pointer ${
               activeTab === 'overview'
-                ? 'border-[#171717] text-[#171717]'
-                : 'border-transparent text-[#666666] hover:text-[#171717]'
+                ? 'border-amber-400 text-neutral-950'
+                : 'border-transparent text-stone-500 hover:text-neutral-900'
             }`}
           >
             Overview
@@ -116,28 +116,28 @@ export default function PayoutPartnerDrawer({
           <button
             type="button"
             onClick={() => setActiveTab('commissions')}
-            className={`pb-2.5 px-3 text-xs font-medium transition-all border-b-2 cursor-pointer flex items-center gap-1.5 ${
+            className={`pb-2.5 px-3 text-xs font-bold transition-all border-b-2 cursor-pointer flex items-center gap-1.5 ${
               activeTab === 'commissions'
-                ? 'border-[#171717] text-[#171717]'
-                : 'border-transparent text-[#666666] hover:text-[#171717]'
+                ? 'border-amber-400 text-neutral-950'
+                : 'border-transparent text-stone-500 hover:text-neutral-900'
             }`}
           >
-            <span>Commissions</span>
-            <span className="px-1.5 py-0.2 rounded-md bg-[#ebebeb] text-[#171717] text-[10px] font-mono">
+            <span>Commission History</span>
+            <span className="px-1.5 py-0.2 rounded-md bg-stone-200 text-stone-700 text-[10px] font-mono">
               {partnerCommissions.length}
             </span>
           </button>
           <button
             type="button"
             onClick={() => setActiveTab('payments')}
-            className={`pb-2.5 px-3 text-xs font-medium transition-all border-b-2 cursor-pointer flex items-center gap-1.5 ${
+            className={`pb-2.5 px-3 text-xs font-bold transition-all border-b-2 cursor-pointer flex items-center gap-1.5 ${
               activeTab === 'payments'
-                ? 'border-[#171717] text-[#171717]'
-                : 'border-transparent text-[#666666] hover:text-[#171717]'
+                ? 'border-amber-400 text-neutral-950'
+                : 'border-transparent text-stone-500 hover:text-neutral-900'
             }`}
           >
-            <span>Disbursements</span>
-            <span className="px-1.5 py-0.2 rounded-md bg-[#ebebeb] text-[#171717] text-[10px] font-mono">
+            <span>Payment History</span>
+            <span className="px-1.5 py-0.2 rounded-md bg-stone-200 text-stone-700 text-[10px] font-mono">
               {partnerPayments.length}
             </span>
           </button>
@@ -151,22 +151,22 @@ export default function PayoutPartnerDrawer({
             <div className="space-y-5">
               
               {/* 3 Summary Cards */}
-              <div className="grid grid-cols-3 gap-2.5">
-                <div className="p-3 rounded-[6px] bg-[#fafafa] border border-[#ebebeb]">
-                  <span className="text-[10px] uppercase text-[#666666] block font-mono">Earned</span>
-                  <span className="font-medium font-mono text-[#171717] text-xs sm:text-sm mt-0.5 block tabular-nums">
+              <div className="grid grid-cols-3 gap-3">
+                <div className="p-3.5 rounded-2xl bg-stone-50 border border-stone-200/80">
+                  <span className="text-[10px] font-bold uppercase text-stone-400 block font-mono">Total Earned</span>
+                  <span className="font-extrabold font-mono text-neutral-900 text-sm mt-0.5 block">
                     {formatIDR(partner.earned)}
                   </span>
                 </div>
-                <div className="p-3 rounded-[6px] bg-[#fafafa] border border-[#ebebeb]">
-                  <span className="text-[10px] uppercase text-[#666666] block font-mono">Paid</span>
-                  <span className="font-medium font-mono text-[#666666] text-xs sm:text-sm mt-0.5 block tabular-nums">
+                <div className="p-3.5 rounded-2xl bg-stone-50 border border-stone-200/80">
+                  <span className="text-[10px] font-bold uppercase text-stone-400 block font-mono">Total Paid</span>
+                  <span className="font-extrabold font-mono text-neutral-900 text-sm mt-0.5 block">
                     {formatIDR(partner.paid)}
                   </span>
                 </div>
-                <div className="p-3 rounded-[6px] bg-[#297a3a]/10 border border-[#297a3a]/20">
-                  <span className="text-[10px] uppercase text-[#297a3a] block font-mono">Unpaid</span>
-                  <span className="font-semibold font-mono text-[#297a3a] text-xs sm:text-sm mt-0.5 block tabular-nums">
+                <div className="p-3.5 rounded-2xl bg-amber-50/80 border border-amber-200/80">
+                  <span className="text-[10px] font-bold uppercase text-amber-800 block font-mono">Unpaid Balance</span>
+                  <span className="font-extrabold font-mono text-emerald-700 text-sm mt-0.5 block">
                     {formatIDR(partner.unpaid)}
                   </span>
                 </div>

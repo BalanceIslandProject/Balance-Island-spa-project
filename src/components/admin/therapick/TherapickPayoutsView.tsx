@@ -41,6 +41,7 @@ export default function TherapickPayoutsView() {
     partners, 
     payouts, 
     commissions, 
+    bookings,
     createPayout, 
     refreshData 
   } = useTherapickAdmin();
@@ -181,6 +182,7 @@ export default function TherapickPayoutsView() {
     reference: string;
     notes: string;
     receipt_url?: string;
+    commission_ids?: string[];
   }) => {
     try {
       const res = await createPayout({
@@ -190,7 +192,8 @@ export default function TherapickPayoutsView() {
         notes: paymentData.notes,
         date: paymentData.payment_date,
         method: paymentData.method,
-        receipt_url: paymentData.receipt_url
+        receipt_url: paymentData.receipt_url,
+        commission_ids: paymentData.commission_ids,
       });
 
       if (!res.success) {
@@ -374,6 +377,8 @@ export default function TherapickPayoutsView() {
         onClose={() => setIsRecordModalOpen(false)}
         partner={selectedPartnerForRecord}
         config={scheduleConfig}
+        commissions={commissions}
+        bookings={bookings}
         onRecordPayment={handleRecordPayment}
       />
 

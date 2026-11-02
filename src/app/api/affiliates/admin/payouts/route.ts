@@ -176,11 +176,10 @@ export async function POST(req: NextRequest) {
     // 2. Select eligible commissions for this partner, strictly preventing double-payout
     let commsToMark: { id: string; commission_amount: number }[] = [];
     if (Array.isArray(commission_ids) && commission_ids.length > 0) {
-      // Fetch only those that are NOT already paid
+      // Fetch specifically selected commissions that are NOT already paid
       const { data: validComms } = await supabase
         .from('affiliate_commissions')
         .select('id, commission_amount')
-        .eq('partner_id', partner.id)
         .in('id', commission_ids)
         .neq('status', 'paid');
 
@@ -188,14 +187,14 @@ export async function POST(req: NextRequest) {
         commsToMark = validComms;
       }
     } else {
-      const { data: approvedComms } = await supabase
+      const { data: eligibleComms } = await supabase
         .from('affiliate_commissions')
         .select('id, commission_amount')
-        .eq('partner_id', partner.id)
-        .eq('status', 'approved');
+        .or(`partner_id.eq.${partner.id},partner_code.eq.${partner.partner_code}`)
+        .neq('status', 'paid');
 
-      if (approvedComms && approvedComms.length > 0) {
-        commsToMark = approvedComms;
+      if (eligibleComms && eligibleComms.length > 0) {
+        commsToMark = eligibleComms;
       }
     }
 

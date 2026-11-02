@@ -319,7 +319,13 @@ export default function PartnerPayoutsPage() {
                       className="hover:bg-[#F8FAFC] transition-colors cursor-pointer"
                     >
                       <td className="py-3.5 pr-4 font-mono font-semibold text-[#0F172A]">
-                        {ref}
+                        <div>{ref}</div>
+                        {p.items && p.items.length > 0 && (
+                          <div className="text-[11px] font-sans font-normal text-[#64748B] truncate max-w-[200px] mt-0.5">
+                            {p.items.map((i: any) => i.treatment_name || 'Treatment').filter(Boolean).slice(0, 2).join(', ')}
+                            {p.items.length > 2 ? ` +${p.items.length - 2} more` : ''}
+                          </div>
+                        )}
                       </td>
                       <td className="py-3.5 px-4 font-semibold text-[#0F172A] tabular-nums">
                         {formatIDR(p.amount)}
@@ -525,6 +531,44 @@ export default function PartnerPayoutsPage() {
                 <span className="text-[#64748B]">Total Amount Disbursed</span>
                 <span className="font-bold text-base text-[#0F172A] tabular-nums">{formatIDR(selectedPayout.amount)}</span>
               </div>
+
+              {/* Itemized Treatments Breakdown */}
+              {selectedPayout.items && selectedPayout.items.length > 0 && (
+                <div className="pt-2 border-t border-[#F1F5F9]">
+                  <div className="flex items-center justify-between text-[11px] font-mono text-[#64748B] font-semibold uppercase tracking-wider mb-2">
+                    <span>Settled Bookings</span>
+                    <span>{selectedPayout.items.length} booking{selectedPayout.items.length > 1 ? 's' : ''}</span>
+                  </div>
+                  <div className="max-h-48 overflow-y-auto space-y-1.5 pr-0.5">
+                    {selectedPayout.items.map((item: any, idx: number) => (
+                      <div 
+                        key={item.id || idx}
+                        className="p-2.5 rounded-[8px] bg-[#F8FAFC] border border-[#E2E8F0] flex items-center justify-between gap-2"
+                      >
+                        <div className="min-w-0">
+                          <div className="font-semibold text-xs text-[#0F172A] truncate">
+                            {item.treatment_name || 'Spa Treatment'}
+                          </div>
+                          <div className="text-[10px] font-mono text-[#64748B] flex items-center gap-1.5 mt-0.5">
+                            <span>{formatDate(item.booking_date)}</span>
+                            {item.guest_name && (
+                              <>
+                                <span>·</span>
+                                <span className="truncate">{item.guest_name}</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <span className="font-mono font-semibold text-xs text-[#059669] tabular-nums">
+                            {formatIDR(item.commission_amount)}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div className="space-y-2 pt-1 text-xs">
                 <div className="flex items-center justify-between">
