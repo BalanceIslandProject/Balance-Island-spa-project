@@ -499,7 +499,7 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
           id: `aff-b-${b.id}`,
           type: 'booking_new',
           title: 'New Affiliate Booking',
-          message: `Booking #${b.reference_number || b.id.slice(0, 8)} attributed to ${b.affiliate_code || 'partner'} (${b.guest_name || 'Guest'}).`,
+          message: `Booking #${b.reference_number || String(b.id || '').slice(0, 8)} attributed to ${b.affiliate_code || 'partner'} (${b.guest_name || 'Guest'}).`,
           created_at: b.created_at,
           read: false,
           reference_id: b.id,

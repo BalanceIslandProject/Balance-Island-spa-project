@@ -383,7 +383,7 @@ export default function TherapickRevenueProfitView() {
                       className="hover:bg-stone-50/70 transition-colors cursor-pointer"
                     >
                       <td className="py-3 px-3 font-mono font-bold text-neutral-900">
-                        {b.reference_number || b.id.slice(0, 8)}
+                        {b.reference_number || String(b.id || '').slice(0, 8)}
                       </td>
                       <td className="py-3 px-3 text-stone-500 font-mono">
                         {b.booking_date || b.created_at?.split('T')[0]}

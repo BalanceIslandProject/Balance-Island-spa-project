@@ -562,7 +562,7 @@ export default function TherapickDashboardOverview() {
                     className="hover:bg-stone-50/70 transition-colors cursor-pointer"
                   >
                     <td className="py-3 px-3 font-mono font-bold text-neutral-900">
-                      {b.reference_number || b.id.slice(0, 8)}
+                      {b.reference_number || String(b.id || '').slice(0, 8)}
                     </td>
                     <td className="py-3 px-3 font-semibold text-neutral-900">
                       {b.guest_name || b.customer_name || 'Guest'}

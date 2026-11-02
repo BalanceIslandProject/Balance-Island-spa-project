@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import TherapickMasterView from '@/components/admin/therapick/TherapickMasterView';
 
 export const metadata = {
@@ -7,5 +7,9 @@ export const metadata = {
 };
 
 export default function AdminCommissionsPage() {
-  return <TherapickMasterView forcedTab="commission" />;
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-xs text-stone-400">Loading commission ledger...</div>}>
+      <TherapickMasterView forcedTab="commission" />
+    </Suspense>
+  );
 }

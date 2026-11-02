@@ -113,7 +113,7 @@ export default function AdminAuditLogsPage() {
                       </span>
                     </td>
                     <td className="py-3 px-4 font-mono text-[11px] text-neutral-600">
-                      {log.target_type}: {log.target_id.slice(0, 12)}...
+                      {log.target_type}: {String(log.target_id || '').slice(0, 12)}...
                     </td>
                     <td className="py-3 px-4 text-neutral-500 font-mono text-[10px] max-w-xs truncate">
                       {JSON.stringify(log.metadata || {})}

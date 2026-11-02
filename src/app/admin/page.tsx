@@ -34,6 +34,19 @@ const CAMPAIGN_PRESETS = [
 function AdminDashboardContent() {
     const searchParams = useSearchParams();
     const brandParam = searchParams.get('brand');
+    const { siteBrandFilter } = useSpa();
+
+    // Therapick Admin System Redesign: render dedicated master view
+    if (brandParam === 'therapick' || (!brandParam && siteBrandFilter === 'therapick')) {
+        return <TherapickMasterView />;
+    }
+
+    return <LegacyAdminDashboardContent />;
+}
+
+function LegacyAdminDashboardContent() {
+    const searchParams = useSearchParams();
+    const brandParam = searchParams.get('brand');
     const { 
         treatments, setTreatments, 
         campaign, setCampaign,
@@ -42,11 +55,6 @@ function AdminDashboardContent() {
         siteBrandFilter, setSiteBrandFilter,
         therapists, setTherapists
     } = useSpa();
-
-    // Therapick Admin System Redesign: render dedicated master view
-    if (brandParam === 'therapick' || (!brandParam && siteBrandFilter === 'therapick')) {
-        return <TherapickMasterView />;
-    }
 
     const triggerRevalidation = async () => {
         try {

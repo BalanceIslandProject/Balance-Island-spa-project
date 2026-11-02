@@ -90,15 +90,15 @@ export default function TherapickPaymentsView() {
   // Handle Mark as Paid
   const handleConfirmPayment = async (booking: any, method: string) => {
     await updatePaymentStatus(booking.id, 'Paid', method);
-    showToast(`Payment confirmed for Booking #${booking.reference_number || booking.id.slice(0, 8)}`);
+    showToast(`Payment confirmed for Booking #${booking.reference_number || String(booking.id || '').slice(0, 8)}`);
     setManualPayModal({ isOpen: false, booking: null, method: 'Cash' });
   };
 
   // Handle Refund
   const handleIssueRefund = async (booking: any) => {
-    if (!confirm(`Are you sure you want to issue a refund for Booking #${booking.reference_number || booking.id.slice(0, 8)}?`)) return;
+    if (!confirm(`Are you sure you want to issue a refund for Booking #${booking.reference_number || String(booking.id || '').slice(0, 8)}?`)) return;
     await updatePaymentStatus(booking.id, 'Refunded');
-    showToast(`Refund issued for Booking #${booking.reference_number || booking.id.slice(0, 8)}`);
+    showToast(`Refund issued for Booking #${booking.reference_number || String(booking.id || '').slice(0, 8)}`);
   };
 
   // Export CSV
@@ -315,7 +315,7 @@ export default function TherapickPaymentsView() {
                           onClick={() => setSelectedBooking(b)}
                           className="hover:text-amber-700 transition-colors cursor-pointer text-left"
                         >
-                          {b.reference_number || b.id.slice(0, 8)}
+                          {b.reference_number || String(b.id || '').slice(0, 8)}
                         </button>
                       </td>
                       <td className="py-3.5 px-4">
@@ -406,7 +406,7 @@ export default function TherapickPaymentsView() {
             </div>
 
             <div className="p-3 rounded-xl bg-stone-50 border border-stone-200 space-y-1 text-xs">
-              <div className="text-stone-500">Booking: <span className="font-mono font-bold text-neutral-900">#{manualPayModal.booking.reference_number || manualPayModal.booking.id.slice(0, 8)}</span></div>
+              <div className="text-stone-500">Booking: <span className="font-mono font-bold text-neutral-900">#{manualPayModal.booking.reference_number || String(manualPayModal.booking.id || '').slice(0, 8)}</span></div>
               <div className="text-stone-500">Guest: <span className="font-semibold text-neutral-900">{manualPayModal.booking.guest_name || manualPayModal.booking.customer_name}</span></div>
               <div className="text-stone-500">Amount: <span className="font-mono font-bold text-emerald-700">{formatIDR(manualPayModal.booking.revenue || manualPayModal.booking.total_amount)}</span></div>
             </div>

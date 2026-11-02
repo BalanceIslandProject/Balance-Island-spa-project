@@ -42,12 +42,11 @@ export default function TherapickAdvancedCalendarModal() {
   const [selectedPartnerId, setSelectedPartnerId] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
 
-  if (!isAdvancedCalendarOpen) return null;
-
   const currentBookings = system === 'website' ? websiteBookings : affiliateBookings;
 
   // Filter bookings
   const filteredBookings = useMemo(() => {
+    if (!isAdvancedCalendarOpen) return [];
     return currentBookings.filter(b => {
       if (selectedStatus !== 'all' && (b.status || '').toLowerCase() !== selectedStatus.toLowerCase()) {
         return false;
@@ -61,10 +60,11 @@ export default function TherapickAdvancedCalendarModal() {
       }
       return true;
     });
-  }, [currentBookings, selectedStatus, selectedPartnerId, system, partners]);
+  }, [isAdvancedCalendarOpen, currentBookings, selectedStatus, selectedPartnerId, system, partners]);
 
   // Detect schedule conflicts (same date, same time, or overlapping therapist)
   const conflicts = useMemo(() => {
+    if (!isAdvancedCalendarOpen) return [];
     const list: Array<{ b1: Booking; b2: Booking; reason: string }> = [];
     for (let i = 0; i < filteredBookings.length; i++) {
       for (let j = i + 1; j < filteredBookings.length; j++) {
@@ -80,7 +80,9 @@ export default function TherapickAdvancedCalendarModal() {
       }
     }
     return list;
-  }, [filteredBookings]);
+  }, [isAdvancedCalendarOpen, filteredBookings]);
+
+  if (!isAdvancedCalendarOpen) return null;
 
   // Calendar days for month view
   const year = currentDate.getFullYear();
@@ -274,7 +276,7 @@ export default function TherapickAdvancedCalendarModal() {
                 {Array.from({ length: totalDays }).map((_, i) => {
                   const dayNum = i + 1;
                   const dayStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
-                  const dayBookings = filteredBookings.filter(b => (b.booking_date || b.created_at.split('T')[0]) === dayStr);
+                  const dayBookings = filteredBookings.filter(b => (b.booking_date || (b.created_at ? b.created_at.split('T')[0] : '')) === dayStr);
 
                   return (
                     <div 

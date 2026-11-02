@@ -152,8 +152,9 @@ export default function TherapickPayoutsView() {
   // Transform live payouts into auditable PaymentRecords
   const paymentRecords: PaymentRecord[] = useMemo(() => {
     return payouts.map((p, idx) => {
-      const cleanRef = p.reference || p.payout_reference || p.payment_reference || `TRX${p.id.slice(0, 6).toUpperCase()}`;
-      const paymentCode = p.id.startsWith('PAY-') ? p.id : `PAY-${new Date(p.created_at || Date.now()).getFullYear()}-${String(idx + 1).padStart(4, '0')}`;
+      const pIdStr = String(p.id || '');
+      const cleanRef = p.reference || p.payout_reference || p.payment_reference || (pIdStr ? `TRX${pIdStr.slice(0, 6).toUpperCase()}` : 'TRX-PAY');
+      const paymentCode = pIdStr.startsWith('PAY-') ? pIdStr : `PAY-${new Date(p.created_at || Date.now()).getFullYear()}-${String(idx + 1).padStart(4, '0')}`;
       return {
         id: paymentCode,
         date: p.created_at ? p.created_at.split('T')[0] : '2026-11-01',

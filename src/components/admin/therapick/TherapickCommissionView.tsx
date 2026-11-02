@@ -298,10 +298,10 @@ export default function TherapickCommissionView() {
                   ) : (
                     filteredLedger.map(c => (
                       <tr key={c.id} className="hover:bg-stone-50/60">
-                        <td className="py-3.5 px-4 font-mono font-bold text-stone-700">{c.id.slice(0, 10)}...</td>
+                        <td className="py-3.5 px-4 font-mono font-bold text-stone-700">{String(c.id || '').slice(0, 10)}...</td>
                         <td className="py-3.5 px-4 text-stone-500">{new Date(c.created_at).toLocaleDateString()}</td>
                         <td className="py-3.5 px-4 font-bold text-neutral-900">{c.partner_name}</td>
-                        <td className="py-3.5 px-4 font-mono text-stone-600">{c.booking_id.slice(0, 8)}...</td>
+                        <td className="py-3.5 px-4 font-mono text-stone-600">{String(c.booking_id || '').slice(0, 8)}...</td>
                         <td className="py-3.5 px-4 font-bold font-mono text-neutral-900">
                           Rp {c.commission_amount.toLocaleString('id-ID')}
                         </td>

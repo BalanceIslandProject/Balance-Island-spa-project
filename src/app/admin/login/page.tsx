@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Lock, Mail, ArrowRight } from 'lucide-react';
 import { getAdminDomainInfo } from '@/lib/domainIsolation';
 
-export default function AdminLogin() {
+function AdminLoginForm() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
@@ -131,6 +131,14 @@ export default function AdminLogin() {
                 </form>
             </div>
         </div>
+    );
+}
+
+export default function AdminLogin() {
+    return (
+        <Suspense fallback={<div className="min-h-screen bg-[#FDFBF7] flex items-center justify-center text-xs text-stone-400">Loading sign in...</div>}>
+            <AdminLoginForm />
+        </Suspense>
     );
 }
 

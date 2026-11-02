@@ -122,7 +122,7 @@ export default function TherapickPartnerDrawer() {
               }`}>
                 {p.status || 'Active'} Partner
               </span>
-              <span className="text-xs font-mono text-stone-400">ID: {p.id.slice(0, 8)}</span>
+              <span className="text-xs font-mono text-stone-400">ID: {String(p.id || '').slice(0, 8)}</span>
             </div>
             <h2 className="text-xl font-bold text-neutral-950 font-sans mt-0.5">{fullName}</h2>
             {p.business_name && (
@@ -332,7 +332,7 @@ export default function TherapickPartnerDrawer() {
                       className="p-3 bg-white border border-stone-200 rounded-xl hover:border-neutral-900 transition-colors cursor-pointer space-y-1.5"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="font-mono text-xs font-bold text-neutral-900">#{b.reference_number || b.id.slice(0, 8)}</span>
+                        <span className="font-mono text-xs font-bold text-neutral-900">#{b.reference_number || String(b.id || '').slice(0, 8)}</span>
                         <span className="font-bold text-xs text-neutral-900">{formatIDR(b.revenue)}</span>
                       </div>
                       <div className="flex items-center justify-between text-xs text-stone-600">

@@ -45,6 +45,14 @@ export default function TherapickBookingDrawer() {
 
   const [loadingAction, setLoadingAction] = useState(false);
 
+  // Auto-calculated therapist fee based on database wage tiers and 2-person rules (packages, couple, four hands)
+  const autoFeeCalc = useMemo(() => {
+    if (!selectedBooking) {
+      return { feeTotal: 0, baseFee: 0, multiplier: 1, isDoubleTherapist: false, reason: '' };
+    }
+    return calculateBookingTherapistFee(selectedBooking, therapistFees, treatments);
+  }, [selectedBooking, therapistFees, treatments]);
+
   if (!selectedBooking) return null;
 
   const b = selectedBooking;
@@ -53,11 +61,6 @@ export default function TherapickBookingDrawer() {
   const commAmount = b.commission?.commission_amount 
     ? Number(b.commission.commission_amount) 
     : (isAffiliate ? revenue * 0.15 : 0);
-
-  // Auto-calculated therapist fee based on database wage tiers and 2-person rules (packages, couple, four hands)
-  const autoFeeCalc = useMemo(() => {
-    return calculateBookingTherapistFee(b, therapistFees, treatments);
-  }, [b, therapistFees, treatments]);
 
   // If therapist_fee_total in booking record is > 0, use it; otherwise use the auto-calculated fee
   const effectiveTherapistFee = Number(b.therapist_fee_total) > 0 

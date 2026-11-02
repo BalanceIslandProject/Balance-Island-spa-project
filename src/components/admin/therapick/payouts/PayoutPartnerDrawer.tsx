@@ -225,7 +225,7 @@ export default function PayoutPartnerDrawer({
                   {partnerCommissions.slice(0, 3).map(comm => (
                     <div key={comm.id} className="p-2.5 rounded-xl bg-stone-50/70 border border-stone-100 flex items-center justify-between text-xs">
                       <div>
-                        <div className="font-bold text-neutral-900">{comm.booking_reference || `#${comm.id.slice(0, 6)}`}</div>
+                        <div className="font-bold text-neutral-900">{comm.booking_reference || `#${String(comm.id || '').slice(0, 6)}`}</div>
                         <div className="text-[10px] text-stone-400">{comm.service_name || 'Spa Package'} · {formatWitaDate(comm.created_at)}</div>
                       </div>
                       <span className="font-bold font-mono text-emerald-700">
@@ -274,7 +274,7 @@ export default function PayoutPartnerDrawer({
                     <div key={comm.id} className="p-3.5 rounded-xl bg-white border border-stone-200/90 shadow-2xs space-y-2">
                       <div className="flex items-center justify-between text-xs">
                         <span className="font-mono font-bold text-neutral-950">
-                          {comm.booking_reference || (comm.booking_id ? `#${comm.booking_id.replace(/^#/, '')}` : `#${comm.id.slice(0, 8)}`)}
+                          {comm.booking_reference || (comm.booking_id ? `#${String(comm.booking_id).replace(/^#/, '')}` : `#${String(comm.id || '').slice(0, 8)}`)}
                         </span>
                         <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${badgeStyle}`}>
                           {badgeLabel}
