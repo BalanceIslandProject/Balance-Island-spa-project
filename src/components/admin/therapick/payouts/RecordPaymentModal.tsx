@@ -1,18 +1,13 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   X, 
-  Check, 
-  Wallet, 
-  Calendar, 
-  Building2, 
-  User, 
-  CreditCard, 
   AlertCircle,
-  FileText,
-  Upload,
-  CheckCircle2
+  Paperclip,
+  Check,
+  ChevronDown,
+  Loader2
 } from 'lucide-react';
 import { PartnerPayoutRow, PayoutWeeklyScheduleConfig } from '@/types/payouts';
 import { formatIDR } from '@/lib/payoutScheduler';
@@ -37,7 +32,6 @@ export default function RecordPaymentModal({
   isOpen,
   onClose,
   partner,
-  config,
   onRecordPayment
 }: RecordPaymentModalProps) {
   const [amount, setAmount] = useState<number>(0);
@@ -46,7 +40,7 @@ export default function RecordPaymentModal({
     try {
       return new Date().toISOString().split('T')[0];
     } catch {
-      return '2026-11-05';
+      return '2026-11-02';
     }
   });
   const [method, setMethod] = useState<string>('Bank Transfer (BCA)');
@@ -60,15 +54,30 @@ export default function RecordPaymentModal({
 
   // Sync state whenever partner changes or modal opens
   useEffect(() => {
-    if (partner) {
+    if (partner && isOpen) {
       const defaultAmt = partner.unpaid > 0 ? partner.unpaid : 0;
       setAmount(defaultAmt);
       setAmountInput(defaultAmt > 0 ? defaultAmt.toLocaleString('id-ID') : '');
-      setReference(`TRX${Date.now().toString().slice(-6)}`);
-      setNotes(`Weekly Payout settlement for ${partner.name}`);
+      const codePart = (partner.partner_code || partner.referral_code || 'REF').replace(/[^A-Za-z0-9]/g, '').slice(0, 4).toUpperCase();
+      setReference(`TRX${codePart}${Date.now().toString().slice(-4)}`);
+      setNotes('');
+      setReceiptFile(null);
+      setReceiptUrl('');
       setErrorMessage(null);
     }
   }, [partner, isOpen]);
+
+  // Handle ESC key to dismiss
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !isSubmitting) {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, isSubmitting, onClose]);
 
   if (!isOpen || !partner) return null;
 
@@ -81,7 +90,7 @@ export default function RecordPaymentModal({
     setAmount(numVal);
     setAmountInput(numVal > 0 ? numVal.toLocaleString('id-ID') : '');
     if (numVal > maxBalance) {
-      setErrorMessage(`Payment amount cannot exceed available unpaid balance (${formatIDR(maxBalance)})`);
+      setErrorMessage(`Amount exceeds unpaid balance (${formatIDR(maxBalance)})`);
     } else {
       setErrorMessage(null);
     }
@@ -98,11 +107,11 @@ export default function RecordPaymentModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (amount <= 0) {
-      setErrorMessage('Please enter a valid payment amount greater than Rp 0.');
+      setErrorMessage('Enter an amount greater than Rp 0.');
       return;
     }
     if (amount > maxBalance) {
-      setErrorMessage(`Payment amount cannot exceed available unpaid balance (${formatIDR(maxBalance)})`);
+      setErrorMessage(`Amount exceeds unpaid balance (${formatIDR(maxBalance)})`);
       return;
     }
 
@@ -115,91 +124,98 @@ export default function RecordPaymentModal({
         amount,
         payment_date: paymentDate,
         method,
-        reference: reference || `TRX${Date.now().toString().slice(-6)}`,
-        notes,
-        receipt_url: receiptUrl
+        reference: reference.trim() || `TRX${Date.now().toString().slice(-6)}`,
+        notes: notes.trim(),
+        receipt_url: receiptUrl.trim()
       });
 
       if (!res.success) {
-        throw new Error(res.error || 'Failed to record payment');
+        throw new Error(res.error || 'Payment recording failed.');
       }
 
       onClose();
     } catch (err: any) {
-      setErrorMessage(err.message || 'Error recording payment.');
+      setErrorMessage(err.message || 'Payment recording failed.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-950/50 backdrop-blur-xs animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-neutral-950/40 backdrop-blur-xs animate-in fade-in duration-150">
       <div 
-        className="fixed inset-0"
-        onClick={() => !isSubmitting && onClose()}
+        className="fixed inset-0" 
+        onClick={() => !isSubmitting && onClose()} 
       />
 
-      <div className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-stone-200/90 overflow-hidden z-10 animate-in zoom-in-95 duration-200 flex flex-col max-h-[92vh]">
+      <div className="relative w-full max-w-md sm:max-w-lg bg-white rounded-[8px] border border-[#ebebeb] shadow-[0_8px_30px_rgba(0,0,0,0.08)] overflow-hidden z-10 animate-in zoom-in-95 duration-150 flex flex-col max-h-[90vh]">
         
         {/* Header */}
-        <div className="px-6 py-4 border-b border-stone-200/80 flex items-center justify-between bg-stone-50/60">
+        <div className="px-5 py-3.5 border-b border-[#ebebeb] flex items-center justify-between bg-white">
           <div>
-            <h3 className="text-base font-extrabold text-neutral-900 tracking-tight">Record Payment</h3>
-            <p className="text-xs text-stone-500">Record a completed manual bank transfer or cash disbursement.</p>
+            <span className="font-mono text-[10px] uppercase tracking-[0.071em] text-[#666666] block leading-none mb-1">
+              Disbursement
+            </span>
+            <h3 className="text-sm sm:text-base font-semibold tracking-[-0.03em] text-[#171717] leading-tight">
+              Record Payment
+            </h3>
           </div>
           <button
             type="button"
             onClick={onClose}
             disabled={isSubmitting}
-            className="p-1.5 rounded-xl text-stone-400 hover:text-neutral-900 hover:bg-stone-200/60 transition-colors cursor-pointer"
+            className="w-7 h-7 rounded-[6px] border border-transparent hover:border-[#ebebeb] hover:bg-[#fafafa] flex items-center justify-center text-[#666666] hover:text-[#171717] transition-all cursor-pointer"
           >
-            <X size={18} />
+            <X size={15} />
           </button>
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4.5 overflow-y-auto">
+        <form onSubmit={handleSubmit} className="p-4 sm:p-5 space-y-3.5 overflow-y-auto">
           
-          {/* Partner Banner Card */}
-          <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200/80 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-neutral-900 text-amber-400 flex items-center justify-center font-bold text-sm">
-                <User size={18} />
-              </div>
-              <div>
-                <h4 className="font-extrabold text-neutral-900 text-sm leading-tight">{partner.name}</h4>
-                <p className="text-xs text-stone-500 mt-0.5">{partner.business_name || 'Affiliate Partner'}</p>
-                {partner.account_number && (
-                  <p className="text-[11px] font-mono text-stone-600 mt-0.5">
-                    {partner.bank_name || 'BCA'} · {partner.account_number}
-                  </p>
-                )}
-              </div>
+          {/* Partner & Balance Summary Card */}
+          <div className="p-3 bg-[#fafafa] border border-[#ebebeb] rounded-[6px] flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <h4 className="font-semibold text-xs sm:text-sm text-[#171717] truncate leading-tight">
+                {partner.name}
+              </h4>
+              <p className="font-mono text-[11px] text-[#666666] mt-0.5 truncate">
+                {partner.bank_name || 'BCA'} {partner.account_number ? `· ${partner.account_number}` : ''}
+                {partner.business_name ? ` (${partner.business_name})` : ''}
+              </p>
             </div>
 
-            <div className="text-right shrink-0 bg-white/90 border border-amber-200 rounded-xl px-3 py-2 shadow-2xs">
-              <div className="text-[10px] font-bold uppercase tracking-wider text-stone-500">Unpaid Balance</div>
-              <div className="text-sm font-extrabold font-mono text-emerald-700 mt-0.5">
+            <div className="text-right shrink-0 pl-2">
+              <span className="font-mono text-[10px] uppercase tracking-[0.071em] text-[#666666] block leading-none">
+                Unpaid
+              </span>
+              <span className="font-mono text-xs sm:text-sm font-semibold text-[#297a3a] tabular-nums mt-0.5 block leading-tight">
                 {formatIDR(partner.unpaid)}
-              </div>
+              </span>
             </div>
           </div>
 
-          {/* Error Message Alert */}
+          {/* Error Message */}
           {errorMessage && (
-            <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center gap-2">
-              <AlertCircle size={15} className="shrink-0 text-rose-600" />
-              <span>{errorMessage}</span>
+            <div className="p-2.5 rounded-[6px] bg-red-50 border border-red-200 text-red-700 text-xs flex items-start gap-2">
+              <AlertCircle size={14} className="shrink-0 text-red-600 mt-0.5" />
+              <span className="leading-tight">{errorMessage}</span>
             </div>
           )}
 
-          {/* Field 1: Payment Amount */}
+          {/* Amount Field */}
           <div>
-            <label className="block text-xs font-bold text-neutral-900 mb-1">
-              Payment Amount <span className="text-rose-500">*</span>
-            </label>
-            <div className="relative">
-              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-stone-400 font-mono">
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-xs font-medium text-[#171717]">
+                Amount <span className="text-red-500">*</span>
+              </label>
+              <span className="font-mono text-[11px] text-[#666666]">
+                Balance: <strong className="text-[#171717] font-semibold">{formatIDR(maxBalance)}</strong>
+              </span>
+            </div>
+
+            <div className="relative flex items-center h-10 px-3 bg-[#fafafa] border border-[#ebebeb] rounded-[6px] focus-within:bg-white focus-within:border-[#171717] transition-all">
+              <span className="font-mono text-xs font-semibold text-[#666666] mr-2 select-none">
                 Rp
               </span>
               <input
@@ -208,100 +224,100 @@ export default function RecordPaymentModal({
                 value={amountInput}
                 onChange={handleAmountChange}
                 placeholder="0"
-                className="w-full text-sm font-bold font-mono bg-stone-50/70 border border-stone-200 rounded-xl pl-10 pr-16 py-2.5 text-neutral-900 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:bg-white transition-all shadow-2xs"
+                className="w-full bg-transparent text-sm font-semibold font-mono text-[#171717] outline-none placeholder:text-[#a8a8a8] tabular-nums"
               />
               <button
                 type="button"
                 onClick={handleMaxClick}
-                className="absolute right-2 top-1/2 -translate-y-1/2 px-2.5 py-1 rounded-lg bg-stone-200 hover:bg-stone-300 text-stone-800 text-[11px] font-bold transition-colors cursor-pointer"
+                className="h-6 px-2 text-[10px] font-mono uppercase font-semibold rounded-[4px] bg-white border border-[#ebebeb] text-[#171717] hover:border-[#171717] hover:bg-[#171717] hover:text-white transition-all cursor-pointer shrink-0 ml-2"
               >
                 Max
               </button>
             </div>
-            <span className="text-[10px] text-stone-400 mt-1 block">
-              Available to disburse: <strong className="text-neutral-700">{formatIDR(maxBalance)}</strong>. Partial payments supported.
-            </span>
           </div>
 
-          {/* Field 2 & 3: Payment Date and Payment Method */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          {/* Date & Method Row */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-neutral-900 mb-1">
-                Payment Date <span className="text-rose-500">*</span>
+              <label className="block text-xs font-medium text-[#171717] mb-1">
+                Date <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="date"
+                required
+                value={paymentDate}
+                onChange={e => setPaymentDate(e.target.value)}
+                className="h-9 sm:h-10 w-full text-xs font-mono bg-[#fafafa] border border-[#ebebeb] rounded-[6px] px-3 text-[#171717] focus:bg-white focus:border-[#171717] outline-none transition-all cursor-pointer"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-[#171717] mb-1">
+                Method <span className="text-red-500">*</span>
               </label>
               <div className="relative">
-                <input
-                  type="date"
-                  required
-                  value={paymentDate}
-                  onChange={e => setPaymentDate(e.target.value)}
-                  className="w-full text-xs font-semibold bg-stone-50/70 border border-stone-200 rounded-xl px-3 py-2.5 text-neutral-900 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:bg-white transition-all shadow-2xs"
-                />
+                <select
+                  value={method}
+                  onChange={e => setMethod(e.target.value)}
+                  className="h-9 sm:h-10 w-full text-xs bg-[#fafafa] border border-[#ebebeb] rounded-[6px] px-3 pr-8 text-[#171717] focus:bg-white focus:border-[#171717] outline-none transition-all appearance-none cursor-pointer"
+                >
+                  <option value="Bank Transfer (BCA)">Bank Transfer (BCA)</option>
+                  <option value="Bank Transfer (Mandiri)">Bank Transfer (Mandiri)</option>
+                  <option value="Bank Transfer (BNI)">Bank Transfer (BNI)</option>
+                  <option value="Bank Transfer (BRI)">Bank Transfer (BRI)</option>
+                  <option value="Other Bank">Other Bank</option>
+                  <option value="Cash">Cash</option>
+                  <option value="Other">Other</option>
+                </select>
+                <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#666666] pointer-events-none" />
               </div>
+            </div>
+          </div>
+
+          {/* Reference & Note Row */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-[#171717] mb-1">
+                Reference
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. TRX123456"
+                value={reference}
+                onChange={e => setReference(e.target.value)}
+                className="h-9 sm:h-10 w-full text-xs font-mono bg-[#fafafa] border border-[#ebebeb] rounded-[6px] px-3 text-[#171717] placeholder:text-[#a8a8a8] focus:bg-white focus:border-[#171717] outline-none transition-all"
+              />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-neutral-900 mb-1">
-                Payment Method <span className="text-rose-500">*</span>
+              <label className="block text-xs font-medium text-[#171717] mb-1">
+                Note <span className="text-[#a8a8a8] font-normal text-[11px]">(Optional)</span>
               </label>
-              <select
-                value={method}
-                onChange={e => setMethod(e.target.value)}
-                className="w-full text-xs font-semibold bg-stone-50/70 border border-stone-200 rounded-xl px-3 py-2.5 text-neutral-900 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:bg-white transition-all shadow-2xs cursor-pointer"
-              >
-                <option value="Bank Transfer (BCA)">Bank Transfer (BCA)</option>
-                <option value="Bank Transfer (Mandiri)">Bank Transfer (Mandiri)</option>
-                <option value="Bank Transfer (BNI)">Bank Transfer (BNI)</option>
-                <option value="Other Bank">Other Bank</option>
-                <option value="Cash">Cash</option>
-                <option value="Other">Other</option>
-              </select>
+              <input
+                type="text"
+                placeholder="e.g. Weekly settlement"
+                value={notes}
+                onChange={e => setNotes(e.target.value)}
+                className="h-9 sm:h-10 w-full text-xs bg-[#fafafa] border border-[#ebebeb] rounded-[6px] px-3 text-[#171717] placeholder:text-[#a8a8a8] focus:bg-white focus:border-[#171717] outline-none transition-all"
+              />
             </div>
           </div>
 
-          {/* Field 4: Transaction Reference */}
+          {/* Receipt / Transfer Proof */}
           <div>
-            <label className="block text-xs font-bold text-neutral-900 mb-1">
-              Transaction Reference
-            </label>
-            <input
-              type="text"
-              placeholder="e.g. TRX123456"
-              value={reference}
-              onChange={e => setReference(e.target.value)}
-              className="w-full text-xs font-medium font-mono bg-stone-50/70 border border-stone-200 rounded-xl px-3 py-2.5 text-neutral-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:bg-white transition-all shadow-2xs"
-            />
-          </div>
-
-          {/* Field 5: Note (Optional) */}
-          <div>
-            <label className="block text-xs font-bold text-neutral-900 mb-1">
-              Note (Optional)
-            </label>
-            <input
-              type="text"
-              placeholder="e.g. Payout Nov 2026"
-              value={notes}
-              onChange={e => setNotes(e.target.value)}
-              className="w-full text-xs font-medium bg-stone-50/70 border border-stone-200 rounded-xl px-3 py-2.5 text-neutral-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:bg-white transition-all shadow-2xs"
-            />
-          </div>
-
-          {/* Field 6: Payment Receipt (Optional) */}
-          <div>
-            <label className="block text-xs font-bold text-neutral-900 mb-1">
-              Payment Receipt / Transfer Proof (Optional)
+            <label className="block text-xs font-medium text-[#171717] mb-1">
+              Receipt / Proof <span className="text-[#a8a8a8] font-normal text-[11px]">(Optional)</span>
             </label>
             <div className="flex items-center gap-2">
               <input
                 type="text"
-                placeholder="Paste transfer receipt URL or filename"
+                placeholder="Paste receipt URL or filename"
                 value={receiptUrl}
                 onChange={e => setReceiptUrl(e.target.value)}
-                className="flex-1 text-xs font-medium bg-stone-50/70 border border-stone-200 rounded-xl px-3 py-2.5 text-neutral-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:bg-white transition-all shadow-2xs"
+                className="flex-1 h-9 sm:h-10 text-xs bg-[#fafafa] border border-[#ebebeb] rounded-[6px] px-3 text-[#171717] placeholder:text-[#a8a8a8] focus:bg-white focus:border-[#171717] outline-none transition-all"
               />
-              <label className="px-3 py-2.5 rounded-xl border border-stone-200 bg-white hover:bg-stone-50 text-xs font-semibold text-stone-700 flex items-center gap-1.5 cursor-pointer shadow-2xs">
-                <Upload size={14} className="text-stone-500" />
+              <label className="h-9 sm:h-10 px-3 rounded-[6px] border border-[#ebebeb] bg-white hover:border-[#171717] hover:bg-[#fafafa] text-xs font-medium text-[#171717] flex items-center gap-1.5 cursor-pointer shrink-0 transition-all">
+                <Paperclip size={13} className="text-[#666666]" />
                 <span className="hidden sm:inline">Attach</span>
                 <input
                   type="file"
@@ -317,35 +333,47 @@ export default function RecordPaymentModal({
               </label>
             </div>
             {receiptFile && (
-              <span className="text-[10px] text-emerald-700 font-semibold mt-1 block">
-                Attached: {receiptFile.name} ({(receiptFile.size / 1024).toFixed(1)} KB)
-              </span>
+              <div className="flex items-center justify-between text-[11px] font-mono text-[#297a3a] mt-1.5 px-1">
+                <span className="truncate">
+                  Attached: {receiptFile.name} ({(receiptFile.size / 1024).toFixed(0)} KB)
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setReceiptFile(null);
+                    setReceiptUrl('');
+                  }}
+                  className="text-[#666666] hover:text-red-600 ml-2"
+                >
+                  <X size={12} />
+                </button>
+              </div>
             )}
           </div>
 
-          {/* Form Actions */}
-          <div className="pt-3 border-t border-stone-100 flex items-center justify-end gap-2.5">
+          {/* Footer Actions */}
+          <div className="pt-3 border-t border-[#ebebeb] flex items-center justify-end gap-2">
             <button
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="px-4 py-2.5 rounded-xl border border-stone-200 bg-white hover:bg-stone-50 text-xs font-bold text-stone-700 transition-colors cursor-pointer"
+              className="h-9 px-4 rounded-[6px] border border-[#ebebeb] bg-white hover:border-[#171717] hover:text-[#171717] text-xs font-medium text-[#4d4d4d] transition-all cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting || amount <= 0 || amount > maxBalance}
-              className="px-5 py-2.5 rounded-xl bg-[#facc15] hover:bg-[#eab308] text-neutral-950 text-xs font-extrabold flex items-center gap-1.5 shadow-xs transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              className="h-9 px-4 rounded-[6px] bg-[#171717] hover:bg-[#262626] text-white text-xs font-medium flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-[0_1px_2px_rgba(0,0,0,0.1)]"
             >
               {isSubmitting ? (
                 <>
-                  <span className="w-3.5 h-3.5 border-2 border-neutral-950 border-t-transparent rounded-full animate-spin" />
+                  <Loader2 size={13} className="animate-spin" />
                   <span>Recording...</span>
                 </>
               ) : (
                 <>
-                  <CheckCircle2 size={15} className="text-neutral-950" />
+                  <Check size={13} />
                   <span>Record Payment</span>
                 </>
               )}
