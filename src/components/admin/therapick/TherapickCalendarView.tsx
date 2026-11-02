@@ -229,21 +229,20 @@ export default function TherapickCalendarView() {
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
       
-      {/* ─────────────────────────────────────────────────────────────
-          1. HEADER & TOP CONTROLS
-         ───────────────────────────────────────────────────────────── */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      {/* 1. FITLO PAGE HEADER & TOP CONTROLS */}
+      <div className="fitlo-page-head">
         <div>
-          <div className="flex items-center gap-2.5">
-            <h1 className="text-xl sm:text-2xl font-extrabold text-neutral-900 tracking-tight">
-              Calendar
+          <div className="flex items-center gap-3">
+            <h1 className="fitlo-page-title">
+              Calendar & Schedule
             </h1>
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-[#FACC15]/20 text-neutral-900 border border-amber-300">
-              {system === 'website' ? 'Website Direct' : 'Affiliate Portal'}
+            <span className="fitlo-badge">
+              <CalendarIcon size={12} className="text-[#0b7a73]" />
+              <span>{system === 'website' ? 'Direct Schedule' : 'Affiliate Portal'}</span>
             </span>
           </div>
-          <p className="text-xs sm:text-sm text-stone-500 mt-0.5">
-            Manage bookings, daily schedules, and appointments.
+          <p className="fitlo-page-subtitle">
+            Manage live therapists, daily booking queues, and synchronized availability slots.
           </p>
         </div>
 
@@ -252,60 +251,54 @@ export default function TherapickCalendarView() {
           <button
             type="button"
             onClick={handleToday}
-            className="px-2.5 py-1.5 text-xs font-bold rounded-xl border border-stone-200 bg-white text-neutral-800 hover:bg-stone-50 transition-colors shadow-2xs cursor-pointer"
+            className="fitlo-btn fitlo-btn--ghost !h-9 !px-3"
           >
             Today
           </button>
 
           {/* Month / Period Navigation (< >) */}
-          <div className="flex items-center gap-2 bg-white border border-stone-200 px-2 py-1 rounded-xl shadow-2xs">
+          <div className="flex items-center gap-2 bg-[var(--fitlo-card)] border border-[var(--fitlo-line)] px-2 py-1 rounded-xl shadow-[var(--fitlo-shadow)]">
             <button
               type="button"
               onClick={handlePrev}
-              className="p-1 rounded-lg text-stone-500 hover:text-neutral-900 hover:bg-stone-50 transition-colors cursor-pointer"
+              className="p-1 rounded-lg text-[var(--fitlo-muted)] hover:text-[var(--fitlo-ink)] hover:bg-[var(--fitlo-card-2)] transition-colors cursor-pointer"
               title="Previous period"
             >
               <ChevronLeft size={16} />
             </button>
-            <span className="text-xs font-bold text-neutral-900 min-w-[110px] text-center font-mono">
+            <span className="text-xs font-bold text-[var(--fitlo-ink)] min-w-[110px] text-center font-mono">
               {viewMode === 'day' ? formattedSelectedDate : monthTitle}
             </span>
             <button
               type="button"
               onClick={handleNext}
-              className="p-1 rounded-lg text-stone-500 hover:text-neutral-900 hover:bg-stone-50 transition-colors cursor-pointer"
+              className="p-1 rounded-lg text-[var(--fitlo-muted)] hover:text-[var(--fitlo-ink)] hover:bg-[var(--fitlo-card-2)] transition-colors cursor-pointer"
               title="Next period"
             >
               <ChevronRight size={16} />
             </button>
           </div>
 
-          {/* View Mode Toggle: Month | Week | Day */}
-          <div className="flex items-center gap-1 bg-stone-100 p-1 rounded-xl text-xs font-bold">
+          {/* View Mode Toggle Pill: Month | Week | Day */}
+          <div className="fitlo-sides !p-1">
             <button
               type="button"
               onClick={() => setViewMode('month')}
-              className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
-                viewMode === 'month' ? 'bg-[#FACC15] text-neutral-950 shadow-2xs font-extrabold' : 'text-stone-500 hover:text-neutral-900'
-              }`}
+              className={`!h-8 !px-3 text-xs ${viewMode === 'month' ? 'is-active !font-bold' : ''}`}
             >
               Month
             </button>
             <button
               type="button"
               onClick={() => setViewMode('week')}
-              className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
-                viewMode === 'week' ? 'bg-[#FACC15] text-neutral-950 shadow-2xs font-extrabold' : 'text-stone-500 hover:text-neutral-900'
-              }`}
+              className={`!h-8 !px-3 text-xs ${viewMode === 'week' ? 'is-active !font-bold' : ''}`}
             >
               Week
             </button>
             <button
               type="button"
               onClick={() => setViewMode('day')}
-              className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
-                viewMode === 'day' ? 'bg-[#FACC15] text-neutral-950 shadow-2xs font-extrabold' : 'text-stone-500 hover:text-neutral-900'
-              }`}
+              className={`!h-8 !px-3 text-xs ${viewMode === 'day' ? 'is-active !font-bold' : ''}`}
             >
               Day
             </button>
@@ -315,7 +308,7 @@ export default function TherapickCalendarView() {
           <select
             value={therapistFilter}
             onChange={e => setTherapistFilter(e.target.value)}
-            className="px-3.5 py-2 rounded-xl border border-stone-200 bg-white text-xs font-semibold text-neutral-900 focus:outline-none focus:ring-2 focus:ring-amber-400 cursor-pointer shadow-2xs"
+            className="fitlo-select !h-9 !py-0 text-xs font-semibold cursor-pointer"
           >
             <option value="all">All Therapists</option>
             {therapistsList.map(t => (
@@ -325,22 +318,20 @@ export default function TherapickCalendarView() {
         </div>
       </div>
 
-      {/* ─────────────────────────────────────────────────────────────
-          2. CALENDAR VIEW MAIN BODY
-         ───────────────────────────────────────────────────────────── */}
+      {/* 2. CALENDAR VIEW MAIN BODY */}
       {viewMode === 'month' && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
           
           {/* Left Column: Month Calendar Matrix (~7-8 cols / 65%) */}
-          <div className="lg:col-span-8 bg-white border border-stone-200/90 rounded-2xl p-6 shadow-2xs space-y-4">
+          <div className="lg:col-span-8 fitlo-card space-y-4">
             
             {/* Month Header Banner with Total Count Badge */}
-            <div className="flex items-center justify-between pb-3 border-b border-stone-100 flex-wrap gap-2">
+            <div className="flex items-center justify-between pb-3 border-b border-[var(--fitlo-line)] flex-wrap gap-2">
               <div className="flex items-center gap-2.5">
-                <h2 className="text-sm font-bold text-neutral-900 font-mono tracking-tight">
+                <h2 className="text-sm font-bold text-[var(--fitlo-ink)] font-mono tracking-tight">
                   {monthTitle}
                 </h2>
-                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold bg-amber-50 text-amber-900 border border-amber-200/80 shadow-2xs">
+                <span className="fitlo-badge">
                   {currentMonthBookingsCount} {currentMonthBookingsCount === 1 ? 'Booking' : 'Bookings'}
                 </span>
               </div>
@@ -348,7 +339,7 @@ export default function TherapickCalendarView() {
               <button
                 type="button"
                 onClick={() => setIsAdvancedCalendarOpen(true)}
-                className="text-xs font-bold text-amber-800 hover:text-neutral-950 flex items-center gap-1.5 cursor-pointer"
+                className="text-xs font-bold text-[var(--fitlo-accent)] hover:text-[var(--fitlo-accent-hi)] flex items-center gap-1.5 cursor-pointer"
               >
                 <SettingsIcon size={13} />
                 <span>Advanced Availability</span>
@@ -356,7 +347,7 @@ export default function TherapickCalendarView() {
             </div>
 
             {/* Weekday Labels (Mon to Sun) */}
-            <div className="grid grid-cols-7 text-center text-[11px] font-mono font-bold uppercase text-stone-400 pb-2">
+            <div className="grid grid-cols-7 text-center text-[11px] font-mono font-bold uppercase text-[var(--fitlo-muted)] pb-2">
               <div>Mon</div>
               <div>Tue</div>
               <div>Wed</div>
@@ -366,7 +357,7 @@ export default function TherapickCalendarView() {
               <div>Sun</div>
             </div>
 
-            {/* Day Numbers Grid: Clean circles with booking count number badge above/on the date */}
+            {/* Day Numbers Grid */}
             <div className="grid grid-cols-7 gap-y-3.5 gap-x-1 sm:gap-x-2 text-center">
               {monthDays.map((cell, idx) => {
                 const isSelected = cell.dateStr === selectedDateStr;
@@ -380,24 +371,24 @@ export default function TherapickCalendarView() {
                       onClick={() => setSelectedDateStr(cell.dateStr)}
                       className={`relative group w-10 h-10 sm:w-11 sm:h-11 rounded-2xl flex items-center justify-center text-xs font-semibold font-mono transition-all cursor-pointer ${
                         isSelected
-                          ? 'bg-[#FACC15] text-neutral-950 font-extrabold shadow-sm ring-2 ring-[#FACC15]/40 scale-105 z-10'
+                          ? 'bg-[#0b7a73] text-white font-extrabold shadow-sm ring-2 ring-[rgba(11,122,115,0.3)] scale-105 z-10'
                           : hasBookings
-                          ? 'bg-amber-50/80 border border-amber-300 hover:bg-amber-100/90 text-neutral-950 font-bold shadow-2xs'
+                          ? 'bg-[var(--fitlo-accent-soft)] border border-[rgba(11,122,115,0.25)] hover:bg-[rgba(11,122,115,0.18)] text-[var(--fitlo-ink)] font-bold'
                           : !cell.isCurrentMonth
-                          ? 'text-stone-300 hover:text-stone-500 hover:bg-stone-50 border border-transparent'
-                          : 'text-neutral-800 hover:bg-stone-100 border border-transparent'
-                      } ${isToday && !isSelected ? 'ring-1.5 ring-neutral-900' : ''}`}
+                          ? 'text-[var(--fitlo-muted)] opacity-40 hover:opacity-100 hover:bg-[var(--fitlo-card-2)] border border-transparent'
+                          : 'text-[var(--fitlo-ink)] hover:bg-[var(--fitlo-card-2)] border border-transparent'
+                      } ${isToday && !isSelected ? 'ring-1.5 ring-[var(--fitlo-ink)]' : ''}`}
                       title={hasBookings ? `${cell.count} ${cell.count === 1 ? 'booking' : 'bookings'} on ${cell.dateStr}` : cell.dateStr}
                     >
                       <span>{cell.day}</span>
 
-                      {/* Prominent Booking Number Badge above/top-right of date (no text underneath) */}
+                      {/* Prominent Booking Number Badge */}
                       {hasBookings && (
                         <span
-                          className={`absolute -top-1.5 -right-1.5 min-w-[19px] h-[19px] px-1 rounded-full text-[10px] font-mono font-black flex items-center justify-center leading-none shadow-xs transition-transform group-hover:scale-110 ${
+                          className={`absolute -top-1.5 -right-1.5 min-w-[19px] h-[19px] px-1 rounded-full text-[10px] font-mono font-bold flex items-center justify-center leading-none shadow-xs transition-transform group-hover:scale-110 ${
                             isSelected
-                              ? 'bg-neutral-950 text-[#FACC15] ring-2 ring-white'
-                              : 'bg-[#FACC15] text-neutral-950 border border-amber-400 ring-2 ring-white'
+                              ? 'bg-[var(--fitlo-card)] text-[#0b7a73] ring-2 ring-[#0b7a73]'
+                              : 'bg-[#0b7a73] text-white ring-2 ring-[var(--fitlo-card)]'
                           }`}
                         >
                           {cell.count}
@@ -410,14 +401,14 @@ export default function TherapickCalendarView() {
             </div>
 
             {/* System Calendar Visibility Bar */}
-            <div className="pt-4 border-t border-stone-100 flex items-center justify-between text-xs">
+            <div className="pt-4 border-t border-[var(--fitlo-line)] flex items-center justify-between text-xs">
               <div className="flex items-center gap-2">
-                <Eye size={15} className="text-stone-400" />
+                <Eye size={15} className="text-[var(--fitlo-muted)]" />
                 <div>
-                  <span className="font-bold text-neutral-900">
+                  <span className="font-bold text-[var(--fitlo-ink)]">
                     {system === 'website' ? 'Show Website Calendar' : 'Show Affiliate Calendar'}
                   </span>
-                  <p className="text-[11px] text-stone-500">
+                  <p className="text-[11px] text-[var(--fitlo-muted)]">
                     {system === 'website' 
                       ? 'Allow customers to view available slots on booktherapick.com' 
                       : 'Allow affiliate partners to view available slots on partner portal'}
@@ -436,8 +427,8 @@ export default function TherapickCalendarView() {
                 }}
                 className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
                   (system === 'website' ? calendarVisibility !== false : showOnAffiliateCalendars !== false)
-                    ? 'bg-[#FACC15]' 
-                    : 'bg-stone-200'
+                    ? 'bg-[#0b7a73]' 
+                    : 'bg-[var(--fitlo-card-3)]'
                 }`}
               >
                 <span
@@ -452,33 +443,31 @@ export default function TherapickCalendarView() {
           </div>
 
           {/* Right Column: Selected Day Schedule (~4-5 cols / 35%) */}
-          <div className="lg:col-span-4 bg-white border border-stone-200/90 rounded-2xl p-6 shadow-2xs flex flex-col justify-between">
+          <div className="lg:col-span-4 fitlo-card flex flex-col justify-between">
             <div className="space-y-4">
-              <div className="flex items-center justify-between pb-3 border-b border-stone-100">
+              <div className="flex items-center justify-between pb-3 border-b border-[var(--fitlo-line)]">
                 <div>
-                  <h2 className="text-sm font-extrabold text-neutral-900">
+                  <h2 className="text-sm font-bold text-[var(--fitlo-ink)]">
                     {formattedSelectedDate}
                   </h2>
-                  <p className="text-[11px] text-stone-400 font-mono">
+                  <p className="text-[11px] text-[var(--fitlo-muted)] font-mono">
                     {system === 'website' ? 'Website Direct Bookings' : 'Affiliate Attributed Bookings'}
                   </p>
                 </div>
-                <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${
-                  dayBookings.length > 0 
-                    ? 'bg-amber-100 text-amber-900 border border-amber-200' 
-                    : 'bg-stone-100 text-stone-500'
+                <span className={`fitlo-badge ${
+                  dayBookings.length > 0 ? '!bg-[var(--fitlo-accent-soft)] !text-[var(--fitlo-accent-text)]' : ''
                 }`}>
                   {dayBookings.length} {dayBookings.length === 1 ? 'Booking' : 'Bookings'}
                 </span>
               </div>
 
               {dayBookings.length === 0 ? (
-                <div className="p-8 rounded-xl bg-stone-50/70 border border-dashed border-stone-200 text-center space-y-2">
-                  <div className="w-10 h-10 rounded-full bg-stone-100 text-stone-400 flex items-center justify-center mx-auto">
+                <div className="p-8 rounded-2xl bg-[var(--fitlo-card-2)] border border-dashed border-[var(--fitlo-line-2)] text-center space-y-2">
+                  <div className="w-10 h-10 rounded-full bg-[var(--fitlo-card-3)] text-[var(--fitlo-muted)] flex items-center justify-center mx-auto">
                     <CalendarIcon size={18} />
                   </div>
-                  <div className="text-xs font-bold text-neutral-800">No Bookings Scheduled</div>
-                  <p className="text-[11px] text-stone-500 max-w-[220px] mx-auto leading-relaxed">
+                  <div className="text-xs font-bold text-[var(--fitlo-ink)]">No Bookings Scheduled</div>
+                  <p className="text-[11px] text-[var(--fitlo-muted)] max-w-[220px] mx-auto leading-relaxed">
                     There are no {system === 'website' ? 'direct website' : 'affiliate'} bookings for this date.
                   </p>
                 </div>
@@ -499,29 +488,28 @@ export default function TherapickCalendarView() {
                       <div
                         key={b.id || idx}
                         onClick={() => setSelectedBooking(b)}
-                        className="p-3.5 rounded-xl border border-stone-200 hover:border-amber-400 bg-stone-50/50 hover:bg-white transition-all cursor-pointer space-y-2 group shadow-2xs"
+                        className="p-3.5 rounded-xl border border-[var(--fitlo-line)] hover:border-[var(--fitlo-accent)] bg-[var(--fitlo-card-2)] hover:bg-[var(--fitlo-card)] transition-all cursor-pointer space-y-2 group shadow-[var(--fitlo-shadow)]"
                       >
                         {/* Top: Time + Booking ID + Status Badge */}
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <span className={`w-1.5 h-4 rounded-full ${
-                              isConfirmed ? 'bg-emerald-500' :
-                              isCompleted ? 'bg-blue-500' :
-                              isCancelled ? 'bg-rose-500' :
-                              isOngoing ? 'bg-amber-500' : 'bg-stone-400'
+                              isConfirmed ? 'bg-[var(--fitlo-good)]' :
+                              isCompleted ? 'bg-[var(--fitlo-info)]' :
+                              isCancelled ? 'bg-[var(--fitlo-bad)]' :
+                              isOngoing ? 'bg-[#f08a5d]' : 'bg-[var(--fitlo-muted)]'
                             }`} />
-                            <span className="text-xs font-mono font-extrabold text-neutral-900">
+                            <span className="text-xs font-mono font-bold text-[var(--fitlo-ink)]">
                               {b.booking_time || b.time || '10:00'}
                             </span>
-                            <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-stone-100 text-stone-700 border border-stone-200/90 shadow-2xs">
+                            <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-[var(--fitlo-card)] text-[var(--fitlo-ink)] border border-[var(--fitlo-line)]">
                               {bId}
                             </span>
                           </div>
-                          <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full ${
-                            isConfirmed ? 'bg-emerald-100 text-emerald-800' :
-                            isCompleted ? 'bg-blue-100 text-blue-800' :
-                            isCancelled ? 'bg-rose-100 text-rose-800 line-through' :
-                            isOngoing ? 'bg-amber-100 text-amber-800' : 'bg-stone-100 text-stone-700'
+                          <span className={`fitlo-pill ${
+                            isConfirmed || isCompleted ? 'fitlo-pill--good' :
+                            isCancelled ? 'fitlo-pill--bad' :
+                            isOngoing ? 'fitlo-pill--warn' : 'fitlo-pill--info'
                           }`}>
                             {b.status || 'Confirmed'}
                           </span>
@@ -529,39 +517,39 @@ export default function TherapickCalendarView() {
 
                         {/* Middle: Treatment Name & Guest */}
                         <div className="pl-3.5 space-y-0.5">
-                          <div className="font-bold text-neutral-900 text-xs group-hover:text-amber-800 transition-colors leading-snug">
+                          <div className="font-bold text-[var(--fitlo-ink)] text-xs group-hover:text-[var(--fitlo-accent)] transition-colors leading-snug">
                             {b.treatment_name || b.service_name || 'Balinese Traditional Massage'}
                           </div>
-                          <div className="text-[11px] text-stone-500 truncate">
+                          <div className="text-[11px] text-[var(--fitlo-muted)] truncate">
                             {b.customer_name || b.guest_name || 'Guest'}
                           </div>
                         </div>
 
-                        {/* Bottom: Treatment Price & Commission Fee (Professional Compact Layout) */}
-                        <div className="pl-3.5 pt-2 border-t border-stone-100 flex items-center justify-between text-xs">
+                        {/* Bottom: Treatment Price & Commission */}
+                        <div className="pl-3.5 pt-2 border-t border-[var(--fitlo-line)] flex items-center justify-between text-xs">
                           <div className="flex items-baseline gap-1 font-mono">
-                            <span className="text-[10px] text-stone-400 uppercase font-semibold">Price:</span>
-                            <span className="font-extrabold text-neutral-900 text-xs">
+                            <span className="text-[10px] text-[var(--fitlo-muted)] uppercase font-semibold">Price:</span>
+                            <span className="font-bold fitlo-num text-[var(--fitlo-ink)] text-xs">
                               {formatIDR(price)}
                             </span>
                           </div>
 
                           <div className="flex items-center gap-1.5">
                             {isAff ? (
-                              <div className="flex items-baseline gap-1 font-mono bg-emerald-50 text-emerald-800 border border-emerald-200/80 px-2 py-0.5 rounded-md">
-                                <span className="text-[9px] uppercase font-bold text-emerald-600">Comm:</span>
-                                <span className="text-[11px] font-extrabold text-emerald-800">
+                              <div className="flex items-baseline gap-1 font-mono bg-[var(--fitlo-good-soft)] text-[var(--fitlo-good)] px-2 py-0.5 rounded-md">
+                                <span className="text-[9px] uppercase font-bold">Comm:</span>
+                                <span className="text-[11px] font-bold fitlo-num">
                                   {formatIDR(commFee)}
                                 </span>
                               </div>
                             ) : (
-                              <span className="text-[10px] font-mono font-semibold text-stone-500 bg-stone-100 px-2 py-0.5 rounded-md">
+                              <span className="text-[10px] font-mono font-semibold text-[var(--fitlo-muted)] bg-[var(--fitlo-card-3)] px-2 py-0.5 rounded-md">
                                 Direct · No Comm
                               </span>
                             )}
 
                             {b.affiliate_code && (
-                              <span className="text-[10px] font-mono font-bold text-amber-900 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
+                              <span className="text-[10px] font-mono font-bold text-[var(--fitlo-accent-text)] bg-[var(--fitlo-accent-soft)] px-1.5 py-0.5 rounded border border-[var(--fitlo-line)]">
                                 {b.affiliate_code}
                               </span>
                             )}
@@ -574,11 +562,11 @@ export default function TherapickCalendarView() {
               )}
             </div>
 
-            <div className="pt-4 border-t border-stone-100 mt-4">
+            <div className="pt-4 border-t border-[var(--fitlo-line)] mt-4">
               <button
                 type="button"
                 onClick={() => setIsAddBookingOpen(true)}
-                className="w-full py-2.5 px-3 rounded-xl bg-[#FACC15] hover:bg-amber-400 text-neutral-950 text-xs font-bold flex items-center justify-center gap-2 shadow-xs transition-all cursor-pointer"
+                className="w-full fitlo-btn fitlo-btn--primary justify-center"
               >
                 <Plus size={14} />
                 <span>Book Treatment for this Day</span>
@@ -588,9 +576,7 @@ export default function TherapickCalendarView() {
         </div>
       )}
 
-      {/* ─────────────────────────────────────────────────────────────
-          3. WEEK VIEW (7-DAY CARDS WITH DAILY BOOKING NUMBERS)
-         ───────────────────────────────────────────────────────────── */}
+      {/* 3. WEEK VIEW (7-DAY CARDS WITH DAILY BOOKING NUMBERS) */}
       {viewMode === 'week' && (
         <div className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-3">
@@ -603,33 +589,33 @@ export default function TherapickCalendarView() {
                 <div
                   key={day.dateStr}
                   onClick={() => setSelectedDateStr(day.dateStr)}
-                  className={`bg-white rounded-2xl border p-4 transition-all cursor-pointer flex flex-col justify-between min-h-[220px] ${
+                  className={`fitlo-card !p-3.5 flex flex-col justify-between cursor-pointer transition-all min-h-[220px] ${
                     isSelected
-                      ? 'border-amber-400 ring-2 ring-amber-300 shadow-sm'
+                      ? '!border-[#0b7a73] ring-2 ring-[rgba(11,122,115,0.2)]'
                       : hasBookings
-                      ? 'border-amber-200/80 bg-amber-50/20 hover:border-amber-400'
-                      : 'border-stone-200 hover:border-stone-300'
+                      ? 'border-[rgba(11,122,115,0.2)] bg-[var(--fitlo-accent-soft)]'
+                      : 'border-[var(--fitlo-line)] hover:border-[var(--fitlo-line-2)]'
                   }`}
                 >
                   <div>
                     {/* Header: Day Name + Date + Booking Count Badge */}
-                    <div className="flex items-start justify-between pb-2 border-b border-stone-100">
+                    <div className="flex items-start justify-between pb-2 border-b border-[var(--fitlo-line)]">
                       <div>
-                        <span className="text-[11px] font-mono font-bold uppercase text-stone-400 block">
+                        <span className="text-[11px] font-mono font-bold uppercase text-[var(--fitlo-muted)] block">
                           {day.dayName}
                         </span>
-                        <span className={`text-base font-extrabold font-mono ${
-                          isToday ? 'text-amber-600 underline' : 'text-neutral-900'
+                        <span className={`text-base font-bold font-mono ${
+                          isToday ? 'text-[#0b7a73] underline' : 'text-[var(--fitlo-ink)]'
                         }`}>
                           {day.dayNum}
                         </span>
                       </div>
                       
                       {/* Daily Number of Bookings Badge */}
-                      <span className={`text-xs font-mono font-extrabold px-2 py-0.5 rounded-full ${
+                      <span className={`text-xs font-mono font-bold px-2 py-0.5 rounded-full ${
                         hasBookings
-                          ? 'bg-[#FACC15] text-neutral-950 border border-amber-400 shadow-2xs'
-                          : 'bg-stone-100 text-stone-400'
+                          ? 'bg-[#0b7a73] text-white shadow-xs'
+                          : 'bg-[var(--fitlo-card-2)] text-[var(--fitlo-muted)]'
                       }`}>
                         {day.count} {day.count === 1 ? 'bking' : 'bkings'}
                       </span>
@@ -638,7 +624,7 @@ export default function TherapickCalendarView() {
                     {/* Bookings List inside Day Card */}
                     <div className="mt-3 space-y-2">
                       {day.bookings.length === 0 ? (
-                        <p className="text-[11px] text-stone-400 font-mono text-center py-4">
+                        <p className="text-[11px] text-[var(--fitlo-muted)] font-mono text-center py-4">
                           No bookings
                         </p>
                       ) : (
@@ -655,24 +641,24 @@ export default function TherapickCalendarView() {
                                 e.stopPropagation();
                                 setSelectedBooking(b);
                               }}
-                              className="p-2.5 rounded-xl bg-stone-50 hover:bg-amber-50/70 border border-stone-200/80 text-left transition-colors space-y-1"
+                              className="p-2.5 rounded-xl bg-[var(--fitlo-card)] hover:bg-[var(--fitlo-card-2)] border border-[var(--fitlo-line)] text-left transition-colors space-y-1"
                             >
                               <div className="flex items-center justify-between text-[10px] font-mono">
                                 <div className="flex items-center gap-1.5">
-                                  <span className="font-extrabold text-neutral-900">{b.booking_time || b.time || '10:00'}</span>
-                                  <span className="text-stone-600 bg-white px-1 py-0.2 rounded border border-stone-200 text-[9px] font-bold">{bId}</span>
+                                  <span className="font-bold text-[var(--fitlo-ink)]">{b.booking_time || b.time || '10:00'}</span>
+                                  <span className="text-[var(--fitlo-muted)] bg-[var(--fitlo-card-2)] px-1 py-0.2 rounded border border-[var(--fitlo-line)] text-[9px] font-bold">{bId}</span>
                                 </div>
-                                <span className="text-stone-500 font-medium truncate max-w-[65px]">{b.status || 'Confirmed'}</span>
+                                <span className="text-[var(--fitlo-muted)] font-medium truncate max-w-[65px]">{b.status || 'Confirmed'}</span>
                               </div>
-                              <div className="text-[11px] font-bold text-neutral-800 truncate">
+                              <div className="text-[11px] font-bold text-[var(--fitlo-ink)] truncate">
                                 {b.treatment_name || b.service_name || 'Massage'}
                               </div>
-                              <div className="pt-1 border-t border-stone-200/60 flex items-center justify-between text-[10px] font-mono">
-                                <span className="font-extrabold text-neutral-900">{formatIDR(price)}</span>
+                              <div className="pt-1 border-t border-[var(--fitlo-line)] flex items-center justify-between text-[10px] font-mono">
+                                <span className="font-bold fitlo-num text-[var(--fitlo-ink)]">{formatIDR(price)}</span>
                                 {isAff ? (
-                                  <span className="text-emerald-700 font-bold bg-emerald-50 px-1 rounded">Comm: {formatIDR(commFee)}</span>
+                                  <span className="text-[var(--fitlo-good)] font-bold bg-[var(--fitlo-good-soft)] px-1 rounded">Comm: {formatIDR(commFee)}</span>
                                 ) : (
-                                  <span className="text-stone-400">Direct</span>
+                                  <span className="text-[var(--fitlo-muted)]">Direct</span>
                                 )}
                               </div>
                             </div>
@@ -680,7 +666,7 @@ export default function TherapickCalendarView() {
                         })
                       )}
                       {day.bookings.length > 3 && (
-                        <p className="text-[10px] font-mono font-bold text-amber-800 text-center">
+                        <p className="text-[10px] font-mono font-bold text-[var(--fitlo-accent-text)] text-center">
                           +{day.bookings.length - 3} more
                         </p>
                       )}
@@ -694,7 +680,7 @@ export default function TherapickCalendarView() {
                       setSelectedDateStr(day.dateStr);
                       setIsAddBookingOpen(true);
                     }}
-                    className="mt-3 w-full py-1 text-[10px] font-bold rounded-lg border border-dashed border-stone-200 text-stone-500 hover:text-neutral-900 hover:border-stone-400 hover:bg-stone-50 transition-colors"
+                    className="mt-3 w-full py-1 text-[10px] font-bold rounded-lg border border-dashed border-[var(--fitlo-line-2)] text-[var(--fitlo-muted)] hover:text-[var(--fitlo-ink)] hover:border-[var(--fitlo-accent)] transition-colors"
                   >
                     + Add Slot
                   </button>
@@ -705,28 +691,26 @@ export default function TherapickCalendarView() {
         </div>
       )}
 
-      {/* ─────────────────────────────────────────────────────────────
-          4. DAY VIEW (HOURLY TIMELINE SCHEDULE)
-         ───────────────────────────────────────────────────────────── */}
+      {/* 4. DAY VIEW (HOURLY TIMELINE SCHEDULE) */}
       {viewMode === 'day' && (
-        <div className="bg-white rounded-2xl border border-stone-200/90 p-6 shadow-2xs space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-stone-100">
+        <div className="fitlo-card space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-[var(--fitlo-line)]">
             <div>
-              <h2 className="text-base font-extrabold text-neutral-900">
+              <h2 className="text-base font-bold text-[var(--fitlo-ink)]">
                 {formattedSelectedDate}
               </h2>
-              <p className="text-xs text-stone-500">
+              <p className="text-xs text-[var(--fitlo-muted)]">
                 Hourly schedule &amp; appointment details
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <span className="px-3 py-1 rounded-full text-xs font-mono font-extrabold bg-[#FACC15] text-neutral-950 border border-amber-400 shadow-2xs">
+              <span className="fitlo-badge !bg-[var(--fitlo-accent-soft)] !text-[var(--fitlo-accent-text)]">
                 {dayBookings.length} {dayBookings.length === 1 ? 'Booking' : 'Bookings'} Today
               </span>
               <button
                 type="button"
                 onClick={() => setIsAddBookingOpen(true)}
-                className="px-3 py-1.5 rounded-xl bg-neutral-950 hover:bg-neutral-800 text-white text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
+                className="fitlo-btn fitlo-btn--primary !h-8 !px-3"
               >
                 <Plus size={13} />
                 <span>Add Booking</span>
@@ -734,7 +718,7 @@ export default function TherapickCalendarView() {
             </div>
           </div>
 
-          <div className="divide-y divide-stone-100">
+          <div className="divide-y divide-[var(--fitlo-line)]">
             {['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00'].map(hourSlot => {
               const hourPrefix = hourSlot.split(':')[0];
               const slotBookings = dayBookings.filter(b => {
@@ -744,12 +728,12 @@ export default function TherapickCalendarView() {
 
               return (
                 <div key={hourSlot} className="py-3 flex items-start gap-4">
-                  <span className="w-14 text-xs font-mono font-bold text-stone-400 pt-1 shrink-0">
+                  <span className="w-14 text-xs font-mono font-bold text-[var(--fitlo-muted)] pt-1 shrink-0">
                     {hourSlot}
                   </span>
                   <div className="flex-1 min-h-[38px]">
                     {slotBookings.length === 0 ? (
-                      <div className="h-full rounded-xl border border-dashed border-stone-100 p-2 text-[11px] text-stone-300 font-mono">
+                      <div className="h-full rounded-xl border border-dashed border-[var(--fitlo-line)] p-2 text-[11px] text-[var(--fitlo-muted)] opacity-60 font-mono">
                         Available slot
                       </div>
                     ) : (
@@ -764,39 +748,39 @@ export default function TherapickCalendarView() {
                             <div
                               key={b.id || idx}
                               onClick={() => setSelectedBooking(b)}
-                              className="p-3 rounded-xl border border-stone-200 bg-amber-50/60 hover:bg-amber-100/70 hover:border-amber-400 transition-all cursor-pointer space-y-1.5 group shadow-2xs"
+                              className="p-3 rounded-xl border border-[var(--fitlo-line)] bg-[var(--fitlo-card-2)] hover:bg-[var(--fitlo-card)] hover:border-[var(--fitlo-accent)] transition-all cursor-pointer space-y-1.5 group shadow-[var(--fitlo-shadow)]"
                             >
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-1.5">
-                                  <span className="text-xs font-mono font-extrabold text-neutral-900">
+                                  <span className="text-xs font-mono font-bold text-[var(--fitlo-ink)]">
                                     {b.booking_time || b.time || hourSlot}
                                   </span>
-                                  <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-white text-stone-600 border border-stone-200">
+                                  <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-[var(--fitlo-card)] text-[var(--fitlo-muted)] border border-[var(--fitlo-line)]">
                                     {bId}
                                   </span>
                                 </div>
-                                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-white border border-stone-200">
+                                <span className="fitlo-pill fitlo-pill--good">
                                   {b.status || 'Confirmed'}
                                 </span>
                               </div>
-                              <div className="font-bold text-neutral-900 text-xs truncate">
+                              <div className="font-bold text-[var(--fitlo-ink)] text-xs truncate">
                                 {b.treatment_name || b.service_name || 'Massage'}
                               </div>
-                              <div className="text-[11px] text-stone-600 truncate">
+                              <div className="text-[11px] text-[var(--fitlo-muted)] truncate">
                                 {b.customer_name || b.guest_name}
                               </div>
-                              <div className="pt-1.5 border-t border-amber-200/60 flex items-center justify-between text-xs font-mono">
+                              <div className="pt-1.5 border-t border-[var(--fitlo-line)] flex items-center justify-between text-xs font-mono">
                                 <div className="flex items-baseline gap-1">
-                                  <span className="text-[10px] text-stone-500 uppercase">Price:</span>
-                                  <span className="font-extrabold text-neutral-900 text-xs">{formatIDR(price)}</span>
+                                  <span className="text-[10px] text-[var(--fitlo-muted)] uppercase">Price:</span>
+                                  <span className="font-bold fitlo-num text-[var(--fitlo-ink)] text-xs">{formatIDR(price)}</span>
                                 </div>
                                 {isAff ? (
-                                  <div className="flex items-baseline gap-1 text-emerald-800 bg-white/80 px-1.5 py-0.5 rounded border border-emerald-200">
-                                    <span className="text-[9px] uppercase font-bold text-emerald-600">Comm:</span>
-                                    <span className="font-bold text-[11px]">{formatIDR(commFee)}</span>
+                                  <div className="flex items-baseline gap-1 text-[var(--fitlo-good)] bg-[var(--fitlo-good-soft)] px-1.5 py-0.5 rounded">
+                                    <span className="text-[9px] uppercase font-bold">Comm:</span>
+                                    <span className="font-bold fitlo-num text-[11px]">{formatIDR(commFee)}</span>
                                   </div>
                                 ) : (
-                                  <span className="text-[10px] text-stone-500">Direct</span>
+                                  <span className="text-[10px] text-[var(--fitlo-muted)]">Direct</span>
                                 )}
                               </div>
                             </div>

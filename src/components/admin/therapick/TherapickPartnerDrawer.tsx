@@ -99,67 +99,65 @@ export default function TherapickPartnerDrawer() {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end">
+    <div className="fitlo-modal-backdrop flex justify-end p-0">
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 bg-neutral-950/40 backdrop-blur-xs transition-opacity" 
+        className="fixed inset-0" 
         onClick={() => setSelectedPartner(null)}
       />
 
       {/* Slide-over Drawer Panel */}
-      <div className="relative w-full max-w-xl bg-white h-full shadow-2xl flex flex-col z-50 overflow-y-auto animate-in slide-in-from-right duration-300">
+      <div className="relative w-full max-w-xl bg-[var(--fitlo-bg)] h-full shadow-2xl flex flex-col z-50 overflow-y-auto animate-in slide-in-from-right duration-300 border-l border-[var(--fitlo-line)]">
         
         {/* Header */}
-        <div className="sticky top-0 bg-white/95 backdrop-blur-md px-6 py-4 border-b border-stone-200/80 flex items-center justify-between z-10">
+        <div className="sticky top-0 bg-[var(--fitlo-card)] px-6 py-4 border-b border-[var(--fitlo-line)] flex items-center justify-between z-10">
           <div>
             <div className="flex items-center gap-2">
-              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+              <span className={`fitlo-pill ${
                 p.status === 'active'
-                  ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                  ? 'fitlo-pill--good'
                   : p.status === 'pending'
-                  ? 'bg-amber-50 text-amber-800 border border-amber-200'
-                  : 'bg-rose-50 text-rose-800 border border-rose-200'
+                  ? 'fitlo-pill--warn'
+                  : 'fitlo-pill--bad'
               }`}>
                 {p.status || 'Active'} Partner
               </span>
-              <span className="text-xs font-mono text-stone-400">ID: {String(p.id || '').slice(0, 8)}</span>
+              <span className="text-xs fitlo-num text-[var(--fitlo-muted)]">ID: {String(p.id || '').slice(0, 8)}</span>
             </div>
-            <h2 className="text-xl font-bold text-neutral-950 font-sans mt-0.5">{fullName}</h2>
+            <h2 className="text-xl font-bold text-[var(--fitlo-ink)] font-sans mt-0.5">{fullName}</h2>
             {p.business_name && (
-              <p className="text-xs text-stone-500 font-medium">{p.business_name}</p>
+              <p className="text-xs text-[var(--fitlo-muted)] font-medium">{p.business_name}</p>
             )}
           </div>
 
           <button
             type="button"
             onClick={() => setSelectedPartner(null)}
-            className="p-1.5 rounded-xl text-stone-400 hover:text-neutral-900 hover:bg-stone-100 transition-colors cursor-pointer"
+            className="p-1.5 rounded-xl text-[var(--fitlo-muted)] hover:text-[var(--fitlo-ink)] hover:bg-[var(--fitlo-card-2)] transition-colors cursor-pointer"
           >
             <X size={18} />
           </button>
         </div>
 
         {/* Sub-tabs bar in drawer */}
-        <div className="flex items-center gap-1 px-6 pt-3 pb-2 border-b border-stone-100 bg-stone-50/60 overflow-x-auto no-scrollbar">
-          {[
-            { id: 'overview', label: 'Overview' },
-            { id: 'bookings', label: `Bookings (${partnerBookings.length})` },
-            { id: 'commissions', label: `Commissions (${partnerCommissions.length})` },
-            { id: 'payouts', label: `Payouts (${partnerPayouts.length})` },
-          ].map(t => (
-            <button
-              key={t.id}
-              type="button"
-              onClick={() => setActiveTab(t.id as any)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
-                activeTab === t.id
-                  ? 'bg-white text-neutral-950 shadow-xs border border-stone-200/80'
-                  : 'text-stone-500 hover:text-neutral-900'
-              }`}
-            >
-              {t.label}
-            </button>
-          ))}
+        <div className="flex items-center px-6 py-3 border-b border-[var(--fitlo-line)] bg-[var(--fitlo-card-2)] overflow-x-auto no-scrollbar">
+          <div className="fitlo-sides">
+            {[
+              { id: 'overview', label: 'Overview' },
+              { id: 'bookings', label: `Bookings (${partnerBookings.length})` },
+              { id: 'commissions', label: `Commissions (${partnerCommissions.length})` },
+              { id: 'payouts', label: `Payouts (${partnerPayouts.length})` },
+            ].map(t => (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => setActiveTab(t.id as any)}
+                className={`fitlo-sides__btn ${activeTab === t.id ? 'is-active' : ''}`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Content Body */}
@@ -168,63 +166,63 @@ export default function TherapickPartnerDrawer() {
           {activeTab === 'overview' && (
             <>
               {/* Financial Balance Summary Card */}
-              <div className="bg-[#FEF3C7]/60 border border-amber-200/70 rounded-2xl p-5 space-y-3">
+              <div className="fitlo-kpi fitlo-kpi--lemon p-5 space-y-3 rounded-2xl">
                 <div className="flex items-center justify-between">
-                  <div className="text-[11px] font-mono font-bold uppercase tracking-wider text-amber-900">Available Payout Balance</div>
+                  <div className="fitlo-kpi__lbl">Available Payout Balance</div>
                   <button
                     type="button"
                     onClick={() => setIsCreatePayoutOpen(true)}
-                    className="px-3 py-1 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-bold shadow-xs transition-colors cursor-pointer"
+                    className="fitlo-btn fitlo-btn--primary text-xs py-1.5 px-3"
                   >
                     Disburse Payout
                   </button>
                 </div>
-                <div className="text-2xl sm:text-3xl font-extrabold text-neutral-950 font-sans">
+                <div className="text-2xl sm:text-3xl font-bold fitlo-num text-[var(--fitlo-ink)]">
                   {formatIDR(availableBalance)}
                 </div>
 
-                <div className="grid grid-cols-3 gap-2 pt-2 border-t border-amber-200/60 text-xs">
+                <div className="grid grid-cols-3 gap-2 pt-2 border-t border-[rgba(22,26,25,0.08)] text-xs">
                   <div>
-                    <div className="text-[10px] text-amber-800 font-medium">Total Earned</div>
-                    <div className="font-bold text-neutral-900 mt-0.5">{formatIDR(totalEarned)}</div>
+                    <div className="text-[10px] text-[var(--fitlo-muted)] font-medium">Total Earned</div>
+                    <div className="font-bold fitlo-num text-[var(--fitlo-ink)] mt-0.5">{formatIDR(totalEarned)}</div>
                   </div>
                   <div>
-                    <div className="text-[10px] text-amber-800 font-medium">Total Paid</div>
-                    <div className="font-bold text-neutral-900 mt-0.5">{formatIDR(totalPaid)}</div>
+                    <div className="text-[10px] text-[var(--fitlo-muted)] font-medium">Total Paid</div>
+                    <div className="font-bold fitlo-num text-[var(--fitlo-ink)] mt-0.5">{formatIDR(totalPaid)}</div>
                   </div>
                   <div>
-                    <div className="text-[10px] text-amber-800 font-medium">Rate</div>
-                    <div className="font-bold text-neutral-900 mt-0.5">{p.commission_rate_pct || 15}%</div>
+                    <div className="text-[10px] text-[var(--fitlo-muted)] font-medium">Rate</div>
+                    <div className="font-bold fitlo-num text-[var(--fitlo-ink)] mt-0.5">{p.commission_rate_pct || 15}%</div>
                   </div>
                 </div>
               </div>
 
               {/* Referral Code Box */}
-              <div className="bg-stone-50/80 border border-stone-200/70 rounded-2xl p-4.5 space-y-2.5">
-                <div className="text-[11px] font-mono font-bold uppercase tracking-wider text-stone-600">Partner Referral Code</div>
-                <div className="flex items-center justify-between bg-white border border-stone-200 rounded-xl px-3.5 py-2">
-                  <span className="font-mono font-extrabold text-sm text-neutral-950 tracking-wider">
+              <div className="fitlo-card p-4.5 space-y-2.5">
+                <div className="text-[11px] font-bold uppercase tracking-wider text-[var(--fitlo-muted)]">Partner Referral Code</div>
+                <div className="flex items-center justify-between bg-[var(--fitlo-card-2)] border border-[var(--fitlo-line)] rounded-xl px-3.5 py-2">
+                  <span className="fitlo-num font-bold text-sm text-[var(--fitlo-ink)] tracking-wider">
                     {p.referral_code}
                   </span>
                   <button
                     type="button"
                     onClick={copyCode}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold text-stone-700 hover:bg-stone-100 transition-colors cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold text-[var(--fitlo-ink)] hover:bg-[var(--fitlo-card)] transition-colors cursor-pointer"
                   >
-                    {copied ? <Check size={14} className="text-emerald-600" /> : <Copy size={14} />}
+                    {copied ? <Check size={14} className="text-[var(--fitlo-accent)]" /> : <Copy size={14} />}
                     <span>{copied ? 'Copied' : 'Copy Code'}</span>
                   </button>
                 </div>
-                <div className="text-[11px] text-stone-500 truncate">
-                  Referral URL: <a href={referralUrl} target="_blank" rel="noreferrer" className="underline hover:text-neutral-900">{referralUrl}</a>
+                <div className="text-[11px] text-[var(--fitlo-muted)] truncate">
+                  Referral URL: <a href={referralUrl} target="_blank" rel="noreferrer" className="underline hover:text-[var(--fitlo-ink)]">{referralUrl}</a>
                 </div>
               </div>
 
               {/* Partner Bank Details */}
-              <div className="bg-white border border-stone-200/90 rounded-2xl p-4.5 space-y-3 shadow-2xs">
+              <div className="fitlo-card p-4.5 space-y-3">
                 <div className="flex items-center justify-between">
-                  <div className="text-[11px] font-mono font-bold uppercase tracking-wider text-stone-600">Bank Account for Payouts</div>
-                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                  <div className="text-[11px] font-bold uppercase tracking-wider text-[var(--fitlo-muted)]">Bank Account for Payouts</div>
+                  <span className="fitlo-pill fitlo-pill--good">
                     <ShieldCheck size={11} />
                     Verified
                   </span>
@@ -232,30 +230,30 @@ export default function TherapickPartnerDrawer() {
 
                 <div className="space-y-2 text-xs">
                   <div className="flex items-center justify-between">
-                    <span className="text-stone-500">Bank Name</span>
-                    <span className="font-bold text-neutral-900">{p.bank_name || 'BCA (Bank Central Asia)'}</span>
+                    <span className="text-[var(--fitlo-muted)]">Bank Name</span>
+                    <span className="font-bold text-[var(--fitlo-ink)]">{p.bank_name || 'BCA (Bank Central Asia)'}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-stone-500">Account Holder</span>
-                    <span className="font-medium text-neutral-900">{p.bank_account_name || fullName}</span>
+                    <span className="text-[var(--fitlo-muted)]">Account Holder</span>
+                    <span className="font-medium text-[var(--fitlo-ink)]">{p.bank_account_name || fullName}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-stone-500">Account Number</span>
-                    <span className="font-mono font-bold text-neutral-900 tracking-wider">{p.bank_account_number || '7720918231'}</span>
+                    <span className="text-[var(--fitlo-muted)]">Account Number</span>
+                    <span className="fitlo-num font-bold text-[var(--fitlo-ink)] tracking-wider">{p.bank_account_number || '7720918231'}</span>
                   </div>
                 </div>
               </div>
 
               {/* Contact Information & WhatsApp */}
-              <div className="bg-white border border-stone-200/90 rounded-2xl p-4.5 space-y-3 shadow-2xs">
+              <div className="fitlo-card p-4.5 space-y-3">
                 <div className="flex items-center justify-between">
-                  <div className="text-[11px] font-mono font-bold uppercase tracking-wider text-stone-600">Contact Details</div>
+                  <div className="text-[11px] font-bold uppercase tracking-wider text-[var(--fitlo-muted)]">Contact Details</div>
                   {waUrl && (
                     <a
                       href={waUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold shadow-xs transition-colors cursor-pointer"
+                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--fitlo-accent)] hover:bg-[#08625c] text-white text-[11px] font-bold shadow-xs transition-colors cursor-pointer"
                     >
                       <MessageSquare size={12} />
                       <span>WhatsApp Partner</span>
@@ -265,28 +263,28 @@ export default function TherapickPartnerDrawer() {
 
                 <div className="space-y-2 text-xs">
                   <div className="flex items-center justify-between">
-                    <span className="text-stone-500">Email</span>
-                    <span className="font-medium text-neutral-900">{p.email || 'partner@example.com'}</span>
+                    <span className="text-[var(--fitlo-muted)]">Email</span>
+                    <span className="font-medium text-[var(--fitlo-ink)]">{p.email || 'partner@example.com'}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-stone-500">Phone</span>
-                    <span className="font-mono text-neutral-900">{p.phone || '+62 812-3456-7890'}</span>
+                    <span className="text-[var(--fitlo-muted)]">Phone</span>
+                    <span className="fitlo-num text-[var(--fitlo-ink)]">{p.phone || '+62 812-3456-7890'}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-stone-500">Member Since</span>
-                    <span className="text-neutral-700">{p.created_at ? new Date(p.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Recent'}</span>
+                    <span className="text-[var(--fitlo-muted)]">Member Since</span>
+                    <span className="text-[var(--fitlo-ink)]">{p.created_at ? new Date(p.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Recent'}</span>
                   </div>
                 </div>
               </div>
 
               {/* Status Action Controls */}
-              <div className="pt-2 border-t border-stone-100 flex items-center justify-between gap-3">
+              <div className="pt-2 border-t border-[var(--fitlo-line)] flex items-center justify-between gap-3">
                 {p.status === 'pending' && (
                   <button
                     type="button"
                     disabled={actionLoading}
                     onClick={() => handleUpdateStatus('active')}
-                    className="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-colors cursor-pointer"
+                    className="fitlo-btn fitlo-btn--primary flex-1"
                   >
                     Approve Application
                   </button>
@@ -297,7 +295,7 @@ export default function TherapickPartnerDrawer() {
                     type="button"
                     disabled={actionLoading}
                     onClick={() => handleUpdateStatus('suspended')}
-                    className="flex-1 py-2.5 rounded-xl bg-white border border-rose-200 text-rose-700 hover:bg-rose-50 text-xs font-bold transition-colors cursor-pointer"
+                    className="fitlo-btn fitlo-btn--ghost flex-1 text-[var(--fitlo-bad)] border-[var(--fitlo-bad-soft)] hover:bg-[var(--fitlo-bad-soft)]"
                   >
                     Suspend Partner
                   </button>
@@ -308,7 +306,7 @@ export default function TherapickPartnerDrawer() {
                     type="button"
                     disabled={actionLoading}
                     onClick={() => handleUpdateStatus('active')}
-                    className="flex-1 py-2.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-bold transition-colors cursor-pointer"
+                    className="fitlo-btn fitlo-btn--primary flex-1"
                   >
                     Reactivate Account
                   </button>
@@ -320,28 +318,28 @@ export default function TherapickPartnerDrawer() {
           {/* Bookings Tab */}
           {activeTab === 'bookings' && (
             <div className="space-y-3">
-              <div className="text-xs font-bold text-neutral-900">Attributed Bookings ({partnerBookings.length})</div>
+              <div className="text-xs font-bold text-[var(--fitlo-ink)]">Attributed Bookings ({partnerBookings.length})</div>
               {partnerBookings.length === 0 ? (
-                <div className="py-8 text-center text-xs text-stone-400">No bookings attributed to this partner yet.</div>
+                <div className="py-8 text-center text-xs text-[var(--fitlo-muted)]">No bookings attributed to this partner yet.</div>
               ) : (
                 <div className="space-y-2">
                   {partnerBookings.map(b => (
                     <div
                       key={b.id}
                       onClick={() => setSelectedBooking(b)}
-                      className="p-3 bg-white border border-stone-200 rounded-xl hover:border-neutral-900 transition-colors cursor-pointer space-y-1.5"
+                      className="p-3 bg-[var(--fitlo-card)] border border-[var(--fitlo-line)] rounded-xl hover:border-[rgba(22,26,25,0.2)] transition-colors cursor-pointer space-y-1.5"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="font-mono text-xs font-bold text-neutral-900">#{b.reference_number || String(b.id || '').slice(0, 8)}</span>
-                        <span className="font-bold text-xs text-neutral-900">{formatIDR(b.revenue)}</span>
+                        <span className="fitlo-num text-xs font-bold text-[var(--fitlo-ink)]">#{b.reference_number || String(b.id || '').slice(0, 8)}</span>
+                        <span className="font-bold text-xs fitlo-num text-[var(--fitlo-ink)]">{formatIDR(b.revenue)}</span>
                       </div>
-                      <div className="flex items-center justify-between text-xs text-stone-600">
+                      <div className="flex items-center justify-between text-xs text-[var(--fitlo-muted)]">
                         <span>{b.treatment_name}</span>
-                        <span>{b.booking_date}</span>
+                        <span className="fitlo-num">{b.booking_date}</span>
                       </div>
-                      <div className="flex items-center justify-between text-[11px] text-stone-500 pt-1 border-t border-stone-100">
+                      <div className="flex items-center justify-between text-[11px] text-[var(--fitlo-muted)] pt-1 border-t border-[var(--fitlo-line)]">
                         <span>Guest: {b.guest_name}</span>
-                        <span className="text-emerald-700 font-semibold">Comm: {formatIDR(b.revenue ? Number(b.revenue) * 0.15 : 0)}</span>
+                        <span className="text-[var(--fitlo-accent)] font-semibold fitlo-num">Comm: {formatIDR(b.revenue ? Number(b.revenue) * 0.15 : 0)}</span>
                       </div>
                     </div>
                   ))}
@@ -353,20 +351,20 @@ export default function TherapickPartnerDrawer() {
           {/* Commissions Tab */}
           {activeTab === 'commissions' && (
             <div className="space-y-3">
-              <div className="text-xs font-bold text-neutral-900">Commission Ledger ({partnerCommissions.length})</div>
+              <div className="text-xs font-bold text-[var(--fitlo-ink)]">Commission Ledger ({partnerCommissions.length})</div>
               {partnerCommissions.length === 0 ? (
-                <div className="py-8 text-center text-xs text-stone-400">No commission transactions found.</div>
+                <div className="py-8 text-center text-xs text-[var(--fitlo-muted)]">No commission transactions found.</div>
               ) : (
                 <div className="space-y-2">
                   {partnerCommissions.map(c => (
-                    <div key={c.id} className="p-3 bg-white border border-stone-200 rounded-xl space-y-1 text-xs">
+                    <div key={c.id} className="p-3 bg-[var(--fitlo-card)] border border-[var(--fitlo-line)] rounded-xl space-y-1 text-xs">
                       <div className="flex items-center justify-between">
-                        <span className="font-mono font-bold text-neutral-900">{c.reference_number || c.booking_id}</span>
-                        <span className="font-bold text-emerald-700">{formatIDR(c.commission_amount)}</span>
+                        <span className="fitlo-num font-bold text-[var(--fitlo-ink)]">{c.reference_number || c.booking_id}</span>
+                        <span className="font-bold text-[var(--fitlo-accent)] fitlo-num">{formatIDR(c.commission_amount)}</span>
                       </div>
-                      <div className="flex items-center justify-between text-stone-500 text-[11px]">
+                      <div className="flex items-center justify-between text-[var(--fitlo-muted)] text-[11px]">
                         <span>Booking: {c.booking_id}</span>
-                        <span className="capitalize font-semibold text-neutral-800">{c.status}</span>
+                        <span className="capitalize font-semibold text-[var(--fitlo-ink)]">{c.status}</span>
                       </div>
                     </div>
                   ))}
@@ -378,20 +376,20 @@ export default function TherapickPartnerDrawer() {
           {/* Payouts Tab */}
           {activeTab === 'payouts' && (
             <div className="space-y-3">
-              <div className="text-xs font-bold text-neutral-900">Disbursed Payouts ({partnerPayouts.length})</div>
+              <div className="text-xs font-bold text-[var(--fitlo-ink)]">Disbursed Payouts ({partnerPayouts.length})</div>
               {partnerPayouts.length === 0 ? (
-                <div className="py-8 text-center text-xs text-stone-400">No payouts disbursed yet.</div>
+                <div className="py-8 text-center text-xs text-[var(--fitlo-muted)]">No payouts disbursed yet.</div>
               ) : (
                 <div className="space-y-2">
                   {partnerPayouts.map(py => (
-                    <div key={py.id} className="p-3 bg-white border border-stone-200 rounded-xl space-y-1 text-xs">
+                    <div key={py.id} className="p-3 bg-[var(--fitlo-card)] border border-[var(--fitlo-line)] rounded-xl space-y-1 text-xs">
                       <div className="flex items-center justify-between">
-                        <span className="font-mono font-bold text-neutral-900">{py.reference_number || 'PAYOUT'}</span>
-                        <span className="font-bold text-neutral-900">{formatIDR(py.amount)}</span>
+                        <span className="fitlo-num font-bold text-[var(--fitlo-ink)]">{py.reference_number || 'PAYOUT'}</span>
+                        <span className="font-bold text-[var(--fitlo-ink)] fitlo-num">{formatIDR(py.amount)}</span>
                       </div>
-                      <div className="flex items-center justify-between text-stone-500 text-[11px]">
+                      <div className="flex items-center justify-between text-[var(--fitlo-muted)] text-[11px]">
                         <span>{new Date(py.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-                        <span className="font-bold text-emerald-700 uppercase">{py.status}</span>
+                        <span className="fitlo-pill fitlo-pill--good">{py.status}</span>
                       </div>
                     </div>
                   ))}

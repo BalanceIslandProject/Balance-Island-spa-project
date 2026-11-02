@@ -290,31 +290,31 @@ export default function TherapickPayoutsView() {
         </div>
       )}
 
-      {/* Header (Matching UI Mockup Exactly) */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-stone-200/80">
+      {/* Fitlo Page Header */}
+      <div className="fitlo-page-head">
         <div>
-          <h1 className="text-xl sm:text-2xl font-extrabold text-neutral-900 tracking-tight">
-            Payouts
-          </h1>
-          <p className="text-xs sm:text-sm text-stone-500 mt-0.5">
+          <div className="flex items-center gap-3">
+            <h1 className="fitlo-page-title">
+              Affiliate Payouts
+            </h1>
+            <span className="fitlo-badge">
+              <CalendarIcon size={12} className="text-[#0b7a73]" />
+              <span>Weekly 7-Day Cycle</span>
+            </span>
+          </div>
+          <p className="fitlo-page-subtitle">
             Track commissions, record payments, and manage weekly payouts.
           </p>
         </div>
 
         {/* Top Right Badges & Actions */}
         <div className="flex items-center flex-wrap gap-2.5">
-          {/* 7-Day Cycle Amber Badge */}
-          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold font-mono bg-amber-50 text-amber-900 border border-amber-200 shadow-2xs">
-            <CalendarIcon size={13} className="text-amber-700" />
-            <span>Weekly Cycle: Every 7 Days</span>
-          </div>
-
           {/* Refresh Action */}
           <button
             type="button"
             onClick={handleRefresh}
             disabled={isRefreshing}
-            className="p-2 rounded-xl border border-stone-200 bg-white hover:bg-stone-50 text-stone-600 transition-colors cursor-pointer shadow-2xs disabled:opacity-60"
+            className="fitlo-ibtn !w-9 !h-9"
             title="Refresh balances"
           >
             <RefreshCw size={14} className={isRefreshing ? 'animate-spin' : ''} />
@@ -324,9 +324,9 @@ export default function TherapickPayoutsView() {
           <button
             type="button"
             onClick={handleExportCSV}
-            className="px-3.5 py-2 rounded-xl border border-stone-200 bg-white hover:bg-stone-50 text-xs font-bold text-stone-700 flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
+            className="fitlo-btn fitlo-btn--ghost"
           >
-            <Download size={14} className="text-stone-500" />
+            <Download size={14} className="text-[var(--fitlo-muted)]" />
             <span>Export CSV</span>
           </button>
         </div>

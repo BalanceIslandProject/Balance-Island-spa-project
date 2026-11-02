@@ -64,34 +64,30 @@ export default function TherapickSettingsView() {
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-200">
+    <div className="space-y-6">
       
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 bg-[#0F172A] text-white text-xs font-semibold px-4 py-3 rounded-xl shadow-2xl border border-stone-700 flex items-center gap-2.5 animate-in slide-in-from-bottom-3">
-          <CheckCircle2 size={16} className="text-[#facc15]" />
+        <div className="fixed bottom-6 right-6 z-50 bg-[var(--fitlo-ink)] text-[var(--fitlo-card)] text-xs font-semibold px-4 py-3 rounded-xl shadow-2xl border border-[var(--fitlo-line)] flex items-center gap-2.5 animate-in slide-in-from-bottom-3">
+          <CheckCircle2 size={16} className="text-[var(--fitlo-accent)]" />
           <span>{toastMessage}</span>
         </div>
       )}
 
-      {/* ─────────────────────────────────────────────────────────────
-          1. HEADER (MATCHING MOCKUP IMAGE 2)
-         ───────────────────────────────────────────────────────────── */}
-      <div>
-        <h1 className="text-xl sm:text-2xl font-extrabold text-neutral-900 tracking-tight">
-          Settings
-        </h1>
-        <p className="text-xs sm:text-sm text-stone-500 mt-0.5">
-          Website system configuration.
-        </p>
+      {/* ─── FITLO PAGE HEADER ─── */}
+      <div className="fitlo-page-head">
+        <div>
+          <h1 className="fitlo-page-title">Settings & Preferences</h1>
+          <p className="fitlo-page-sub">
+            Configure business profile, booking rules, notification triggers, and calendar controls.
+          </p>
+        </div>
       </div>
 
-      {/* ─────────────────────────────────────────────────────────────
-          2. TWO COLUMN SETTINGS LAYOUT (MATCHING MOCKUP IMAGE 2)
-         ───────────────────────────────────────────────────────────── */}
+      {/* ─── TWO COLUMN SETTINGS LAYOUT ─── */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
         
-        {/* Left Column: Category Pills (~3 cols / 25%) */}
+        {/* Left Column: Category Pills */}
         <div className="md:col-span-4 lg:col-span-3 space-y-1.5">
           {[
             { id: 'general', label: 'General', icon: SettingsIcon },
@@ -111,8 +107,8 @@ export default function TherapickSettingsView() {
                 onClick={() => setActiveCategory(item.id as any)}
                 className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-bold transition-all text-left cursor-pointer ${
                   isActive
-                    ? 'bg-[#FACC15] text-neutral-950 shadow-xs'
-                    : 'bg-white border border-stone-200/80 text-stone-600 hover:bg-stone-50'
+                    ? 'bg-[var(--fitlo-accent)] text-white shadow-xs'
+                    : 'bg-[var(--fitlo-card)] border border-[var(--fitlo-line)] text-[var(--fitlo-muted)] hover:text-[var(--fitlo-ink)] hover:bg-[var(--fitlo-card-2)]'
                 }`}
               >
                 <Icon size={15} />
@@ -122,44 +118,44 @@ export default function TherapickSettingsView() {
           })}
         </div>
 
-        {/* Right Column: Settings Form (~8-9 cols / 75%) */}
-        <div className="md:col-span-8 lg:col-span-9 bg-white border border-stone-200/90 rounded-2xl p-6 shadow-2xs">
+        {/* Right Column: Settings Form */}
+        <div className="md:col-span-8 lg:col-span-9 fitlo-card p-6">
           <form onSubmit={handleSaveSettings} className="space-y-6">
             
-            {/* GENERAL SETTINGS (MATCHING MOCKUP IMAGE 2 BOTTOM RIGHT) */}
+            {/* GENERAL SETTINGS */}
             {activeCategory === 'general' && (
               <div className="space-y-5">
                 <div>
-                  <h2 className="text-sm font-bold text-neutral-900 tracking-tight">
+                  <h2 className="text-sm font-bold text-[var(--fitlo-ink)] tracking-tight">
                     General Settings
                   </h2>
-                  <p className="text-xs text-stone-500 mt-0.5">
+                  <p className="text-xs text-[var(--fitlo-muted)] mt-0.5">
                     Configure your business profile, operational timezone, and customer booking rules.
                   </p>
                 </div>
 
                 <div className="space-y-4 pt-2">
                   <div>
-                    <label className="block text-xs font-bold text-neutral-700 uppercase tracking-wider mb-1">
+                    <label className="block text-xs font-bold text-[var(--fitlo-ink)] uppercase tracking-wider mb-1">
                       Business Name
                     </label>
                     <input
                       type="text"
                       value={businessName}
                       onChange={e => setBusinessName(e.target.value)}
-                      className="w-full px-3.5 py-2 rounded-xl border border-stone-200 bg-stone-50/50 text-xs font-semibold text-neutral-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-400"
+                      className="fitlo-input w-full"
                     />
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-bold text-neutral-700 uppercase tracking-wider mb-1">
+                      <label className="block text-xs font-bold text-[var(--fitlo-ink)] uppercase tracking-wider mb-1">
                         Time Zone
                       </label>
                       <select
                         value={timeZone}
                         onChange={e => setTimeZone(e.target.value)}
-                        className="w-full px-3.5 py-2 rounded-xl border border-stone-200 bg-white text-xs font-semibold text-neutral-900 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                        className="fitlo-input w-full"
                       >
                         <option value="(UTC+08:00) Bali">(UTC+08:00) Bali (WITA)</option>
                         <option value="(UTC+07:00) Jakarta">(UTC+07:00) Jakarta (WIB)</option>
@@ -168,7 +164,7 @@ export default function TherapickSettingsView() {
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold text-neutral-700 uppercase tracking-wider mb-1">
+                      <label className="block text-xs font-bold text-[var(--fitlo-ink)] uppercase tracking-wider mb-1">
                         Default Booking Status
                       </label>
                       <select
@@ -177,30 +173,30 @@ export default function TherapickSettingsView() {
                           setDefaultBookingStatus(e.target.value);
                           setWhatsappAutoStatus(e.target.value);
                         }}
-                        className="w-full px-3.5 py-2 rounded-xl border border-stone-200 bg-white text-xs font-semibold text-neutral-900 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                        className="fitlo-input w-full"
                       >
                         <option value="In Progress">In Progress (Default)</option>
                         <option value="Confirmed">Confirmed</option>
                         <option value="Pending">Pending Review</option>
                       </select>
-                      <p className="text-[11px] text-stone-500 mt-1">
+                      <p className="text-[11px] text-[var(--fitlo-muted)] mt-1">
                         Status automatically assigned when CS sends a WhatsApp chat message.
                       </p>
                     </div>
                   </div>
 
-                  {/* Toggle Switches Matching Mockup */}
-                  <div className="pt-3 border-t border-stone-100 space-y-4">
+                  {/* Toggle Switches */}
+                  <div className="pt-3 border-t border-[var(--fitlo-line)] space-y-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <div className="text-xs font-bold text-neutral-900">Show Website Calendar</div>
-                        <div className="text-[11px] text-stone-500">Display availability calendar on booking page</div>
+                        <div className="text-xs font-bold text-[var(--fitlo-ink)]">Show Website Calendar</div>
+                        <div className="text-[11px] text-[var(--fitlo-muted)]">Display availability calendar on booking page</div>
                       </div>
                       <button
                         type="button"
                         onClick={() => setShowWebsiteCalendar(!showWebsiteCalendar)}
                         className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                          showWebsiteCalendar ? 'bg-[#FACC15]' : 'bg-stone-200'
+                          showWebsiteCalendar ? 'bg-[var(--fitlo-accent)]' : 'bg-[var(--fitlo-line)]'
                         }`}
                       >
                         <span
@@ -213,14 +209,14 @@ export default function TherapickSettingsView() {
 
                     <div className="flex items-center justify-between">
                       <div>
-                        <div className="text-xs font-bold text-neutral-900">Allow Customer Reschedule</div>
-                        <div className="text-[11px] text-stone-500">Let customers reschedule their booking up to 4 hours before</div>
+                        <div className="text-xs font-bold text-[var(--fitlo-ink)]">Allow Customer Reschedule</div>
+                        <div className="text-[11px] text-[var(--fitlo-muted)]">Let customers reschedule their booking up to 4 hours before</div>
                       </div>
                       <button
                         type="button"
                         onClick={() => setAllowReschedule(!allowReschedule)}
                         className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                          allowReschedule ? 'bg-[#FACC15]' : 'bg-stone-200'
+                          allowReschedule ? 'bg-[var(--fitlo-accent)]' : 'bg-[var(--fitlo-line)]'
                         }`}
                       >
                         <span
@@ -238,24 +234,24 @@ export default function TherapickSettingsView() {
             {/* BOOKING & CALENDAR SETTINGS */}
             {activeCategory === 'booking' && (
               <div className="space-y-4">
-                <h2 className="text-sm font-bold text-neutral-900">Booking & Calendar Rules</h2>
+                <h2 className="text-sm font-bold text-[var(--fitlo-ink)]">Booking & Calendar Rules</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                   <div>
-                    <label className="block font-semibold text-stone-700 mb-1">Buffer Between Sessions (Minutes)</label>
+                    <label className="block font-bold text-[var(--fitlo-ink)] mb-1">Buffer Between Sessions (Minutes)</label>
                     <input
                       type="number"
                       value={bufferTime}
                       onChange={e => setBufferTime(e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl border border-stone-200 font-mono text-neutral-900"
+                      className="fitlo-input w-full fitlo-num"
                     />
                   </div>
                   <div>
-                    <label className="block font-semibold text-stone-700 mb-1">Min. Advance Notice (Hours)</label>
+                    <label className="block font-bold text-[var(--fitlo-ink)] mb-1">Min. Advance Notice (Hours)</label>
                     <input
                       type="number"
                       value={advanceNotice}
                       onChange={e => setAdvanceNotice(e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl border border-stone-200 font-mono text-neutral-900"
+                      className="fitlo-input w-full fitlo-num"
                     />
                   </div>
                 </div>
@@ -265,23 +261,23 @@ export default function TherapickSettingsView() {
             {/* PAYMENTS SETTINGS */}
             {activeCategory === 'payments' && (
               <div className="space-y-4">
-                <h2 className="text-sm font-bold text-neutral-900">Payment Gateway & Methods</h2>
+                <h2 className="text-sm font-bold text-[var(--fitlo-ink)]">Payment Gateway & Methods</h2>
                 <div className="space-y-3 text-xs">
-                  <label className="flex items-center gap-2 cursor-pointer font-semibold text-neutral-800">
+                  <label className="flex items-center gap-2 cursor-pointer font-bold text-[var(--fitlo-ink)]">
                     <input
                       type="checkbox"
                       checked={acceptOnline}
                       onChange={e => setAcceptOnline(e.target.checked)}
-                      className="w-4 h-4 rounded text-amber-500 focus:ring-amber-400"
+                      className="w-4 h-4 rounded text-[var(--fitlo-accent)] focus:ring-[var(--fitlo-accent)]"
                     />
                     <span>Accept Online Payment (Bank Transfer / QRIS / Midtrans)</span>
                   </label>
-                  <label className="flex items-center gap-2 cursor-pointer font-semibold text-neutral-800">
+                  <label className="flex items-center gap-2 cursor-pointer font-bold text-[var(--fitlo-ink)]">
                     <input
                       type="checkbox"
                       checked={acceptCash}
                       onChange={e => setAcceptCash(e.target.checked)}
-                      className="w-4 h-4 rounded text-amber-500 focus:ring-amber-400"
+                      className="w-4 h-4 rounded text-[var(--fitlo-accent)] focus:ring-[var(--fitlo-accent)]"
                     />
                     <span>Accept Cash on Arrival at Client Villa</span>
                   </label>
@@ -292,29 +288,29 @@ export default function TherapickSettingsView() {
             {/* NOTIFICATIONS SETTINGS */}
             {activeCategory === 'notifications' && (
               <div className="space-y-4">
-                <h2 className="text-sm font-bold text-neutral-900">Notification Alerts</h2>
+                <h2 className="text-sm font-bold text-[var(--fitlo-ink)]">Notification Alerts</h2>
                 <div className="space-y-3 text-xs">
-                  <label className="flex items-center gap-2 cursor-pointer font-semibold text-neutral-800">
+                  <label className="flex items-center gap-2 cursor-pointer font-bold text-[var(--fitlo-ink)]">
                     <input
                       type="checkbox"
                       checked={notifyWhatsAppAdmin}
                       onChange={e => setNotifyWhatsAppAdmin(e.target.checked)}
-                      className="w-4 h-4 rounded text-amber-500 focus:ring-amber-400"
+                      className="w-4 h-4 rounded text-[var(--fitlo-accent)] focus:ring-[var(--fitlo-accent)]"
                     />
                     <span>Send immediate WhatsApp dispatch alert to Admin on new website bookings</span>
                   </label>
-                  <label className="flex items-center gap-2 cursor-pointer font-semibold text-neutral-800">
+                  <label className="flex items-center gap-2 cursor-pointer font-bold text-[var(--fitlo-ink)]">
                     <input
                       type="checkbox"
                       checked={notifyEmailCustomer}
                       onChange={e => setNotifyEmailCustomer(e.target.checked)}
-                      className="w-4 h-4 rounded text-amber-500 focus:ring-amber-400"
+                      className="w-4 h-4 rounded text-[var(--fitlo-accent)] focus:ring-[var(--fitlo-accent)]"
                     />
                     <span>Send booking confirmation & calendar invite to customer email</span>
                   </label>
 
-                  <div className="pt-3 border-t border-stone-100">
-                    <label className="block text-xs font-bold text-neutral-700 uppercase tracking-wider mb-1">
+                  <div className="pt-3 border-t border-[var(--fitlo-line)]">
+                    <label className="block text-xs font-bold text-[var(--fitlo-ink)] uppercase tracking-wider mb-1">
                       WhatsApp Dispatch Auto-Status
                     </label>
                     <select
@@ -323,13 +319,13 @@ export default function TherapickSettingsView() {
                         setWhatsappAutoStatus(e.target.value);
                         setDefaultBookingStatus(e.target.value);
                       }}
-                      className="w-full sm:w-80 px-3.5 py-2 rounded-xl border border-stone-200 bg-white text-xs font-semibold text-neutral-900 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                      className="fitlo-input w-full sm:w-80"
                     >
                       <option value="In Progress">In Progress (Recommended)</option>
                       <option value="Confirmed">Confirmed</option>
                       <option value="Pending">Pending Review</option>
                     </select>
-                    <p className="text-[11px] text-stone-500 mt-1">
+                    <p className="text-[11px] text-[var(--fitlo-muted)] mt-1">
                       When CS clicks the WhatsApp Chat button on a booking, it automatically marks the treatment as In Progress.
                     </p>
                   </div>
@@ -340,19 +336,19 @@ export default function TherapickSettingsView() {
             {/* INTEGRATIONS SETTINGS */}
             {activeCategory === 'integrations' && (
               <div className="space-y-4">
-                <h2 className="text-sm font-bold text-neutral-900">System Integrations</h2>
-                <div className="p-4 rounded-xl bg-stone-50 border border-stone-200 text-xs space-y-2">
+                <h2 className="text-sm font-bold text-[var(--fitlo-ink)]">System Integrations</h2>
+                <div className="p-4 rounded-xl bg-[var(--fitlo-card-2)] border border-[var(--fitlo-line)] text-xs space-y-2">
                   <div className="flex items-center justify-between">
                     <span>Website Domain:</span>
-                    <span className="font-mono font-bold text-emerald-700">booktherapick.com (Connected)</span>
+                    <span className="fitlo-num font-bold text-[var(--fitlo-accent)]">booktherapick.com (Connected)</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span>Supabase Database:</span>
-                    <span className="font-mono font-bold text-emerald-700">Active (Brand: Therapick)</span>
+                    <span className="fitlo-num font-bold text-[var(--fitlo-accent)]">Active (Brand: Therapick)</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span>WhatsApp Gateway:</span>
-                    <span className="font-mono font-bold text-neutral-800">Operational</span>
+                    <span className="font-bold text-[var(--fitlo-ink)]">Operational</span>
                   </div>
                 </div>
               </div>
@@ -361,21 +357,21 @@ export default function TherapickSettingsView() {
             {/* USER ACCESS */}
             {activeCategory === 'access' && (
               <div className="space-y-4">
-                <h2 className="text-sm font-bold text-neutral-900">Admin Roles & Permissions</h2>
-                <div className="p-4 rounded-xl bg-stone-50 border border-stone-200 text-xs text-stone-600">
+                <h2 className="text-sm font-bold text-[var(--fitlo-ink)]">Admin Roles & Permissions</h2>
+                <div className="p-4 rounded-xl bg-[var(--fitlo-card-2)] border border-[var(--fitlo-line)] text-xs text-[var(--fitlo-muted)]">
                   Role-based access is active. System maintains isolated operational permissions between the Website Management environment and Affiliate Partner operations.
                 </div>
               </div>
             )}
 
             {/* Save Button */}
-            <div className="pt-4 border-t border-stone-100 flex items-center justify-end">
+            <div className="pt-4 border-t border-[var(--fitlo-line)] flex items-center justify-end">
               <button
                 type="submit"
                 disabled={isSaving}
-                className="px-5 py-2.5 rounded-xl bg-[#0F172A] hover:bg-neutral-800 text-white text-xs font-bold shadow-xs transition-all flex items-center gap-2 cursor-pointer"
+                className="fitlo-btn fitlo-btn--primary flex items-center gap-2 cursor-pointer"
               >
-                {isSaving ? <RefreshCw size={14} className="animate-spin text-[#facc15]" /> : <Check size={14} />}
+                {isSaving ? <RefreshCw size={14} className="animate-spin text-white" /> : <Check size={14} />}
                 <span>Save Configuration</span>
               </button>
             </div>

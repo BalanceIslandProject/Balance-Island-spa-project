@@ -117,43 +117,43 @@ export default function TherapickAdvancedCalendarModal() {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+    <div className="fitlo-modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto bg-black/40 backdrop-blur-xs animate-in fade-in duration-200">
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 bg-neutral-950/50 backdrop-blur-xs transition-opacity" 
+        className="fixed inset-0 transition-opacity" 
         onClick={() => setIsAdvancedCalendarOpen(false)}
       />
 
       {/* Modal Dialog */}
-      <div className="relative w-full max-w-5xl bg-white rounded-3xl shadow-2xl border border-stone-200/90 z-50 flex flex-col max-h-[90vh] overflow-hidden animate-in fade-in zoom-in-95">
+      <div className="relative w-full max-w-5xl bg-[var(--fitlo-card,#fdfdfb)] rounded-2xl shadow-2xl border border-[var(--fitlo-line,rgba(22,26,25,0.08))] z-50 flex flex-col max-h-[90vh] overflow-hidden animate-in fade-in zoom-in-95">
         
         {/* Header */}
-        <div className="px-6 py-4 border-b border-stone-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-stone-50/50">
+        <div className="px-6 py-4 border-b border-[var(--fitlo-line,rgba(22,26,25,0.08))] flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[var(--fitlo-bg,#f7f6f2)]">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-[#FACC15] flex items-center justify-center text-neutral-950 shadow-xs">
+            <div className="w-10 h-10 rounded-xl bg-[var(--fitlo-accent-soft,#d8ecee)] flex items-center justify-center text-[var(--fitlo-accent,#0b7a73)] shadow-xs">
               <CalendarIcon size={20} />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-base font-bold text-neutral-950 font-sans">
+                <h2 className="text-base font-bold text-[var(--fitlo-ink,#161a19)] tracking-tight">
                   Advanced {system === 'affiliate' ? 'Affiliate' : 'Website'} Calendar
                 </h2>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-neutral-900 text-white font-mono">
+                <span className="fitlo-pill fitlo-pill--paid text-[10px] font-bold">
                   {filteredBookings.length} Bookings
                 </span>
               </div>
-              <p className="text-xs text-stone-500">Therapist availability, time slots & conflict detection</p>
+              <p className="text-xs text-[var(--fitlo-muted,#59615d)]">Therapist availability, time slots & conflict detection</p>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
             {/* View Mode Tabs */}
-            <div className="bg-stone-200/70 p-1 rounded-xl flex items-center gap-1 text-xs font-bold">
+            <div className="fitlo-sides flex items-center gap-1 text-xs font-bold p-1 rounded-xl">
               <button
                 type="button"
                 onClick={() => setViewMode('month')}
-                className={`px-3 py-1 rounded-lg transition-colors cursor-pointer ${
-                  viewMode === 'month' ? 'bg-white text-neutral-950 shadow-xs' : 'text-stone-600 hover:text-neutral-950'
+                className={`fitlo-sides__btn cursor-pointer ${
+                  viewMode === 'month' ? 'is-active' : ''
                 }`}
               >
                 Month
@@ -161,8 +161,8 @@ export default function TherapickAdvancedCalendarModal() {
               <button
                 type="button"
                 onClick={() => setViewMode('week')}
-                className={`px-3 py-1 rounded-lg transition-colors cursor-pointer ${
-                  viewMode === 'week' ? 'bg-white text-neutral-950 shadow-xs' : 'text-stone-600 hover:text-neutral-950'
+                className={`fitlo-sides__btn cursor-pointer ${
+                  viewMode === 'week' ? 'is-active' : ''
                 }`}
               >
                 Week
@@ -170,8 +170,8 @@ export default function TherapickAdvancedCalendarModal() {
               <button
                 type="button"
                 onClick={() => setViewMode('day')}
-                className={`px-3 py-1 rounded-lg transition-colors cursor-pointer ${
-                  viewMode === 'day' ? 'bg-white text-neutral-950 shadow-xs' : 'text-stone-600 hover:text-neutral-950'
+                className={`fitlo-sides__btn cursor-pointer ${
+                  viewMode === 'day' ? 'is-active' : ''
                 }`}
               >
                 Day
@@ -181,7 +181,7 @@ export default function TherapickAdvancedCalendarModal() {
             <button
               type="button"
               onClick={() => setIsAdvancedCalendarOpen(false)}
-              className="p-1.5 rounded-xl text-stone-400 hover:text-neutral-900 hover:bg-stone-100 transition-colors cursor-pointer"
+              className="p-1.5 rounded-xl text-[var(--fitlo-muted,#59615d)] hover:text-[var(--fitlo-ink,#161a19)] hover:bg-[var(--fitlo-card-2,#f0efea)] transition-colors cursor-pointer"
             >
               <X size={20} />
             </button>
@@ -189,22 +189,22 @@ export default function TherapickAdvancedCalendarModal() {
         </div>
 
         {/* Filter & Controls Bar */}
-        <div className="px-6 py-3 border-b border-stone-100 flex flex-wrap items-center justify-between gap-3 text-xs bg-white">
+        <div className="px-6 py-3 border-b border-[var(--fitlo-line,rgba(22,26,25,0.08))] flex flex-wrap items-center justify-between gap-3 text-xs bg-[var(--fitlo-card,#fdfdfb)]">
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={handlePrev}
-              className="p-1.5 rounded-lg border border-stone-200 hover:bg-stone-50 cursor-pointer"
+              className="p-1.5 rounded-lg border border-[var(--fitlo-line,rgba(22,26,25,0.08))] hover:bg-[var(--fitlo-bg,#f7f6f2)] text-[var(--fitlo-ink,#161a19)] cursor-pointer"
             >
               <ChevronLeft size={16} />
             </button>
-            <span className="font-bold text-neutral-900 px-2 font-mono text-sm">
+            <span className="font-bold text-[var(--fitlo-ink,#161a19)] px-2 font-mono text-sm">
               {currentDate.toLocaleString('en-US', { month: 'long', year: 'numeric', ...(viewMode === 'day' ? { day: 'numeric' } : {}) })}
             </span>
             <button
               type="button"
               onClick={handleNext}
-              className="p-1.5 rounded-lg border border-stone-200 hover:bg-stone-50 cursor-pointer"
+              className="p-1.5 rounded-lg border border-[var(--fitlo-line,rgba(22,26,25,0.08))] hover:bg-[var(--fitlo-bg,#f7f6f2)] text-[var(--fitlo-ink,#161a19)] cursor-pointer"
             >
               <ChevronRight size={16} />
             </button>
@@ -216,7 +216,7 @@ export default function TherapickAdvancedCalendarModal() {
               <select
                 value={selectedPartnerId}
                 onChange={(e) => setSelectedPartnerId(e.target.value)}
-                className="bg-stone-50 border border-stone-200 rounded-xl px-3 py-1.5 text-xs font-semibold text-neutral-900 focus:outline-none focus:ring-1 focus:ring-neutral-900"
+                className="fitlo-input text-xs font-semibold py-1.5"
               >
                 <option value="all">All Partners ({partners.length})</option>
                 {partners.map(p => (
@@ -231,7 +231,7 @@ export default function TherapickAdvancedCalendarModal() {
             <select
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value)}
-              className="bg-stone-50 border border-stone-200 rounded-xl px-3 py-1.5 text-xs font-semibold text-neutral-900 focus:outline-none focus:ring-1 focus:ring-neutral-900"
+              className="fitlo-input text-xs font-semibold py-1.5"
             >
               <option value="all">All Statuses</option>
               <option value="confirmed">Confirmed</option>
@@ -251,11 +251,11 @@ export default function TherapickAdvancedCalendarModal() {
         )}
 
         {/* Calendar Body Viewport */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-6 bg-[var(--fitlo-card,#fdfdfb)]">
           {viewMode === 'month' && (
-            <div className="border border-stone-200 rounded-2xl overflow-hidden shadow-2xs">
+            <div className="border border-[var(--fitlo-line,rgba(22,26,25,0.08))] rounded-2xl overflow-hidden shadow-2xs">
               {/* Day Headers */}
-              <div className="grid grid-cols-7 bg-stone-50 border-b border-stone-200 text-center text-xs font-bold font-mono text-stone-600 py-2">
+              <div className="grid grid-cols-7 bg-[var(--fitlo-bg,#f7f6f2)] border-b border-[var(--fitlo-line,rgba(22,26,25,0.08))] text-center text-xs font-bold font-mono text-[var(--fitlo-muted,#59615d)] py-2">
                 <div>Sun</div>
                 <div>Mon</div>
                 <div>Tue</div>
@@ -266,10 +266,10 @@ export default function TherapickAdvancedCalendarModal() {
               </div>
 
               {/* Grid Cells */}
-              <div className="grid grid-cols-7 divide-x divide-y divide-stone-100 text-xs">
+              <div className="grid grid-cols-7 divide-x divide-y divide-[var(--fitlo-line,rgba(22,26,25,0.08))] text-xs">
                 {/* Empty offset days */}
                 {Array.from({ length: firstDay }).map((_, i) => (
-                  <div key={`offset-${i}`} className="min-h-[100px] bg-stone-50/40 p-2" />
+                  <div key={`offset-${i}`} className="min-h-[100px] bg-[var(--fitlo-bg,#f7f6f2)]/40 p-2" />
                 ))}
 
                 {/* Actual Days */}
@@ -284,12 +284,12 @@ export default function TherapickAdvancedCalendarModal() {
                   return (
                     <div 
                       key={`day-${dayNum}`}
-                      className="min-h-[100px] p-2 hover:bg-stone-50/50 transition-colors flex flex-col justify-between"
+                      className="min-h-[100px] p-2 hover:bg-[var(--fitlo-bg,#f7f6f2)]/50 transition-colors flex flex-col justify-between"
                     >
                       <div className="flex items-center justify-between mb-1">
-                        <span className="font-mono font-bold text-neutral-800 text-xs">{dayNum}</span>
+                        <span className="font-mono font-bold text-[var(--fitlo-ink,#161a19)] text-xs">{dayNum}</span>
                         {dayBookings.length > 0 && (
-                          <span className="text-[10px] font-mono font-extrabold px-1.5 py-0.5 rounded-full bg-[#FACC15] text-neutral-950 border border-amber-400 shadow-2xs">
+                          <span className="text-[10px] font-mono font-extrabold px-1.5 py-0.5 rounded-full bg-[var(--fitlo-accent,#0b7a73)] text-white shadow-2xs">
                             {dayBookings.length} {dayBookings.length === 1 ? 'bking' : 'bkings'}
                           </span>
                         )}
@@ -308,14 +308,14 @@ export default function TherapickAdvancedCalendarModal() {
                                 ? 'bg-emerald-50 text-emerald-900 border border-emerald-200/80 hover:bg-emerald-100'
                                 : (b.status || '').toLowerCase() === 'cancelled'
                                 ? 'bg-rose-50 text-rose-800 line-through'
-                                : 'bg-amber-50 text-amber-900 border border-amber-200/80 hover:bg-amber-100'
+                                : 'bg-[var(--fitlo-accent-soft,#d8ecee)] text-[var(--fitlo-accent,#0b7a73)] border border-[var(--fitlo-accent,#0b7a73)]/20 hover:opacity-90'
                             }`}
                           >
                             {b.time} · {b.guest_name || 'Guest'}
                           </button>
                         ))}
                         {dayBookings.length > 3 && (
-                          <div className="text-[9px] text-stone-400 font-semibold text-center">
+                          <div className="text-[9px] text-[var(--fitlo-muted,#59615d)] font-semibold text-center">
                             +{dayBookings.length - 3} more
                           </div>
                         )}
@@ -329,36 +329,36 @@ export default function TherapickAdvancedCalendarModal() {
 
           {viewMode === 'day' && (
             <div className="space-y-3">
-              <div className="text-xs font-bold text-neutral-900 mb-2">
+              <div className="text-xs font-bold text-[var(--fitlo-ink,#161a19)] mb-2">
                 Bookings for {currentDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
               </div>
 
               {filteredBookings.length === 0 ? (
-                <div className="py-16 text-center text-xs text-stone-400">No bookings scheduled for this date.</div>
+                <div className="py-16 text-center text-xs text-[var(--fitlo-muted,#59615d)]">No bookings scheduled for this date.</div>
               ) : (
                 <div className="space-y-2">
                   {filteredBookings.map(b => (
                     <div
                       key={b.id}
                       onClick={() => setSelectedBooking(b)}
-                      className="p-4 bg-white border border-stone-200 rounded-2xl hover:border-neutral-900 transition-colors cursor-pointer flex items-center justify-between"
+                      className="p-4 bg-[var(--fitlo-card,#fdfdfb)] border border-[var(--fitlo-line,rgba(22,26,25,0.08))] rounded-2xl hover:border-[var(--fitlo-accent,#0b7a73)] transition-colors cursor-pointer flex items-center justify-between"
                     >
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-stone-100 flex flex-col items-center justify-center font-mono">
-                          <span className="text-xs font-extrabold text-neutral-950">{b.time}</span>
-                          <span className="text-[9px] text-stone-500">WITA</span>
+                        <div className="w-12 h-12 rounded-xl bg-[var(--fitlo-bg,#f7f6f2)] flex flex-col items-center justify-center font-mono">
+                          <span className="text-xs font-extrabold text-[var(--fitlo-ink,#161a19)]">{b.time}</span>
+                          <span className="text-[9px] text-[var(--fitlo-muted,#59615d)]">WITA</span>
                         </div>
                         <div>
-                          <div className="text-sm font-bold text-neutral-950">{b.treatment_name}</div>
-                          <div className="text-xs text-stone-600">
+                          <div className="text-sm font-bold text-[var(--fitlo-ink,#161a19)]">{b.treatment_name}</div>
+                          <div className="text-xs text-[var(--fitlo-muted,#59615d)]">
                             {b.guest_name} · {b.location || 'Villa'} · {b.pax} pax
                           </div>
                         </div>
                       </div>
 
                       <div className="text-right">
-                        <div className="text-sm font-bold text-neutral-950">{formatIDR(b.revenue)}</div>
-                        <div className="text-xs font-semibold text-emerald-700 capitalize">{b.status || 'Confirmed'}</div>
+                        <div className="text-sm font-bold text-[var(--fitlo-ink,#161a19)]">{formatIDR(b.revenue)}</div>
+                        <div className="text-xs font-semibold text-[var(--fitlo-accent,#0b7a73)] capitalize">{b.status || 'Confirmed'}</div>
                       </div>
                     </div>
                   ))}
@@ -368,21 +368,21 @@ export default function TherapickAdvancedCalendarModal() {
           )}
 
           {viewMode === 'week' && (
-            <div className="py-12 text-center text-xs text-stone-500">
+            <div className="py-12 text-center text-xs text-[var(--fitlo-muted,#59615d)]">
               Week view schedules available. Use Month view for island-wide overview or Day view for hourly time slots.
             </div>
           )}
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-3.5 border-t border-stone-200 bg-stone-50 flex items-center justify-between text-xs">
-          <div className="flex items-center gap-4 text-stone-600 font-medium">
+        <div className="px-6 py-3.5 border-t border-[var(--fitlo-line,rgba(22,26,25,0.08))] bg-[var(--fitlo-bg,#f7f6f2)] flex items-center justify-between text-xs">
+          <div className="flex items-center gap-4 text-[var(--fitlo-muted,#59615d)] font-medium">
             <span className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
               Confirmed
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-amber-400" />
+              <span className="w-2.5 h-2.5 rounded-full bg-[var(--fitlo-accent,#0b7a73)]" />
               Pending
             </span>
             <span className="flex items-center gap-1.5">
@@ -394,7 +394,7 @@ export default function TherapickAdvancedCalendarModal() {
           <button
             type="button"
             onClick={() => setIsAdvancedCalendarOpen(false)}
-            className="px-4 py-2 rounded-xl bg-neutral-900 text-white font-bold hover:bg-neutral-800 transition-colors cursor-pointer"
+            className="fitlo-btn fitlo-btn--primary text-xs"
           >
             Close Calendar
           </button>

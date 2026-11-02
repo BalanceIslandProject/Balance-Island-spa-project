@@ -67,14 +67,14 @@ export default function TherapickReportsView() {
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-200">
-      {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="space-y-6">
+      {/* ─── FITLO PAGE HEADER ─── */}
+      <div className="fitlo-page-head">
         <div>
-          <h1 className="text-xl sm:text-2xl font-extrabold text-neutral-900 tracking-tight">
-            {system === 'website' ? 'Website Financial Report' : 'Affiliate Financial Report'}
+          <h1 className="fitlo-page-title">
+            {system === 'website' ? 'Website Financial Reports' : 'Affiliate Financial Reports'}
           </h1>
-          <p className="text-xs sm:text-sm text-stone-500 mt-0.5">
+          <p className="fitlo-page-sub">
             {system === 'website'
               ? 'Audited income statement, treatment margins, and direct guest revenue trends.'
               : 'Partner revenue distribution, commission settlements, therapist costs, and net platform yield.'}
@@ -85,7 +85,7 @@ export default function TherapickReportsView() {
           <button
             type="button"
             onClick={handleExportCSV}
-            className="px-4 py-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
+            className="fitlo-btn fitlo-btn--primary flex items-center gap-1.5"
           >
             <Download size={14} />
             <span>Download Statement (CSV)</span>
@@ -93,99 +93,97 @@ export default function TherapickReportsView() {
         </div>
       </div>
 
-      {/* Primary Financial Metric Summary Cards */}
+      {/* ─── FITLO 4 PASTEL FINANCIAL KPI TILES ─── */}
       {system === 'website' ? (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-white p-5 rounded-2xl border border-stone-200/90 shadow-2xs">
-            <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-stone-500">Gross Website Revenue</span>
-            <div className="text-2xl font-extrabold text-neutral-900 mt-1 font-mono">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+          <div className="fitlo-kpi fitlo-kpi--cyan">
+            <span className="fitlo-kpi__lbl">Gross Website Revenue</span>
+            <div className="fitlo-kpi__val text-xl sm:text-2xl mt-1">
               Rp {websiteMetrics.revenue.toLocaleString('id-ID')}
             </div>
-            <div className="text-xs text-emerald-600 mt-1 font-semibold">▲ +14% vs previous period</div>
+            <div className="fitlo-kpi__sub font-semibold text-[var(--fitlo-accent)] mt-1">▲ +14% vs previous period</div>
           </div>
 
-          <div className="bg-white p-5 rounded-2xl border border-stone-200/90 shadow-2xs">
-            <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-stone-500">Therapist Payments</span>
-            <div className="text-2xl font-extrabold text-stone-700 mt-1 font-mono">
+          <div className="fitlo-kpi fitlo-kpi--pebble">
+            <span className="fitlo-kpi__lbl">Therapist Payments</span>
+            <div className="fitlo-kpi__val text-xl sm:text-2xl mt-1">
               Rp {websiteMetrics.therapist_payments.toLocaleString('id-ID')}
             </div>
-            <div className="text-xs text-stone-400 mt-1">Direct treatment labor cost</div>
+            <div className="fitlo-kpi__sub mt-1">Direct treatment labor cost</div>
           </div>
 
-          <div className="bg-[#fef9c3]/70 p-5 rounded-2xl border border-[#fef08a] shadow-2xs">
-            <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-amber-900">Net Operating Profit</span>
-            <div className="text-2xl font-extrabold text-amber-950 mt-1 font-mono">
+          <div className="fitlo-kpi fitlo-kpi--lemon">
+            <span className="fitlo-kpi__lbl">Net Operating Profit</span>
+            <div className="fitlo-kpi__val text-xl sm:text-2xl text-[var(--fitlo-accent)] mt-1">
               Rp {websiteMetrics.net_profit.toLocaleString('id-ID')}
             </div>
-            <div className="text-xs text-amber-800 mt-1 font-semibold">Net margin: ~50.2%</div>
+            <div className="fitlo-kpi__sub font-bold text-[var(--fitlo-accent)] mt-1">Net margin: ~50.2%</div>
           </div>
 
-          <div className="bg-white p-5 rounded-2xl border border-stone-200/90 shadow-2xs">
-            <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-stone-500">Avg Booking Value</span>
-            <div className="text-2xl font-extrabold text-neutral-900 mt-1 font-mono">
+          <div className="fitlo-kpi fitlo-kpi--peach">
+            <span className="fitlo-kpi__lbl">Avg Booking Value</span>
+            <div className="fitlo-kpi__val text-xl sm:text-2xl mt-1">
               Rp {websiteMetrics.avg_booking_value.toLocaleString('id-ID')}
             </div>
-            <div className="text-xs text-stone-400 mt-1">{websiteMetrics.booking_count} completed sessions</div>
+            <div className="fitlo-kpi__sub mt-1">{websiteMetrics.booking_count} completed sessions</div>
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-white p-5 rounded-2xl border border-stone-200/90 shadow-2xs">
-            <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-stone-500">Affiliate Gross Revenue</span>
-            <div className="text-2xl font-extrabold text-neutral-900 mt-1 font-mono">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+          <div className="fitlo-kpi fitlo-kpi--cyan">
+            <span className="fitlo-kpi__lbl">Affiliate Gross Revenue</span>
+            <div className="fitlo-kpi__val text-xl sm:text-2xl mt-1">
               Rp {affiliateMetrics.revenue.toLocaleString('id-ID')}
             </div>
-            <div className="text-xs text-emerald-600 mt-1 font-semibold">▲ +12% vs previous period</div>
+            <div className="fitlo-kpi__sub font-semibold text-[var(--fitlo-accent)] mt-1">▲ +12% vs previous period</div>
           </div>
 
-          <div className="bg-white p-5 rounded-2xl border border-stone-200/90 shadow-2xs">
-            <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-stone-500">Therapist Fees</span>
-            <div className="text-2xl font-extrabold text-stone-700 mt-1 font-mono">
+          <div className="fitlo-kpi fitlo-kpi--pebble">
+            <span className="fitlo-kpi__lbl">Therapist Fees</span>
+            <div className="fitlo-kpi__val text-xl sm:text-2xl mt-1">
               Rp {affiliateMetrics.therapist_fee.toLocaleString('id-ID')}
             </div>
-            <div className="text-xs text-stone-400 mt-1">Disbursed to spa therapists</div>
+            <div className="fitlo-kpi__sub mt-1">Disbursed to spa therapists</div>
           </div>
 
-          <div className="bg-white p-5 rounded-2xl border border-stone-200/90 shadow-2xs">
-            <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-amber-700">Partner Commissions (15%)</span>
-            <div className="text-2xl font-extrabold text-amber-800 mt-1 font-mono">
+          <div className="fitlo-kpi fitlo-kpi--peach">
+            <span className="fitlo-kpi__lbl">Partner Commissions (15%)</span>
+            <div className="fitlo-kpi__val text-xl sm:text-2xl mt-1 text-[var(--fitlo-now)]">
               Rp {affiliateMetrics.commission.toLocaleString('id-ID')}
             </div>
-            <div className="text-xs text-stone-400 mt-1">Payable to referring partners</div>
+            <div className="fitlo-kpi__sub mt-1">Payable to referring partners</div>
           </div>
 
-          <div className="bg-[#fef9c3]/70 p-5 rounded-2xl border border-[#fef08a] shadow-2xs">
-            <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-amber-900">Platform Net Profit</span>
-            <div className="text-2xl font-extrabold text-amber-950 mt-1 font-mono">
+          <div className="fitlo-kpi fitlo-kpi--lemon">
+            <span className="fitlo-kpi__lbl">Platform Net Profit</span>
+            <div className="fitlo-kpi__val text-xl sm:text-2xl text-[var(--fitlo-accent)] mt-1">
               Rp {affiliateMetrics.net_profit.toLocaleString('id-ID')}
             </div>
-            <div className="text-xs text-amber-800 mt-1 font-semibold">Yield after fees & commission</div>
+            <div className="fitlo-kpi__sub font-bold text-[var(--fitlo-accent)] mt-1">Yield after fees & commission</div>
           </div>
         </div>
       )}
 
-      {/* Monthly Financial Breakdown Table */}
-      <div className="bg-white rounded-2xl p-6 border border-stone-200/90 shadow-2xs space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-base font-bold text-neutral-900">Historical Monthly Performance</h3>
-            <p className="text-xs text-stone-500">Audited monthly statements over the past 5 operating months.</p>
-          </div>
+      {/* ─── HISTORICAL MONTHLY PERFORMANCE TABLE ─── */}
+      <div className="fitlo-card p-6 space-y-4">
+        <div>
+          <h3 className="text-base font-bold text-[var(--fitlo-ink)]">Historical Monthly Performance</h3>
+          <p className="text-xs text-[var(--fitlo-muted)] mt-0.5">Audited monthly statements over the past 5 operating months.</p>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse min-w-[700px]">
+        <div className="overflow-x-auto no-scrollbar">
+          <table className="fitlo-table">
             <thead>
-              <tr className="border-b border-stone-200 bg-stone-50/60 text-[11px] font-bold font-mono uppercase tracking-wider text-stone-500">
-                <th className="py-3 px-4">Period</th>
-                <th className="py-3 px-4">Revenue</th>
-                <th className="py-3 px-4">{system === 'website' ? 'Therapist Payments' : 'Therapist Fees'}</th>
-                {system === 'affiliate' && <th className="py-3 px-4">Commissions (15%)</th>}
-                <th className="py-3 px-4">Net Platform Profit</th>
-                <th className="py-3 px-4">Operating Margin</th>
+              <tr>
+                <th>Period</th>
+                <th>Revenue</th>
+                <th>{system === 'website' ? 'Therapist Payments' : 'Therapist Fees'}</th>
+                {system === 'affiliate' && <th>Commissions (15%)</th>}
+                <th>Net Platform Profit</th>
+                <th>Operating Margin</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-stone-100 text-xs">
+            <tbody>
               {monthlyData.map((m, idx) => {
                 const rev = system === 'website' ? m.websiteRev : m.affiliateRev;
                 const cost = system === 'website' ? m.websiteCost : Math.round(m.affiliateRev * 0.45);
@@ -194,24 +192,24 @@ export default function TherapickReportsView() {
                 const margin = rev > 0 ? ((netProfit / rev) * 100).toFixed(1) : '0';
 
                 return (
-                  <tr key={idx} className="hover:bg-amber-50/20">
-                    <td className="py-3.5 px-4 font-bold text-neutral-900">{m.month}</td>
-                    <td className="py-3.5 px-4 font-mono font-bold text-neutral-900">
+                  <tr key={idx}>
+                    <td className="font-bold text-[var(--fitlo-ink)]">{m.month}</td>
+                    <td className="fitlo-num font-bold text-[var(--fitlo-ink)]">
                       Rp {rev.toLocaleString('id-ID')}
                     </td>
-                    <td className="py-3.5 px-4 font-mono text-stone-600">
+                    <td className="fitlo-num text-[var(--fitlo-muted)]">
                       Rp {cost.toLocaleString('id-ID')}
                     </td>
                     {system === 'affiliate' && (
-                      <td className="py-3.5 px-4 font-mono font-bold text-amber-700">
+                      <td className="fitlo-num font-bold text-[var(--fitlo-now)]">
                         Rp {comm.toLocaleString('id-ID')}
                       </td>
                     )}
-                    <td className="py-3.5 px-4 font-mono font-extrabold text-emerald-800">
+                    <td className="fitlo-num font-bold text-[var(--fitlo-accent)]">
                       Rp {netProfit.toLocaleString('id-ID')}
                     </td>
-                    <td className="py-3.5 px-4">
-                      <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-bold bg-stone-100 text-stone-700 font-mono">
+                    <td>
+                      <span className="fitlo-pill fitlo-pill--good">
                         {margin}%
                       </span>
                     </td>
@@ -223,10 +221,10 @@ export default function TherapickReportsView() {
         </div>
       </div>
 
-      {/* Partner Attribution Breakdown (If on Affiliate System) */}
+      {/* ─── PARTNER REVENUE ATTRIBUTION ─── */}
       {system === 'affiliate' && (
-        <div className="bg-white rounded-2xl p-6 border border-stone-200/90 shadow-2xs space-y-4">
-          <h3 className="text-base font-bold text-neutral-900">Revenue Yield by Partner</h3>
+        <div className="fitlo-card p-6 space-y-4">
+          <h3 className="text-base font-bold text-[var(--fitlo-ink)]">Revenue Yield by Partner</h3>
           <div className="space-y-3">
             {partners.slice(0, 5).map((p, index) => {
               const pct = affiliateMetrics.revenue > 0 
@@ -237,19 +235,19 @@ export default function TherapickReportsView() {
                 <div key={p.id} className="space-y-1.5">
                   <div className="flex items-center justify-between text-xs">
                     <div className="flex items-center gap-2">
-                      <span className="w-5 h-5 rounded-full bg-stone-100 text-neutral-800 font-bold text-[10px] flex items-center justify-center">
+                      <span className="w-5 h-5 rounded-full bg-[var(--fitlo-card-2)] border border-[var(--fitlo-line)] text-[var(--fitlo-ink)] font-bold text-[10px] flex items-center justify-center">
                         {index + 1}
                       </span>
-                      <span className="font-bold text-neutral-900">{p.name}</span>
-                      <span className="text-stone-400 font-mono text-[11px]">({p.referral_code})</span>
+                      <span className="font-bold text-[var(--fitlo-ink)]">{p.name}</span>
+                      <span className="text-[var(--fitlo-muted)] fitlo-num text-[11px]">({p.referral_code})</span>
                     </div>
-                    <span className="font-bold font-mono text-neutral-900">
+                    <span className="font-bold fitlo-num text-[var(--fitlo-ink)]">
                       Rp {p.affiliate_revenue.toLocaleString('id-ID')} ({pct}%)
                     </span>
                   </div>
-                  <div className="w-full h-2 rounded-full bg-stone-100 overflow-hidden">
+                  <div className="w-full h-2 rounded-full bg-[var(--fitlo-card-2)] border border-[var(--fitlo-line)] overflow-hidden">
                     <div 
-                      className="h-full bg-[#facc15] rounded-full transition-all duration-500" 
+                      className="h-full bg-[var(--fitlo-accent)] rounded-full transition-all duration-500" 
                       style={{ width: `${pct}%` }} 
                     />
                   </div>

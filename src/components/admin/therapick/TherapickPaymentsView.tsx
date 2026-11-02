@@ -130,24 +130,22 @@ export default function TherapickPaymentsView() {
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-200">
+    <div className="space-y-6">
       
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 bg-[#0F172A] text-white text-xs font-semibold px-4 py-3 rounded-xl shadow-2xl border border-stone-700 flex items-center gap-2.5 animate-in slide-in-from-bottom-3">
-          <CheckCircle2 size={16} className="text-[#facc15]" />
+        <div className="fixed bottom-6 right-6 z-50 bg-[var(--fitlo-ink)] text-[var(--fitlo-card)] text-xs font-semibold px-4 py-3 rounded-xl shadow-2xl border border-[var(--fitlo-line)] flex items-center gap-2.5 animate-in slide-in-from-bottom-3">
+          <CheckCircle2 size={16} className="text-[var(--fitlo-accent)]" />
           <span>{toastMessage}</span>
         </div>
       )}
 
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* ─── FITLO PAGE HEADER ─── */}
+      <div className="fitlo-page-head">
         <div>
-          <h1 className="text-xl sm:text-2xl font-extrabold text-neutral-900 tracking-tight">
-            Payments
-          </h1>
-          <p className="text-xs sm:text-sm text-stone-500 mt-0.5">
-            Manage customer transaction records, manual collections, and refunds.
+          <h1 className="fitlo-page-title">Payment Settlements</h1>
+          <p className="fitlo-page-sub">
+            Transaction reconciliation, manual on-arrival collections, and refunds.
           </p>
         </div>
 
@@ -156,143 +154,136 @@ export default function TherapickPaymentsView() {
             type="button"
             onClick={() => refreshData()}
             disabled={loading}
-            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-stone-200 hover:border-amber-400 text-neutral-800 text-xs font-semibold shadow-2xs hover:shadow-xs transition-all cursor-pointer"
+            className="fitlo-btn fitlo-btn--ghost flex items-center gap-2"
           >
-            <RefreshCw size={14} className={loading ? 'animate-spin text-amber-600' : 'text-stone-500'} />
+            <RefreshCw size={14} className={loading ? 'animate-spin text-[var(--fitlo-accent)]' : 'text-[var(--fitlo-muted)]'} />
             <span className="hidden sm:inline">Sync</span>
           </button>
 
           <button
             type="button"
             onClick={handleExportCSV}
-            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-stone-200 hover:border-amber-400 text-neutral-800 text-xs font-semibold shadow-2xs hover:shadow-xs transition-all cursor-pointer"
+            className="fitlo-btn fitlo-btn--ghost flex items-center gap-2"
           >
-            <Download size={14} className="text-stone-500" />
+            <Download size={14} className="text-[var(--fitlo-muted)]" />
             <span>Export CSV</span>
           </button>
         </div>
       </div>
 
-      {/* Primary KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-stone-200/90 shadow-2xs">
-          <div className="flex items-center justify-between text-stone-400 mb-2">
-            <span className="text-[11px] font-mono uppercase font-bold tracking-wider">Total Booking Value</span>
-            <Wallet size={16} className="text-stone-400" />
+      {/* ─── FITLO 4 PASTEL KPI TILES ─── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+        <div className="fitlo-kpi fitlo-kpi--peach">
+          <div className="flex items-center justify-between mb-1">
+            <span className="fitlo-kpi__lbl">Total Booking Value</span>
+            <Wallet size={15} className="text-[var(--fitlo-ink)] opacity-60" />
           </div>
-          <div className="text-xl sm:text-2xl font-extrabold text-neutral-900 font-mono">
+          <div className="fitlo-kpi__val text-xl sm:text-2xl">
             {formatIDR(metrics.totalGross)}
           </div>
-          <p className="text-[11px] text-stone-500 mt-1">Across all website reservations</p>
+          <div className="fitlo-kpi__sub">Across all website reservations</div>
         </div>
 
-        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-stone-200/90 shadow-2xs">
-          <div className="flex items-center justify-between text-stone-400 mb-2">
-            <span className="text-[11px] font-mono uppercase font-bold tracking-wider">Collected Revenue</span>
-            <CheckCircle2 size={16} className="text-emerald-500" />
+        <div className="fitlo-kpi fitlo-kpi--cyan">
+          <div className="flex items-center justify-between mb-1">
+            <span className="fitlo-kpi__lbl">Collected Revenue</span>
+            <CheckCircle2 size={15} className="text-[var(--fitlo-accent)]" />
           </div>
-          <div className="text-xl sm:text-2xl font-extrabold text-emerald-700 font-mono">
+          <div className="fitlo-kpi__val text-xl sm:text-2xl text-[var(--fitlo-accent)]">
             {formatIDR(metrics.totalPaid)}
           </div>
-          <p className="text-[11px] text-stone-500 mt-1">Verified settled payments</p>
+          <div className="fitlo-kpi__sub">Verified settled payments</div>
         </div>
 
-        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-stone-200/90 shadow-2xs">
-          <div className="flex items-center justify-between text-stone-400 mb-2">
-            <span className="text-[11px] font-mono uppercase font-bold tracking-wider">Outstanding Balance</span>
-            <AlertCircle size={16} className="text-amber-500" />
+        <div className="fitlo-kpi fitlo-kpi--lemon">
+          <div className="flex items-center justify-between mb-1">
+            <span className="fitlo-kpi__lbl">Outstanding Balance</span>
+            <AlertCircle size={15} className="text-[var(--fitlo-now)]" />
           </div>
-          <div className="text-xl sm:text-2xl font-extrabold text-amber-700 font-mono">
+          <div className="fitlo-kpi__val text-xl sm:text-2xl text-[var(--fitlo-now)]">
             {formatIDR(metrics.totalUnpaid)}
           </div>
-          <p className="text-[11px] text-stone-500 mt-1">Cash on arrival / pending</p>
+          <div className="fitlo-kpi__sub">Cash on arrival / pending</div>
         </div>
 
-        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-stone-200/90 shadow-2xs">
-          <div className="flex items-center justify-between text-stone-400 mb-2">
-            <span className="text-[11px] font-mono uppercase font-bold tracking-wider">Settlement Rate</span>
-            <CreditCard size={16} className="text-neutral-700" />
+        <div className="fitlo-kpi fitlo-kpi--pebble">
+          <div className="flex items-center justify-between mb-1">
+            <span className="fitlo-kpi__lbl">Settlement Rate</span>
+            <CreditCard size={15} className="text-[var(--fitlo-ink)] opacity-60" />
           </div>
-          <div className="text-xl sm:text-2xl font-extrabold text-neutral-900 font-mono">
+          <div className="fitlo-kpi__val text-xl sm:text-2xl">
             {metrics.paidRatePct}%
           </div>
-          <p className="text-[11px] text-stone-500 mt-1">Completed payment share</p>
+          <div className="fitlo-kpi__sub">Completed payment share</div>
         </div>
       </div>
 
-      {/* Filter and Search Bar */}
-      <div className="bg-white rounded-2xl p-4 border border-stone-200/90 shadow-2xs space-y-3">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-          {/* Search Input */}
-          <div className="relative flex-1">
-            <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Search by booking ID or customer name..."
-              className="w-full pl-9 pr-4 py-2 rounded-xl border border-stone-200 bg-stone-50/50 text-xs text-neutral-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:border-amber-400 transition-all placeholder:text-stone-400"
-            />
-          </div>
+      {/* ─── FITLO FILTER AND SEARCH BAR ─── */}
+      <div className="fitlo-card p-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div className="relative flex-1">
+          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--fitlo-muted)]" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder="Search by booking ID or customer name..."
+            className="fitlo-input w-full pl-9"
+          />
+        </div>
 
-          {/* Status Tabs */}
-          <div className="flex items-center gap-1 bg-stone-100 p-1 rounded-xl shrink-0 text-xs">
-            <button
-              onClick={() => setStatusFilter('all')}
-              className={`px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
-                statusFilter === 'all' ? 'bg-white text-neutral-900 shadow-2xs' : 'text-stone-500 hover:text-stone-900'
-              }`}
-            >
-              All Status
-            </button>
-            <button
-              onClick={() => setStatusFilter('paid')}
-              className={`px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
-                statusFilter === 'paid' ? 'bg-white text-emerald-800 shadow-2xs' : 'text-stone-500 hover:text-stone-900'
-              }`}
-            >
-              Paid
-            </button>
-            <button
-              onClick={() => setStatusFilter('unpaid')}
-              className={`px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
-                statusFilter === 'unpaid' ? 'bg-white text-amber-800 shadow-2xs' : 'text-stone-500 hover:text-stone-900'
-              }`}
-            >
-              Unpaid
-            </button>
-            <button
-              onClick={() => setStatusFilter('refunded')}
-              className={`px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
-                statusFilter === 'refunded' ? 'bg-white text-rose-800 shadow-2xs' : 'text-stone-500 hover:text-stone-900'
-              }`}
-            >
-              Refunded
-            </button>
-          </div>
+        {/* Status Segmented Tabs */}
+        <div className="fitlo-sides">
+          <button
+            type="button"
+            onClick={() => setStatusFilter('all')}
+            className={`fitlo-sides__btn ${statusFilter === 'all' ? 'is-active' : ''}`}
+          >
+            All Status
+          </button>
+          <button
+            type="button"
+            onClick={() => setStatusFilter('paid')}
+            className={`fitlo-sides__btn ${statusFilter === 'paid' ? 'is-active' : ''}`}
+          >
+            Paid
+          </button>
+          <button
+            type="button"
+            onClick={() => setStatusFilter('unpaid')}
+            className={`fitlo-sides__btn ${statusFilter === 'unpaid' ? 'is-active' : ''}`}
+          >
+            Unpaid
+          </button>
+          <button
+            type="button"
+            onClick={() => setStatusFilter('refunded')}
+            className={`fitlo-sides__btn ${statusFilter === 'refunded' ? 'is-active' : ''}`}
+          >
+            Refunded
+          </button>
         </div>
       </div>
 
-      {/* Main Payments Table */}
-      <div className="bg-white rounded-2xl border border-stone-200/90 shadow-2xs overflow-hidden">
+      {/* ─── MAIN PAYMENTS TABLE ─── */}
+      <div className="fitlo-card p-0 overflow-hidden">
         <div className="overflow-x-auto no-scrollbar">
-          <table className="w-full text-left text-xs">
+          <table className="fitlo-table">
             <thead>
-              <tr className="border-b border-stone-200 bg-stone-50/50 text-[11px] font-mono uppercase font-bold text-stone-400">
-                <th className="py-3 px-4">Booking ID</th>
-                <th className="py-3 px-4">Customer</th>
-                <th className="py-3 px-4">Total Amount</th>
-                <th className="py-3 px-4">Amount Paid</th>
-                <th className="py-3 px-4">Remaining Balance</th>
-                <th className="py-3 px-4">Method</th>
-                <th className="py-3 px-4 text-center">Status</th>
-                <th className="py-3 px-4 text-right">Actions</th>
+              <tr>
+                <th>Booking ID</th>
+                <th>Customer</th>
+                <th>Total Amount</th>
+                <th>Amount Paid</th>
+                <th>Remaining Balance</th>
+                <th>Method</th>
+                <th className="text-center">Status</th>
+                <th className="text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-stone-100">
+            <tbody>
               {filteredBookings.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-12 text-center text-stone-400">
+                  <td colSpan={8} className="py-12 text-center text-[var(--fitlo-muted)]">
                     No payment records match your filters.
                   </td>
                 </tr>
@@ -307,43 +298,43 @@ export default function TherapickPaymentsView() {
                   return (
                     <tr 
                       key={b.id} 
-                      className="hover:bg-stone-50/70 transition-colors"
+                      className="transition-colors"
                     >
-                      <td className="py-3.5 px-4 font-mono font-bold text-neutral-900">
+                      <td className="fitlo-num font-bold text-[var(--fitlo-ink)]">
                         <button
                           type="button"
                           onClick={() => setSelectedBooking(b)}
-                          className="hover:text-amber-700 transition-colors cursor-pointer text-left"
+                          className="hover:text-[var(--fitlo-accent)] transition-colors cursor-pointer text-left"
                         >
                           {b.reference_number || String(b.id || '').slice(0, 8)}
                         </button>
                       </td>
-                      <td className="py-3.5 px-4">
-                        <div className="font-semibold text-neutral-900">{b.guest_name || b.customer_name || 'Guest'}</div>
-                        <div className="text-[11px] text-stone-400">{b.booking_date || b.created_at?.split('T')[0]}</div>
+                      <td>
+                        <div className="font-semibold text-[var(--fitlo-ink)]">{b.guest_name || b.customer_name || 'Guest'}</div>
+                        <div className="text-[11px] text-[var(--fitlo-muted)] fitlo-num">{b.booking_date || b.created_at?.split('T')[0]}</div>
                       </td>
-                      <td className="py-3.5 px-4 font-mono font-bold text-neutral-900">
+                      <td className="fitlo-num font-bold text-[var(--fitlo-ink)]">
                         {formatIDR(total)}
                       </td>
-                      <td className="py-3.5 px-4 font-mono font-semibold text-emerald-700">
+                      <td className="fitlo-num font-semibold text-[var(--fitlo-accent)]">
                         {formatIDR(paidAmount)}
                       </td>
-                      <td className="py-3.5 px-4 font-mono text-stone-600">
+                      <td className="fitlo-num text-[var(--fitlo-muted)]">
                         {formatIDR(remaining)}
                       </td>
-                      <td className="py-3.5 px-4">
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-stone-100 font-mono text-[11px] font-semibold text-stone-700">
+                      <td>
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[var(--fitlo-card-2)] border border-[var(--fitlo-line)] text-[11px] font-semibold text-[var(--fitlo-ink)]">
                           {b.payment_method === 'Cash' ? <Banknote size={12} /> : <CreditCard size={12} />}
                           <span>{b.payment_method || 'Online'}</span>
                         </span>
                       </td>
-                      <td className="py-3.5 px-4 text-center">
-                        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold ${
+                      <td className="text-center">
+                        <span className={`fitlo-pill ${
                           isPaid 
-                            ? 'bg-emerald-100 text-emerald-800' 
+                            ? 'fitlo-pill--good' 
                             : isRefunded
-                            ? 'bg-rose-100 text-rose-800'
-                            : 'bg-amber-100 text-amber-800'
+                            ? 'fitlo-pill--bad'
+                            : 'fitlo-pill--warn'
                         }`}>
                           <span className={`w-1.5 h-1.5 rounded-full ${
                             isPaid ? 'bg-emerald-500' : isRefunded ? 'bg-rose-500' : 'bg-amber-500'
@@ -351,13 +342,13 @@ export default function TherapickPaymentsView() {
                           {b.payment_status || 'Unpaid'}
                         </span>
                       </td>
-                      <td className="py-3.5 px-4 text-right">
+                      <td className="text-right">
                         <div className="flex items-center justify-end gap-1.5">
                           {!isPaid && !isRefunded && (
                             <button
                               type="button"
                               onClick={() => setManualPayModal({ isOpen: true, booking: b, method: 'Cash' })}
-                              className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] transition-colors cursor-pointer"
+                              className="px-2.5 py-1 rounded-lg bg-[var(--fitlo-accent)] hover:bg-[#08625c] text-white font-bold text-[11px] transition-colors cursor-pointer shadow-xs"
                             >
                               Record Paid
                             </button>
@@ -367,7 +358,7 @@ export default function TherapickPaymentsView() {
                               type="button"
                               onClick={() => handleIssueRefund(b)}
                               title="Issue Refund"
-                              className="p-1 rounded-lg text-stone-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                              className="p-1 rounded-lg text-[var(--fitlo-muted)] hover:text-[var(--fitlo-bad)] hover:bg-[var(--fitlo-bad-soft)] transition-colors cursor-pointer"
                             >
                               <RotateCcw size={14} />
                             </button>
@@ -375,7 +366,7 @@ export default function TherapickPaymentsView() {
                           <button
                             type="button"
                             onClick={() => setSelectedBooking(b)}
-                            className="p-1 rounded-lg text-stone-400 hover:text-neutral-800 hover:bg-stone-100 transition-colors cursor-pointer"
+                            className="p-1 rounded-lg text-[var(--fitlo-muted)] hover:text-[var(--fitlo-ink)] hover:bg-[var(--fitlo-card-2)] transition-colors cursor-pointer"
                           >
                             <ArrowUpRight size={14} />
                           </button>
@@ -390,33 +381,33 @@ export default function TherapickPaymentsView() {
         </div>
       </div>
 
-      {/* Manual Payment Confirmation Modal */}
+      {/* ─── MANUAL PAYMENT MODAL ─── */}
       {manualPayModal.isOpen && manualPayModal.booking && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in">
-          <div className="bg-white w-full max-w-sm rounded-2xl shadow-2xl border border-stone-200 p-5 space-y-4">
+        <div className="fitlo-modal-backdrop">
+          <div className="fitlo-card w-full max-w-sm p-6 space-y-4 shadow-2xl">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-neutral-900">Record Manual Payment</h3>
+              <h3 className="text-sm font-bold text-[var(--fitlo-ink)]">Record Manual Payment</h3>
               <button 
                 type="button" 
                 onClick={() => setManualPayModal({ isOpen: false, booking: null, method: 'Cash' })}
-                className="text-stone-400 hover:text-stone-700"
+                className="text-[var(--fitlo-muted)] hover:text-[var(--fitlo-ink)]"
               >
                 <X size={16} />
               </button>
             </div>
 
-            <div className="p-3 rounded-xl bg-stone-50 border border-stone-200 space-y-1 text-xs">
-              <div className="text-stone-500">Booking: <span className="font-mono font-bold text-neutral-900">#{manualPayModal.booking.reference_number || String(manualPayModal.booking.id || '').slice(0, 8)}</span></div>
-              <div className="text-stone-500">Guest: <span className="font-semibold text-neutral-900">{manualPayModal.booking.guest_name || manualPayModal.booking.customer_name}</span></div>
-              <div className="text-stone-500">Amount: <span className="font-mono font-bold text-emerald-700">{formatIDR(manualPayModal.booking.revenue || manualPayModal.booking.total_amount)}</span></div>
+            <div className="p-3.5 rounded-xl bg-[var(--fitlo-card-2)] border border-[var(--fitlo-line)] space-y-1 text-xs">
+              <div className="text-[var(--fitlo-muted)]">Booking: <span className="fitlo-num font-bold text-[var(--fitlo-ink)]">#{manualPayModal.booking.reference_number || String(manualPayModal.booking.id || '').slice(0, 8)}</span></div>
+              <div className="text-[var(--fitlo-muted)]">Guest: <span className="font-semibold text-[var(--fitlo-ink)]">{manualPayModal.booking.guest_name || manualPayModal.booking.customer_name}</span></div>
+              <div className="text-[var(--fitlo-muted)]">Amount: <span className="fitlo-num font-bold text-[var(--fitlo-accent)]">{formatIDR(manualPayModal.booking.revenue || manualPayModal.booking.total_amount)}</span></div>
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-neutral-700">Payment Method</label>
+              <label className="text-xs font-bold text-[var(--fitlo-ink)]">Payment Method</label>
               <select
                 value={manualPayModal.method}
                 onChange={e => setManualPayModal(prev => ({ ...prev, method: e.target.value }))}
-                className="w-full px-3 py-2 rounded-xl border border-stone-200 bg-white text-xs font-semibold text-neutral-900 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                className="fitlo-input w-full"
               >
                 <option value="Cash">Cash on Arrival (Villa)</option>
                 <option value="Online">Online Bank Transfer / QRIS</option>
@@ -424,18 +415,18 @@ export default function TherapickPaymentsView() {
               </select>
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-2">
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-[var(--fitlo-line)]">
               <button
                 type="button"
                 onClick={() => setManualPayModal({ isOpen: false, booking: null, method: 'Cash' })}
-                className="px-3 py-1.5 rounded-xl border border-stone-200 text-xs font-bold text-stone-600 hover:bg-stone-50"
+                className="fitlo-btn fitlo-btn--ghost"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={() => handleConfirmPayment(manualPayModal.booking, manualPayModal.method)}
-                className="px-4 py-1.5 rounded-xl bg-[#0F172A] hover:bg-neutral-800 text-white text-xs font-bold shadow-xs"
+                className="fitlo-btn fitlo-btn--primary"
               >
                 Confirm Payment
               </button>

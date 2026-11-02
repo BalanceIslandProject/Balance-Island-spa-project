@@ -65,20 +65,20 @@ export default function TherapickNotificationCenter() {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-black/30 backdrop-blur-xs animate-in fade-in duration-150">
+    <div className="fitlo-modal-backdrop fixed inset-0 z-50 flex justify-end bg-black/30 backdrop-blur-xs animate-in fade-in duration-150">
       <div 
-        className="w-full max-w-md bg-white h-full shadow-2xl flex flex-col border-l border-stone-200"
+        className="w-full max-w-md bg-[var(--fitlo-card,#fdfdfb)] h-full shadow-2xl flex flex-col border-l border-[var(--fitlo-line,rgba(22,26,25,0.08))]"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="p-4 border-b border-stone-100 flex items-center justify-between bg-stone-50/70">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center text-neutral-800">
+        <div className="p-4 border-b border-[var(--fitlo-line,rgba(22,26,25,0.08))] flex items-center justify-between bg-[var(--fitlo-bg,#f7f6f2)]">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-[var(--fitlo-accent-soft,#d8ecee)] flex items-center justify-center text-[var(--fitlo-accent,#0b7a73)]">
               <Bell size={16} />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-neutral-900">Notifications</h3>
-              <p className="text-[11px] text-stone-500">
+              <h3 className="text-sm font-bold text-[var(--fitlo-ink,#161a19)]">Notifications</h3>
+              <p className="text-[11px] text-[var(--fitlo-muted,#59615d)]">
                 {unreadNotificationCount} unread system alerts
               </p>
             </div>
@@ -89,7 +89,7 @@ export default function TherapickNotificationCenter() {
               <button
                 type="button"
                 onClick={markAllNotificationsAsRead}
-                className="text-[11px] font-semibold text-stone-600 hover:text-neutral-950 px-2 py-1 rounded-md hover:bg-stone-200/50 transition-colors cursor-pointer"
+                className="text-[11px] font-semibold text-[var(--fitlo-accent,#0b7a73)] hover:underline px-2 py-1 rounded-md transition-colors cursor-pointer"
               >
                 Mark all read
               </button>
@@ -97,7 +97,7 @@ export default function TherapickNotificationCenter() {
             <button
               type="button"
               onClick={() => setIsNotificationCenterOpen(false)}
-              className="p-1.5 text-stone-400 hover:text-stone-700 hover:bg-stone-200/50 rounded-lg transition-colors cursor-pointer"
+              className="p-1.5 text-[var(--fitlo-muted,#59615d)] hover:text-[var(--fitlo-ink,#161a19)] hover:bg-[var(--fitlo-card-2,#f0efea)] rounded-lg transition-colors cursor-pointer"
             >
               <X size={18} />
             </button>
@@ -105,14 +105,14 @@ export default function TherapickNotificationCenter() {
         </div>
 
         {/* Notification List */}
-        <div className="flex-1 overflow-y-auto divide-y divide-stone-100 p-2">
+        <div className="flex-1 overflow-y-auto divide-y divide-[var(--fitlo-line,rgba(22,26,25,0.08))] p-2">
           {notifications.length === 0 ? (
             <div className="py-16 text-center">
-              <div className="w-12 h-12 rounded-full bg-stone-100 text-stone-400 flex items-center justify-center mx-auto mb-3">
+              <div className="w-12 h-12 rounded-2xl bg-[var(--fitlo-card-2,#f0efea)] text-[var(--fitlo-muted,#59615d)] flex items-center justify-center mx-auto mb-3">
                 <Bell size={20} />
               </div>
-              <p className="text-xs font-semibold text-stone-600">No notifications yet</p>
-              <p className="text-[11px] text-stone-400 mt-0.5">
+              <p className="text-xs font-semibold text-[var(--fitlo-ink,#161a19)]">No notifications yet</p>
+              <p className="text-[11px] text-[var(--fitlo-muted,#59615d)] mt-0.5">
                 New bookings, payouts, and partner activity will show here in realtime.
               </p>
             </div>
@@ -124,29 +124,29 @@ export default function TherapickNotificationCenter() {
                   key={n.id}
                   onClick={() => handleNotificationClick(n)}
                   className={`p-3 rounded-xl transition-all cursor-pointer flex items-start gap-3 ${
-                    n.is_read ? 'hover:bg-stone-50' : 'bg-amber-50/40 hover:bg-amber-50/70 border border-amber-100/60'
+                    n.is_read ? 'hover:bg-[var(--fitlo-bg,#f7f6f2)]' : 'bg-[var(--fitlo-accent-soft,#d8ecee)]/40 hover:bg-[var(--fitlo-accent-soft,#d8ecee)]/70 border border-[var(--fitlo-accent,#0b7a73)]/20'
                   }`}
                 >
-                  <div className={`w-8 h-8 rounded-full shrink-0 flex items-center justify-center shadow-2xs ${
-                    n.is_read ? 'bg-stone-100 text-stone-500' : 'bg-white ring-2 ring-amber-200'
+                  <div className={`w-8 h-8 rounded-xl shrink-0 flex items-center justify-center shadow-2xs ${
+                    n.is_read ? 'bg-[var(--fitlo-card-2,#f0efea)] text-[var(--fitlo-muted,#59615d)]' : 'bg-[var(--fitlo-card,#fdfdfb)] ring-2 ring-[var(--fitlo-accent,#0b7a73)]/30'
                   }`}>
                     {getIcon(n.type)}
                   </div>
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-1">
-                      <span className={`text-xs ${n.is_read ? 'font-medium text-stone-700' : 'font-bold text-neutral-900'}`}>
+                      <span className={`text-xs ${n.is_read ? 'font-medium text-[var(--fitlo-muted,#59615d)]' : 'font-bold text-[var(--fitlo-ink,#161a19)]'}`}>
                         {n.title}
                       </span>
-                      <span className="text-[10px] text-stone-400 shrink-0">{dateStr}</span>
+                      <span className="text-[10px] text-[var(--fitlo-muted,#59615d)] shrink-0 font-mono">{dateStr}</span>
                     </div>
-                    <p className="text-xs text-stone-600 mt-0.5 leading-relaxed">
+                    <p className="text-xs text-[var(--fitlo-ink,#161a19)]/80 mt-0.5 leading-relaxed">
                       {n.message}
                     </p>
                   </div>
 
                   {!n.is_read && (
-                    <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0 self-center" />
+                    <span className="w-2 h-2 rounded-full bg-[var(--fitlo-accent,#0b7a73)] shrink-0 self-center" />
                   )}
                 </div>
               );
@@ -155,8 +155,8 @@ export default function TherapickNotificationCenter() {
         </div>
 
         {/* Footer */}
-        <div className="p-3 border-t border-stone-100 bg-stone-50/50 text-center">
-          <span className="text-[11px] font-mono text-stone-500">
+        <div className="p-3 border-t border-[var(--fitlo-line,rgba(22,26,25,0.08))] bg-[var(--fitlo-bg,#f7f6f2)] text-center">
+          <span className="text-[11px] font-mono text-[var(--fitlo-muted,#59615d)]">
             Realtime Supabase Event Listener Active
           </span>
         </div>

@@ -95,26 +95,26 @@ export default function TherapickAddBookingModal() {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-200">
+    <div className="fitlo-modal-backdrop">
       <div 
-        className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-stone-200 overflow-hidden flex flex-col max-h-[90vh]"
+        className="w-full max-w-2xl fitlo-card p-0 overflow-hidden flex flex-col max-h-[90vh] shadow-2xl"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="px-6 py-4 border-b border-stone-100 flex items-center justify-between bg-stone-50/70">
+        <div className="px-6 py-4 border-b border-[var(--fitlo-line)] flex items-center justify-between bg-[var(--fitlo-card-2)]">
           <div>
             <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-[#facc15]" />
-              <h3 className="text-base font-bold text-neutral-900">Create New Booking</h3>
+              <span className="w-2.5 h-2.5 rounded-full bg-[var(--fitlo-accent)]" />
+              <h3 className="text-base font-bold text-[var(--fitlo-ink)]">Create New Booking</h3>
             </div>
-            <p className="text-xs text-stone-500 mt-0.5">
+            <p className="text-xs text-[var(--fitlo-muted)] mt-0.5">
               Add a new booking directly to the {bookingSource} system schedule.
             </p>
           </div>
           <button 
             type="button"
             onClick={() => setIsAddBookingOpen(false)}
-            className="p-1.5 text-stone-400 hover:text-stone-700 hover:bg-stone-200/50 rounded-lg transition-colors cursor-pointer"
+            className="p-1.5 text-[var(--fitlo-muted)] hover:text-[var(--fitlo-ink)] hover:bg-[var(--fitlo-card)] rounded-lg transition-colors cursor-pointer"
           >
             <X size={18} />
           </button>
@@ -123,53 +123,45 @@ export default function TherapickAddBookingModal() {
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-5">
           {successMessage && (
-            <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold rounded-xl flex items-center gap-2">
-              <Check size={16} className="text-emerald-600" />
+            <div className="p-3 bg-[var(--fitlo-accent)]/10 border border-[var(--fitlo-accent)]/30 text-[var(--fitlo-accent)] text-xs font-semibold rounded-xl flex items-center gap-2">
+              <Check size={16} className="text-[var(--fitlo-accent)]" />
               <span>{successMessage}</span>
             </div>
           )}
 
           {/* System Attribution Pill Selector */}
           <div>
-            <label className="block text-xs font-bold text-stone-700 mb-1.5 uppercase tracking-wider font-mono">
+            <label className="block text-xs font-bold text-[var(--fitlo-ink)] mb-1.5 uppercase tracking-wider">
               Attribution Channel
             </label>
-            <div className="grid grid-cols-2 gap-2 p-1 bg-stone-100 rounded-xl">
+            <div className="fitlo-sides w-full">
               <button
                 type="button"
                 onClick={() => setBookingSource('Website')}
-                className={`py-2 px-3 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-2 ${
-                  bookingSource === 'Website'
-                    ? 'bg-white text-neutral-900 shadow-xs'
-                    : 'text-stone-600 hover:text-neutral-900'
-                }`}
+                className={`fitlo-sides__btn flex-1 ${bookingSource === 'Website' ? 'is-active' : ''}`}
               >
-                <span>🌐 Direct Website Booking</span>
+                <span>Direct Website Booking</span>
               </button>
               <button
                 type="button"
                 onClick={() => setBookingSource('Affiliate')}
-                className={`py-2 px-3 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-2 ${
-                  bookingSource === 'Affiliate'
-                    ? 'bg-[#facc15] text-neutral-950 shadow-xs'
-                    : 'text-stone-600 hover:text-neutral-900'
-                }`}
+                className={`fitlo-sides__btn flex-1 ${bookingSource === 'Affiliate' ? 'is-active' : ''}`}
               >
-                <span>👥 Partner / Affiliate Booking</span>
+                <span>Partner / Affiliate Booking</span>
               </button>
             </div>
           </div>
 
           {/* Partner Dropdown if Affiliate */}
           {bookingSource === 'Affiliate' && (
-            <div className="p-3 bg-amber-50/60 border border-amber-200/70 rounded-xl space-y-2">
-              <label className="block text-xs font-bold text-amber-900">
+            <div className="p-3 bg-[var(--fitlo-card-2)] border border-[var(--fitlo-line)] rounded-xl space-y-2">
+              <label className="block text-xs font-bold text-[var(--fitlo-ink)]">
                 Select Attributed Partner
               </label>
               <select
                 value={selectedPartnerId}
                 onChange={e => setSelectedPartnerId(e.target.value)}
-                className="w-full text-xs font-medium bg-white border border-amber-200 rounded-lg p-2.5 text-neutral-900 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                className="fitlo-input w-full"
               >
                 {partners.map(p => (
                   <option key={p.id} value={p.id}>
@@ -177,7 +169,7 @@ export default function TherapickAddBookingModal() {
                   </option>
                 ))}
               </select>
-              <p className="text-[11px] text-amber-700">
+              <p className="text-[11px] text-[var(--fitlo-muted)]">
                 15% commission will be automatically computed upon confirmation.
               </p>
             </div>
@@ -185,36 +177,36 @@ export default function TherapickAddBookingModal() {
 
           {/* Guest Information */}
           <div className="space-y-3">
-            <h4 className="text-xs font-bold font-mono uppercase tracking-wider text-stone-500">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-[var(--fitlo-muted)]">
               Guest Information
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-stone-700 mb-1">Guest Full Name *</label>
+                <label className="block text-xs font-semibold text-[var(--fitlo-ink)] mb-1">Guest Full Name *</label>
                 <div className="relative">
-                  <User size={14} className="absolute left-3 top-3 text-stone-400" />
+                  <User size={14} className="absolute left-3 top-3 text-[var(--fitlo-muted)]" />
                   <input
                     type="text"
                     required
                     placeholder="e.g. Sarah Jenkins"
                     value={customerName}
                     onChange={e => setCustomerName(e.target.value)}
-                    className="w-full text-xs bg-white border border-stone-200 rounded-xl pl-9 pr-3 py-2.5 text-neutral-900 placeholder:text-stone-400 focus:ring-2 focus:ring-amber-400 focus:outline-none"
+                    className="fitlo-input w-full pl-9"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-stone-700 mb-1">WhatsApp / Phone *</label>
+                <label className="block text-xs font-semibold text-[var(--fitlo-ink)] mb-1">WhatsApp / Phone *</label>
                 <div className="relative">
-                  <Phone size={14} className="absolute left-3 top-3 text-stone-400" />
+                  <Phone size={14} className="absolute left-3 top-3 text-[var(--fitlo-muted)]" />
                   <input
                     type="tel"
                     required
                     placeholder="e.g. +62 812 3456 7890"
                     value={customerPhone}
                     onChange={e => setCustomerPhone(e.target.value)}
-                    className="w-full text-xs bg-white border border-stone-200 rounded-xl pl-9 pr-3 py-2.5 text-neutral-900 placeholder:text-stone-400 focus:ring-2 focus:ring-amber-400 focus:outline-none"
+                    className="fitlo-input w-full pl-9 fitlo-num"
                   />
                 </div>
               </div>
@@ -222,56 +214,56 @@ export default function TherapickAddBookingModal() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-stone-700 mb-1">Email (Optional)</label>
+                <label className="block text-xs font-semibold text-[var(--fitlo-ink)] mb-1">Email (Optional)</label>
                 <input
                   type="email"
                   placeholder="sarah@example.com"
                   value={customerEmail}
                   onChange={e => setCustomerEmail(e.target.value)}
-                  className="w-full text-xs bg-white border border-stone-200 rounded-xl px-3 py-2.5 text-neutral-900 placeholder:text-stone-400 focus:ring-2 focus:ring-amber-400 focus:outline-none"
+                  className="fitlo-input w-full"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-stone-700 mb-1">Room / Suite No.</label>
+                <label className="block text-xs font-semibold text-[var(--fitlo-ink)] mb-1">Room / Suite No.</label>
                 <input
                   type="text"
                   placeholder="e.g. Villa 4 or Room 201"
                   value={roomNumber}
                   onChange={e => setRoomNumber(e.target.value)}
-                  className="w-full text-xs bg-white border border-stone-200 rounded-xl px-3 py-2.5 text-neutral-900 placeholder:text-stone-400 focus:ring-2 focus:ring-amber-400 focus:outline-none"
+                  className="fitlo-input w-full"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-stone-700 mb-1">Villa / Hotel Location</label>
+              <label className="block text-xs font-semibold text-[var(--fitlo-ink)] mb-1">Villa / Hotel Location</label>
               <div className="relative">
-                <MapPin size={14} className="absolute left-3 top-3 text-stone-400" />
+                <MapPin size={14} className="absolute left-3 top-3 text-[var(--fitlo-muted)]" />
                 <input
                   type="text"
                   placeholder="e.g. Mandapa, a Ritz-Carlton Reserve, Ubud"
                   value={locationAddress}
                   onChange={e => setLocationAddress(e.target.value)}
-                  className="w-full text-xs bg-white border border-stone-200 rounded-xl pl-9 pr-3 py-2.5 text-neutral-900 placeholder:text-stone-400 focus:ring-2 focus:ring-amber-400 focus:outline-none"
+                  className="fitlo-input w-full pl-9"
                 />
               </div>
             </div>
           </div>
 
           {/* Treatment & Schedule Details */}
-          <div className="space-y-3 pt-2 border-t border-stone-100">
-            <h4 className="text-xs font-bold font-mono uppercase tracking-wider text-stone-500">
+          <div className="space-y-3 pt-2 border-t border-[var(--fitlo-line)]">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-[var(--fitlo-muted)]">
               Treatment & Schedule
             </h4>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-stone-700 mb-1">Service</label>
+                <label className="block text-xs font-semibold text-[var(--fitlo-ink)] mb-1">Service</label>
                 <select
                   value={serviceName}
                   onChange={e => handleServiceChange(e.target.value)}
-                  className="w-full text-xs bg-white border border-stone-200 rounded-xl px-3 py-2.5 text-neutral-900 focus:ring-2 focus:ring-amber-400 focus:outline-none"
+                  className="fitlo-input w-full"
                 >
                   {servicesList.map(s => (
                     <option key={s.id} value={s.name}>
@@ -282,11 +274,11 @@ export default function TherapickAddBookingModal() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-stone-700 mb-1">Assigned Therapist</label>
+                <label className="block text-xs font-semibold text-[var(--fitlo-ink)] mb-1">Assigned Therapist</label>
                 <select
                   value={therapistName}
                   onChange={e => setTherapistName(e.target.value)}
-                  className="w-full text-xs bg-white border border-stone-200 rounded-xl px-3 py-2.5 text-neutral-900 focus:ring-2 focus:ring-amber-400 focus:outline-none"
+                  className="fitlo-input w-full"
                 >
                   {therapistsList.map(t => (
                     <option key={t.id} value={t.name}>
@@ -299,74 +291,74 @@ export default function TherapickAddBookingModal() {
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-stone-700 mb-1">Date</label>
+                <label className="block text-xs font-semibold text-[var(--fitlo-ink)] mb-1">Date</label>
                 <div className="relative">
-                  <Calendar size={14} className="absolute left-3 top-3 text-stone-400" />
+                  <Calendar size={14} className="absolute left-3 top-3 text-[var(--fitlo-muted)]" />
                   <input
                     type="date"
                     required
                     value={bookingDate}
                     onChange={e => setBookingDate(e.target.value)}
-                    className="w-full text-xs bg-white border border-stone-200 rounded-xl pl-9 pr-3 py-2.5 text-neutral-900 focus:ring-2 focus:ring-amber-400 focus:outline-none"
+                    className="fitlo-input w-full pl-9 fitlo-num"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-stone-700 mb-1">Time</label>
+                <label className="block text-xs font-semibold text-[var(--fitlo-ink)] mb-1">Time</label>
                 <div className="relative">
-                  <Clock size={14} className="absolute left-3 top-3 text-stone-400" />
+                  <Clock size={14} className="absolute left-3 top-3 text-[var(--fitlo-muted)]" />
                   <input
                     type="time"
                     required
                     value={bookingTime}
                     onChange={e => setBookingTime(e.target.value)}
-                    className="w-full text-xs bg-white border border-stone-200 rounded-xl pl-9 pr-3 py-2.5 text-neutral-900 focus:ring-2 focus:ring-amber-400 focus:outline-none"
+                    className="fitlo-input w-full pl-9 fitlo-num"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-stone-700 mb-1">Total Amount (IDR)</label>
+                <label className="block text-xs font-semibold text-[var(--fitlo-ink)] mb-1">Total Amount (IDR)</label>
                 <div className="relative">
-                  <DollarSign size={14} className="absolute left-3 top-3 text-stone-400" />
+                  <DollarSign size={14} className="absolute left-3 top-3 text-[var(--fitlo-muted)]" />
                   <input
                     type="number"
                     step="5000"
                     required
                     value={amount}
                     onChange={e => setAmount(Number(e.target.value))}
-                    className="w-full text-xs bg-white border border-stone-200 rounded-xl pl-9 pr-3 py-2.5 text-neutral-900 focus:ring-2 focus:ring-amber-400 focus:outline-none font-bold"
+                    className="fitlo-input w-full pl-9 fitlo-num font-bold"
                   />
                 </div>
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-stone-700 mb-1">Special Requests / Notes</label>
+              <label className="block text-xs font-semibold text-[var(--fitlo-ink)] mb-1">Special Requests / Notes</label>
               <textarea
                 rows={2}
                 placeholder="e.g. Deep pressure, guest prefers jasmine massage oil."
                 value={specialNotes}
                 onChange={e => setSpecialNotes(e.target.value)}
-                className="w-full text-xs bg-white border border-stone-200 rounded-xl p-3 text-neutral-900 placeholder:text-stone-400 focus:ring-2 focus:ring-amber-400 focus:outline-none resize-none"
+                className="fitlo-input w-full resize-none"
               />
             </div>
           </div>
 
           {/* Footer Submit */}
-          <div className="pt-3 border-t border-stone-100 flex items-center justify-end gap-3">
+          <div className="pt-3 border-t border-[var(--fitlo-line)] flex items-center justify-end gap-3">
             <button
               type="button"
               onClick={() => setIsAddBookingOpen(false)}
-              className="px-4 py-2.5 text-xs font-semibold text-stone-600 hover:text-stone-900 rounded-xl border border-stone-200 hover:bg-stone-50 transition-colors cursor-pointer"
+              className="fitlo-btn fitlo-btn--ghost"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-6 py-2.5 text-xs font-bold bg-[#facc15] hover:bg-[#eab308] text-neutral-950 rounded-xl shadow-xs transition-all cursor-pointer flex items-center gap-2 disabled:opacity-50"
+              className="fitlo-btn fitlo-btn--primary flex items-center gap-2 disabled:opacity-50"
             >
               {isSubmitting ? (
                 <span>Creating...</span>

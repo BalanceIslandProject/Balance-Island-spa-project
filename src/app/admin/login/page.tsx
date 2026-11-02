@@ -68,52 +68,57 @@ function AdminLoginForm() {
         domainInfo.brand === 'bali' ? 'Sign in to access Ubud Home Spa console' : 'Dual-brand operations for Elexoir & Home Spa Ubud';
 
     return (
-        <div className="min-h-screen bg-[#FDFBF7] flex items-center justify-center p-4 selection:bg-amber-300">
-            <div className="w-full max-w-md bg-white rounded-3xl shadow-xl p-8 border border-stone-200/80">
+        <div className="min-h-screen bg-[#f7f6f2] flex items-center justify-center p-4 selection:bg-[#d8ecee] selection:text-[#0b7a73] font-['Urbanist',sans-serif]">
+            <div className="w-full max-w-md bg-[#fdfdfb] rounded-3xl p-8 sm:p-10 border border-[rgba(22,26,25,0.08)] shadow-[0_1px_2px_rgba(22,26,25,0.04),0_14px_32px_-16px_rgba(22,26,25,0.18)]">
                 <div className="text-center mb-8">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-stone-100 border border-stone-200/80 text-xs font-bold text-neutral-800 mb-3 shadow-2xs">
-                        <span className="w-2 h-2 rounded-full" style={{ backgroundColor: dotColor }} />
+                    {/* Fitlo Brand Mark */}
+                    <div className="w-12 h-12 rounded-2xl bg-[#0b7a73] text-white flex items-center justify-center mx-auto mb-4 shadow-[0_8px_18px_-6px_rgba(11,122,115,0.5)]">
+                        <span className="font-bold text-lg tracking-wider">TP</span>
+                    </div>
+
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#f0efea] border border-[rgba(22,26,25,0.08)] text-[11px] font-bold text-[#161a19] mb-3">
+                        <span className="w-2 h-2 rounded-full" style={{ backgroundColor: domainInfo.brand === 'therapick' ? '#0b7a73' : dotColor }} />
                         <span>{domainInfo.badgeText}</span>
                     </div>
-                    <h1 className="font-serif text-3xl text-neutral-900 font-medium mb-1.5">{loginTitle}</h1>
-                    <p className="text-xs text-stone-500 max-w-xs mx-auto">{loginSubtitle}</p>
+                    <h1 className="text-2xl sm:text-3xl font-extrabold text-[#161a19] tracking-tight mb-2">{loginTitle}</h1>
+                    <p className="text-xs text-[#5f6665] max-w-xs mx-auto leading-relaxed">{loginSubtitle}</p>
                 </div>
 
                 {error && (
-                    <div className="bg-red-50 text-red-600 p-3 rounded-xl text-xs mb-6 text-center border border-red-100 font-medium">
+                    <div className="bg-[rgba(180,35,24,0.08)] text-[#b42318] p-3 rounded-xl text-xs mb-6 text-center border border-[rgba(180,35,24,0.15)] font-semibold">
                         {error}
                     </div>
                 )}
 
                 <form onSubmit={handleLogin} className="space-y-4">
                     <div>
-                        <label className="block text-[11px] font-mono font-bold tracking-wider uppercase text-stone-600 mb-1.5 ml-1">Email</label>
+                        <label className="block text-[11px] font-bold tracking-wider uppercase text-[#5f6665] mb-1.5 ml-1">Email</label>
                         <div className="relative">
-                            <div className="absolute inset-y-0 left-3.5 flex items-center pointer-events-none text-stone-400">
+                            <div className="absolute inset-y-0 left-3.5 flex items-center pointer-events-none text-[#5f6665]">
                                 <Mail className="h-4 w-4" />
                             </div>
                             <input
                                 type="email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                className="w-full bg-stone-50/60 border border-stone-200 rounded-xl h-11 pl-10 pr-4 text-xs text-neutral-900 focus:outline-none focus:ring-2 focus:ring-neutral-900/10 focus:border-neutral-900 transition-all font-sans"
-                                placeholder="admin@example.com"
+                                className="w-full bg-[#fdfdfb] border border-[rgba(22,26,25,0.15)] rounded-xl h-11 pl-10 pr-4 text-xs font-semibold text-[#161a19] placeholder:text-[#8a9190] focus:outline-none focus:border-[#0b7a73] focus:ring-3 focus:ring-[rgba(11,122,115,0.12)] transition-all"
+                                placeholder="putuedosantika@gmail.com"
                                 required
                             />
                         </div>
                     </div>
 
                     <div>
-                        <label className="block text-[11px] font-mono font-bold tracking-wider uppercase text-stone-600 mb-1.5 ml-1">Password</label>
+                        <label className="block text-[11px] font-bold tracking-wider uppercase text-[#5f6665] mb-1.5 ml-1">Password</label>
                         <div className="relative">
-                            <div className="absolute inset-y-0 left-3.5 flex items-center pointer-events-none text-stone-400">
+                            <div className="absolute inset-y-0 left-3.5 flex items-center pointer-events-none text-[#5f6665]">
                                 <Lock className="h-4 w-4" />
                             </div>
                             <input
                                 type="password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="w-full bg-stone-50/60 border border-stone-200 rounded-xl h-11 pl-10 pr-4 text-xs text-neutral-900 focus:outline-none focus:ring-2 focus:ring-neutral-900/10 focus:border-neutral-900 transition-all font-sans"
+                                className="w-full bg-[#fdfdfb] border border-[rgba(22,26,25,0.15)] rounded-xl h-11 pl-10 pr-4 text-xs font-semibold text-[#161a19] placeholder:text-[#8a9190] focus:outline-none focus:border-[#0b7a73] focus:ring-3 focus:ring-[rgba(11,122,115,0.12)] transition-all"
                                 placeholder="••••••••"
                                 required
                             />
@@ -123,7 +128,7 @@ function AdminLoginForm() {
                     <button
                         type="submit"
                         disabled={isLoading}
-                        className="w-full h-11 bg-neutral-900 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-2 hover:bg-neutral-800 transition-all disabled:opacity-70 mt-6 shadow-xs cursor-pointer"
+                        className="w-full h-11 bg-[#0b7a73] text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 hover:bg-[#08665f] transition-all disabled:opacity-70 mt-6 shadow-[0_6px_16px_-8px_#0b7a73] cursor-pointer"
                     >
                         {isLoading ? 'Authenticating...' : 'Sign In'}
                         {!isLoading && <ArrowRight className="w-3.5 h-3.5" />}

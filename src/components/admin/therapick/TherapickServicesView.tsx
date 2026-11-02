@@ -181,37 +181,33 @@ export default function TherapickServicesView() {
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
+    <div className="space-y-6">
       
-      {/* ─────────────────────────────────────────────────────────────
-          PAGE HEADER (MATCHING IMAGE 2)
-         ───────────────────────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b border-[#E5E5E5]">
+      {/* ─── FITLO PAGE HEADER ─── */}
+      <div className="fitlo-page-head">
         <div>
-          <h1 className="text-xl md:text-2xl font-semibold tracking-tight text-black">
-            Treatment Catalog
-          </h1>
-          <p className="text-[13px] text-[#737373] mt-0.5">
-            Browse, search, edit, or pin spa rituals and pricing packages.
+          <h1 className="fitlo-page-title">Treatment Catalog</h1>
+          <p className="fitlo-page-sub">
+            Browse, search, edit, or pin spa rituals and pricing packages for Therapick.
           </p>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto items-stretch sm:items-center">
           <div className="w-full sm:w-64 relative">
-            <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#A3A3A3]" />
+            <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--fitlo-muted)]" />
             <input
               type="text"
               placeholder="Search treatments..."
               value={menuSearch}
               onChange={e => setMenuSearch(e.target.value)}
-              className="w-full bg-white border border-[#E5E5E5] rounded-lg pl-9 pr-3 py-2 text-xs text-black placeholder:text-[#A3A3A3] focus:outline-none focus:border-black transition-colors"
+              className="fitlo-input w-full pl-9"
             />
           </div>
 
           <button 
             type="button"
             onClick={openAddModal}
-            className="px-3.5 py-2 rounded-lg bg-black text-white hover:bg-neutral-800 text-xs font-medium flex items-center justify-center gap-1.5 transition-colors cursor-pointer whitespace-nowrap shadow-xs"
+            className="fitlo-btn fitlo-btn--primary"
           >
             <PlusCircle size={15} />
             <span>Add Treatment</span>
@@ -219,61 +215,43 @@ export default function TherapickServicesView() {
         </div>
       </div>
 
-      {/* ─────────────────────────────────────────────────────────────
-          METRICS STRIP (MATCHING IMAGE 2)
-         ───────────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 border border-[#E5E5E5] rounded-xl divide-y sm:divide-y-0 sm:divide-x divide-[#E5E5E5] bg-white overflow-hidden shadow-xs">
-        <div className="p-4 sm:p-5">
-          <div className="text-[11px] font-semibold uppercase tracking-wider text-[#737373]">
-            Total Treatments
-          </div>
-          <div className="text-xl sm:text-2xl font-semibold tracking-tight text-black mt-1">
-            {treatments.length}
-          </div>
-          <div className="text-[11px] text-[#737373] mt-0.5">In current catalog</div>
+      {/* ─── FITLO 4 PASTEL KPI TILES ─── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+        <div className="fitlo-kpi fitlo-kpi--peach">
+          <div className="fitlo-kpi__lbl">Total Treatments</div>
+          <div className="fitlo-kpi__val">{treatments.length}</div>
+          <div className="fitlo-kpi__sub">In current catalog</div>
         </div>
 
-        <div className="p-4 sm:p-5">
-          <div className="text-[11px] font-semibold uppercase tracking-wider text-[#737373]">
-            Pinned Most Booked
-          </div>
-          <div className="text-xl sm:text-2xl font-semibold tracking-tight text-black mt-1">
-            {treatments.filter(t => t.is_pinned).length}
-          </div>
-          <div className="text-[11px] text-[#737373] mt-0.5">Featured on booking menu</div>
+        <div className="fitlo-kpi fitlo-kpi--cyan">
+          <div className="fitlo-kpi__lbl">Pinned Most Booked</div>
+          <div className="fitlo-kpi__val">{treatments.filter(t => t.is_pinned).length}</div>
+          <div className="fitlo-kpi__sub">Featured on booking menu</div>
         </div>
 
-        <div className="p-4 sm:p-5">
-          <div className="text-[11px] font-semibold uppercase tracking-wider text-[#737373]">
-            Categories
-          </div>
-          <div className="text-xl sm:text-2xl font-semibold tracking-tight text-black mt-1">
-            {new Set(treatments.map(t => t.category)).size}
-          </div>
-          <div className="text-[11px] text-[#737373] mt-0.5">Unique ritual types</div>
+        <div className="fitlo-kpi fitlo-kpi--lemon">
+          <div className="fitlo-kpi__lbl">Categories</div>
+          <div className="fitlo-kpi__val">{new Set(treatments.map(t => t.category)).size}</div>
+          <div className="fitlo-kpi__sub">Unique ritual types</div>
         </div>
 
-        <div className="p-4 sm:p-5">
-          <div className="text-[11px] font-semibold uppercase tracking-wider text-[#737373]">
-            Brand Scope
-          </div>
-          <div className="text-xl sm:text-2xl font-semibold tracking-tight text-black mt-1 flex items-center gap-1.5 capitalize">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#facc15]" />
+        <div className="fitlo-kpi fitlo-kpi--pebble">
+          <div className="fitlo-kpi__lbl">Brand Scope</div>
+          <div className="fitlo-kpi__val flex items-center gap-1.5 text-base sm:text-lg">
+            <span className="w-2.5 h-2.5 rounded-full bg-[var(--fitlo-accent)]" />
             <span>Therapick</span>
           </div>
-          <div className="text-[11px] text-[#737373] mt-0.5">Active catalogue</div>
+          <div className="fitlo-kpi__sub">Active catalogue</div>
         </div>
       </div>
 
-      {/* ─────────────────────────────────────────────────────────────
-          GRID OF TREATMENTS (EXACTLY MATCHING IMAGE 2)
-         ───────────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      {/* ─── FITLO TREATMENT CARDS GRID ─── */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredTreatments.length === 0 ? (
-          <div className="col-span-full bg-white border border-[#E5E5E5] rounded-xl p-12 text-center text-[#737373]">
-            <Layers size={28} className="mx-auto mb-2 text-[#A3A3A3]" />
-            <p className="font-semibold text-black">No treatments match your search</p>
-            <p className="text-xs text-[#737373] mt-1">Try another keyword or create a new treatment.</p>
+          <div className="col-span-full fitlo-card p-12 text-center text-[var(--fitlo-muted)]">
+            <Layers size={32} className="mx-auto mb-2 text-[var(--fitlo-muted)] opacity-60" />
+            <p className="font-semibold text-[var(--fitlo-ink)]">No treatments match your search</p>
+            <p className="text-xs text-[var(--fitlo-muted)] mt-1">Try another keyword or create a new treatment.</p>
           </div>
         ) : (
           filteredTreatments.map(t => {
@@ -282,46 +260,46 @@ export default function TherapickServicesView() {
             return (
               <div 
                 key={t.id} 
-                className="bg-white border border-[#E5E5E5] rounded-xl p-5 shadow-xs hover:border-[#D4D4D4] transition-all flex flex-col justify-between"
+                className="fitlo-card p-5 flex flex-col justify-between hover:border-[rgba(22,26,25,0.16)] transition-all"
               >
                 <div>
                   <div className="flex justify-between items-start gap-2 mb-2">
-                    <h4 className="font-semibold text-black text-sm uppercase pr-2">
+                    <h4 className="font-bold text-[var(--fitlo-ink)] text-sm uppercase tracking-wide pr-2">
                       {t.title}
                     </h4>
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-[#F5F5F5] text-[#525252] border border-[#E5E5E5] capitalize shrink-0">
+                    <span className="fitlo-pill fitlo-pill--info shrink-0 capitalize">
                       {t.category || 'Package'}
                     </span>
                   </div>
-                  <p className="text-xs text-[#737373] line-clamp-2 mb-4 leading-relaxed">
+                  <p className="text-xs text-[var(--fitlo-muted)] line-clamp-2 mb-4 leading-relaxed">
                     {t.desc || 'Enjoy a relaxing wellness experience designed to soothe the body and mind.'}
                   </p>
                 </div>
 
                 <div className="space-y-4">
-                  <div className="border border-[#E5E5E5] rounded-lg overflow-hidden bg-white">
+                  <div className="border border-[var(--fitlo-line)] rounded-xl overflow-hidden bg-[var(--fitlo-card-2)]">
                     <table className="w-full text-left text-xs">
-                      <thead className="bg-[#FAFAFA] border-b border-[#E5E5E5]">
+                      <thead className="bg-[var(--fitlo-card-2)] border-b border-[var(--fitlo-line)]">
                         <tr>
-                          <th className="py-2 px-3 text-[10px] font-semibold uppercase tracking-wider text-[#737373]">
+                          <th className="py-2 px-3 text-[10px] font-bold uppercase tracking-wider text-[var(--fitlo-muted)]">
                             Duration
                           </th>
-                          <th className="py-2 px-3 text-[10px] font-semibold uppercase tracking-wider text-[#737373] text-right">
+                          <th className="py-2 px-3 text-[10px] font-bold uppercase tracking-wider text-[var(--fitlo-muted)] text-right">
                             Price (IDR)
                           </th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-[#E5E5E5]">
+                      <tbody className="divide-y divide-[var(--fitlo-line)] bg-[var(--fitlo-card)]">
                         {options.map((o, idx) => {
                           const num = parseInt(String(o.price || '0').replace(/,/g, '') || '0', 10);
                           const formattedPrice = !isNaN(num) && num > 0 ? num.toLocaleString('en-US') : '0';
 
                           return (
-                            <tr key={idx} className="hover:bg-[#FAFAFA] transition-colors">
-                              <td className="py-2.5 px-3 font-medium text-black">
+                            <tr key={idx} className="hover:bg-[var(--fitlo-card-2)] transition-colors">
+                              <td className="py-2.5 px-3 font-semibold text-[var(--fitlo-ink)]">
                                 {o.duration} mins
                               </td>
-                              <td className="py-2.5 px-3 font-semibold text-black text-right font-mono">
+                              <td className="py-2.5 px-3 font-bold text-[var(--fitlo-ink)] text-right fitlo-num">
                                 {formattedPrice}
                               </td>
                             </tr>
@@ -337,14 +315,14 @@ export default function TherapickServicesView() {
                     <button
                       type="button"
                       onClick={() => handleTogglePin(t)}
-                      className={`p-2 rounded-lg transition-colors shrink-0 cursor-pointer ${
+                      className={`p-2 rounded-xl transition-colors shrink-0 cursor-pointer ${
                         t.is_pinned 
-                          ? 'bg-black text-white shadow-xs' 
-                          : 'bg-white border border-[#E5E5E5] text-black hover:bg-[#F5F5F5]'
+                          ? 'bg-[var(--fitlo-ink)] text-[var(--fitlo-card)] shadow-xs' 
+                          : 'bg-[var(--fitlo-card)] border border-[var(--fitlo-line)] text-[var(--fitlo-ink)] hover:bg-[var(--fitlo-card-2)]'
                       }`}
                       title={t.is_pinned ? "Unpin from Most Booked" : "Pin to Most Booked"}
                     >
-                      <Pin size={13} className={t.is_pinned ? "fill-white" : ""} />
+                      <Pin size={13} className={t.is_pinned ? "fill-[var(--fitlo-card)]" : ""} />
                     </button>
 
                     {/* Thumbnail if pinned and available */}
@@ -352,7 +330,7 @@ export default function TherapickServicesView() {
                       <img 
                         src={t.pinned_image} 
                         alt="Pinned" 
-                        className="w-7 h-7 object-cover rounded-lg shrink-0 border border-[#E5E5E5]" 
+                        className="w-7 h-7 object-cover rounded-lg shrink-0 border border-[var(--fitlo-line)]" 
                       />
                     )}
 
@@ -360,7 +338,7 @@ export default function TherapickServicesView() {
                     <button
                       type="button"
                       onClick={() => openEditModal(t)}
-                      className="flex-1 py-1.5 px-3 rounded-lg border border-[#E5E5E5] bg-white hover:bg-[#F5F5F5] text-xs font-medium text-black flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                      className="flex-1 py-1.5 px-3 rounded-xl border border-[var(--fitlo-line)] bg-[var(--fitlo-card)] hover:bg-[var(--fitlo-card-2)] text-xs font-semibold text-[var(--fitlo-ink)] flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                     >
                       <Edit3 size={13} />
                       <span>Edit</span>
@@ -370,7 +348,7 @@ export default function TherapickServicesView() {
                     <button
                       type="button"
                       onClick={() => handleDelete(t)}
-                      className="p-2 rounded-lg border border-[#E5E5E5] bg-white text-[#737373] hover:text-rose-600 hover:border-rose-200 transition-colors cursor-pointer"
+                      className="p-2 rounded-xl border border-[var(--fitlo-line)] bg-[var(--fitlo-card)] text-[var(--fitlo-muted)] hover:text-[var(--fitlo-bad)] hover:bg-[var(--fitlo-bad-soft)] transition-colors cursor-pointer"
                       title="Delete Treatment"
                     >
                       <Trash2 size={13} />
@@ -383,27 +361,25 @@ export default function TherapickServicesView() {
         )}
       </div>
 
-      {/* ─────────────────────────────────────────────────────────────
-          ADD / EDIT TREATMENT MODAL
-         ───────────────────────────────────────────────────────────── */}
+      {/* ─── ADD / EDIT TREATMENT MODAL ─── */}
       {modalState.isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in">
-          <div className="bg-white w-full max-w-xl rounded-xl shadow-2xl border border-[#E5E5E5] overflow-hidden flex flex-col max-h-[90vh]">
+        <div className="fitlo-modal-backdrop">
+          <div className="fitlo-card w-full max-w-xl p-0 overflow-hidden flex flex-col max-h-[90vh] shadow-2xl">
             
             {/* Header */}
-            <div className="px-6 py-4 border-b border-[#E5E5E5] flex items-center justify-between bg-[#FAFAFA]">
+            <div className="px-6 py-4 border-b border-[var(--fitlo-line)] flex items-center justify-between bg-[var(--fitlo-card-2)]">
               <div>
-                <h2 className="text-base font-semibold text-black">
+                <h2 className="text-base font-bold text-[var(--fitlo-ink)]">
                   {modalState.isNew ? 'Add Spa Treatment' : 'Edit Treatment'}
                 </h2>
-                <p className="text-xs text-[#737373]">
+                <p className="text-xs text-[var(--fitlo-muted)] mt-0.5">
                   {modalState.isNew ? 'Create a new massage or package for Therapick website.' : 'Update pricing tiers and description.'}
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setModalState(prev => ({ ...prev, isOpen: false }))}
-                className="p-1 rounded-lg text-[#737373] hover:text-black hover:bg-[#F5F5F5]"
+                className="p-1 rounded-lg text-[var(--fitlo-muted)] hover:text-[var(--fitlo-ink)] hover:bg-[var(--fitlo-card)] transition-colors"
               >
                 <X size={18} />
               </button>
@@ -412,24 +388,24 @@ export default function TherapickServicesView() {
             {/* Form */}
             <form onSubmit={handleSaveModal} className="p-6 overflow-y-auto space-y-4">
               <div>
-                <label className="text-xs font-medium text-[#171717] mb-1.5 block">Treatment Title *</label>
+                <label className="text-xs font-semibold text-[var(--fitlo-ink)] mb-1.5 block">Treatment Title *</label>
                 <input 
                   type="text" 
                   required 
                   placeholder="e.g. Traditional Balinese Massage" 
                   value={modalState.title} 
                   onChange={e => setModalState(prev => ({ ...prev, title: e.target.value }))}
-                  className="w-full bg-white border border-[#E5E5E5] rounded-lg px-3 py-2 text-xs text-black placeholder:text-[#A3A3A3] focus:outline-none focus:border-black transition-colors"
+                  className="fitlo-input w-full"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-medium text-[#171717] mb-1.5 block">Category</label>
+                  <label className="text-xs font-semibold text-[var(--fitlo-ink)] mb-1.5 block">Category</label>
                   <select 
                     value={modalState.category} 
                     onChange={e => setModalState(prev => ({ ...prev, category: e.target.value }))}
-                    className="w-full bg-white border border-[#E5E5E5] rounded-lg px-3 py-2 text-xs text-black focus:outline-none focus:border-black transition-colors"
+                    className="fitlo-input w-full"
                   >
                     <option value="Massage">Massage</option>
                     <option value="Package">Package</option>
@@ -440,12 +416,12 @@ export default function TherapickServicesView() {
                 </div>
 
                 <div className="flex items-center gap-4 pt-6">
-                  <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-[#171717]">
+                  <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-[var(--fitlo-ink)]">
                     <input
                       type="checkbox"
                       checked={modalState.is_pinned}
                       onChange={e => setModalState(prev => ({ ...prev, is_pinned: e.target.checked }))}
-                      className="w-4 h-4 rounded border-[#E5E5E5] text-black focus:ring-black"
+                      className="w-4 h-4 rounded border-[var(--fitlo-line)] text-[var(--fitlo-accent)] focus:ring-[var(--fitlo-accent)]"
                     />
                     <span>Most Booked Pin</span>
                   </label>
@@ -453,16 +429,16 @@ export default function TherapickServicesView() {
               </div>
 
               {/* Duration & Pricing Options */}
-              <div className="space-y-3 pt-2 border-t border-[#E5E5E5]">
+              <div className="space-y-3 pt-2 border-t border-[var(--fitlo-line)]">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h4 className="text-xs font-semibold uppercase tracking-wider text-[#737373]">Duration & Pricing</h4>
-                    <p className="text-[11px] text-[#A3A3A3] mt-0.5">Define duration options and prices in IDR</p>
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-[var(--fitlo-muted)]">Duration & Pricing</h4>
+                    <p className="text-[11px] text-[var(--fitlo-muted)] mt-0.5">Define duration options and prices in IDR</p>
                   </div>
                   <button 
                     type="button" 
                     onClick={handleAddOption}
-                    className="text-xs font-medium text-black border border-[#E5E5E5] bg-white hover:bg-[#F5F5F5] px-2.5 py-1 rounded-md flex items-center gap-1 cursor-pointer"
+                    className="text-xs font-semibold text-[var(--fitlo-ink)] border border-[var(--fitlo-line)] bg-[var(--fitlo-card)] hover:bg-[var(--fitlo-card-2)] px-2.5 py-1 rounded-lg flex items-center gap-1 cursor-pointer transition-colors"
                   >
                     <Plus size={13} /> Add Option
                   </button>
@@ -478,15 +454,15 @@ export default function TherapickServicesView() {
                           placeholder="60"
                           value={opt.duration}
                           onChange={e => handleOptionChange(idx, 'duration', e.target.value)}
-                          className="w-full bg-white border border-[#E5E5E5] rounded-lg pl-3 pr-10 py-1.5 text-xs text-black focus:outline-none focus:border-black font-mono"
+                          className="fitlo-input w-full pl-3 pr-10 fitlo-num"
                         />
-                        <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-semibold text-[#737373] pointer-events-none">
+                        <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-[var(--fitlo-muted)] pointer-events-none">
                           MINS
                         </span>
                       </div>
 
                       <div className="flex-1 relative">
-                        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-medium text-[#737373] pointer-events-none">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-[var(--fitlo-muted)] pointer-events-none">
                           Rp
                         </span>
                         <input
@@ -495,7 +471,7 @@ export default function TherapickServicesView() {
                           placeholder="450,000"
                           value={opt.price}
                           onChange={e => handleOptionChange(idx, 'price', e.target.value)}
-                          className="w-full bg-white border border-[#E5E5E5] rounded-lg pl-8 pr-3 py-1.5 text-xs text-black focus:outline-none focus:border-black font-mono"
+                          className="fitlo-input w-full pl-9 fitlo-num"
                         />
                       </div>
 
@@ -503,7 +479,7 @@ export default function TherapickServicesView() {
                         <button
                           type="button"
                           onClick={() => handleRemoveOption(idx)}
-                          className="p-1.5 text-[#737373] hover:text-rose-600 transition-colors"
+                          className="p-1.5 text-[var(--fitlo-muted)] hover:text-[var(--fitlo-bad)] transition-colors"
                         >
                           <Trash2 size={14} />
                         </button>
@@ -514,33 +490,33 @@ export default function TherapickServicesView() {
               </div>
 
               {/* Description */}
-              <div className="pt-2 border-t border-[#E5E5E5]">
-                <label className="text-xs font-medium text-[#171717] mb-1.5 block">Description</label>
+              <div className="pt-2 border-t border-[var(--fitlo-line)]">
+                <label className="text-xs font-semibold text-[var(--fitlo-ink)] mb-1.5 block">Description</label>
                 <textarea
                   rows={3}
                   required
                   placeholder="Write details about the treatment, technique, and wellness effects..."
                   value={modalState.desc}
                   onChange={e => setModalState(prev => ({ ...prev, desc: e.target.value }))}
-                  className="w-full bg-white border border-[#E5E5E5] rounded-lg px-3 py-2 text-xs text-black placeholder:text-[#A3A3A3] focus:outline-none focus:border-black transition-colors resize-none leading-relaxed"
+                  className="fitlo-input w-full resize-none leading-relaxed"
                 />
               </div>
 
               {/* Footer */}
-              <div className="pt-4 border-t border-[#E5E5E5] flex justify-end gap-2">
+              <div className="pt-4 border-t border-[var(--fitlo-line)] flex justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setModalState(prev => ({ ...prev, isOpen: false }))}
-                  className="px-3.5 py-2 text-xs font-medium border border-[#E5E5E5] bg-white hover:bg-[#F5F5F5] rounded-lg transition-colors cursor-pointer"
+                  className="fitlo-btn fitlo-btn--ghost"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-4 py-2 text-xs font-medium bg-black text-white hover:bg-neutral-800 rounded-lg shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
+                  className="fitlo-btn fitlo-btn--primary"
                 >
-                  {isSubmitting ? <RefreshCw size={13} className="animate-spin text-[#facc15]" /> : <Check size={13} />}
+                  {isSubmitting ? <RefreshCw size={13} className="animate-spin" /> : <Check size={13} />}
                   <span>{modalState.isNew ? 'Create Treatment' : 'Save Changes'}</span>
                 </button>
               </div>

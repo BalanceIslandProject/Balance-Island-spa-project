@@ -78,84 +78,87 @@ export default function TherapickTherapistsView() {
       {/* ─────────────────────────────────────────────────────────────
           PAGE HEADER (MATCHING IMAGE 1)
          ───────────────────────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b border-[#E5E5E5]">
+      {/* Fitlo Page Header */}
+      <div className="fitlo-page-head">
         <div>
-          <h1 className="text-xl md:text-2xl font-semibold tracking-tight text-black">
-            Therapist Fee Setup
-          </h1>
-          <p className="text-[13px] text-[#737373] mt-0.5">
+          <div className="flex items-center gap-3">
+            <h1 className="fitlo-page-title">
+              Therapist Fee Setup
+            </h1>
+            <span className="fitlo-badge">
+              <DollarSign size={12} className="text-[#0b7a73]" />
+              <span>Wage Configuration</span>
+            </span>
+          </div>
+          <p className="fitlo-page-subtitle">
             Configure wage payouts per treatment duration tier for therapists.
           </p>
         </div>
 
         <div className="flex items-center gap-3 w-full sm:w-auto">
           <div className="w-full sm:w-64 relative">
-            <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#A3A3A3]" />
+            <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--fitlo-muted)]" />
             <input
               type="text"
               placeholder="Search treatments..."
               value={feeSearch}
               onChange={e => setFeeSearch(e.target.value)}
-              className="w-full bg-white border border-[#E5E5E5] rounded-lg pl-9 pr-3 py-2 text-xs text-black placeholder:text-[#A3A3A3] focus:outline-none focus:border-black transition-colors"
+              className="w-full bg-[var(--fitlo-card-2)] border border-[var(--fitlo-line)] rounded-xl pl-9 pr-3 py-2 text-xs font-semibold text-[var(--fitlo-ink)] placeholder:text-[var(--fitlo-muted)] focus:outline-none focus:border-[var(--fitlo-accent)] transition-colors"
             />
           </div>
           <button
             type="button"
             onClick={() => refreshData()}
-            className="px-3 py-2 rounded-lg border border-[#E5E5E5] bg-white hover:bg-[#F5F5F5] text-xs font-medium text-black flex items-center gap-1.5 transition-colors cursor-pointer shrink-0"
+            className="fitlo-btn fitlo-btn--ghost !h-9 !px-3"
             title="Sync with database"
           >
-            <RefreshCw size={13} className={loading ? 'animate-spin text-amber-500' : 'text-[#737373]'} />
+            <RefreshCw size={13} className={loading ? 'animate-spin text-[#0b7a73]' : 'text-[var(--fitlo-muted)]'} />
             <span className="hidden sm:inline">Sync</span>
           </button>
         </div>
       </div>
 
-      {/* ─────────────────────────────────────────────────────────────
-          METRICS STRIP (MATCHING IMAGE 1)
-         ───────────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 lg:grid-cols-3 border border-[#E5E5E5] rounded-xl divide-y sm:divide-y-0 sm:divide-x divide-[#E5E5E5] bg-white overflow-hidden shadow-2xs">
-        <div className="p-4 sm:p-5">
-          <div className="text-[11px] font-semibold uppercase tracking-wider text-[#737373]">
-            Total Treatments
+      {/* Fitlo Tinted KPI Tiles */}
+      <div className="fitlo-kpis !grid-cols-3">
+        <div className="fitlo-kpi fitlo-kpi--1">
+          <div className="fitlo-kpi__label">
+            <span>Total Treatments</span>
           </div>
-          <div className="text-xl sm:text-2xl font-semibold tracking-tight text-black mt-1">
+          <div className="fitlo-kpi__value fitlo-num">
             {treatments.length}
           </div>
-          <div className="text-[11px] text-[#737373] mt-0.5">In current brand catalog</div>
+          <div className="fitlo-kpi__foot">In current brand catalog</div>
         </div>
 
-        <div className="p-4 sm:p-5">
-          <div className="text-[11px] font-semibold uppercase tracking-wider text-[#737373]">
-            Wage Tiers Set
+        <div className="fitlo-kpi fitlo-kpi--2">
+          <div className="fitlo-kpi__label">
+            <span>Wage Tiers Set</span>
           </div>
-          <div className="text-xl sm:text-2xl font-semibold tracking-tight text-black mt-1">
+          <div className="fitlo-kpi__value fitlo-num">
             {therapistFees.length}
           </div>
-          <div className="text-[11px] text-[#737373] mt-0.5">Custom payouts defined</div>
+          <div className="fitlo-kpi__foot">Custom payouts defined</div>
         </div>
 
-        <div className="p-4 sm:p-5 col-span-2 lg:col-span-1">
-          <div className="text-[11px] font-semibold uppercase tracking-wider text-[#737373]">
-            Active Brand
+        <div className="fitlo-kpi fitlo-kpi--4">
+          <div className="fitlo-kpi__label">
+            <span>Active Brand</span>
           </div>
-          <div className="text-xl sm:text-2xl font-semibold tracking-tight text-black mt-1 flex items-center gap-1.5 capitalize">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#facc15]" />
+          <div className="fitlo-kpi__value text-lg flex items-center gap-2 mt-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#0b7a73]" />
             <span>Therapick</span>
           </div>
-          <div className="text-[11px] text-[#737373] mt-0.5">Website database scope</div>
+          <div className="fitlo-kpi__foot">Website database scope</div>
         </div>
       </div>
 
-      {/* ─────────────────────────────────────────────────────────────
-          TREATMENT FEE CARDS GRID (EXACTLY MATCHING IMAGE 1)
-         ───────────────────────────────────────────────────────────── */}
+      {/* TREATMENT FEE CARDS GRID */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {filteredTreatments.length === 0 ? (
-          <div className="col-span-full bg-white border border-[#E5E5E5] rounded-xl p-12 text-center text-[#737373]">
-            <DollarSign size={28} className="mx-auto mb-2 text-[#A3A3A3]" />
-            <p className="font-semibold text-black">No treatments match your search</p>
-            <p className="text-xs text-[#737373] mt-1">Try another keyword.</p>
+          <div className="col-span-full fitlo-card p-12 text-center text-[var(--fitlo-muted)]">
+            <DollarSign size={28} className="mx-auto mb-2 text-[var(--fitlo-muted)] opacity-40" />
+            <p className="font-semibold text-[var(--fitlo-ink)]">No treatments match your search</p>
+            <p className="text-xs text-[var(--fitlo-muted)] mt-1">Try another keyword.</p>
           </div>
         ) : (
           filteredTreatments.map(t => {
@@ -164,34 +167,34 @@ export default function TherapickTherapistsView() {
             return (
               <div 
                 key={t.id} 
-                className="bg-white border border-[#E5E5E5] rounded-xl p-5 shadow-2xs hover:border-[#D4D4D4] transition-all flex flex-col justify-between"
+                className="fitlo-card flex flex-col justify-between"
               >
                 <div>
                   <div className="flex justify-between items-start gap-2 mb-3">
-                    <h4 className="font-semibold text-black text-sm uppercase">
+                    <h4 className="font-bold text-[var(--fitlo-ink)] text-sm uppercase tracking-tight">
                       {t.title}
                     </h4>
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-[#F5F5F5] text-[#525252] border border-[#E5E5E5] capitalize shrink-0">
+                    <span className="fitlo-badge shrink-0">
                       {t.category || 'Package'}
                     </span>
                   </div>
                 </div>
 
                 <div className="space-y-4">
-                  <div className="border border-[#E5E5E5] rounded-lg overflow-hidden bg-white">
+                  <div className="border border-[var(--fitlo-line)] rounded-xl overflow-hidden bg-[var(--fitlo-card)]">
                     <table className="w-full text-left text-xs">
-                      <thead className="bg-[#FAFAFA] border-b border-[#E5E5E5]">
+                      <thead className="bg-[var(--fitlo-card-2)] border-b border-[var(--fitlo-line)]">
                         <tr>
-                          <th className="py-2 px-3 text-[10px] font-semibold uppercase tracking-wider text-[#737373]">
+                          <th className="py-2.5 px-3 text-[10px] font-bold uppercase tracking-wider text-[var(--fitlo-muted)]">
                             Duration
                           </th>
-                          <th className="py-2 px-3 text-[10px] font-semibold uppercase tracking-wider text-[#737373] text-right">
+                          <th className="py-2.5 px-3 text-[10px] font-bold uppercase tracking-wider text-[var(--fitlo-muted)] text-right">
                             Fee (IDR)
                           </th>
-                          <th className="py-2 px-2 text-[10px] font-semibold uppercase tracking-wider text-[#737373] text-right w-16"></th>
+                          <th className="py-2.5 px-2 text-[10px] font-bold uppercase tracking-wider text-[var(--fitlo-muted)] text-right w-16"></th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-[#E5E5E5]">
+                      <tbody className="divide-y divide-[var(--fitlo-line)]">
                         {options.map(opt => {
                           const durationStr = String(opt.duration || '').trim();
                           const key = `${t.id}-${durationStr}`;
@@ -207,12 +210,12 @@ export default function TherapickTherapistsView() {
                           const isSaving = savingKey === key;
 
                           return (
-                            <tr key={durationStr} className="hover:bg-[#FAFAFA] transition-colors">
-                              <td className="py-2.5 px-3 font-medium text-black">
+                            <tr key={durationStr} className="hover:bg-[var(--fitlo-card-2)] transition-colors">
+                              <td className="py-2.5 px-3 font-semibold text-[var(--fitlo-ink)]">
                                 {durationStr} mins
                               </td>
 
-                              <td className="py-2.5 px-3 font-semibold text-black text-right">
+                              <td className="py-2.5 px-3 font-bold fitlo-num text-[var(--fitlo-ink)] text-right">
                                 {isEditing ? (
                                   <input 
                                     type="text"
@@ -220,7 +223,7 @@ export default function TherapickTherapistsView() {
                                     placeholder="e.g. 150,000"
                                     value={feeInputs[key] || ''}
                                     onChange={e => setFeeInputs({ ...feeInputs, [key]: e.target.value })}
-                                    className="h-7 text-xs text-right py-0.5 px-2 w-24 border border-[#E5E5E5] rounded bg-white text-black focus:outline-none focus:border-black inline-block font-mono"
+                                    className="h-7 text-xs text-right py-0.5 px-2 w-24 border border-[var(--fitlo-line-2)] rounded bg-[var(--fitlo-card)] text-[var(--fitlo-ink)] focus:outline-none focus:border-[var(--fitlo-accent)] inline-block font-mono"
                                   />
                                 ) : (
                                   feeValue
@@ -235,15 +238,15 @@ export default function TherapickTherapistsView() {
                                         type="button"
                                         onClick={() => handleSaveFee(t.id, durationStr)}
                                         disabled={isSaving}
-                                        className="h-6 px-2 text-[11px] font-medium rounded bg-black text-white hover:bg-neutral-800 transition-colors cursor-pointer flex items-center gap-1 shadow-2xs"
+                                        className="h-6 px-2 text-[11px] font-bold rounded bg-[#0b7a73] text-white hover:bg-[#08665f] transition-colors cursor-pointer flex items-center gap-1 shadow-2xs"
                                       >
-                                        {isSaving ? <RefreshCw size={10} className="animate-spin text-[#facc15]" /> : <Check size={11} />}
+                                        {isSaving ? <RefreshCw size={10} className="animate-spin text-white" /> : <Check size={11} />}
                                         <span>Save</span>
                                       </button>
                                       <button
                                         type="button"
                                         onClick={() => setEditingFee(null)}
-                                        className="h-6 px-1.5 text-[11px] font-medium rounded border border-[#E5E5E5] bg-white text-[#737373] hover:text-black hover:bg-[#F5F5F5] transition-colors cursor-pointer"
+                                        className="h-6 px-1.5 text-[11px] font-medium rounded border border-[var(--fitlo-line)] bg-[var(--fitlo-card)] text-[var(--fitlo-muted)] hover:text-[var(--fitlo-ink)] transition-colors cursor-pointer"
                                       >
                                         <X size={12} />
                                       </button>
@@ -259,7 +262,7 @@ export default function TherapickTherapistsView() {
                                           }));
                                           setEditingFee({ id: t.id, duration: durationStr });
                                         }}
-                                        className="p-1 rounded text-[#737373] hover:text-black hover:bg-[#F5F5F5] transition-colors cursor-pointer"
+                                        className="p-1 rounded text-[var(--fitlo-muted)] hover:text-[var(--fitlo-ink)] hover:bg-[var(--fitlo-card-2)] transition-colors cursor-pointer"
                                         title={feeObj ? 'Edit Fee' : 'Add Fee'}
                                       >
                                         <Edit3 size={13} />
@@ -268,10 +271,10 @@ export default function TherapickTherapistsView() {
                                         <button
                                           type="button"
                                           onClick={() => handleDeleteFee(t.id, durationStr)}
-                                          className="p-1 rounded text-[#737373] hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                                          className="p-1 rounded text-[var(--fitlo-muted)] hover:text-[var(--fitlo-bad)] hover:bg-[var(--fitlo-bad-soft)] transition-colors cursor-pointer"
                                           title="Delete Fee"
                                         >
-                                          <Trash2 size={13} className="text-rose-500" />
+                                          <Trash2 size={13} className="text-[var(--fitlo-bad)]" />
                                         </button>
                                       )}
                                     </>

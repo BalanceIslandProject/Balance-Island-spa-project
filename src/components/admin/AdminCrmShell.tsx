@@ -165,17 +165,14 @@ export default function AdminCrmShell({ children, serverHost }: AdminCrmShellPro
 
   // Determine active brand console
   const activeBrandId = useMemo<AdminConsoleBrand>(() => {
-    if (domainInfo.isDomainLocked) {
-      return domainInfo.brand;
-    }
     if (brandParam && ['central', 'elexoir', 'bali'].includes(brandParam)) {
       return brandParam as AdminConsoleBrand;
     }
-    if (siteBrandFilter && ['central', 'elexoir', 'bali'].includes(siteBrandFilter)) {
-      return siteBrandFilter as AdminConsoleBrand;
+    if (domainInfo.isDomainLocked) {
+      return domainInfo.brand;
     }
-    return domainInfo.brand;
-  }, [domainInfo, brandParam, siteBrandFilter]);
+    return 'therapick';
+  }, [domainInfo, brandParam]);
 
   // Sync brand with spa context
   useEffect(() => {

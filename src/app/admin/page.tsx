@@ -34,14 +34,14 @@ const CAMPAIGN_PRESETS = [
 function AdminDashboardContent() {
     const searchParams = useSearchParams();
     const brandParam = searchParams.get('brand');
-    const { siteBrandFilter } = useSpa();
 
-    // Therapick Admin System Redesign: render dedicated master view
-    if (brandParam === 'therapick' || (!brandParam && siteBrandFilter === 'therapick')) {
-        return <TherapickMasterView />;
+    // Only render legacy Central / Elexoir / Ubud consoles when explicitly requested
+    if (brandParam === 'central' || brandParam === 'elexoir' || brandParam === 'bali') {
+        return <LegacyAdminDashboardContent />;
     }
 
-    return <LegacyAdminDashboardContent />;
+    // Default to Therapick Admin System Master View (Fitlo UI)
+    return <TherapickMasterView />;
 }
 
 function LegacyAdminDashboardContent() {

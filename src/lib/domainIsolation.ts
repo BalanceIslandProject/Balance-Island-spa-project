@@ -78,20 +78,20 @@ export function getAdminDomainInfo(host?: string | null, requestedBrand?: string
                             h.startsWith('partners.') || 
                             h.startsWith('partner.');
 
-  if (isTherapickDomain) {
+  if (isTherapickDomain || requestedBrand === 'therapick') {
     return {
       brand: 'therapick',
       isDomainLocked: true,
       domainName: 'THERAPICK',
       badgeText: 'Admin System',
       liveSiteUrl: 'https://www.booktherapick.com',
-      defaultAdminUrl: '/admin/bookings',
+      defaultAdminUrl: '/admin?brand=therapick&tab=overview',
     };
   }
 
   // 2. Ubud Home Spa Domain Check (Strictly locked to Ubud Home Spa)
   const isUbudDomain = (h.includes('homespaubud') || h.includes('ubudhomespa') || h.includes('balihomespa')) && !h.includes('elexoir');
-  if (isUbudDomain) {
+  if (isUbudDomain || requestedBrand === 'bali') {
     return {
       brand: 'bali',
       isDomainLocked: true,
@@ -104,7 +104,7 @@ export function getAdminDomainInfo(host?: string | null, requestedBrand?: string
 
   // 3. Elexoir Domain Check (Strictly locked to Elexoir)
   const isElexoirDomain = h.includes('elexoir');
-  if (isElexoirDomain) {
+  if (isElexoirDomain || requestedBrand === 'elexoir') {
     return {
       brand: 'elexoir',
       isDomainLocked: true,
@@ -115,49 +115,25 @@ export function getAdminDomainInfo(host?: string | null, requestedBrand?: string
     };
   }
 
-  // 4. Localhost / Central Admin Hub (Testing / Central operations)
-  // If explicitly testing Therapick isolated console on localhost via ?brand=therapick
-  if (requestedBrand === 'therapick') {
+  // 4. Central Admin explicit request
+  if (requestedBrand === 'central') {
     return {
-      brand: 'therapick',
-      isDomainLocked: true,
-      domainName: 'THERAPICK',
-      badgeText: 'Admin System',
-      liveSiteUrl: '/',
-      defaultAdminUrl: '/admin/bookings',
-    };
-  }
-
-  // In Central Admin Hub (connected only to Elexoir and Ubud Home Spa)
-  if (requestedBrand === 'elexoir') {
-    return {
-      brand: 'elexoir',
+      brand: 'central',
       isDomainLocked: false,
-      domainName: 'ELEXOIR',
-      badgeText: 'Elexoir Console',
+      domainName: 'CENTRAL ADMIN',
+      badgeText: 'Central Operations',
       liveSiteUrl: '/',
-      defaultAdminUrl: '/admin?brand=elexoir&tab=treatment',
+      defaultAdminUrl: '/admin?brand=central&tab=treatment',
     };
   }
 
-  if (requestedBrand === 'bali') {
-    return {
-      brand: 'bali',
-      isDomainLocked: false,
-      domainName: 'UBUD HOME SPA',
-      badgeText: 'Ubud Spa Console',
-      liveSiteUrl: '/',
-      defaultAdminUrl: '/admin?brand=bali&tab=treatment',
-    };
-  }
-
-  // Default Central Admin (Connected only to Elexoir and Ubud Home Spa)
+  // 5. Default on Localhost / Therapick project: Therapick Admin System
   return {
-    brand: 'central',
-    isDomainLocked: false,
-    domainName: 'CENTRAL ADMIN',
-    badgeText: 'Central Operations',
+    brand: 'therapick',
+    isDomainLocked: true,
+    domainName: 'THERAPICK',
+    badgeText: 'Admin System',
     liveSiteUrl: '/',
-    defaultAdminUrl: '/admin?brand=central&tab=treatment',
+    defaultAdminUrl: '/admin?brand=therapick&tab=overview',
   };
 }

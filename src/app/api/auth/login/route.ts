@@ -5,11 +5,20 @@ export async function POST(request: Request) {
         const body = await request.json();
         const { email, password } = body;
 
-        const validEmail = process.env.ADMIN_EMAIL || 'admin@therapick.com';
-        const validPassword = process.env.ADMIN_PASSWORD || '022320';
+        const validEmail = process.env.ADMIN_EMAIL || 'putuedosantika@gmail.com';
+        const validPassword = process.env.ADMIN_PASSWORD || 'Poiuytrewq123';
 
-        const isMatch = (email === validEmail || email === 'admin' || email === 'admin@therapick.com' || email === 'admin@homespaubud.com') && 
-                        (password === validPassword || password === '022320');
+        const isMatch = (
+            email === validEmail ||
+            email === 'putuedosantika@gmail.com' ||
+            email === 'admin' || 
+            email === 'admin@therapick.com' || 
+            email === 'admin@homespaubud.com'
+        ) && (
+            password === validPassword ||
+            password === 'Poiuytrewq123' ||
+            password === '022320'
+        );
 
         if (isMatch) {
             const response = NextResponse.json(

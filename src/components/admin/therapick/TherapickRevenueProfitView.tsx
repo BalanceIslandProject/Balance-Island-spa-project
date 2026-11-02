@@ -92,18 +92,14 @@ export default function TherapickRevenueProfitView() {
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-200">
+    <div className="space-y-6">
       
-      {/* ─────────────────────────────────────────────────────────────
-          1. HEADER & DATE SELECTOR (MATCHING MOCKUP)
-         ───────────────────────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* ─── FITLO PAGE HEADER & DATE SELECTOR ─── */}
+      <div className="fitlo-page-head">
         <div>
-          <h1 className="text-xl sm:text-2xl font-extrabold text-neutral-900 tracking-tight">
-            Revenue & Profit
-          </h1>
-          <p className="text-xs sm:text-sm text-stone-500 mt-0.5">
-            Financial performance from website bookings.
+          <h1 className="fitlo-page-title">Revenue & Profit</h1>
+          <p className="fitlo-page-sub">
+            Financial performance, therapist payout breakdown, and realized margins.
           </p>
         </div>
 
@@ -113,16 +109,16 @@ export default function TherapickRevenueProfitView() {
             <button
               type="button"
               onClick={() => setDateDropdownOpen(!dateDropdownOpen)}
-              className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-stone-200 hover:border-amber-400 text-xs font-semibold text-neutral-800 shadow-2xs hover:shadow-xs transition-all cursor-pointer"
+              className="fitlo-btn fitlo-btn--ghost flex items-center gap-2"
             >
-              <CalendarIcon size={14} className="text-stone-400" />
+              <CalendarIcon size={14} className="text-[var(--fitlo-muted)]" />
               <span>{dateRange.label || 'Oct 1, 2026 - Oct 31, 2026'}</span>
-              <ChevronDown size={14} className={`text-stone-400 transition-transform ${dateDropdownOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown size={14} className={`text-[var(--fitlo-muted)] transition-transform ${dateDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
 
             {dateDropdownOpen && (
-              <div className="absolute right-0 top-full mt-2 w-48 bg-white border border-stone-200 rounded-2xl p-1.5 shadow-xl z-40 animate-in fade-in zoom-in-95">
-                <div className="px-3 py-1.5 text-[10px] font-mono font-bold uppercase tracking-wider text-stone-400 border-b border-stone-100">
+              <div className="absolute right-0 top-full mt-2 w-48 fitlo-card p-1.5 shadow-xl z-40 animate-in fade-in zoom-in-95">
+                <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-[var(--fitlo-muted)] border-b border-[var(--fitlo-line)]">
                   Select Period
                 </div>
                 <div className="py-1 space-y-0.5">
@@ -141,8 +137,8 @@ export default function TherapickRevenueProfitView() {
                         setDatePreset(opt.id as any);
                         setDateDropdownOpen(false);
                       }}
-                      className={`w-full text-left px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                        dateRange.preset === opt.id ? 'bg-[#FACC15] text-neutral-950 font-bold' : 'text-stone-700 hover:bg-stone-50'
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                        dateRange.preset === opt.id ? 'bg-[var(--fitlo-accent)] text-white font-bold' : 'text-[var(--fitlo-ink)] hover:bg-[var(--fitlo-card-2)]'
                       }`}
                     >
                       {opt.label}
@@ -156,125 +152,115 @@ export default function TherapickRevenueProfitView() {
           <button
             type="button"
             onClick={handleExportCSV}
-            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-stone-200 hover:border-amber-400 text-neutral-800 text-xs font-semibold shadow-2xs hover:shadow-xs transition-all cursor-pointer"
+            className="fitlo-btn fitlo-btn--ghost flex items-center gap-2"
           >
-            <Download size={14} className="text-stone-500" />
-            <span className="hidden sm:inline">Export</span>
+            <Download size={14} className="text-[var(--fitlo-muted)]" />
+            <span className="hidden sm:inline">Export CSV</span>
           </button>
         </div>
       </div>
 
-      {/* ─────────────────────────────────────────────────────────────
-          2. 3 PRIMARY FINANCIAL KPI CARDS (MATCHING MOCKUP)
-         ───────────────────────────────────────────────────────────── */}
+      {/* ─── FITLO 3 PRIMARY FINANCIAL KPI CARDS ─── */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {/* Total Revenue */}
-        <div className="bg-white border border-stone-200/90 rounded-2xl p-5 shadow-2xs hover:shadow-xs transition-shadow">
-          <div className="flex items-center gap-3 mb-2.5">
-            <div className="w-8 h-8 rounded-xl bg-stone-100 flex items-center justify-center text-stone-700">
-              <Layers size={16} />
-            </div>
-            <span className="text-xs font-semibold text-stone-500">Total Revenue</span>
+        <div className="fitlo-kpi fitlo-kpi--cyan">
+          <div className="flex items-center gap-2 mb-2">
+            <Layers size={15} className="text-[var(--fitlo-ink)] opacity-70" />
+            <span className="fitlo-kpi__lbl">Total Revenue</span>
           </div>
-          <div className="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-950 font-sans">
+          <div className="fitlo-kpi__val text-2xl sm:text-3xl">
             {formatIDR(totalRev)}
           </div>
-          <div className="flex items-center gap-1.5 mt-2 text-[11px] font-semibold text-emerald-600">
+          <div className="fitlo-kpi__sub flex items-center gap-1.5 mt-2 font-semibold text-[var(--fitlo-accent)]">
             <span>▲ +12%</span>
-            <span className="text-stone-400 font-normal">vs last period</span>
+            <span className="text-[var(--fitlo-muted)] font-normal">vs last period</span>
           </div>
         </div>
 
         {/* Therapist Payment */}
-        <div className="bg-white border border-stone-200/90 rounded-2xl p-5 shadow-2xs hover:shadow-xs transition-shadow">
-          <div className="flex items-center gap-3 mb-2.5">
-            <div className="w-8 h-8 rounded-xl bg-stone-100 flex items-center justify-center text-stone-700">
-              <User size={16} />
-            </div>
-            <span className="text-xs font-semibold text-stone-500">Therapist Payment</span>
+        <div className="fitlo-kpi fitlo-kpi--pebble">
+          <div className="flex items-center gap-2 mb-2">
+            <User size={15} className="text-[var(--fitlo-ink)] opacity-70" />
+            <span className="fitlo-kpi__lbl">Therapist Payment</span>
           </div>
-          <div className="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-950 font-sans">
+          <div className="fitlo-kpi__val text-2xl sm:text-3xl">
             {formatIDR(therapistPay)}
           </div>
-          <div className="flex items-center gap-1.5 mt-2 text-[11px] font-semibold text-stone-500">
+          <div className="fitlo-kpi__sub flex items-center gap-1.5 mt-2 font-semibold text-[var(--fitlo-muted)]">
             <span>▼ -8%</span>
-            <span className="text-stone-400 font-normal">vs last period</span>
+            <span className="text-[var(--fitlo-muted)] font-normal">vs last period</span>
           </div>
         </div>
 
-        {/* Net Profit (Light Yellow Card Matching Mockup) */}
-        <div className="bg-[#FEF3C7]/80 border border-amber-200/90 rounded-2xl p-5 shadow-2xs hover:shadow-xs transition-shadow">
-          <div className="flex items-center gap-3 mb-2.5">
-            <div className="w-8 h-8 rounded-xl bg-amber-200/60 flex items-center justify-center text-amber-900">
-              <TrendingUp size={16} />
-            </div>
-            <span className="text-xs font-bold text-amber-900">Net Profit</span>
+        {/* Net Profit */}
+        <div className="fitlo-kpi fitlo-kpi--lemon">
+          <div className="flex items-center gap-2 mb-2">
+            <TrendingUp size={15} className="text-[var(--fitlo-ink)] opacity-70" />
+            <span className="fitlo-kpi__lbl">Net Profit</span>
           </div>
-          <div className="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-950 font-sans">
+          <div className="fitlo-kpi__val text-2xl sm:text-3xl">
             {formatIDR(netProfit)}
           </div>
-          <div className="flex items-center gap-1.5 mt-2 text-[11px] font-bold text-emerald-700">
+          <div className="fitlo-kpi__sub flex items-center gap-1.5 mt-2 font-bold text-[var(--fitlo-accent)]">
             <span>▲ +18%</span>
-            <span className="text-amber-800/80 font-normal">vs last period</span>
+            <span className="text-[var(--fitlo-muted)] font-normal">vs last period</span>
           </div>
         </div>
       </div>
 
-      {/* ─────────────────────────────────────────────────────────────
-          3. REVENUE VS THERAPIST PAYMENT BAR CHART + SUMMARY CARD
-         ───────────────────────────────────────────────────────────── */}
+      {/* ─── FITLO REVENUE VS THERAPIST PAYMENT BAR CHART + SUMMARY ─── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         
-        {/* Left Column: Revenue vs Therapist Payment Bar Chart (~8 cols / 65%) */}
-        <div className="lg:col-span-8 bg-white border border-stone-200/90 rounded-2xl p-6 shadow-2xs space-y-5">
+        {/* Left Column: Revenue vs Therapist Payment Bar Chart */}
+        <div className="lg:col-span-8 fitlo-card p-6 space-y-5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <h2 className="text-sm font-bold text-neutral-900 tracking-tight">
+              <h2 className="text-sm font-bold text-[var(--fitlo-ink)] tracking-tight">
                 Revenue vs Therapist Payment
               </h2>
               <div className="flex items-center gap-4 text-xs mt-1.5">
-                <div className="flex items-center gap-1.5 font-semibold text-neutral-800">
-                  <span className="w-3 h-3 rounded-sm bg-[#FACC15]" />
+                <div className="flex items-center gap-1.5 font-semibold text-[var(--fitlo-ink)]">
+                  <span className="w-3 h-3 rounded-xs bg-[var(--fitlo-accent)]" />
                   <span>Revenue</span>
                 </div>
-                <div className="flex items-center gap-1.5 font-semibold text-stone-600">
-                  <span className="w-3 h-3 rounded-sm bg-[#334155]" />
+                <div className="flex items-center gap-1.5 font-semibold text-[var(--fitlo-muted)]">
+                  <span className="w-3 h-3 rounded-xs bg-[var(--fitlo-ink)]" />
                   <span>Therapist Payment</span>
                 </div>
               </div>
             </div>
 
             {/* Scale Indicator */}
-            <span className="text-[11px] font-mono text-stone-400 bg-stone-50 px-2.5 py-1 rounded-lg self-start sm:self-auto">
+            <span className="text-[11px] font-bold text-[var(--fitlo-muted)] bg-[var(--fitlo-card-2)] px-2.5 py-1 rounded-lg self-start sm:self-auto border border-[var(--fitlo-line)]">
               Currency: IDR (Millions)
             </span>
           </div>
 
           {/* Bar Chart Graphic */}
           <div className="pt-4">
-            <div className="flex items-end justify-between h-48 gap-3 sm:gap-6 border-b border-stone-200 pb-2">
+            <div className="flex items-end justify-between h-48 gap-3 sm:gap-6 border-b border-[var(--fitlo-line)] pb-2">
               {chartData.buckets.map((b, idx) => {
                 const revHeight = Math.round((b.rev / (chartData.maxVal * 1.15)) * 100);
                 const feeHeight = Math.round((b.fee / (chartData.maxVal * 1.15)) * 100);
 
                 return (
                   <div key={idx} className="flex-1 flex flex-col items-center h-full justify-end group">
-                    <div className="w-full flex items-end justify-center gap-1 sm:gap-2 h-full">
+                    <div className="w-full flex items-end justify-center gap-1.5 sm:gap-2.5 h-full">
                       {/* Revenue Bar */}
                       <div 
                         style={{ height: `${Math.max(revHeight, 10)}%` }} 
-                        className="w-4 sm:w-8 bg-[#FACC15] rounded-t-sm group-hover:opacity-90 transition-all relative cursor-pointer"
+                        className="w-4 sm:w-8 bg-[var(--fitlo-accent)] rounded-t-sm group-hover:opacity-90 transition-all relative cursor-pointer shadow-xs"
                         title={`Revenue: ${formatIDR(b.rev)}`}
                       />
                       {/* Therapist Fee Bar */}
                       <div 
                         style={{ height: `${Math.max(feeHeight, 8)}%` }} 
-                        className="w-4 sm:w-8 bg-[#334155] rounded-t-sm group-hover:opacity-90 transition-all relative cursor-pointer"
+                        className="w-4 sm:w-8 bg-[var(--fitlo-ink)] rounded-t-sm group-hover:opacity-90 transition-all relative cursor-pointer shadow-xs"
                         title={`Therapist Payment: ${formatIDR(b.fee)}`}
                       />
                     </div>
                     {/* X-Axis Label */}
-                    <span className="text-[11px] font-mono font-medium text-stone-500 mt-2">
+                    <span className="text-[11px] font-bold text-[var(--fitlo-muted)] mt-2">
                       {b.label}
                     </span>
                   </div>
@@ -283,7 +269,7 @@ export default function TherapickRevenueProfitView() {
             </div>
 
             {/* Y-Axis Reference Scale */}
-            <div className="flex items-center justify-between text-[10px] font-mono text-stone-400 pt-2">
+            <div className="flex items-center justify-between text-[10px] font-bold text-[var(--fitlo-muted)] pt-2 fitlo-num">
               <span>0</span>
               <span>10M</span>
               <span>20M</span>
@@ -292,81 +278,79 @@ export default function TherapickRevenueProfitView() {
           </div>
         </div>
 
-        {/* Right Column: Financial Summary Card (~4 cols / 35%) */}
-        <div className="lg:col-span-4 bg-white border border-stone-200/90 rounded-2xl p-6 shadow-2xs flex flex-col justify-between">
+        {/* Right Column: Financial Summary Card */}
+        <div className="lg:col-span-4 fitlo-card p-6 flex flex-col justify-between">
           <div>
-            <h2 className="text-sm font-bold text-neutral-900 tracking-tight mb-4">
-              Summary
+            <h2 className="text-sm font-bold text-[var(--fitlo-ink)] tracking-tight mb-4">
+              Financial Summary
             </h2>
 
             <div className="space-y-4">
-              <div className="flex items-center justify-between py-2 border-b border-stone-100">
-                <span className="text-xs text-stone-500">Total Bookings</span>
-                <span className="text-sm font-extrabold text-neutral-900 font-mono">
+              <div className="flex items-center justify-between py-2 border-b border-[var(--fitlo-line)]">
+                <span className="text-xs text-[var(--fitlo-muted)]">Total Bookings</span>
+                <span className="text-sm font-bold text-[var(--fitlo-ink)] fitlo-num">
                   {bookingCount}
                 </span>
               </div>
 
-              <div className="flex items-center justify-between py-2 border-b border-stone-100">
-                <span className="text-xs text-stone-500">Avg. Booking Value</span>
-                <span className="text-sm font-extrabold text-neutral-900 font-mono">
+              <div className="flex items-center justify-between py-2 border-b border-[var(--fitlo-line)]">
+                <span className="text-xs text-[var(--fitlo-muted)]">Avg. Booking Value</span>
+                <span className="text-sm font-bold text-[var(--fitlo-ink)] fitlo-num">
                   {formatIDR(avgBookingVal)}
                 </span>
               </div>
 
-              <div className="flex items-center justify-between py-2 border-b border-stone-100">
-                <span className="text-xs text-stone-500">Profit Margin</span>
-                <span className="text-sm font-extrabold text-emerald-700 font-mono">
+              <div className="flex items-center justify-between py-2 border-b border-[var(--fitlo-line)]">
+                <span className="text-xs text-[var(--fitlo-muted)]">Profit Margin</span>
+                <span className="text-sm font-bold text-[var(--fitlo-accent)] fitlo-num">
                   {profitMarginPct}%
                 </span>
               </div>
 
-              <div className="flex items-center justify-between py-2 border-b border-stone-100">
-                <span className="text-xs text-stone-500">Labor Share Ratio</span>
-                <span className="text-sm font-extrabold text-stone-700 font-mono">
+              <div className="flex items-center justify-between py-2 border-b border-[var(--fitlo-line)]">
+                <span className="text-xs text-[var(--fitlo-muted)]">Labor Share Ratio</span>
+                <span className="text-sm font-bold text-[var(--fitlo-ink)] fitlo-num">
                   {totalRev > 0 ? ((therapistPay / totalRev) * 100).toFixed(1) : '55.4'}%
                 </span>
               </div>
             </div>
           </div>
 
-          <div className="mt-6 p-3.5 rounded-xl bg-amber-50/60 border border-amber-200/60 text-xs text-amber-900 leading-relaxed">
+          <div className="mt-6 p-3.5 rounded-xl bg-[var(--fitlo-card-2)] border border-[var(--fitlo-line)] text-xs text-[var(--fitlo-ink)] leading-relaxed">
             <span className="font-bold">Financial Integrity:</span> Figures reflect recognized revenue from verified direct website reservations, strictly segregated from affiliate partner transactions.
           </div>
         </div>
       </div>
 
-      {/* ─────────────────────────────────────────────────────────────
-          4. TRANSACTION REVENUE LEDGER
-         ───────────────────────────────────────────────────────────── */}
-      <div className="bg-white border border-stone-200/90 rounded-2xl p-6 shadow-2xs space-y-4">
+      {/* ─── FITLO TRANSACTION REVENUE LEDGER ─── */}
+      <div className="fitlo-card p-6 space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-bold text-neutral-900 tracking-tight">
+          <h2 className="text-sm font-bold text-[var(--fitlo-ink)] tracking-tight">
             Financial Transaction Records
           </h2>
-          <span className="text-xs text-stone-500">
+          <span className="text-xs text-[var(--fitlo-muted)]">
             Showing {websiteBookings.length} website transactions
           </span>
         </div>
 
         <div className="overflow-x-auto no-scrollbar">
-          <table className="w-full text-left text-xs">
+          <table className="fitlo-table">
             <thead>
-              <tr className="border-b border-stone-200 text-[11px] font-mono uppercase font-bold text-stone-400">
-                <th className="py-2.5 px-3">Booking ID</th>
-                <th className="py-2.5 px-3">Date</th>
-                <th className="py-2.5 px-3">Customer</th>
-                <th className="py-2.5 px-3">Service</th>
-                <th className="py-2.5 px-3 text-right">Gross Amount</th>
-                <th className="py-2.5 px-3 text-right">Therapist Fee</th>
-                <th className="py-2.5 px-3 text-right">Net Profit</th>
-                <th className="py-2.5 px-3 text-center">Status</th>
+              <tr>
+                <th>Booking ID</th>
+                <th>Date</th>
+                <th>Customer</th>
+                <th>Service</th>
+                <th className="text-right">Gross Amount</th>
+                <th className="text-right">Therapist Fee</th>
+                <th className="text-right">Net Profit</th>
+                <th className="text-center">Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-stone-100">
+            <tbody>
               {websiteBookings.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-8 text-center text-stone-400">
+                  <td colSpan={8} className="py-8 text-center text-[var(--fitlo-muted)]">
                     No website transactions recorded for this period.
                   </td>
                 </tr>
@@ -380,31 +364,31 @@ export default function TherapickRevenueProfitView() {
                     <tr 
                       key={b.id} 
                       onClick={() => setSelectedBooking(b)}
-                      className="hover:bg-stone-50/70 transition-colors cursor-pointer"
+                      className="cursor-pointer"
                     >
-                      <td className="py-3 px-3 font-mono font-bold text-neutral-900">
+                      <td className="fitlo-num font-bold text-[var(--fitlo-ink)]">
                         {b.reference_number || String(b.id || '').slice(0, 8)}
                       </td>
-                      <td className="py-3 px-3 text-stone-500 font-mono">
+                      <td className="text-[var(--fitlo-muted)] fitlo-num">
                         {b.booking_date || b.created_at?.split('T')[0]}
                       </td>
-                      <td className="py-3 px-3 font-semibold text-neutral-900">
+                      <td className="font-semibold text-[var(--fitlo-ink)]">
                         {b.guest_name || b.customer_name || 'Guest'}
                       </td>
-                      <td className="py-3 px-3 text-stone-600">
+                      <td className="text-[var(--fitlo-muted)]">
                         {b.treatment_name || b.service_name || 'Massage'}
                       </td>
-                      <td className="py-3 px-3 text-right font-mono font-bold text-neutral-900">
+                      <td className="text-right fitlo-num font-bold text-[var(--fitlo-ink)]">
                         {formatIDR(gross)}
                       </td>
-                      <td className="py-3 px-3 text-right font-mono text-stone-600">
+                      <td className="text-right fitlo-num text-[var(--fitlo-muted)]">
                         {formatIDR(fee)}
                       </td>
-                      <td className="py-3 px-3 text-right font-mono font-bold text-emerald-700">
+                      <td className="text-right fitlo-num font-bold text-[var(--fitlo-accent)]">
                         {formatIDR(net)}
                       </td>
-                      <td className="py-3 px-3 text-center">
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-100 text-emerald-800">
+                      <td className="text-center">
+                        <span className="fitlo-pill fitlo-pill--good">
                           {b.payment_status || 'Paid'}
                         </span>
                       </td>

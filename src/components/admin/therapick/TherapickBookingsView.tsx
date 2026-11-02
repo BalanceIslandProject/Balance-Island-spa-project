@@ -230,20 +230,20 @@ export default function TherapickBookingsView() {
 
   return (
     <div className="space-y-5 animate-in fade-in duration-200">
-      {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* Fitlo Page Header */}
+      <div className="fitlo-page-head">
         <div>
-          <div className="flex items-center gap-2.5">
-            <h1 className="text-xl sm:text-2xl font-extrabold text-neutral-900 tracking-tight">
+          <div className="flex items-center gap-3">
+            <h1 className="fitlo-page-title">
               {system === 'website' ? 'Website Bookings' : 'Affiliate Bookings'}
             </h1>
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-100 text-amber-900 border border-amber-200">
-              <Users size={11} className="text-amber-700" />
-              <span>Affiliate System</span>
+            <span className="fitlo-badge">
+              <Users size={12} className="text-[#0b7a73]" />
+              <span>{system === 'website' ? 'Direct Bookings' : 'Affiliate Network'}</span>
             </span>
           </div>
-          <p className="text-xs sm:text-sm text-stone-500 mt-0.5">
-            Realtime partner attribution, referral verification, and automatic 15% commission disbursement tracking.
+          <p className="fitlo-page-subtitle">
+            Realtime partner attribution, referral verification, and automatic commission disbursement tracking.
           </p>
         </div>
 
@@ -251,16 +251,16 @@ export default function TherapickBookingsView() {
           <button
             type="button"
             onClick={handleExportCSV}
-            className="px-3.5 py-2 rounded-xl border border-stone-200 bg-white hover:bg-stone-50 text-xs font-semibold text-stone-700 flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
+            className="fitlo-btn fitlo-btn--ghost"
           >
-            <Download size={14} className="text-stone-500" />
+            <Download size={14} className="text-[var(--fitlo-muted)]" />
             <span className="hidden sm:inline">Export</span> CSV
           </button>
 
           <button
             type="button"
             onClick={() => setIsAddBookingOpen(true)}
-            className="px-4 py-2 rounded-xl bg-[#facc15] hover:bg-[#eab308] text-neutral-950 text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
+            className="fitlo-btn fitlo-btn--primary"
           >
             <Plus size={15} />
             <span>Add Booking</span>
@@ -268,14 +268,14 @@ export default function TherapickBookingsView() {
         </div>
       </div>
 
-      {/* Modern Search & Filter Controls */}
-      <div className="bg-white rounded-2xl p-4 sm:p-5 border border-stone-200/90 shadow-2xs space-y-4">
+      {/* Fitlo Search & Filter Controls Card */}
+      <div className="fitlo-card space-y-4">
         {/* Row 1: Multifunctional Search Bar & Dropdowns */}
         <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3">
           
           {/* Multifunctional Search Bar */}
           <div className="relative flex-1">
-            <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
+            <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--fitlo-muted)] pointer-events-none" />
             <input
               type="text"
               placeholder="Search booking ID, customer, phone, service, or partner..."
@@ -286,13 +286,13 @@ export default function TherapickBookingsView() {
                   e.currentTarget.blur();
                 }
               }}
-              className="w-full text-xs font-medium bg-stone-50/80 border border-stone-200/90 rounded-xl pl-9 pr-9 py-2.5 text-neutral-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:bg-white focus:border-stone-300 transition-all shadow-2xs"
+              className="w-full text-xs font-medium bg-[var(--fitlo-card-2)] border border-[var(--fitlo-line)] rounded-xl pl-9 pr-9 py-2.5 text-[var(--fitlo-ink)] placeholder:text-[var(--fitlo-muted)] focus:outline-none focus:border-[var(--fitlo-accent)] focus:bg-[var(--fitlo-card)] transition-all"
             />
             {searchQuery && (
               <button
                 type="button"
                 onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded-full text-stone-400 hover:text-neutral-900 hover:bg-stone-200 transition-colors cursor-pointer"
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded-full text-[var(--fitlo-muted)] hover:text-[var(--fitlo-ink)] transition-colors cursor-pointer"
                 title="Clear search"
               >
                 <X size={13} />
@@ -312,10 +312,10 @@ export default function TherapickBookingsView() {
                   setIsServiceDropdownOpen(false);
                   setIsPartnerDropdownOpen(false);
                 }}
-                className={`w-full sm:w-[150px] text-xs font-semibold px-3 py-2.5 rounded-xl border flex items-center justify-between gap-1.5 transition-all cursor-pointer shadow-2xs ${
+                className={`w-full sm:w-[150px] text-xs font-semibold px-3 py-2.5 rounded-xl border flex items-center justify-between gap-1.5 transition-all cursor-pointer ${
                   statusFilter !== 'all' 
-                    ? 'bg-amber-50/70 border-amber-300 text-neutral-900' 
-                    : 'bg-white hover:bg-stone-50 border-stone-200 text-stone-700'
+                    ? 'bg-[var(--fitlo-accent-soft)] border-[var(--fitlo-accent)] text-[var(--fitlo-accent-text)]' 
+                    : 'bg-[var(--fitlo-card)] hover:bg-[var(--fitlo-card-2)] border-[var(--fitlo-line)] text-[var(--fitlo-ink-2)]'
                 }`}
               >
                 <div className="flex items-center gap-1.5 truncate">
@@ -533,27 +533,27 @@ export default function TherapickBookingsView() {
         </div>
 
         {/* Row 2: Quick Booking Status Filters & Summary Count */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-stone-100">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-[var(--fitlo-line)]">
           
           {/* Quick Status Buttons */}
           <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
-            <span className="text-[11px] font-bold text-stone-400 uppercase tracking-wider mr-1 shrink-0">
-              Quick:
+            <span className="text-[11px] font-bold text-[var(--fitlo-muted)] uppercase tracking-wider mr-1 shrink-0">
+              Filter:
             </span>
 
             {/* Quick ALL */}
             <button
               type="button"
               onClick={() => setStatusFilter('all')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shrink-0 ${
+              className={`px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shrink-0 ${
                 statusFilter === 'all'
-                  ? 'bg-[#facc15] text-neutral-950 font-bold shadow-2xs border border-amber-300'
-                  : 'bg-stone-100 hover:bg-stone-200 text-stone-700 border border-transparent'
+                  ? 'bg-[#0b7a73] text-white font-bold shadow-xs'
+                  : 'bg-[var(--fitlo-card-2)] hover:bg-[var(--fitlo-card-3)] text-[var(--fitlo-ink-2)]'
               }`}
             >
               <span>All</span>
-              <span className={`px-1.5 py-0.2 rounded-md text-[10px] font-mono ${
-                statusFilter === 'all' ? 'bg-neutral-950 text-white font-bold' : 'bg-stone-200 text-stone-600 font-semibold'
+              <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
+                statusFilter === 'all' ? 'bg-white text-[#0b7a73] font-bold' : 'bg-[var(--fitlo-card-3)] text-[var(--fitlo-muted)] font-semibold'
               }`}>
                 {quickCounts.all}
               </span>
@@ -563,16 +563,16 @@ export default function TherapickBookingsView() {
             <button
               type="button"
               onClick={() => setStatusFilter('pending')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shrink-0 ${
+              className={`px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shrink-0 ${
                 statusFilter === 'pending'
-                  ? 'bg-[#facc15] text-neutral-950 font-bold shadow-2xs border border-amber-300'
-                  : 'bg-stone-100 hover:bg-stone-200 text-stone-700 border border-transparent'
+                  ? 'bg-[#0b7a73] text-white font-bold shadow-xs'
+                  : 'bg-[var(--fitlo-card-2)] hover:bg-[var(--fitlo-card-3)] text-[var(--fitlo-ink-2)]'
               }`}
             >
-              <span className="w-2 h-2 rounded-full bg-amber-500" />
+              <span className="w-2 h-2 rounded-full bg-[#f08a5d]" />
               <span>Pending</span>
-              <span className={`px-1.5 py-0.2 rounded-md text-[10px] font-mono ${
-                statusFilter === 'pending' ? 'bg-neutral-950 text-white font-bold' : 'bg-stone-200 text-stone-600 font-semibold'
+              <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
+                statusFilter === 'pending' ? 'bg-white text-[#0b7a73] font-bold' : 'bg-[var(--fitlo-card-3)] text-[var(--fitlo-muted)] font-semibold'
               }`}>
                 {quickCounts.pending}
               </span>
@@ -582,27 +582,27 @@ export default function TherapickBookingsView() {
             <button
               type="button"
               onClick={() => setStatusFilter('confirmed')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shrink-0 ${
+              className={`px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shrink-0 ${
                 statusFilter === 'confirmed'
-                  ? 'bg-[#facc15] text-neutral-950 font-bold shadow-2xs border border-amber-300'
-                  : 'bg-stone-100 hover:bg-stone-200 text-stone-700 border border-transparent'
+                  ? 'bg-[#0b7a73] text-white font-bold shadow-xs'
+                  : 'bg-[var(--fitlo-card-2)] hover:bg-[var(--fitlo-card-3)] text-[var(--fitlo-ink-2)]'
               }`}
             >
-              <span className="w-2 h-2 rounded-full bg-emerald-500" />
+              <span className="w-2 h-2 rounded-full bg-[#1e7548]" />
               <span>Confirmed</span>
-              <span className={`px-1.5 py-0.2 rounded-md text-[10px] font-mono ${
-                statusFilter === 'confirmed' ? 'bg-neutral-950 text-white font-bold' : 'bg-stone-200 text-stone-600 font-semibold'
+              <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
+                statusFilter === 'confirmed' ? 'bg-white text-[#0b7a73] font-bold' : 'bg-[var(--fitlo-card-3)] text-[var(--fitlo-muted)] font-semibold'
               }`}>
                 {quickCounts.confirmed}
               </span>
             </button>
 
-            {/* Reset Filters Shortcut (Visible when any filter is active) */}
+            {/* Reset Filters Shortcut */}
             {hasActiveFilters && (
               <button
                 type="button"
                 onClick={handleResetFilters}
-                className="ml-2 px-2.5 py-1.5 rounded-lg text-xs text-rose-600 hover:bg-rose-50 font-semibold flex items-center gap-1 transition-colors cursor-pointer shrink-0"
+                className="ml-2 px-2.5 py-1.5 rounded-full text-xs text-[#b42318] hover:bg-[rgba(180,35,24,0.08)] font-semibold flex items-center gap-1 transition-colors cursor-pointer shrink-0"
               >
                 <X size={12} />
                 <span>Reset Filters</span>
@@ -611,44 +611,44 @@ export default function TherapickBookingsView() {
           </div>
 
           {/* Result Count Status Summary */}
-          <div className="text-xs text-stone-500 shrink-0">
-            Showing <strong className="text-neutral-900 font-mono">{filteredBookings.length}</strong> of {scopedBookings.length} bookings
+          <div className="text-xs text-[var(--fitlo-muted)] shrink-0">
+            Showing <strong className="text-[var(--fitlo-ink)] fitlo-num font-bold">{filteredBookings.length}</strong> of {scopedBookings.length} bookings
           </div>
         </div>
       </div>
 
-      {/* Bookings Table Card */}
-      <div className="bg-white rounded-2xl border border-stone-200/90 shadow-2xs overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse min-w-[850px]">
+      {/* Bookings Table Card (Fitlo Table) */}
+      <div className="fitlo-card fitlo-card--flush">
+        <div className="fitlo-table-wrap">
+          <table className="fitlo-table min-w-[850px]">
             <thead>
-              <tr className="border-b border-stone-200 bg-stone-50/70 text-[11px] font-bold font-mono uppercase tracking-wider text-stone-500">
-                <th className="py-3.5 px-4">Booking ID</th>
-                <th className="py-3.5 px-4">Customer</th>
-                <th className="py-3.5 px-4">Service</th>
-                <th className="py-3.5 px-4">Partner</th>
-                <th className="py-3.5 px-4 text-right">Amount</th>
-                <th className="py-3.5 px-4 text-center">Status</th>
-                <th className="py-3.5 px-3 text-right">Action</th>
+              <tr>
+                <th>Booking ID</th>
+                <th>Customer</th>
+                <th>Service</th>
+                <th>Partner</th>
+                <th className="r">Amount</th>
+                <th style={{ textAlign: 'center' }}>Status</th>
+                <th className="r">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-stone-100 text-xs">
+            <tbody>
               {filteredBookings.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-16 text-center text-stone-400">
+                  <td colSpan={7} className="py-16 text-center text-[var(--fitlo-muted)]">
                     <div className="max-w-sm mx-auto space-y-2">
-                      <div className="w-12 h-12 rounded-2xl bg-stone-100 text-stone-400 flex items-center justify-center mx-auto mb-3">
+                      <div className="w-12 h-12 rounded-2xl bg-[var(--fitlo-card-2)] text-[var(--fitlo-muted)] flex items-center justify-center mx-auto mb-3">
                         <Search size={22} />
                       </div>
-                      <h4 className="font-bold text-neutral-900 text-sm">No matching bookings found</h4>
-                      <p className="text-xs text-stone-400 leading-relaxed">
+                      <h4 className="font-bold text-[var(--fitlo-ink)] text-sm">No matching bookings found</h4>
+                      <p className="text-xs text-[var(--fitlo-muted)] leading-relaxed">
                         We couldn't find any bookings matching your current search query or active filter selections.
                       </p>
                       {hasActiveFilters && (
                         <button
                           type="button"
                           onClick={handleResetFilters}
-                          className="mt-3 px-3.5 py-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-bold transition-all cursor-pointer inline-flex items-center gap-1.5"
+                          className="mt-3 fitlo-btn fitlo-btn--primary"
                         >
                           <RefreshCw size={12} />
                           <span>Clear All Filters &amp; Search</span>
@@ -672,99 +672,91 @@ export default function TherapickBookingsView() {
                     <tr 
                       key={b.id} 
                       onClick={() => setSelectedBooking(b)}
-                      className="hover:bg-amber-50/40 transition-colors cursor-pointer group"
+                      className="cursor-pointer group"
                     >
                       {/* 1. Booking ID */}
-                      <td className="py-3.5 px-4">
-                        <div className="font-mono font-extrabold text-neutral-950 group-hover:text-amber-800 transition-colors">
+                      <td>
+                        <div className="font-mono font-bold text-[var(--fitlo-ink)] group-hover:text-[var(--fitlo-accent)] transition-colors">
                           {bookingCode}
                         </div>
-                        <div className="text-[11px] text-stone-400 font-mono mt-0.5">
+                        <div className="text-[11px] text-[var(--fitlo-muted)] font-mono mt-0.5">
                           {displayDate} · {displayTime}
                         </div>
                       </td>
 
                       {/* 2. Customer */}
-                      <td className="py-3.5 px-4">
-                        <div className="font-bold text-neutral-950 text-sm">
+                      <td>
+                        <div className="font-bold text-[var(--fitlo-ink)]">
                           {b.customer_name || b.guest_name || 'Guest'}
                         </div>
                         {b.customer_phone ? (
-                          <div className="text-[11px] text-stone-500 font-mono flex items-center gap-1 mt-0.5">
-                            <Phone size={10} className="text-stone-400" />
+                          <div className="text-[11px] text-[var(--fitlo-muted)] font-mono flex items-center gap-1 mt-0.5">
+                            <Phone size={10} className="text-[var(--fitlo-muted)]" />
                             <span>{b.customer_phone}</span>
                           </div>
                         ) : (
-                          <div className="text-[10px] text-stone-400 italic">No phone recorded</div>
+                          <div className="text-[10px] text-[var(--fitlo-muted)] italic">No phone recorded</div>
                         )}
                       </td>
 
                       {/* 3. Service & Duration */}
-                      <td className="py-3.5 px-4">
-                        <div className="font-semibold text-neutral-900">
+                      <td>
+                        <div className="font-semibold text-[var(--fitlo-ink)]">
                           {b.service_name || b.treatment_name || 'Balinese Traditional'}
                         </div>
-                        <div className="text-[11px] text-stone-500 font-medium mt-0.5">
+                        <div className="text-[11px] text-[var(--fitlo-muted)] font-medium mt-0.5">
                           {b.duration_minutes ? `${b.duration_minutes} min` : '90 min'}
                         </div>
                       </td>
 
                       {/* 4. Partner */}
-                      <td className="py-3.5 px-4">
-                        <div className="font-bold text-neutral-900 text-xs">
+                      <td>
+                        <div className="font-semibold text-[var(--fitlo-ink)] text-xs">
                           {partnerName}
                         </div>
                         {referralCode ? (
                           <div className="inline-flex items-center gap-1 mt-0.5">
-                            <span className="px-1.5 py-0.2 rounded bg-amber-100 text-amber-900 border border-amber-200/80 text-[10px] font-mono font-bold">
+                            <span className="px-1.5 py-0.2 rounded bg-[var(--fitlo-card-2)] text-[var(--fitlo-accent-text)] border border-[var(--fitlo-line)] text-[10px] font-mono font-bold">
                               #{referralCode}
                             </span>
                           </div>
                         ) : (
-                          <div className="text-[10px] text-stone-400">Direct referral</div>
+                          <div className="text-[10px] text-[var(--fitlo-muted)]">Direct referral</div>
                         )}
                       </td>
 
                       {/* 5. Amount */}
-                      <td className="py-3.5 px-4 text-right">
-                        <div className="font-bold font-mono text-neutral-950 text-sm">
+                      <td className="r">
+                        <div className="font-bold fitlo-num text-[var(--fitlo-ink)]">
                           Rp {(b.total_amount || b.revenue || 375000).toLocaleString('id-ID')}
                         </div>
                         <div className="text-[10px] font-medium mt-0.5">
                           {b.payment_status === 'Paid' ? (
-                            <span className="text-emerald-700 font-bold">Paid ({b.payment_method || 'Online'})</span>
+                            <span className="text-[var(--fitlo-good)] font-bold">Paid ({b.payment_method || 'Online'})</span>
                           ) : (
-                            <span className="text-stone-400">Unsettled</span>
+                            <span className="text-[var(--fitlo-muted)]">Unsettled</span>
                           )}
                         </div>
                       </td>
 
                       {/* 6. Status Badge */}
-                      <td className="py-3.5 px-4 text-center">
-                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold capitalize transition-all ${
-                          statusStr === 'confirmed'
-                            ? 'bg-emerald-50 text-emerald-900 border border-emerald-200'
-                            : statusStr === 'completed'
-                            ? 'bg-emerald-100 text-emerald-950 border border-emerald-300 font-extrabold'
+                      <td style={{ textAlign: 'center' }}>
+                        <span className={`fitlo-pill ${
+                          statusStr === 'confirmed' || statusStr === 'completed'
+                            ? 'fitlo-pill--good'
                             : statusStr === 'in_progress'
-                            ? 'bg-sky-50 text-sky-900 border border-sky-200'
+                            ? 'fitlo-pill--info'
                             : statusStr === 'cancelled'
-                            ? 'bg-rose-50 text-rose-800 border border-rose-200'
-                            : 'bg-amber-50 text-amber-900 border border-amber-200'
+                            ? 'fitlo-pill--bad'
+                            : 'fitlo-pill--warn'
                         }`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${
-                            statusStr === 'confirmed' ? 'bg-emerald-500' :
-                            statusStr === 'completed' ? 'bg-emerald-700' :
-                            statusStr === 'in_progress' ? 'bg-sky-500' :
-                            statusStr === 'cancelled' ? 'bg-rose-500' : 'bg-amber-500'
-                          }`} />
-                          <span>{b.status || 'Pending'}</span>
+                          {b.status || 'Pending'}
                         </span>
                       </td>
 
                       {/* 7. Action Arrow */}
-                      <td className="py-3.5 px-3 text-right">
-                        <div className="w-7 h-7 rounded-lg inline-flex items-center justify-center text-stone-400 group-hover:text-neutral-900 group-hover:bg-amber-100 transition-all">
+                      <td className="r">
+                        <div className="w-7 h-7 rounded-lg inline-flex items-center justify-center text-[var(--fitlo-muted)] group-hover:text-[var(--fitlo-ink)] group-hover:bg-[var(--fitlo-card-3)] transition-all">
                           <ChevronRight size={15} />
                         </div>
                       </td>
@@ -778,9 +770,9 @@ export default function TherapickBookingsView() {
 
         {/* Pagination Footer */}
         {filteredBookings.length > 0 && (
-          <div className="px-5 py-3.5 bg-stone-50/70 border-t border-stone-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-            <div className="text-stone-500">
-              Showing <strong className="text-neutral-900">{(currentPage - 1) * pageSize + 1}</strong> to <strong className="text-neutral-900">{Math.min(currentPage * pageSize, filteredBookings.length)}</strong> of <strong className="text-neutral-900">{filteredBookings.length}</strong> bookings
+          <div className="px-5 py-3.5 bg-[var(--fitlo-card-2)] border-t border-[var(--fitlo-line)] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+            <div className="text-[var(--fitlo-muted)]">
+              Showing <strong className="text-[var(--fitlo-ink)] fitlo-num">{(currentPage - 1) * pageSize + 1}</strong> to <strong className="text-[var(--fitlo-ink)] fitlo-num">{Math.min(currentPage * pageSize, filteredBookings.length)}</strong> of <strong className="text-[var(--fitlo-ink)] fitlo-num">{filteredBookings.length}</strong> bookings
             </div>
 
             <div className="flex items-center gap-1.5 self-center sm:self-auto">
@@ -788,7 +780,7 @@ export default function TherapickBookingsView() {
                 type="button"
                 disabled={currentPage === 1}
                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                className="px-2.5 py-1.5 rounded-lg border border-stone-200 bg-white hover:bg-stone-50 text-stone-700 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center gap-1 font-medium transition-colors shadow-2xs"
+                className="fitlo-btn fitlo-btn--ghost !h-8 !px-2.5 disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <ChevronLeft size={13} />
                 <span>Previous</span>
@@ -796,10 +788,9 @@ export default function TherapickBookingsView() {
 
               <div className="flex items-center gap-1 px-1">
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map(pNum => {
-                  // Only display up to 5 page numbers gracefully
                   if (totalPages > 5 && Math.abs(pNum - currentPage) > 2 && pNum !== 1 && pNum !== totalPages) {
                     if (pNum === 2 || pNum === totalPages - 1) {
-                      return <span key={pNum} className="px-1 text-stone-400 font-mono">...</span>;
+                      return <span key={pNum} className="px-1 text-[var(--fitlo-muted)] font-mono">...</span>;
                     }
                     return null;
                   }
@@ -810,8 +801,8 @@ export default function TherapickBookingsView() {
                       onClick={() => setCurrentPage(pNum)}
                       className={`w-7 h-7 rounded-lg font-mono text-xs font-bold transition-all cursor-pointer ${
                         currentPage === pNum
-                          ? 'bg-neutral-900 text-white shadow-xs'
-                          : 'bg-white hover:bg-stone-100 text-stone-700 border border-stone-200'
+                          ? 'bg-[#0b7a73] text-white shadow-xs'
+                          : 'bg-[var(--fitlo-card)] hover:bg-[var(--fitlo-card-3)] text-[var(--fitlo-ink)] border border-[var(--fitlo-line)]'
                       }`}
                     >
                       {pNum}
@@ -824,7 +815,7 @@ export default function TherapickBookingsView() {
                 type="button"
                 disabled={currentPage === totalPages}
                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                className="px-2.5 py-1.5 rounded-lg border border-stone-200 bg-white hover:bg-stone-50 text-stone-700 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center gap-1 font-medium transition-colors shadow-2xs"
+                className="fitlo-btn fitlo-btn--ghost !h-8 !px-2.5 disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <span>Next</span>
                 <ChevronRight size={13} />
@@ -833,6 +824,7 @@ export default function TherapickBookingsView() {
           </div>
         )}
       </div>
+
     </div>
   );
 }
