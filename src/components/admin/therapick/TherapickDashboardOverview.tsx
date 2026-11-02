@@ -11,28 +11,24 @@ import {
   ChevronRight, 
   ChevronDown, 
   Plus, 
-  MoreHorizontal, 
   Sparkles, 
   Users, 
-  Globe, 
   ArrowRight, 
   Clock, 
   CheckCircle2, 
   AlertCircle,
   Eye,
-  Settings as SettingsIcon,
-  Search,
-  Filter,
   Check,
-  XCircle,
-  RotateCcw
+  CalendarDays,
+  Flame,
+  Flower2,
+  Heart
 } from 'lucide-react';
 import { useTherapickAdmin } from '@/context/TherapickAdminContext';
-import { Booking } from '@/components/TherapickBookingManagement';
 
 const formatIDR = (val: number | string | undefined | null) => {
   const num = Number(val) || 0;
-  return `Rp${num.toLocaleString('id-ID')}`;
+  return `Rp ${num.toLocaleString('id-ID')}`;
 };
 
 export default function TherapickDashboardOverview() {
@@ -52,8 +48,6 @@ export default function TherapickDashboardOverview() {
     setSelectedPartner,
     setIsAddBookingOpen,
     setIsAdvancedCalendarOpen,
-    showOnAffiliateCalendars,
-    setShowOnAffiliateCalendars,
     loading
   } = useTherapickAdmin();
 
@@ -68,7 +62,7 @@ export default function TherapickDashboardOverview() {
   // Date Range Picker Dropdown State
   const [dateDropdownOpen, setDateDropdownOpen] = useState(false);
 
-  // Calendar State for Affiliate Split Calendar
+  // Calendar State for Split Calendar
   const [calendarMonth, setCalendarMonth] = useState<Date>(() => new Date());
   const [selectedDateStr, setSelectedDateStr] = useState<string>(() => {
     const now = new Date();
@@ -78,7 +72,7 @@ export default function TherapickDashboardOverview() {
     return `${y}-${m}-${d}`;
   });
 
-  // Booking Summary Metrics for Website Overview (Matching Mockup Image 2)
+  // Booking Summary Metrics for Website Overview
   const bookingSummary = useMemo(() => {
     const total = websiteBookings.length || 86;
     const completed = websiteBookings.filter(b => (b.status || '').toLowerCase() === 'completed' || (b.treatment_status || '').toLowerCase() === 'finished').length || 72;
@@ -96,17 +90,6 @@ export default function TherapickDashboardOverview() {
     const outstandingPayouts = affiliateMetrics.outstandingPayouts || 1260000;
     return { active, total, pendingComm, outstandingPayouts };
   }, [partners, affiliateBookings, affiliateMetrics]);
-
-  // Revenue Trend points (Oct 1, Oct 8, Oct 15, Oct 22, Oct 31)
-  const revenueTrendPoints = useMemo(() => {
-    return [
-      { label: 'Oct 1', value: 6 },
-      { label: 'Oct 8', value: 14 },
-      { label: 'Oct 15', value: 11 },
-      { label: 'Oct 22', value: 22 },
-      { label: 'Oct 31', value: 28 },
-    ];
-  }, []);
 
   // Active bookings list based on current system
   const currentBookings = system === 'website' ? websiteBookings : affiliateBookings;
@@ -171,20 +154,20 @@ export default function TherapickDashboardOverview() {
   };
 
   return (
-    <div className="space-y-6 pb-20 font-sans antialiased text-neutral-900 animate-in fade-in duration-300">
+    <div className="space-y-6 pb-20 font-sans antialiased text-[var(--fitlo-ink)]">
       
       {/* ─────────────────────────────────────────────────────────────
-          1. HEADER GREETING & DATE RANGE CONTROLS (MATCHING MOCKUP)
+          1. HEADER GREETING & DATE RANGE CONTROLS (FITLO EDITORIAL STYLE)
          ───────────────────────────────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-neutral-950 font-sans">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[var(--fitlo-ink)]">
             {system === 'website' ? 'Website Overview' : greeting}
           </h1>
-          <p className="text-xs sm:text-sm text-stone-500 mt-0.5">
+          <p className="text-xs sm:text-sm text-[var(--fitlo-muted)] mt-0.5">
             {system === 'website'
-              ? 'Direct bookings from your website.'
-              : "Here's your affiliate performance today."}
+              ? 'Direct bookings & revenue performance from your website.'
+              : "Here's your affiliate partner performance today."}
           </p>
         </div>
 
@@ -193,16 +176,16 @@ export default function TherapickDashboardOverview() {
           <button
             type="button"
             onClick={() => setDateDropdownOpen(!dateDropdownOpen)}
-            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-stone-200 text-xs font-semibold text-neutral-800 hover:bg-stone-50 shadow-2xs transition-all cursor-pointer"
+            className="fitlo-btn text-xs font-semibold shadow-xs"
           >
-            <CalendarIcon size={14} className="text-stone-500" />
+            <CalendarIcon size={14} className="text-[var(--fitlo-muted)]" />
             <span>{dateRange.label || 'Oct 1, 2026 - Oct 31, 2026'}</span>
-            <ChevronDown size={14} className={`text-stone-400 transition-transform ${dateDropdownOpen ? 'rotate-180' : ''}`} />
+            <ChevronDown size={14} className={`text-[var(--fitlo-muted)] transition-transform ${dateDropdownOpen ? 'rotate-180' : ''}`} />
           </button>
 
           {dateDropdownOpen && (
-            <div className="absolute right-0 top-full mt-2 w-48 bg-white border border-stone-200 rounded-2xl p-1.5 shadow-xl z-40 animate-in fade-in zoom-in-95">
-              <div className="px-3 py-1.5 text-[10px] font-mono font-bold uppercase tracking-wider text-stone-600 border-b border-stone-100">
+            <div className="absolute right-0 top-full mt-2 w-52 bg-[var(--fitlo-card)] border border-[var(--fitlo-line-2)] rounded-2xl p-1.5 shadow-xl z-40 animate-in fade-in zoom-in-95">
+              <div className="px-3 py-1.5 text-[10px] font-mono font-bold uppercase tracking-wider text-[var(--fitlo-muted)] border-b border-[var(--fitlo-line)]">
                 Select Date Window
               </div>
               <div className="py-1 space-y-0.5">
@@ -222,7 +205,9 @@ export default function TherapickDashboardOverview() {
                       setDateDropdownOpen(false);
                     }}
                     className={`w-full text-left px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                      dateRange.preset === opt.id ? 'bg-[#FACC15] text-neutral-950 font-bold' : 'text-stone-700 hover:bg-stone-50'
+                      dateRange.preset === opt.id 
+                        ? 'bg-[var(--fitlo-accent)] text-white font-bold' 
+                        : 'text-[var(--fitlo-ink-2)] hover:bg-[var(--fitlo-card-2)]'
                     }`}
                   >
                     {opt.label}
@@ -235,369 +220,422 @@ export default function TherapickDashboardOverview() {
       </div>
 
       {/* ─────────────────────────────────────────────────────────────
-          2. PRIMARY FINANCIAL KPI CARDS (MATCHING MOCKUP)
+          2. FITLO 4 TINTED PASTEL KPI CARDS
          ───────────────────────────────────────────────────────────── */}
-      {system === 'website' ? (
-        /* Website 3 Primary KPI Cards */
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {/* 1. Revenue Card */}
-          <div className="bg-white border border-stone-200/90 rounded-2xl p-5 shadow-2xs hover:shadow-xs transition-shadow">
-            <div className="flex items-center gap-3 mb-2.5">
-              <div className="w-8 h-8 rounded-xl bg-stone-100 flex items-center justify-center text-stone-700">
-                <Layers size={16} />
-              </div>
-              <span className="text-xs font-semibold text-stone-500">Revenue</span>
-            </div>
-            <div className="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-950 font-sans">
-              {formatIDR(websiteMetrics.totalRevenue || 28460000)}
-            </div>
-            <div className="flex items-center gap-1.5 mt-2 text-[11px] font-semibold text-emerald-600">
-              <span>▲ +12%</span>
-              <span className="text-stone-400 font-normal">vs last period</span>
-            </div>
+      <div className="fitlo-kpis">
+        {/* Tile 1: Soft Peach - Total Revenue / Commission */}
+        <div className="fitlo-kpi fitlo-kpi--1">
+          <div className="fitlo-kpi__label">
+            <Layers size={16} />
+            <span>{system === 'website' ? 'Total Revenue' : 'Affiliate Commission'}</span>
           </div>
-
-          {/* 2. Therapist Payment Card */}
-          <div className="bg-white border border-stone-200/90 rounded-2xl p-5 shadow-2xs hover:shadow-xs transition-shadow">
-            <div className="flex items-center gap-3 mb-2.5">
-              <div className="w-8 h-8 rounded-xl bg-stone-100 flex items-center justify-center text-stone-700">
-                <User size={16} />
-              </div>
-              <span className="text-xs font-semibold text-stone-500">Therapist Payment</span>
-            </div>
-            <div className="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-950 font-sans">
-              {formatIDR(websiteMetrics.therapistPayments || 15770000)}
-            </div>
-            <div className="flex items-center gap-1.5 mt-2 text-[11px] font-semibold text-stone-500">
-              <span>▼ -8%</span>
-              <span className="text-stone-400 font-normal">vs last period</span>
-            </div>
+          <div className="fitlo-kpi__value">
+            {system === 'website' 
+              ? formatIDR(websiteMetrics.totalRevenue || 28450000) 
+              : formatIDR(affiliateMetrics.commission || 4280000)}
           </div>
-
-          {/* 3. Net Profit Card (Light Yellow Highlight Card) */}
-          <div className="bg-[#FEF3C7]/80 border border-amber-200/90 rounded-2xl p-5 shadow-2xs hover:shadow-xs transition-shadow">
-            <div className="flex items-center gap-3 mb-2.5">
-              <div className="w-8 h-8 rounded-xl bg-amber-200/60 flex items-center justify-center text-amber-900">
-                <TrendingUp size={16} />
-              </div>
-              <span className="text-xs font-bold text-amber-900">Net Profit</span>
-            </div>
-            <div className="text-2xl sm:text-3xl font-extrabold tracking-tight text-neutral-950 font-sans">
-              {formatIDR(websiteMetrics.netProfit || 12690000)}
-            </div>
-            <div className="flex items-center gap-1.5 mt-2 text-[11px] font-bold text-emerald-700">
-              <span>▲ +18%</span>
-              <span className="text-amber-800/80 font-normal">vs last period</span>
-            </div>
-          </div>
-        </div>
-      ) : (
-        /* Affiliate 4 KPI Cards */
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-white border border-stone-200/90 rounded-2xl p-5 shadow-2xs">
-            <div className="flex items-center gap-3 mb-2.5">
-              <div className="w-8 h-8 rounded-xl bg-stone-100 flex items-center justify-center text-stone-700">
-                <Layers size={16} />
-              </div>
-              <span className="text-xs font-semibold text-stone-500">Revenue</span>
-            </div>
-            <div className="text-xl sm:text-2xl font-extrabold text-neutral-950">
-              {formatIDR(affiliateMetrics.affiliateRevenue || 28460000)}
-            </div>
-            <div className="text-[11px] font-semibold text-emerald-600 mt-2">
-              ▲ +{affiliateMetrics.revChangePct}% vs last period
-            </div>
-          </div>
-
-          <div className="bg-white border border-stone-200/90 rounded-2xl p-5 shadow-2xs">
-            <div className="flex items-center gap-3 mb-2.5">
-              <div className="w-8 h-8 rounded-xl bg-stone-100 flex items-center justify-center text-stone-700">
-                <User size={16} />
-              </div>
-              <span className="text-xs font-semibold text-stone-500">Therapist Fee</span>
-            </div>
-            <div className="text-xl sm:text-2xl font-extrabold text-neutral-950">
-              {formatIDR(affiliateMetrics.therapistFees || 15770000)}
-            </div>
-            <div className="text-[11px] font-semibold text-rose-600 mt-2">
-              ▲ +8% vs last period
-            </div>
-          </div>
-
-          <div className="bg-white border border-stone-200/90 rounded-2xl p-5 shadow-2xs">
-            <div className="flex items-center gap-3 mb-2.5">
-              <div className="w-8 h-8 rounded-xl bg-stone-100 flex items-center justify-center text-stone-700">
-                <Percent size={16} />
-              </div>
-              <span className="text-xs font-semibold text-stone-500">Commission</span>
-            </div>
-            <div className="text-xl sm:text-2xl font-extrabold text-neutral-950">
-              {formatIDR(affiliateMetrics.commission || 4269000)}
-            </div>
-            <div className="text-[11px] font-semibold text-emerald-600 mt-2">
-              ▲ +10% vs last period
-            </div>
-          </div>
-
-          <div className="bg-[#FEF3C7]/80 border border-amber-200/90 rounded-2xl p-5 shadow-2xs">
-            <div className="flex items-center gap-3 mb-2.5">
-              <div className="w-8 h-8 rounded-xl bg-amber-200/60 flex items-center justify-center text-amber-900">
-                <TrendingUp size={16} />
-              </div>
-              <span className="text-xs font-bold text-amber-900">Net Profit</span>
-            </div>
-            <div className="text-xl sm:text-2xl font-extrabold text-neutral-950">
-              {formatIDR(affiliateMetrics.netProfit || 8421000)}
-            </div>
-            <div className="text-[11px] font-bold text-emerald-700 mt-2">
-              ▲ +18% vs last period
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ─────────────────────────────────────────────────────────────
-          3. REVENUE TREND + SUMMARY ROW (MATCHING MOCKUP IMAGE 2)
-         ───────────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-        
-        {/* Left Card: Revenue Trend Area Chart (~8 cols / 65%) */}
-        <div className="lg:col-span-8 bg-white border border-stone-200/90 rounded-2xl p-6 shadow-2xs space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-bold text-neutral-900 tracking-tight">
-              Revenue Trend
-            </h2>
-            <span className="text-[11px] font-mono text-stone-400">
-              Oct 1 – Oct 31, 2026
+          <div className="fitlo-kpi__foot">
+            <span className="fitlo-delta fitlo-delta--up">
+              ↑ 14.2%
             </span>
-          </div>
-
-          {/* Interactive SVG Smooth Line & Area Chart */}
-          <div className="pt-2">
-            <div className="relative h-44 w-full">
-              {/* Y-Axis Grid Lines */}
-              <div className="absolute inset-0 flex flex-col justify-between pointer-events-none text-[10px] font-mono text-stone-300">
-                <div className="border-b border-stone-100 w-full flex items-center justify-between">
-                  <span>30M</span>
-                </div>
-                <div className="border-b border-stone-100 w-full flex items-center justify-between">
-                  <span>20M</span>
-                </div>
-                <div className="border-b border-stone-100 w-full flex items-center justify-between">
-                  <span>10M</span>
-                </div>
-                <div className="w-full flex items-center justify-between text-stone-400">
-                  <span>0</span>
-                </div>
-              </div>
-
-              {/* Smooth Trend Curve */}
-              <svg className="w-full h-full overflow-visible" preserveAspectRatio="none" viewBox="0 0 500 150">
-                <defs>
-                  <linearGradient id="yellowGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stopColor="#FACC15" stopOpacity="0.45" />
-                    <stop offset="100%" stopColor="#FACC15" stopOpacity="0.0" />
-                  </linearGradient>
-                </defs>
-
-                {/* Shaded Area */}
-                <path
-                  d="M 20 120 C 100 110, 150 90, 200 80 C 270 70, 320 95, 380 40 C 430 15, 470 20, 480 15 L 480 150 L 20 150 Z"
-                  fill="url(#yellowGradient)"
-                />
-
-                {/* Line Path */}
-                <path
-                  d="M 20 120 C 100 110, 150 90, 200 80 C 270 70, 320 95, 380 40 C 430 15, 470 20, 480 15"
-                  fill="none"
-                  stroke="#FACC15"
-                  strokeWidth="3.5"
-                  strokeLinecap="round"
-                />
-
-                {/* Trend Points */}
-                <circle cx="20" cy="120" r="3.5" fill="#FACC15" />
-                <circle cx="200" cy="80" r="3.5" fill="#FACC15" />
-                <circle cx="380" cy="40" r="3.5" fill="#FACC15" />
-                <circle cx="480" cy="15" r="4.5" fill="#FACC15" stroke="#FFF" strokeWidth="2" />
-              </svg>
-            </div>
-
-            {/* X-Axis Date Labels */}
-            <div className="flex items-center justify-between text-[11px] font-mono text-stone-500 pt-3">
-              <span>Oct 1</span>
-              <span>Oct 8</span>
-              <span>Oct 15</span>
-              <span>Oct 22</span>
-              <span>Oct 31</span>
-            </div>
+            <span>vs previous period</span>
+            {/* Embedded SVG sparkline */}
+            <svg className="spark" viewBox="0 0 60 20">
+              <path
+                d="M 0 16 Q 15 4, 30 11 T 60 3"
+                fill="none"
+                stroke="#145c33"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+            </svg>
           </div>
         </div>
 
-        {/* Right Card: Summary Card (~4 cols / 35%) */}
-        <div className="lg:col-span-4 bg-white border border-stone-200/90 rounded-2xl p-6 shadow-2xs flex flex-col justify-between">
-          <div>
-            <h2 className="text-sm font-bold text-neutral-900 tracking-tight mb-4">
-              {system === 'website' ? 'Booking Summary' : 'Partner Summary'}
-            </h2>
-
-            {system === 'website' ? (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between py-2 border-b border-stone-100">
-                  <div className="flex items-center gap-2 text-stone-500 text-xs">
-                    <CalendarIcon size={14} className="text-stone-400" />
-                    <span>Total Bookings</span>
-                  </div>
-                  <span className="text-sm font-extrabold text-neutral-900 font-mono">
-                    {bookingSummary.total}
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between py-2 border-b border-stone-100">
-                  <div className="flex items-center gap-2 text-stone-500 text-xs">
-                    <CheckCircle2 size={14} className="text-emerald-500" />
-                    <span>Completed</span>
-                  </div>
-                  <span className="text-sm font-extrabold text-emerald-700 font-mono">
-                    {bookingSummary.completed}
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between py-2 border-b border-stone-100">
-                  <div className="flex items-center gap-2 text-stone-500 text-xs">
-                    <Clock size={14} className="text-amber-500" />
-                    <span>Upcoming</span>
-                  </div>
-                  <span className="text-sm font-extrabold text-amber-700 font-mono">
-                    {bookingSummary.upcoming}
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between py-2 border-b border-stone-100">
-                  <div className="flex items-center gap-2 text-stone-500 text-xs">
-                    <XCircle size={14} className="text-rose-400" />
-                    <span>Cancelled</span>
-                  </div>
-                  <span className="text-sm font-extrabold text-rose-600 font-mono">
-                    {bookingSummary.cancelled}
-                  </span>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between py-2 border-b border-stone-100">
-                  <span className="text-xs text-stone-500">Active Partners</span>
-                  <span className="text-sm font-extrabold text-neutral-900 font-mono">{partnerSummary.active}</span>
-                </div>
-                <div className="flex items-center justify-between py-2 border-b border-stone-100">
-                  <span className="text-xs text-stone-500">Total Bookings</span>
-                  <span className="text-sm font-extrabold text-neutral-900 font-mono">{partnerSummary.total}</span>
-                </div>
-                <div className="flex items-center justify-between py-2 border-b border-stone-100">
-                  <span className="text-xs text-stone-500">Pending Commission</span>
-                  <span className="text-sm font-extrabold text-amber-700 font-mono">{formatIDR(partnerSummary.pendingComm)}</span>
-                </div>
-                <div className="flex items-center justify-between py-2 border-b border-stone-100">
-                  <span className="text-xs text-stone-500">Outstanding Payouts</span>
-                  <span className="text-sm font-extrabold text-neutral-900 font-mono">{formatIDR(partnerSummary.outstandingPayouts)}</span>
-                </div>
-              </div>
-            )}
+        {/* Tile 2: Soft Cyan - Completed Bookings */}
+        <div className="fitlo-kpi fitlo-kpi--2">
+          <div className="fitlo-kpi__label">
+            <CalendarDays size={16} />
+            <span>Completed Bookings</span>
           </div>
+          <div className="fitlo-kpi__value">
+            {bookingSummary.completed}
+          </div>
+          <div className="fitlo-kpi__foot">
+            <span className="fitlo-delta fitlo-delta--up">
+              ↑ 8.4%
+            </span>
+            <span>of {bookingSummary.total} total</span>
+            <svg className="spark" viewBox="0 0 60 20">
+              <path
+                d="M 0 14 Q 20 2, 40 12 T 60 5"
+                fill="none"
+                stroke="#08665f"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+            </svg>
+          </div>
+        </div>
 
-          <div className="mt-4 pt-3 border-t border-stone-100 flex items-center justify-between text-xs text-stone-500">
-            <span>Direct Reservations</span>
-            <button
-              type="button"
-              onClick={() => setActiveTab('bookings')}
-              className="font-bold text-amber-800 hover:text-neutral-950 flex items-center gap-1 cursor-pointer"
-            >
-              <span>View All</span>
-              <ArrowRight size={13} />
-            </button>
+        {/* Tile 3: Soft Lemon - In-Flight Guests or Active Partners */}
+        <div className="fitlo-kpi fitlo-kpi--3">
+          <div className="fitlo-kpi__label">
+            <Users size={16} />
+            <span>{system === 'website' ? 'Upcoming Bookings' : 'Active Partners'}</span>
+          </div>
+          <div className="fitlo-kpi__value">
+            {system === 'website' ? bookingSummary.upcoming : partnerSummary.active}
+          </div>
+          <div className="fitlo-kpi__foot">
+            <span className="fitlo-delta fitlo-delta--up">
+              ● Active
+            </span>
+            <span>{system === 'website' ? 'Dispatched / In-flight' : 'In network'}</span>
+            <svg className="spark" viewBox="0 0 60 20">
+              <path
+                d="M 0 15 Q 18 10, 35 6 T 60 2"
+                fill="none"
+                stroke="#8a5600"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+            </svg>
+          </div>
+        </div>
+
+        {/* Tile 4: Soft Pebble - Net Profit or Outstanding Payouts */}
+        <div className="fitlo-kpi fitlo-kpi--4">
+          <div className="fitlo-kpi__label">
+            <TrendingUp size={16} />
+            <span>{system === 'website' ? 'Estimated Net Margin' : 'Pending Payouts'}</span>
+          </div>
+          <div className="fitlo-kpi__value">
+            {system === 'website'
+              ? formatIDR(websiteMetrics.netProfit || 12850000)
+              : formatIDR(partnerSummary.outstandingPayouts)}
+          </div>
+          <div className="fitlo-kpi__foot">
+            <span className="fitlo-delta fitlo-delta--up">
+              ↑ 5.2%
+            </span>
+            <span>{system === 'website' ? '45% net margin' : 'Ready to disburse'}</span>
+            <svg className="spark" viewBox="0 0 60 20">
+              <path
+                d="M 0 18 Q 15 12, 30 14 T 60 6"
+                fill="none"
+                stroke="#161a19"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+            </svg>
           </div>
         </div>
       </div>
 
       {/* ─────────────────────────────────────────────────────────────
-          4. RECENT DIRECT WEBSITE BOOKINGS TABLE (MATCHING MOCKUP)
+          3. REVENUE STUDIO & GLOWING CURVED AREA CHART
          ───────────────────────────────────────────────────────────── */}
-      <div className="bg-white border border-stone-200/90 rounded-2xl p-6 shadow-2xs space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-bold text-neutral-900 tracking-tight">
-            Recent Bookings
-          </h2>
+      <div className="fitlo-card">
+        <div className="fitlo-chead">
+          <div>
+            <h2>Revenue Studio</h2>
+            <p>
+              {system === 'website' ? 'Direct booking revenue over time' : 'Affiliate commissions & booking volume'} · +14.2% vs previous window
+            </p>
+          </div>
+
           <button
             type="button"
-            onClick={() => setActiveTab('bookings')}
-            className="text-xs font-bold text-amber-800 hover:text-neutral-950 flex items-center gap-1 cursor-pointer"
+            onClick={() => setActiveTab('revenue')}
+            className="text-xs font-semibold text-[var(--fitlo-accent-text)] hover:underline flex items-center gap-1 cursor-pointer"
           >
-            <span>View All Bookings</span>
+            <span>Full analytics</span>
             <ArrowRight size={13} />
           </button>
         </div>
 
-        <div className="overflow-x-auto no-scrollbar">
-          <table className="w-full text-left text-xs">
-            <thead>
-              <tr className="border-b border-stone-200 bg-stone-50/50 text-[11px] font-mono uppercase font-bold text-stone-400">
-                <th className="py-2.5 px-3">Booking ID</th>
-                <th className="py-2.5 px-3">Customer</th>
-                <th className="py-2.5 px-3">Service</th>
-                <th className="py-2.5 px-3">Date & Time</th>
-                <th className="py-2.5 px-3 text-right">Amount</th>
-                <th className="py-2.5 px-3 text-center">Status</th>
-                <th className="py-2.5 px-3 text-right"></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-stone-100">
-              {websiteBookings.slice(0, 5).map(b => {
-                const amount = Number(b.revenue || b.total_amount || 375000);
-                const status = b.status || 'Confirmed';
+        {/* SVG Glowing Area Chart */}
+        <div className="relative pt-6 pb-2 w-full select-none">
+          <div className="absolute left-0 inset-y-6 flex flex-col justify-between text-[11px] font-mono text-[var(--fitlo-muted)] pointer-events-none">
+            <span>Rp 30M</span>
+            <span>Rp 20M</span>
+            <span>Rp 10M</span>
+            <span>Rp 0</span>
+          </div>
 
+          <div className="pl-14 w-full h-48 sm:h-56 relative">
+            <svg className="w-full h-full overflow-visible" viewBox="0 0 600 200" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="fitloRevenueGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="var(--fitlo-accent)" stopOpacity="0.32" />
+                  <stop offset="70%" stopColor="var(--fitlo-accent)" stopOpacity="0.05" />
+                  <stop offset="100%" stopColor="var(--fitlo-accent)" stopOpacity="0" />
+                </linearGradient>
+              </defs>
+
+              {/* Grid Lines */}
+              <line x1="0" y1="10" x2="600" y2="10" stroke="var(--fitlo-line)" strokeDasharray="3 4" strokeWidth="1" />
+              <line x1="0" y1="70" x2="600" y2="70" stroke="var(--fitlo-line)" strokeDasharray="3 4" strokeWidth="1" />
+              <line x1="0" y1="130" x2="600" y2="130" stroke="var(--fitlo-line)" strokeDasharray="3 4" strokeWidth="1" />
+              <line x1="0" y1="190" x2="600" y2="190" stroke="var(--fitlo-line)" strokeWidth="1" />
+
+              {/* Dashed Previous Window Comparison */}
+              <path
+                d="M 0 170 C 120 160, 240 150, 360 135 C 480 120, 540 110, 600 95"
+                fill="none"
+                stroke="var(--fitlo-muted)"
+                strokeWidth="1.6"
+                strokeDasharray="4 4"
+                opacity="0.55"
+              />
+
+              {/* Main Glowing Area Fill */}
+              <path
+                d="M 0 165 C 130 150, 240 135, 360 100 C 460 70, 530 45, 600 30 L 600 190 L 0 190 Z"
+                fill="url(#fitloRevenueGrad)"
+              />
+
+              {/* Main Curve */}
+              <path
+                d="M 0 165 C 130 150, 240 135, 360 100 C 460 70, 530 45, 600 30"
+                fill="none"
+                stroke="var(--fitlo-accent)"
+                strokeWidth="2.8"
+                strokeLinecap="round"
+              />
+
+              {/* Interactive Curve Points */}
+              {[
+                { x: 0, y: 165, val: 'Rp 6M' },
+                { x: 150, y: 145, val: 'Rp 14M' },
+                { x: 300, y: 120, val: 'Rp 19M' },
+                { x: 450, y: 65, val: 'Rp 24M' },
+                { x: 600, y: 30, val: 'Rp 28M' }
+              ].map((pt, i) => (
+                <circle
+                  key={i}
+                  cx={pt.x}
+                  cy={pt.y}
+                  r="4"
+                  fill="var(--fitlo-card)"
+                  stroke="var(--fitlo-accent)"
+                  strokeWidth="2.5"
+                />
+              ))}
+            </svg>
+          </div>
+
+          {/* X Axis Labels */}
+          <div className="pl-14 pt-3 flex justify-between text-[11px] font-semibold text-[var(--fitlo-muted)]">
+            <span>Oct 1</span>
+            <span>Oct 8</span>
+            <span>Oct 15</span>
+            <span>Oct 22</span>
+            <span>Oct 31</span>
+          </div>
+        </div>
+      </div>
+
+      {/* ─────────────────────────────────────────────────────────────
+          4. SPLIT GRID: RECENT BOOKINGS TABLE & BEST PERFORMERS
+         ───────────────────────────────────────────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        
+        {/* Left Column (8 cols): Recent Bookings Table */}
+        <div className="lg:col-span-8 fitlo-card fitlo-card--flush">
+          <div className="fitlo-chead p-5 pb-3">
+            <div>
+              <h2>Recent Reservations</h2>
+              <p>Click any row to open the full booking drawer</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setActiveTab('bookings')}
+              className="text-xs font-semibold text-[var(--fitlo-accent-text)] hover:underline flex items-center gap-1 cursor-pointer"
+            >
+              <span>View All</span>
+              <ArrowRight size={13} />
+            </button>
+          </div>
+
+          <div className="fitlo-table-wrap">
+            <table className="fitlo-table">
+              <thead>
+                <tr>
+                  <th>Booking</th>
+                  <th>Customer</th>
+                  <th>Service</th>
+                  <th>Date & Time</th>
+                  <th className="r">Amount</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {currentBookings.slice(0, 5).map(b => {
+                  const amount = Number(b.revenue || b.total_amount || 375000);
+                  const status = b.status || 'Confirmed';
+                  const initials = (b.guest_name || b.customer_name || 'Guest')
+                    .split(' ')
+                    .map((p: string) => p[0])
+                    .join('')
+                    .slice(0, 2)
+                    .toUpperCase();
+
+                  return (
+                    <tr
+                      key={b.id}
+                      onClick={() => setSelectedBooking(b)}
+                      className="cursor-pointer"
+                    >
+                      <td className="font-mono text-xs font-bold text-[var(--fitlo-ink)]">
+                        {b.reference_number || String(b.id || '').slice(0, 8)}
+                      </td>
+                      <td>
+                        <div className="flex items-center gap-2.5">
+                          <div className="fitlo-av" style={{ width: '28px', height: '28px', fontSize: '10px' }}>
+                            {initials}
+                          </div>
+                          <span className="font-semibold text-xs text-[var(--fitlo-ink)]">
+                            {b.guest_name || b.customer_name || 'Valued Guest'}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="text-xs text-[var(--fitlo-muted)] max-w-[140px] truncate">
+                        {b.treatment_name || b.service_name || 'Balinese Traditional Massage'}
+                      </td>
+                      <td className="font-mono text-[11px] text-[var(--fitlo-muted)]">
+                        {b.booking_date || b.created_at?.split('T')[0]} {b.time || '14:00'}
+                      </td>
+                      <td className="r font-mono font-bold text-xs text-[var(--fitlo-ink)]">
+                        {formatIDR(amount)}
+                      </td>
+                      <td>
+                        {status === 'Completed' || status === 'Finished' ? (
+                          <span className="fitlo-pill fitlo-pill--good">Completed</span>
+                        ) : status === 'Confirmed' ? (
+                          <span className="fitlo-pill fitlo-pill--info">Confirmed</span>
+                        ) : status === 'In Progress' ? (
+                          <span className="fitlo-pill fitlo-pill--warn">In Progress</span>
+                        ) : (
+                          <span className="fitlo-pill fitlo-pill--bad">Cancelled</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Right Column (4 cols): Selling Best & Team Activity */}
+        <div className="lg:col-span-4 space-y-5">
+          {/* Selling Best Rituals */}
+          <div className="fitlo-card">
+            <div className="fitlo-chead">
+              <div>
+                <h2>Top Rituals</h2>
+                <p>By demand this month</p>
+              </div>
+              <Sparkles size={16} className="text-[var(--fitlo-accent)]" />
+            </div>
+
+            <div className="space-y-3.5 pt-1">
+              {[
+                { name: 'Balinese Deep Tissue', units: 48, pct: 85, icon: Flame },
+                { name: 'Signature Island Sanctuary', units: 36, pct: 65, icon: Flower2 },
+                { name: 'Couples Rejuvenation', units: 22, pct: 45, icon: Heart },
+              ].map((item, idx) => {
+                const Icon = item.icon;
                 return (
-                  <tr
-                    key={b.id}
-                    onClick={() => setSelectedBooking(b)}
-                    className="hover:bg-stone-50/70 transition-colors cursor-pointer"
-                  >
-                    <td className="py-3 px-3 font-mono font-bold text-neutral-900">
-                      {b.reference_number || String(b.id || '').slice(0, 8)}
-                    </td>
-                    <td className="py-3 px-3 font-semibold text-neutral-900">
-                      {b.guest_name || b.customer_name || 'Guest'}
-                    </td>
-                    <td className="py-3 px-3 text-stone-600">
-                      {b.treatment_name || b.service_name || 'Balinese Traditional Massage'}
-                    </td>
-                    <td className="py-3 px-3 text-stone-500 font-mono text-[11px]">
-                      {b.booking_date || b.created_at?.split('T')[0]} {b.time || '14:00'}
-                    </td>
-                    <td className="py-3 px-3 text-right font-mono font-bold text-neutral-900">
-                      {formatIDR(amount)}
-                    </td>
-                    <td className="py-3 px-3 text-center">
-                      <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold ${
-                        status === 'Completed' || status === 'Finished'
-                          ? 'bg-emerald-100 text-emerald-800'
-                          : status === 'Confirmed'
-                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                          : status === 'In Progress'
-                          ? 'bg-amber-100 text-amber-800'
-                          : 'bg-rose-100 text-rose-800'
-                      }`}>
-                        <span className="w-1.5 h-1.5 rounded-full bg-current" />
-                        <span>{status}</span>
-                      </span>
-                    </td>
-                    <td className="py-3 px-3 text-right text-stone-400 font-bold">
-                      &gt;
-                    </td>
-                  </tr>
+                  <div key={idx} className="space-y-1.5">
+                    <div className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-2">
+                        <Icon size={14} className="text-[var(--fitlo-accent)]" />
+                        <span className="font-semibold text-[var(--fitlo-ink)]">{item.name}</span>
+                      </div>
+                      <span className="font-mono text-[var(--fitlo-muted)]">{item.units}</span>
+                    </div>
+                    <div className="fitlo-level">
+                      <i style={{ width: `${item.pct}%` }} />
+                    </div>
+                  </div>
                 );
               })}
-            </tbody>
-          </table>
+            </div>
+          </div>
+
+          {/* Interactive Split Day Calendar Schedule */}
+          <div className="fitlo-card">
+            <div className="fitlo-chead">
+              <div>
+                <h2>Booking Calendar</h2>
+                <p>{calendarMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</p>
+              </div>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={handlePrevMonth}
+                  className="p-1 rounded-lg hover:bg-[var(--fitlo-card-2)] text-[var(--fitlo-muted)] hover:text-[var(--fitlo-ink)] cursor-pointer"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <button
+                  type="button"
+                  onClick={handleNextMonth}
+                  className="p-1 rounded-lg hover:bg-[var(--fitlo-card-2)] text-[var(--fitlo-muted)] hover:text-[var(--fitlo-ink)] cursor-pointer"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            </div>
+
+            {/* Calendar Grid */}
+            <div className="grid grid-cols-7 gap-1 text-center text-xs pt-1">
+              {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
+                <span key={i} className="font-bold text-[10px] text-[var(--fitlo-muted)] pb-1">{d}</span>
+              ))}
+
+              {calendarDays.map((d, i) => {
+                if (!d.dayNumber) {
+                  return <div key={`empty-${i}`} className="h-7" />;
+                }
+
+                return (
+                  <button
+                    key={d.dateStr}
+                    type="button"
+                    onClick={() => d.dateStr && setSelectedDateStr(d.dateStr)}
+                    className={`h-7 w-7 mx-auto rounded-full text-xs font-semibold flex items-center justify-center transition-all cursor-pointer relative ${
+                      d.isSelected
+                        ? 'bg-[var(--fitlo-accent)] text-white font-bold shadow-xs'
+                        : d.isToday
+                        ? 'bg-[var(--fitlo-card-2)] text-[var(--fitlo-ink)] font-bold ring-1 ring-[var(--fitlo-accent)]'
+                        : 'text-[var(--fitlo-ink)] hover:bg-[var(--fitlo-card-2)]'
+                    }`}
+                  >
+                    <span>{d.dayNumber}</span>
+                    {d.count > 0 && !d.isSelected && (
+                      <span className="w-1 h-1 rounded-full bg-[var(--fitlo-now)] absolute bottom-0.5" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Selected Date Summary */}
+            <div className="mt-3 pt-3 border-t border-[var(--fitlo-line)] flex items-center justify-between text-xs text-[var(--fitlo-muted)]">
+              <span>{selectedDateBookings.length} bookings on this date</span>
+              <button
+                type="button"
+                onClick={() => setIsAdvancedCalendarOpen(true)}
+                className="font-bold text-[var(--fitlo-accent-text)] hover:underline cursor-pointer"
+              >
+                Schedule →
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>

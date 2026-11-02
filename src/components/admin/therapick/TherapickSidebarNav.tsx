@@ -2,10 +2,10 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { usePathname, useSearchParams, useRouter } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { 
   LayoutDashboard, CalendarDays, Calendar, Users, Layers, 
-  TrendingUp, Wallet, FileText, Settings, User, Receipt, Sparkles, DollarSign, Clock 
+  TrendingUp, Wallet, FileText, Settings, Receipt, Sparkles, Clock, Plus 
 } from 'lucide-react';
 import { useTherapickAdmin } from '@/context/TherapickAdminContext';
 
@@ -20,15 +20,14 @@ interface NavItemDef {
 export default function TherapickSidebarNav() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const router = useRouter();
-  const { system, activeTab, setActiveTab } = useTherapickAdmin();
+  const { system, setActiveTab, setIsAddBookingOpen } = useTherapickAdmin();
 
   const currentTab = searchParams.get('tab') || (pathname === '/admin/bookings' ? 'bookings' : pathname === '/admin/partners' ? 'partners' : pathname === '/admin/commissions' ? 'commission' : pathname === '/admin/payouts' ? 'payouts' : pathname === '/admin/settings' ? 'settings' : 'overview');
 
-  // Website System Navigation (10 Items from Mockup)
+  // Website System Navigation (Fitlo 10-Item Nav)
   const websitePrimaryItems: NavItemDef[] = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard, href: '/admin?brand=therapick&tab=overview' },
-    { id: 'bookings', label: 'Bookings', icon: CalendarDays, href: '/admin?brand=therapick&tab=bookings' },
+    { id: 'bookings', label: 'Bookings', icon: CalendarDays, href: '/admin?brand=therapick&tab=bookings', badge: 'Live' },
     { id: 'calendar', label: 'Calendar', icon: Calendar, href: '/admin?brand=therapick&tab=calendar' },
     { id: 'therapists', label: 'Therapists & Fees', icon: Clock, href: '/admin?brand=therapick&tab=therapists' },
     { id: 'services', label: 'Menu Overview', icon: Layers, href: '/admin?brand=therapick&tab=services' },
@@ -39,10 +38,10 @@ export default function TherapickSidebarNav() {
     { id: 'settings', label: 'Settings', icon: Settings, href: '/admin?brand=therapick&tab=settings' },
   ];
 
-  // Affiliate System Navigation (8 Items from Mockup)
+  // Affiliate System Navigation (Fitlo 8-Item Nav)
   const affiliatePrimaryItems: NavItemDef[] = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard, href: '/admin?brand=therapick&tab=overview' },
-    { id: 'partners', label: 'Partners', icon: Users, href: '/admin?brand=therapick&tab=partners' },
+    { id: 'partners', label: 'Partners', icon: Users, href: '/admin?brand=therapick&tab=partners', badge: 'Active' },
     { id: 'bookings', label: 'Bookings', icon: CalendarDays, href: '/admin?brand=therapick&tab=bookings' },
     { id: 'calendar', label: 'Calendar', icon: Calendar, href: '/admin?brand=therapick&tab=calendar' },
     { id: 'commission', label: 'Commission', icon: Receipt, href: '/admin?brand=therapick&tab=commission' },
@@ -51,8 +50,6 @@ export default function TherapickSidebarNav() {
     { id: 'settings', label: 'Settings', icon: Settings, href: '/admin?brand=therapick&tab=settings' },
   ];
 
-  const secondaryItems: NavItemDef[] = [];
-
   const primaryItems = system === 'website' ? websitePrimaryItems : affiliatePrimaryItems;
 
   const handleNavClick = (item: NavItemDef) => {
@@ -60,19 +57,19 @@ export default function TherapickSidebarNav() {
   };
 
   return (
-    <aside className="hidden lg:flex flex-col w-60 lg:w-64 shrink-0 bg-[#0F172A] text-slate-300 p-4 select-none sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto no-scrollbar border-r border-slate-800">
+    <aside className="fitlo-side hidden lg:flex select-none">
       
-      {/* System Indicator Pill in Sidebar */}
-      <div className="mb-4 px-2">
-        <div className="flex items-center justify-between text-[11px] font-mono uppercase tracking-wider text-slate-400 pb-2 border-b border-slate-800/80">
-          <span>{system === 'website' ? 'Website Portal' : 'Affiliate Portal'}</span>
-          <span className="w-2 h-2 rounded-full bg-[#facc15]" />
+      {/* Fitlo Brand Mark & Title */}
+      <Link href="/admin?brand=therapick&tab=overview" className="fitlo-brand">
+        <div className="fitlo-mark">
+          <Sparkles size={20} strokeWidth={2.2} />
         </div>
-      </div>
+        <b>Therapick</b>
+      </Link>
 
-      {/* Primary Items */}
-      <div className="space-y-1">
-        {primaryItems.map(item => {
+      {/* Navigation List */}
+      <nav className="fitlo-snav">
+        {primaryItems.map((item) => {
           const isActive = currentTab === item.id;
           const Icon = item.icon;
 
@@ -81,68 +78,48 @@ export default function TherapickSidebarNav() {
               key={item.id}
               href={item.href}
               onClick={() => handleNavClick(item)}
-              className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                isActive
-                  ? 'bg-[#1E293B] text-white shadow-xs font-bold border-l-2 border-[#facc15]'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-              }`}
+              className={`fitlo-snav__item ${isActive ? 'is-active' : ''}`}
             >
-              <Icon size={16} className={isActive ? 'text-[#facc15]' : 'text-slate-400'} />
-              <span className="truncate">{item.label}</span>
+              <Icon size={18} strokeWidth={isActive ? 2.2 : 1.8} />
+              <span className="fitlo-snav__label">{item.label}</span>
               {item.badge && (
-                <span className="ml-auto text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-300">
-                  {item.badge}
-                </span>
+                <span className="fitlo-nav__count">{item.badge}</span>
               )}
             </Link>
           );
         })}
+      </nav>
+
+      {/* Quick Action: Add Booking */}
+      <div className="fitlo-side__group">
+        <div className="fitlo-side__head">Quick action</div>
+        <button
+          type="button"
+          onClick={() => setIsAddBookingOpen(true)}
+          className="fitlo-side__quick"
+          title="Create New Booking"
+        >
+          <span className="fitlo-side__plus">+</span>
+          <span>Add a booking</span>
+        </button>
       </div>
 
-      {/* Separator */}
-      <div className="my-4 border-t border-slate-800" />
-
-      {/* Secondary Items (Reports & Settings) */}
-      <div className="space-y-1">
-        {secondaryItems.map(item => {
-          const isActive = currentTab === item.id;
-          const Icon = item.icon;
-
-          return (
-            <Link
-              key={item.id}
-              href={item.href}
-              onClick={() => handleNavClick(item)}
-              className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                isActive
-                  ? 'bg-[#1E293B] text-white shadow-xs font-bold border-l-2 border-[#facc15]'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-              }`}
-            >
-              <Icon size={16} className={isActive ? 'text-[#facc15]' : 'text-slate-400'} />
-              <span className="truncate">{item.label}</span>
-            </Link>
-          );
-        })}
-      </div>
-
-      {/* Sidebar Footer */}
-      <div className="mt-auto pt-4 border-t border-slate-800/80 px-2 text-[11px] text-slate-500 font-mono">
-        <div className="flex items-center justify-between">
-          <span>Therapick OS</span>
-          <span className="text-[#facc15] font-bold">v2.6</span>
-        </div>
+      {/* Fitlo Sidebar Footer */}
+      <div className="pt-3 border-t border-[var(--fitlo-line)] flex items-center justify-between text-xs text-[var(--fitlo-muted)] font-medium">
+        <span className="capitalize">{system} portal</span>
+        <span className="w-2 h-2 rounded-full bg-[var(--fitlo-accent)] animate-pulse" />
       </div>
     </aside>
   );
 }
 
+// Exported for Mobile Slide-Out Drawer
 export function TherapickMobileDrawerLinks({ onClose }: { onClose: () => void }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { system, setActiveTab } = useTherapickAdmin();
 
-  const currentTab = searchParams.get('tab') || (pathname === '/admin/bookings' ? 'bookings' : pathname === '/admin/partners' ? 'partners' : pathname === '/admin/commissions' ? 'commission' : pathname === '/admin/payouts' ? 'payouts' : pathname === '/admin/settings' ? 'settings' : 'overview');
+  const currentTab = searchParams.get('tab') || 'overview';
 
   const websitePrimaryItems = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard, href: '/admin?brand=therapick&tab=overview' },
@@ -168,68 +145,29 @@ export function TherapickMobileDrawerLinks({ onClose }: { onClose: () => void })
     { id: 'settings', label: 'Settings', icon: Settings, href: '/admin?brand=therapick&tab=settings' },
   ];
 
-  const secondaryItems: any[] = [];
-
-  const items = system === 'website' ? websitePrimaryItems : affiliatePrimaryItems;
+  const primaryItems = system === 'website' ? websitePrimaryItems : affiliatePrimaryItems;
 
   return (
-    <div className="space-y-4">
-      <div className="space-y-1">
-        <div className="text-[10px] font-mono uppercase font-bold tracking-wider text-slate-400 px-3 pb-1">
-          {system === 'website' ? 'Website Management' : 'Affiliate Management'}
-        </div>
-        {items.map(item => {
-          const isActive = currentTab === item.id;
-          const Icon = item.icon;
-          return (
-            <Link
-              key={item.id}
-              href={item.href}
-              onClick={() => {
-                setActiveTab(item.id);
-                onClose();
-              }}
-              className={`flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                isActive
-                  ? 'bg-[#1E293B] text-white shadow-xs font-bold border-l-2 border-[#facc15]'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-              }`}
-            >
-              <Icon size={16} className={isActive ? 'text-[#facc15]' : 'text-slate-400'} />
-              <span>{item.label}</span>
-            </Link>
-          );
-        })}
-      </div>
+    <div className="space-y-1">
+      {primaryItems.map((item) => {
+        const isActive = currentTab === item.id;
+        const Icon = item.icon;
 
-      <div className="border-t border-slate-800 pt-3 space-y-1">
-        <div className="text-[10px] font-mono uppercase font-bold tracking-wider text-slate-400 px-3 pb-1">
-          Administration
-        </div>
-        {secondaryItems.map(item => {
-          const isActive = currentTab === item.id;
-          const Icon = item.icon;
-          return (
-            <Link
-              key={item.id}
-              href={item.href}
-              onClick={() => {
-                setActiveTab(item.id);
-                onClose();
-              }}
-              className={`flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                isActive
-                  ? 'bg-[#1E293B] text-white shadow-xs font-bold border-l-2 border-[#facc15]'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-              }`}
-            >
-              <Icon size={16} className={isActive ? 'text-[#facc15]' : 'text-slate-400'} />
-              <span>{item.label}</span>
-            </Link>
-          );
-        })}
-      </div>
+        return (
+          <Link
+            key={item.id}
+            href={item.href}
+            onClick={() => {
+              setActiveTab(item.id);
+              onClose();
+            }}
+            className={`fitlo-snav__item ${isActive ? 'is-active' : ''}`}
+          >
+            <Icon size={18} strokeWidth={isActive ? 2.2 : 1.8} />
+            <span className="fitlo-snav__label">{item.label}</span>
+          </Link>
+        );
+      })}
     </div>
   );
 }
-

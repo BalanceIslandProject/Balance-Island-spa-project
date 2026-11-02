@@ -35,6 +35,7 @@ import TherapickSystemSwitcher from '@/components/admin/therapick/TherapickSyste
 import TherapickSidebarNav, { TherapickMobileDrawerLinks } from '@/components/admin/therapick/TherapickSidebarNav';
 import TherapickMobileBottomNav from '@/components/admin/therapick/TherapickMobileBottomNav';
 import TherapickTopNavControls from '@/components/admin/therapick/TherapickTopNavControls';
+import '@/components/admin/therapick/fitlo.css';
 
 interface AdminCrmShellProps {
   children: React.ReactNode;
@@ -417,43 +418,47 @@ export default function AdminCrmShell({ children, serverHost }: AdminCrmShellPro
   if (activeBrandId === 'therapick') {
     return (
       <TherapickAdminProvider>
-        <div className="min-h-screen w-full bg-[#fbf9f5] text-neutral-900 font-sans antialiased flex flex-col selection:bg-amber-300 selection:text-neutral-950 pb-16 lg:pb-0">
-          
-          {/* 1. TOP BAR */}
-          <header className="sticky top-0 z-40 w-full bg-white/95 backdrop-blur-md border-b border-[#eaecf0] px-4 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between">
-            <div className="flex items-center gap-2.5 sm:gap-3.5">
-              <button
-                type="button"
-                onClick={() => setMobileDrawerOpen(true)}
-                className="lg:hidden p-1.5 -ml-1 text-stone-700 hover:text-neutral-900 hover:bg-stone-100 rounded-lg transition-colors cursor-pointer"
-                aria-label="Open navigation menu"
-              >
-                <Menu size={20} />
-              </button>
+        <div className="fitlo-app">
+          {/* Desktop Left Sidebar */}
+          <TherapickSidebarNav />
 
-              <Link href="/admin?brand=therapick&tab=overview" className="flex items-center gap-2 mr-1">
-                <span className="w-2.5 h-2.5 rounded-full shrink-0 shadow-2xs bg-[#facc15]" />
-                <span className="font-extrabold tracking-wider text-sm sm:text-base text-neutral-900 uppercase font-sans">
-                  THERAPICK
-                </span>
-              </Link>
+          {/* Right Workspace Column */}
+          <div className="fitlo-col">
+            {/* 1. FITLO 3-COLUMN STICKY TOPBAR */}
+            <header className="fitlo-top">
+              {/* Left: Mobile Drawer Trigger & Live Stats Figure */}
+              <div className="fitlo-top__left">
+                <button
+                  type="button"
+                  onClick={() => setMobileDrawerOpen(true)}
+                  className="lg:hidden p-1.5 -ml-1 text-[var(--fitlo-muted)] hover:text-[var(--fitlo-ink)] rounded-lg transition-colors cursor-pointer"
+                  aria-label="Open navigation menu"
+                >
+                  <Menu size={20} />
+                </button>
 
-              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold bg-stone-100 text-stone-700 border border-stone-200/90 shadow-2xs">
-                Admin System
-              </span>
+                <div className="fitlo-figure hidden sm:flex">
+                  <b>96</b>
+                  <span>
+                    <span>Bookings</span>
+                    <small>Oct 2026</small>
+                  </span>
+                </div>
+              </div>
+
+              {/* Center: Dual System Switcher Pill */}
+              <div className="hidden sm:block">
+                <TherapickSystemSwitcher />
+              </div>
+
+              {/* Right: Search, Notifications, + New Booking, Profile */}
+              <TherapickTopNavControls liveSiteUrl={domainInfo.liveSiteUrl || 'https://booktherapick.com'} />
+            </header>
+
+            {/* Mobile System Switcher below header on small screens */}
+            <div className="sm:hidden px-4 py-2 border-b border-[var(--fitlo-line)] bg-[var(--fitlo-bg)] flex justify-center">
+              <TherapickSystemSwitcher />
             </div>
-
-            {/* Right: Live site, Notifications with unread badge, TP avatar */}
-            <TherapickTopNavControls liveSiteUrl={domainInfo.liveSiteUrl || 'https://booktherapick.com'} />
-          </header>
-
-          {/* 2. PERSISTENT GLOBAL SYSTEM SWITCHER (Website vs Affiliate) */}
-          <TherapickSystemSwitcher />
-
-          {/* 3. MAIN BODY (DARK NAVY SIDEBAR + CONTENT VIEWPORT) */}
-          <div className="flex-1 flex w-full max-w-[1600px] mx-auto min-h-0">
-            {/* Desktop Dark Navy Sidebar */}
-            <TherapickSidebarNav />
 
             {/* Mobile Navigation Drawer */}
             {mobileDrawerOpen && (
@@ -462,18 +467,20 @@ export default function AdminCrmShell({ children, serverHost }: AdminCrmShellPro
                   className="fixed inset-0 bg-black/40 backdrop-blur-xs transition-opacity"
                   onClick={() => setMobileDrawerOpen(false)}
                 />
-                <div className="relative w-72 max-w-[85vw] bg-[#0F172A] text-slate-200 h-full shadow-2xl flex flex-col p-4 z-50 overflow-y-auto">
-                  <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+                <div className="relative w-72 max-w-[85vw] bg-[var(--fitlo-bg)] text-[var(--fitlo-ink)] h-full shadow-2xl flex flex-col p-4 z-50 overflow-y-auto">
+                  <div className="flex items-center justify-between pb-3 border-b border-[var(--fitlo-line)]">
                     <div className="flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full bg-[#facc15]" />
-                      <span className="font-extrabold tracking-wider text-sm text-white uppercase">
+                      <div className="fitlo-mark" style={{ width: '28px', height: '28px' }}>
+                        <Sparkles size={16} />
+                      </div>
+                      <span className="font-bold text-sm uppercase">
                         THERAPICK
                       </span>
                     </div>
                     <button
                       type="button"
                       onClick={() => setMobileDrawerOpen(false)}
-                      className="p-1 text-slate-400 hover:text-white rounded-lg cursor-pointer"
+                      className="p-1 text-[var(--fitlo-muted)] hover:text-[var(--fitlo-ink)] rounded-lg cursor-pointer"
                     >
                       <X size={18} />
                     </button>
@@ -483,15 +490,15 @@ export default function AdminCrmShell({ children, serverHost }: AdminCrmShellPro
                     <TherapickMobileDrawerLinks onClose={() => setMobileDrawerOpen(false)} />
                   </div>
 
-                  <div className="mt-auto pt-4 border-t border-slate-800">
+                  <div className="mt-auto pt-4 border-t border-[var(--fitlo-line)]">
                     <Link
                       href={domainInfo.liveSiteUrl || 'https://booktherapick.com'}
                       target="_blank"
                       rel="noreferrer"
-                      className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border border-slate-700 bg-slate-800/80 text-xs font-medium text-slate-300 hover:bg-slate-700 transition-colors"
+                      className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border border-[var(--fitlo-line-2)] bg-[var(--fitlo-card)] text-xs font-semibold text-[var(--fitlo-ink)] hover:bg-[var(--fitlo-card-2)] transition-colors"
                     >
                       <span>Open Live Website</span>
-                      <ExternalLink size={12} className="text-slate-400" />
+                      <ExternalLink size={12} className="text-[var(--fitlo-muted)]" />
                     </Link>
                   </div>
                 </div>
@@ -499,7 +506,7 @@ export default function AdminCrmShell({ children, serverHost }: AdminCrmShellPro
             )}
 
             {/* Main Content Area */}
-            <main className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8 overflow-x-hidden">
+            <main className="fitlo-main">
               {children}
             </main>
           </div>

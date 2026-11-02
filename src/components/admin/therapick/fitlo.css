@@ -1,0 +1,745 @@
+/* ==========================================================================
+   FITLO DESIGN SYSTEM FOR THERAPICK ADMIN DASHBOARD
+   Based on Fitlo Editorial Minimalist Shop & Admin (demo.codeandchill.store/fitlo)
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --fitlo-font: "Urbanist", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --fitlo-fs-2xs: 11px;
+  --fitlo-fs-xs: 12px;
+  --fitlo-fs-sm: 12.5px;
+  --fitlo-fs-md: 13.5px;
+  --fitlo-fs-base: 14px;
+  --fitlo-fs-lg: 15px;
+  --fitlo-fs-xl: 17px;
+  --fitlo-fs-2xl: 20px;
+  --fitlo-fs-3xl: 22px;
+  --fitlo-fs-4xl: 26px;
+  --fitlo-fs-display: 34px;
+
+  --fitlo-r-sm: 10px;
+  --fitlo-r-md: 14px;
+  --fitlo-r-lg: 20px;
+  --fitlo-r-xl: 26px;
+  --fitlo-ease: cubic-bezier(.22, 1, .36, 1);
+  --fitlo-side-w: 252px;
+  --fitlo-side-rail: 80px;
+
+  /* Fitlo Warm Editorial Color Palette (Default Light) */
+  --fitlo-bg: #f7f6f2;
+  --fitlo-card: #fdfdfb;
+  --fitlo-card-2: #f0efea;
+  --fitlo-card-3: #e5e4de;
+  --fitlo-ink: #161a19;
+  --fitlo-ink-2: #353b3a;
+  --fitlo-muted: #5f6665;
+  --fitlo-line: rgba(22, 26, 25, 0.08);
+  --fitlo-line-2: rgba(22, 26, 25, 0.15);
+
+  --fitlo-shadow: 0 1px 2px rgba(22, 26, 25, 0.04), 0 10px 26px -18px rgba(22, 26, 25, 0.22);
+  --fitlo-shadow-lg: 0 2px 6px rgba(22, 26, 25, 0.07), 0 28px 60px -24px rgba(22, 26, 25, 0.32);
+
+  --fitlo-accent: #0b7a73;
+  --fitlo-accent-ink: #ffffff;
+  --fitlo-accent-hi: #08665f;
+  --fitlo-accent-soft: rgba(11, 122, 115, 0.12);
+  --fitlo-accent-text: #08665f;
+  --fitlo-now: #e2603a;
+  --fitlo-gold: #f08a5d;
+
+  --fitlo-good: #1e7548;
+  --fitlo-good-soft: rgba(30, 117, 72, 0.12);
+  --fitlo-warn: #8a5600;
+  --fitlo-warn-soft: rgba(214, 150, 20, 0.17);
+  --fitlo-bad: #b42318;
+  --fitlo-bad-soft: rgba(180, 35, 24, 0.1);
+  --fitlo-info: #2c5d87;
+  --fitlo-info-soft: rgba(44, 93, 135, 0.1);
+
+  /* Fitlo Signature Tinted Pastel Tiles */
+  --fitlo-tile-1: #ffe2d1; /* Soft Peach */
+  --fitlo-tile-2: #d8ecee; /* Soft Cyan */
+  --fitlo-tile-3: #fbeaa8; /* Soft Lemon */
+  --fitlo-tile-4: #e9e8e3; /* Soft Pebble */
+  --fitlo-tile-ink: #161a19;
+  --fitlo-tile-muted: rgba(22, 26, 25, 0.65);
+}
+
+/* --------------------------------------------------------------------------
+   FITLO APP CONTAINER & BASE
+   -------------------------------------------------------------------------- */
+.fitlo-app {
+  min-height: 100vh;
+  background-color: var(--fitlo-bg);
+  color: var(--fitlo-ink);
+  font-family: var(--fitlo-font);
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 1024px) {
+  .fitlo-app {
+    display: grid;
+    grid-template-columns: var(--fitlo-side-w) minmax(0, 1fr);
+  }
+}
+
+.fitlo-col {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 100vh;
+}
+
+.fitlo-main {
+  width: 100%;
+  max-width: 1540px;
+  margin: 0 auto;
+  padding: 8px 32px 56px;
+  flex: 1;
+}
+
+@media (max-width: 1023px) {
+  .fitlo-main {
+    padding: 12px 16px 80px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   FITLO SIDEBAR
+   -------------------------------------------------------------------------- */
+.fitlo-side {
+  background: var(--fitlo-bg);
+  border-right: 1px solid var(--fitlo-line);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  padding: 24px 18px 18px;
+  z-index: 30;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.fitlo-side::-webkit-scrollbar {
+  display: none;
+}
+
+.fitlo-brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin-bottom: 24px;
+  padding: 0 6px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.fitlo-mark {
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  background: var(--fitlo-accent);
+  color: var(--fitlo-accent-ink);
+  box-shadow: 0 8px 16px -8px var(--fitlo-accent);
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+
+.fitlo-brand b {
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--fitlo-ink);
+}
+
+.fitlo-snav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--fitlo-line);
+  flex: 1;
+}
+
+.fitlo-snav__item {
+  height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 14px;
+  border-radius: var(--fitlo-r-md);
+  font-size: var(--fitlo-fs-md);
+  font-weight: 600;
+  color: var(--fitlo-ink-2);
+  text-decoration: none;
+  transition: all 0.2s var(--fitlo-ease);
+}
+
+.fitlo-snav__item:hover {
+  background: var(--fitlo-card-2);
+  color: var(--fitlo-ink);
+}
+
+.fitlo-snav__item.is-active {
+  background: var(--fitlo-accent);
+  color: #ffffff !important;
+  box-shadow: 0 8px 14px -6px rgba(11, 122, 115, 0.4);
+}
+
+.fitlo-snav__item.is-active svg {
+  color: #ffffff !important;
+}
+
+.fitlo-snav__label {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fitlo-nav__count {
+  height: 20px;
+  min-width: 20px;
+  border-radius: 99px;
+  background: var(--fitlo-accent-soft);
+  color: var(--fitlo-accent-text);
+  font-size: var(--fitlo-fs-2xs);
+  font-weight: 700;
+  display: inline-grid;
+  place-items: center;
+  padding: 0 6px;
+}
+
+.fitlo-snav__item.is-active .fitlo-nav__count {
+  background: #ffffff;
+  color: var(--fitlo-accent);
+}
+
+.fitlo-side__group {
+  padding: 16px 0 12px;
+  border-bottom: 1px solid var(--fitlo-line);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fitlo-side__head {
+  font-size: var(--fitlo-fs-xs);
+  color: var(--fitlo-muted);
+  font-weight: 600;
+  padding: 0 14px 4px;
+}
+
+.fitlo-side__quick {
+  height: 38px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
+  border-radius: var(--fitlo-r-sm);
+  background: var(--fitlo-card);
+  border: 1px solid var(--fitlo-line);
+  color: var(--fitlo-ink-2);
+  font-size: var(--fitlo-fs-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.fitlo-side__quick:hover {
+  background: var(--fitlo-card-2);
+  color: var(--fitlo-ink);
+}
+
+.fitlo-side__plus {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: var(--fitlo-card-2);
+  display: grid;
+  place-items: center;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+/* --------------------------------------------------------------------------
+   FITLO STICKY TOPBAR
+   -------------------------------------------------------------------------- */
+.fitlo-top {
+  position: sticky;
+  top: 0;
+  z-index: 25;
+  background: var(--fitlo-bg);
+  min-height: 80px;
+  padding: 0 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid var(--fitlo-line);
+}
+
+@media (max-width: 1023px) {
+  .fitlo-top {
+    padding: 0 16px;
+    min-height: 68px;
+  }
+}
+
+.fitlo-top__left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.fitlo-figure {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.fitlo-figure > b {
+  font-size: var(--fitlo-fs-display);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--fitlo-ink);
+  line-height: 1;
+}
+
+.fitlo-figure > span {
+  display: flex;
+  flex-direction: column;
+  padding-left: 12px;
+  border-left: 1px solid var(--fitlo-line-2);
+  line-height: 1.2;
+}
+
+.fitlo-figure > span > span {
+  font-size: var(--fitlo-fs-md);
+  font-weight: 600;
+  color: var(--fitlo-ink);
+}
+
+.fitlo-figure small {
+  font-size: var(--fitlo-fs-xs);
+  color: var(--fitlo-muted);
+  font-weight: 500;
+}
+
+/* Center Dual Switcher Pill */
+.fitlo-sides {
+  background: var(--fitlo-card-2);
+  border: 1px solid var(--fitlo-line);
+  border-radius: 99px;
+  padding: 4px;
+  display: inline-flex;
+  gap: 2px;
+}
+
+.fitlo-sides button {
+  height: 38px;
+  padding: 0 20px;
+  border-radius: 99px;
+  font-size: var(--fitlo-fs-md);
+  font-weight: 600;
+  color: var(--fitlo-muted);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  transition: all 0.2s var(--fitlo-ease);
+}
+
+.fitlo-sides button:hover {
+  color: var(--fitlo-ink);
+}
+
+.fitlo-sides button.is-active {
+  background: var(--fitlo-card);
+  color: var(--fitlo-ink);
+  box-shadow: 0 2px 8px rgba(22, 26, 25, 0.08);
+}
+
+/* Right Tools */
+.fitlo-top__right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.fitlo-searchpill {
+  background: var(--fitlo-card);
+  border: 1px solid var(--fitlo-line);
+  box-shadow: var(--fitlo-shadow);
+  border-radius: 99px;
+  height: 42px;
+  width: 260px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 8px 0 14px;
+  color: var(--fitlo-muted);
+  font-size: var(--fitlo-fs-md);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.fitlo-searchpill:hover {
+  color: var(--fitlo-ink);
+  background: var(--fitlo-card-2);
+}
+
+.fitlo-searchpill span:not(.fitlo-kbd) {
+  flex: 1;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fitlo-kbd {
+  background: var(--fitlo-card-2);
+  border: 1px solid var(--fitlo-line);
+  border-radius: 99px;
+  min-width: 26px;
+  height: 24px;
+  padding: 0 6px;
+  display: inline-grid;
+  place-items: center;
+  font-size: var(--fitlo-fs-2xs);
+  font-weight: 700;
+  color: var(--fitlo-muted);
+}
+
+.fitlo-ibtn {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--fitlo-card);
+  border: 1px solid var(--fitlo-line);
+  box-shadow: var(--fitlo-shadow);
+  display: grid;
+  place-items: center;
+  color: var(--fitlo-ink);
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s;
+}
+
+.fitlo-ibtn:hover {
+  background: var(--fitlo-card-2);
+}
+
+.fitlo-ibtn__badge {
+  position: absolute;
+  top: 2px;
+  right: 0;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 99px;
+  background: var(--fitlo-accent);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+  padding: 0 4px;
+  box-shadow: 0 0 0 2px var(--fitlo-bg);
+}
+
+.fitlo-btn {
+  height: 40px;
+  padding: 0 16px;
+  border-radius: 12px;
+  font-size: var(--fitlo-fs-md);
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--fitlo-line-2);
+  background: var(--fitlo-card);
+  color: var(--fitlo-ink);
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.fitlo-btn:hover {
+  background: var(--fitlo-card-2);
+}
+
+.fitlo-btn--primary {
+  background: var(--fitlo-accent);
+  color: #ffffff;
+  border: 0;
+  box-shadow: 0 6px 16px -8px var(--fitlo-accent);
+}
+
+.fitlo-btn--primary:hover {
+  background: var(--fitlo-accent-hi);
+  transform: translateY(-1px);
+}
+
+.fitlo-me {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 14px 4px 4px;
+  border-radius: 99px;
+  background: transparent;
+  color: var(--fitlo-ink);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.fitlo-me:hover {
+  background: var(--fitlo-card-2);
+}
+
+.fitlo-av {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--fitlo-card-3);
+  border: 1px solid var(--fitlo-line);
+  display: grid;
+  place-items: center;
+  font-size: var(--fitlo-fs-xs);
+  font-weight: 700;
+  color: var(--fitlo-ink);
+}
+
+/* --------------------------------------------------------------------------
+   FITLO CARDS & 4 PASTEL TINTED KPIS
+   -------------------------------------------------------------------------- */
+.fitlo-card {
+  background: var(--fitlo-card);
+  border-radius: var(--fitlo-r-lg);
+  border: 1px solid var(--fitlo-line);
+  box-shadow: var(--fitlo-shadow);
+  padding: 20px 22px;
+  position: relative;
+}
+
+.fitlo-card--flush {
+  padding: 0;
+  overflow: hidden;
+}
+
+.fitlo-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+  margin-bottom: 22px;
+}
+
+@media (max-width: 1279px) {
+  .fitlo-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .fitlo-kpis {
+    grid-template-columns: 1fr;
+  }
+}
+
+.fitlo-kpi {
+  border-radius: var(--fitlo-r-lg);
+  padding: 18px 20px 16px;
+  min-height: 128px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(22, 26, 25, 0.06);
+}
+
+.fitlo-kpi--1 { background: var(--fitlo-tile-1); }
+.fitlo-kpi--2 { background: var(--fitlo-tile-2); }
+.fitlo-kpi--3 { background: var(--fitlo-tile-3); }
+.fitlo-kpi--4 { background: var(--fitlo-tile-4); }
+
+.fitlo-kpi__label {
+  font-size: var(--fitlo-fs-sm);
+  color: var(--fitlo-tile-muted);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fitlo-kpi__value {
+  font-size: var(--fitlo-fs-3xl);
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--fitlo-tile-ink);
+  margin-top: 10px;
+  line-height: 1.1;
+}
+
+.fitlo-kpi__foot {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 8px;
+  font-size: var(--fitlo-fs-xs);
+  color: var(--fitlo-tile-muted);
+  font-weight: 600;
+}
+
+.fitlo-kpi__foot .spark {
+  width: 86px;
+  height: 28px;
+  margin-left: auto;
+}
+
+.fitlo-delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-size: var(--fitlo-fs-2xs);
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.fitlo-delta--up { color: #145c33; }
+.fitlo-delta--down { color: #9a2a14; }
+
+/* --------------------------------------------------------------------------
+   FITLO DATA TABLES & PILLS
+   -------------------------------------------------------------------------- */
+.fitlo-chead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 32px;
+  margin-bottom: 16px;
+}
+
+.fitlo-chead h2, .fitlo-chead h3 {
+  font-size: var(--fitlo-fs-lg);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--fitlo-ink);
+}
+
+.fitlo-chead p {
+  font-size: var(--fitlo-fs-sm);
+  color: var(--fitlo-muted);
+  margin-top: 2px;
+}
+
+.fitlo-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.fitlo-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fitlo-fs-md);
+}
+
+.fitlo-table th {
+  text-align: left;
+  font-size: var(--fitlo-fs-xs);
+  font-weight: 600;
+  color: var(--fitlo-muted);
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--fitlo-line);
+  white-space: nowrap;
+}
+
+.fitlo-table td {
+  padding: 14px 18px;
+  font-weight: 600;
+  border-bottom: 1px solid var(--fitlo-line);
+  vertical-align: middle;
+  color: var(--fitlo-ink);
+}
+
+.fitlo-table tbody tr {
+  transition: background 0.15s;
+}
+
+.fitlo-table tbody tr:hover td {
+  background: var(--fitlo-card-2);
+}
+
+.fitlo-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.fitlo-table .r {
+  text-align: right;
+}
+
+.fitlo-pill {
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px;
+  border-radius: 99px;
+  font-size: var(--fitlo-fs-xs);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.fitlo-pill::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.fitlo-pill--good {
+  background: var(--fitlo-good-soft);
+  color: var(--fitlo-good);
+}
+
+.fitlo-pill--warn {
+  background: var(--fitlo-warn-soft);
+  color: var(--fitlo-warn);
+}
+
+.fitlo-pill--bad {
+  background: var(--fitlo-bad-soft);
+  color: var(--fitlo-bad);
+}
+
+.fitlo-pill--info {
+  background: var(--fitlo-info-soft);
+  color: var(--fitlo-info);
+}
+
+.fitlo-level {
+  height: 6px;
+  border-radius: 6px;
+  background: var(--fitlo-card-3);
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+}
+
+.fitlo-level i {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--fitlo-accent);
+  transition: width 0.6s var(--fitlo-ease);
+}
