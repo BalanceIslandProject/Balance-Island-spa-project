@@ -85,6 +85,37 @@ export default function TherapickCalendarView() {
     return String(raw).split('T')[0].trim();
   };
 
+  // Safe Currency Formatter
+  const formatIDR = (val: number | string | undefined | null) => {
+    const num = Number(val) || 0;
+    return `IDR ${num.toLocaleString('id-ID')}`;
+  };
+
+  // Booking Data Helpers
+  const getBookingPrice = (b: any): number => {
+    return Number(b.revenue || b.total_amount || b.total_price || 0);
+  };
+
+  const getBookingCommission = (b: any): number => {
+    if (b.commission?.commission_amount != null) {
+      return Number(b.commission.commission_amount);
+    }
+    if (b.commission_amount != null) {
+      return Number(b.commission_amount);
+    }
+    if (b.affiliate_code) {
+      return Math.round(getBookingPrice(b) * 0.15);
+    }
+    return 0;
+  };
+
+  const getBookingId = (b: any): string => {
+    if (b.reference_number) return `#${String(b.reference_number).trim().toUpperCase()}`;
+    if (b.booking_id) return `#${String(b.booking_id).trim().toUpperCase()}`;
+    if (b.id) return `#${String(b.id).slice(0, 8).toUpperCase()}`;
+    return '#BK-000';
+  };
+
   // Active bookings list strictly scoped to Website vs Affiliate system
   const currentSystemBookings = system === 'website' ? websiteBookings : affiliateBookings;
 
@@ -199,7 +230,7 @@ export default function TherapickCalendarView() {
     <div className="space-y-6 animate-in fade-in duration-200">
       
       {/* ─────────────────────────────────────────────────────────────
-          1. HEADER & TOP CONTROLS (MATCHING MOCKUP IMAGE 2)
+          1. HEADER & TOP CONTROLS
          ───────────────────────────────────────────────────────────── */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
@@ -212,7 +243,7 @@ export default function TherapickCalendarView() {
             </span>
           </div>
           <p className="text-xs sm:text-sm text-stone-500 mt-0.5">
-            Manage bookings, daily schedules, and therapist availability.
+            Manage bookings, daily schedules, and appointments.
           </p>
         </div>
 
@@ -335,15 +366,15 @@ export default function TherapickCalendarView() {
               <div>Sun</div>
             </div>
 
-            {/* Day Numbers Grid with Booking Count Numbers */}
-            <div className="grid grid-cols-7 gap-y-3 gap-x-1 sm:gap-x-2 text-center">
+            {/* Day Numbers Grid: Clean circles with booking count number badge above/on the date */}
+            <div className="grid grid-cols-7 gap-y-3.5 gap-x-1 sm:gap-x-2 text-center">
               {monthDays.map((cell, idx) => {
                 const isSelected = cell.dateStr === selectedDateStr;
                 const hasBookings = cell.count > 0;
                 const isToday = todayStr === cell.dateStr;
 
                 return (
-                  <div key={idx} className="flex flex-col items-center justify-center py-1">
+                  <div key={idx} className="flex justify-center items-center py-0.5">
                     <button
                       type="button"
                       onClick={() => setSelectedDateStr(cell.dateStr)}
@@ -360,7 +391,7 @@ export default function TherapickCalendarView() {
                     >
                       <span>{cell.day}</span>
 
-                      {/* Prominent Booking Number Badge on the Date */}
+                      {/* Prominent Booking Number Badge above/top-right of date (no text underneath) */}
                       {hasBookings && (
                         <span
                           className={`absolute -top-1.5 -right-1.5 min-w-[19px] h-[19px] px-1 rounded-full text-[10px] font-mono font-black flex items-center justify-center leading-none shadow-xs transition-transform group-hover:scale-110 ${
@@ -373,22 +404,6 @@ export default function TherapickCalendarView() {
                         </span>
                       )}
                     </button>
-
-                    {/* Subtitle Count Label Underneath Date */}
-                    {hasBookings ? (
-                      <span
-                        className={`text-[9px] sm:text-[10px] font-mono font-bold mt-1 tracking-tight leading-none transition-colors ${
-                          isSelected ? 'text-amber-900 font-black' : 'text-stone-600'
-                        }`}
-                      >
-                        <span className="hidden sm:inline">{cell.count} {cell.count === 1 ? 'booking' : 'bookings'}</span>
-                        <span className="sm:hidden">{cell.count} {cell.count === 1 ? 'bk' : 'bks'}</span>
-                      </span>
-                    ) : (
-                      <span className="text-[9px] sm:text-[10px] font-mono mt-1 leading-none text-transparent select-none pointer-events-none">
-                        ·
-                      </span>
-                    )}
                   </div>
                 );
               })}
@@ -468,20 +483,25 @@ export default function TherapickCalendarView() {
                   </p>
                 </div>
               ) : (
-                <div className="space-y-3 max-h-[380px] overflow-y-auto no-scrollbar pr-0.5">
+                <div className="space-y-3 max-h-[420px] overflow-y-auto no-scrollbar pr-0.5">
                   {dayBookings.map((b, idx) => {
                     const statusStr = (b.status || '').toLowerCase();
                     const isConfirmed = statusStr === 'confirmed';
                     const isCompleted = statusStr === 'completed';
                     const isCancelled = statusStr === 'cancelled';
                     const isOngoing = statusStr === 'ongoing' || statusStr === 'in progress';
+                    const bId = getBookingId(b);
+                    const price = getBookingPrice(b);
+                    const commFee = getBookingCommission(b);
+                    const isAff = Boolean(b.affiliate_code || b.commission);
 
                     return (
                       <div
                         key={b.id || idx}
                         onClick={() => setSelectedBooking(b)}
-                        className="p-3.5 rounded-xl border border-stone-200 hover:border-amber-400 bg-stone-50/50 hover:bg-white transition-all cursor-pointer space-y-1.5 group"
+                        className="p-3.5 rounded-xl border border-stone-200 hover:border-amber-400 bg-stone-50/50 hover:bg-white transition-all cursor-pointer space-y-2 group shadow-2xs"
                       >
+                        {/* Top: Time + Booking ID + Status Badge */}
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <span className={`w-1.5 h-4 rounded-full ${
@@ -492,6 +512,9 @@ export default function TherapickCalendarView() {
                             }`} />
                             <span className="text-xs font-mono font-extrabold text-neutral-900">
                               {b.booking_time || b.time || '10:00'}
+                            </span>
+                            <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-stone-100 text-stone-700 border border-stone-200/90 shadow-2xs">
+                              {bId}
                             </span>
                           </div>
                           <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full ${
@@ -504,19 +527,45 @@ export default function TherapickCalendarView() {
                           </span>
                         </div>
 
-                        <div className="font-bold text-neutral-900 text-xs pl-3.5 group-hover:text-amber-800 transition-colors">
-                          {b.treatment_name || b.service_name || 'Balinese Traditional Massage'}
+                        {/* Middle: Treatment Name & Guest */}
+                        <div className="pl-3.5 space-y-0.5">
+                          <div className="font-bold text-neutral-900 text-xs group-hover:text-amber-800 transition-colors leading-snug">
+                            {b.treatment_name || b.service_name || 'Balinese Traditional Massage'}
+                          </div>
+                          <div className="text-[11px] text-stone-500 truncate">
+                            {b.customer_name || b.guest_name || 'Guest'}
+                          </div>
                         </div>
 
-                        <div className="text-[11px] text-stone-500 pl-3.5 flex items-center justify-between flex-wrap gap-1">
-                          <span>
-                            {b.customer_name || b.guest_name || 'Guest'} · <strong className="text-neutral-800">{b.therapist_name || 'Wayan S.'}</strong>
-                          </span>
-                          {b.affiliate_code && (
-                            <span className="text-[10px] font-mono font-bold text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
-                              {b.affiliate_code}
+                        {/* Bottom: Treatment Price & Commission Fee (Professional Compact Layout) */}
+                        <div className="pl-3.5 pt-2 border-t border-stone-100 flex items-center justify-between text-xs">
+                          <div className="flex items-baseline gap-1 font-mono">
+                            <span className="text-[10px] text-stone-400 uppercase font-semibold">Price:</span>
+                            <span className="font-extrabold text-neutral-900 text-xs">
+                              {formatIDR(price)}
                             </span>
-                          )}
+                          </div>
+
+                          <div className="flex items-center gap-1.5">
+                            {isAff ? (
+                              <div className="flex items-baseline gap-1 font-mono bg-emerald-50 text-emerald-800 border border-emerald-200/80 px-2 py-0.5 rounded-md">
+                                <span className="text-[9px] uppercase font-bold text-emerald-600">Comm:</span>
+                                <span className="text-[11px] font-extrabold text-emerald-800">
+                                  {formatIDR(commFee)}
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="text-[10px] font-mono font-semibold text-stone-500 bg-stone-100 px-2 py-0.5 rounded-md">
+                                Direct · No Comm
+                              </span>
+                            )}
+
+                            {b.affiliate_code && (
+                              <span className="text-[10px] font-mono font-bold text-amber-900 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
+                                {b.affiliate_code}
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
                     );
@@ -587,30 +636,48 @@ export default function TherapickCalendarView() {
                     </div>
 
                     {/* Bookings List inside Day Card */}
-                    <div className="mt-3 space-y-1.5">
+                    <div className="mt-3 space-y-2">
                       {day.bookings.length === 0 ? (
                         <p className="text-[11px] text-stone-400 font-mono text-center py-4">
                           No bookings
                         </p>
                       ) : (
-                        day.bookings.slice(0, 3).map((b: any, idx: number) => (
-                          <div
-                            key={b.id || idx}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedBooking(b);
-                            }}
-                            className="p-2 rounded-lg bg-stone-50 hover:bg-amber-50 border border-stone-100 text-left transition-colors"
-                          >
-                            <div className="flex items-center justify-between text-[10px] font-mono">
-                              <span className="font-bold text-neutral-900">{b.booking_time || b.time || '10:00'}</span>
-                              <span className="text-stone-500 font-medium truncate max-w-[65px]">{b.status || 'Confirmed'}</span>
+                        day.bookings.slice(0, 3).map((b: any, idx: number) => {
+                          const bId = getBookingId(b);
+                          const price = getBookingPrice(b);
+                          const commFee = getBookingCommission(b);
+                          const isAff = Boolean(b.affiliate_code || b.commission);
+
+                          return (
+                            <div
+                              key={b.id || idx}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedBooking(b);
+                              }}
+                              className="p-2.5 rounded-xl bg-stone-50 hover:bg-amber-50/70 border border-stone-200/80 text-left transition-colors space-y-1"
+                            >
+                              <div className="flex items-center justify-between text-[10px] font-mono">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="font-extrabold text-neutral-900">{b.booking_time || b.time || '10:00'}</span>
+                                  <span className="text-stone-600 bg-white px-1 py-0.2 rounded border border-stone-200 text-[9px] font-bold">{bId}</span>
+                                </div>
+                                <span className="text-stone-500 font-medium truncate max-w-[65px]">{b.status || 'Confirmed'}</span>
+                              </div>
+                              <div className="text-[11px] font-bold text-neutral-800 truncate">
+                                {b.treatment_name || b.service_name || 'Massage'}
+                              </div>
+                              <div className="pt-1 border-t border-stone-200/60 flex items-center justify-between text-[10px] font-mono">
+                                <span className="font-extrabold text-neutral-900">{formatIDR(price)}</span>
+                                {isAff ? (
+                                  <span className="text-emerald-700 font-bold bg-emerald-50 px-1 rounded">Comm: {formatIDR(commFee)}</span>
+                                ) : (
+                                  <span className="text-stone-400">Direct</span>
+                                )}
+                              </div>
                             </div>
-                            <div className="text-[11px] font-semibold text-neutral-800 truncate mt-0.5">
-                              {b.treatment_name || b.service_name || 'Massage'}
-                            </div>
-                          </div>
-                        ))
+                          );
+                        })
                       )}
                       {day.bookings.length > 3 && (
                         <p className="text-[10px] font-mono font-bold text-amber-800 text-center">
@@ -649,7 +716,7 @@ export default function TherapickCalendarView() {
                 {formattedSelectedDate}
               </h2>
               <p className="text-xs text-stone-500">
-                Hourly therapist schedule &amp; appointment slots
+                Hourly schedule &amp; appointment details
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -687,29 +754,54 @@ export default function TherapickCalendarView() {
                       </div>
                     ) : (
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                        {slotBookings.map((b: any, idx: number) => (
-                          <div
-                            key={b.id || idx}
-                            onClick={() => setSelectedBooking(b)}
-                            className="p-3 rounded-xl border border-stone-200 bg-amber-50/60 hover:bg-amber-100/70 hover:border-amber-400 transition-all cursor-pointer space-y-1 group"
-                          >
-                            <div className="flex items-center justify-between">
-                              <span className="text-xs font-mono font-extrabold text-neutral-900">
-                                {b.booking_time || b.time || hourSlot}
-                              </span>
-                              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-white border border-stone-200">
-                                {b.status || 'Confirmed'}
-                              </span>
+                        {slotBookings.map((b: any, idx: number) => {
+                          const bId = getBookingId(b);
+                          const price = getBookingPrice(b);
+                          const commFee = getBookingCommission(b);
+                          const isAff = Boolean(b.affiliate_code || b.commission);
+
+                          return (
+                            <div
+                              key={b.id || idx}
+                              onClick={() => setSelectedBooking(b)}
+                              className="p-3 rounded-xl border border-stone-200 bg-amber-50/60 hover:bg-amber-100/70 hover:border-amber-400 transition-all cursor-pointer space-y-1.5 group shadow-2xs"
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-xs font-mono font-extrabold text-neutral-900">
+                                    {b.booking_time || b.time || hourSlot}
+                                  </span>
+                                  <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-white text-stone-600 border border-stone-200">
+                                    {bId}
+                                  </span>
+                                </div>
+                                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-white border border-stone-200">
+                                  {b.status || 'Confirmed'}
+                                </span>
+                              </div>
+                              <div className="font-bold text-neutral-900 text-xs truncate">
+                                {b.treatment_name || b.service_name || 'Massage'}
+                              </div>
+                              <div className="text-[11px] text-stone-600 truncate">
+                                {b.customer_name || b.guest_name}
+                              </div>
+                              <div className="pt-1.5 border-t border-amber-200/60 flex items-center justify-between text-xs font-mono">
+                                <div className="flex items-baseline gap-1">
+                                  <span className="text-[10px] text-stone-500 uppercase">Price:</span>
+                                  <span className="font-extrabold text-neutral-900 text-xs">{formatIDR(price)}</span>
+                                </div>
+                                {isAff ? (
+                                  <div className="flex items-baseline gap-1 text-emerald-800 bg-white/80 px-1.5 py-0.5 rounded border border-emerald-200">
+                                    <span className="text-[9px] uppercase font-bold text-emerald-600">Comm:</span>
+                                    <span className="font-bold text-[11px]">{formatIDR(commFee)}</span>
+                                  </div>
+                                ) : (
+                                  <span className="text-[10px] text-stone-500">Direct</span>
+                                )}
+                              </div>
                             </div>
-                            <div className="font-bold text-neutral-900 text-xs truncate">
-                              {b.treatment_name || b.service_name || 'Massage'}
-                            </div>
-                            <div className="text-[11px] text-stone-600 flex items-center justify-between">
-                              <span>{b.customer_name || b.guest_name}</span>
-                              <strong className="text-neutral-900">{b.therapist_name || 'Wayan S.'}</strong>
-                            </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     )}
                   </div>
