@@ -1062,23 +1062,3 @@
   border-color: var(--line) !important;
 }
 
-/* ==========================================================================
-   UNIFIED FONT & NUMBER STYLING (IDENTICAL TO ADMIN DASHBOARD)
-   ========================================================================== */
-.cirrel-app,
-.cirrel-app * {
-  font-family: var(--font-cirrel);
-}
-
-.cirrel-num,
-.fitlo-num,
-.cirrel-app .tabular-nums,
-.cirrel-app [data-num],
-.cirrel-app .font-mono,
-.cirrel-app .cirrel-num {
-  font-family: var(--font-cirrel) !important;
-  font-variant-numeric: tabular-nums lining-nums !important;
-  font-feature-settings: "tnum" 1, "lnum" 1, "cv01" 1 !important;
-  letter-spacing: -0.015em !important;
-}
-

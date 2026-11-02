@@ -806,19 +806,10 @@
   line-height: 1.4;
 }
 
-/* ==========================================================================
-   UNIFIED NUMBER & TYPOGRAPHY STYLING (IDENTICAL TO PARTNERS PORTAL)
-   ========================================================================== */
-.fitlo-num,
-.cirrel-num,
-.fitlo-app .tabular-nums,
-.fitlo-app [data-num],
-.fitlo-app .font-mono,
-.fitlo-app .fitlo-num {
-  font-family: var(--fitlo-font) !important;
-  font-variant-numeric: tabular-nums lining-nums !important;
-  font-feature-settings: "tnum" 1, "lnum" 1, "cv01" 1 !important;
-  letter-spacing: -0.015em !important;
+.fitlo-num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+  letter-spacing: -0.01em;
 }
 
 .fitlo-badge {
