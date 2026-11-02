@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useEffect, useMemo, useCall
 import { supabase } from '@/lib/supabase';
 import { Booking } from '@/components/TherapickBookingManagement';
 import { Treatment, TherapistFee } from '@/context/SpaContext';
+import { calculateBookingTherapistFee } from '@/lib/bookingFeeCalculator';
 
 export type AdminSystem = 'website' | 'affiliate';
 
@@ -115,6 +116,12 @@ interface TherapickAdminContextType {
   showOnAffiliateCalendars: boolean;
   setShowOnAffiliateCalendars: (show: boolean) => void;
 
+  // Settings
+  defaultBookingStatus: string;
+  setDefaultBookingStatus: (s: string) => void;
+  whatsappAutoStatus: string;
+  setWhatsappAutoStatus: (s: string) => void;
+
   // Notifications
   notifications: AdminNotification[];
   unreadCount: number;
@@ -126,6 +133,7 @@ interface TherapickAdminContextType {
   updateBookingStatus: (id: string, newStatus: string) => Promise<void>;
   updateTreatmentStatus: (id: string, newStatus: string) => Promise<void>;
   updatePaymentStatus: (id: string, newStatus: string, method?: string) => Promise<void>;
+  updateTherapistFee: (id: string, newFee: number) => Promise<void>;
   updatePartnerStatus: (id: string, newStatus: string) => Promise<void>;
   deletePartner: (id: string) => Promise<void>;
   deleteBooking: (id: string) => Promise<{ success: boolean; error?: string }>;
@@ -276,6 +284,33 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
   const [isNotificationCenterOpen, setIsNotificationCenterOpen] = useState(false);
   const [calendarVisibility, setCalendarVisibility] = useState(true);
   const [showOnAffiliateCalendars, setShowOnAffiliateCalendars] = useState(true);
+
+  // Settings (Default Booking Status & WhatsApp Auto-Status)
+  const [defaultBookingStatus, setDefaultBookingStatusState] = useState<string>('In Progress');
+  const [whatsappAutoStatus, setWhatsappAutoStatusState] = useState<string>('In Progress');
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedStatus = localStorage.getItem('therapick_default_booking_status');
+      if (savedStatus) setDefaultBookingStatusState(savedStatus);
+      const savedWa = localStorage.getItem('therapick_whatsapp_auto_status');
+      if (savedWa) setWhatsappAutoStatusState(savedWa);
+    }
+  }, []);
+
+  const setDefaultBookingStatus = useCallback((status: string) => {
+    setDefaultBookingStatusState(status);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('therapick_default_booking_status', status);
+    }
+  }, []);
+
+  const setWhatsappAutoStatus = useCallback((status: string) => {
+    setWhatsappAutoStatusState(status);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('therapick_whatsapp_auto_status', status);
+    }
+  }, []);
 
   // 5. Notifications State
   const [notifications, setNotifications] = useState<AdminNotification[]>([]);
@@ -528,7 +563,9 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
 
     const therapistPayments = list.reduce((sum, b) => {
       if ((b.status || '').toLowerCase() === 'cancelled') return sum;
-      return sum + Number(b.therapist_fee_total || 0);
+      const explicit = Number(b.therapist_fee_total || 0);
+      if (explicit > 0) return sum + explicit;
+      return sum + calculateBookingTherapistFee(b, therapistFees, treatments).feeTotal;
     }, 0);
 
     const netProfit = totalRevenue - therapistPayments;
@@ -549,7 +586,7 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
       revChangePct: 14.5,
       netChangePct: 16.2
     };
-  }, [websiteBookings, dateRange]);
+  }, [websiteBookings, therapistFees, treatments, dateRange]);
 
   // 8. Calculate Affiliate Financial Metrics
   const affiliateMetrics = useMemo<AffiliateMetrics>(() => {
@@ -564,9 +601,11 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
       return sum + Number(b.revenue || 0);
     }, 0);
 
-    const therapistFees = list.reduce((sum, b) => {
+    const therapistFeesTotal = list.reduce((sum, b) => {
       if ((b.status || '').toLowerCase() === 'cancelled') return sum;
-      return sum + Number(b.therapist_fee_total || 0);
+      const explicit = Number(b.therapist_fee_total || 0);
+      if (explicit > 0) return sum + explicit;
+      return sum + calculateBookingTherapistFee(b, therapistFees, treatments).feeTotal;
     }, 0);
 
     const commission = list.reduce((sum, b) => {
@@ -576,7 +615,7 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
     }, 0);
 
     // Rule: Net Profit = Affiliate Revenue - Therapist Fees - Commission
-    const netProfit = affiliateRevenue - therapistFees - commission;
+    const netProfit = affiliateRevenue - therapistFeesTotal - commission;
     const bookingCount = list.filter(b => (b.status || '').toLowerCase() !== 'cancelled').length;
     const activePartnersCount = partners.filter(p => p.status === 'active').length;
 
@@ -591,8 +630,8 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
     return {
       affiliateRevenue,
       revenue: affiliateRevenue,
-      therapistFees,
-      therapist_fee: therapistFees,
+      therapistFees: therapistFeesTotal,
+      therapist_fee: therapistFeesTotal,
       commission,
       netProfit,
       net_profit: netProfit,
@@ -605,7 +644,7 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
       revChangePct: 12.0,
       netChangePct: 18.0
     };
-  }, [affiliateBookings, partners, commissions, payouts, dateRange]);
+  }, [affiliateBookings, partners, commissions, payouts, therapistFees, treatments, dateRange]);
 
   // Notifications helpers
   const unreadCount = useMemo(() => {
@@ -757,6 +796,33 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
       await syncAffiliateCommission(booking, { payment_verified: true, status: 'approved' });
     } else {
       await syncAffiliateCommission(booking, { payment_verified: false });
+    }
+
+    setBookings(prev => prev.map(b => b.id === id ? { ...b, ...payload } : b));
+    if (selectedBooking && selectedBooking.id === id) {
+      setSelectedBooking(prev => prev ? { ...prev, ...payload } : null);
+    }
+    refreshData();
+  };
+
+  // Action: Update Therapist Fee
+  const updateTherapistFee = async (id: string, newFee: number) => {
+    const booking = bookings.find(b => b.id === id);
+    const commAmount = booking?.commission?.commission_amount 
+      ? Number(booking.commission.commission_amount) 
+      : (booking?.affiliate_code ? Number(booking?.revenue || 0) * 0.15 : 0);
+    const revenue = Number(booking?.revenue || 0);
+    const netProfit = revenue - newFee - commAmount;
+
+    const payload: any = { 
+      therapist_fee_total: newFee,
+      net_profit: netProfit
+    };
+
+    try {
+      await supabase.from('bookings').update(payload).eq('id', id);
+    } catch (e) {
+      console.error('Failed to update therapist fee:', e);
     }
 
     setBookings(prev => prev.map(b => b.id === id ? { ...b, ...payload } : b));
@@ -1121,6 +1187,10 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
         setCalendarVisibility,
         showOnAffiliateCalendars,
         setShowOnAffiliateCalendars,
+        defaultBookingStatus,
+        setDefaultBookingStatus,
+        whatsappAutoStatus,
+        setWhatsappAutoStatus,
         notifications,
         unreadCount,
         unreadNotificationCount: unreadCount,
@@ -1129,6 +1199,7 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
         updateBookingStatus,
         updateTreatmentStatus,
         updatePaymentStatus,
+        updateTherapistFee,
         updatePartnerStatus,
         deletePartner,
         deleteBooking,

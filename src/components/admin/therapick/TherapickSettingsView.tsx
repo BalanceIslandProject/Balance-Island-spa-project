@@ -13,7 +13,11 @@ export default function TherapickSettingsView() {
     calendarVisibility, 
     setCalendarVisibility,
     showOnAffiliateCalendars,
-    setShowOnAffiliateCalendars
+    setShowOnAffiliateCalendars,
+    defaultBookingStatus: contextDefaultStatus,
+    setDefaultBookingStatus: setContextDefaultStatus,
+    whatsappAutoStatus: contextWaStatus,
+    setWhatsappAutoStatus: setContextWaStatus
   } = useTherapickAdmin();
 
   const [activeCategory, setActiveCategory] = useState<'general' | 'booking' | 'payments' | 'notifications' | 'integrations' | 'access'>('general');
@@ -23,7 +27,8 @@ export default function TherapickSettingsView() {
   // Form states
   const [businessName, setBusinessName] = useState('THERAPICK Bali Home Spa & Massage');
   const [timeZone, setTimeZone] = useState('(UTC+08:00) Bali');
-  const [defaultBookingStatus, setDefaultBookingStatus] = useState('Confirmed');
+  const [defaultBookingStatus, setDefaultBookingStatus] = useState(contextDefaultStatus || 'In Progress');
+  const [whatsappAutoStatus, setWhatsappAutoStatus] = useState(contextWaStatus || 'In Progress');
   const [showWebsiteCalendar, setShowWebsiteCalendar] = useState(calendarVisibility !== false);
   const [allowReschedule, setAllowReschedule] = useState(true);
 
@@ -50,10 +55,12 @@ export default function TherapickSettingsView() {
     e.preventDefault();
     setIsSaving(true);
     setCalendarVisibility(showWebsiteCalendar);
+    setContextDefaultStatus(defaultBookingStatus);
+    setContextWaStatus(whatsappAutoStatus);
     setTimeout(() => {
       setIsSaving(false);
-      showToast('Website system settings saved successfully!');
-    }, 600);
+      showToast('Settings saved successfully!');
+    }, 500);
   };
 
   return (
@@ -166,13 +173,19 @@ export default function TherapickSettingsView() {
                       </label>
                       <select
                         value={defaultBookingStatus}
-                        onChange={e => setDefaultBookingStatus(e.target.value)}
+                        onChange={e => {
+                          setDefaultBookingStatus(e.target.value);
+                          setWhatsappAutoStatus(e.target.value);
+                        }}
                         className="w-full px-3.5 py-2 rounded-xl border border-stone-200 bg-white text-xs font-semibold text-neutral-900 focus:outline-none focus:ring-2 focus:ring-amber-400"
                       >
+                        <option value="In Progress">In Progress (Default)</option>
                         <option value="Confirmed">Confirmed</option>
                         <option value="Pending">Pending Review</option>
-                        <option value="In Progress">In Progress</option>
                       </select>
+                      <p className="text-[11px] text-stone-500 mt-1">
+                        Status automatically assigned when CS sends a WhatsApp chat message.
+                      </p>
                     </div>
                   </div>
 
@@ -299,6 +312,27 @@ export default function TherapickSettingsView() {
                     />
                     <span>Send booking confirmation & calendar invite to customer email</span>
                   </label>
+
+                  <div className="pt-3 border-t border-stone-100">
+                    <label className="block text-xs font-bold text-neutral-700 uppercase tracking-wider mb-1">
+                      WhatsApp Dispatch Auto-Status
+                    </label>
+                    <select
+                      value={whatsappAutoStatus}
+                      onChange={e => {
+                        setWhatsappAutoStatus(e.target.value);
+                        setDefaultBookingStatus(e.target.value);
+                      }}
+                      className="w-full sm:w-80 px-3.5 py-2 rounded-xl border border-stone-200 bg-white text-xs font-semibold text-neutral-900 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                    >
+                      <option value="In Progress">In Progress (Recommended)</option>
+                      <option value="Confirmed">Confirmed</option>
+                      <option value="Pending">Pending Review</option>
+                    </select>
+                    <p className="text-[11px] text-stone-500 mt-1">
+                      When CS clicks the WhatsApp Chat button on a booking, it automatically marks the treatment as In Progress.
+                    </p>
+                  </div>
                 </div>
               </div>
             )}
