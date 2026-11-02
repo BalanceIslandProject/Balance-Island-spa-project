@@ -84,11 +84,12 @@ export default function ScheduleTrackingModal({ booking, onClose }: ScheduleTrac
   };
 
   const isCancelled = booking.commission_status === 'cancelled' || booking.booking_status === 'Cancelled';
-  const isPaid = booking.payment_status === 'paid' || booking.payment_verified;
+  const isCashOnArrival = Boolean(booking.payment_method && /cash/i.test(booking.payment_method));
+  const isPaid = booking.payment_status === 'paid' || booking.payment_verified || isCashOnArrival;
   const isPaidOut = booking.commission_status === 'paid';
   const isApproved = booking.commission_status === 'approved';
   const isFinished = booking.treatment_status === 'Finish' || booking.treatment_status === 'Finished' || booking.booking_status === 'Completed' || booking.service_completed;
-  const isOngoing = booking.treatment_status === 'Ongoing' || booking.treatment_status === 'In Progress' || booking.booking_status === 'Ongoing';
+  const isOngoing = booking.treatment_status === 'Ongoing' || booking.treatment_status === 'In Progress' || booking.booking_status === 'Ongoing' || booking.booking_status === 'In Progress' || isCashOnArrival;
 
   // Determine active milestone (1 to 4)
   let activeStep = 1;
@@ -111,7 +112,7 @@ export default function ScheduleTrackingModal({ booking, onClose }: ScheduleTrac
     },
     {
       label: 'Payment',
-      sub: isPaid ? 'Paid' : 'Pending',
+      sub: isCashOnArrival ? 'Paid (Cash on Arrival)' : (isPaid ? 'Paid' : 'Pending'),
       isDone: !isCancelled && (isPaid || activeStep >= 2),
       isCurrent: !isCancelled && activeStep === 1 && !isPaid,
     },
@@ -123,7 +124,7 @@ export default function ScheduleTrackingModal({ booking, onClose }: ScheduleTrac
         ? 'In Progress' 
         : (booking.time || 'Scheduled'),
       isDone: !isCancelled && (isFinished || activeStep >= 3),
-      isCurrent: !isCancelled && isOngoing,
+      isCurrent: !isCancelled && isOngoing && !isFinished,
     },
     {
       label: 'Payout',
@@ -190,6 +191,10 @@ export default function ScheduleTrackingModal({ booking, onClose }: ScheduleTrac
               ) : isCancelled ? (
                 <span className="text-[10px] font-semibold text-[#DC2626] bg-[#FEF2F2] px-2 py-0.5 rounded-[4px] uppercase tracking-wide">
                   Cancelled
+                </span>
+              ) : isOngoing || booking.booking_status === 'In Progress' ? (
+                <span className="text-[10px] font-semibold text-[#0E2319] bg-[#E8F5E9] border border-[#C8E6C9] px-2 py-0.5 rounded-[4px] uppercase tracking-wide">
+                  In Progress
                 </span>
               ) : (
                 <span className="text-[10px] font-semibold text-[#2563EB] bg-[#EFF6FF] px-2 py-0.5 rounded-[4px] uppercase tracking-wide">
@@ -289,6 +294,12 @@ export default function ScheduleTrackingModal({ booking, onClose }: ScheduleTrac
                 <div className="flex items-center justify-between">
                   <span className="text-[#64748B]">Service Delivery</span>
                   <span className="text-[#059669] font-medium">On-demand Mobile Spa</span>
+                </div>
+                <div className="flex items-center justify-between pt-1 border-t border-[#F1F5F9]">
+                  <span className="text-[#64748B]">Payment Method</span>
+                  <span className={`font-semibold ${isCashOnArrival ? 'text-[#0E2319]' : isPaid ? 'text-[#059669]' : 'text-[#64748B]'}`}>
+                    {isCashOnArrival ? 'Paid (Cash on Arrival)' : isPaid ? `Paid (${booking.payment_method || 'Online'})` : 'Pending'}
+                  </span>
                 </div>
               </div>
             )}

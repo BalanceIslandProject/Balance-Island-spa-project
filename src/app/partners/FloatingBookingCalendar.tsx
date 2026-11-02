@@ -612,12 +612,20 @@ export default function FloatingBookingCalendar({
                   {/* Top Row: PAID OUT label + Track Schedule button + Invoice ID */}
                   <div className="flex items-center justify-between gap-2 flex-wrap">
                     <div className="flex items-center gap-2">
-                      {/* ONLY commission paid out has a label in capital letters */}
-                      {isPaidCommission && (
+                      {/* Status / Payment Badge */}
+                      {isPaidCommission ? (
                         <span className="font-mono text-[10px] font-semibold text-white bg-[#171717] px-2 py-0.5 rounded-[4px] uppercase tracking-wider">
                           PAID OUT
                         </span>
-                      )}
+                      ) : (b.payment_method && /cash/i.test(b.payment_method)) ? (
+                        <span className="font-mono text-[10px] font-semibold text-[#0E2319] bg-[#E8F5E9] border border-[#C8E6C9] px-2 py-0.5 rounded-[4px]">
+                          Cash on Arrival
+                        </span>
+                      ) : b.booking_status === 'In Progress' ? (
+                        <span className="font-mono text-[10px] font-semibold text-[#0E2319] bg-[#E8F5E9] border border-[#C8E6C9] px-2 py-0.5 rounded-[4px]">
+                          In Progress
+                        </span>
+                      ) : null}
 
                       {/* Single-click button to track book schedule */}
                       <button

@@ -799,8 +799,20 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
   // Action: Update Payment Status
   const updatePaymentStatus = async (id: string, newStatus: string, method?: string) => {
     const booking = bookings.find(b => b.id === id);
-    const payload: any = { payment_status: newStatus };
-    if (method) payload.payment_method = method;
+    const isCashOnArrival = method === 'Cash' || method === 'Cash on Arrival' || newStatus === 'Cash on Arrival' || (method && /cash/i.test(method));
+    const effectiveMethod = isCashOnArrival ? 'Cash on Arrival' : (method || booking?.payment_method || 'Online');
+    const effectivePaymentStatus = newStatus === 'Cash on Arrival' ? 'Paid' : newStatus;
+
+    const payload: any = { 
+      payment_status: effectivePaymentStatus,
+      payment_method: effectiveMethod
+    };
+
+    // When admin sets up cash on arrival, booking status & treatment status automatically become 'In Progress' / 'Ongoing'
+    if (isCashOnArrival && effectivePaymentStatus === 'Paid') {
+      payload.treatment_status = 'In Progress';
+      payload.status = 'Ongoing';
+    }
 
     try {
       await fetch('/api/admin/bookings/status', {
@@ -808,8 +820,12 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           booking_id: id, 
-          payment_status: newStatus,
-          payment_method: method || booking?.payment_method || 'Online'
+          payment_status: effectivePaymentStatus,
+          payment_method: effectiveMethod,
+          ...(isCashOnArrival && effectivePaymentStatus === 'Paid' ? {
+            treatment_status: 'In Progress',
+            booking_status: 'Ongoing'
+          } : {})
         }),
       });
     } catch (e) {
@@ -818,12 +834,14 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
 
     await supabase.from('bookings').update(payload).eq('id', id);
 
-    if (newStatus === 'Paid') {
-      // Only approve if treatment is also finished!
-      const isFinished = (booking?.treatment_status === 'Finished' || booking?.status === 'Completed');
+    if (effectivePaymentStatus === 'Paid') {
+      // Only approve commission if treatment is also finished!
+      const isFinished = (payload.treatment_status || booking?.treatment_status) === 'Finished' || (payload.status || booking?.status) === 'Completed';
       await syncAffiliateCommission(booking, { 
         payment_verified: true, 
-        status: isFinished ? 'approved' : 'pending' 
+        service_completed: isFinished,
+        status: isFinished ? 'approved' : 'pending',
+        notes: isCashOnArrival ? 'Paid (Cash on Arrival)' : `Paid via ${effectiveMethod}`
       });
     } else {
       await syncAffiliateCommission(booking, { 

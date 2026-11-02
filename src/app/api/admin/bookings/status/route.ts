@@ -2,7 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 
 // Validated Enumerations
-export const VALID_BOOKING_STATUSES = ['Pending', 'Approved', 'Confirmed', 'Cancelled'] as const;
+export const VALID_BOOKING_STATUSES = [
+  'Pending', 
+  'Approved', 
+  'Confirmed', 
+  'Cancelled', 
+  'Ongoing', 
+  'Completed', 
+  'In Progress'
+] as const;
 export const VALID_TREATMENT_STATUSES = [
   'Scheduled',
   'Therapist Assigned',
@@ -18,6 +26,8 @@ export const VALID_PAYMENT_STATUSES = [
   'Paid',
   'Refunded',
   'Payment Failed',
+  'Cash on Arrival',
+  'Paid (Cash on Arrival)',
 ] as const;
 
 function checkAdminAuth(req: NextRequest): boolean {
@@ -175,7 +185,9 @@ export async function PATCH(req: NextRequest) {
         nextPaymentVerified = payment_status === 'Paid';
         commUpdates.payment_verified = nextPaymentVerified;
         if (nextPaymentVerified && payment_method) {
-          commUpdates.notes = `Paid via ${payment_method}`;
+          commUpdates.notes = String(payment_method).toLowerCase().includes('cash') 
+            ? 'Paid (Cash on Arrival)' 
+            : `Paid via ${payment_method}`;
         } else if (!nextPaymentVerified) {
           commUpdates.notes = payment_status;
         }

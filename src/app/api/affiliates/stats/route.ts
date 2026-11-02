@@ -104,30 +104,38 @@ export async function GET(req: NextRequest) {
         rawTreatmentStatus.toLowerCase() === 'cancelled' ||
         comm.status === 'cancelled' || 
         comm.status === 'declined';
+      // Detect payment method (Cash on Arrival / Online)
+      let paymentMethod = '';
+      if (comm.notes) {
+        if (/cash/i.test(comm.notes)) paymentMethod = 'Cash on Arrival';
+        else if (/online/i.test(comm.notes)) paymentMethod = 'Online';
+      }
+      if (!paymentMethod && matched.payment_method) {
+        if (/cash/i.test(matched.payment_method)) paymentMethod = 'Cash on Arrival';
+        else paymentMethod = String(matched.payment_method);
+      }
+      if (!paymentMethod && isPaid) {
+        paymentMethod = 'Online';
+      }
+
+      const isCashOnArrival = paymentMethod === 'Cash on Arrival';
+
       const isCompleted = Boolean(comm.service_completed) || 
         rawBookingStatus.toLowerCase() === 'completed' || 
         rawTreatmentStatus.toLowerCase() === 'finished';
       const isOngoing = rawBookingStatus.toLowerCase() === 'ongoing' || 
-        rawTreatmentStatus.toLowerCase() === 'in progress';
+        rawBookingStatus.toLowerCase() === 'in progress' ||
+        rawTreatmentStatus.toLowerCase() === 'in progress' ||
+        isCashOnArrival; // Cash on arrival automatically puts booking in progress
       const isConfirmed = rawBookingStatus.toLowerCase() === 'confirmed';
 
       let displayBookingStatus = 'Pending';
       if (isCancelled) displayBookingStatus = 'Cancelled';
       else if (isCompleted) displayBookingStatus = 'Completed';
-      else if (isOngoing) displayBookingStatus = 'Ongoing';
+      else if (isOngoing) displayBookingStatus = 'In Progress';
       else if (isConfirmed) displayBookingStatus = 'Confirmed';
 
       const displayTreatmentStatus = rawTreatmentStatus || (isCompleted ? 'Finished' : isOngoing ? 'In Progress' : 'Scheduled');
-
-      // Detect payment method (cash / online)
-      let paymentMethod = '';
-      if (comm.notes) {
-        if (/cash/i.test(comm.notes)) paymentMethod = 'cash';
-        else if (/online/i.test(comm.notes)) paymentMethod = 'online';
-      }
-      if (!paymentMethod && matched.payment_method) {
-        paymentMethod = String(matched.payment_method).toLowerCase();
-      }
 
       // Couple massage pricing logic:
       // If couple treatment was multiplied by guests, ensure treatment amount does NOT exceed gross booking amount

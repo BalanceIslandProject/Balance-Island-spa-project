@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
+import Link from 'next/link';
 import { 
   X, 
   MapPin, 
@@ -10,14 +11,13 @@ import {
   User, 
   Users, 
   Globe, 
-  CreditCard, 
   CheckCircle2, 
   MessageSquare,
   Trash2,
   Check,
+  Copy,
   ChevronDown,
-  Sparkles,
-  DollarSign
+  ExternalLink
 } from 'lucide-react';
 import { useTherapickAdmin } from '@/context/TherapickAdminContext';
 import { calculateBookingTherapistFee } from '@/lib/bookingFeeCalculator';
@@ -25,6 +25,35 @@ import { calculateBookingTherapistFee } from '@/lib/bookingFeeCalculator';
 const formatIDR = (val: number | string | undefined | null) => {
   const num = Number(val) || 0;
   return `Rp ${num.toLocaleString('id-ID')}`;
+};
+
+const cleanTreatmentName = (name?: string | null): string => {
+  if (!name) return 'Signature Ritual';
+  return name.replace(/\s*\(\s*\d+\s*(?:mins?|minutes?|m)?\s*\)/gi, '').trim();
+};
+
+const safeFormatDate = (rawDate: string | undefined | null) => {
+  if (!rawDate) return '';
+  try {
+    const cleanStr = String(rawDate).includes('T') ? String(rawDate).split('T')[0] : String(rawDate);
+    const parts = cleanStr.split('-');
+    if (parts.length === 3) {
+      const year = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const day = parseInt(parts[2], 10);
+      if (!isNaN(year) && !isNaN(month) && !isNaN(day)) {
+        const d = new Date(year, month, day);
+        return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+      }
+    }
+    const d = new Date(rawDate);
+    if (!isNaN(d.getTime())) {
+      return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+    }
+  } catch {
+    // fallback
+  }
+  return String(rawDate);
 };
 
 export default function TherapickBookingDrawer() {
@@ -40,10 +69,10 @@ export default function TherapickBookingDrawer() {
     treatments,
     whatsappAutoStatus,
     defaultBookingStatus,
-    system
   } = useTherapickAdmin();
 
   const [loadingAction, setLoadingAction] = useState(false);
+  const [copiedRef, setCopiedRef] = useState(false);
 
   // Auto-calculated therapist fee based on database wage tiers and 2-person rules (packages, couple, four hands)
   const autoFeeCalc = useMemo(() => {
@@ -86,6 +115,43 @@ export default function TherapickBookingDrawer() {
   const waUrl = cleanPhone 
     ? `https://wa.me/${cleanPhone}?text=Hello%20${encodeURIComponent(guestName)}%2C%20regarding%20your%20Therapick%20booking%20%23${bookingRef}...` 
     : null;
+
+  const isCashOnArrival = Boolean(
+    (b.payment_method && /cash/i.test(b.payment_method)) ||
+    (b.payment_status && /cash/i.test(b.payment_status))
+  );
+
+  const isPaid = b.payment_status === 'Paid';
+  const currentPaymentVal = isCashOnArrival && isPaid
+    ? 'Paid (Cash on Arrival)'
+    : isPaid
+    ? 'Paid (Online)'
+    : 'Unpaid';
+
+  const rawBookingStatus = String(b.status || 'Pending').toLowerCase();
+  const rawTreatmentStatus = String(b.treatment_status || '').toLowerCase();
+  const isCancelled = rawBookingStatus === 'cancelled' || rawTreatmentStatus === 'cancelled';
+  const isFinished = rawBookingStatus === 'completed' || rawTreatmentStatus === 'finished';
+  const isOngoing = rawBookingStatus === 'ongoing' || rawBookingStatus === 'in progress' || rawTreatmentStatus === 'in progress' || (isCashOnArrival && isPaid);
+  const isConfirmed = rawBookingStatus === 'confirmed';
+
+  const displayStatusLabel = isCancelled
+    ? 'Cancelled'
+    : isFinished
+    ? 'Completed'
+    : isOngoing
+    ? 'In Progress'
+    : isConfirmed
+    ? 'Confirmed'
+    : 'Pending';
+
+  const handleCopyRef = () => {
+    if (navigator?.clipboard) {
+      navigator.clipboard.writeText(bookingRef);
+      setCopiedRef(true);
+      setTimeout(() => setCopiedRef(false), 2000);
+    }
+  };
 
   // WhatsApp click handler: open chat & automatically set status to 'In Progress' per settings
   const handleWhatsAppDispatch = async () => {
@@ -149,258 +215,267 @@ export default function TherapickBookingDrawer() {
     }
   };
 
-  // Payment select value computation
-  const currentPaymentVal = b.payment_status === 'Paid'
-    ? (String(b.payment_method || '').toLowerCase() === 'cash' ? 'Paid (Cash)' : 'Paid (Online)')
-    : 'Unpaid';
+  const cleanTreatment = cleanTreatmentName(b.treatment_name);
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end">
+    <div className="fixed inset-0 z-50 flex items-center justify-end bg-black/40 backdrop-blur-xs animate-in fade-in duration-200">
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 bg-neutral-950/40 backdrop-blur-xs transition-opacity" 
+        className="absolute inset-0" 
         onClick={() => setSelectedBooking(null)}
       />
 
-      {/* Slide-over Drawer Panel */}
-      <div className="relative w-full max-w-md sm:max-w-lg bg-white h-full shadow-2xl flex flex-col z-50 overflow-y-auto animate-in slide-in-from-right duration-300">
+      {/* Slide-over Drawer Panel (Matching Partner Portal Calm Apple Design) */}
+      <div 
+        className="relative w-full max-w-md sm:max-w-lg h-full bg-[#F8FAFC] shadow-2xl flex flex-col z-10 animate-in slide-in-from-right duration-250 font-sans border-l border-[#E2E8F0]"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="booking-drawer-title"
+      >
         
-        {/* Header */}
-        <div className="sticky top-0 bg-white/95 backdrop-blur-md px-5 sm:px-6 py-4 border-b border-stone-200/80 flex items-center justify-between z-10">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-mono font-bold text-stone-500 uppercase">
+        {/* Header: Exact Partner Portal Architecture */}
+        <div className="p-4 sm:p-5 border-b border-[#E2E8F0] bg-white shrink-0 space-y-2.5">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 flex-wrap min-w-0">
+              <span className="font-mono text-sm font-bold text-[#0F172A]">
                 #{bookingRef}
               </span>
-              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                (b.status || '').toLowerCase() === 'confirmed' || (b.status || '').toLowerCase() === 'ongoing'
-                  ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                  : (b.status || '').toLowerCase() === 'cancelled'
-                  ? 'bg-rose-50 text-rose-800 border border-rose-200'
-                  : 'bg-amber-50 text-amber-800 border border-amber-200'
-              }`}>
-                <span className="w-1.5 h-1.5 rounded-full bg-current" />
-                <span>{b.status || 'Pending'}</span>
-              </span>
+              <button
+                type="button"
+                onClick={handleCopyRef}
+                className="text-[#94A3B8] hover:text-[#0F172A] p-1 rounded-md hover:bg-[#F1F5F9] cursor-pointer transition-colors"
+                title="Copy Reference Number"
+                aria-label="Copy reference"
+              >
+                {copiedRef ? <Check size={12} className="text-[#059669]" /> : <Copy size={12} />}
+              </button>
+
+              {/* Status Badge */}
+              {isCancelled ? (
+                <span className="text-[10px] font-semibold text-[#DC2626] bg-[#FEF2F2] px-2 py-0.5 rounded-[4px] uppercase tracking-wide">
+                  Cancelled
+                </span>
+              ) : isFinished ? (
+                <span className="text-[10px] font-semibold text-[#059669] bg-[#ECFDF5] px-2 py-0.5 rounded-[4px] uppercase tracking-wide">
+                  Completed
+                </span>
+              ) : isOngoing ? (
+                <span className="text-[10px] font-semibold text-[#0E2319] bg-[#E8F5E9] border border-[#C8E6C9] px-2 py-0.5 rounded-[4px] uppercase tracking-wide">
+                  In Progress
+                </span>
+              ) : isConfirmed ? (
+                <span className="text-[10px] font-semibold text-[#059669] bg-[#ECFDF5] px-2 py-0.5 rounded-[4px] uppercase tracking-wide">
+                  Confirmed
+                </span>
+              ) : (
+                <span className="text-[10px] font-semibold text-[#2563EB] bg-[#EFF6FF] px-2 py-0.5 rounded-[4px] uppercase tracking-wide">
+                  Pending
+                </span>
+              )}
             </div>
-            <h2 className="text-lg font-bold text-neutral-950 font-sans mt-0.5">Booking Details</h2>
+
+            <button
+              type="button"
+              onClick={() => setSelectedBooking(null)}
+              className="p-1.5 -mr-1 text-[#94A3B8] hover:text-[#0F172A] hover:bg-[#F1F5F9] rounded-full transition-colors cursor-pointer shrink-0"
+              aria-label="Close booking details"
+            >
+              <X size={18} />
+            </button>
           </div>
 
-          <button
-            type="button"
-            onClick={() => setSelectedBooking(null)}
-            className="p-1.5 rounded-xl text-stone-400 hover:text-neutral-900 hover:bg-stone-100 transition-colors cursor-pointer"
-            aria-label="Close booking details"
-          >
-            <X size={18} />
-          </button>
+          {/* Full-width Title Row */}
+          <div className="w-full">
+            <h2 
+              id="booking-drawer-title" 
+              className="text-base sm:text-lg font-bold text-[#0F172A] leading-snug break-words tracking-tight uppercase"
+            >
+              {cleanTreatment}
+            </h2>
+          </div>
         </div>
 
-        {/* Content Body */}
-        <div className="p-5 sm:p-6 space-y-4">
+        {/* Content Body: Clean Paper Canvas & Discrete White Cards */}
+        <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3.5 bg-[#F8FAFC]">
           
-          {/* Card 1: Treatment & Customer Information */}
-          <div className="bg-white border border-stone-200 rounded-2xl p-4 sm:p-4.5 space-y-3.5 shadow-2xs">
-            <div className="flex items-center justify-between border-b border-stone-100 pb-2.5">
-              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-stone-600">
-                Treatment & Schedule
-              </span>
-              <span className={`font-bold px-2 py-0.5 rounded-full text-[10px] border ${
-                (b.treatment_status || '').toLowerCase() === 'finished'
-                  ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                  : (b.treatment_status || '').toLowerCase() === 'in progress'
-                  ? 'bg-amber-50 text-amber-900 border-amber-200'
-                  : (b.treatment_status || '').toLowerCase() === 'cancelled'
-                  ? 'bg-rose-50 text-rose-800 border-rose-200'
-                  : 'bg-stone-100 text-stone-700 border-stone-200'
-              }`}>
-                {b.treatment_status || 'Scheduled'}
-              </span>
+          {/* Card 1: Guest Information */}
+          <div className="p-3.5 sm:p-4 rounded-[8px] bg-white border border-[#E2E8F0] shadow-2xs space-y-2.5 text-xs">
+            <div className="flex items-center justify-between text-xs font-semibold text-[#0F172A]">
+              <span>Guest Information</span>
             </div>
             
-            <div className="space-y-2 text-xs">
-              <div className="flex items-center justify-between">
-                <span className="text-stone-500">Service</span>
-                <span className="font-bold text-neutral-900 text-right">{b.treatment_name || 'Signature Ritual'}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-stone-500">Duration</span>
-                <span className="font-medium text-neutral-900">{b.duration_minutes ? `${b.duration_minutes} min` : '90 min'}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-stone-500">Date & Time</span>
-                <span className="font-semibold text-neutral-900">{b.booking_date || (b.created_at ? b.created_at.split('T')[0] : 'Today')} at {b.time || b.booking_time || '14:00'}</span>
-              </div>
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-[#64748B]">Name</span>
+              <span className="font-semibold text-[#0F172A] text-right">{guestName}</span>
             </div>
 
-            {/* Customer Contact Details */}
-            <div className="pt-3 border-t border-stone-100 space-y-2.5 text-xs">
-              <div className="flex items-center justify-between">
-                <span className="text-stone-500 flex items-center gap-1.5">
-                  <User size={13} className="text-stone-400" />
-                  Guest Name
-                </span>
-                <span className="font-bold text-neutral-900">{guestName}</span>
-              </div>
-
-              {guestPhone && (
-                <div className="flex items-center justify-between">
-                  <span className="text-stone-500 flex items-center gap-1.5">
-                    <Phone size={13} className="text-stone-400" />
-                    WhatsApp
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-neutral-900">{guestPhone}</span>
-                    {waUrl && (
-                      <a
-                        href={waUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        onClick={handleWhatsAppDispatch}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold shadow-xs transition-colors cursor-pointer"
-                        title="Open WhatsApp chat & set status to In Progress"
-                      >
-                        <MessageSquare size={11} />
-                        <span>Chat</span>
-                      </a>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {guestEmail && (
-                <div className="flex items-center justify-between">
-                  <span className="text-stone-500 flex items-center gap-1.5">
-                    <Mail size={13} className="text-stone-400" />
-                    Email
-                  </span>
-                  <span className="text-neutral-900 font-medium">{guestEmail}</span>
-                </div>
-              )}
-
-              {location && (
-                <div className="flex items-start justify-between gap-4">
-                  <span className="text-stone-500 flex items-center gap-1.5 shrink-0">
-                    <MapPin size={13} className="text-stone-400" />
-                    Villa / Location
-                  </span>
-                  <span className="font-medium text-neutral-900 text-right">{location}</span>
-                </div>
-              )}
-
-              {roomNumber && (
-                <div className="flex items-center justify-between">
-                  <span className="text-stone-500">Room / Villa No.</span>
-                  <span className="font-mono font-bold text-neutral-900">{roomNumber}</span>
-                </div>
-              )}
-
-              {notes && (
-                <div className="pt-2 border-t border-dashed border-stone-200">
-                  <span className="text-stone-400 block text-[10px] uppercase font-mono mb-1">Notes / Requests</span>
-                  <p className="text-neutral-700 bg-stone-50 rounded-lg p-2 text-[11px] leading-relaxed">{notes}</p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Card 2: Partner Attribution Source */}
-          <div className="bg-white border border-stone-200/90 rounded-2xl p-4 space-y-2 shadow-2xs">
-            <div className="text-[11px] font-mono font-bold uppercase tracking-wider text-stone-600">Referring Partner & Attribution</div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                {isAffiliate ? (
-                  <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-900 flex items-center justify-center font-bold text-xs">
-                    <Users size={15} />
-                  </div>
-                ) : (
-                  <div className="w-8 h-8 rounded-xl bg-blue-100 text-blue-900 flex items-center justify-center font-bold text-xs">
-                    <Globe size={15} />
-                  </div>
-                )}
-                <div>
-                  <div className="text-xs font-bold text-neutral-900">
-                    {isAffiliate ? ((b as any).partner_info?.business || (b as any).partner_name || b.affiliate_code || 'Affiliate Partner') : 'Direct Website Booking'}
-                  </div>
-                  <div className="text-[10px] text-stone-500 font-mono">
-                    {isAffiliate ? `Referral Code: ${b.affiliate_code || (b as any).partner_info?.code || 'DIRECT'}` : 'booktherapick.com'}
-                  </div>
-                </div>
-              </div>
-
-              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                isAffiliate ? 'bg-amber-100 text-amber-900 border border-amber-200' : 'bg-blue-100 text-blue-900 border border-blue-200'
-              }`}>
-                {isAffiliate ? 'Affiliate Attributed' : 'Website Direct'}
+            <div className="flex items-start justify-between gap-3">
+              <span className="text-[#64748B] shrink-0">Location</span>
+              <span className="font-medium text-[#0F172A] text-right break-words max-w-[70%]">
+                {location || 'Private Villa / Resort in Bali'}
               </span>
             </div>
-          </div>
 
-          {/* Card 3: Financial Breakdown & Commission (Auto-calculated Therapist Fee) */}
-          <div className="bg-stone-50/90 border border-stone-200/80 rounded-2xl p-4.5 space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-stone-600">
-                Financial Breakdown & Commission
-              </span>
-              <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md">
-                Auto-Calculated
-              </span>
-            </div>
-            
-            <div className="space-y-2 text-xs">
-              <div className="flex items-center justify-between">
-                <span className="text-stone-500">Booking Amount</span>
-                <span className="font-bold text-neutral-900 font-mono">{formatIDR(revenue)}</span>
-              </div>
-
-              <div className="flex items-center justify-between text-rose-600">
-                <div className="flex items-center gap-1.5">
-                  <span>Therapist Fee Total</span>
-                  <span className="text-[10px] font-medium text-stone-500 bg-white border border-stone-200 px-1.5 py-0.2 rounded">
-                    {autoFeeCalc.reason}
-                  </span>
-                </div>
-                <span className="font-mono font-semibold">- {formatIDR(effectiveTherapistFee)}</span>
-              </div>
-
-              {isAffiliate && (
-                <div className="flex items-center justify-between text-amber-800 font-medium">
-                  <span>Affiliate Commission (15%)</span>
-                  <span className="font-bold font-mono">- {formatIDR(commAmount)}</span>
-                </div>
-              )}
-
-              <div className="pt-2 border-t border-stone-200 flex items-center justify-between text-sm font-bold text-neutral-950">
-                <span>Net Profit</span>
-                <span className="text-emerald-700 font-mono">{formatIDR(netProfit)}</span>
-              </div>
-            </div>
-
-            {isAffiliate && (
-              <div className="p-2.5 rounded-xl bg-amber-50/80 border border-amber-200/70 text-[11px] text-amber-900 leading-tight">
-                <strong>Commission Policy:</strong> Weekly 7-day payout cycle once treatment is completed & customer payment verified.
+            {roomNumber && roomNumber !== '-' && (
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-[#64748B]">Room</span>
+                <span className="font-semibold text-[#0F172A] text-right">{roomNumber}</span>
               </div>
             )}
 
-            <div className="pt-2 border-t border-stone-200 flex items-center justify-between text-xs">
-              <span className="text-stone-500">Current Payment</span>
-              <span className={`font-bold px-2 py-0.5 rounded-full text-[10px] ${
-                b.payment_status === 'Paid' ? 'bg-emerald-100 text-emerald-900 border border-emerald-200' : 'bg-stone-200 text-stone-800'
-              }`}>
-                {b.payment_status || 'Unpaid'} ({b.payment_method || 'Online'})
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-[#64748B]">Time</span>
+              <span className="font-semibold text-[#0F172A] text-right">{b.time || b.booking_time || 'Scheduled'}</span>
+            </div>
+
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-[#64748B]">Date</span>
+              <span className="font-medium text-[#0F172A] text-right">{safeFormatDate(b.booking_date || b.created_at)}</span>
+            </div>
+
+            {guestPhone && (
+              <div className="flex items-center justify-between gap-3 pt-2 border-t border-[#F1F5F9]">
+                <span className="text-[#64748B]">WhatsApp</span>
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-[#0F172A] font-medium">{guestPhone}</span>
+                  {waUrl && (
+                    <a
+                      href={waUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      onClick={handleWhatsAppDispatch}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-[4px] bg-[#0E2319] hover:bg-[#163625] text-white text-[11px] font-medium transition-colors cursor-pointer"
+                      title="Open WhatsApp chat & set status to In Progress"
+                    >
+                      <MessageSquare size={11} />
+                      <span>Chat</span>
+                    </a>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {guestEmail && (
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-[#64748B]">Email</span>
+                <span className="font-medium text-[#0F172A]">{guestEmail}</span>
+              </div>
+            )}
+          </div>
+
+          {/* Card 2: Treatment Details */}
+          <div className="p-3.5 sm:p-4 rounded-[8px] bg-white border border-[#E2E8F0] shadow-2xs space-y-2.5 text-xs">
+            <div className="flex items-center justify-between text-xs font-semibold text-[#0F172A]">
+              <span>Treatment Details</span>
+              <span className="text-[10px] font-mono text-[#64748B] bg-[#F1F5F9] px-2 py-0.5 rounded-[4px]">
+                {b.treatment_status || 'Scheduled'}
+              </span>
+            </div>
+
+            <div className="flex items-start justify-between gap-3">
+              <span className="text-[#64748B] shrink-0">Ritual</span>
+              <span className="font-semibold text-[#0F172A] text-right break-words max-w-[70%] leading-snug">
+                {cleanTreatment}
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <span className="text-[#64748B]">Duration</span>
+              <span className="text-[#0F172A] font-medium">
+                {b.duration_minutes ? `${b.duration_minutes} Mins` : '90 Mins'}
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <span className="text-[#64748B]">Service Delivery</span>
+              <span className="text-[#059669] font-medium">On-demand Mobile Spa</span>
+            </div>
+
+            {notes && (
+              <div className="pt-2 border-t border-[#F1F5F9] text-[#64748B] italic text-[11px] leading-relaxed">
+                &ldquo;{notes}&rdquo;
+              </div>
+            )}
+          </div>
+
+          {/* Card 3: Referring Partner & Attribution */}
+          <div className="p-3.5 sm:p-4 rounded-[8px] bg-white border border-[#E2E8F0] shadow-2xs space-y-2.5 text-xs">
+            <div className="flex items-center justify-between text-xs font-semibold text-[#0F172A]">
+              <span>Referring Partner</span>
+              <span className="text-[10px] font-mono text-[#64748B] bg-[#F1F5F9] px-2 py-0.5 rounded-[4px]">
+                {isAffiliate ? 'Affiliate Partner' : 'Direct Booking'}
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-[#64748B]">Partner</span>
+              <span className="font-semibold text-[#0F172A] text-right">
+                {isAffiliate 
+                  ? ((b as any).partner_info?.business || (b as any).partner_name || b.affiliate_code || 'Affiliate Partner') 
+                  : 'Direct Website Booking'}
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-[#64748B]">Referral Code</span>
+              <span className="font-mono font-medium text-[#0F172A]">
+                #{b.affiliate_code || (b as any).partner_info?.code || 'DIRECT'}
               </span>
             </div>
           </div>
 
-          {/* Card 4: Streamlined UPDATE BOOKING STATE */}
-          <div className="bg-white border border-stone-200 rounded-2xl p-4.5 space-y-3.5 shadow-2xs">
-            <div className="text-[11px] font-mono font-bold uppercase tracking-wider text-stone-600">
-              Update Booking State
+          {/* Card 4: Financial Summary (Calm Disciplined Monochrome) */}
+          <div className="p-3.5 sm:p-4 rounded-[8px] bg-white border border-[#E2E8F0] shadow-2xs space-y-2.5 text-xs">
+            <div className="flex items-center justify-between text-xs font-semibold text-[#0F172A]">
+              <span>Financial Summary</span>
+              <span className="text-[10px] font-mono text-[#64748B] bg-[#F1F5F9] px-2 py-0.5 rounded-[4px]">
+                Auto-Calculated
+              </span>
             </div>
 
-            {/* Payment Dropdown (Cash or Online or Unpaid) */}
+            <div className="flex items-center justify-between">
+              <span className="text-[#64748B]">Gross Treatment</span>
+              <span className="font-mono font-semibold text-[#0F172A] tabular-nums">{formatIDR(revenue)}</span>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <span className="text-[#64748B]">
+                Therapist Fee {autoFeeCalc.reason ? `(${autoFeeCalc.reason})` : ''}
+              </span>
+              <span className="font-mono text-[#64748B] tabular-nums">- {formatIDR(effectiveTherapistFee)}</span>
+            </div>
+
+            {isAffiliate && (
+              <div className="flex items-center justify-between">
+                <span className="text-[#64748B]">Affiliate Commission (15%)</span>
+                <span className="font-mono text-[#64748B] tabular-nums">- {formatIDR(commAmount)}</span>
+              </div>
+            )}
+
+            <div className="pt-2 border-t border-[#F1F5F9] flex items-center justify-between">
+              <span className="font-semibold text-[#0F172A]">Net Profit</span>
+              <span className="font-mono font-bold text-sm text-[#059669] tabular-nums">{formatIDR(netProfit)}</span>
+            </div>
+
+            <div className="flex items-center justify-between pt-1">
+              <span className="text-[#64748B]">Payment Method</span>
+              <span className={`font-semibold ${isCashOnArrival ? 'text-[#0E2319]' : isPaid ? 'text-[#059669]' : 'text-[#64748B]'}`}>
+                {isCashOnArrival 
+                  ? 'Paid (Cash on Arrival)' 
+                  : isPaid 
+                  ? `Paid (${b.payment_method || 'Online'})` 
+                  : 'Payment Pending'}
+              </span>
+            </div>
+          </div>
+
+          {/* Card 5: Update Booking State (Streamlined & Clean) */}
+          <div className="p-3.5 sm:p-4 rounded-[8px] bg-white border border-[#E2E8F0] shadow-2xs space-y-3 text-xs">
+            <div className="text-xs font-semibold text-[#0F172A]">Update Booking State</div>
+
+            {/* Payment Status Dropdown */}
             <div>
-              <label className="block text-[11px] font-semibold text-stone-500 mb-1.5">
+              <label className="block text-[11px] font-medium text-[#64748B] mb-1.5">
                 Payment Status & Method
               </label>
               <div className="relative">
@@ -409,34 +484,34 @@ export default function TherapickBookingDrawer() {
                   value={currentPaymentVal}
                   onChange={e => {
                     const val = e.target.value;
-                    if (val === 'Paid (Cash)') {
-                      handlePaymentChange('Paid', 'Cash');
+                    if (val === 'Paid (Cash on Arrival)') {
+                      handlePaymentChange('Paid', 'Cash on Arrival');
                     } else if (val === 'Paid (Online)') {
                       handlePaymentChange('Paid', 'Online');
                     } else {
                       handlePaymentChange('Unpaid', b.payment_method || 'Online');
                     }
                   }}
-                  className="w-full appearance-none px-3.5 py-2.5 rounded-xl border border-stone-200 bg-stone-50/60 hover:bg-white text-xs font-bold text-neutral-900 focus:outline-none focus:ring-2 focus:ring-neutral-900 cursor-pointer transition-all"
+                  className="w-full appearance-none px-3 py-2 rounded-[6px] border border-[#CBD5E1] bg-white hover:border-[#0F172A] text-xs font-medium text-[#0F172A] focus:outline-none focus:ring-1 focus:ring-[#0F172A] cursor-pointer transition-colors"
                 >
-                  <option value="Paid (Cash)">Paid (Cash on Arrival)</option>
-                  <option value="Paid (Online)">Paid (Online / Transfer / Card)</option>
+                  <option value="Paid (Cash on Arrival)">Paid (Cash on Arrival)</option>
+                  <option value="Paid (Online)">Paid (Online / Card)</option>
                   <option value="Unpaid">Unpaid (Payment Pending)</option>
                 </select>
-                <ChevronDown size={14} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none" />
+                <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94A3B8] pointer-events-none" />
               </div>
             </div>
 
             {/* Streamlined Ongoing & Finish Treatment Buttons */}
-            <div className="grid grid-cols-2 gap-2.5 pt-1">
+            <div className="grid grid-cols-2 gap-2 pt-1">
               <button
                 type="button"
                 disabled={loadingAction}
                 onClick={() => handleTreatmentStatusChange('In Progress')}
-                className={`py-2.5 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                className={`py-2 px-3 rounded-[6px] text-xs font-medium transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                   (b.treatment_status || '').toLowerCase() === 'in progress'
-                    ? 'bg-amber-400 text-neutral-950 ring-2 ring-amber-400 ring-offset-1 shadow-xs'
-                    : 'bg-amber-50 border border-amber-200 text-amber-900 hover:bg-amber-100'
+                    ? 'bg-[#0F172A] text-white shadow-2xs'
+                    : 'bg-white border border-[#CBD5E1] text-[#0F172A] hover:bg-[#F1F5F9]'
                 }`}
               >
                 <Clock size={13} />
@@ -447,10 +522,10 @@ export default function TherapickBookingDrawer() {
                 type="button"
                 disabled={loadingAction}
                 onClick={() => handleTreatmentStatusChange('Finished')}
-                className={`py-2.5 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                className={`py-2 px-3 rounded-[6px] text-xs font-medium transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                   (b.treatment_status || '').toLowerCase() === 'finished'
-                    ? 'bg-emerald-600 text-white ring-2 ring-emerald-600 ring-offset-1 shadow-xs'
-                    : 'bg-emerald-50 border border-emerald-200 text-emerald-900 hover:bg-emerald-100'
+                    ? 'bg-[#059669] text-white shadow-2xs'
+                    : 'bg-white border border-[#CBD5E1] text-[#0F172A] hover:bg-[#F1F5F9]'
                 }`}
               >
                 <CheckCircle2 size={13} />
@@ -459,12 +534,12 @@ export default function TherapickBookingDrawer() {
             </div>
 
             {/* Discreet Secondary Actions (Cancel / Remove) */}
-            <div className="pt-2 border-t border-stone-100 flex items-center justify-between text-[11px]">
+            <div className="pt-2 border-t border-[#F1F5F9] flex items-center justify-between text-[11px]">
               <button
                 type="button"
                 disabled={loadingAction}
                 onClick={() => handleStatusChange('Cancelled')}
-                className="text-stone-400 hover:text-rose-600 font-medium transition-colors cursor-pointer"
+                className="text-[#94A3B8] hover:text-[#DC2626] transition-colors cursor-pointer"
               >
                 Cancel Booking
               </button>
@@ -473,56 +548,36 @@ export default function TherapickBookingDrawer() {
                 type="button"
                 disabled={loadingAction}
                 onClick={handleDelete}
-                className="text-stone-400 hover:text-rose-600 font-medium transition-colors cursor-pointer flex items-center gap-1"
+                className="text-[#94A3B8] hover:text-[#DC2626] transition-colors cursor-pointer flex items-center gap-1"
               >
-                <Trash2 size={12} />
+                <Trash2 size={11} />
                 <span>Remove Booking</span>
               </button>
             </div>
           </div>
 
-          {/* Card 5: Booking Activity History */}
-          <div className="bg-white border border-stone-200/90 rounded-2xl p-4 space-y-2.5 shadow-2xs">
-            <div className="text-[11px] font-mono font-bold uppercase tracking-wider text-stone-600">Booking Activity History</div>
-            <div className="space-y-2.5 text-xs">
-              <div className="flex items-start gap-2.5">
-                <div className="w-2 h-2 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
-                <div>
-                  <div className="font-semibold text-neutral-900">Booking Created & Attributed</div>
-                  <div className="text-[10px] text-stone-400 font-mono">
-                    {b.created_at ? new Date(b.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Initial creation'}
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-start gap-2.5">
-                <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${(b.status || '').toLowerCase() === 'confirmed' || (b.status || '').toLowerCase() === 'completed' || (b.status || '').toLowerCase() === 'ongoing' ? 'bg-emerald-500' : 'bg-stone-300'}`} />
-                <div>
-                  <div className="font-semibold text-neutral-900">Admin Confirmation</div>
-                  <div className="text-[10px] text-stone-400 font-mono">
-                    {(b.status || '').toLowerCase() === 'confirmed' || (b.status || '').toLowerCase() === 'completed' || (b.status || '').toLowerCase() === 'ongoing' ? 'Confirmed by admin' : 'Awaiting confirmation'}
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-start gap-2.5">
-                <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${(b.treatment_status || '').toLowerCase() === 'finished' ? 'bg-emerald-500' : (b.treatment_status || '').toLowerCase() === 'in progress' ? 'bg-amber-400' : 'bg-stone-300'}`} />
-                <div>
-                  <div className="font-semibold text-neutral-900">Treatment Execution</div>
-                  <div className="text-[10px] text-stone-400 font-mono">{b.treatment_status || 'Scheduled'}</div>
-                </div>
-              </div>
-              <div className="flex items-start gap-2.5">
-                <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${b.payment_status === 'Paid' ? 'bg-emerald-500' : 'bg-stone-300'}`} />
-                <div>
-                  <div className="font-semibold text-neutral-900">Payment & Settlement</div>
-                  <div className="text-[10px] text-stone-400 font-mono">
-                    {b.payment_status === 'Paid' ? `Paid via ${b.payment_method || 'Online'}` : 'Unsettled'}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
         </div>
+
+        {/* Drawer Footer with Actions (Matching Partner Portal exactly) */}
+        <div className="p-4 border-t border-[#E2E8F0] bg-white flex items-center justify-between shrink-0">
+          <Link
+            href={`/invoice/${bookingRef}`}
+            target="_blank"
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-[#0E2319] hover:underline"
+          >
+            <span>View Official Invoice</span>
+            <ExternalLink size={12} />
+          </Link>
+
+          <button
+            type="button"
+            onClick={() => setSelectedBooking(null)}
+            className="px-4 py-2 rounded-[6px] bg-[#0E2319] hover:bg-[#163625] text-white text-xs font-medium transition-colors cursor-pointer"
+          >
+            Done
+          </button>
+        </div>
+
       </div>
     </div>
   );

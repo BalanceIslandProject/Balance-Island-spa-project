@@ -422,7 +422,11 @@ export default function PartnerCommissionFilterCard({
                         )}
                       </button>
 
-                      {isPaid ? (
+                      {b.payment_method && /cash/i.test(b.payment_method) ? (
+                        <span className="font-mono text-[10px] text-[#0E2319] bg-[#E8F5E9] px-2 py-0.5 rounded-[4px] border border-[#C8E6C9]">
+                          Paid (Cash on Arrival)
+                        </span>
+                      ) : isPaid ? (
                         <span className="font-mono text-[10px] text-[#297a3a] bg-[#fafafa] px-2 py-0.5 rounded-[4px] border border-[#ebebeb]">
                           Paid
                         </span>
