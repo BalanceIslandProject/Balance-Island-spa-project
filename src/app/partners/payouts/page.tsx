@@ -91,7 +91,7 @@ export default function PartnerPayoutsPage() {
     const formatted = new Intl.NumberFormat('id-ID', {
       maximumFractionDigits: 0,
     }).format(val || 0);
-    return `Rp${formatted}`;
+    return `Rp ${formatted}`;
   };
 
   const formatDate = (dateStr?: string) => {
@@ -532,40 +532,53 @@ export default function PartnerPayoutsPage() {
                 <span className="font-bold text-base text-[#0F172A] tabular-nums">{formatIDR(selectedPayout.amount)}</span>
               </div>
 
-              {/* Itemized Treatments Breakdown */}
+              {/* Itemized Treatments Breakdown - Matching Admin Dashboard */}
               {selectedPayout.items && selectedPayout.items.length > 0 && (
-                <div className="pt-2 border-t border-[#F1F5F9]">
-                  <div className="flex items-center justify-between text-[11px] font-mono text-[#64748B] font-semibold uppercase tracking-wider mb-2">
-                    <span>Settled Bookings</span>
-                    <span>{selectedPayout.items.length} booking{selectedPayout.items.length > 1 ? 's' : ''}</span>
+                <div className="space-y-2 pt-2 border-t border-[#F1F5F9]">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-[10px] uppercase tracking-wider text-stone-500 font-bold block">
+                      SETTLED BOOKINGS
+                    </span>
+                    <span className="px-1.5 py-0.2 rounded-md bg-stone-100 border border-stone-200 text-stone-600 text-[10px] font-mono">
+                      {selectedPayout.items.length} {selectedPayout.items.length > 1 ? 'BOOKINGS' : 'BOOKING'}
+                    </span>
                   </div>
-                  <div className="max-h-48 overflow-y-auto space-y-1.5 pr-0.5">
-                    {selectedPayout.items.map((item: any, idx: number) => (
-                      <div 
-                        key={item.id || idx}
-                        className="p-2.5 rounded-[8px] bg-[#F8FAFC] border border-[#E2E8F0] flex items-center justify-between gap-2"
-                      >
-                        <div className="min-w-0">
-                          <div className="font-semibold text-xs text-[#0F172A] truncate">
-                            {item.treatment_name || 'Spa Treatment'}
+
+                  <div className="max-h-52 overflow-y-auto space-y-1.5 border border-stone-200/90 rounded-xl p-2 bg-stone-50/50">
+                    {selectedPayout.items.map((item: any, idx: number) => {
+                      const bId = item.booking_id || item.booking_ref || item.reference_number || '';
+                      const cleanBId = bId && bId !== 'BK-DIRECT' ? (bId.startsWith('#') ? bId : `#${bId}`) : '';
+
+                      return (
+                        <div 
+                          key={item.id || idx}
+                          className="p-2.5 rounded-lg border bg-white border-stone-200/90 shadow-2xs flex items-center justify-between gap-3"
+                        >
+                          <div className="min-w-0">
+                            <div className="font-extrabold text-xs text-neutral-900 truncate uppercase">
+                              {item.treatment_name || 'Spa Treatment'}
+                            </div>
+                            <div className="font-mono text-[11px] text-stone-500 flex items-center gap-1.5 mt-0.5">
+                              <span className="text-stone-700 font-medium">
+                                {formatDate(item.booking_date)}
+                              </span>
+                              {cleanBId && (
+                                <>
+                                  <span className="text-stone-300">·</span>
+                                  <span className="text-stone-500 font-medium">{cleanBId}</span>
+                                </>
+                              )}
+                            </div>
                           </div>
-                          <div className="text-[10px] font-mono text-[#64748B] flex items-center gap-1.5 mt-0.5">
-                            <span>{formatDate(item.booking_date)}</span>
-                            {item.booking_id && item.booking_id !== 'BK-DIRECT' && (
-                              <>
-                                <span>·</span>
-                                <span>#{item.booking_id.replace(/^#/, '')}</span>
-                              </>
-                            )}
+
+                          <div className="text-right shrink-0">
+                            <span className="font-mono font-extrabold text-xs text-emerald-700 tabular-nums">
+                              +{formatIDR(item.commission_amount || item.amount || 0)}
+                            </span>
                           </div>
                         </div>
-                        <div className="text-right shrink-0">
-                          <span className="font-mono font-semibold text-xs text-[#059669] tabular-nums">
-                            {formatIDR(item.commission_amount)}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               )}

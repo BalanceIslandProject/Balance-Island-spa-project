@@ -86,7 +86,7 @@ export async function GET(req: NextRequest) {
       const a = attrMap.get(bKey);
       return {
         ...c,
-        guest_name: b?.guest_name || a?.customer_name || c.guest_name || 'Guest',
+        booking_id: c.booking_id || b?.reference_number || b?.id || '',
         treatment_name: b?.treatment_name || c.treatment_name || 'Spa Treatment',
         booking_date: b?.booking_date || c.booking_date || (c.created_at ? c.created_at.split('T')[0] : ''),
         booking_time: b?.time || c.booking_time || '',
