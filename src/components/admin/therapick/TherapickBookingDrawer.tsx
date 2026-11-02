@@ -24,7 +24,7 @@ import { calculateBookingTherapistFee } from '@/lib/bookingFeeCalculator';
 
 const formatIDR = (val: number | string | undefined | null) => {
   const num = Number(val) || 0;
-  return `Rp${num.toLocaleString('id-ID')}`;
+  return `Rp ${num.toLocaleString('id-ID')}`;
 };
 
 export default function TherapickBookingDrawer() {
@@ -75,11 +75,13 @@ export default function TherapickBookingDrawer() {
   const roomNumber = b.room_number || (b as any).villa_number || (b as any).room || '';
   const notes = b.notes || b.special_requests || (b as any).additional_notes || '';
 
-  // WhatsApp quick link
+  // WhatsApp quick link & safe booking reference
+  const bIdStr = String(b.id || '');
+  const bookingRef = b.reference_number || (bIdStr ? bIdStr.slice(0, 8) : 'BK-1');
   const waPhone = guestPhone.replace(/[^0-9]/g, '');
   const cleanPhone = waPhone.startsWith('0') ? '62' + waPhone.slice(1) : waPhone;
   const waUrl = cleanPhone 
-    ? `https://wa.me/${cleanPhone}?text=Hello%20${encodeURIComponent(guestName)}%2C%20regarding%20your%20Therapick%20booking%20%23${b.reference_number || b.id.slice(0, 8)}...` 
+    ? `https://wa.me/${cleanPhone}?text=Hello%20${encodeURIComponent(guestName)}%2C%20regarding%20your%20Therapick%20booking%20%23${bookingRef}...` 
     : null;
 
   // WhatsApp click handler: open chat & automatically set status to 'In Progress' per settings
@@ -133,7 +135,7 @@ export default function TherapickBookingDrawer() {
   };
 
   const handleDelete = async () => {
-    if (!window.confirm(`Are you sure you want to permanently remove booking #${b.reference_number || b.id.slice(0, 8)}? This action cannot be undone.`)) {
+    if (!window.confirm(`Are you sure you want to permanently remove booking #${bookingRef}? This action cannot be undone.`)) {
       return;
     }
     setLoadingAction(true);
@@ -165,7 +167,7 @@ export default function TherapickBookingDrawer() {
           <div>
             <div className="flex items-center gap-2">
               <span className="text-xs font-mono font-bold text-stone-500 uppercase">
-                #{b.reference_number || b.id.slice(0, 8)}
+                #{bookingRef}
               </span>
               <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
                 (b.status || '').toLowerCase() === 'confirmed' || (b.status || '').toLowerCase() === 'ongoing'
@@ -224,7 +226,7 @@ export default function TherapickBookingDrawer() {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-stone-500">Date & Time</span>
-                <span className="font-semibold text-neutral-900">{b.booking_date} at {b.time || '14:00'}</span>
+                <span className="font-semibold text-neutral-900">{b.booking_date || (b.created_at ? b.created_at.split('T')[0] : 'Today')} at {b.time || b.booking_time || '14:00'}</span>
               </div>
             </div>
 

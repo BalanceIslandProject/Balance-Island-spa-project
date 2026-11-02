@@ -99,11 +99,21 @@ export default function TherapickPayoutsView() {
         (py.partner_name && p.name && py.partner_name.toLowerCase() === p.name.toLowerCase())
       );
 
-      const earned = pComms.reduce((sum, c) => sum + (Number(c.commission_amount) || 0), 0);
+      // STRICT PAYOUT ELIGIBILITY:
+      // Only approved commissions that are NOT yet settled / paid are eligible for payout!
+      // Pending commissions (treatment not done yet) MUST NOT be counted or displayed in unpaid!
+      // Cancelled treatments/commissions CANNOT be processed.
+      const eligibleComms = pComms.filter(c => {
+        const status = String(c.status || '').toLowerCase();
+        const isNotSettled = !c.payout_id && !c.is_settled && status !== 'paid';
+        return status === 'approved' && isNotSettled;
+      });
+
       const paid = pPayouts
         .filter(py => py.status === 'completed' || py.status === 'paid' || py.status === 'Processed')
         .reduce((sum, py) => sum + (Number(py.amount) || 0), 0);
-      const unpaid = Math.max(0, earned - paid);
+      const unpaid = eligibleComms.reduce((sum, c) => sum + (Number(c.commission_amount) || 0), 0);
+      const earned = paid + unpaid;
 
       // 7-day cycle: if unpaid < minimum threshold (100k), rolls over to next cycle
       const isBelowThreshold = unpaid > 0 && unpaid < scheduleConfig.min_payout_threshold;

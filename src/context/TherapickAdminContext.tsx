@@ -138,6 +138,7 @@ interface TherapickAdminContextType {
   deletePartner: (id: string) => Promise<void>;
   deleteBooking: (id: string) => Promise<{ success: boolean; error?: string }>;
   createBooking: (bookingData: any) => Promise<{ success: boolean; error?: string }>;
+  updateCommissionStatus: (id: string, newStatus: string) => Promise<{ success: boolean; error?: string }>;
   createPayout: (payoutDataOrPartnerId: any, amount?: number, reference_number?: string, notes?: string, payout_date?: string) => Promise<{ success: boolean; error?: string }>;
   saveTherapistFee: (treatmentId: string, duration: string, fee: string) => Promise<{ success: boolean; error?: string }>;
   deleteTherapistFee: (feeId: string) => Promise<{ success: boolean; error?: string }>;
@@ -409,15 +410,36 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
           b.partner_info?.id === p.id ||
           b.commission?.partner_id === p.id
         );
-        const partnerComms = rawComms.filter((c: any) => c.partner_id === p.id);
-        const partnerPayouts = rawPayouts.filter((py: any) => py.partner_id === p.id);
+        const partnerComms = rawComms.filter((c: any) => 
+          c.partner_id === p.id || 
+          (c.partner_code && p.referral_code && c.partner_code.toUpperCase() === p.referral_code.toUpperCase()) ||
+          (c.partner_name && p.name && c.partner_name.toLowerCase() === p.name.toLowerCase())
+        );
+        const partnerPayouts = rawPayouts.filter((py: any) => 
+          py.partner_id === p.id ||
+          (py.partner_name && p.name && py.partner_name.toLowerCase() === p.name.toLowerCase())
+        );
 
-        const totalRev = partnerBookings.reduce((sum, b) => sum + (Number(b.revenue || b.total_amount) || 0), 0);
-        const totalComm = partnerComms.reduce((sum, c) => sum + (Number(c.commission_amount) || 0), 0);
+        const totalRev = partnerBookings.reduce((sum, b) => {
+          if ((b.status || '').toLowerCase() === 'cancelled') return sum;
+          return sum + (Number(b.revenue || b.total_amount) || 0);
+        }, 0);
+
+        // STRICT PAYOUT ELIGIBILITY LOGIC:
+        // 1. Only commissions with status === 'approved' (and not paid/settled yet) are eligible for payout!
+        // 2. Pending commissions (treatment not done yet) MUST NOT be in available balance or unpaid.
+        // 3. Cancelled commissions must NEVER be processed.
+        const approvedUnpaidComms = partnerComms.filter((c: any) => {
+          const status = String(c.status || '').toLowerCase();
+          const isNotSettled = !c.payout_id && !c.is_settled && status !== 'paid';
+          return status === 'approved' && isNotSettled;
+        });
+
         const totalPaid = partnerPayouts
           .filter((py: any) => py.status === 'completed' || py.status === 'paid' || py.status === 'Processed')
           .reduce((sum: number, py: any) => sum + (Number(py.amount) || 0), 0);
-        const availableBal = Math.max(0, totalComm - totalPaid);
+        const availableBal = approvedUnpaidComms.reduce((sum, c) => sum + (Number(c.commission_amount) || 0), 0);
+        const totalComm = totalPaid + availableBal; // Only approved and paid commissions count towards earned
 
         return {
           ...p,
@@ -552,7 +574,7 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
   const websiteMetrics = useMemo<WebsiteMetrics>(() => {
     const list = websiteBookings.filter(b => {
       if (!dateRange.startDate || !dateRange.endDate) return true;
-      const bDate = b.booking_date || b.created_at.split('T')[0];
+      const bDate = b.booking_date || (b.created_at ? b.created_at.split('T')[0] : '');
       return bDate >= dateRange.startDate && bDate <= dateRange.endDate;
     });
 
@@ -592,7 +614,7 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
   const affiliateMetrics = useMemo<AffiliateMetrics>(() => {
     const list = affiliateBookings.filter(b => {
       if (!dateRange.startDate || !dateRange.endDate) return true;
-      const bDate = b.booking_date || b.created_at.split('T')[0];
+      const bDate = b.booking_date || (b.created_at ? b.created_at.split('T')[0] : '');
       return bDate >= dateRange.startDate && bDate <= dateRange.endDate;
     });
 
@@ -719,7 +741,7 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
     } else if (newStatus.toLowerCase() === 'completed') {
       await syncAffiliateCommission(booking, { service_completed: true, status: 'approved' });
     } else if (newStatus.toLowerCase() === 'confirmed') {
-      await syncAffiliateCommission(booking, { status: 'approved' });
+      // Confirmed only confirms schedule; treatment is NOT done yet, so commission remains pending!
     }
 
     setBookings(prev => prev.map(b => b.id === id ? { ...b, ...payload } : b));
@@ -748,17 +770,21 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
       payload.status = 'Completed';
     } else if (newStatus === 'In Progress') {
       payload.status = 'Ongoing';
+    } else if (newStatus === 'Cancelled') {
+      payload.status = 'Cancelled';
     }
 
     await supabase.from('bookings').update(payload).eq('id', id);
 
     if (newStatus === 'Finished') {
+      // Only set status to 'approved' if payment is also verified ('Paid')!
+      const isPaid = (booking?.payment_status === 'Paid');
       await syncAffiliateCommission(booking, { 
         service_completed: true, 
-        status: (booking?.payment_status === 'Paid' || payload.status === 'Completed') ? 'approved' : 'pending' 
+        status: isPaid ? 'approved' : 'pending' 
       });
     } else if (newStatus === 'In Progress') {
-      await syncAffiliateCommission(booking, { notes: 'Treatment In Progress' });
+      await syncAffiliateCommission(booking, { service_completed: false, status: 'pending', notes: 'Treatment In Progress' });
     } else if (newStatus === 'Cancelled') {
       await syncAffiliateCommission(booking, { status: 'cancelled', service_completed: false });
     }
@@ -793,9 +819,17 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
     await supabase.from('bookings').update(payload).eq('id', id);
 
     if (newStatus === 'Paid') {
-      await syncAffiliateCommission(booking, { payment_verified: true, status: 'approved' });
+      // Only approve if treatment is also finished!
+      const isFinished = (booking?.treatment_status === 'Finished' || booking?.status === 'Completed');
+      await syncAffiliateCommission(booking, { 
+        payment_verified: true, 
+        status: isFinished ? 'approved' : 'pending' 
+      });
     } else {
-      await syncAffiliateCommission(booking, { payment_verified: false });
+      await syncAffiliateCommission(booking, { 
+        payment_verified: false,
+        status: 'pending' 
+      });
     }
 
     setBookings(prev => prev.map(b => b.id === id ? { ...b, ...payload } : b));
@@ -868,44 +902,126 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
     }
   };
 
-  // Action: Create New Booking
-  const createBooking = async (bookingData: any): Promise<{ success: boolean; error?: string }> => {
+  // Action: Create New Booking (Schema-adaptive & resilient)
+  const createBooking = async (bookingData: any): Promise<{ success: boolean; error?: string; booking?: any }> => {
     try {
-      const { data, error } = await supabase.from('bookings').insert([{
-        ...bookingData,
+      const refNum = bookingData.reference_number || (
+        'BK' + Math.random().toString(36).substring(2, 6).toUpperCase()
+      );
+      const guestName = (bookingData.customer_name || bookingData.guest_name || 'Guest').trim();
+      const guestWhatsapp = (bookingData.customer_phone || bookingData.guest_whatsapp || '').trim();
+      const guestEmail = (bookingData.customer_email || bookingData.guest_email || '').trim() || null;
+      const treatmentName = bookingData.service_name || bookingData.treatment_name || 'Balinese Traditional Massage';
+      const duration = Number(bookingData.duration_minutes) || 90;
+      const bookingDate = bookingData.booking_date || new Date().toISOString().split('T')[0];
+      const time = bookingData.booking_time || bookingData.time || '14:00';
+      const location = bookingData.location_address || bookingData.location || 'Client Villa / Hotel';
+      const roomNumber = bookingData.room_number || null;
+      const amount = Number(bookingData.total_amount || bookingData.revenue || bookingData.total_price || 375000);
+      const source = bookingData.source || (bookingData.affiliate_code ? 'Affiliate' : 'Website');
+      const affCode = bookingData.affiliate_code ? String(bookingData.affiliate_code).trim().toUpperCase() : null;
+      const notes = bookingData.special_notes || bookingData.notes || null;
+
+      // Auto compute therapist fee based on database rules
+      const autoFee = calculateBookingTherapistFee({
+        treatment_name: treatmentName,
+        duration_minutes: duration,
+        revenue: amount,
+        pax: 1
+      }, therapistFees, treatments);
+      const therapistFeeTotal = autoFee.feeTotal;
+      const commAmount = affCode ? Math.round(amount * 0.15) : 0;
+      const netProfit = Math.max(0, amount - therapistFeeTotal - commAmount);
+
+      const candidatePayload: Record<string, any> = {
+        reference_number: refNum,
+        guest_name: guestName,
+        guest_whatsapp: guestWhatsapp,
+        guest_email: guestEmail,
+        treatment_name: treatmentName,
+        booking_date: bookingDate,
+        time: time,
+        location: location,
+        room_number: roomNumber,
+        revenue: amount,
+        total_price: amount,
+        duration_minutes: duration,
+        therapist_fee_total: therapistFeeTotal,
+        net_profit: netProfit,
+        pax: 1,
+        therapists_count: autoFee.multiplier,
+        assigned_therapist_name: bookingData.therapist_name || 'Wayan S.',
+        status: defaultBookingStatus || 'Pending',
+        treatment_status: 'Scheduled',
+        payment_status: 'Unpaid',
+        payment_method: 'Online',
+        source: source,
+        affiliate_code: affCode,
+        notes: notes,
         brand: 'therapick',
         created_at: new Date().toISOString()
-      }]).select().single();
+      };
 
-      if (error) throw error;
+      // Resilient adaptive insert loop to survive schema cache differences
+      let createdRow: any = null;
+      let lastErr: any = null;
+      const activePayload = { ...candidatePayload };
 
-      // If affiliate booking, also create commission entry
-      if (bookingData.affiliate_code) {
-        const cleanAffiliateCode = String(bookingData.affiliate_code).trim().toUpperCase();
+      for (let attempt = 0; attempt < 8; attempt++) {
+        const { data, error } = await supabase
+          .from('bookings')
+          .insert([activePayload])
+          .select()
+          .single();
+
+        if (!error && data) {
+          createdRow = data;
+          lastErr = null;
+          break;
+        }
+
+        lastErr = error;
+        const msg = error?.message || '';
+        const match = msg.match(/Could not find the '([^']+)' column of 'bookings'/i);
+        if (match && match[1] && activePayload[match[1]] !== undefined) {
+          delete activePayload[match[1]];
+          continue;
+        }
+        break;
+      }
+
+      if (lastErr || !createdRow) {
+        throw new Error(lastErr?.message || 'Failed to insert booking record');
+      }
+
+      // If affiliate booking, insert commission record with STRICT PENDING STATUS
+      // Treatment is not completed yet!
+      if (affCode) {
         const partner = partners.find(p => 
-          (p.partner_code && p.partner_code.toUpperCase() === cleanAffiliateCode) || 
-          (p.referral_code && p.referral_code.toUpperCase() === cleanAffiliateCode)
+          (p.partner_code && p.partner_code.toUpperCase() === affCode) || 
+          (p.referral_code && p.referral_code.toUpperCase() === affCode) ||
+          p.id === bookingData.partner_id
         );
         const rate = partner?.commission_rate_pct || 15;
-        const gross = Number(bookingData.revenue || bookingData.total_price || 0);
-        const commAmount = Math.round((gross * rate) / 100);
+        const grossComm = Math.round((amount * rate) / 100);
 
         try {
           await supabase.from('affiliate_commissions').insert([{
             partner_id: partner?.id || null,
-            partner_code: partner?.partner_code || cleanAffiliateCode,
-            booking_id: data.reference_number || data.id,
-            booking_amount_gross: gross,
-            eligible_treatment_amount: gross,
+            partner_code: partner?.partner_code || partner?.referral_code || affCode,
+            partner_name: partner?.name || partner?.business_name || null,
+            booking_id: createdRow.reference_number || createdRow.id,
+            booking_amount_gross: amount,
+            eligible_treatment_amount: amount,
             transport_fee: 0,
             tip_amount: 0,
             discount_amount: 0,
             commission_rate_pct: rate,
-            commission_amount: commAmount,
-            status: 'pending',
-            payment_verified: bookingData.payment_status === 'Paid',
+            commission_amount: grossComm,
+            status: 'pending', // Strictly pending! Treatment is NOT done yet!
+            payment_verified: false,
             service_completed: false,
-            notes: `Created from Therapick Admin Dashboard for booking #${data.reference_number || data.id}`,
+            notes: `Attributed booking #${createdRow.reference_number || createdRow.id}`,
             created_at: new Date().toISOString()
           }]);
         } catch (commErr) {
@@ -914,10 +1030,30 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
       }
 
       await refreshData();
-      return { success: true };
+      return { success: true, booking: createdRow };
     } catch (err: any) {
       console.error('Create booking failed:', err);
       return { success: false, error: err.message || 'Failed to create booking' };
+    }
+  };
+
+  // Action: Explicit Commission Status Update
+  const updateCommissionStatus = async (id: string, newStatus: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const { error } = await supabase
+        .from('affiliate_commissions')
+        .update({
+          status: newStatus,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id);
+
+      if (error) throw error;
+      await refreshData();
+      return { success: true };
+    } catch (err: any) {
+      console.error('Failed to update commission status:', err);
+      return { success: false, error: err.message || 'Failed to update commission status' };
     }
   };
 
@@ -1204,6 +1340,7 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
         deletePartner,
         deleteBooking,
         createBooking,
+        updateCommissionStatus,
         createPayout,
         saveTherapistFee,
         deleteTherapistFee,

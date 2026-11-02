@@ -659,8 +659,9 @@ export default function TherapickBookingsView() {
                 </tr>
               ) : (
                 paginatedBookings.map(b => {
-                  const bookingCode = b.reference_number || (b.id?.startsWith('BK-') ? b.id : `#BK-${b.id.slice(0, 5).toUpperCase()}`);
-                  const displayDate = b.booking_date || b.created_at?.split('T')[0] || 'Today';
+                  const bIdStr = String(b.id || '');
+                  const bookingCode = b.reference_number || (bIdStr.startsWith('BK-') ? bIdStr : bIdStr ? `#BK-${bIdStr.slice(0, 5).toUpperCase()}` : '#BK-001');
+                  const displayDate = b.booking_date || (b.created_at ? b.created_at.split('T')[0] : 'Today');
                   const displayTime = b.booking_time || b.time || '14:00';
                   const partnerName = b.partner_name || b.partner_info?.name || b.partner_info?.business || 'Direct Affiliate';
                   const referralCode = b.affiliate_code || b.partner_info?.code || '';

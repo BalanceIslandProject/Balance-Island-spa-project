@@ -174,14 +174,15 @@ export async function POST(req: NextRequest) {
     }
 
     // 2. Select eligible commissions for this partner, strictly preventing double-payout
+    // RULE: Only commissions that are APPROVED by admin and have NOT been settled or attached to a payout can be paid
     let commsToMark: { id: string; commission_amount: number }[] = [];
     if (Array.isArray(commission_ids) && commission_ids.length > 0) {
-      // Fetch specifically selected commissions that are NOT already paid
       const { data: validComms } = await supabase
         .from('affiliate_commissions')
-        .select('id, commission_amount')
+        .select('id, commission_amount, status, payout_id')
         .in('id', commission_ids)
-        .neq('status', 'paid');
+        .eq('status', 'approved')
+        .is('payout_id', null);
 
       if (validComms) {
         commsToMark = validComms;
@@ -189,9 +190,10 @@ export async function POST(req: NextRequest) {
     } else {
       const { data: eligibleComms } = await supabase
         .from('affiliate_commissions')
-        .select('id, commission_amount')
+        .select('id, commission_amount, status, payout_id')
         .or(`partner_id.eq.${partner.id},partner_code.eq.${partner.partner_code}`)
-        .neq('status', 'paid');
+        .eq('status', 'approved')
+        .is('payout_id', null);
 
       if (eligibleComms && eligibleComms.length > 0) {
         commsToMark = eligibleComms;

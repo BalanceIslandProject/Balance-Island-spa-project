@@ -13,7 +13,8 @@ export default function TherapickCommissionView() {
     commissions, 
     affiliateMetrics, 
     setSelectedPartner, 
-    setIsCreatePayoutOpen 
+    setIsCreatePayoutOpen,
+    updateCommissionStatus
   } = useTherapickAdmin();
 
   const [activeTab, setActiveTab] = useState<'summary' | 'ledger'>('summary');
@@ -284,6 +285,7 @@ export default function TherapickCommissionView() {
                     <th className="py-3 px-4">Commission Amount</th>
                     <th className="py-3 px-4">Rate</th>
                     <th className="py-3 px-4">Status</th>
+                    <th className="py-3 px-4 text-right">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-stone-100 text-xs">
@@ -307,11 +309,32 @@ export default function TherapickCommissionView() {
                         <td className="py-3.5 px-4">
                           <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase font-mono ${
                             c.status === 'paid' ? 'bg-blue-100 text-blue-800' :
-                            c.status === 'available' ? 'bg-emerald-100 text-emerald-800' :
+                            c.status === 'approved' || c.status === 'available' ? 'bg-emerald-100 text-emerald-800' :
                             c.status === 'pending' ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800'
                           }`}>
                             {c.status}
                           </span>
+                        </td>
+                        <td className="py-3.5 px-4 text-right">
+                          {c.status === 'pending' ? (
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                if (window.confirm(`Approve commission for booking #${c.booking_id}? This makes it eligible for payouts.`)) {
+                                  await updateCommissionStatus(c.id, 'approved');
+                                }
+                              }}
+                              className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs transition-colors cursor-pointer"
+                            >
+                              Approve
+                            </button>
+                          ) : c.status === 'approved' || c.status === 'available' ? (
+                            <span className="text-[11px] font-semibold text-emerald-700">Eligible</span>
+                          ) : c.status === 'paid' ? (
+                            <span className="text-[11px] font-semibold text-blue-700">Settled</span>
+                          ) : (
+                            <span className="text-[11px] text-stone-400">—</span>
+                          )}
                         </td>
                       </tr>
                     ))

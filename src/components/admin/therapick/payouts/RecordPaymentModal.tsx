@@ -9,6 +9,7 @@ import {
   ChevronDown,
   Loader2,
   Calendar,
+  Clock,
   Sparkles,
   CheckSquare,
   Square
@@ -77,7 +78,12 @@ export default function RecordPaymentModal({
       const matchCode = (c.partner_code && partner.partner_code && c.partner_code.toUpperCase() === partner.partner_code.toUpperCase()) ||
                         (c.partner_code && partner.referral_code && c.partner_code.toUpperCase() === partner.referral_code.toUpperCase());
       const matchName = c.partner_name && partner.name && c.partner_name.toLowerCase() === partner.name.toLowerCase();
-      return (matchId || matchCode || matchName) && c.status !== 'paid';
+      const status = String(c.status || '').toLowerCase();
+      // STRICT ELIGIBILITY: Only approved commissions that are NOT yet settled or paid
+      const isApproved = status === 'approved';
+      const isNotSettled = !c.payout_id && !c.is_settled && status !== 'paid';
+
+      return (matchId || matchCode || matchName) && isApproved && isNotSettled;
     });
 
     return pComms.map((c: any) => {
@@ -319,7 +325,7 @@ export default function RecordPaymentModal({
           )}
 
           {/* Section: Select Bookings & Treatments (User Requirement) */}
-          {eligibleComms.length > 0 && (
+          {eligibleComms.length > 0 ? (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-bold text-neutral-900 flex items-center gap-1.5">
@@ -390,6 +396,16 @@ export default function RecordPaymentModal({
                   );
                 })}
               </div>
+            </div>
+          ) : (
+            <div className="p-3.5 rounded-xl bg-amber-50/70 border border-amber-200/80 text-amber-950 text-xs space-y-1">
+              <div className="font-bold flex items-center gap-1.5 text-amber-900">
+                <Clock size={13} className="text-amber-700" />
+                <span>No Approved Commissions Eligible for Payout</span>
+              </div>
+              <p className="text-[11px] text-amber-800 leading-relaxed">
+                Commissions only become eligible for payout once the treatment is completed and approved by admin. Bookings with pending or cancelled treatments cannot be processed.
+              </p>
             </div>
           )}
 

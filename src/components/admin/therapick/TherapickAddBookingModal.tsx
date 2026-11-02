@@ -32,6 +32,13 @@ export default function TherapickAddBookingModal() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
+  // Sync selectedPartnerId when partners load
+  React.useEffect(() => {
+    if (!selectedPartnerId && partners.length > 0) {
+      setSelectedPartnerId(partners[0].id);
+    }
+  }, [partners, selectedPartnerId]);
+
   if (!isAddBookingOpen) return null;
 
   const handleServiceChange = (name: string) => {
@@ -51,7 +58,9 @@ export default function TherapickAddBookingModal() {
     }
 
     setIsSubmitting(true);
-    const selectedPartner = bookingSource === 'Affiliate' ? partners.find(p => p.id === selectedPartnerId) : undefined;
+    const selectedPartner = bookingSource === 'Affiliate' 
+      ? (partners.find(p => p.id === selectedPartnerId) || partners[0]) 
+      : undefined;
 
     const res = await createBooking({
       customer_name: customerName.trim(),

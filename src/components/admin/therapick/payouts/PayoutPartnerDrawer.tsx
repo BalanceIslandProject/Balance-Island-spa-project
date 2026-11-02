@@ -251,31 +251,49 @@ export default function PayoutPartnerDrawer({
               </div>
 
               <div className="space-y-2">
-                {partnerCommissions.map(comm => (
-                  <div key={comm.id} className="p-3.5 rounded-xl bg-white border border-stone-200/90 shadow-2xs space-y-2">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="font-mono font-bold text-neutral-950">
-                        {comm.booking_reference || `#${comm.id.slice(0, 8)}`}
-                      </span>
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                        comm.status === 'paid' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
-                      }`}>
-                        {comm.status === 'paid' ? 'Settled' : 'Eligible'}
-                      </span>
-                    </div>
+                {partnerCommissions.map(comm => {
+                  const isPaid = comm.status === 'paid' || !!comm.payout_id;
+                  const isApproved = String(comm.status).toLowerCase() === 'approved';
+                  const isCancelled = String(comm.status).toLowerCase() === 'cancelled';
+                  const badgeLabel = isPaid 
+                    ? 'Settled' 
+                    : isApproved 
+                    ? 'Eligible (Approved)' 
+                    : isCancelled 
+                    ? 'Cancelled' 
+                    : 'Pending Treatment';
+                  const badgeStyle = isPaid 
+                    ? 'bg-blue-50 text-blue-800 border border-blue-200'
+                    : isApproved 
+                    ? 'bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold'
+                    : isCancelled 
+                    ? 'bg-rose-50 text-rose-800 border border-rose-200'
+                    : 'bg-amber-50 text-amber-800 border border-amber-200';
 
-                    <div className="flex items-baseline justify-between text-xs">
-                      <span className="text-stone-600">{comm.service_name || 'Balinese Traditional Ritual'}</span>
-                      <span className="font-mono font-extrabold text-emerald-700 text-sm">
-                        {formatIDR(comm.commission_amount)}
-                      </span>
-                    </div>
+                  return (
+                    <div key={comm.id} className="p-3.5 rounded-xl bg-white border border-stone-200/90 shadow-2xs space-y-2">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-mono font-bold text-neutral-950">
+                          {comm.booking_reference || (comm.booking_id ? `#${comm.booking_id.replace(/^#/, '')}` : `#${comm.id.slice(0, 8)}`)}
+                        </span>
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${badgeStyle}`}>
+                          {badgeLabel}
+                        </span>
+                      </div>
 
-                    <div className="text-[10px] text-stone-400 font-mono pt-1 border-t border-stone-100">
-                      Attributed on {formatWitaDate(comm.created_at)}
+                      <div className="flex items-baseline justify-between text-xs">
+                        <span className="text-stone-600">{comm.service_name || 'Balinese Traditional Ritual'}</span>
+                        <span className="font-mono font-extrabold text-emerald-700 text-sm">
+                          {formatIDR(comm.commission_amount)}
+                        </span>
+                      </div>
+
+                      <div className="text-[10px] text-stone-400 font-mono pt-1 border-t border-stone-100">
+                        Attributed on {formatWitaDate(comm.created_at)}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
 
                 {partnerCommissions.length === 0 && (
                   <div className="py-12 text-center text-stone-400 text-xs">
