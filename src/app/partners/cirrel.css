@@ -283,6 +283,16 @@
   flex: none;
 }
 
+.cirrel-brand__logo {
+  filter: brightness(0) invert(1);
+  transition: filter 0.25s ease;
+}
+
+[data-theme="light"] .cirrel-brand__logo,
+.theme-light .cirrel-brand__logo {
+  filter: none;
+}
+
 .cirrel-brand__text {
   min-width: 0;
 }

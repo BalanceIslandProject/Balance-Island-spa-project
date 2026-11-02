@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { 
   LayoutDashboard, CalendarDays, Calendar, Users, Layers, 
-  TrendingUp, Wallet, FileText, Settings, Receipt, Sparkles, Clock, Plus 
+  TrendingUp, Wallet, FileText, Settings, Receipt, Clock, Plus 
 } from 'lucide-react';
 import { useTherapickAdmin } from '@/context/TherapickAdminContext';
 
@@ -59,12 +59,13 @@ export default function TherapickSidebarNav() {
   return (
     <aside className="fitlo-side hidden lg:flex select-none">
       
-      {/* Fitlo Brand Mark & Title */}
-      <Link href="/admin?brand=therapick&tab=overview" className="fitlo-brand">
-        <div className="fitlo-mark">
-          <Sparkles size={20} strokeWidth={2.2} />
-        </div>
-        <b>Therapick</b>
+      {/* Brand Logo */}
+      <Link href="/admin?brand=therapick&tab=overview" className="fitlo-brand" title="Therapick Admin Dashboard">
+        <img 
+          src="/therapick-logo-2.png" 
+          alt="Therapick" 
+          className="h-8 w-auto max-w-[155px] object-contain"
+        />
       </Link>
 
       {/* Navigation List */}

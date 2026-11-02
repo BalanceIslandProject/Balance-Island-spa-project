@@ -170,6 +170,13 @@
   color: inherit;
 }
 
+.fitlo-brand img {
+  height: 32px;
+  max-width: 155px;
+  width: auto;
+  object-fit: contain;
+}
+
 .fitlo-mark {
   width: 36px;
   height: 36px;

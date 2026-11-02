@@ -466,14 +466,17 @@ export default function AdminCrmShell({ children, serverHost }: AdminCrmShellPro
                 />
                 <div className="relative w-72 max-w-[85vw] bg-[var(--fitlo-bg)] text-[var(--fitlo-ink)] h-full shadow-2xl flex flex-col p-4 z-50 overflow-y-auto">
                   <div className="flex items-center justify-between pb-3 border-b border-[var(--fitlo-line)]">
-                    <div className="flex items-center gap-2">
-                      <div className="fitlo-mark" style={{ width: '28px', height: '28px' }}>
-                        <Sparkles size={16} />
-                      </div>
-                      <span className="font-bold text-sm uppercase">
-                        THERAPICK
-                      </span>
-                    </div>
+                    <Link 
+                      href="/admin?brand=therapick&tab=overview" 
+                      onClick={() => setMobileDrawerOpen(false)}
+                      className="flex items-center"
+                    >
+                      <img 
+                        src="/therapick-logo-2.png" 
+                        alt="Therapick" 
+                        className="h-7 w-auto object-contain"
+                      />
+                    </Link>
                     <button
                       type="button"
                       onClick={() => setMobileDrawerOpen(false)}

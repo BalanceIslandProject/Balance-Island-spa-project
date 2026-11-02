@@ -71,10 +71,20 @@ function AdminLoginForm() {
         <div className="min-h-screen bg-[#f7f6f2] flex items-center justify-center p-4 selection:bg-[#d8ecee] selection:text-[#0b7a73] font-['Urbanist',sans-serif]">
             <div className="w-full max-w-md bg-[#fdfdfb] rounded-3xl p-8 sm:p-10 border border-[rgba(22,26,25,0.08)] shadow-[0_1px_2px_rgba(22,26,25,0.04),0_14px_32px_-16px_rgba(22,26,25,0.18)]">
                 <div className="text-center mb-8">
-                    {/* Fitlo Brand Mark */}
-                    <div className="w-12 h-12 rounded-2xl bg-[#0b7a73] text-white flex items-center justify-center mx-auto mb-4 shadow-[0_8px_18px_-6px_rgba(11,122,115,0.5)]">
-                        <span className="font-bold text-lg tracking-wider">TP</span>
-                    </div>
+                    {/* Brand Logo */}
+                    {domainInfo.brand === 'therapick' ? (
+                        <div className="flex justify-center mb-5">
+                            <img 
+                                src="/therapick-logo-2.png" 
+                                alt="Therapick" 
+                                className="h-9 w-auto max-w-[170px] object-contain"
+                            />
+                        </div>
+                    ) : (
+                        <div className="w-12 h-12 rounded-2xl bg-[#0b7a73] text-white flex items-center justify-center mx-auto mb-4 shadow-[0_8px_18px_-6px_rgba(11,122,115,0.5)]">
+                            <span className="font-bold text-lg tracking-wider">TP</span>
+                        </div>
+                    )}
 
                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#f0efea] border border-[rgba(22,26,25,0.08)] text-[11px] font-bold text-[#161a19] mb-3">
                         <span className="w-2 h-2 rounded-full" style={{ backgroundColor: domainInfo.brand === 'therapick' ? '#0b7a73' : dotColor }} />

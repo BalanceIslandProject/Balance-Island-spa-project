@@ -20,8 +20,7 @@ import {
   PanelLeftClose,
   PanelLeft,
   Moon,
-  Sun,
-  Sparkles
+  Sun
 } from 'lucide-react';
 
 interface PartnerNavProps {
@@ -148,20 +147,31 @@ export default function PartnerNav({ session }: PartnerNavProps) {
          ======================================================== */}
       <aside className={`cirrel-side hidden lg:flex ${isRail ? 'is-rail' : ''}`}>
         
-        {/* Header / Brand with Glowing Blue Gradient Mark */}
+        {/* Header / Brand with Official Therapick Logo */}
         <div className="cirrel-side__head">
           <Link 
             href={session ? '/partners/overview' : '/partners'} 
             className="cirrel-brand"
             title="Therapick Partners Portal"
           >
-            <div className="cirrel-mark">
-              <Sparkles size={20} strokeWidth={2.2} />
-            </div>
-            <div className="cirrel-brand__text">
-              <b>Therapick</b>
-              <small>Partner Portal · Bali</small>
-            </div>
+            {isRail ? (
+              <img 
+                src="/therapick-favicon.png" 
+                alt="Therapick" 
+                className="w-8 h-8 rounded-lg object-contain cirrel-brand__logo"
+              />
+            ) : (
+              <div className="flex flex-col gap-1 min-w-0">
+                <img 
+                  src="/therapick-logo-2.png" 
+                  alt="Therapick" 
+                  className="h-7 w-auto max-w-[145px] object-contain cirrel-brand__logo"
+                />
+                <span className="text-[10px] font-semibold text-[var(--muted)] tracking-wider uppercase pl-0.5">
+                  Partner Portal · Bali
+                </span>
+              </div>
+            )}
           </Link>
 
           <button 
@@ -303,15 +313,14 @@ export default function PartnerNav({ session }: PartnerNavProps) {
           href={session ? '/partners/overview' : '/partners'} 
           className="flex items-center gap-2.5 outline-none"
         >
-          <div className="cirrel-mark" style={{ width: '30px', height: '30px', borderRadius: '10px' }}>
-            <Sparkles size={16} strokeWidth={2.2} />
-          </div>
-          <div className="flex flex-col">
-            <b className="text-sm font-bold leading-tight">Therapick</b>
-            <span className="text-[9px] font-semibold text-[var(--muted)] uppercase tracking-wider">
-              Partner Portal
-            </span>
-          </div>
+          <img 
+            src="/therapick-logo-2.png" 
+            alt="Therapick" 
+            className="h-6 w-auto object-contain cirrel-brand__logo"
+          />
+          <span className="text-[9px] font-semibold text-[var(--muted)] uppercase tracking-wider border-l border-[var(--line)] pl-2 ml-0.5">
+            Partner Portal
+          </span>
         </Link>
 
         {session && (
