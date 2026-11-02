@@ -146,7 +146,7 @@ export default function PartnerNav({ session }: PartnerNavProps) {
       {/* ========================================================
           1. CIRREL FLOATING FROSTED GLASS SIDEBAR (DESKTOP)
          ======================================================== */}
-      <aside className={`cirrel-side hidden md:flex ${isRail ? 'is-rail' : ''}`}>
+      <aside className={`cirrel-side hidden lg:flex ${isRail ? 'is-rail' : ''}`}>
         
         {/* Header / Brand with Glowing Blue Gradient Mark */}
         <div className="cirrel-side__head">
@@ -298,7 +298,7 @@ export default function PartnerNav({ session }: PartnerNavProps) {
       {/* ========================================================
           2. MOBILE CIRREL TOP HEADER (md:hidden)
          ======================================================== */}
-      <header className="md:hidden sticky top-0 z-40 bg-[var(--glass-hi)] backdrop-blur-xl border-b border-[var(--line)] px-4 h-14 flex items-center justify-between text-[var(--ink)]">
+      <header className="lg:hidden sticky top-0 z-40 bg-[var(--glass-hi)] backdrop-blur-xl border-b border-[var(--line)] px-4 h-14 flex items-center justify-between text-[var(--ink)]">
         <Link 
           href={session ? '/partners/overview' : '/partners'} 
           className="flex items-center gap-2.5 outline-none"
@@ -389,7 +389,7 @@ export default function PartnerNav({ session }: PartnerNavProps) {
           3. MOBILE CIRREL FROSTED GLASS BOTTOM TAB BAR (md:hidden)
          ======================================================== */}
       {session && (
-        <nav className="fixed bottom-0 inset-x-0 z-40 bg-[var(--glass-hi)] backdrop-blur-2xl border-t border-[var(--line)] px-2 py-1 md:hidden pb-[max(0.6rem,env(safe-area-inset-bottom))] shadow-2xl">
+        <nav className="fixed bottom-0 inset-x-0 z-40 bg-[var(--glass-hi)] backdrop-blur-2xl border-t border-[var(--line)] px-2 py-1 lg:hidden pb-[max(0.6rem,env(safe-area-inset-bottom))] shadow-2xl">
           <div className="grid grid-cols-6 items-center">
             {[...portalItems, ...toolItems].map((item) => {
               const Icon = item.icon;

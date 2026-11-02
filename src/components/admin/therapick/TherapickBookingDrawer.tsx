@@ -218,7 +218,7 @@ export default function TherapickBookingDrawer() {
   const cleanTreatment = cleanTreatmentName(b.treatment_name);
 
   return (
-    <div className="fitlo-modal-backdrop flex justify-end p-0">
+    <div className="fitlo-modal-backdrop fixed inset-0 z-50 flex justify-end p-0">
       {/* Backdrop click */}
       <div 
         className="absolute inset-0" 

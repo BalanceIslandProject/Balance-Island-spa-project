@@ -260,7 +260,7 @@ export default function TherapickCustomersView() {
 
       {/* ─── CUSTOMER PROFILE DRAWER ─── */}
       {selectedCustomer && (
-        <div className="fitlo-modal-backdrop flex justify-end p-0">
+        <div className="fitlo-modal-backdrop fixed inset-0 z-50 flex justify-end p-0">
           <div className="bg-[var(--fitlo-card)] w-full max-w-md h-full shadow-2xl border-l border-[var(--fitlo-line)] p-6 flex flex-col justify-between overflow-y-auto animate-in slide-in-from-right duration-200">
             <div className="space-y-6">
               <div className="flex items-center justify-between pb-4 border-b border-[var(--fitlo-line)]">

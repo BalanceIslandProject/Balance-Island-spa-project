@@ -46,7 +46,7 @@ export default function TherapickMobileBottomNav() {
   ];
 
   return (
-    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-stone-200 px-3 py-2 flex items-center justify-around shadow-lg select-none">
+    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-[var(--fitlo-card,#fdfdfb)]/95 backdrop-blur-md border-t border-[var(--fitlo-line,rgba(22,26,25,0.08))] px-3 py-1.5 pb-[max(0.6rem,env(safe-area-inset-bottom))] flex items-center justify-around shadow-lg select-none">
       {navItems.map(item => {
         const isActive = currentTab === item.id;
         const Icon = item.icon;
@@ -57,13 +57,13 @@ export default function TherapickMobileBottomNav() {
             href={item.href}
             onClick={() => setActiveTab(item.id)}
             className={`flex flex-col items-center justify-center flex-1 py-1 transition-all ${
-              isActive ? 'text-neutral-950 font-bold' : 'text-stone-400 hover:text-stone-700'
+              isActive ? 'text-[var(--fitlo-accent,#0b7a73)] font-bold' : 'text-[var(--fitlo-muted,#5f6665)] hover:text-[var(--fitlo-ink,#161a19)]'
             }`}
           >
-            <div className={`p-1 rounded-xl transition-colors ${
-              isActive ? 'bg-[#facc15] text-neutral-950 shadow-2xs' : ''
+            <div className={`p-1.5 rounded-xl transition-colors ${
+              isActive ? 'bg-[var(--fitlo-accent-soft,#d8ecee)] text-[var(--fitlo-accent,#0b7a73)]' : ''
             }`}>
-              <Icon size={18} />
+              <Icon size={18} strokeWidth={isActive ? 2.2 : 1.8} />
             </div>
             <span className="text-[10px] mt-0.5 tracking-tight">{item.label}</span>
           </Link>

@@ -99,7 +99,7 @@ export default function TherapickPartnerDrawer() {
   };
 
   return (
-    <div className="fitlo-modal-backdrop flex justify-end p-0">
+    <div className="fitlo-modal-backdrop fixed inset-0 z-50 flex justify-end p-0">
       {/* Backdrop */}
       <div 
         className="fixed inset-0" 
