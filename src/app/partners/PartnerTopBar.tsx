@@ -1,142 +1,169 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { PartnerSessionData } from '@/lib/partnerAuth';
 import { 
-  LayoutDashboard, 
-  CalendarDays, 
-  Receipt, 
-  Wallet, 
   Share2, 
-  Settings, 
   Bell, 
-  MessageCircle, 
   Check, 
   Copy, 
-  ChevronRight,
-  ExternalLink
+  RotateCw,
+  Plus,
+  X,
+  Sparkles
 } from 'lucide-react';
 
 export default function PartnerTopBar({ session }: { session: PartnerSessionData | null }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [copiedLink, setCopiedLink] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [greeting, setGreeting] = useState('Good day');
 
-  // Dynamic Kravio Breadcrumb based on route
-  const getBreadcrumb = () => {
-    if (pathname.includes('/partners/bookings')) {
-      return { section: 'Operations', page: 'Bookings & Calendar', icon: CalendarDays };
-    }
-    if (pathname.includes('/partners/commissions')) {
-      return { section: 'Finance', page: 'Commissions Ledger', icon: Receipt };
-    }
-    if (pathname.includes('/partners/payouts')) {
-      return { section: 'Finance', page: 'Payouts & Transfers', icon: Wallet };
-    }
-    if (pathname.includes('/partners/referrals')) {
-      return { section: 'Growth', page: 'Referral & QR Hub', icon: Share2 };
-    }
-    if (pathname.includes('/partners/profile') || pathname.includes('/partners/settings')) {
-      return { section: 'Account', page: 'Settings & Security', icon: Settings };
-    }
-    return { section: 'Overview', page: 'Dashboard', icon: LayoutDashboard };
+  useEffect(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) setGreeting('Good morning');
+    else if (hour < 18) setGreeting('Good afternoon');
+    else setGreeting('Good evening');
+  }, []);
+
+  const handleRefresh = () => {
+    if (refreshing) return;
+    setRefreshing(true);
+    router.refresh();
+    window.dispatchEvent(new Event('partner:refresh'));
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 700);
   };
 
-  const breadcrumb = getBreadcrumb();
-  const Icon = breadcrumb.icon;
+  const getPageTitle = () => {
+    if (pathname.includes('/partners/bookings')) return 'Bookings';
+    if (pathname.includes('/partners/commissions')) return 'Commissions';
+    if (pathname.includes('/partners/payouts')) return 'Payouts';
+    if (pathname.includes('/partners/history')) return 'History';
+    if (pathname.includes('/partners/settings') || pathname.includes('/partners/profile')) return 'Settings';
+    return 'Overview';
+  };
+
+  const partnerCode = session?.partner_code || 'BALIHEAD112';
+  const partnerFirstName = session?.first_name || 'Partner';
 
   const handleCopyLink = () => {
-    const code = session?.partner_code || 'BALIHEAD112';
-    const link = `https://www.booktherapick.com/?ref=${code}`;
+    const link = `https://www.booktherapick.com/?ref=${partnerCode}`;
     navigator.clipboard.writeText(link);
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 2000);
   };
 
-  const partnerInitials = `${session?.first_name?.[0] || 'P'}${session?.last_name?.[0] || ''}`.toUpperCase();
+  // Formatted current date like Cirrel: "Sunday, November 2"
+  const formattedDate = new Date().toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric'
+  });
 
   return (
-    <header className="h-16 px-4 sm:px-6 md:px-8 border-b border-[#e5e7eb] bg-white flex items-center justify-between shrink-0 sticky top-0 z-20">
-      
-      {/* Left: Kravio-style Small Breadcrumb Navigation */}
-      <div className="flex items-center gap-2 text-xs">
-        <div className="w-6 h-6 rounded-[5px] bg-[#f3f4f6] text-[#374151] flex items-center justify-center">
-          <Icon size={13} />
-        </div>
-        <span className="font-medium text-[#6b7280]">{breadcrumb.section}</span>
-        <span className="text-[#d1d5db]">/</span>
-        <span className="font-semibold text-[#111827]">{breadcrumb.page}</span>
-      </div>
-
-      {/* Right: Quick Tools, Notifications, Support, Avatar */}
-      <div className="flex items-center gap-2 sm:gap-3">
+    <header className="cirrel-top hidden md:block">
+      <div className="cirrel-top__in">
         
-        {/* Quick Referral Link Copy (Desktop) */}
-        <button
-          type="button"
-          onClick={handleCopyLink}
-          className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-[6px] bg-[#f9fafb] hover:bg-[#f3f4f6] border border-[#e5e7eb] text-xs font-mono text-[#374151] hover:text-[#111827] transition-all cursor-pointer"
-          title="Copy unique referral link"
-        >
-          <Share2 size={12} className="text-[#6b7280]" />
-          <span className="truncate max-w-[120px]">ref={session?.partner_code || 'BALIHEAD112'}</span>
-          {copiedLink ? (
-            <span className="text-[#16a34a] font-semibold flex items-center gap-0.5 text-[10px]">
-              <Check size={11} /> Copied
-            </span>
-          ) : (
-            <Copy size={11} className="text-[#9ca3af]" />
-          )}
-        </button>
+        {/* Left: Greeting & Status Dot */}
+        <div className="cirrel-top__hello">
+          <b>{greeting}, {partnerFirstName}</b>
+          <small>
+            <span className="cirrel-live"></span>
+            {formattedDate} · {getPageTitle()} · Live Sync
+          </small>
+        </div>
 
-
-        {/* Notifications Bell */}
-        <div className="relative">
+        {/* Right: Action Tools */}
+        <div className="cirrel-tools">
+          
+          {/* Quick Referral Link Pill Button */}
           <button
             type="button"
-            onClick={() => setShowNotifications(!showNotifications)}
-            className="p-1.5 text-[#6b7280] hover:text-[#111827] hover:bg-[#f3f4f6] rounded-[6px] transition-colors relative border border-transparent hover:border-[#e5e7eb] cursor-pointer"
-            title="Notifications"
-            aria-label="Notifications"
+            onClick={handleCopyLink}
+            className="cirrel-btn"
+            style={{ height: '42px', padding: '0 14px' }}
+            title="Click to copy unique referral link"
           >
-            <Bell size={16} />
-            <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-[#16a34a] ring-2 ring-white" />
+            <Share2 size={14} className="opacity-70" />
+            <span className="font-mono text-xs opacity-90">ref={partnerCode}</span>
+            {copiedLink ? (
+              <span className="flex items-center gap-1 text-[var(--good)] font-bold text-xs ml-1">
+                <Check size={13} /> Copied!
+              </span>
+            ) : (
+              <Copy size={12} className="opacity-50 ml-1" />
+            )}
           </button>
 
-          {showNotifications && (
-            <div className="absolute right-0 mt-2 w-72 bg-white rounded-[8px] border border-[#e5e7eb] shadow-lg p-3 space-y-2 z-50 text-xs animate-in fade-in-50">
-              <div className="flex items-center justify-between pb-2 border-b border-[#e5e7eb]">
-                <span className="font-semibold text-[#111827]">Partner Notifications</span>
-                <span className="text-[10px] text-[#16a34a] bg-[#16a34a]/10 px-1.5 py-0.5 rounded-[4px] font-mono">Live</span>
-              </div>
-              <div className="space-y-1.5">
-                <div className="p-2 rounded-[6px] bg-[#f9fafb] border border-[#e5e7eb]">
-                  <p className="font-medium text-[#111827]">Automated Booking Attribution Active</p>
-                  <p className="text-[11px] text-[#6b7280] mt-0.5">Guest referrals are tracked with instant commission settlements.</p>
+          {/* Manual Refresh Button */}
+          <button
+            type="button"
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="cirrel-ibtn"
+            title="Refresh portal data"
+            aria-label="Refresh portal data"
+          >
+            <RotateCw size={17} className={refreshing ? 'animate-spin text-[var(--accent)]' : ''} />
+          </button>
+
+          {/* Notifications Button with Badge */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setShowNotifications(!showNotifications)}
+              className="cirrel-ibtn"
+              title="Notifications"
+              aria-label="Notifications"
+            >
+              <Bell size={18} />
+              <span className="cirrel-ibtn__badge">1</span>
+            </button>
+
+            {showNotifications && (
+              <div 
+                className="absolute right-0 mt-2.5 w-80 cirrel-card shadow-2xl z-50 text-xs"
+                style={{ borderRadius: '18px', padding: '16px' }}
+              >
+                <div className="flex items-center justify-between pb-2.5 border-b border-[var(--line)] mb-3">
+                  <span className="font-bold text-[var(--ink)] text-sm">Notifications</span>
+                  <button 
+                    onClick={() => setShowNotifications(false)}
+                    className="text-[var(--muted)] hover:text-[var(--ink)] cursor-pointer"
+                  >
+                    <X size={15} />
+                  </button>
+                </div>
+                <div className="p-3 rounded-[12px] bg-[var(--card-2)] border border-[var(--line)]">
+                  <div className="flex items-center gap-1.5 text-[var(--good)] font-semibold text-xs mb-1">
+                    <Check size={13} /> Real-time Attribution Live
+                  </div>
+                  <p className="text-[var(--muted)] leading-relaxed">
+                    Bookings referred via your link <code className="text-[var(--accent-text)]">?ref={partnerCode}</code> are automatically credited to your ledger.
+                  </p>
                 </div>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
 
-        {/* Profile Avatar Pill */}
-        {session && (
-          <Link
-            href="/partners/profile"
-            className="flex items-center gap-2 pl-2 border-l border-[#e5e7eb] hover:opacity-85 transition-opacity"
-            title="Account Settings"
+          {/* Primary Action Button (+ Book Client) */}
+          <a
+            href={`https://www.booktherapick.com/?ref=${partnerCode}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="cirrel-btn cirrel-btn--accent"
+            style={{ height: '42px', padding: '0 18px' }}
           >
-            <div className="relative">
-              <div className="w-8 h-8 rounded-full bg-[#111827] text-white text-xs font-semibold flex items-center justify-center">
-                {partnerInitials}
-              </div>
-              <span className="absolute bottom-0 right-0 w-2 h-2 rounded-full bg-[#16a34a] ring-2 ring-white" />
-            </div>
-          </Link>
-        )}
-
+            <Plus size={16} strokeWidth={2.4} />
+            <span>Book Client</span>
+          </a>
+        </div>
       </div>
     </header>
   );

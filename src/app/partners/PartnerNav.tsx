@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { PartnerSessionData } from '@/lib/partnerAuth';
@@ -15,7 +15,13 @@ import {
   Bell, 
   Check, 
   X,
-  RotateCw
+  RotateCw,
+  Search,
+  PanelLeftClose,
+  PanelLeft,
+  Moon,
+  Sun,
+  Sparkles
 } from 'lucide-react';
 
 interface PartnerNavProps {
@@ -28,6 +34,56 @@ export default function PartnerNav({ session }: PartnerNavProps) {
   const [loggingOut, setLoggingOut] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [isRail, setIsRail] = useState(false);
+  const [isDark, setIsDark] = useState(true);
+
+  // Initialize theme and rail state from localStorage
+  useEffect(() => {
+    try {
+      const savedTheme = localStorage.getItem('cirrel:partner-theme');
+      if (savedTheme) {
+        const isDarkTheme = savedTheme === 'dark';
+        setIsDark(isDarkTheme);
+        const root = document.getElementById('partner-portal-root');
+        if (root) {
+          root.setAttribute('data-theme', isDarkTheme ? 'dark' : 'light');
+        }
+      }
+
+      const savedRail = localStorage.getItem('cirrel:partner-rail');
+      if (savedRail === '1') {
+        setIsRail(true);
+        document.body.classList.add('cirrel-side-rail-active');
+      }
+    } catch (e) {
+      // safe fallback
+    }
+  }, []);
+
+  const toggleTheme = () => {
+    const nextDark = !isDark;
+    setIsDark(nextDark);
+    const root = document.getElementById('partner-portal-root');
+    if (root) {
+      root.setAttribute('data-theme', nextDark ? 'dark' : 'light');
+    }
+    try {
+      localStorage.setItem('cirrel:partner-theme', nextDark ? 'dark' : 'light');
+    } catch (e) {}
+  };
+
+  const toggleRail = () => {
+    const nextRail = !isRail;
+    setIsRail(nextRail);
+    if (nextRail) {
+      document.body.classList.add('cirrel-side-rail-active');
+    } else {
+      document.body.classList.remove('cirrel-side-rail-active');
+    }
+    try {
+      localStorage.setItem('cirrel:partner-rail', nextRail ? '1' : '0');
+    } catch (e) {}
+  };
 
   const handleRefresh = () => {
     if (refreshing) return;
@@ -62,12 +118,15 @@ export default function PartnerNav({ session }: PartnerNavProps) {
 
   const partnerCode = session?.partner_code || 'PARTNER';
 
-  // 6 Canonical Sections matching the Redesign Master Prompt & Mockup
-  const navItems = [
-    { href: '/partners/overview', label: 'Overview', icon: LayoutDashboard },
+  // Navigation Links matching Cirrel & Partner Portal
+  const portalItems = [
+    { href: '/partners/overview', label: 'Overview', icon: LayoutDashboard, badge: 'Live' },
     { href: '/partners/bookings', label: 'Bookings', icon: CalendarDays },
     { href: '/partners/commissions', label: 'Commissions', icon: Receipt },
     { href: '/partners/payouts', label: 'Payouts', icon: Wallet },
+  ];
+
+  const toolItems = [
     { href: '/partners/history', label: 'History', icon: Clock },
     { href: '/partners/settings', label: 'Settings', icon: Settings },
   ];
@@ -85,133 +144,198 @@ export default function PartnerNav({ session }: PartnerNavProps) {
   return (
     <>
       {/* ========================================================
-          1. DESKTOP SIDEBAR (WHITE BG WITH REAL THERAPICK TITLE LOGO)
+          1. CIRREL FLOATING FROSTED GLASS SIDEBAR (DESKTOP)
          ======================================================== */}
-      <aside className="hidden md:flex flex-col bg-white sticky top-0 h-screen max-h-screen shrink-0 z-30 self-start w-60 lg:w-64 select-none border-r border-[#E2E8F0]">
+      <aside className={`cirrel-side hidden md:flex ${isRail ? 'is-rail' : ''}`}>
         
-        {/* Brand & Partner Badge */}
-        <div className="h-20 px-6 border-b border-[#F1F5F9] flex flex-col justify-center shrink-0">
+        {/* Header / Brand with Glowing Blue Gradient Mark */}
+        <div className="cirrel-side__head">
           <Link 
             href={session ? '/partners/overview' : '/partners'} 
-            className="group flex flex-col gap-1.5 outline-none"
+            className="cirrel-brand"
+            title="Therapick Partners Portal"
           >
-            <img 
-              src="/therapick-logo-2.png" 
-              alt="Therapick" 
-              className="h-7 w-auto object-contain object-left transition-transform duration-200 group-hover:opacity-90"
-            />
-            <span className="text-[10px] font-semibold tracking-wider text-[#64748B] uppercase">
-              Partner Portal
-            </span>
+            <div className="cirrel-mark">
+              <Sparkles size={20} strokeWidth={2.2} />
+            </div>
+            <div className="cirrel-brand__text">
+              <b>Therapick</b>
+              <small>Partner Portal · Bali</small>
+            </div>
           </Link>
+
+          <button 
+            type="button"
+            onClick={toggleRail}
+            className="cirrel-collapse"
+            title={isRail ? "Expand sidebar" : "Collapse to rail"}
+            aria-label="Toggle navigation rail"
+          >
+            {isRail ? <PanelLeft size={16} /> : <PanelLeftClose size={16} />}
+          </button>
         </div>
 
-        {/* 6 Navigation Links */}
-        <nav className="flex-1 px-3.5 py-5 space-y-1 overflow-y-auto">
-          {session ? (
-            navItems.map((item) => {
-              const Icon = item.icon;
-              const active = isItemActive(item.href);
+        {/* Quick Search Trigger */}
+        <div 
+          className="cirrel-side__search"
+          onClick={() => {
+            const input = document.getElementById('cirrel-search-input');
+            if (input) input.focus();
+          }}
+          title="Search portal"
+        >
+          <Search size={16} />
+          <span>Search portal...</span>
+          <span className="cirrel-kbd">⌘K</span>
+        </div>
 
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`flex items-center gap-3 px-3.5 py-2.5 rounded-[8px] text-[13px] font-medium transition-all ${
-                    active
-                      ? 'bg-[#0E2319] text-white shadow-2xs font-semibold'
-                      : 'text-[#64748B] hover:text-[#0F172A] hover:bg-[#F8FAFC]'
-                  }`}
-                >
-                  <Icon 
-                    size={17} 
-                    strokeWidth={active ? 2.2 : 1.75} 
-                    className={active ? 'text-white' : 'text-[#64748B]'} 
-                  />
-                  <span>{item.label}</span>
-                </Link>
-              );
-            })
+        {/* Navigation List */}
+        <nav className="cirrel-snav">
+          {session ? (
+            <>
+              <div className="cirrel-side__group">PORTAL</div>
+              {portalItems.map((item) => {
+                const Icon = item.icon;
+                const active = isItemActive(item.href);
+
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`cirrel-snav__item ${active ? 'is-active' : ''}`}
+                    title={item.label}
+                  >
+                    <Icon size={19} strokeWidth={active ? 2.2 : 1.8} />
+                    <span className="cirrel-snav__label">{item.label}</span>
+                    {item.badge && (
+                      <span className="cirrel-snav__count">{item.badge}</span>
+                    )}
+                  </Link>
+                );
+              })}
+
+              <div className="cirrel-side__group" style={{ marginTop: '12px' }}>TOOLS</div>
+              {toolItems.map((item) => {
+                const Icon = item.icon;
+                const active = isItemActive(item.href);
+
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`cirrel-snav__item ${active ? 'is-active' : ''}`}
+                    title={item.label}
+                  >
+                    <Icon size={19} strokeWidth={active ? 2.2 : 1.8} />
+                    <span className="cirrel-snav__label">{item.label}</span>
+                  </Link>
+                );
+              })}
+            </>
           ) : (
-            <div className="space-y-1 pt-2">
+            <div className="space-y-1.5 pt-2">
               <Link
                 href="/partners"
-                className="flex items-center gap-3 px-3.5 py-2.5 rounded-[8px] text-[13px] font-medium text-[#64748B] hover:text-[#0F172A] hover:bg-[#F8FAFC]"
+                className="cirrel-snav__item"
               >
-                <span>Program Overview</span>
+                <span className="cirrel-snav__label">Program Overview</span>
               </Link>
               <Link
                 href="/partners/login"
-                className="flex items-center gap-3 px-3.5 py-2.5 rounded-[8px] text-[13px] font-medium bg-[#0E2319] text-white"
+                className="cirrel-snav__item is-active"
               >
-                <span>Partner Log In</span>
+                <span className="cirrel-snav__label">Partner Log In</span>
               </Link>
             </div>
           )}
         </nav>
 
-        {/* Bottom Profile Pill */}
-        {session && (
-          <div className="p-3.5 border-t border-[#F1F5F9] shrink-0 bg-white">
-            <div className="flex items-center justify-between p-2 rounded-[8px] hover:bg-[#F8FAFC] transition-colors">
-              <Link href="/partners/settings" className="flex items-center gap-3 min-w-0 flex-1">
-                <div className="w-8 h-8 rounded-full bg-[#0E2319] text-white font-semibold text-xs flex items-center justify-center shrink-0">
+        {/* Footer: Theme Switcher & Partner Profile Cell */}
+        <div className="cirrel-side__foot">
+          {/* Dark / Light Mode Switch */}
+          <div className="cirrel-side__theme">
+            {isDark ? <Moon size={18} /> : <Sun size={18} />}
+            <span>Dark mode</span>
+            <button 
+              type="button"
+              role="switch"
+              aria-checked={isDark}
+              onClick={toggleTheme}
+              className="cirrel-switch"
+              title="Toggle dark/light mode"
+            >
+              <i></i>
+            </button>
+          </div>
+
+          {/* User Account Card */}
+          {session && (
+            <div className="cirrel-side__me">
+              <Link href="/partners/settings" className="flex items-center gap-2.5 min-w-0 flex-1 text-inherit">
+                <div className="cirrel-av">
                   {partnerInitials}
                 </div>
-                <div className="min-w-0 flex-1 text-left">
-                  <div className="text-xs font-semibold text-[#0F172A] truncate">
-                    {partnerName}
-                  </div>
-                  <div className="text-[11px] text-[#64748B] truncate font-mono uppercase tracking-wide">
-                    {partnerCode}
-                  </div>
+                <div className="cirrel-cell__text">
+                  <b>{partnerName}</b>
+                  <small>ref={partnerCode}</small>
                 </div>
               </Link>
               <button
                 type="button"
                 onClick={handleLogout}
                 disabled={loggingOut}
-                className="p-1.5 text-[#94A3B8] hover:text-[#DC2626] transition-colors cursor-pointer"
+                className="p-1.5 text-inherit opacity-60 hover:opacity-100 hover:text-[#ff6f66] transition-colors cursor-pointer"
                 title="Sign Out"
                 aria-label="Sign Out"
               >
-                <LogOut size={15} />
+                <LogOut size={16} />
               </button>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </aside>
 
       {/* ========================================================
-          2. MOBILE COMPACT TOP HEADER (md:hidden)
+          2. MOBILE CIRREL TOP HEADER (md:hidden)
          ======================================================== */}
-      <header className="md:hidden sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-[#e2e8f0] px-4 h-14 flex items-center justify-between">
+      <header className="md:hidden sticky top-0 z-40 bg-[var(--glass-hi)] backdrop-blur-xl border-b border-[var(--line)] px-4 h-14 flex items-center justify-between text-[var(--ink)]">
         <Link 
           href={session ? '/partners/overview' : '/partners'} 
-          className="flex flex-col gap-0.5 outline-none"
+          className="flex items-center gap-2.5 outline-none"
         >
-          <img 
-            src="/therapick-logo-2.png" 
-            alt="Therapick" 
-            className="h-5 w-auto object-contain object-left"
-          />
-          <span className="text-[9px] font-medium tracking-wider text-[#64748B] uppercase">
-            Partner Portal
-          </span>
+          <div className="cirrel-mark" style={{ width: '30px', height: '30px', borderRadius: '10px' }}>
+            <Sparkles size={16} strokeWidth={2.2} />
+          </div>
+          <div className="flex flex-col">
+            <b className="text-sm font-bold leading-tight">Therapick</b>
+            <span className="text-[9px] font-semibold text-[var(--muted)] uppercase tracking-wider">
+              Partner Portal
+            </span>
+          </div>
         </Link>
 
         {session && (
-          <div className="flex items-center gap-1 sm:gap-2">
+          <div className="flex items-center gap-1.5">
+            {/* Theme Toggle Button */}
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="p-1.5 text-[var(--muted)] hover:text-[var(--ink)] rounded-[8px] transition-colors"
+              title="Toggle theme"
+            >
+              {isDark ? <Moon size={17} /> : <Sun size={17} />}
+            </button>
+
             {/* Refresh Button */}
             <button
               type="button"
               onClick={handleRefresh}
               disabled={refreshing}
-              className="p-1.5 text-[#64748B] hover:text-[#0F172A] rounded-[6px] hover:bg-[#F1F5F9] transition-colors cursor-pointer disabled:opacity-50"
+              className="p-1.5 text-[var(--muted)] hover:text-[var(--ink)] rounded-[8px] transition-colors cursor-pointer disabled:opacity-50"
               title="Refresh app data"
               aria-label="Refresh app data"
             >
-              <RotateCw size={17} strokeWidth={1.8} className={refreshing ? 'animate-spin text-[#0E2319]' : ''} />
+              <RotateCw size={17} strokeWidth={1.8} className={refreshing ? 'animate-spin text-[var(--accent)]' : ''} />
             </button>
 
             {/* Notification Bell */}
@@ -219,29 +343,29 @@ export default function PartnerNav({ session }: PartnerNavProps) {
               <button
                 type="button"
                 onClick={() => setShowNotifications(!showNotifications)}
-                className="p-1.5 text-[#64748b] hover:text-[#0f172a] rounded-[6px] relative cursor-pointer"
+                className="p-1.5 text-[var(--muted)] hover:text-[var(--ink)] rounded-[8px] relative cursor-pointer"
                 aria-label="Notifications"
               >
                 <Bell size={18} strokeWidth={1.8} />
-                <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-[#16a34a] ring-2 ring-white" />
+                <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-[var(--accent)]" />
               </button>
 
               {showNotifications && (
-                <div className="absolute right-0 mt-2 w-72 bg-white rounded-xl border border-[#e2e8f0] shadow-xl p-3.5 space-y-2 z-50 text-xs animate-in fade-in-50">
-                  <div className="flex items-center justify-between pb-2 border-b border-[#f1f5f9]">
-                    <span className="font-semibold text-[#0f172a]">Partner Notifications</span>
+                <div className="absolute right-0 mt-2 w-72 bg-[var(--card)] backdrop-blur-xl rounded-xl border border-[var(--line)] shadow-2xl p-3.5 space-y-2 z-50 text-xs">
+                  <div className="flex items-center justify-between pb-2 border-b border-[var(--line)]">
+                    <span className="font-semibold text-[var(--ink)]">Partner Notifications</span>
                     <button 
                       onClick={() => setShowNotifications(false)}
-                      className="text-[#94a3b8] hover:text-[#0f172a] cursor-pointer"
+                      className="text-[var(--muted)] hover:text-[var(--ink)] cursor-pointer"
                     >
                       <X size={14} />
                     </button>
                   </div>
-                  <div className="p-2.5 rounded-[8px] bg-[#f8fafc] border border-[#f1f5f9]">
-                    <div className="flex items-center gap-1.5 text-[#16a34a] font-medium text-[11px] mb-1">
-                      <Check size={12} /> Live Attribution
+                  <div className="p-2.5 rounded-[10px] bg-[var(--card-2)] border border-[var(--line)]">
+                    <div className="flex items-center gap-1.5 text-[var(--good)] font-medium text-[11px] mb-1">
+                      <Check size={12} /> Live Attribution Active
                     </div>
-                    <p className="text-[11px] text-[#475569] leading-snug">
+                    <p className="text-[11px] text-[var(--muted)] leading-snug">
                       Your referral link and QR code are tracking bookings in real time.
                     </p>
                   </div>
@@ -252,7 +376,8 @@ export default function PartnerNav({ session }: PartnerNavProps) {
             {/* Profile Avatar */}
             <Link 
               href="/partners/settings" 
-              className="w-7.5 h-7.5 rounded-full bg-[#0E2319] text-white text-[11px] font-semibold flex items-center justify-center shrink-0"
+              className="cirrel-av"
+              style={{ width: '30px', height: '30px', fontSize: '11px' }}
             >
               {partnerInitials}
             </Link>
@@ -261,12 +386,12 @@ export default function PartnerNav({ session }: PartnerNavProps) {
       </header>
 
       {/* ========================================================
-          3. MOBILE DEDICATED BOTTOM NAVIGATION (md:hidden)
+          3. MOBILE CIRREL FROSTED GLASS BOTTOM TAB BAR (md:hidden)
          ======================================================== */}
       {session && (
-        <nav className="fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-md border-t border-[#e2e8f0] px-1 py-1 md:hidden pb-[max(0.6rem,env(safe-area-inset-bottom))] shadow-lg">
+        <nav className="fixed bottom-0 inset-x-0 z-40 bg-[var(--glass-hi)] backdrop-blur-2xl border-t border-[var(--line)] px-2 py-1 md:hidden pb-[max(0.6rem,env(safe-area-inset-bottom))] shadow-2xl">
           <div className="grid grid-cols-6 items-center">
-            {navItems.map((item) => {
+            {[...portalItems, ...toolItems].map((item) => {
               const Icon = item.icon;
               const active = isItemActive(item.href);
 
@@ -274,11 +399,13 @@ export default function PartnerNav({ session }: PartnerNavProps) {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex flex-col items-center justify-center min-h-[46px] py-1 rounded-[6px] transition-colors ${
-                    active ? 'text-[#0E2319] font-semibold' : 'text-[#94a3b8] hover:text-[#64748b]'
+                  className={`flex flex-col items-center justify-center min-h-[46px] py-1 rounded-[10px] transition-all ${
+                    active 
+                      ? 'text-[var(--accent)] font-semibold' 
+                      : 'text-[var(--muted)] hover:text-[var(--ink)]'
                   }`}
                 >
-                  <Icon size={17} strokeWidth={active ? 2.2 : 1.75} />
+                  <Icon size={18} strokeWidth={active ? 2.4 : 1.75} />
                   <span className="text-[9.5px] mt-0.5 tracking-tight">{item.label}</span>
                 </Link>
               );

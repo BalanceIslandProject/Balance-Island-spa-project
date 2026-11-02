@@ -5,6 +5,7 @@ import { isBookTherapickHost } from '@/lib/domainIsolation';
 import { getPartnerSession } from '@/lib/partnerAuth';
 import PartnerNav from './PartnerNav';
 import PartnerTopBar from './PartnerTopBar';
+import './cirrel.css';
 
 export const metadata = {
   title: 'Partner Program | BookTherapick Bali',
@@ -37,15 +38,26 @@ export default async function PartnersLayout({
   const session = await getPartnerSession();
 
   return (
-    <div className="min-h-screen md:h-screen md:overflow-hidden bg-[#f8f9fa] text-[#0f172a] flex flex-col md:flex-row font-sans selection:bg-[#0f172a] selection:text-white antialiased relative">
+    <div id="partner-portal-root" className="cirrel-app min-h-screen selection:bg-[#0a84ff] selection:text-white antialiased relative" data-theme="dark">
+      {/* Cirrel Ambient Liquid Mesh Gradient Background */}
+      <div className="cirrel-bg" aria-hidden="true">
+        <i></i>
+        <i></i>
+        <i></i>
+        <i></i>
+      </div>
+
+      {/* Cirrel Floating Frosted Glass Sidebar */}
       <PartnerNav session={session} />
-      <div className="flex-1 flex flex-col min-w-0 w-full h-full md:h-screen md:overflow-hidden">
-        <main className="flex-1 min-w-0 w-full h-full md:overflow-y-auto px-3.5 sm:px-6 lg:px-8 py-3.5 sm:py-6 pb-24 md:pb-12 overscroll-contain">
-          <div className="w-full max-w-[1440px] mx-auto">
-            {children}
-          </div>
+
+      {/* Main View Area */}
+      <div className="cirrel-main">
+        {session && <PartnerTopBar session={session} />}
+        <main className="cirrel-content">
+          {children}
         </main>
       </div>
     </div>
   );
 }
+
