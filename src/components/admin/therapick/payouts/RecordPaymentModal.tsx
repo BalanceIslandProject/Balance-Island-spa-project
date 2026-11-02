@@ -361,24 +361,19 @@ export default function RecordPaymentModal({
                           {isChecked ? <Check size={13} strokeWidth={3} /> : null}
                         </div>
 
-                        {/* Booking Details: Date & Treatment */}
+                        {/* Booking Details: Treatment Name, Date, Booking ID */}
                         <div className="min-w-0">
-                          <div className="flex items-center gap-1.5">
-                            <span className="font-extrabold text-xs text-neutral-900 truncate">
-                              {comm.treatment_name}
-                            </span>
+                          <div className="font-extrabold text-xs text-neutral-900 truncate">
+                            {comm.treatment_name}
                           </div>
-                          <div className="font-mono text-[10px] text-stone-500 flex items-center gap-1.5 mt-0.5">
-                            <span className="inline-flex items-center gap-1 font-semibold text-neutral-700">
-                              <Calendar size={11} className="text-stone-400" />
+                          <div className="font-mono text-[11px] text-stone-500 flex items-center gap-1.5 mt-0.5">
+                            <span className="text-stone-700 font-medium">
                               {formatBookingDate(comm.booking_date)}
                             </span>
-                            <span>·</span>
-                            <span className="truncate">{comm.guest_name}</span>
                             {comm.booking_id && comm.booking_id !== 'BK-DIRECT' && (
                               <>
-                                <span>·</span>
-                                <span className="text-stone-400">#{comm.booking_id}</span>
+                                <span className="text-stone-300">·</span>
+                                <span className="text-stone-500">#{comm.booking_id.replace(/^#/, '')}</span>
                               </>
                             )}
                           </div>

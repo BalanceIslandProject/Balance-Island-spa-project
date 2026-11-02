@@ -551,10 +551,10 @@ export default function PartnerPayoutsPage() {
                           </div>
                           <div className="text-[10px] font-mono text-[#64748B] flex items-center gap-1.5 mt-0.5">
                             <span>{formatDate(item.booking_date)}</span>
-                            {item.guest_name && (
+                            {item.booking_id && item.booking_id !== 'BK-DIRECT' && (
                               <>
                                 <span>·</span>
-                                <span className="truncate">{item.guest_name}</span>
+                                <span>#{item.booking_id.replace(/^#/, '')}</span>
                               </>
                             )}
                           </div>
