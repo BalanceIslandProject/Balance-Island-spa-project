@@ -67,13 +67,6 @@ export default function TherapickBookingDrawer() {
   // Real Net Profit
   const netProfit = Math.max(0, revenue - effectiveTherapistFee - commAmount);
 
-  // Auto-save the calculated therapist fee if currently 0 in database
-  useEffect(() => {
-    if (b && (!b.therapist_fee_total || Number(b.therapist_fee_total) === 0) && autoFeeCalc.feeTotal > 0) {
-      updateTherapistFee(b.id, autoFeeCalc.feeTotal);
-    }
-  }, [b?.id, b?.therapist_fee_total, autoFeeCalc.feeTotal, updateTherapistFee]);
-
   // Customer Data extraction
   const guestName = b.guest_name || (b as any).customer_name || (b as any).name || 'Guest';
   const guestPhone = b.guest_whatsapp || (b as any).customer_phone || (b as any).phone || '';
@@ -118,6 +111,9 @@ export default function TherapickBookingDrawer() {
   const handleTreatmentStatusChange = async (newStatus: string) => {
     setLoadingAction(true);
     try {
+      if ((!b.therapist_fee_total || Number(b.therapist_fee_total) === 0) && autoFeeCalc.feeTotal > 0) {
+        await updateTherapistFee(b.id, autoFeeCalc.feeTotal);
+      }
       await updateTreatmentStatus(b.id, newStatus);
     } finally {
       setLoadingAction(false);
@@ -127,6 +123,9 @@ export default function TherapickBookingDrawer() {
   const handlePaymentChange = async (newStatus: string, method?: string) => {
     setLoadingAction(true);
     try {
+      if ((!b.therapist_fee_total || Number(b.therapist_fee_total) === 0) && autoFeeCalc.feeTotal > 0) {
+        await updateTherapistFee(b.id, autoFeeCalc.feeTotal);
+      }
       await updatePaymentStatus(b.id, newStatus, method);
     } finally {
       setLoadingAction(false);

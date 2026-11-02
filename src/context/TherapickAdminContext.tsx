@@ -806,7 +806,7 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
   };
 
   // Action: Update Therapist Fee
-  const updateTherapistFee = async (id: string, newFee: number) => {
+  const updateTherapistFee = useCallback(async (id: string, newFee: number) => {
     const booking = bookings.find(b => b.id === id);
     const commAmount = booking?.commission?.commission_amount 
       ? Number(booking.commission.commission_amount) 
@@ -830,7 +830,7 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
       setSelectedBooking(prev => prev ? { ...prev, ...payload } : null);
     }
     refreshData();
-  };
+  }, [bookings, selectedBooking, refreshData]);
 
   // Action: Delete Booking
   const deleteBooking = async (id: string): Promise<{ success: boolean; error?: string }> => {
