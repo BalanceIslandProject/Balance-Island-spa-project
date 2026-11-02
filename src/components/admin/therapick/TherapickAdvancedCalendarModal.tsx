@@ -276,7 +276,10 @@ export default function TherapickAdvancedCalendarModal() {
                 {Array.from({ length: totalDays }).map((_, i) => {
                   const dayNum = i + 1;
                   const dayStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
-                  const dayBookings = filteredBookings.filter(b => (b.booking_date || (b.created_at ? b.created_at.split('T')[0] : '')) === dayStr);
+                  const dayBookings = filteredBookings.filter(b => {
+                    const raw = b.booking_date || (b.created_at ? b.created_at.split('T')[0] : '');
+                    return String(raw).split('T')[0].trim() === dayStr;
+                  });
 
                   return (
                     <div 
@@ -286,8 +289,8 @@ export default function TherapickAdvancedCalendarModal() {
                       <div className="flex items-center justify-between mb-1">
                         <span className="font-mono font-bold text-neutral-800 text-xs">{dayNum}</span>
                         {dayBookings.length > 0 && (
-                          <span className="text-[10px] font-bold px-1.5 rounded-full bg-stone-100 text-stone-600">
-                            {dayBookings.length}
+                          <span className="text-[10px] font-mono font-extrabold px-1.5 py-0.5 rounded-full bg-[#FACC15] text-neutral-950 border border-amber-400 shadow-2xs">
+                            {dayBookings.length} {dayBookings.length === 1 ? 'bking' : 'bkings'}
                           </span>
                         )}
                       </div>
