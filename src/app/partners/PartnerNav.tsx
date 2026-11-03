@@ -323,7 +323,7 @@ export default function PartnerNav({ session }: PartnerNavProps) {
           </span>
         </Link>
 
-        {session && (
+        {session ? (
           <div className="flex items-center gap-1.5">
             {/* Theme Toggle Button */}
             <button
@@ -389,6 +389,23 @@ export default function PartnerNav({ session }: PartnerNavProps) {
               style={{ width: '30px', height: '30px', fontSize: '11px' }}
             >
               {partnerInitials}
+            </Link>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="p-1.5 text-[var(--muted)] hover:text-[var(--ink)] rounded-[8px] transition-colors"
+              title="Toggle theme"
+            >
+              {isDark ? <Moon size={17} /> : <Sun size={17} />}
+            </button>
+            <Link 
+              href="/partners/login" 
+              className="text-[11px] font-semibold px-3 py-1.5 rounded-[8px] bg-[var(--card)] border border-[var(--line)] text-[var(--ink)] hover:bg-[var(--card-2)] transition-colors"
+            >
+              Sign In
             </Link>
           </div>
         )}

@@ -1072,3 +1072,19 @@
   border-color: var(--line) !important;
 }
 
+/* --------------------------------------------------------------------------
+   MOBILE TOP NAVBAR ENFORCEMENT
+   -------------------------------------------------------------------------- */
+#partner-portal-root header.lg\:hidden,
+.cirrel-app header.lg\:hidden {
+  display: flex !important;
+}
+
+@media (min-width: 1024px) {
+  #partner-portal-root header.lg\:hidden,
+  .cirrel-app header.lg\:hidden {
+    display: none !important;
+  }
+}
+
+

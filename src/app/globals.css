@@ -85,8 +85,8 @@ body[data-domain="therapick"] .domain-spa-only {
 }
 
 /* Partners Subdomain Isolation: strictly never show main website header or footer */
-body[data-subdomain="partners"] header,
-body[data-subdomain="partners"] footer {
+body[data-subdomain="partners"] header:not(#partner-portal-root header),
+body[data-subdomain="partners"] footer:not(#partner-portal-root footer) {
   display: none !important;
 }
 
