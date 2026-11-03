@@ -1,7 +1,9 @@
 import type { Metadata, Viewport } from "next";
-import { Plus_Jakarta_Sans, Newsreader } from "next/font/google";
+import { Plus_Jakarta_Sans, Newsreader, Urbanist } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
+import "./therapick-glass.css";
+import GlassThemeScope from "@/components/therapick/GlassThemeScope";
 import TopNav from "@/components/TopNav";
 import Footer from "@/components/Footer";
 import { SpaProvider } from "@/context/SpaContext";
@@ -19,6 +21,14 @@ const jakarta = Plus_Jakarta_Sans({
 
 const newsreader = Newsreader({
   variable: "--font-newsreader",
+  subsets: ["latin"],
+  display: "swap",
+  style: ["normal", "italic"],
+});
+
+// Therapick main-site glass theme typeface (scoped via html[data-site-theme="glass"])
+const urbanist = Urbanist({
+  variable: "--font-urbanist",
   subsets: ["latin"],
   display: "swap",
   style: ["normal", "italic"],
@@ -342,8 +352,16 @@ export default async function RootLayout({
   const initialData = await getSpaData(brand);
 
   return (
-    <html lang="en" className="antialiased scroll-smooth">
+    <html lang="en" className="antialiased scroll-smooth" suppressHydrationWarning>
       <head>
+        {isTherapick && !isPartnersSubdomain && (
+          // Applies the Therapick glass theme before first paint (customer pages only, never admin/partners)
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `(function(d){try{if(!/^\\/(admin|partners)(\\/|$)/.test(location.pathname)){d.setAttribute('data-site-theme','glass');}}catch(e){}})(document.documentElement);`,
+            }}
+          />
+        )}
         {isTherapick ? (
           <>
             <link rel="icon" type="image/png" href="/therapick-favicon.png" />
@@ -729,11 +747,12 @@ export default async function RootLayout({
       <body
         data-domain={isTherapick ? "therapick" : (isBaliDomain ? "bali" : "ubud")}
         data-subdomain={isPartnersSubdomain ? "partners" : undefined}
-        className={`${jakarta.variable} ${newsreader.variable} font-sans bg-transparent text-text min-h-screen selection:bg-primary selection:text-white`}
+        className={`${jakarta.variable} ${newsreader.variable} ${urbanist.variable} font-sans bg-transparent text-text min-h-screen selection:bg-primary selection:text-white`}
       >
         <SpaProvider brand={brand} initialData={initialData}>
           <CartProvider>
             <ScrollRevealProvider />
+            <GlassThemeScope enabled={isTherapick && !isPartnersSubdomain} />
             {isTherapick && (
               <Suspense fallback={null}>
                 <AffiliateTracker brand={brand} />

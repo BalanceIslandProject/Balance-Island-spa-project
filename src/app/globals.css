@@ -3,14 +3,18 @@
 @theme {
   --color-background: #FFFFFF;
   --color-surface: #FFFFFF;
-  --color-primary: #322F37; /* Dark bento boxes and text */
-  --color-secondary: #F3F4F6; /* Light gray */
-  --color-accent: #E5E7EB; /* Gray for cards */
-  --color-highlight: #F9FAFB; /* Off-white */
+  --color-primary: #322F37;
+  /* Dark bento boxes and text */
+  --color-secondary: #F3F4F6;
+  /* Light gray */
+  --color-accent: #E5E7EB;
+  /* Gray for cards */
+  --color-highlight: #F9FAFB;
+  /* Off-white */
   --color-text: #1C221D;
   --color-text-muted: #7A7C75;
   --color-border: #E8EBE3;
-  
+
   --shadow-soft: 0 8px 24px -4px rgba(0, 0, 0, 0.04);
   --shadow-soft-lg: 0 12px 32px -4px rgba(0, 0, 0, 0.08);
   --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.06);
@@ -22,19 +26,29 @@
 body[data-domain="bali"],
 body[data-domain="therapick"] {
   --color-background: #FFFFFF;
-  --color-secondary: #F3F4F6; /* Light gray */
-  --color-accent: #E5E7EB; /* Gray for cards */
-  --color-highlight: #F9FAFB; /* Off-white */
+  --color-secondary: #F3F4F6;
+  /* Light gray */
+  --color-accent: #E5E7EB;
+  /* Gray for cards */
+  --color-highlight: #F9FAFB;
+  /* Off-white */
 }
 
-html, body {
+html,
+body {
   background-color: var(--color-background);
   color: var(--color-text);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-h1, h2, h3, h4, h5, h6, .font-serif {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.font-serif {
   letter-spacing: -0.01em;
 }
 
@@ -47,6 +61,7 @@ h1, h2, h3, h4, h5, h6, .font-serif {
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
@@ -77,11 +92,11 @@ body[data-subdomain="partners"] footer {
 
 /* Remove autofill yellow background in Webkit browsers */
 input:-webkit-autofill,
-input:-webkit-autofill:hover, 
-input:-webkit-autofill:focus, 
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
 input:-webkit-autofill:active {
-    -webkit-box-shadow: 0 0 0 30px white inset !important;
-    -webkit-text-fill-color: var(--color-primary, #322F37) !important;
+  -webkit-box-shadow: 0 0 0 30px white inset !important;
+  -webkit-text-fill-color: var(--color-primary, #322F37) !important;
 }
 
 /* ==========================================================================
@@ -98,7 +113,7 @@ html {
   opacity: 0;
   transform: translate3d(0, 32px, 0);
   transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+    transform 0.85s cubic-bezier(0.16, 1, 0.3, 1);
   will-change: opacity, transform;
 }
 
@@ -112,7 +127,7 @@ html {
   opacity: 0;
   transform: translate3d(0, 24px, 0) scale(0.97);
   transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+    transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
   will-change: opacity, transform;
 }
 
@@ -126,7 +141,7 @@ html {
   opacity: 0;
   transform: translate3d(-32px, 0, 0);
   transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+    transform 0.85s cubic-bezier(0.16, 1, 0.3, 1);
   will-change: opacity, transform;
 }
 
@@ -139,7 +154,7 @@ html {
   opacity: 0;
   transform: translate3d(32px, 0, 0);
   transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+    transform 0.85s cubic-bezier(0.16, 1, 0.3, 1);
   will-change: opacity, transform;
 }
 
@@ -149,55 +164,63 @@ html {
 }
 
 /* Staggered child reveals for grids & cards */
-.scroll-reveal-stagger > * {
+.scroll-reveal-stagger>* {
   opacity: 0;
   transform: translate3d(0, 24px, 0);
   transition: opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+    transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
   will-change: opacity, transform;
 }
 
-.scroll-reveal-stagger.is-revealed > *:nth-child(1) {
+.scroll-reveal-stagger.is-revealed>*:nth-child(1) {
   opacity: 1 !important;
   transform: translate3d(0, 0, 0) !important;
   transition-delay: 0.04s;
 }
-.scroll-reveal-stagger.is-revealed > *:nth-child(2) {
+
+.scroll-reveal-stagger.is-revealed>*:nth-child(2) {
   opacity: 1 !important;
   transform: translate3d(0, 0, 0) !important;
   transition-delay: 0.10s;
 }
-.scroll-reveal-stagger.is-revealed > *:nth-child(3) {
+
+.scroll-reveal-stagger.is-revealed>*:nth-child(3) {
   opacity: 1 !important;
   transform: translate3d(0, 0, 0) !important;
   transition-delay: 0.16s;
 }
-.scroll-reveal-stagger.is-revealed > *:nth-child(4) {
+
+.scroll-reveal-stagger.is-revealed>*:nth-child(4) {
   opacity: 1 !important;
   transform: translate3d(0, 0, 0) !important;
   transition-delay: 0.22s;
 }
-.scroll-reveal-stagger.is-revealed > *:nth-child(5) {
+
+.scroll-reveal-stagger.is-revealed>*:nth-child(5) {
   opacity: 1 !important;
   transform: translate3d(0, 0, 0) !important;
   transition-delay: 0.28s;
 }
-.scroll-reveal-stagger.is-revealed > *:nth-child(6) {
+
+.scroll-reveal-stagger.is-revealed>*:nth-child(6) {
   opacity: 1 !important;
   transform: translate3d(0, 0, 0) !important;
   transition-delay: 0.34s;
 }
-.scroll-reveal-stagger.is-revealed > *:nth-child(7) {
+
+.scroll-reveal-stagger.is-revealed>*:nth-child(7) {
   opacity: 1 !important;
   transform: translate3d(0, 0, 0) !important;
   transition-delay: 0.40s;
 }
-.scroll-reveal-stagger.is-revealed > *:nth-child(8) {
+
+.scroll-reveal-stagger.is-revealed>*:nth-child(8) {
   opacity: 1 !important;
   transform: translate3d(0, 0, 0) !important;
   transition-delay: 0.46s;
 }
-.scroll-reveal-stagger.is-revealed > *:nth-child(n+9) {
+
+.scroll-reveal-stagger.is-revealed>*:nth-child(n+9) {
   opacity: 1 !important;
   transform: translate3d(0, 0, 0) !important;
   transition-delay: 0.52s;
@@ -208,14 +231,14 @@ html {
   html {
     scroll-behavior: auto !important;
   }
+
   .scroll-reveal,
   .scroll-reveal-scale,
   .scroll-reveal-left,
   .scroll-reveal-right,
-  .scroll-reveal-stagger > * {
+  .scroll-reveal-stagger>* {
     opacity: 1 !important;
     transform: none !important;
     transition: none !important;
   }
 }
-

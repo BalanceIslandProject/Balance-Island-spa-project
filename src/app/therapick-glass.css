@@ -1,0 +1,285 @@
+/* ==========================================================================
+   THERAPICK — MAIN WEBSITE GLASS THEME
+   Frosted-glass surfaces over soft ambient colour, single-typeface
+   (Urbanist) with tabular figures. Presentation only: no layout, sizing
+   or behavioural changes. Active exclusively when
+   html[data-site-theme="glass"] is set (Therapick customer pages; never
+   admin, partner portal, Elexoir or Home Spa Ubud).
+   ========================================================================== */
+
+/* ---------- 1. Tokens ---------------------------------------------------- */
+html[data-site-theme="glass"] {
+  --tg-canvas: #eef2f8;
+  --tg-ink: #0e1525;
+  --tg-ink-2: #2a3448;
+  --tg-muted: #5f6b80;
+  --tg-faint: #8a95a8;
+
+  --tg-fill: rgba(255, 255, 255, 0.64);
+  --tg-fill-soft: rgba(255, 255, 255, 0.46);
+  --tg-fill-strong: rgba(255, 255, 255, 0.9);
+  --tg-tint: rgba(15, 23, 42, 0.045);
+  --tg-edge: rgba(255, 255, 255, 0.85);
+  --tg-line: rgba(15, 23, 42, 0.08);
+
+  --tg-accent: #2d6cf5;
+  --tg-accent-hi: #4d88ff;
+  --tg-accent-lo: #1f56dc;
+  --tg-accent-grad: linear-gradient(180deg, var(--tg-accent-hi) 0%, var(--tg-accent) 55%, var(--tg-accent-lo) 100%);
+  --tg-accent-ring: 0 6px 18px -8px rgba(45, 108, 245, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.28);
+
+  --tg-shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 14px 34px -18px rgba(28, 48, 92, 0.28);
+  --tg-shadow-hover: 0 2px 4px rgba(16, 24, 40, 0.05), 0 22px 44px -20px rgba(28, 48, 92, 0.36);
+  --tg-shadow-pop: 0 2px 6px rgba(16, 24, 40, 0.06), 0 30px 70px -24px rgba(20, 34, 70, 0.42);
+  --tg-inset: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  --tg-blur: blur(22px) saturate(165%);
+
+  background-color: var(--tg-canvas) !important;
+  color-scheme: light;
+}
+
+/* Re-point the site's design tokens (Tailwind v4 utilities read these vars) */
+html[data-site-theme="glass"] body {
+  --color-primary: var(--tg-ink);
+  --color-text: var(--tg-ink-2);
+  --color-text-muted: var(--tg-muted);
+  --color-border: rgba(15, 23, 42, 0.09);
+  --color-secondary: #e6ecf7;
+  --color-accent: #d9e2f1;
+  --color-highlight: #f4f7fc;
+  --color-surface: var(--tg-fill);
+
+  --font-sans: var(--font-urbanist), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-serif: var(--font-urbanist), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: var(--font-urbanist), ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  background: transparent !important;
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
+  text-rendering: optimizeLegibility;
+  overflow-x: clip;
+}
+
+/* ---------- 2. Ambient background --------------------------------------- */
+html[data-site-theme="glass"] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(46% 40% at 6% 10%, rgba(66, 133, 255, 0.30) 0%, rgba(66, 133, 255, 0) 70%),
+    radial-gradient(34% 32% at 94% 6%, rgba(255, 168, 92, 0.24) 0%, rgba(255, 168, 92, 0) 72%),
+    radial-gradient(42% 40% at 88% 88%, rgba(52, 196, 224, 0.26) 0%, rgba(52, 196, 224, 0) 70%),
+    radial-gradient(40% 38% at 12% 92%, rgba(56, 196, 146, 0.22) 0%, rgba(56, 196, 146, 0) 70%),
+    radial-gradient(30% 28% at 55% 48%, rgba(150, 168, 210, 0.16) 0%, rgba(150, 168, 210, 0) 72%),
+    linear-gradient(180deg, #f3f6fb 0%, #ebf0f7 100%);
+}
+
+/* ---------- 3. Typography & numbers ------------------------------------- */
+:where(html[data-site-theme="glass"]) :is(h1, h2, h3, h4, h5, h6) {
+  letter-spacing: -0.02em;
+  font-family: var(--font-sans);
+}
+:where(html[data-site-theme="glass"]) :is(.text-2xl, .text-3xl, .text-4xl, .text-5xl, .text-6xl) {
+  letter-spacing: -0.03em;
+}
+:where(html[data-site-theme="glass"]) .font-serif {
+  font-family: var(--font-serif);
+  font-weight: 600;
+}
+:where(html[data-site-theme="glass"]) .font-serif .italic,
+:where(html[data-site-theme="glass"]) .font-serif.italic {
+  font-weight: 500;
+  color: var(--tg-accent);
+  opacity: 1;
+}
+:where(html[data-site-theme="glass"]) .font-mono {
+  font-family: var(--font-mono);
+  letter-spacing: 0.06em;
+}
+:where(html[data-site-theme="glass"]) :is(input, select, textarea, button) {
+  font-family: inherit;
+  font-variant-numeric: inherit;
+}
+/* Urbanist runs small at micro sizes — lift legibility without re-flowing */
+:where(html[data-site-theme="glass"]) .text-\[8px\] { font-size: 9px; }
+:where(html[data-site-theme="glass"]) .text-\[9px\] { font-size: 9.5px; }
+:where(html[data-site-theme="glass"]) :is(p, li, span, h1, h2, h3, h4, h5, h6, a) {
+  overflow-wrap: break-word;
+}
+:where(html[data-site-theme="glass"]) ::selection {
+  background: rgba(45, 108, 245, 0.18);
+  color: var(--tg-ink);
+}
+
+/* ---------- 4. Page canvases become transparent ------------------------- */
+:where(html[data-site-theme="glass"]) .min-h-screen:is(.bg-white, .bg-background, .bg-\[\#F8F9F9\]),
+:where(html[data-site-theme="glass"]) footer.bg-white {
+  background-color: transparent;
+}
+:where(html[data-site-theme="glass"]) footer.bg-white {
+  border-top-color: rgba(255, 255, 255, 0.7);
+}
+/* Solid white wash overlays at the top of pages would hide the ambient canvas */
+:where(html[data-site-theme="glass"]) .bg-gradient-to-b.from-white.via-white.to-white {
+  display: none;
+}
+
+/* ---------- 5. Glass surfaces ------------------------------------------ */
+/* Base: any white surface (skips elements that swap backgrounds responsively/on hover) */
+:where(html[data-site-theme="glass"]) .bg-white:not([class*=":bg-"]):not(.min-h-screen):not(footer) {
+  background-color: var(--tg-fill);
+}
+/* Elevated cards: rounded + bordered white surfaces in page flow */
+:where(html[data-site-theme="glass"]) .bg-white[class*="rounded"][class*="border"]:not(.fixed):not(.absolute) {
+  border-color: var(--tg-edge);
+  box-shadow: var(--tg-shadow), var(--tg-inset);
+  transition: box-shadow 0.35s cubic-bezier(.22, 1, .36, 1), transform 0.35s cubic-bezier(.22, 1, .36, 1), background-color 0.3s ease;
+}
+:where(html[data-site-theme="glass"]) .bg-white[class*="rounded"][class*="border"][class*="hover:shadow"]:hover,
+:where(html[data-site-theme="glass"]) .group:hover > .bg-white[class*="rounded"][class*="border"] {
+  box-shadow: var(--tg-shadow-hover), var(--tg-inset);
+  background-color: rgba(255, 255, 255, 0.76);
+}
+/* Nested white inside a card: flatter, crisper chip */
+:where(html[data-site-theme="glass"]) .bg-white .bg-white:not([class*=":bg-"]) {
+  background-color: rgba(255, 255, 255, 0.78);
+  box-shadow: none;
+  border-color: rgba(15, 23, 42, 0.06);
+}
+/* Surface token users */
+:where(html[data-site-theme="glass"]) .bg-surface:not(.fixed) {
+  border-color: var(--tg-edge);
+}
+
+/* Floating layers: dropdowns, popovers, drawers, modals — strong frosted glass */
+:where(html[data-site-theme="glass"]) :is(.fixed, .absolute).bg-white:not(.min-h-screen):not([class*=":bg-"]),
+:where(html[data-site-theme="glass"]) .fixed .bg-white:not([class*=":bg-"]),
+:where(html[data-site-theme="glass"]) .fixed .bg-surface {
+  background-color: var(--tg-fill-strong);
+}
+:where(html[data-site-theme="glass"]) :is(.fixed, .absolute).bg-white[class*="shadow"]:not([class*=":bg-"]),
+:where(html[data-site-theme="glass"]) .fixed > .bg-white[class*="rounded"],
+:where(html[data-site-theme="glass"]) .fixed > div > .bg-white[class*="rounded"] {
+  -webkit-backdrop-filter: var(--tg-blur);
+  backdrop-filter: var(--tg-blur);
+  box-shadow: var(--tg-shadow-pop), var(--tg-inset);
+  border-color: var(--tg-edge);
+}
+/* Modal scrims: deeper, cooler blur */
+:where(html[data-site-theme="glass"]) .fixed.inset-0:is(.bg-black\/60, .bg-black\/40, .bg-black\/20, .bg-primary\/45) {
+  background-color: rgba(10, 18, 36, 0.38);
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
+  backdrop-filter: blur(10px) saturate(140%);
+}
+
+/* Header pill (TopNav when scrolled/open) */
+:where(html[data-site-theme="glass"]) header.bg-white\/85 {
+  background-color: rgba(255, 255, 255, 0.62);
+  border-color: var(--tg-edge);
+  box-shadow: 0 10px 30px -14px rgba(28, 48, 92, 0.35), var(--tg-inset);
+  -webkit-backdrop-filter: blur(26px) saturate(180%);
+  backdrop-filter: blur(26px) saturate(180%);
+}
+
+/* Soft neutral fills → cool translucent tint */
+:where(html[data-site-theme="glass"]) :is(.bg-gray-50, .bg-gray-100, .bg-stone-50, .bg-stone-100, .bg-\[\#FAFAFA\], .bg-\[\#F8F9FA\], .bg-\[\#F5F5F7\], .bg-gray-100\/90):not([class*="hover:bg-"]):not([class*="md:bg-"]) {
+  background-color: var(--tg-tint);
+}
+/* Ticket cut-outs on campaign cards should read as holes into the canvas */
+:where(html[data-site-theme="glass"]) .rounded-full.shadow-inner.bg-\[\#FAFAFA\] {
+  background-color: var(--tg-canvas);
+  border-color: rgba(255, 255, 255, 0.9);
+  box-shadow: inset 0 1px 3px rgba(15, 23, 42, 0.12);
+}
+/* Campaign ticket frame */
+:where(html[data-site-theme="glass"]) .bg-\[\#FAFAFA\][class*="rounded-[24px]"] {
+  background-color: var(--tg-fill);
+  border-color: var(--tg-edge);
+  box-shadow: var(--tg-shadow), var(--tg-inset);
+}
+
+/* Hairlines */
+:where(html[data-site-theme="glass"]) :is(.border-gray-100, .border-gray-200, .border-gray-200\/90, .border-\[\#E5E7EB\], .border-\[\#eaecf0\], .border-stone-200) {
+  border-color: var(--tg-line);
+}
+:where(html[data-site-theme="glass"]) .bg-white:is(.border-gray-100, .border-gray-200, .border-gray-200\/90, .border-\[\#E5E7EB\], .border-\[\#eaecf0\], .border-stone-200):not(.fixed):not(.absolute) {
+  border-color: var(--tg-edge);
+}
+
+/* ---------- 6. Accent actions ------------------------------------------- */
+/* Solid dark fills (CTAs, add buttons, active chips, badges) become the accent */
+:where(html[data-site-theme="glass"]) :is(.bg-black, .bg-primary, .bg-\[\#1D1D1F\], .bg-\[\#2B2B2B\], .bg-neutral-900, .bg-\[\#3b82f6\], .bg-\[\#2563eb\]):not(.h-px):not(.w-px) {
+  background-image: var(--tg-accent-grad);
+  background-color: var(--tg-accent);
+  border-color: transparent;
+}
+:where(html[data-site-theme="glass"]) :is(button, a, [role="button"]):is(.bg-black, .bg-primary, .bg-\[\#1D1D1F\], .bg-\[\#2B2B2B\], .bg-neutral-900),
+:where(html[data-site-theme="glass"]) div.rounded-full:is(.bg-black, .bg-\[\#1D1D1F\]) {
+  box-shadow: var(--tg-accent-ring);
+}
+:where(html[data-site-theme="glass"]) :is(button, a, [role="button"]):is(.bg-black, .bg-primary, .bg-\[\#1D1D1F\], .bg-\[\#2B2B2B\], .bg-neutral-900):hover {
+  filter: brightness(1.07);
+}
+/* Hover-to-dark controls resolve to the accent instead of black */
+:where(html[data-site-theme="glass"]) :is(.hover\:bg-black, .hover\:bg-primary, .hover\:bg-neutral-800):hover:not(:disabled),
+:where(html[data-site-theme="glass"]) .group:hover :is(.group-hover\:bg-black, .group-hover\:bg-primary) {
+  background-image: var(--tg-accent-grad);
+  background-color: var(--tg-accent);
+  color: #fff;
+  border-color: transparent;
+}
+/* Big filled panels (e.g. contact CTA block) */
+:where(html[data-site-theme="glass"]) .bg-primary.p-8 {
+  box-shadow: 0 24px 60px -28px rgba(45, 108, 245, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+/* Range sliders & native accents */
+:where(html[data-site-theme="glass"]) .accent-black,
+:where(html[data-site-theme="glass"]) input[type="checkbox"],
+:where(html[data-site-theme="glass"]) input[type="radio"] {
+  accent-color: var(--tg-accent);
+}
+/* Focus rings */
+:where(html[data-site-theme="glass"]) :is(input, select, textarea):focus-visible,
+:where(html[data-site-theme="glass"]) .focus-within\:border-black:focus-within {
+  border-color: rgba(45, 108, 245, 0.55);
+}
+:where(html[data-site-theme="glass"]) :is(button, a):focus-visible {
+  outline: 2px solid rgba(45, 108, 245, 0.55);
+  outline-offset: 2px;
+}
+
+/* ---------- 7. Radius rhythm (visual only) ------------------------------ */
+:where(html[data-site-theme="glass"]) :is(.rounded-\[40px\], .rounded-\[2rem\], .rounded-\[32px\]) {
+  border-radius: 28px;
+}
+
+/* ---------- 8. Inputs ---------------------------------------------------- */
+:where(html[data-site-theme="glass"]) :is(input, textarea, select):not([type="range"]):not([type="checkbox"]):not([type="radio"])::placeholder {
+  color: var(--tg-faint);
+}
+
+/* ---------- 9. Motion & performance ------------------------------------ */
+
+/* Sticky containers need a solid feel + frosted blur */
+:where(html[data-site-theme="glass"]) .sticky.bg-white {
+  background-color: rgba(255, 255, 255, 0.72);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  backdrop-filter: blur(20px) saturate(160%);
+}
+
+@media (max-width: 767px) {
+  /* Fewer live blurs on phones; frosted look is carried by the ambient canvas */
+  :where(html[data-site-theme="glass"]) .fixed .bg-white[class*="rounded"]:not(header) {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background-color: rgba(255, 255, 255, 0.96);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  :where(html[data-site-theme="glass"]) .bg-white[class*="rounded"][class*="border"] {
+    transition: none;
+  }
+}
