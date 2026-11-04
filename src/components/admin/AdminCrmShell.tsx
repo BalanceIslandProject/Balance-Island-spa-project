@@ -233,6 +233,9 @@ export default function AdminCrmShell({ children, serverHost }: AdminCrmShellPro
     if (href === '/admin/settings') {
       return pathname === '/admin/settings';
     }
+    if (href === '/admin/campaigns') {
+      return pathname === '/admin/campaigns' || (pathname === '/admin' && (searchParams.get('tab') === 'campaigns' || searchParams.get('tab') === 'campaign'));
+    }
     if (href === '/admin/audit-logs') {
       return pathname === '/admin/audit-logs';
     }

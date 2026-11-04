@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { 
   LayoutDashboard, CalendarDays, Calendar, Users, Layers, 
-  TrendingUp, Wallet, FileText, Settings, Receipt, Clock, Plus 
+  TrendingUp, Wallet, FileText, Settings, Receipt, Clock, Plus, Megaphone 
 } from 'lucide-react';
 import { useTherapickAdmin } from '@/context/TherapickAdminContext';
 
@@ -22,7 +22,7 @@ export default function TherapickSidebarNav() {
   const searchParams = useSearchParams();
   const { system, setActiveTab, setIsAddBookingOpen } = useTherapickAdmin();
 
-  const currentTab = searchParams.get('tab') || (pathname === '/admin/bookings' ? 'bookings' : pathname === '/admin/partners' ? 'partners' : pathname === '/admin/commissions' ? 'commission' : pathname === '/admin/payouts' ? 'payouts' : pathname === '/admin/settings' ? 'settings' : 'overview');
+  const currentTab = searchParams.get('tab') || (pathname === '/admin/bookings' ? 'bookings' : pathname === '/admin/partners' ? 'partners' : pathname === '/admin/commissions' ? 'commission' : pathname === '/admin/payouts' ? 'payouts' : pathname === '/admin/settings' ? 'settings' : pathname === '/admin/campaigns' ? 'campaigns' : 'overview');
 
   // Website System Navigation (Fitlo 10-Item Nav)
   const websitePrimaryItems: NavItemDef[] = [
@@ -31,6 +31,7 @@ export default function TherapickSidebarNav() {
     { id: 'calendar', label: 'Calendar', icon: Calendar, href: '/admin?brand=therapick&tab=calendar' },
     { id: 'therapists', label: 'Therapists & Fees', icon: Clock, href: '/admin?brand=therapick&tab=therapists' },
     { id: 'services', label: 'Menu Overview', icon: Layers, href: '/admin?brand=therapick&tab=services' },
+    { id: 'campaigns', label: 'Campaign Cards', icon: Megaphone, href: '/admin?brand=therapick&tab=campaigns' },
     { id: 'customers', label: 'Customers', icon: Users, href: '/admin?brand=therapick&tab=customers' },
     { id: 'revenue', label: 'Revenue & Profit', icon: TrendingUp, href: '/admin?brand=therapick&tab=revenue' },
     { id: 'payments', label: 'Payments', icon: Wallet, href: '/admin?brand=therapick&tab=payments' },
@@ -128,6 +129,7 @@ export function TherapickMobileDrawerLinks({ onClose }: { onClose: () => void })
     { id: 'calendar', label: 'Calendar', icon: Calendar, href: '/admin?brand=therapick&tab=calendar' },
     { id: 'therapists', label: 'Therapists & Fees', icon: Clock, href: '/admin?brand=therapick&tab=therapists' },
     { id: 'services', label: 'Menu Overview', icon: Layers, href: '/admin?brand=therapick&tab=services' },
+    { id: 'campaigns', label: 'Campaign Cards', icon: Megaphone, href: '/admin?brand=therapick&tab=campaigns' },
     { id: 'customers', label: 'Customers', icon: Users, href: '/admin?brand=therapick&tab=customers' },
     { id: 'revenue', label: 'Revenue & Profit', icon: TrendingUp, href: '/admin?brand=therapick&tab=revenue' },
     { id: 'payments', label: 'Payments', icon: Wallet, href: '/admin?brand=therapick&tab=payments' },

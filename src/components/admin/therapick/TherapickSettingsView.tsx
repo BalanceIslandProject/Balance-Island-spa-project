@@ -3,13 +3,15 @@
 import React, { useState } from 'react';
 import { 
   Settings as SettingsIcon, Calendar, Wallet, Bell, 
-  Globe, Shield, Check, CheckCircle2, RefreshCw, Key
+  Globe, Shield, Check, CheckCircle2, RefreshCw, Key,
+  Megaphone, ArrowRight, Ticket, ExternalLink
 } from 'lucide-react';
 import { useTherapickAdmin } from '@/context/TherapickAdminContext';
 
 export default function TherapickSettingsView() {
   const { 
     system, 
+    setActiveTab,
     calendarVisibility, 
     setCalendarVisibility,
     showOnAffiliateCalendars,
@@ -20,7 +22,7 @@ export default function TherapickSettingsView() {
     setWhatsappAutoStatus: setContextWaStatus
   } = useTherapickAdmin();
 
-  const [activeCategory, setActiveCategory] = useState<'general' | 'booking' | 'payments' | 'notifications' | 'integrations' | 'access'>('general');
+  const [activeCategory, setActiveCategory] = useState<'general' | 'campaign' | 'booking' | 'payments' | 'notifications' | 'integrations' | 'access'>('general');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -91,6 +93,7 @@ export default function TherapickSettingsView() {
         <div className="md:col-span-4 lg:col-span-3 space-y-1.5">
           {[
             { id: 'general', label: 'General', icon: SettingsIcon },
+            { id: 'campaign', label: 'Campaign Cards', icon: Megaphone },
             { id: 'booking', label: 'Booking & Calendar', icon: Calendar },
             { id: 'payments', label: 'Payments', icon: Wallet },
             { id: 'notifications', label: 'Notifications', icon: Bell },
@@ -226,6 +229,69 @@ export default function TherapickSettingsView() {
                         />
                       </button>
                     </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* CAMPAIGN CARD SETTINGS */}
+            {activeCategory === 'campaign' && (
+              <div className="space-y-5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[var(--fitlo-line)]">
+                  <div>
+                    <h2 className="text-sm font-bold text-[var(--fitlo-ink)] tracking-tight flex items-center gap-2">
+                      <Megaphone size={16} className="text-[var(--fitlo-accent)]" />
+                      <span>Campaign Card & Storefront Promotion</span>
+                    </h2>
+                    <p className="text-xs text-[var(--fitlo-muted)] mt-0.5">
+                      Configure ticket discounts, seasonal banners, and promo packages for booktherapick.com.
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('campaigns')}
+                    className="fitlo-btn fitlo-btn--primary text-xs shrink-0 self-start sm:self-auto cursor-pointer"
+                  >
+                    <span>Open Full Campaign Manager</span>
+                    <ArrowRight size={13} />
+                  </button>
+                </div>
+
+                {/* Info Card with Live Ticket Demo */}
+                <div className="p-4 rounded-xl bg-[var(--fitlo-card-2)] border border-[var(--fitlo-line)] space-y-3">
+                  <div className="flex items-center justify-between text-xs font-bold text-[var(--fitlo-ink)]">
+                    <span className="flex items-center gap-1.5">
+                      <Ticket size={14} className="text-[#3b82f6]" />
+                      <span>Active Storefront Promotion</span>
+                    </span>
+                    <span className="text-[11px] text-[#3b82f6] font-semibold">
+                      Live on Homepage
+                    </span>
+                  </div>
+
+                  <p className="text-xs text-[var(--fitlo-muted)] leading-relaxed">
+                    The campaign card appears prominently right below the search bar on the Therapick homepage. Customers tap it to browse eligible discounted rituals with tickets and instant booking calculations.
+                  </p>
+
+                  <div className="pt-2 flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('campaigns')}
+                      className="fitlo-btn fitlo-btn--primary text-xs cursor-pointer"
+                    >
+                      <Megaphone size={13} />
+                      <span>Configure Campaign Cards & Rituals</span>
+                    </button>
+                    <a
+                      href="https://booktherapick.com"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="fitlo-btn fitlo-btn--ghost text-xs"
+                    >
+                      <ExternalLink size={13} />
+                      <span>View on Live Storefront</span>
+                    </a>
                   </div>
                 </div>
               </div>

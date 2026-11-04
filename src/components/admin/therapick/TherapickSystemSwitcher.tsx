@@ -14,7 +14,7 @@ export default function TherapickSystemSwitcher() {
     if (newSystem === 'website' && ['partners', 'commission', 'payouts'].includes(activeTab)) {
       setActiveTab('overview');
     }
-    if (newSystem === 'affiliate' && ['therapists', 'services', 'customers', 'revenue', 'payments'].includes(activeTab)) {
+    if (newSystem === 'affiliate' && ['therapists', 'services', 'campaigns', 'campaign', 'customers', 'revenue', 'payments'].includes(activeTab)) {
       setActiveTab('overview');
     }
   };
