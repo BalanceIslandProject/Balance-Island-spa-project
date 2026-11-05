@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, Search, Heart, Cloud, Droplet, User, Flame, Clock, ArrowRight, X, ShoppingBag, Plus, Minus, MessageCircle, ChevronLeft, ChevronDown, Bitcoin, CheckCircle2, Copy, Calendar, MapPin, Tag, DoorOpen, Trash2, Info, Check, Phone, Building2 } from 'lucide-react';
 import Link from 'next/link';
 import { saveBookingToSupabase } from '@/lib/bookingUtils';
-import { calculateCartTotal, getItemMultiplier } from '@/lib/pricingUtils';
+import { calculateCartTotal, getItemMultiplier, isCoupleTreatment } from '@/lib/pricingUtils';
 import { useCart } from '@/context/CartContext';
 import { useSpa } from '@/context/SpaContext';
 import SeoExpandedContent from '@/components/SeoExpandedContent';
@@ -66,6 +66,11 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
     const [showTableFeeModal, setShowTableFeeModal] = useState<boolean>(false);
     const [availableAddons, setAvailableAddons] = useState<any[]>([]);
     const [therapickStep, setTherapickStep] = useState<'selection' | 'details' | 'review'>('selection');
+    const [selectedPartnerBreakdown, setSelectedPartnerBreakdown] = useState<{
+        treatment: any;
+        selectedDuration: string;
+        guests: number;
+    } | null>(null);
 
     // Load custom addons configured from Therapick Admin Dashboard
     useEffect(() => {
@@ -93,16 +98,16 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
         };
     }, []);
 
-    // Lock body scroll when campaign modal is open
+    // Lock body scroll when campaign or breakdown modal is open
     useEffect(() => {
-        if (isCampaignModalOpen) {
+        if (isCampaignModalOpen || selectedPartnerBreakdown) {
             const originalOverflow = document.body.style.overflow;
             document.body.style.overflow = 'hidden';
             return () => {
                 document.body.style.overflow = originalOverflow;
             };
         }
-    }, [isCampaignModalOpen]);
+    }, [isCampaignModalOpen, selectedPartnerBreakdown]);
     
     // Initialize date and time
     const getInitialDateTime = () => {
@@ -224,6 +229,11 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                     const guestAndPriceText = isCouple 
                         ? (item.guests === 2 ? `1 COUPLE\n2 PERSONS\nIDR ${price}` : `${item.guests / 2} COUPLES\n${item.guests} PERSONS\nIDR ${price}`)
                         : `${item.guests} PERSON${item.guests > 1 ? 'S' : ''} IDR ${price}`;
+
+                    if (item.isPartner) {
+                        const partnerBreakdown = `\n*PARTNER SPA:* ${item.partnerName || ''} (${item.partnerLocation || ''})\n• Published Rate: IDR ${(item.publishedPrice || item.price).toLocaleString('en-US')}\n• Partner Discount (${item.discountPercentage || 0}%): -IDR ${(item.discountAmount || 0).toLocaleString('en-US')}\n• Subtotal: IDR ${(item.subtotal || item.price).toLocaleString('en-US')}\n• Tax & Service (${item.taxPercentage || 0}%): +IDR ${(item.taxAmount || 0).toLocaleString('en-US')}`;
+                        return `*${cleanTitle}*\nDURATION ${item.duration}\n${guestAndPriceText}${partnerBreakdown}${whatsIncludedText}`;
+                    }
 
                     if (item.isCampaign && item.discountPercentage && Number(item.discountPercentage) > 0) {
                         const originalPriceNum = item.price / (1 - (item.discountPercentage / 100));
@@ -1635,6 +1645,231 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                         </motion.div>
                     </div>
                 )}
+            </AnimatePresence>
+
+            {/* Partner Price Breakdown Modal (PDF Breakdown Logic) */}
+            <AnimatePresence>
+                {selectedPartnerBreakdown && (() => {
+                    const { treatment: pt, selectedDuration, guests } = selectedPartnerBreakdown;
+                    const currentOpt = pt.options?.find((o: any) => o.duration === selectedDuration) || pt.options?.[0] || { duration: '60', price: '450,000' };
+                    const publishedPricePerPerson = parseInt(String(currentOpt.price).replace(/[^0-9]/g, '') || '0', 10);
+                    const isCouple = isCoupleTreatment(pt.title);
+                    const baseMultiplier = isCouple ? Math.max(1, Math.round(guests / 2)) : guests;
+                    const publishedPrice = publishedPricePerPerson * baseMultiplier;
+                    const discountPercent = Number(pt.partner_discount_percentage) || 0;
+                    const taxPercent = Number(pt.partner_tax_percentage) || 0;
+
+                    const discountAmount = discountPercent > 0 ? Math.round(publishedPrice * (discountPercent / 100)) : 0;
+                    const subtotal = publishedPrice - discountAmount;
+                    const taxAmount = taxPercent > 0 ? Math.round(subtotal * (taxPercent / 100)) : 0;
+                    const guestPayment = subtotal + taxAmount;
+                    const finalRatePerUnit = Math.round(guestPayment / baseMultiplier);
+
+                    const handleProceedToBooking = () => {
+                        const durLabel = String(currentOpt.duration).toUpperCase().includes('MIN') ? currentOpt.duration : `${currentOpt.duration} MINS`;
+                        setCartItems([{
+                            id: Date.now().toString() + Math.random().toString(36).substring(2, 7),
+                            treatmentId: pt.id,
+                            title: `${pt.title} · ${pt.partner_name}`,
+                            duration: durLabel,
+                            price: finalRatePerUnit,
+                            publishedPrice: publishedPrice,
+                            discountAmount: discountAmount,
+                            subtotal: subtotal,
+                            taxAmount: taxAmount,
+                            discountPercentage: discountPercent,
+                            taxPercentage: taxPercent,
+                            guests: guests,
+                            isPartner: true,
+                            partnerName: pt.partner_name,
+                            partnerLocation: pt.partner_location,
+                            partnerLogoUrl: pt.partner_logo_url
+                        }]);
+                        setSelectedPartnerBreakdown(null);
+                        setIsBookingModalOpen(true);
+                    };
+
+                    return (
+                        <div className="fixed inset-0 z-[10000] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-xs">
+                            <motion.div
+                                initial={{ y: '100%', opacity: 0.8 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                exit={{ y: '100%', opacity: 0 }}
+                                transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+                                className="w-full sm:max-w-md bg-white rounded-t-[32px] sm:rounded-[32px] p-6 shadow-2xl border border-gray-100 flex flex-col text-black max-h-[90vh] overflow-y-auto"
+                                style={{ backgroundColor: '#ffffff', opacity: 1 }}
+                            >
+                                {/* Modal Header */}
+                                <div className="flex items-start justify-between pb-4 border-b border-gray-100">
+                                    <div className="flex items-center gap-2.5">
+                                        {pt.partner_logo_url ? (
+                                            <img
+                                                src={pt.partner_logo_url}
+                                                alt={pt.partner_name}
+                                                className="w-9 h-9 rounded-full object-cover border border-gray-200 bg-white"
+                                            />
+                                        ) : (
+                                            <div className="w-9 h-9 rounded-full bg-gray-100 text-gray-900 flex items-center justify-center font-bold text-xs">
+                                                {pt.partner_name?.charAt(0) || 'P'}
+                                            </div>
+                                        )}
+                                        <div>
+                                            <h3 className="font-bold text-sm text-gray-900 leading-snug">
+                                                {pt.partner_name}
+                                            </h3>
+                                            {pt.partner_location && (
+                                                <span className="text-[10px] text-gray-500 flex items-center gap-1">
+                                                    <MapPin size={10} className="text-gray-400" />
+                                                    {pt.partner_location}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => setSelectedPartnerBreakdown(null)}
+                                        className="w-8 h-8 rounded-full bg-gray-100 hover:bg-black hover:text-white flex items-center justify-center text-gray-600 transition-colors"
+                                    >
+                                        <X size={15} />
+                                    </button>
+                                </div>
+
+                                {/* Treatment Details */}
+                                <div className="py-4 space-y-3">
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div>
+                                            <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 text-[9px] font-bold tracking-widest uppercase mb-1">
+                                                {pt.category || 'Massage'}
+                                            </span>
+                                            <h4 className="text-base font-bold text-gray-900 leading-tight">
+                                                {pt.title}
+                                            </h4>
+                                        </div>
+
+                                        {discountPercent > 0 && (
+                                            <span className="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/80 text-[10px] font-black tracking-wide shrink-0">
+                                                {discountPercent}% OFF
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    {/* Duration & Guests Selection */}
+                                    <div className="grid grid-cols-2 gap-2 pt-1">
+                                        <div>
+                                            <label className="block text-[9px] font-bold uppercase tracking-wider text-gray-400 mb-1">Duration</label>
+                                            <div className="relative">
+                                                <select
+                                                    value={selectedDuration}
+                                                    onChange={(e) => setSelectedPartnerBreakdown(prev => prev ? { ...prev, selectedDuration: e.target.value } : null)}
+                                                    className="w-full appearance-none bg-gray-50 hover:bg-gray-100 text-xs font-bold text-gray-900 py-2 pl-3 pr-7 rounded-xl border border-gray-200/90 focus:outline-none cursor-pointer"
+                                                >
+                                                    {pt.options?.map((opt: any, oIdx: number) => (
+                                                        <option key={oIdx} value={opt.duration}>
+                                                            {String(opt.duration).toUpperCase().includes('MIN') ? opt.duration : `${opt.duration} MINS`}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                                <ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400" />
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-[9px] font-bold uppercase tracking-wider text-gray-400 mb-1">Guests</label>
+                                            <div className="flex items-center justify-between bg-gray-50 rounded-xl border border-gray-200/90 p-1 px-2.5 h-[35px]">
+                                                <span className="text-xs font-bold text-gray-900">{guests} {guests === 1 ? 'Person' : 'Persons'}</span>
+                                                <div className="flex items-center gap-1">
+                                                    <button
+                                                        type="button"
+                                                        disabled={guests <= (isCouple ? 2 : 1)}
+                                                        onClick={() => setSelectedPartnerBreakdown(prev => prev ? { ...prev, guests: Math.max(isCouple ? 2 : 1, prev.guests - (isCouple ? 2 : 1)) } : null)}
+                                                        className="w-5 h-5 rounded-md bg-white border border-gray-200 flex items-center justify-center text-gray-700 disabled:opacity-40"
+                                                    >
+                                                        <Minus size={10} />
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setSelectedPartnerBreakdown(prev => prev ? { ...prev, guests: prev.guests + (isCouple ? 2 : 1) } : null)}
+                                                        className="w-5 h-5 rounded-md bg-white border border-gray-200 flex items-center justify-center text-gray-700"
+                                                    >
+                                                        <Plus size={10} />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Price Breakdown Table (PDF Logic) */}
+                                <div className="rounded-2xl bg-gray-50 p-4 border border-gray-200/80 space-y-2.5">
+                                    <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-gray-400 pb-1.5 border-b border-gray-200/60">
+                                        <span>CUSTOMER PAYMENT</span>
+                                        <span>Amount</span>
+                                    </div>
+
+                                    {/* Published price */}
+                                    <div className="flex items-center justify-between text-xs">
+                                        <span className="text-gray-600">Published price</span>
+                                        <span className="font-semibold text-gray-900">
+                                            IDR {publishedPrice.toLocaleString('en-US')}
+                                        </span>
+                                    </div>
+
+                                    {/* Discount */}
+                                    {discountPercent > 0 && (
+                                        <div className="flex items-center justify-between text-xs text-emerald-600">
+                                            <span className="font-medium">Discount ({discountPercent}%)</span>
+                                            <span className="font-semibold">
+                                                −IDR {discountAmount.toLocaleString('en-US')}
+                                            </span>
+                                        </div>
+                                    )}
+
+                                    {/* Subtotal */}
+                                    <div className="flex items-center justify-between text-xs pt-1 border-t border-gray-200/60">
+                                        <span className="text-gray-700 font-medium">Subtotal</span>
+                                        <span className="font-bold text-gray-900">
+                                            IDR {subtotal.toLocaleString('en-US')}
+                                        </span>
+                                    </div>
+
+                                    {/* Tax & service */}
+                                    {taxPercent > 0 && (
+                                        <div className="flex items-center justify-between text-xs text-gray-600">
+                                            <span>Tax &amp; service ({taxPercent}%)</span>
+                                            <span className="font-semibold text-gray-900">
+                                                +IDR {taxAmount.toLocaleString('en-US')}
+                                            </span>
+                                        </div>
+                                    )}
+
+                                    {/* Total Guest Payment */}
+                                    <div className="flex items-center justify-between text-sm pt-2.5 border-t border-gray-300">
+                                        <span className="font-bold text-gray-900">Guest payment</span>
+                                        <span className="font-black text-gray-900 text-base">
+                                            IDR {guestPayment.toLocaleString('en-US')}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {/* CTA Button to proceed directly to complete booking section */}
+                                <div className="pt-4 space-y-2">
+                                    <button
+                                        type="button"
+                                        onClick={handleProceedToBooking}
+                                        className="w-full py-3.5 px-4 rounded-full bg-[#1D1D1F] hover:bg-black text-white text-xs font-bold transition-all shadow-md active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer"
+                                    >
+                                        <span>Continue to Complete Booking</span>
+                                        <ArrowRight size={14} />
+                                    </button>
+                                    <p className="text-[10px] text-center text-gray-400">
+                                        Instant confirmation via WhatsApp · No pre-payment required
+                                    </p>
+                                </div>
+                            </motion.div>
+                        </div>
+                    );
+                })()}
             </AnimatePresence>
 
             <div className="max-w-7xl mx-auto px-6 relative z-10">
