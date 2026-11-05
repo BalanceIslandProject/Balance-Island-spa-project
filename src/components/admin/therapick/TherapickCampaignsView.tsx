@@ -2,125 +2,141 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { 
-  Megaphone, Plus, Trash2, ArrowUp, ArrowDown, ArrowRight, Check, 
-  CheckCircle2, RefreshCw, Eye, EyeOff, Sparkles, Layers, Calendar, 
-  Percent, ExternalLink, Ticket, Search, X, CheckCheck
+  Plus, Copy, Check, Eye, ExternalLink, X, 
+  Trash2, Star, Sparkles, RefreshCw, CheckCircle2,
+  Calendar, Layers, Tag
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { useSpa, Campaign, SelectedCampaignTreatment, sortCampaigns, DEFAULT_CAMPAIGNS } from '@/context/SpaContext';
+import { useSpa, Campaign, sortCampaigns, DEFAULT_CAMPAIGNS } from '@/context/SpaContext';
 import { useTherapickAdmin } from '@/context/TherapickAdminContext';
 
-interface CampaignFormState {
-  title: string;
-  label: string;
-  description: string;
-  discountPercentage: number;
-  startDate: string;
-  endDate: string;
-  duration: string;
-  order: number;
-  is_published: boolean;
-  selectedTreatments: SelectedCampaignTreatment[];
+interface DiscountCodeItem {
+  id: string;
+  code: string;
+  kind: 'pct' | 'fixed' | 'ship';
+  value: number;
+  uses: number;
+  limit: number;
+  ends: string; // ISO date or date string
+  active: boolean;
+  note: string;
 }
 
-const CAMPAIGN_PRESETS = [
+const DEFAULT_DISCOUNTS: DiscountCodeItem[] = [
   {
-    title: "Summer Retreat & Spa Package",
-    label: "LIMITED 10% OFF",
-    description: "Relax deeply with customized flower baths, traditional Balinese massage, and organic botanical body wraps in the comfort of your villa.",
-    discountPercentage: 10,
-    duration: "1_month"
+    id: 'd1',
+    code: 'WELCOME15',
+    kind: 'pct',
+    value: 15,
+    uses: 412,
+    limit: 1000,
+    ends: '2026-12-30',
+    active: true,
+    note: 'First order, any in-villa treatment'
   },
   {
-    title: "Couples In-Villa Escape",
-    label: "SPECIAL 15% OFF",
-    description: "Indulge in a tranquil couples journey with aromatherapy massage, foot reflexology, and complimentary herbal wellness teas.",
-    discountPercentage: 15,
-    duration: "2_weeks"
+    id: 'd2',
+    code: 'LAYERS20',
+    kind: 'pct',
+    value: 20,
+    uses: 187,
+    limit: 300,
+    ends: '2026-11-08',
+    active: true,
+    note: 'Signature flower bath & massage edit'
   },
   {
-    title: "Signature Bali Healing Ritual",
-    label: "EXCLUSIVE 20% OFF",
-    description: "Rejuvenate body and spirit with our master therapists featuring sacred Balinese boreh wrap and deep tissue recovery.",
-    discountPercentage: 20,
-    duration: "1_month"
+    id: 'd3',
+    code: 'FREESHIP',
+    kind: 'ship',
+    value: 0,
+    uses: 266,
+    limit: 500,
+    ends: '2026-11-29',
+    active: true,
+    note: 'Free villa therapist travel across Bali'
   },
   {
-    title: "Flash Weekend Special",
-    label: "WEEKEND 10% OFF",
-    description: "Quick weekend rejuvenation delivered straight to your hotel or villa pool deck anywhere in Bali.",
-    discountPercentage: 10,
-    duration: "weekend"
+    id: 'd4',
+    code: 'FIT10',
+    kind: 'fixed',
+    value: 100000,
+    uses: 58,
+    limit: 400,
+    ends: '2026-12-14',
+    active: true,
+    note: 'Rp 100k off after ritual assessment'
+  },
+  {
+    id: 'd5',
+    code: 'SUMMER30',
+    kind: 'pct',
+    value: 30,
+    uses: 300,
+    limit: 300,
+    ends: '2026-09-08',
+    active: false,
+    note: 'Summer clear-out (ended)'
   }
 ];
 
-const generateUUID = () => {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-    return crypto.randomUUID();
-  }
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0;
-    const v = c === 'x' ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
-};
-
-const formatMonth = (dateStr: string) => {
-  try {
-    return new Date(dateStr).toLocaleDateString('en-US', { month: 'short' });
-  } catch {
-    return '';
-  }
-};
-
-const formatDay = (dateStr: string) => {
-  try {
-    return new Date(dateStr).getDate();
-  } catch {
-    return '';
-  }
-};
-
-const formatYear = (dateStr: string) => {
-  try {
-    return new Date(dateStr).getFullYear();
-  } catch {
-    return '';
-  }
-};
-
 export default function TherapickCampaignsView() {
   const { treatments } = useTherapickAdmin();
-  const { 
-    campaigns: spaCampaigns, 
-    setCampaigns: setSpaCampaigns, 
-    setCampaign: setSpaCampaign 
-  } = useSpa();
+  const { campaigns: spaCampaigns, setCampaigns: setSpaCampaigns, setCampaign: setSpaCampaign } = useSpa();
 
-  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [editingCampaignId, setEditingCampaignId] = useState<string | null>(null);
+  // Active Sub-tab: 'discounts' | 'banners'
+  const [subTab, setSubTab] = useState<'discounts' | 'banners'>('discounts');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const [treatmentSearch, setTreatmentSearch] = useState('');
+  const [copiedCode, setCopiedCode] = useState<string | null>(null);
 
-  // Form State
-  const [formData, setFormData] = useState<CampaignFormState>({
-    title: 'Summer Retreat & Spa Package',
-    label: 'LIMITED 10% OFF',
-    description: 'Relax deeply with customized flower baths, traditional Balinese massage, and organic botanical body wraps in the comfort of your villa.',
+  // Discount Codes state
+  const [discounts, setDiscounts] = useState<DiscountCodeItem[]>(DEFAULT_DISCOUNTS);
+  const [loadingDiscounts, setLoadingDiscounts] = useState(true);
+
+  // Storefront Banners state
+  const [banners, setBanners] = useState<Campaign[]>([]);
+  const [loadingBanners, setLoadingBanners] = useState(true);
+
+  // Modals state
+  const [isCodeModalOpen, setIsCodeModalOpen] = useState(false);
+  const [editingCode, setEditingCode] = useState<DiscountCodeItem | null>(null);
+  const [codeForm, setCodeForm] = useState({
+    code: '',
+    kind: 'pct' as 'pct' | 'fixed' | 'ship',
+    value: '15',
+    limit: '500',
+    days: '30',
+    note: '',
+    active: true
+  });
+
+  const [isBannerModalOpen, setIsBannerModalOpen] = useState(false);
+  const [editingBanner, setEditingBanner] = useState<Campaign | null>(null);
+  const [bannerForm, setBannerForm] = useState({
+    title: '',
+    description: '',
+    label: '',
     discountPercentage: 10,
     startDate: '',
     endDate: '',
     duration: '1_month',
-    order: 1,
-    is_published: true,
-    selectedTreatments: []
+    image: '',
+    active: true,
+    selectedTreatments: [] as any[]
   });
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 3500);
+    setTimeout(() => setToastMessage(null), 3000);
+  };
+
+  const copyCode = (code: string) => {
+    try {
+      navigator.clipboard?.writeText(code);
+    } catch {}
+    setCopiedCode(code);
+    showToast(`${code} copied`);
+    setTimeout(() => setCopiedCode(null), 2000);
   };
 
   const triggerRevalidation = async () => {
@@ -131,31 +147,59 @@ export default function TherapickCampaignsView() {
         body: JSON.stringify({ action: 'revalidate' })
       });
     } catch (e) {
-      console.warn('Revalidation notice:', e);
+      console.warn('Revalidation note:', e);
     }
   };
 
-  // Fetch campaigns for Therapick
-  const fetchCampaigns = useCallback(async () => {
-    setLoading(true);
+  // ─────────────────────────────────────────────────────────────────────────────
+  // 1. FETCH DISCOUNT CODES
+  // ─────────────────────────────────────────────────────────────────────────────
+  const fetchDiscounts = useCallback(async () => {
+    setLoadingDiscounts(true);
     try {
-      // 1. Fetch campaigns for therapick brand
-      let { data, error } = await supabase
+      const { data, error } = await supabase
+        .from('promo_codes')
+        .select('*')
+        .eq('brand', 'therapick')
+        .order('created_at', { ascending: false });
+
+      if (data && data.length > 0) {
+        const mapped: DiscountCodeItem[] = data.map((d: any) => ({
+          id: d.id,
+          code: d.code,
+          kind: d.discount_type === 'fixed' ? 'fixed' : d.discount_type === 'ship' ? 'ship' : 'pct',
+          value: Number(d.discount_value) || 0,
+          uses: Number(d.current_uses) || 0,
+          limit: Number(d.max_uses) || 500,
+          ends: d.ends_at || '2026-12-31',
+          active: d.is_active !== false,
+          note: d.description || `${d.discount_value}% off in-villa booking`
+        }));
+        setDiscounts(mapped);
+      } else {
+        setDiscounts(DEFAULT_DISCOUNTS);
+      }
+    } catch (e) {
+      console.error('Error fetching promo codes:', e);
+    } finally {
+      setLoadingDiscounts(false);
+    }
+  }, []);
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // 2. FETCH STOREFRONT BANNERS
+  // ─────────────────────────────────────────────────────────────────────────────
+  const fetchBanners = useCallback(async () => {
+    setLoadingBanners(true);
+    try {
+      let { data } = await supabase
         .from('campaigns')
         .select('*')
         .eq('brand', 'therapick')
         .order('order', { ascending: true });
 
-      // Fallback: If no therapick-specific campaigns exist yet, check general/elexoir or spa context
       if (!data || data.length === 0) {
-        const { data: fallbackData } = await supabase
-          .from('campaigns')
-          .select('*')
-          .order('order', { ascending: true });
-        
-        if (fallbackData && fallbackData.length > 0) {
-          data = fallbackData;
-        } else if (spaCampaigns && spaCampaigns.length > 0) {
+        if (spaCampaigns && spaCampaigns.length > 0) {
           data = spaCampaigns;
         } else {
           data = DEFAULT_CAMPAIGNS;
@@ -164,288 +208,283 @@ export default function TherapickCampaignsView() {
 
       if (data && data.length > 0) {
         const sorted = sortCampaigns(data);
-        setCampaigns(sorted);
-        loadCampaignToForm(sorted[0]);
-      } else {
-        setCampaigns([]);
+        setBanners(sorted);
       }
-    } catch (err) {
-      console.error('Error fetching campaigns:', err);
+    } catch (e) {
+      console.error('Error fetching banners:', e);
     } finally {
-      setLoading(false);
+      setLoadingBanners(false);
     }
   }, [spaCampaigns]);
 
   useEffect(() => {
-    fetchCampaigns();
-  }, [fetchCampaigns]);
+    fetchDiscounts();
+    fetchBanners();
+  }, [fetchDiscounts, fetchBanners]);
 
-  // Load a campaign into the editor
-  const loadCampaignToForm = (c: Campaign) => {
-    setEditingCampaignId(c.id || null);
-    setFormData({
-      title: c.title || '',
-      label: c.label || '',
-      description: c.description || '',
-      discountPercentage: c.discountPercentage ?? 10,
-      startDate: c.startDate || '',
-      endDate: c.endDate || '',
-      duration: c.duration || '1_month',
-      order: c.order ?? 1,
-      is_published: c.is_published !== false,
-      selectedTreatments: c.selectedTreatments || []
-    });
-  };
+  // ─────────────────────────────────────────────────────────────────────────────
+  // DISCOUNT CODE HANDLERS
+  // ─────────────────────────────────────────────────────────────────────────────
+  const toggleCodeActive = async (id: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    const target = discounts.find(d => d.id === id);
+    if (!target) return;
+    const nextActive = !target.active;
 
-  // Reset form for a new campaign
-  const handleNewCampaign = () => {
-    setEditingCampaignId(null);
-    setFormData({
-      title: 'New Seasonal Campaign',
-      label: 'SPECIAL 15% OFF',
-      description: 'Experience pure island relaxation with our curated in-villa spa treatments at special promotional rates.',
-      discountPercentage: 15,
-      startDate: '',
-      endDate: '',
-      duration: '1_month',
-      order: campaigns.length + 1,
-      is_published: true,
-      selectedTreatments: treatments.map(t => ({
-        treatmentId: t.id,
-        durations: (t.options || []).map(o => o.duration)
-      }))
-    });
-  };
-
-  // Apply a preset
-  const handleApplyPreset = (preset: typeof CAMPAIGN_PRESETS[0]) => {
-    setFormData(prev => ({
-      ...prev,
-      title: preset.title,
-      label: preset.label,
-      description: preset.description,
-      discountPercentage: preset.discountPercentage,
-      duration: preset.duration
-    }));
-    showToast(`Loaded preset: "${preset.title}"`);
-  };
-
-  // Treatment selection handlers
-  const handleSelectAllTreatments = () => {
-    const all = treatments.map(t => ({
-      treatmentId: t.id,
-      durations: (t.options || []).map(o => o.duration)
-    }));
-    setFormData(prev => ({ ...prev, selectedTreatments: all }));
-  };
-
-  const handleClearAllTreatments = () => {
-    setFormData(prev => ({ ...prev, selectedTreatments: [] }));
-  };
-
-  const handleToggleTreatmentDuration = (treatmentId: string, duration: string) => {
-    setFormData(prev => {
-      const existing = prev.selectedTreatments.find(st => st.treatmentId === treatmentId);
-      let updated: SelectedCampaignTreatment[];
-
-      if (existing) {
-        const hasDuration = existing.durations.includes(duration);
-        let nextDurations: string[];
-        if (hasDuration) {
-          nextDurations = existing.durations.filter(d => d !== duration);
-        } else {
-          nextDurations = [...existing.durations, duration];
-        }
-
-        if (nextDurations.length === 0) {
-          updated = prev.selectedTreatments.filter(st => st.treatmentId !== treatmentId);
-        } else {
-          updated = prev.selectedTreatments.map(st => 
-            st.treatmentId === treatmentId ? { ...st, durations: nextDurations } : st
-          );
-        }
-      } else {
-        updated = [...prev.selectedTreatments, { treatmentId, durations: [duration] }];
-      }
-
-      return { ...prev, selectedTreatments: updated };
-    });
-  };
-
-  // Reorder campaigns
-  const handleMoveCampaign = async (index: number, direction: 'up' | 'down') => {
-    const targetIndex = direction === 'up' ? index - 1 : index + 1;
-    if (targetIndex < 0 || targetIndex >= campaigns.length) return;
-
-    const newCampaigns = [...campaigns];
-    const [moved] = newCampaigns.splice(index, 1);
-    newCampaigns.splice(targetIndex, 0, moved);
-
-    const reordered = newCampaigns.map((c, i) => ({ ...c, order: i + 1 }));
-    setCampaigns(reordered);
-    setSpaCampaigns(reordered);
-    if (reordered.length > 0) {
-      setSpaCampaign(reordered[0]);
-    }
+    setDiscounts(prev => prev.map(d => d.id === id ? { ...d, active: nextActive } : d));
+    showToast(nextActive ? `${target.code} works in the bag again` : `${target.code} paused — stops working in the bag`);
 
     try {
-      localStorage.setItem('spa_campaigns', JSON.stringify(reordered));
-      window.dispatchEvent(new Event('spa_campaigns_updated'));
-      await Promise.all(
-        reordered.map(item => 
-          supabase.from('campaigns').update({ order: item.order }).eq('id', item.id)
-        )
-      );
-      await triggerRevalidation();
-    } catch (e) {
-      console.error('Failed to update campaign order:', e);
+      await supabase.from('promo_codes').update({ is_active: nextActive }).eq('id', id);
+    } catch (err) {
+      console.warn('Update promo error:', err);
     }
   };
 
-  // Toggle publish / hide
-  const handleTogglePublish = async (camp: Campaign) => {
-    const newStatus = camp.is_published === false;
-    const updated = campaigns.map(c => c.id === camp.id ? { ...c, is_published: newStatus } : c);
-    setCampaigns(updated);
+  const openNewCodeModal = () => {
+    setEditingCode(null);
+    setCodeForm({
+      code: '',
+      kind: 'pct',
+      value: '15',
+      limit: '500',
+      days: '30',
+      note: 'First order, any in-villa treatment',
+      active: true
+    });
+    setIsCodeModalOpen(true);
+  };
+
+  const openEditCodeModal = (item: DiscountCodeItem) => {
+    setEditingCode(item);
+    setCodeForm({
+      code: item.code,
+      kind: item.kind,
+      value: String(item.value),
+      limit: String(item.limit),
+      days: '30',
+      note: item.note,
+      active: item.active
+    });
+    setIsCodeModalOpen(true);
+  };
+
+  const handleSaveCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleanCode = codeForm.code.trim().toUpperCase();
+    if (!cleanCode) return;
+
+    const endDate = new Date(Date.now() + (Number(codeForm.days) || 30) * 86400000).toISOString().split('T')[0];
+
+    const newDiscount: DiscountCodeItem = {
+      id: editingCode ? editingCode.id : `d${Date.now()}`,
+      code: cleanCode,
+      kind: codeForm.kind,
+      value: codeForm.kind === 'ship' ? 0 : Number(codeForm.value) || 0,
+      uses: editingCode ? editingCode.uses : 0,
+      limit: Number(codeForm.limit) || 500,
+      ends: endDate,
+      active: codeForm.active,
+      note: codeForm.note.trim() || (codeForm.kind === 'pct' ? `${codeForm.value}% off` : codeForm.kind === 'fixed' ? `Rp ${codeForm.value} off` : 'Free villa transport')
+    };
+
+    if (editingCode) {
+      setDiscounts(prev => prev.map(d => d.id === editingCode.id ? newDiscount : d));
+    } else {
+      setDiscounts(prev => [newDiscount, ...prev]);
+    }
+
+    setIsCodeModalOpen(false);
+    showToast(`${cleanCode} is live — try it in the bag`);
+
+    try {
+      const record = {
+        code: cleanCode,
+        discount_type: codeForm.kind === 'fixed' ? 'fixed' : codeForm.kind === 'ship' ? 'ship' : 'percentage',
+        discount_value: codeForm.kind === 'ship' ? 0 : Number(codeForm.value) || 0,
+        max_uses: Number(codeForm.limit) || 500,
+        current_uses: editingCode ? editingCode.uses : 0,
+        description: newDiscount.note,
+        ends_at: endDate,
+        is_active: codeForm.active,
+        brand: 'therapick'
+      };
+
+      if (editingCode) {
+        await supabase.from('promo_codes').update(record).eq('id', editingCode.id);
+      } else {
+        await supabase.from('promo_codes').insert([{ ...record, id: newDiscount.id }]);
+      }
+    } catch (err) {
+      console.warn('Supabase promo save error:', err);
+    }
+  };
+
+  const handleDeleteCode = async (id: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    if (!window.confirm('Delete this discount code?')) return;
+    setDiscounts(prev => prev.filter(d => d.id !== id));
+    showToast('Discount code deleted');
+    try {
+      await supabase.from('promo_codes').delete().eq('id', id);
+    } catch (err) {
+      console.warn('Delete promo error:', err);
+    }
+  };
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // SHOP BANNERS HANDLERS
+  // ─────────────────────────────────────────────────────────────────────────────
+  const toggleBannerActive = async (banner: Campaign, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    const nextActive = banner.is_published === false;
+    const updated = banners.map(b => b.id === banner.id ? { ...b, is_published: nextActive } : b);
+    setBanners(updated);
     setSpaCampaigns(updated);
 
-    if (editingCampaignId === camp.id) {
-      setFormData(prev => ({ ...prev, is_published: newStatus }));
-    }
+    showToast(nextActive ? `"${banner.title}" is on Explore` : `"${banner.title}" is off Explore`);
 
     try {
       localStorage.setItem('spa_campaigns', JSON.stringify(updated));
       window.dispatchEvent(new Event('spa_campaigns_updated'));
-      await supabase.from('campaigns').update({ is_published: newStatus }).eq('id', camp.id);
+      await supabase.from('campaigns').update({ is_published: nextActive }).eq('id', banner.id);
       await triggerRevalidation();
-      showToast(newStatus ? 'Campaign is now published on storefront' : 'Campaign hidden from storefront');
-    } catch (e) {
-      console.error('Failed to toggle publish status:', e);
+    } catch (err) {
+      console.warn('Banner toggle error:', err);
     }
   };
 
-  // Delete campaign
-  const handleDeleteCampaign = async (id: string) => {
-    if (!window.confirm('Are you sure you want to delete this campaign card?')) return;
+  const makeBannerHero = async (banner: Campaign, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    const without = banners.filter(b => b.id !== banner.id);
+    const updated = [{ ...banner, order: 1, is_published: true }, ...without.map((b, i) => ({ ...b, order: i + 2 }))];
 
-    const updated = campaigns.filter(c => c.id !== id);
-    setCampaigns(updated);
+    setBanners(updated);
     setSpaCampaigns(updated);
-    if (updated.length > 0) {
-      setSpaCampaign(updated[0]);
-      if (editingCampaignId === id) {
-        loadCampaignToForm(updated[0]);
-      }
+    setSpaCampaign(updated[0]);
+
+    showToast(`"${banner.title}" is now the hero on Explore`);
+
+    try {
+      localStorage.setItem('spa_campaigns', JSON.stringify(updated));
+      localStorage.setItem('spa_campaign', JSON.stringify(updated[0]));
+      window.dispatchEvent(new Event('spa_campaigns_updated'));
+      await Promise.all(updated.map(b => supabase.from('campaigns').update({ order: b.order }).eq('id', b.id)));
+      await triggerRevalidation();
+    } catch (err) {
+      console.warn('Hero update error:', err);
+    }
+  };
+
+  const openEditBannerModal = (b: Campaign) => {
+    setEditingBanner(b);
+    setBannerForm({
+      title: b.title || '',
+      description: b.description || '',
+      label: b.label || `${b.discountPercentage}% OFF`,
+      discountPercentage: b.discountPercentage ?? 10,
+      startDate: b.startDate || '',
+      endDate: b.endDate || '',
+      duration: b.duration || '1_month',
+      image: b.image_url || b.image || '',
+      active: b.is_published !== false,
+      selectedTreatments: b.selectedTreatments || []
+    });
+    setIsBannerModalOpen(true);
+  };
+
+  const openNewBannerModal = () => {
+    setEditingBanner(null);
+    setBannerForm({
+      title: 'New Storefront Banner',
+      description: 'Exclusive in-villa spa package delivered straight to your Bali pool deck.',
+      label: 'LIMITED 15% OFF',
+      discountPercentage: 15,
+      startDate: '',
+      endDate: '',
+      duration: '1_month',
+      image: 'https://images.pexels.com/photos/3865712/pexels-photo-3865712.jpeg?auto=compress&cs=tinysrgb&w=1200&h=800&fit=crop&crop=center',
+      active: true,
+      selectedTreatments: treatments.map(t => ({ treatmentId: t.id, durations: (t.options || []).map(o => o.duration) }))
+    });
+    setIsBannerModalOpen(true);
+  };
+
+  const handleSaveBanner = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const targetId = editingBanner?.id || (typeof crypto !== 'undefined' ? crypto.randomUUID() : `b${Date.now()}`);
+
+    const bannerData: Campaign = {
+      id: targetId,
+      title: bannerForm.title.trim() || 'Storefront Campaign',
+      description: bannerForm.description.trim(),
+      label: bannerForm.label.trim() || `${bannerForm.discountPercentage}% OFF`,
+      discountPercentage: Number(bannerForm.discountPercentage) || 0,
+      startDate: bannerForm.startDate || undefined,
+      endDate: bannerForm.endDate || undefined,
+      duration: bannerForm.duration || '1_month',
+      image_url: bannerForm.image || null,
+      is_published: bannerForm.active,
+      order: editingBanner?.order || (banners.length + 1),
+      selectedTreatments: bannerForm.selectedTreatments.length > 0 
+        ? bannerForm.selectedTreatments 
+        : treatments.map(t => ({ treatmentId: t.id, durations: (t.options || []).map(o => o.duration) })),
+      brand: 'therapick'
+    } as any;
+
+    let updatedList: Campaign[];
+    if (editingBanner) {
+      updatedList = banners.map(b => b.id === editingBanner.id ? bannerData : b);
     } else {
-      setSpaCampaign(null);
-      handleNewCampaign();
+      updatedList = [...banners, bannerData];
     }
 
+    const sorted = sortCampaigns(updatedList);
+    setBanners(sorted);
+    setSpaCampaigns(sorted);
+    if (sorted.length > 0) setSpaCampaign(sorted[0]);
+    setIsBannerModalOpen(false);
+    showToast(`Saved "${bannerData.title}"`);
+
+    try {
+      localStorage.setItem('spa_campaigns', JSON.stringify(sorted));
+      window.dispatchEvent(new Event('spa_campaigns_updated'));
+      if (editingBanner) {
+        await supabase.from('campaigns').update(bannerData).eq('id', editingBanner.id);
+      } else {
+        await supabase.from('campaigns').insert([bannerData]);
+      }
+      await triggerRevalidation();
+    } catch (err) {
+      console.warn('Save banner error:', err);
+    }
+  };
+
+  const handleDeleteBanner = async (id: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    if (!window.confirm('Delete this storefront campaign banner?')) return;
+    const updated = banners.filter(b => b.id !== id);
+    setBanners(updated);
+    setSpaCampaigns(updated);
+    if (updated.length > 0) setSpaCampaign(updated[0]);
+    showToast('Banner deleted');
     try {
       localStorage.setItem('spa_campaigns', JSON.stringify(updated));
       window.dispatchEvent(new Event('spa_campaigns_updated'));
       await supabase.from('campaigns').delete().eq('id', id);
       await triggerRevalidation();
-      showToast('Campaign card deleted.');
-    } catch (e) {
-      console.error('Delete error:', e);
-    }
-  };
-
-  // Save / Update Campaign
-  const handleSaveCampaign = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
-    try {
-      const targetId = editingCampaignId || generateUUID();
-      const targetOrder = Number(formData.order) || (editingCampaignId ? 1 : campaigns.length + 1);
-
-      const resolvedSelectedTreatments = formData.selectedTreatments.length > 0
-        ? formData.selectedTreatments
-        : treatments.map(t => ({
-            treatmentId: t.id,
-            durations: (t.options || []).map(o => o.duration)
-          }));
-
-      const campaignRecord: Campaign = {
-        id: targetId,
-        title: formData.title.trim() || 'Summer Retreat & Spa Package',
-        label: formData.label.trim() || `${formData.discountPercentage}% OFF`,
-        description: formData.description.trim() || '',
-        discountPercentage: Number(formData.discountPercentage) || 0,
-        startDate: formData.startDate || undefined,
-        endDate: formData.endDate || undefined,
-        duration: formData.duration || '1_month',
-        selectedTreatments: resolvedSelectedTreatments,
-        order: targetOrder,
-        is_published: formData.is_published,
-        brand: 'therapick'
-      } as any;
-
-      let updatedList: Campaign[];
-      if (editingCampaignId) {
-        updatedList = campaigns.map(c => c.id === editingCampaignId ? campaignRecord : c);
-      } else {
-        updatedList = [...campaigns.filter(c => c.id !== targetId), campaignRecord];
-      }
-
-      const sorted = sortCampaigns(updatedList);
-      setCampaigns(sorted);
-      setSpaCampaigns(sorted);
-      if (sorted.length > 0) {
-        setSpaCampaign(sorted[0]);
-      }
-      setEditingCampaignId(targetId);
-
-      // Local optimistic cache
-      try {
-        localStorage.setItem('spa_campaigns', JSON.stringify(sorted));
-        if (sorted.length > 0) {
-          localStorage.setItem('spa_campaign', JSON.stringify(sorted[0]));
-        }
-        window.dispatchEvent(new Event('spa_campaigns_updated'));
-      } catch (err) {
-        console.error('Local cache error:', err);
-      }
-
-      // Supabase persist
-      if (editingCampaignId) {
-        await supabase
-          .from('campaigns')
-          .update(campaignRecord)
-          .eq('id', editingCampaignId);
-      } else {
-        await supabase
-          .from('campaigns')
-          .insert([campaignRecord]);
-      }
-
-      await triggerRevalidation();
-      showToast('Campaign card saved & updated on storefront!');
     } catch (err) {
-      console.error('Error saving campaign:', err);
-      showToast('Error saving campaign card. Please check your network.');
-    } finally {
-      setIsSubmitting(false);
+      console.warn('Delete banner error:', err);
     }
   };
 
-  // Filtered treatments for the picker
-  const filteredTreatments = useMemo(() => {
-    if (!treatmentSearch.trim()) return treatments;
-    const q = treatmentSearch.toLowerCase();
-    return treatments.filter(t => 
-      t.title.toLowerCase().includes(q) || 
-      (t.category && t.category.toLowerCase().includes(q))
-    );
-  }, [treatments, treatmentSearch]);
-
-  const publishedCount = campaigns.filter(c => c.is_published !== false).length;
-  const draftCount = campaigns.filter(c => c.is_published === false).length;
+  // Counts
+  const activeDiscountsCount = discounts.filter(d => d.active).length;
+  const activeBannersCount = banners.filter(b => b.is_published !== false).length;
 
   return (
     <div className="space-y-6">
+      
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed bottom-6 right-6 z-50 bg-[var(--fitlo-ink)] text-[var(--fitlo-card)] text-xs font-semibold px-4 py-3 rounded-xl shadow-2xl border border-[var(--fitlo-line)] flex items-center gap-2.5 animate-in slide-in-from-bottom-3">
@@ -457,592 +496,606 @@ export default function TherapickCampaignsView() {
       {/* ─── FITLO PAGE HEADER ─── */}
       <div className="fitlo-page-head">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="fitlo-page-title">Campaign Cards</h1>
-            <span className="fitlo-pill fitlo-pill--info">Website System</span>
-          </div>
+          <h1 className="fitlo-page-title">Campaigns</h1>
           <p className="fitlo-page-sub">
-            Configure promotional ticket cards, seasonal discounts, date ranges, and eligible spa rituals for the Therapick customer homepage.
+            {subTab === 'discounts' 
+              ? `${activeDiscountsCount} codes live in the bag` 
+              : `${activeBannersCount} of ${banners.length} banners on Explore`}
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
-          <button
-            type="button"
-            onClick={fetchCampaigns}
-            className="fitlo-btn fitlo-btn--ghost"
-            title="Refresh from database"
-          >
-            <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
-            <span className="hidden sm:inline">Refresh</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={handleNewCampaign}
-            className="fitlo-btn fitlo-btn--primary"
-          >
-            <Plus size={15} strokeWidth={2.4} />
-            <span>+ New Campaign</span>
-          </button>
-        </div>
-      </div>
-
-      {/* ─── FITLO 4-TILE SUMMARY METRICS STRIP ─── */}
-      <div className="fitlo-kpis">
-        <div className="fitlo-kpi fitlo-kpi--1">
-          <div className="fitlo-kpi__label">Total Campaigns</div>
-          <div className="fitlo-kpi__value">{campaigns.length}</div>
-          <div className="fitlo-kpi__foot">
-            <span>Configured promotion cards</span>
-          </div>
-        </div>
-
-        <div className="fitlo-kpi fitlo-kpi--2">
-          <div className="fitlo-kpi__label">Active on Storefront</div>
-          <div className="fitlo-kpi__value">{publishedCount}</div>
-          <div className="fitlo-kpi__foot">
-            <span className="fitlo-delta fitlo-delta--up">● Live visible cards</span>
-          </div>
-        </div>
-
-        <div className="fitlo-kpi fitlo-kpi--3">
-          <div className="fitlo-kpi__label">Drafts / Hidden</div>
-          <div className="fitlo-kpi__value">{draftCount}</div>
-          <div className="fitlo-kpi__foot">
-            <span>Inactive or staged</span>
-          </div>
-        </div>
-
-        <div className="fitlo-kpi fitlo-kpi--4">
-          <div className="fitlo-kpi__label">Available Rituals</div>
-          <div className="fitlo-kpi__value">{treatments.length}</div>
-          <div className="fitlo-kpi__foot">
-            <span>Eligible for promo packages</span>
-          </div>
-        </div>
-      </div>
-
-      {/* ─── 2-COLUMN MAIN WORKSPACE ─── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        
-        {/* LEFT COLUMN: Campaign Stack & Presets (4 cols) */}
-        <div className="lg:col-span-4 space-y-4">
-          
-          {/* Campaign List Card */}
-          <div className="fitlo-card overflow-hidden">
-            <div className="fitlo-chead flex items-center justify-between pb-3 border-b border-[var(--fitlo-line)]">
-              <div>
-                <h2 className="text-xs font-bold uppercase tracking-wider text-[var(--fitlo-ink)]">
-                  Campaign Stack
-                </h2>
-                <p className="text-[11px] text-[var(--fitlo-muted)]">
-                  Click to edit details or reorder priority
-                </p>
-              </div>
-              <span className="fitlo-badge">{campaigns.length}</span>
-            </div>
-
-            {loading ? (
-              <div className="p-8 text-center text-xs text-[var(--fitlo-muted)] flex items-center justify-center gap-2">
-                <RefreshCw size={14} className="animate-spin text-[var(--fitlo-accent)]" />
-                <span>Loading campaigns...</span>
-              </div>
-            ) : campaigns.length === 0 ? (
-              <div className="p-8 text-center text-xs text-[var(--fitlo-muted)]">
-                No campaigns found. Click &quot;+ New Campaign&quot; to create one.
-              </div>
-            ) : (
-              <div className="divide-y divide-[var(--fitlo-line)] max-h-[500px] overflow-y-auto">
-                {campaigns.map((camp, idx) => {
-                  const isCurrent = editingCampaignId === camp.id;
-                  const isPub = camp.is_published !== false;
-
-                  return (
-                    <div
-                      key={camp.id || idx}
-                      onClick={() => loadCampaignToForm(camp)}
-                      className={`p-3.5 transition-all cursor-pointer group select-none ${
-                        isCurrent
-                          ? 'bg-[var(--fitlo-card-2)] border-l-4 border-l-[var(--fitlo-accent)]'
-                          : 'hover:bg-[var(--fitlo-card-2)]/60 border-l-4 border-l-transparent'
-                      }`}
-                    >
-                      <div className="flex items-start gap-3">
-                        {/* Ticket Badge Icon */}
-                        <div className="w-10 h-10 rounded-xl bg-[#3b82f6]/10 text-[#3b82f6] border border-[#3b82f6]/20 flex items-center justify-center shrink-0">
-                          <Ticket size={18} />
-                        </div>
-
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between gap-1 mb-1">
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-[#3b82f6] truncate">
-                              {camp.label || `${camp.discountPercentage}% OFF`}
-                            </span>
-                            <span className={`fitlo-pill ${isPub ? 'fitlo-pill--good' : 'fitlo-pill--warn'} text-[9px] py-0 px-1.5`}>
-                              {isPub ? 'Live' : 'Draft'}
-                            </span>
-                          </div>
-
-                          <h4 className="text-xs font-bold text-[var(--fitlo-ink)] truncate">
-                            {camp.title || 'Untitled Campaign'}
-                          </h4>
-
-                          <div className="flex items-center gap-2 mt-1 text-[11px] text-[var(--fitlo-muted)]">
-                            <span>#{camp.order ?? (idx + 1)}</span>
-                            <span>•</span>
-                            <span>{camp.discountPercentage || 0}% discount</span>
-                            {camp.startDate && (
-                              <>
-                                <span>•</span>
-                                <span>{camp.startDate}</span>
-                              </>
-                            )}
-                          </div>
-
-                          {/* Quick Action Buttons */}
-                          <div className="mt-2.5 pt-2 border-t border-[var(--fitlo-line)] flex items-center justify-between opacity-90 sm:opacity-0 group-hover:opacity-100 transition-opacity">
-                            <div className="flex items-center gap-1">
-                              <button
-                                type="button"
-                                disabled={idx === 0}
-                                onClick={(e) => { e.stopPropagation(); handleMoveCampaign(idx, 'up'); }}
-                                className="p-1 rounded text-[var(--fitlo-muted)] hover:text-[var(--fitlo-ink)] hover:bg-[var(--fitlo-card-3)] disabled:opacity-20"
-                                title="Move up in display order"
-                              >
-                                <ArrowUp size={12} />
-                              </button>
-                              <button
-                                type="button"
-                                disabled={idx === campaigns.length - 1}
-                                onClick={(e) => { e.stopPropagation(); handleMoveCampaign(idx, 'down'); }}
-                                className="p-1 rounded text-[var(--fitlo-muted)] hover:text-[var(--fitlo-ink)] hover:bg-[var(--fitlo-card-3)] disabled:opacity-20"
-                                title="Move down in display order"
-                              >
-                                <ArrowDown size={12} />
-                              </button>
-                            </div>
-
-                            <div className="flex items-center gap-2">
-                              <button
-                                type="button"
-                                onClick={(e) => { e.stopPropagation(); handleTogglePublish(camp); }}
-                                className="text-[11px] font-semibold text-[var(--fitlo-muted)] hover:text-[var(--fitlo-ink)]"
-                              >
-                                {isPub ? 'Hide' : 'Publish'}
-                              </button>
-                              {camp.id && (
-                                <button
-                                  type="button"
-                                  onClick={(e) => { e.stopPropagation(); handleDeleteCampaign(camp.id!); }}
-                                  className="text-[var(--fitlo-muted)] hover:text-red-600 p-1 transition-colors"
-                                  title="Delete campaign"
-                                >
-                                  <Trash2 size={12} />
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-
-            {/* Quick Presets Bar */}
-            <div className="p-3 bg-[var(--fitlo-card-2)] border-t border-[var(--fitlo-line)] space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--fitlo-muted)] flex items-center gap-1">
-                  <Sparkles size={11} className="text-[var(--fitlo-accent)]" />
-                  <span>Quick Presets</span>
-                </span>
-                <span className="text-[10px] text-[var(--fitlo-muted)]">Click to load</span>
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {CAMPAIGN_PRESETS.map((preset, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => handleApplyPreset(preset)}
-                    className="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-[var(--fitlo-card)] border border-[var(--fitlo-line)] text-[var(--fitlo-ink)] hover:border-[var(--fitlo-ink)] transition-colors cursor-pointer"
-                  >
-                    {preset.title.split('&')[0].trim()}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* RIGHT COLUMN: Realtime Live Preview & Comprehensive Editor Form (8 cols) */}
-        <div className="lg:col-span-8 space-y-6">
-
-          {/* 1. STOREFRONT REALTIME LIVE PREVIEW */}
-          <div className="fitlo-card p-5 md:p-6 space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--fitlo-ink)] flex items-center gap-1.5">
-                  <Eye size={14} className="text-[var(--fitlo-accent)]" />
-                  <span>Storefront Ticket Preview</span>
-                </h3>
-                <span className="text-[10px] text-[var(--fitlo-muted)]">(Updates in real-time)</span>
-              </div>
-              <span className="text-[11px] font-bold text-[#3b82f6]">
-                Theme: Blue Campaign Ticket Card
-              </span>
-            </div>
-
-            {/* Live Realistic Campaign Ticket Card */}
-            <div className="relative w-full flex flex-row rounded-[24px] overflow-hidden shadow-xs border border-gray-200 bg-[#FAFAFA] min-h-[160px] md:min-h-[175px]">
-              {/* Left Section (Blue) */}
-              <div className="flex-1 bg-[#3b82f6] text-white p-5 flex flex-col justify-between relative z-10">
-                <div>
-                  <div className="inline-flex items-center text-[10px] md:text-xs font-bold tracking-wide uppercase mb-1.5 text-white/90">
-                    {formData.label || `${formData.discountPercentage}% OFF`}
-                  </div>
-                  <h3 className="text-lg md:text-xl font-bold leading-tight mb-1.5 text-white">
-                    {formData.title || 'Untitled Campaign'}
-                  </h3>
-                  <p className="text-white/80 text-xs line-clamp-2 leading-relaxed font-light">
-                    {formData.description || 'Campaign promotional description will appear here on the homepage.'}
-                  </p>
-                </div>
-                <div className="mt-3 flex items-center justify-between">
-                  <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white">
-                    <ArrowRight size={14} />
-                  </div>
-                  <span className="text-[11px] font-medium text-white/80">
-                    {formData.selectedTreatments.length > 0 
-                      ? `${formData.selectedTreatments.length} Rituals Included` 
-                      : 'All Rituals Eligible'}
-                  </span>
-                </div>
-              </div>
-
-              {/* Divider with Cutouts */}
-              <div className="relative w-0 flex flex-col justify-between items-center z-20">
-                <div className="absolute top-0 -translate-x-1/2 -translate-y-1/2 w-6 h-6 bg-[#f7f6f2] rounded-full border border-gray-200 shadow-inner"></div>
-                <div className="absolute top-0 bottom-0 -translate-x-1/2 border-l-[3px] border-dotted border-gray-300/80 z-[-1]"></div>
-                <div className="absolute bottom-0 -translate-x-1/2 translate-y-1/2 w-6 h-6 bg-[#f7f6f2] rounded-full border border-gray-200 shadow-inner"></div>
-              </div>
-
-              {/* Right Ticket Stub */}
-              <div className="w-[100px] md:w-[125px] bg-white flex flex-col items-center justify-center py-4 px-2 shrink-0 text-center relative z-10">
-                <div className="flex flex-col items-center justify-center gap-2">
-                  <div className="flex flex-col items-center">
-                    <div className="text-[8px] font-bold text-stone-400 uppercase tracking-widest mb-0.5">Start</div>
-                    {formData.startDate ? (
-                      <>
-                        <div className="text-[10px] font-bold text-stone-700 uppercase leading-none">{formatMonth(formData.startDate)}</div>
-                        <div className="text-lg font-black text-stone-900 leading-none my-0.5">{formatDay(formData.startDate)}</div>
-                        <div className="text-[9px] font-bold text-stone-400 uppercase leading-none">{formatYear(formData.startDate)}</div>
-                      </>
-                    ) : (
-                      <div className="text-xs font-bold text-stone-900 uppercase">NOW</div>
-                    )}
-                  </div>
-
-                  <div className="w-6 h-px bg-stone-200"></div>
-
-                  <div className="flex flex-col items-center">
-                    <div className="text-[8px] font-bold text-stone-400 uppercase tracking-widest mb-0.5">End</div>
-                    {formData.endDate ? (
-                      <>
-                        <div className="text-[10px] font-bold text-stone-700 uppercase leading-none">{formatMonth(formData.endDate)}</div>
-                        <div className="text-lg font-black text-stone-900 leading-none my-0.5">{formatDay(formData.endDate)}</div>
-                        <div className="text-[9px] font-bold text-stone-400 uppercase leading-none">{formatYear(formData.endDate)}</div>
-                      </>
-                    ) : (
-                      <div className="text-[10px] font-bold text-stone-900 uppercase">{formData.duration ? formData.duration.replace('_', ' ') : 'OCT'}</div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* 2. CAMPAIGN DETAILS FORM */}
-          <div className="fitlo-card p-6">
-            <div className="border-b border-[var(--fitlo-line)] pb-3 mb-5 flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-bold text-[var(--fitlo-ink)] tracking-tight">
-                  {editingCampaignId ? 'Edit Campaign Card' : 'Create New Campaign Card'}
-                </h3>
-                <p className="text-xs text-[var(--fitlo-muted)] mt-0.5">
-                  Position #{formData.order || 1} • Saved to Therapick storefront
-                </p>
-              </div>
-
-              {/* Publish Toggle Button */}
+        <div>
+          {subTab === 'discounts' ? (
+            <button
+              type="button"
+              onClick={openNewCodeModal}
+              className="fitlo-btn fitlo-btn--primary cursor-pointer"
+            >
+              <Plus size={16} strokeWidth={2.4} />
+              <span>New code</span>
+            </button>
+          ) : (
+            <div className="flex items-center gap-2">
+              <a
+                href="https://booktherapick.com"
+                target="_blank"
+                rel="noreferrer"
+                className="fitlo-btn fitlo-btn--ghost text-xs"
+              >
+                <Eye size={14} />
+                <span>See Explore</span>
+              </a>
               <button
                 type="button"
-                onClick={() => setFormData(prev => ({ ...prev, is_published: !prev.is_published }))}
-                className={`fitlo-pill ${formData.is_published ? 'fitlo-pill--good' : 'fitlo-pill--warn'} cursor-pointer`}
+                onClick={openNewBannerModal}
+                className="fitlo-btn fitlo-btn--primary cursor-pointer"
               >
-                {formData.is_published ? '● Live on Storefront' : '○ Draft / Hidden'}
+                <Plus size={16} strokeWidth={2.4} />
+                <span>New banner</span>
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ─── FITLO SUBNAV TABS ─── */}
+      <div className="fitlo-tabs">
+        <button
+          type="button"
+          onClick={() => setSubTab('discounts')}
+          className={`fitlo-tab-btn ${subTab === 'discounts' ? 'is-active' : ''}`}
+        >
+          <span>Discount codes</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setSubTab('banners')}
+          className={`fitlo-tab-btn ${subTab === 'banners' ? 'is-active' : ''}`}
+        >
+          <span>Shop banners</span>
+        </button>
+      </div>
+
+      {/* ─── TAB 1: DISCOUNT CODES TICKETS GRID ─── */}
+      {subTab === 'discounts' && (
+        <div className="tickets animate-in fade-in duration-200">
+          {discounts.map((item) => {
+            const endsDate = item.ends ? new Date(item.ends) : new Date();
+            const daysLeft = Math.round((endsDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+            const isUsedUp = item.uses >= item.limit;
+            const isEnded = daysLeft < 0;
+            const isLive = item.active && !isUsedUp && !isEnded;
+            const pctUsed = Math.min(100, Math.round((item.uses / Math.max(1, item.limit)) * 100));
+
+            const displayValue = item.kind === 'pct' 
+              ? `${item.value}% off` 
+              : item.kind === 'ship' 
+                ? 'Free delivery' 
+                : `Rp ${(item.value / 1000).toLocaleString('id-ID')}k off`;
+
+            return (
+              <article 
+                key={item.id}
+                onClick={() => openEditCodeModal(item)}
+                className={`card ticket ${item.active ? '' : 'is-off'} cursor-pointer group`}
+              >
+                {/* Ticket Top: Code with Copy Button + Active Switch */}
+                <div className="ticket__top">
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); copyCode(item.code); }}
+                    className="ticket__code"
+                    title={`Copy code ${item.code}`}
+                  >
+                    <span>{item.code}</span>
+                    {copiedCode === item.code ? (
+                      <Check size={14} className="text-[var(--fitlo-accent)] shrink-0" />
+                    ) : (
+                      <Copy size={13} className="ico shrink-0 opacity-60 group-hover:opacity-100" />
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={item.active}
+                    onClick={(e) => toggleCodeActive(item.id, e)}
+                    className={`fitlo-switch ${item.active ? 'is-checked' : ''}`}
+                    title={item.active ? 'Pause code' : 'Activate code'}
+                  >
+                    <i />
+                  </button>
+                </div>
+
+                {/* Big Ticket Value */}
+                <div className="ticket__value">
+                  {displayValue}
+                </div>
+
+                {/* Subtitle / Note */}
+                <p className="text-xs text-[var(--fitlo-muted)] line-clamp-1">
+                  {item.note || 'Active promo code'}
+                </p>
+
+                {/* Usage Count & Percentage */}
+                <div className="ticket__use">
+                  <small>{item.uses.toLocaleString()} of {item.limit.toLocaleString()} used</small>
+                  <small>{pctUsed}%</small>
+                </div>
+
+                {/* Meter Progress Bar */}
+                <div className={`fitlo-meter ${isUsedUp ? 'is-bad' : pctUsed > 80 ? 'is-warn' : ''}`}>
+                  <i style={{ width: `${pctUsed}%` }} />
+                </div>
+
+                {/* Ticket Foot: Status Pill & Expiry */}
+                <div className="ticket__foot">
+                  {isLive ? (
+                    <span className="fitlo-pill fitlo-pill--good text-[11px] py-0.5 px-2">
+                      Live
+                    </span>
+                  ) : isUsedUp ? (
+                    <span className="fitlo-pill fitlo-pill--bad text-[11px] py-0.5 px-2">
+                      Used up
+                    </span>
+                  ) : isEnded ? (
+                    <span className="fitlo-pill fitlo-pill--info text-[11px] py-0.5 px-2">
+                      Ended
+                    </span>
+                  ) : (
+                    <span className="fitlo-pill fitlo-pill--warn text-[11px] py-0.5 px-2">
+                      Paused
+                    </span>
+                  )}
+
+                  <small className="text-[11px] text-[var(--fitlo-muted)] font-medium">
+                    {daysLeft >= 0 
+                      ? `Ends ${endsDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · ${daysLeft} days` 
+                      : `Ended ${endsDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`}
+                  </small>
+                </div>
+              </article>
+            );
+          })}
+
+          {/* Dotted "+ New code" Card matching screenshot */}
+          <button
+            type="button"
+            onClick={openNewCodeModal}
+            className="card ticket ticket--new"
+          >
+            <Plus size={20} className="mb-1" />
+            <b className="text-sm font-bold text-[var(--fitlo-ink)]">New code</b>
+            <small className="text-xs text-[var(--fitlo-muted)]">Live in the bag as soon as it’s saved</small>
+          </button>
+        </div>
+      )}
+
+      {/* ─── TAB 2: SHOP BANNERS GRID ─── */}
+      {subTab === 'banners' && (
+        <div className="banners animate-in fade-in duration-200">
+          {banners.map((banner, idx) => {
+            const isHero = banner.order === 1 || idx === 0;
+            const isLive = banner.is_published !== false;
+
+            return (
+              <article 
+                key={banner.id || idx}
+                className={`card bancard ${isLive ? '' : 'is-off'}`}
+              >
+                {/* 16:9 Picture with Tint & Hero Tag */}
+                <div className="bancard__pic">
+                  <img 
+                    src={banner.image_url || banner.image || 'https://images.pexels.com/photos/3865712/pexels-photo-3865712.jpeg?auto=compress&cs=tinysrgb&w=1200&h=800&fit=crop&crop=center'} 
+                    alt={banner.title} 
+                  />
+                  {isHero && isLive && (
+                    <span className="pcard__tag">Hero</span>
+                  )}
+                </div>
+
+                {/* Body */}
+                <div className="bancard__body">
+                  <div className="bancard__top">
+                    <div className="cell__text">
+                      <b>{banner.title}</b>
+                      <small>{banner.description || 'In-villa signature treatment package'}</small>
+                    </div>
+
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={isLive}
+                      onClick={(e) => toggleBannerActive(banner, e)}
+                      className={`fitlo-switch ${isLive ? 'is-checked' : ''}`}
+                      title={isLive ? 'Hide banner' : 'Publish banner'}
+                    >
+                      <i />
+                    </button>
+                  </div>
+
+                  {/* Stats Strip */}
+                  <div className="bancard__stats">
+                    <div>
+                      <small>Discount</small>
+                      <b>{banner.discountPercentage || 10}%</b>
+                    </div>
+                    <div>
+                      <small>Rituals</small>
+                      <b>{banner.selectedTreatments?.length || treatments.length}</b>
+                    </div>
+                    <div>
+                      <small>Duration</small>
+                      <b className="capitalize text-xs">{banner.duration ? banner.duration.replace('_', ' ') : '1 mo'}</b>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="bancard__actions justify-between">
+                    <div className="flex items-center gap-2">
+                      {!isHero && (
+                        <button
+                          type="button"
+                          disabled={!isLive}
+                          onClick={(e) => makeBannerHero(banner, e)}
+                          className="fitlo-btn fitlo-btn--ghost text-xs py-1 px-2.5 disabled:opacity-30 cursor-pointer"
+                        >
+                          <Star size={12} />
+                          <span>Make it the hero</span>
+                        </button>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={() => openEditBannerModal(banner)}
+                        className="fitlo-btn fitlo-btn--ghost text-xs py-1 px-2.5 cursor-pointer"
+                      >
+                        Edit
+                      </button>
+                    </div>
+
+                    <div className="flex items-center gap-1.5">
+                      <a
+                        href="https://booktherapick.com"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-xs text-[var(--fitlo-muted)] hover:text-[var(--fitlo-ink)] flex items-center gap-1"
+                      >
+                        <span>Opens booktherapick</span>
+                        <ExternalLink size={11} />
+                      </a>
+                      {banner.id && (
+                        <button
+                          type="button"
+                          onClick={(e) => handleDeleteBanner(banner.id!, e)}
+                          className="text-[var(--fitlo-muted)] hover:text-red-500 p-1"
+                          title="Delete banner"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </article>
+            );
+          })}
+
+          {/* Dotted "+ New banner" Card */}
+          <button
+            type="button"
+            onClick={openNewBannerModal}
+            className="card ticket ticket--new"
+          >
+            <Plus size={20} className="mb-1" />
+            <b className="text-sm font-bold text-[var(--fitlo-ink)]">New banner</b>
+            <small className="text-xs text-[var(--fitlo-muted)]">Live on Explore as soon as it’s saved</small>
+          </button>
+        </div>
+      )}
+
+      {/* ─────────────────────────────────────────────────────────────────────────────
+          MODAL: NEW / EDIT DISCOUNT CODE
+          ───────────────────────────────────────────────────────────────────────────── */}
+      {isCodeModalOpen && (
+        <div className="fitlo-modal-backdrop flex items-center justify-center p-4">
+          <div className="fitlo-modal w-full max-w-md p-6 space-y-5 animate-in zoom-in-95">
+            <div className="flex items-center justify-between pb-3 border-b border-[var(--fitlo-line)]">
+              <div>
+                <h3 className="text-base font-bold text-[var(--fitlo-ink)]">
+                  {editingCode ? 'Edit discount code' : 'New discount code'}
+                </h3>
+                <p className="text-xs text-[var(--fitlo-muted)] mt-0.5">
+                  Works in the bag the moment it is saved.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsCodeModalOpen(false)}
+                className="p-1 rounded-lg text-[var(--fitlo-muted)] hover:text-[var(--fitlo-ink)]"
+              >
+                <X size={18} />
               </button>
             </div>
 
-            <form onSubmit={handleSaveCampaign} className="space-y-5">
-              
-              {/* Row 1: Headline & Badge Label */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-[var(--fitlo-ink)] uppercase tracking-wider mb-1">
-                    Headline / Title
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Summer Retreat & Spa Package"
-                    value={formData.title}
-                    onChange={e => setFormData({ ...formData, title: e.target.value })}
-                    className="fitlo-input w-full"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-[var(--fitlo-ink)] uppercase tracking-wider mb-1">
-                    Badge Label
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. LIMITED 10% OFF"
-                    value={formData.label}
-                    onChange={e => setFormData({ ...formData, label: e.target.value })}
-                    className="fitlo-input w-full"
-                  />
-                </div>
-              </div>
-
-              {/* Row 2: Description */}
+            <form onSubmit={handleSaveCode} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-[var(--fitlo-ink)] uppercase tracking-wider mb-1">
-                  Card Description
+                <label className="block text-xs font-bold uppercase tracking-wider text-[var(--fitlo-ink)] mb-1">
+                  Code
                 </label>
-                <textarea
-                  rows={2}
-                  placeholder="Describe the promo package, highlights, and in-villa experience..."
-                  value={formData.description}
-                  onChange={e => setFormData({ ...formData, description: e.target.value })}
-                  className="fitlo-input w-full resize-none"
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. WELCOME15"
+                  value={codeForm.code}
+                  onChange={e => setCodeForm({ ...codeForm, code: e.target.value.toUpperCase().replace(/\s/g, '') })}
+                  className="fitlo-input w-full font-mono uppercase tracking-wider text-sm font-bold"
+                  autoFocus
                 />
               </div>
 
-              {/* Row 3: Discount %, Start Date, End Date, Duration */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-[var(--fitlo-ink)] uppercase tracking-wider mb-1">
-                    Discount Rate (%)
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="number"
-                      required
-                      min="0"
-                      max="100"
-                      value={formData.discountPercentage}
-                      onChange={e => setFormData({ ...formData, discountPercentage: Math.max(0, Math.min(100, Number(e.target.value))) })}
-                      className="fitlo-input w-full pr-8"
-                    />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-[var(--fitlo-muted)]">%</span>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-[var(--fitlo-ink)] uppercase tracking-wider mb-1">
-                    Start Date
-                  </label>
-                  <input
-                    type="date"
-                    value={formData.startDate}
-                    onChange={e => setFormData({ ...formData, startDate: e.target.value })}
-                    className="fitlo-input w-full"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-[var(--fitlo-ink)] uppercase tracking-wider mb-1">
-                    End Date
-                  </label>
-                  <input
-                    type="date"
-                    value={formData.endDate}
-                    onChange={e => setFormData({ ...formData, endDate: e.target.value })}
-                    className="fitlo-input w-full"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-[var(--fitlo-ink)] uppercase tracking-wider mb-1">
-                    Fallback Duration
+                  <label className="block text-xs font-bold uppercase tracking-wider text-[var(--fitlo-ink)] mb-1">
+                    Gives
                   </label>
                   <select
-                    value={formData.duration}
-                    onChange={e => setFormData({ ...formData, duration: e.target.value })}
-                    className="fitlo-select w-full"
+                    value={codeForm.kind}
+                    onChange={e => setCodeForm({ ...codeForm, kind: e.target.value as any })}
+                    className="fitlo-select w-full text-xs font-semibold"
                   >
-                    <option value="1_month">1 Month</option>
-                    <option value="2_weeks">2 Weeks</option>
-                    <option value="weekend">Weekend Special</option>
-                    <option value="limited">Limited Time</option>
+                    <option value="pct">Percentage (% off)</option>
+                    <option value="fixed">Fixed Amount (IDR)</option>
+                    <option value="ship">Free Villa Transport</option>
                   </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-[var(--fitlo-ink)] mb-1">
+                    {codeForm.kind === 'pct' ? 'Discount %' : codeForm.kind === 'fixed' ? 'Amount (IDR)' : 'Value'}
+                  </label>
+                  <input
+                    type="number"
+                    disabled={codeForm.kind === 'ship'}
+                    value={codeForm.kind === 'ship' ? '0' : codeForm.value}
+                    onChange={e => setCodeForm({ ...codeForm, value: e.target.value })}
+                    className="fitlo-input w-full text-xs"
+                    min="0"
+                    placeholder="15"
+                  />
                 </div>
               </div>
 
-              {/* 3. ELIGIBLE SPA RITUALS & DURATIONS PICKER */}
-              <div className="pt-3 border-t border-[var(--fitlo-line)] space-y-3">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <div>
-                    <label className="block text-xs font-bold text-[var(--fitlo-ink)] uppercase tracking-wider">
-                      Eligible Spa Rituals & Durations
-                    </label>
-                    <p className="text-[11px] text-[var(--fitlo-muted)]">
-                      Customers can book these rituals through the campaign card popup with the discount applied.
-                    </p>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={handleSelectAllTreatments}
-                      className="text-xs font-bold text-[var(--fitlo-accent)] hover:underline cursor-pointer"
-                    >
-                      Select All
-                    </button>
-                    <span className="text-[var(--fitlo-line-2)]">•</span>
-                    <button
-                      type="button"
-                      onClick={handleClearAllTreatments}
-                      className="text-xs font-bold text-[var(--fitlo-muted)] hover:underline cursor-pointer"
-                    >
-                      Clear
-                    </button>
-                  </div>
-                </div>
-
-                {/* Treatment Search */}
-                <div className="relative">
-                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--fitlo-muted)]" />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-[var(--fitlo-ink)] mb-1">
+                    Usage Limit
+                  </label>
                   <input
-                    type="text"
-                    placeholder="Filter rituals by name or category..."
-                    value={treatmentSearch}
-                    onChange={e => setTreatmentSearch(e.target.value)}
-                    className="fitlo-input w-full pl-8 text-xs py-1.5"
+                    type="number"
+                    required
+                    min="1"
+                    value={codeForm.limit}
+                    onChange={e => setCodeForm({ ...codeForm, limit: e.target.value })}
+                    className="fitlo-input w-full text-xs"
+                    placeholder="500"
                   />
                 </div>
 
-                {/* Rituals list with duration toggles */}
-                <div className="max-h-56 overflow-y-auto space-y-2 pr-1 border border-[var(--fitlo-line)] rounded-xl p-2.5 bg-[var(--fitlo-card-2)]/40">
-                  {filteredTreatments.length === 0 ? (
-                    <div className="p-4 text-center text-xs text-[var(--fitlo-muted)]">
-                      No treatments match your search.
-                    </div>
-                  ) : (
-                    filteredTreatments.map((t) => {
-                      const selectedT = formData.selectedTreatments.find(st => st.treatmentId === t.id);
-                      const isAnySelected = Boolean(selectedT && selectedT.durations.length > 0);
-
-                      return (
-                        <div
-                          key={t.id}
-                          className={`p-2.5 rounded-lg border transition-colors ${
-                            isAnySelected
-                              ? 'bg-[var(--fitlo-card)] border-[var(--fitlo-line-2)] shadow-2xs'
-                              : 'bg-[var(--fitlo-card)]/50 border-[var(--fitlo-line)] opacity-70'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between mb-1.5">
-                            <div className="min-w-0 pr-2">
-                              <span className="text-xs font-bold text-[var(--fitlo-ink)] truncate block">
-                                {t.title}
-                              </span>
-                              <span className="text-[10px] text-[var(--fitlo-muted)]">
-                                {t.category || 'Spa Treatment'}
-                              </span>
-                            </div>
-
-                            {isAnySelected && (
-                              <span className="text-[10px] font-bold text-[var(--fitlo-accent)] flex items-center gap-1 shrink-0">
-                                <Check size={11} strokeWidth={2.5} />
-                                <span>{selectedT?.durations.length} Selected</span>
-                              </span>
-                            )}
-                          </div>
-
-                          {/* Duration Chips */}
-                          <div className="flex flex-wrap gap-1.5">
-                            {(t.options || []).map(opt => {
-                              const isDurSelected = selectedT?.durations.includes(opt.duration);
-                              return (
-                                <button
-                                  type="button"
-                                  key={opt.duration}
-                                  onClick={() => handleToggleTreatmentDuration(t.id, opt.duration)}
-                                  className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1 ${
-                                    isDurSelected
-                                      ? 'bg-[var(--fitlo-accent)] text-white shadow-2xs'
-                                      : 'bg-[var(--fitlo-card-2)] text-[var(--fitlo-muted)] border border-[var(--fitlo-line)] hover:text-[var(--fitlo-ink)] hover:border-[var(--fitlo-line-2)]'
-                                  }`}
-                                >
-                                  {isDurSelected && <Check size={10} strokeWidth={3} />}
-                                  <span>{opt.duration} mins</span>
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      );
-                    })
-                  )}
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-[var(--fitlo-ink)] mb-1">
+                    Duration (Days)
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    min="1"
+                    value={codeForm.days}
+                    onChange={e => setCodeForm({ ...codeForm, days: e.target.value })}
+                    className="fitlo-input w-full text-xs"
+                    placeholder="30"
+                  />
                 </div>
               </div>
 
-              {/* Form Bottom Actions */}
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-[var(--fitlo-ink)] mb-1">
+                  Note / Subtitle
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. First order, any item"
+                  value={codeForm.note}
+                  onChange={e => setCodeForm({ ...codeForm, note: e.target.value })}
+                  className="fitlo-input w-full text-xs"
+                />
+              </div>
+
+              <div className="flex items-center justify-between pt-2">
+                <span className="text-xs font-bold text-[var(--fitlo-ink)]">Active in bag immediately</span>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={codeForm.active}
+                  onClick={() => setCodeForm({ ...codeForm, active: !codeForm.active })}
+                  className={`fitlo-switch ${codeForm.active ? 'is-checked' : ''}`}
+                >
+                  <i />
+                </button>
+              </div>
+
               <div className="pt-4 border-t border-[var(--fitlo-line)] flex items-center justify-between">
-                <div className="text-xs text-[var(--fitlo-muted)]">
-                  {editingCampaignId ? 'Editing existing campaign' : 'Creating new campaign'}
-                </div>
+                {editingCode ? (
+                  <button
+                    type="button"
+                    onClick={(e) => { handleDeleteCode(editingCode.id, e); setIsCodeModalOpen(false); }}
+                    className="text-xs font-semibold text-red-500 hover:underline"
+                  >
+                    Delete code
+                  </button>
+                ) : <div />}
 
                 <div className="flex items-center gap-2">
-                  {editingCampaignId && (
-                    <button
-                      type="button"
-                      onClick={handleNewCampaign}
-                      className="fitlo-btn fitlo-btn--ghost text-xs"
-                    >
-                      Cancel / New
-                    </button>
-                  )}
-
+                  <button
+                    type="button"
+                    onClick={() => setIsCodeModalOpen(false)}
+                    className="fitlo-btn fitlo-btn--ghost text-xs"
+                  >
+                    Cancel
+                  </button>
                   <button
                     type="submit"
-                    disabled={isSubmitting}
                     className="fitlo-btn fitlo-btn--primary text-xs"
                   >
-                    {isSubmitting ? (
-                      <>
-                        <RefreshCw size={13} className="animate-spin" />
-                        <span>Saving...</span>
-                      </>
-                    ) : (
-                      <>
-                        <CheckCheck size={14} />
-                        <span>{editingCampaignId ? 'Save Campaign Changes' : 'Publish New Campaign'}</span>
-                      </>
-                    )}
+                    <span>{editingCode ? 'Save changes' : 'Save code'}</span>
                   </button>
                 </div>
               </div>
             </form>
           </div>
         </div>
-      </div>
+      )}
+
+      {/* ─────────────────────────────────────────────────────────────────────────────
+          MODAL: NEW / EDIT SHOP BANNER
+          ───────────────────────────────────────────────────────────────────────────── */}
+      {isBannerModalOpen && (
+        <div className="fitlo-modal-backdrop flex items-center justify-center p-4">
+          <div className="fitlo-modal w-full max-w-lg p-6 space-y-5 animate-in zoom-in-95">
+            <div className="flex items-center justify-between pb-3 border-b border-[var(--fitlo-line)]">
+              <div>
+                <h3 className="text-base font-bold text-[var(--fitlo-ink)]">
+                  {editingBanner ? 'Edit storefront banner' : 'New storefront banner'}
+                </h3>
+                <p className="text-xs text-[var(--fitlo-muted)] mt-0.5">
+                  Displays on booktherapick.com homepage & Explore.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsBannerModalOpen(false)}
+                className="p-1 rounded-lg text-[var(--fitlo-muted)] hover:text-[var(--fitlo-ink)]"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveBanner} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-[var(--fitlo-ink)] mb-1">
+                  Title
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. The layering edit"
+                  value={bannerForm.title}
+                  onChange={e => setBannerForm({ ...bannerForm, title: e.target.value })}
+                  className="fitlo-input w-full text-sm font-semibold"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-[var(--fitlo-ink)] mb-1">
+                  Subtitle / Highlights
+                </label>
+                <textarea
+                  rows={2}
+                  placeholder="Heavy knits, soft fleece and a parka for the cold snap..."
+                  value={bannerForm.description}
+                  onChange={e => setBannerForm({ ...bannerForm, description: e.target.value })}
+                  className="fitlo-input w-full text-xs resize-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-[var(--fitlo-ink)] mb-1">
+                    Badge Label
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 15% OFF"
+                    value={bannerForm.label}
+                    onChange={e => setBannerForm({ ...bannerForm, label: e.target.value })}
+                    className="fitlo-input w-full text-xs"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-[var(--fitlo-ink)] mb-1">
+                    Discount %
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={bannerForm.discountPercentage}
+                    onChange={e => setBannerForm({ ...bannerForm, discountPercentage: Number(e.target.value) })}
+                    className="fitlo-input w-full text-xs"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-[var(--fitlo-ink)] mb-1">
+                  Banner Image URL
+                </label>
+                <input
+                  type="url"
+                  placeholder="https://..."
+                  value={bannerForm.image}
+                  onChange={e => setBannerForm({ ...bannerForm, image: e.target.value })}
+                  className="fitlo-input w-full text-xs"
+                />
+              </div>
+
+              <div className="flex items-center justify-between pt-2">
+                <span className="text-xs font-bold text-[var(--fitlo-ink)]">Publish on storefront immediately</span>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={bannerForm.active}
+                  onClick={() => setBannerForm({ ...bannerForm, active: !bannerForm.active })}
+                  className={`fitlo-switch ${bannerForm.active ? 'is-checked' : ''}`}
+                >
+                  <i />
+                </button>
+              </div>
+
+              <div className="pt-4 border-t border-[var(--fitlo-line)] flex items-center justify-between">
+                {editingBanner?.id ? (
+                  <button
+                    type="button"
+                    onClick={(e) => { handleDeleteBanner(editingBanner.id!, e); setIsBannerModalOpen(false); }}
+                    className="text-xs font-semibold text-red-500 hover:underline"
+                  >
+                    Delete banner
+                  </button>
+                ) : <div />}
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsBannerModalOpen(false)}
+                    className="fitlo-btn fitlo-btn--ghost text-xs"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="fitlo-btn fitlo-btn--primary text-xs"
+                  >
+                    <span>{editingBanner ? 'Save changes' : 'Save banner'}</span>
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
-

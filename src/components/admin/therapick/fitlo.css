@@ -806,7 +806,8 @@
   line-height: 1.2;
 }
 
-.fitlo-page-subtitle {
+.fitlo-page-subtitle,
+.fitlo-page-sub {
   font-size: var(--fitlo-fs-sm);
   color: var(--fitlo-muted);
   margin-top: 3px;
@@ -884,5 +885,388 @@
   background: var(--fitlo-card);
   border-left: 1px solid var(--fitlo-line-2);
   box-shadow: var(--fitlo-shadow-lg);
+}
+
+/* --------------------------------------------------------------------------
+   FITLO CAMPAIGNS TICKETS & BANNERS (demo.codeandchill.store/fitlo/#/campaigns)
+   -------------------------------------------------------------------------- */
+[data-theme="dark"],
+.dark {
+  --fitlo-bg: #111514;
+  --fitlo-card: #191e1d;
+  --fitlo-card-2: #151a19;
+  --fitlo-card-3: #262c2b;
+  --fitlo-ink: #eef1f0;
+  --fitlo-ink-2: #d1d6d5;
+  --fitlo-muted: #9fa8a6;
+  --fitlo-line: rgba(238, 241, 240, 0.08);
+  --fitlo-line-2: rgba(238, 241, 240, 0.16);
+  --fitlo-accent: #3cc2b5;
+  --fitlo-accent-ink: #05201d;
+  --fitlo-accent-hi: #5fd3c7;
+  --fitlo-accent-soft: rgba(60, 194, 181, 0.13);
+  --fitlo-accent-text: #6fd6cb;
+  --fitlo-good: #6fcb95;
+  --fitlo-warn: #e8b85e;
+  --fitlo-bad: #f38a7e;
+  --fitlo-info: #8fb9e0;
+}
+
+/* Tabs Bar */
+.fitlo-tabs {
+  border-bottom: 1px solid var(--fitlo-line);
+  scrollbar-width: none;
+  gap: 4px;
+  margin-bottom: 24px;
+  display: flex;
+  position: relative;
+  overflow-x: auto;
+}
+
+.fitlo-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.fitlo-tab-btn {
+  height: 42px;
+  font-size: var(--fitlo-fs-md);
+  color: var(--fitlo-muted);
+  white-space: nowrap;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px;
+  font-weight: 600;
+  display: inline-flex;
+  position: relative;
+  cursor: pointer;
+  background: none;
+  border: none;
+  transition: color 0.15s ease;
+}
+
+.fitlo-tab-btn:hover {
+  color: var(--fitlo-ink);
+}
+
+.fitlo-tab-btn.is-active {
+  color: var(--fitlo-ink);
+  font-weight: 700;
+}
+
+.fitlo-tab-btn.is-active::after {
+  content: "";
+  background: var(--fitlo-accent);
+  height: 2px;
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  border-radius: 2px;
+}
+
+/* Switch Toggle */
+.fitlo-switch {
+  background: var(--fitlo-card-3);
+  width: 42px;
+  height: 24px;
+  box-shadow: inset 0 0 0 1px var(--fitlo-line);
+  border-radius: 99px;
+  flex: none;
+  position: relative;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s cubic-bezier(.22, 1, .36, 1);
+  display: inline-block;
+  padding: 0;
+}
+
+.fitlo-switch i {
+  background: #ffffff;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  transition: transform 0.2s cubic-bezier(.22, 1, .36, 1);
+  display: block;
+}
+
+.fitlo-switch.is-checked,
+.fitlo-switch[aria-checked="true"] {
+  background: var(--fitlo-accent);
+  box-shadow: none;
+}
+
+.fitlo-switch.is-checked i,
+.fitlo-switch[aria-checked="true"] i {
+  transform: translateX(18px);
+}
+
+/* Meter / Progress Bar */
+.fitlo-meter {
+  background: var(--fitlo-card-3);
+  border-radius: 8px;
+  height: 5px;
+  display: block;
+  position: relative;
+  overflow: hidden;
+  margin-top: 6px;
+  margin-bottom: 8px;
+}
+
+.fitlo-meter i {
+  border-radius: inherit;
+  background: var(--fitlo-accent);
+  transform-origin: 0;
+  position: absolute;
+  inset: 0;
+  transition: width 0.3s ease;
+}
+
+.fitlo-meter.is-warn i {
+  background: var(--fitlo-warn);
+}
+
+.fitlo-meter.is-bad i {
+  background: var(--fitlo-bad);
+}
+
+/* Tickets Grid */
+.tickets {
+  gap: 18px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  display: grid;
+}
+
+.ticket {
+  position: relative;
+  flex-direction: column;
+  gap: 10px;
+  display: flex;
+  overflow: hidden;
+  padding: 16px 20px;
+  background: var(--fitlo-card);
+  border: 1px solid var(--fitlo-line);
+  border-radius: var(--fitlo-r-md, 14px);
+  transition: all 0.2s var(--fitlo-ease);
+}
+
+.ticket:before, .ticket:after {
+  content: "";
+  background: var(--fitlo-bg);
+  width: 22px;
+  height: 22px;
+  box-shadow: inset 0 0 0 1px var(--fitlo-line);
+  border-radius: 50%;
+  position: absolute;
+  top: 64px;
+  z-index: 2;
+}
+
+.ticket:before {
+  left: -11px;
+}
+
+.ticket:after {
+  right: -11px;
+}
+
+.ticket__top {
+  border-bottom: 1.5px dashed var(--fitlo-line-2);
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 14px;
+  display: flex;
+}
+
+.ticket__code {
+  font-size: var(--fitlo-fs-xl, 17px);
+  letter-spacing: .06em;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  display: inline-flex;
+  cursor: pointer;
+  color: var(--fitlo-ink);
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.ticket__code:hover {
+  opacity: 0.85;
+}
+
+.ticket__value {
+  font-size: var(--fitlo-fs-4xl, 26px);
+  letter-spacing: -.02em;
+  color: var(--fitlo-accent-text, #08665f);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.ticket.is-off .ticket__value {
+  color: var(--fitlo-muted);
+}
+
+.ticket__use {
+  color: var(--fitlo-muted);
+  justify-content: space-between;
+  font-weight: 600;
+  display: flex;
+  font-size: var(--fitlo-fs-xs, 12px);
+}
+
+.ticket__foot {
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  display: flex;
+}
+
+.ticket--new {
+  min-height: 220px;
+  color: var(--fitlo-muted);
+  border: 1.5px dashed var(--fitlo-line-2);
+  text-align: center;
+  background: transparent;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  border-radius: var(--fitlo-r-md, 14px);
+  transition: all 0.2s ease;
+}
+
+.ticket--new:before, .ticket--new:after {
+  display: none !important;
+}
+
+.ticket--new:hover {
+  color: var(--fitlo-ink);
+  background: var(--fitlo-card);
+  border-color: var(--fitlo-accent);
+}
+
+/* Banners Grid */
+.banners {
+  gap: 18px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  display: grid;
+}
+
+@media (max-width: 768px) {
+  .banners {
+    grid-template-columns: 1fr;
+  }
+}
+
+.bancard {
+  flex-direction: column;
+  gap: 14px;
+  padding: 10px 10px 16px;
+  display: flex;
+  background: var(--fitlo-card);
+  border: 1px solid var(--fitlo-line);
+  border-radius: var(--fitlo-r-md, 14px);
+  position: relative;
+}
+
+.bancard__pic {
+  aspect-ratio: 16/9;
+  border-radius: 14px;
+  position: relative;
+  overflow: hidden;
+  background: var(--fitlo-card-2);
+}
+
+.bancard__pic img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.bancard__pic .pcard__tag {
+  height: 24px;
+  font-size: var(--fitlo-fs-xs, 12px);
+  background: var(--fitlo-accent);
+  color: var(--fitlo-accent-ink, #ffffff);
+  border-radius: 99px;
+  align-items: center;
+  padding: 0 10px;
+  font-weight: 700;
+  display: inline-flex;
+  position: absolute;
+  top: 10px;
+  left: 10px;
+}
+
+.bancard.is-off .bancard__pic {
+  opacity: .45;
+}
+
+.bancard__body {
+  flex-direction: column;
+  gap: 14px;
+  padding: 0 8px;
+  display: flex;
+}
+
+.bancard__top {
+  align-items: flex-start;
+  gap: 12px;
+  display: flex;
+}
+
+.bancard__top .cell__text {
+  flex: 1;
+}
+
+.bancard__top .cell__text b {
+  font-size: var(--fitlo-fs-lg, 15px);
+  font-weight: 700;
+  display: block;
+  color: var(--fitlo-ink);
+}
+
+.bancard__top .cell__text small {
+  color: var(--fitlo-muted);
+  font-size: var(--fitlo-fs-xs, 12px);
+}
+
+.bancard__stats {
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  display: grid;
+}
+
+.bancard__stats > div {
+  background: var(--fitlo-card-2);
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+
+.bancard__stats small {
+  color: var(--fitlo-muted);
+  font-weight: 600;
+  display: block;
+  font-size: 11px;
+}
+
+.bancard__stats b {
+  font-size: var(--fitlo-fs-xl, 17px);
+  color: var(--fitlo-ink);
+  font-weight: 700;
+}
+
+.bancard__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
 }
 
