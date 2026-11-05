@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useCart, BookingHistory } from '@/context/CartContext';
-import { CheckCircle2, ChevronLeft, User, Calendar, Clock, MapPin, DoorOpen, Download, Loader2, XCircle } from 'lucide-react';
+import { CheckCircle2, ChevronLeft, User, Calendar, Clock, MapPin, DoorOpen, Download, Loader2, XCircle, Building2, X } from 'lucide-react';
 import Link from 'next/link';
 import { Suspense } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -15,6 +15,62 @@ function InvoicePage() {
     const { history } = useCart();
     const [booking, setBooking] = useState<BookingHistory | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [selectedTreatmentModal, setSelectedTreatmentModal] = useState<any | null>(null);
+    const [treatmentDetails, setTreatmentDetails] = useState<any | null>(null);
+    const [isDetailsLoading, setIsDetailsLoading] = useState(false);
+
+    // Fetch treatment details when "View Details" is clicked
+    useEffect(() => {
+        if (!selectedTreatmentModal) {
+            setTreatmentDetails(null);
+            return;
+        }
+        const fetchDetails = async () => {
+            setIsDetailsLoading(true);
+            try {
+                const rawTitle = selectedTreatmentModal.title
+                    .replace(/\s*[·•-]\s*Jaens\s*Spa.*$/i, '')
+                    .replace(/\s*[·•-].*$/, '')
+                    .trim();
+
+                // 1. Try partner_treatments
+                let { data: pt } = await supabase
+                    .from('partner_treatments')
+                    .select('*')
+                    .or(`id.eq.${selectedTreatmentModal.treatmentId || '00000000-0000-0000-0000-000000000000'},title.ilike.%${rawTitle}%`)
+                    .maybeSingle();
+
+                if (pt) {
+                    setTreatmentDetails(pt);
+                    setIsDetailsLoading(false);
+                    return;
+                }
+
+                // 2. Try standard treatments
+                let { data: t } = await supabase
+                    .from('treatments')
+                    .select('*')
+                    .or(`id.eq.${selectedTreatmentModal.treatmentId || '00000000-0000-0000-0000-000000000000'},title.ilike.%${rawTitle}%`)
+                    .maybeSingle();
+
+                if (t) {
+                    setTreatmentDetails(t);
+                } else {
+                    setTreatmentDetails({
+                        title: rawTitle,
+                        desc: 'Premium holistic wellness ritual delivered by certified spa therapists.',
+                        options: [{ duration: selectedTreatmentModal.duration, price: selectedTreatmentModal.price }]
+                    });
+                }
+            } catch (err) {
+                console.error('Error fetching treatment details for modal:', err);
+            } finally {
+                setIsDetailsLoading(false);
+            }
+        };
+
+        fetchDetails();
+    }, [selectedTreatmentModal]);
 
     useEffect(() => {
         const fetchInvoice = async () => {
@@ -156,165 +212,202 @@ function InvoicePage() {
         );
     }
 
-    return (
-        <div className="min-h-[100dvh] bg-secondary/30 pt-20 pb-24 px-4 sm:px-6">
-                <style dangerouslySetInnerHTML={{__html: `
-                    footer, .floating-nav, #floating-nav, .mobile-nav { display: none !important; }
-                `}} />
+    const partnerItem = booking.items.find((i: any) => i.isPartner || i.partnerName);
 
-            <div className="max-w-lg mx-auto bg-white rounded-3xl shadow-soft-lg overflow-hidden border border-border/80 relative">
+    const cleanTreatmentTitle = (title: string) => {
+        let t = title;
+        if (partnerItem?.partnerName) {
+            t = t.replace(new RegExp(`\\s*[·•-]\\s*${partnerItem.partnerName}.*`, 'i'), '');
+        }
+        t = t.replace(/\s*[·•-]\s*Jaens\s*Spa.*$/i, '');
+        return t.trim();
+    };
+
+    return (
+        <div className="invoice-container min-h-[100dvh] bg-secondary/30 pt-16 pb-24 px-4 sm:px-6">
+            <style dangerouslySetInnerHTML={{__html: `
+                footer, .floating-nav, #floating-nav, .mobile-nav { display: none !important; }
+                @media print {
+                    @page {
+                        size: A4 portrait;
+                        margin: 8mm 12mm;
+                    }
+                    html, body {
+                        background: #ffffff !important;
+                        color: #000000 !important;
+                        margin: 0 !important;
+                        padding: 0 !important;
+                        -webkit-print-color-adjust: exact !important;
+                        print-color-adjust: exact !important;
+                    }
+                    header, footer, nav, .floating-nav, #floating-nav, .mobile-nav, .print\\:hidden, button, a {
+                        display: none !important;
+                    }
+                    .invoice-container {
+                        padding: 0 !important;
+                        margin: 0 auto !important;
+                        background: transparent !important;
+                        min-height: auto !important;
+                    }
+                    .invoice-card {
+                        box-shadow: none !important;
+                        border: 1px solid #e5e7eb !important;
+                        border-radius: 16px !important;
+                        max-width: 100% !important;
+                        padding: 20px 24px !important;
+                        margin: 0 auto !important;
+                        page-break-inside: avoid !important;
+                        break-inside: avoid !important;
+                    }
+                    .invoice-card * {
+                        page-break-inside: avoid !important;
+                    }
+                }
+            `}} />
+
+            <div className="invoice-card max-w-lg mx-auto bg-white rounded-3xl shadow-soft-lg overflow-hidden border border-border/80 relative">
                 
                 {/* Header Pattern */}
                 <div className="h-2 bg-primary w-full"></div>
 
                 <div className="p-6 sm:p-8">
-                    {/* Header */}
-                    <div className="flex flex-col items-center justify-center text-center mb-8 pb-8 border-b border-border/50 border-dashed">
+                    {/* Header: Verified Confirmed Reservation (No Pending State) */}
+                    <div className="flex flex-col items-center justify-center text-center mb-6 pb-6 border-b border-border/50 border-dashed">
                         {booking.status?.toLowerCase() === 'cancelled' ? (
-                            <div className="w-12 h-12 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-4">
-                                <XCircle size={24} />
-                            </div>
-                        ) : booking.status?.toLowerCase() === 'pending' ? (
-                            <div className="w-12 h-12 bg-orange-50 text-orange-500 rounded-full flex items-center justify-center mb-4">
-                                <Clock size={24} />
+                            <div className="w-11 h-11 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-3">
+                                <XCircle size={22} />
                             </div>
                         ) : (
-                            <div className="w-12 h-12 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center mb-4">
+                            <div className="w-11 h-11 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mb-3 shadow-xs">
                                 <CheckCircle2 size={24} />
                             </div>
                         )}
-                        <h1 className="font-serif text-2xl text-primary font-medium tracking-wide mb-1 uppercase">BOOKING {booking.status || 'CONFIRMED'}</h1>
-                        <p className="text-text-muted text-sm max-w-[250px] mb-4">
-                            {booking.status?.toLowerCase() === 'cancelled' ? 'Your booking has been cancelled.' :
-                             booking.status?.toLowerCase() === 'pending' ? 'Your booking is pending confirmation.' :
-                             'Your booking has been received and confirmed.'}
+                        <h1 className="font-serif text-xl sm:text-2xl text-primary font-bold tracking-wide mb-1 uppercase">
+                            {booking.status?.toLowerCase() === 'cancelled' ? 'RESERVATION CANCELLED' : 'SPA RESERVATION CONFIRMED'}
+                        </h1>
+                        <p className="text-text-muted text-xs sm:text-sm max-w-[280px] mb-3">
+                            {booking.status?.toLowerCase() === 'cancelled' 
+                                ? 'Your spa reservation has been cancelled.' 
+                                : 'Your spa reservation has been verified and confirmed.'}
                         </p>
                         
-                        <div className="bg-black/5 text-primary text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-lg">
+                        <div className="bg-black/5 text-primary text-[11px] font-mono font-bold uppercase tracking-widest px-3.5 py-1.5 rounded-lg inline-block">
                             {booking.id.toUpperCase().substring(0, 10)}
                         </div>
                     </div>
 
-                    {/* Service Provider */}
-                    {(() => {
-                        const partnerItem = booking.items.find((i: any) => i.isPartner || i.partnerName);
-                        if (partnerItem) {
-                            return (
-                                <div className="mb-8 bg-[#F8F9FA] rounded-2xl p-5 border border-border/60 text-center">
-                                    <span className="text-[9px] font-bold uppercase tracking-widest text-emerald-800 bg-emerald-50 border border-emerald-200/80 px-3 py-1 rounded-full inline-block mb-3">
-                                        Verified Partner Spa Reservation
+                    {/* Service Provider & Venue: Clean, Short Title, No Extra Labels */}
+                    {partnerItem ? (
+                        <div className="mb-6 bg-[#F8F9FA] rounded-2xl p-5 border border-border/50 text-center flex flex-col items-center">
+                            {partnerItem.partnerLogoUrl ? (
+                                <img
+                                    src={partnerItem.partnerLogoUrl}
+                                    alt={partnerItem.partnerName || 'Partner Spa'}
+                                    className="w-14 h-14 rounded-2xl object-cover border border-gray-200 bg-white mb-2.5 shadow-xs"
+                                />
+                            ) : (
+                                <div className="w-14 h-14 rounded-2xl bg-[#1D1D1F] text-white flex items-center justify-center font-bold text-lg mb-2.5 shadow-xs">
+                                    {partnerItem.partnerName?.charAt(0) || 'P'}
+                                </div>
+                            )}
+                            <h2 className="font-serif text-lg sm:text-xl text-primary font-bold tracking-tight leading-tight">
+                                {partnerItem.partnerName}
+                            </h2>
+                            {partnerItem.partnerLocation && (
+                                <p className="text-xs text-text-muted mt-1 flex items-center justify-center gap-1.5 font-medium">
+                                    <MapPin className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                                    {partnerItem.partnerLocation}
+                                </p>
+                            )}
+                        </div>
+                    ) : (
+                        <div className="mb-6 text-center">
+                            <h2 className="font-serif text-base text-primary font-medium tracking-wide">PT BALANCE ISLAND INDONESIA</h2>
+                        </div>
+                    )}
+
+                    {/* Guest & Venue Details: Simple Clean Rows without Columns */}
+                    <div className="mb-6 bg-[#F8F9FA] rounded-2xl p-5 border border-border/40">
+                        <h3 className="text-[10px] font-bold uppercase tracking-widest text-text-muted mb-2 border-b border-border/50 pb-2">
+                            {partnerItem ? 'Guest & Venue Details' : 'Guest Details'}
+                        </h3>
+                        <div className="divide-y divide-border/30 text-xs">
+                            <div className="flex items-center justify-between py-2">
+                                <span className="flex items-center gap-1.5 text-text-muted font-medium">
+                                    <User className="w-3.5 h-3.5 text-gray-400" /> Guest Name
+                                </span>
+                                <span className="font-bold text-primary text-right">{booking.customerDetails.name}</span>
+                            </div>
+                            <div className="flex items-center justify-between py-2">
+                                <span className="flex items-center gap-1.5 text-text-muted font-medium">
+                                    <Calendar className="w-3.5 h-3.5 text-gray-400" /> Date &amp; Time
+                                </span>
+                                <span className="font-bold text-primary text-right">{booking.customerDetails.date} at {booking.customerDetails.time}</span>
+                            </div>
+                            {booking.customerDetails.location && (
+                                <div className="flex items-center justify-between py-2">
+                                    <span className="flex items-center gap-1.5 text-text-muted font-medium">
+                                        <MapPin className="w-3.5 h-3.5 text-gray-400" /> {partnerItem ? 'Staying At' : 'Villa / Hotel'}
                                     </span>
-                                    <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted mb-2">Service Provider &amp; Venue</p>
-                                    {partnerItem.partnerLogoUrl ? (
-                                        <img
-                                            src={partnerItem.partnerLogoUrl}
-                                            alt={partnerItem.partnerName || 'Partner Spa'}
-                                            className="w-14 h-14 rounded-2xl object-cover border border-gray-200 bg-white mx-auto mb-2.5 shadow-xs"
-                                        />
-                                    ) : (
-                                        <div className="w-14 h-14 rounded-2xl bg-[#1D1D1F] text-white flex items-center justify-center font-bold text-lg mx-auto mb-2.5 shadow-xs">
-                                            {partnerItem.partnerName?.charAt(0) || 'P'}
-                                        </div>
-                                    )}
-                                    <h2 className="font-serif text-xl text-primary font-bold tracking-tight">
-                                        {partnerItem.partnerName}
-                                    </h2>
-                                    {partnerItem.partnerLocation && (
-                                        <p className="text-xs text-text-muted mt-1.5 flex items-center justify-center gap-1.5 font-medium">
-                                            <MapPin className="w-3.5 h-3.5 text-gray-500 shrink-0" />
-                                            {partnerItem.partnerLocation}
-                                        </p>
-                                    )}
-                                    <p className="text-[10px] text-gray-400 mt-3 pt-2.5 border-t border-border/40 font-mono">
-                                        Official Booking Verified &amp; Facilitated by PT BALANCE ISLAND INDONESIA
-                                    </p>
+                                    <span className="font-bold text-primary text-right max-w-[60%] truncate">{booking.customerDetails.location}</span>
                                 </div>
-                            );
-                        }
-
-                        return (
-                            <div className="mb-8">
-                                <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted mb-4 text-center">Service Provider</p>
-                                <h2 className="text-center font-serif text-lg text-primary font-medium tracking-wide">PT BALANCE ISLAND INDONESIA</h2>
-                            </div>
-                        );
-                    })()}
-
-                    {/* Guest Details */}
-                    {(() => {
-                        const partnerItem = booking.items.find((i: any) => i.isPartner || i.partnerName);
-                        return (
-                            <div className="mb-8 bg-[#F8F9FA] rounded-2xl p-5 border border-border/40">
-                                <h3 className="text-[10px] font-bold uppercase tracking-widest text-text-muted mb-4 border-b border-border/50 pb-2">
-                                    {partnerItem ? 'Guest & Venue Details' : 'Guest Details'}
-                                </h3>
-                                <div className={`grid ${partnerItem ? 'grid-cols-2 sm:grid-cols-3' : 'grid-cols-3'} gap-3 sm:gap-5 items-center`}>
-                                    <div className="flex flex-col gap-5 overflow-hidden">
-                                        <div className="w-full">
-                                            <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-text-muted mb-1"><User className="w-3 h-3"/> Name</span>
-                                            <span className="text-sm text-primary font-medium block truncate" title={booking.customerDetails.name}>{booking.customerDetails.name}</span>
-                                        </div>
-                                        <div>
-                                            <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-text-muted mb-1"><Calendar className="w-3 h-3"/> Date</span>
-                                            <span className="text-sm text-primary font-medium whitespace-nowrap">{booking.customerDetails.date}</span>
-                                        </div>
-                                    </div>
-                                    
-                                    <div className="flex flex-col items-center justify-center text-center border-x border-border/50 px-2 h-full py-2">
-                                        <span className="flex items-center justify-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-text-muted mb-2"><Clock className="w-3 h-3"/> Time</span>
-                                        <span className="text-xl sm:text-2xl text-primary font-serif font-medium">{booking.customerDetails.time}</span>
-                                    </div>
-
-                                    <div className="flex flex-col gap-5">
-                                        <div>
-                                            <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-text-muted mb-1"><MapPin className="w-3 h-3"/> {partnerItem ? 'Venue' : 'Location'}</span>
-                                            <span className="text-sm text-primary font-medium line-clamp-2 leading-tight">
-                                                {partnerItem ? (partnerItem.partnerName || booking.customerDetails.location) : booking.customerDetails.location}
-                                            </span>
-                                        </div>
-                                        {!partnerItem && booking.customerDetails.room && (
-                                            <div>
-                                                <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-text-muted mb-1"><DoorOpen className="w-3 h-3"/> Room</span>
-                                                <span className="text-sm text-primary font-medium line-clamp-1">{booking.customerDetails.room}</span>
-                                            </div>
-                                        )}
-                                        {partnerItem && booking.customerDetails.location && (
-                                            <div>
-                                                <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-text-muted mb-1"><User className="w-3 h-3"/> Staying At</span>
-                                                <span className="text-xs text-primary font-medium line-clamp-1">{booking.customerDetails.location}</span>
-                                            </div>
-                                        )}
-                                    </div>
+                            )}
+                            {partnerItem && (
+                                <div className="flex items-center justify-between py-2">
+                                    <span className="flex items-center gap-1.5 text-text-muted font-medium">
+                                        <Building2 className="w-3.5 h-3.5 text-gray-400" /> Venue
+                                    </span>
+                                    <span className="font-bold text-primary text-right">{partnerItem.partnerName}</span>
                                 </div>
-                            </div>
-                        );
-                    })()}
-
-                    {/* Treatments */}
-                    <div className="mb-6">
-                        <h3 className="text-[10px] font-bold uppercase tracking-widest text-text-muted mb-3">Treatments</h3>
-                        <div className="space-y-3">
-                            {booking.items.map(item => (
-                                <div key={item.id} className="flex justify-between items-start border-b border-border/30 pb-3 last:border-0 last:pb-0">
-                                    <div className="pr-4">
-                                        <p className="text-xs font-bold text-primary mb-1 leading-tight">{item.title}</p>
-                                        <p className="text-[10px] text-text-muted">{item.guests} {item.guests > 1 ? 'Guests' : 'Guest'} • {String(item.duration).replace(/mins?/i, '').trim()} Mins</p>
-                                    </div>
-                                    <div className="text-right shrink-0">
-                                        <p className="text-sm font-serif font-medium text-primary leading-tight">
-                                            IDR {(() => {
-                                            const isCouple = ['couple', 'honeymoon'].some(k => item.title.toLowerCase().includes(k));
-                                            const multiplier = isCouple ? (item.guests / 2) : item.guests;
-                                            return (item.price * multiplier).toLocaleString('en-US');
-                                        })()}
-                                        </p>
-                                    </div>
+                            )}
+                            {!partnerItem && booking.customerDetails.room && (
+                                <div className="flex items-center justify-between py-2">
+                                    <span className="flex items-center gap-1.5 text-text-muted font-medium">
+                                        <DoorOpen className="w-3.5 h-3.5 text-gray-400" /> Room
+                                    </span>
+                                    <span className="font-bold text-primary text-right">{booking.customerDetails.room}</span>
                                 </div>
-                            ))}
+                            )}
                         </div>
                     </div>
 
-                    {/* Price Breakdown (for Partner Spas or Discounted bookings) */}
+                    {/* Treatments: Clean Title without Partner Redundancy + View Details Link */}
+                    <div className="mb-6">
+                        <h3 className="text-[10px] font-bold uppercase tracking-widest text-text-muted mb-3">Treatments</h3>
+                        <div className="space-y-3">
+                            {booking.items.map(item => {
+                                const cleanTitle = cleanTreatmentTitle(item.title);
+                                const isCouple = ['couple', 'honeymoon'].some(k => item.title.toLowerCase().includes(k));
+                                const multiplier = isCouple ? (item.guests / 2) : item.guests;
+                                const itemTotal = (item.price * multiplier).toLocaleString('en-US');
+
+                                return (
+                                    <div key={item.id} className="flex justify-between items-start border-b border-border/30 pb-3 last:border-0 last:pb-0">
+                                        <div className="pr-4">
+                                            <p className="text-xs font-bold text-primary mb-0.5 leading-tight">{cleanTitle}</p>
+                                            <p className="text-[10px] text-text-muted">
+                                                {item.guests} {item.guests > 1 ? 'Guests' : 'Guest'} • {String(item.duration).replace(/mins?/i, '').trim()} Mins
+                                            </p>
+                                            <button
+                                                type="button"
+                                                onClick={() => setSelectedTreatmentModal(item)}
+                                                className="mt-1.5 text-[10px] font-semibold text-primary underline underline-offset-4 hover:text-black flex items-center gap-1 cursor-pointer print:hidden"
+                                            >
+                                                View Details
+                                            </button>
+                                        </div>
+                                        <div className="text-right shrink-0">
+                                            <p className="text-sm font-serif font-medium text-primary leading-tight">
+                                                IDR {itemTotal}
+                                            </p>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    {/* Price Breakdown */}
                     {(() => {
                         let publishedTotal = 0;
                         let discountTotal = 0;
@@ -384,18 +477,19 @@ function InvoicePage() {
                     })()}
 
                     {/* Total */}
-                    <div className="flex justify-between items-center pt-4 border-t border-border/80 mb-8">
+                    <div className="flex justify-between items-center pt-3 border-t border-border/80 mb-6">
                         <span className="text-xs font-bold uppercase tracking-widest text-primary">Total Paid</span>
-                        <span className="text-xl font-serif font-medium text-primary">
+                        <span className="text-xl font-serif font-bold text-primary">
                             IDR {booking.totalPrice.toLocaleString('en-US')}
                         </span>
                     </div>
 
-                    {/* Action Buttons */}
-                    <div className="flex flex-col gap-3">
+                    {/* Action Buttons (Strictly Hidden from Printed PDF) */}
+                    <div className="flex flex-col gap-3 print:hidden">
                         <button 
+                            type="button"
                             onClick={() => window.print()}
-                            className="w-full flex items-center justify-center gap-2 bg-surface text-primary border border-border px-6 py-3.5 rounded-xl text-xs font-bold shadow-sm hover:bg-black/5 transition-colors tracking-widest uppercase"
+                            className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-black text-white px-6 py-3.5 rounded-xl text-xs font-bold shadow-md transition-all tracking-widest uppercase cursor-pointer"
                         >
                             <Download size={14} /> Download PDF
                         </button>
@@ -409,6 +503,139 @@ function InvoicePage() {
 
                 </div>
             </div>
+
+            {/* Treatment Details Pop-up Modal on Invoice */}
+            {selectedTreatmentModal && (
+                <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs print:hidden">
+                    <div className="w-full max-w-lg bg-white rounded-3xl p-6 shadow-2xl border border-gray-100 flex flex-col text-black max-h-[88vh] overflow-y-auto no-scrollbar animate-in fade-in zoom-in-95 duration-200">
+                        <div className="flex items-center justify-between pb-3.5 border-b border-gray-100">
+                            <div>
+                                <span className="text-[10px] font-bold tracking-widest text-primary/60 uppercase block">Treatment Details</span>
+                                <h3 className="font-serif text-lg sm:text-xl font-bold text-gray-900 mt-0.5">
+                                    {cleanTreatmentTitle(selectedTreatmentModal.title)}
+                                </h3>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setSelectedTreatmentModal(null)}
+                                className="w-8 h-8 rounded-full bg-gray-100 hover:bg-black hover:text-white flex items-center justify-center text-gray-600 transition-colors cursor-pointer"
+                            >
+                                <X size={15} />
+                            </button>
+                        </div>
+
+                        <div className="py-4 space-y-4 flex-1">
+                            {isDetailsLoading ? (
+                                <div className="py-12 flex flex-col items-center justify-center gap-2 text-gray-400">
+                                    <Loader2 className="w-5 h-5 animate-spin" />
+                                    <span className="text-xs">Loading details...</span>
+                                </div>
+                            ) : treatmentDetails ? (() => {
+                                let descClean = treatmentDetails.desc || '';
+                                let inclusions: { duration: string; name: string }[] = [];
+
+                                if (treatmentDetails.desc) {
+                                    const splitRegex = /(?:Treatment\s*Includes|What(?:'s|\s+is)\s*Included|Package\s*Includes)\s*:?\s*/i;
+                                    const parts = treatmentDetails.desc.split(splitRegex);
+                                    descClean = parts[0].trim();
+                                    const rawInclusions = parts.length > 1 ? parts.slice(1).join(' ').trim() : '';
+
+                                    if (rawInclusions) {
+                                        const itemRegex = /(\d+\s*(?:Minutes?|Mins?))\s*[–\-:]\s*([^0-9–\-:]+?)(?=(?:\d+\s*(?:Minutes?|Mins?)\s*[–\-:])|$)/gi;
+                                        let match;
+                                        while ((match = itemRegex.exec(rawInclusions)) !== null) {
+                                            const dur = match[1].trim();
+                                            const name = match[2].trim().replace(/^[•\-\*,\s]+|[•\-\*,\s]+$/g, '');
+                                            if (name) inclusions.push({ duration: dur, name });
+                                        }
+
+                                        if (inclusions.length === 0) {
+                                            const lines = rawInclusions.split('\n').map((l: string) => l.trim()).filter(Boolean);
+                                            for (const line of lines) {
+                                                const durMatch = line.match(/^(\d+\s*(?:Minutes?|Mins?))\s*[–\-:]\s*(.+)/i);
+                                                if (durMatch) {
+                                                    inclusions.push({ duration: durMatch[1].trim(), name: durMatch[2].trim() });
+                                                } else {
+                                                    inclusions.push({ duration: '', name: line.replace(/^[•\-\*,\s]+/, '') });
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                return (
+                                    <>
+                                        {treatmentDetails.image_url && (
+                                            <div className="relative h-44 w-full rounded-2xl overflow-hidden bg-gray-100 shadow-xs">
+                                                <img
+                                                    src={treatmentDetails.image_url}
+                                                    alt={treatmentDetails.title}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            </div>
+                                        )}
+
+                                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-gray-100 text-gray-800 text-xs font-bold uppercase tracking-wider">
+                                            <Clock size={12} className="text-gray-500" />
+                                            <span>{String(selectedTreatmentModal.duration).replace(/mins?/gi, '').trim()} Mins</span>
+                                        </div>
+
+                                        {descClean && (
+                                            <div className="space-y-1">
+                                                <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 block">Experience</span>
+                                                <p className="text-xs text-gray-600 leading-relaxed font-light">
+                                                    {descClean}
+                                                </p>
+                                            </div>
+                                        )}
+
+                                        {inclusions.length > 0 && (
+                                            <div className="space-y-2 pt-1">
+                                                <h4 className="text-xs font-black uppercase tracking-wider text-gray-900 flex items-center gap-1.5">
+                                                    <span>Treatment Inclusions</span>
+                                                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                                                        {inclusions.length} Steps Included
+                                                    </span>
+                                                </h4>
+                                                <div className="rounded-2xl border border-gray-200/90 bg-gray-50/70 overflow-hidden divide-y divide-gray-100">
+                                                    {inclusions.map((inc, i) => (
+                                                        <div key={i} className="flex items-center justify-between p-2.5 sm:p-3 hover:bg-white transition-colors gap-3">
+                                                            <div className="flex items-center gap-2 min-w-0">
+                                                                <div className="w-5 h-5 rounded-md bg-black text-white flex items-center justify-center font-bold text-[9px] shrink-0">
+                                                                    {i + 1}
+                                                                </div>
+                                                                <span className="text-xs font-bold text-gray-900 leading-snug">
+                                                                    {inc.name}
+                                                                </span>
+                                                            </div>
+                                                            {inc.duration && (
+                                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white border border-gray-200 text-gray-700 text-[10px] font-bold uppercase tracking-wider shrink-0 shadow-xs">
+                                                                    <Clock size={10} className="text-gray-400" />
+                                                                    {inc.duration}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </>
+                                );
+                            })() : null}
+                        </div>
+
+                        <div className="pt-3 border-t border-gray-100">
+                            <button
+                                type="button"
+                                onClick={() => setSelectedTreatmentModal(null)}
+                                className="w-full py-3 rounded-xl bg-gray-100 hover:bg-black hover:text-white text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer"
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

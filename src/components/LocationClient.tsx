@@ -333,7 +333,9 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                 activeBrand
             );
 
-            const finalMessage = baseMessage + '\n\n*BOOKING ID :* ' + bookingIdRef.current;
+            const origin = typeof window !== 'undefined' ? window.location.origin : 'https://booktherapick.com';
+            const invoiceUrl = `${origin}/invoice/${bookingIdRef.current}`;
+            const finalMessage = `${baseMessage}\n\n*BOOKING ID :* ${bookingIdRef.current}\n*INVOICE :* ${invoiceUrl}`;
             
             saveDraft({
                 id: bookingIdRef.current,
@@ -1246,22 +1248,40 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                                             </div>
                                                         )}
                                                         <h3 className="font-bold text-sm text-primary leading-tight">{item.title}</h3>
-                                                        <p className="text-xs text-text-muted flex items-center gap-1 mt-1 mb-2">
+                                                        <p className="text-xs text-text-muted flex items-center gap-1 mt-1 mb-1">
                                                             <Clock className="w-3 h-3" /> {String(item.duration).replace(/mins?/i, '').trim()} Mins
                                                         </p>
-                                                        {isReviewingBooking && (() => {
-                                                            const itemTreatment = treatments.find(t => t.id === item.treatmentId || t.title === item.title);
-                                                            if (!itemTreatment || !itemTreatment.desc) return null;
-                                                            return (
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => setDetailsModalTreatment(itemTreatment)}
-                                                                    className="mt-2 mb-3 text-[10px] font-bold uppercase tracking-widest text-primary underline underline-offset-4 decoration-primary/30 hover:decoration-primary transition-all flex items-center gap-1"
-                                                                >
-                                                                    See Details <ArrowRight className="w-3 h-3" />
-                                                                </button>
-                                                            );
-                                                        })()}
+                                                        {isReviewingBooking && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    const partnerItem = partnerTreatments.find(p => p.id === item.treatmentId || item.title.includes(p.title) || (item.partnerName && p.partner_name === item.partnerName));
+                                                                    if (partnerItem || item.isPartner) {
+                                                                        const targetPartner = partnerItem || {
+                                                                            id: item.treatmentId,
+                                                                            title: item.title.replace(/\s*[·•-].*$/, '').trim(),
+                                                                            partner_name: item.partnerName || 'Partner Spa',
+                                                                            partner_location: item.partnerLocation || '',
+                                                                            partner_logo_url: item.partnerLogoUrl || '',
+                                                                            partner_discount_percentage: item.discountPercentage || 5,
+                                                                            partner_tax_percentage: item.taxPercentage || 17.5,
+                                                                            options: [{ duration: item.duration, price: item.publishedPrice || item.price }],
+                                                                            desc: (partnerItem as any)?.desc || ''
+                                                                        };
+                                                                        setSelectedDetailsDuration(item.duration);
+                                                                        setSelectedPartnerDetails(targetPartner);
+                                                                    } else {
+                                                                        const itemTreatment = treatments.find(t => t.id === item.treatmentId || t.title === item.title);
+                                                                        if (itemTreatment) {
+                                                                            setDetailsModalTreatment(itemTreatment);
+                                                                        }
+                                                                    }
+                                                                }}
+                                                                className="mt-1 mb-2 text-[11px] font-semibold text-primary underline underline-offset-4 decoration-primary/40 hover:decoration-primary transition-all flex items-center gap-1 cursor-pointer"
+                                                            >
+                                                                <span>View Details</span>
+                                                            </button>
+                                                        )}
                                                     </div>
                                                     <span className="font-serif text-primary font-medium text-right flex flex-col shrink-0">
                                                         IDR {item.price.toLocaleString('en-US')}

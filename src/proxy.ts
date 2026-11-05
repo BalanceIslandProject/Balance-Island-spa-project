@@ -6,6 +6,20 @@ export function proxy(request: NextRequest) {
     const path = request.nextUrl.pathname;
     const host = request.headers.get('x-forwarded-host') || request.headers.get('host') || '';
 
+    // 0. SUPPRESS OPENGRAPH FOR INVOICE LINK SHARING IN WHATSAPP / SOCIAL MESSENGERS
+    // When customer confirms booking, sending invoice URL in WhatsApp shouldn't show an intrusive OpenGraph preview card.
+    const userAgent = (request.headers.get('user-agent') || '').toLowerCase();
+    const isBotScraper = userAgent.includes('whatsapp') || userAgent.includes('facebookexternalhit') || userAgent.includes('meta-externalagent');
+    if (isBotScraper && path.startsWith('/invoice')) {
+        return new NextResponse(
+            '<!DOCTYPE html><html><head><meta name="robots" content="noindex, nofollow" /></head><body></body></html>',
+            {
+                status: 200,
+                headers: { 'content-type': 'text/html; charset=utf-8' },
+            }
+        );
+    }
+
     // Normalize host
     const cleanHost = host.toLowerCase().split(':')[0].trim();
     const isPartnersSubdomain = cleanHost.startsWith('partners.') || cleanHost.startsWith('partner.');
