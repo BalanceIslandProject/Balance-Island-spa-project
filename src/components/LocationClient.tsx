@@ -111,11 +111,14 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
         }
     }, [isCampaignModalOpen, selectedPartnerBreakdown, selectedPartnerDetails]);
     
-    // Initialize date and time
+    // Initialize date and time (3 hours from now for availability)
     const getInitialDateTime = () => {
         const now = new Date();
-        const date = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
-        const time = now.toTimeString().split(' ')[0].substring(0, 5);
+        const availableTime = new Date(now.getTime() + 3 * 60 * 60 * 1000);
+        const date = new Date(availableTime.getTime() - (availableTime.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+        const hours = String(availableTime.getHours()).padStart(2, '0');
+        const minutes = String(availableTime.getMinutes()).padStart(2, '0');
+        const time = `${hours}:${minutes}`;
         return { date, time };
     };
     
@@ -197,17 +200,19 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                         ? `\n*ADD-ONS:* ${item.addons.map((a: any) => `${a.title} (+IDR ${Number(a.price).toLocaleString('en-US')})`).join(', ')}`
                         : '';
 
+                    const cleanDur = String(item.duration).replace(/mins?/gi, '').trim() + ' MINS';
                     if (item.isCampaign && item.discountPercentage && Number(item.discountPercentage) > 0) {
                         const originalPriceNum = item.price / (1 - (Number(item.discountPercentage) / 100));
                         const originalPrice = ((originalPriceNum + addonsPrice) * multiplier).toLocaleString('en-US');
                         const priceText = `~IDR ${originalPrice}~ [${item.discountPercentage}% OFF SPA]`;
-                        return `*${cleanTitle}*\nDURATION: ${item.duration} MINS\n${guestAndPriceText} ${priceText}${addonsText}`;
+                        return `*${cleanTitle}*\nDURATION: ${cleanDur}\n${guestAndPriceText} ${priceText}${addonsText}`;
                     }
 
-                    return `*${cleanTitle}*\nDURATION: ${item.duration} MINS\n${guestAndPriceText}${addonsText}`;
+                    return `*${cleanTitle}*\nDURATION: ${cleanDur}\n${guestAndPriceText}${addonsText}`;
                 }).join('\n\n------------------------\n\n');
 
-                baseMessage = `*NEW SPA BOOKING*\n${websiteSource}\n\n*SERVICE AREA:* ${locationName}\n*TREATMENTS:*\n${treatmentsList}\n\n*TOTAL PRICE:* IDR ${totalPrice.toLocaleString('en-US')}${promoText}\n\n*CLIENT DETAILS:*\n• Name: ${formData.name}\n• Date: ${formData.date}\n• Time: ${formData.time}\n• Location/Villa: ${formData.location}\n• Room Number: ${formData.room || 'N/A'}\n\nHello! I would like to confirm this booking.`;
+                const roomLine = cartItems.some(i => i.isPartner) ? '' : `\n• Room Number: ${formData.room || 'N/A'}`;
+                baseMessage = `*NEW SPA BOOKING*\n${websiteSource}\n\n*SERVICE AREA:* ${locationName}\n*TREATMENTS:*\n${treatmentsList}\n\n*TOTAL PRICE:* IDR ${totalPrice.toLocaleString('en-US')}${promoText}\n\n*CLIENT DETAILS:*\n• Name: ${formData.name}\n• Date: ${formData.date}\n• Time: ${formData.time}\n• Location/Villa: ${formData.location}${roomLine}\n\nHello! I would like to confirm this booking.`;
             } else {
                 const treatmentsList = cartItems.map(item => {
                     const cleanTitle = item.title
@@ -232,22 +237,25 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                         ? (item.guests === 2 ? `1 COUPLE\n2 PERSONS\nIDR ${price}` : `${item.guests / 2} COUPLES\n${item.guests} PERSONS\nIDR ${price}`)
                         : `${item.guests} PERSON${item.guests > 1 ? 'S' : ''} IDR ${price}`;
 
+                    const cleanDur = String(item.duration).replace(/mins?/gi, '').trim() + ' MINS';
+
                     if (item.isPartner) {
                         const partnerBreakdown = `\n*PARTNER SPA:* ${item.partnerName || ''} (${item.partnerLocation || ''})\n• Published Rate: IDR ${(item.publishedPrice || item.price).toLocaleString('en-US')}\n• Partner Discount (${item.discountPercentage || 0}%): -IDR ${(item.discountAmount || 0).toLocaleString('en-US')}\n• Subtotal: IDR ${(item.subtotal || item.price).toLocaleString('en-US')}\n• Tax & Service (${item.taxPercentage || 0}%): +IDR ${(item.taxAmount || 0).toLocaleString('en-US')}`;
-                        return `*${cleanTitle}*\nDURATION ${item.duration}\n${guestAndPriceText}${partnerBreakdown}${whatsIncludedText}`;
+                        return `*${cleanTitle}*\nDURATION: ${cleanDur}\n${guestAndPriceText}${partnerBreakdown}${whatsIncludedText}`;
                     }
 
                     if (item.isCampaign && item.discountPercentage && Number(item.discountPercentage) > 0) {
                         const originalPriceNum = item.price / (1 - (item.discountPercentage / 100));
                         const originalPrice = (originalPriceNum * multiplier).toLocaleString('en-US');
                         const priceText = `~IDR ${originalPrice}~ [${item.discountPercentage}% OFF SPA]`;
-                        return `*${cleanTitle}*\nDURATION ${item.duration} MINS\n${guestAndPriceText} ${priceText}${whatsIncludedText}`;
+                        return `*${cleanTitle}*\nDURATION: ${cleanDur}\n${guestAndPriceText} ${priceText}${whatsIncludedText}`;
                     }
 
-                    return `*${cleanTitle}*\nDURATION ${item.duration} MINS\n${guestAndPriceText}${whatsIncludedText}`;
+                    return `*${cleanTitle}*\nDURATION: ${cleanDur}\n${guestAndPriceText}${whatsIncludedText}`;
                 }).join('\n\n------------------------\n\n');
 
-                baseMessage = `*NEW SPA BOOKING*\n${websiteSource}\n\n*SERVICE AREA:* ${locationName}\n*TREATMENTS:*\n${treatmentsList}\n\n*TOTAL PRICE:* IDR ${totalPrice.toLocaleString('en-US')}${promoText}\n\n*CLIENT DETAILS:*\n• Name: ${formData.name}\n• Date: ${formData.date}\n• Time: ${formData.time}\n• Location/Villa: ${formData.location}\n• Room Number: ${formData.room || 'N/A'}\n\nHello! I would like to confirm this booking.`;
+                const roomLine = cartItems.some(i => i.isPartner) ? '' : `\n• Room Number: ${formData.room || 'N/A'}`;
+                baseMessage = `*NEW SPA BOOKING*\n${websiteSource}\n\n*SERVICE AREA:* ${locationName}\n*TREATMENTS:*\n${treatmentsList}\n\n*TOTAL PRICE:* IDR ${totalPrice.toLocaleString('en-US')}${promoText}\n\n*CLIENT DETAILS:*\n• Name: ${formData.name}\n• Date: ${formData.date}\n• Time: ${formData.time}\n• Location/Villa: ${formData.location}${roomLine}\n\nHello! I would like to confirm this booking.`;
             }
 
             // Save to Supabase before opening WhatsApp
@@ -1031,11 +1039,18 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                         <button onClick={() => setIsSelectingMore(false)} className="w-8 h-8 rounded-full bg-surface flex items-center justify-center hover:bg-border transition-colors shrink-0">
                                             <ChevronLeft className="w-4 h-4" />
                                         </button>
-                                        <h2 className="font-serif text-2xl text-primary">Select Treatment</h2>
+                                        <h2 className="font-serif text-2xl text-primary">
+                                            {cartItems.some(i => i.isPartner) ? "Add Partner Spa Treatment" : "Select Treatment"}
+                                        </h2>
                                     </div>
                                     
                                     <div className="space-y-3 max-h-[calc(100dvh-110px)] md:max-h-[70vh] overflow-y-auto pr-2 pb-16 no-scrollbar">
-                                        {treatments.map(t => (
+                                        {(cartItems.some(i => i.isPartner) ? partnerTreatments : treatments).map((t: any) => {
+                                            const isPartnerItem = cartItems.some(i => i.isPartner) || !!t.partner_name;
+                                            const discountRate = Number(t.partner_discount_percentage) || 0;
+                                            const taxRate = Number(t.partner_tax_percentage) || 0;
+
+                                            return (
                                             <div 
                                                 key={t.id} 
                                                 className={`bg-surface border ${expandedTreatmentId === t.id ? 'border-primary' : 'border-border/50'} rounded-2xl overflow-hidden shadow-sm transition-all`}
@@ -1045,9 +1060,11 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                                     className="p-3 flex gap-4 hover:bg-black/[0.02] cursor-pointer group"
                                                 >
                                                     <div className="flex-1 py-1 pl-2">
-                                                        <div className="text-[9px] font-bold tracking-widest text-primary/50 uppercase mb-1">{t.category}</div>
+                                                        <div className="text-[9px] font-bold tracking-widest text-primary/50 uppercase mb-1">
+                                                            {t.category} {isPartnerItem && `· ${t.partner_name}`}
+                                                        </div>
                                                         <h4 className="font-bold text-sm text-primary mb-1 line-clamp-1">{t.title}</h4>
-                                                        <div className="text-[10px] text-text-muted"><Clock className="w-3 h-3 inline mr-1" />{t.options.length} Options</div>
+                                                        <div className="text-[10px] text-text-muted"><Clock className="w-3 h-3 inline mr-1" />{t.options?.length || 1} Options</div>
                                                     </div>
                                                     <div className="flex items-center pr-2">
                                                         <div className={`w-8 h-8 rounded-full bg-white border border-border flex items-center justify-center text-primary transition-all duration-300 ${expandedTreatmentId === t.id ? 'rotate-45 bg-primary text-white' : 'group-hover:bg-primary group-hover:text-white'}`}>
@@ -1068,39 +1085,68 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                                                 <p className="text-xs text-text-muted leading-relaxed">{t.desc}</p>
                                                                 <div className="space-y-2">
                                                                     <div className="text-[10px] font-bold uppercase tracking-widest text-primary/80 mb-2">Select Duration</div>
-                                                                    {t.options.map((opt, idx) => (
-                                                                        <button
-                                                                            key={idx}
-                                                                            onClick={(e) => {
-                                                                                e.stopPropagation();
+                                                                    {(t.options || []).map((opt: any, idx: number) => {
+                                                                        const optBasePrice = parseInt(String(opt?.price || '0').replace(/[^0-9]/g, '') || '0', 10);
+                                                                        const discAmount = discountRate > 0 ? Math.round(optBasePrice * (discountRate / 100)) : 0;
+                                                                        const sub = optBasePrice - discAmount;
+                                                                        const taxAmount = taxRate > 0 ? Math.round(sub * (taxRate / 100)) : 0;
+                                                                        const finalRatePerUnit = isPartnerItem ? (sub + taxAmount) : optBasePrice;
+                                                                        const durStr = String(opt.duration).toUpperCase().includes('MIN') ? opt.duration : `${opt.duration} MINS`;
+
+                                                                        return (
+                                                                            <button
+                                                                                key={idx}
+                                                                                onClick={(e) => {
+                                                                                    e.stopPropagation();
                                                                                     const isCouple = ['couple', 'honeymoon'].some(k => t.title.toLowerCase().includes(k));
-                                                                                    setCartItems([...cartItems, {
+                                                                                    const newCartItem = isPartnerItem ? {
+                                                                                        id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
+                                                                                        treatmentId: t.id,
+                                                                                        title: `${t.title} · ${t.partner_name}`,
+                                                                                        duration: durStr,
+                                                                                        price: finalRatePerUnit,
+                                                                                        publishedPrice: optBasePrice,
+                                                                                        discountAmount: discAmount,
+                                                                                        subtotal: sub,
+                                                                                        taxAmount: taxAmount,
+                                                                                        discountPercentage: discountRate,
+                                                                                        taxPercentage: taxRate,
+                                                                                        guests: isCouple ? 2 : 1,
+                                                                                        isPartner: true,
+                                                                                        partnerName: t.partner_name,
+                                                                                        partnerLocation: t.partner_location,
+                                                                                        partnerLogoUrl: t.partner_logo_url
+                                                                                    } : {
                                                                                         id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
                                                                                         treatmentId: t.id,
                                                                                         title: t.title,
                                                                                         duration: opt.duration,
-                                                                                        price: parseInt(opt.price.replace(/,/g, '') || '0'),
+                                                                                        price: optBasePrice,
                                                                                         guests: isCouple ? 2 : 1,
                                                                                         isCampaign: false,
                                                                                         massageTable: true,
                                                                                         addons: []
-                                                                                    }]);
-                                                                                setExpandedTreatmentId(null);
-                                                                                setIsSelectingMore(false);
-                                                                            }}
-                                                                            className="w-full flex items-center justify-between p-3 rounded-xl border border-border hover:border-primary/50 hover:bg-primary/5 transition-all group"
-                                                                        >
-                                                                            <span className="text-sm font-bold text-primary group-hover:text-primary transition-colors">{opt.duration} Mins</span>
-                                                                            <span className="text-sm font-serif text-primary">IDR {parseInt(opt.price.replace(/,/g, '') || '0').toLocaleString('en-US')}</span>
-                                                                        </button>
-                                                                    ))}
+                                                                                    };
+
+                                                                                    setCartItems([...cartItems, newCartItem]);
+                                                                                    setExpandedTreatmentId(null);
+                                                                                    setIsSelectingMore(false);
+                                                                                }}
+                                                                                className="w-full flex items-center justify-between p-3 rounded-xl border border-border hover:border-primary/50 hover:bg-primary/5 transition-all group cursor-pointer"
+                                                                            >
+                                                                                <span className="text-sm font-bold text-primary group-hover:text-primary transition-colors">{String(opt.duration).replace(/mins?/i, '').trim()} Mins</span>
+                                                                                <span className="text-sm font-serif text-primary">IDR {finalRatePerUnit.toLocaleString('en-US')}</span>
+                                                                            </button>
+                                                                        );
+                                                                    })}
                                                                 </div>
                                                             </div>
                                                         </motion.div>
                                                     )}
                                                 </AnimatePresence>
                                             </div>
-                                        ))}
+                                            );
+                                        })}
                                         <div className="text-center pt-2 pb-8">
                                             <span className="text-[10px] font-bold uppercase tracking-widest text-text-muted/50 flex items-center justify-center gap-2">
                                                 Scroll for more treatments <ArrowRight className="w-3 h-3 rotate-90" />
@@ -1136,7 +1182,7 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                                         )}
                                                         <h3 className="font-bold text-sm text-primary leading-tight">{item.title}</h3>
                                                         <p className="text-xs text-text-muted flex items-center gap-1 mt-1 mb-2">
-                                                            <Clock className="w-3 h-3" /> {item.duration} Mins
+                                                            <Clock className="w-3 h-3" /> {String(item.duration).replace(/mins?/i, '').trim()} Mins
                                                         </p>
                                                         {isReviewingBooking && (() => {
                                                             const itemTreatment = treatments.find(t => t.id === item.treatmentId || t.title === item.title);
@@ -1257,26 +1303,40 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                                 <input
                                                     type="time" required
                                                     value={formData.time} onChange={e => setFormData({ ...formData, time: e.target.value })}
+                                                    min={(() => {
+                                                        const now = new Date();
+                                                        const todayStr = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+                                                        if (formData.date === todayStr) {
+                                                            const minTime = new Date(now.getTime() + 3 * 60 * 60 * 1000);
+                                                            return `${String(minTime.getHours()).padStart(2, '0')}:${String(minTime.getMinutes()).padStart(2, '0')}`;
+                                                        }
+                                                        return undefined;
+                                                    })()}
                                                     className="w-full min-w-0 appearance-none bg-white border border-border/80 rounded-xl px-4 py-3.5 text-sm text-primary placeholder:text-text-muted/50 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
                                                 />
                                             </div>
                                         </div>
                                         <div className="space-y-1.5 w-full">
-                                            <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1"><MapPin className="w-3.5 h-3.5"/> Villa / Hotel Name</label>
+                                            <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1">
+                                                <MapPin className="w-3.5 h-3.5"/> {cartItems.some(i => i.isPartner) ? "Your Hotel / Villa in Bali" : "Villa / Hotel Name"}
+                                            </label>
                                             <input
-                                                type="text" required placeholder="e.g. Four Seasons Sayan"
+                                                type="text" required placeholder={cartItems.some(i => i.isPartner) ? "e.g. Maya Ubud Resort & Spa" : "e.g. Four Seasons Sayan"}
                                                 value={formData.location} onChange={e => setFormData({ ...formData, location: e.target.value })}
                                                 className="w-full bg-white border border-border/80 rounded-xl px-4 py-3.5 text-sm text-primary placeholder:text-text-muted/50 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
                                             />
                                         </div>
-                                        <div className="space-y-1.5 w-full">
-                                            <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1"><DoorOpen className="w-3.5 h-3.5"/> Room Number (Optional)</label>
-                                            <input
-                                                type="text" placeholder="e.g. Villa 12"
-                                                value={formData.room} onChange={e => setFormData({ ...formData, room: e.target.value })}
-                                                className="w-full bg-white border border-border/80 rounded-xl px-4 py-3.5 text-sm text-primary placeholder:text-text-muted/50 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-                                            />
-                                        </div>
+                                        {/* Room Number (Removed for Partner Spas) */}
+                                        {!cartItems.some(i => i.isPartner) && (
+                                            <div className="space-y-1.5 w-full">
+                                                <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1"><DoorOpen className="w-3.5 h-3.5"/> Room Number (Optional)</label>
+                                                <input
+                                                    type="text" placeholder="e.g. Villa 12"
+                                                    value={formData.room} onChange={e => setFormData({ ...formData, room: e.target.value })}
+                                                    className="w-full bg-white border border-border/80 rounded-xl px-4 py-3.5 text-sm text-primary placeholder:text-text-muted/50 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                                                />
+                                            </div>
+                                        )}
 
                                         {/* Promo Code Input */}
                                         <div className="space-y-1.5 pt-1 w-full">
@@ -1357,7 +1417,7 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                                         <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-text-muted mb-1"><MapPin className="w-3 h-3"/> Location</span>
                                                         <span className="text-sm text-primary font-medium line-clamp-2 leading-tight">{formData.location}</span>
                                                     </div>
-                                                    {formData.room && (
+                                                    {formData.room && !cartItems.some(i => i.isPartner) && (
                                                         <div>
                                                             <span className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-text-muted mb-1"><DoorOpen className="w-3 h-3"/> Room</span>
                                                             <span className="text-sm text-primary font-medium line-clamp-1">{formData.room}</span>
@@ -1640,7 +1700,7 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                 )}
             </AnimatePresence>
 
-            {/* Partner Treatment Details Modal */}
+            {/* Partner Treatment Details Modal (Full Screen Pop-Up) */}
             <AnimatePresence>
                 {selectedPartnerDetails && (() => {
                     const pt = selectedPartnerDetails;
@@ -1654,13 +1714,44 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                     const subtotalPrice = basePublishedPrice - discountAmount;
                     const isCouple = isCoupleTreatment(pt.title);
 
+                    // Robust parsing of treatment inclusions and description
                     let descClean = pt.desc || '';
-                    let whatsIncludedList: string[] = [];
+                    let inclusions: { duration: string; name: string }[] = [];
                     if (pt.desc) {
-                        const parts = pt.desc.split(/What's Included\s*:?\s*/i);
-                        if (parts.length > 1) {
-                            descClean = parts[0].trim();
-                            whatsIncludedList = parts[1].split('\n').map((s: string) => s.replace(/^[-•*]\s*/, '').trim()).filter(Boolean);
+                        const splitRegex = /(?:Treatment\s*Includes|What(?:'s|\s+is)\s*Included|Package\s*Includes)\s*:?\s*/i;
+                        const parts = pt.desc.split(splitRegex);
+                        descClean = parts[0].trim();
+                        const rawInclusions = parts.length > 1 ? parts.slice(1).join(' ').trim() : '';
+
+                        if (rawInclusions) {
+                            // Extract items like "60 Minutes – Balinese Healing Touch", "45 Minutes - Body Scrub", etc.
+                            const itemRegex = /(\d+\s*(?:Minutes?|Mins?))\s*[–\-:]\s*([^0-9–\-:]+?)(?=(?:\d+\s*(?:Minutes?|Mins?)\s*[–\-:])|$)/gi;
+                            let match;
+                            while ((match = itemRegex.exec(rawInclusions)) !== null) {
+                                const dur = match[1].trim();
+                                const name = match[2].trim().replace(/^[•\-\*,\s]+|[•\-\*,\s]+$/g, '');
+                                if (name) {
+                                    inclusions.push({ duration: dur, name });
+                                }
+                            }
+
+                            // Fallback if newline-separated
+                            if (inclusions.length === 0) {
+                                const lines = rawInclusions.split('\n').map((l: string) => l.trim()).filter(Boolean);
+                                for (const line of lines) {
+                                    const durMatch = line.match(/^(\d+\s*(?:Minutes?|Mins?))\s*[–\-:]\s*(.+)/i) || 
+                                                     line.match(/^(.+?)\s*\((\d+\s*(?:Minutes?|Mins?))\)/i);
+                                    if (durMatch) {
+                                        if (durMatch[1].match(/\d+\s*(?:Minutes?|Mins?)/i)) {
+                                            inclusions.push({ duration: durMatch[1].trim(), name: durMatch[2].trim() });
+                                        } else {
+                                            inclusions.push({ duration: durMatch[2].trim(), name: durMatch[1].trim() });
+                                        }
+                                    } else {
+                                        inclusions.push({ duration: '', name: line.replace(/^[•\-\*,\s]+/, '') });
+                                    }
+                                }
+                            }
                         }
                     }
 
@@ -1674,26 +1765,26 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                     };
 
                     return (
-                        <div className="fixed inset-0 z-[10000] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-xs">
+                        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-0 md:p-4 bg-black/60 backdrop-blur-xs">
                             <motion.div
                                 initial={{ y: '100%', opacity: 0.8 }}
                                 animate={{ y: 0, opacity: 1 }}
                                 exit={{ y: '100%', opacity: 0 }}
                                 transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-                                className="w-full sm:max-w-lg bg-white rounded-t-[32px] sm:rounded-[32px] p-6 shadow-2xl border border-gray-100 flex flex-col text-black max-h-[92vh] overflow-y-auto"
+                                className="w-full h-[100dvh] md:h-auto md:max-h-[92vh] md:max-w-2xl bg-white rounded-none md:rounded-[32px] p-5 sm:p-7 shadow-2xl border border-gray-100 flex flex-col text-black overflow-y-auto no-scrollbar"
                                 style={{ backgroundColor: '#ffffff', opacity: 1 }}
                             >
                                 {/* Modal Header: Partner Identity */}
-                                <div className="flex items-center justify-between pb-4 border-b border-gray-100">
+                                <div className="flex items-center justify-between pb-4 border-b border-gray-100 shrink-0">
                                     <div className="flex items-center gap-3">
                                         {pt.partner_logo_url ? (
                                             <img
                                                 src={pt.partner_logo_url}
                                                 alt={pt.partner_name}
-                                                className="w-10 h-10 rounded-2xl object-cover border border-gray-200/90 bg-white shadow-xs shrink-0"
+                                                className="w-11 h-11 rounded-2xl object-cover border border-gray-200/90 bg-white shadow-xs shrink-0"
                                             />
                                         ) : (
-                                            <div className="w-10 h-10 rounded-2xl bg-[#1D1D1F] text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-xs">
+                                            <div className="w-11 h-11 rounded-2xl bg-[#1D1D1F] text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-xs">
                                                 {pt.partner_name?.charAt(0) || 'P'}
                                             </div>
                                         )}
@@ -1713,9 +1804,10 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                     <button
                                         type="button"
                                         onClick={() => setSelectedPartnerDetails(null)}
-                                        className="w-8 h-8 rounded-full bg-gray-100 hover:bg-black hover:text-white flex items-center justify-center text-gray-600 transition-colors cursor-pointer"
+                                        className="w-9 h-9 rounded-full bg-gray-100 hover:bg-black hover:text-white flex items-center justify-center text-gray-600 transition-colors cursor-pointer"
+                                        title="Close"
                                     >
-                                        <X size={15} />
+                                        <X size={16} />
                                     </button>
                                 </div>
 
@@ -1723,7 +1815,7 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                 <div className="py-4 space-y-4 flex-1">
                                     {/* Treatment Image */}
                                     {pt.image_url && (
-                                        <div className="relative h-48 sm:h-56 w-full rounded-2xl overflow-hidden bg-gray-100 shadow-xs">
+                                        <div className="relative h-52 sm:h-64 w-full rounded-2xl overflow-hidden bg-gray-100 shadow-xs">
                                             <img
                                                 src={pt.image_url}
                                                 alt={pt.title}
@@ -1744,81 +1836,93 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                         </div>
                                     )}
 
-                                    {/* Title */}
+                                    {/* Title & Category */}
                                     <div>
                                         <div className="flex items-center gap-2 mb-1">
                                             <span className="text-[10px] font-bold uppercase tracking-widest text-primary/70">
                                                 {pt.category || 'Package'}
                                             </span>
                                             {isCouple && (
-                                                <span className="text-[9px] font-bold uppercase tracking-wider bg-rose-50 text-rose-600 px-2 py-0.5 rounded-full border border-rose-100">
+                                                <span className="text-[9px] font-bold uppercase tracking-wider bg-rose-50 text-rose-600 px-2.5 py-0.5 rounded-full border border-rose-100">
                                                     Couple Ritual
                                                 </span>
                                             )}
                                         </div>
-                                        <h2 className="font-serif text-xl sm:text-2xl font-bold text-gray-900 leading-tight">
+                                        <h2 className="font-serif text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">
                                             {pt.title}
                                         </h2>
                                     </div>
 
-                                    {/* Duration Selection (if multiple options) or pill */}
-                                    {opts.length > 1 ? (
-                                        <div className="space-y-1.5">
-                                            <label className="text-[9px] font-bold uppercase tracking-wider text-gray-400 block">Select Duration</label>
-                                            <div className="flex flex-wrap gap-2">
+                                    {/* Dropdown to display treatment duration and treatment name */}
+                                    <div className="space-y-1.5">
+                                        <label className="text-[10px] font-bold uppercase tracking-wider text-gray-400 block">
+                                            Treatment Duration &amp; Package Option
+                                        </label>
+                                        <div className="relative">
+                                            <select
+                                                value={chosenDur}
+                                                onChange={(e) => setSelectedDetailsDuration(e.target.value)}
+                                                className="w-full appearance-none bg-gray-50 hover:bg-gray-100 text-xs sm:text-sm font-bold text-gray-900 py-3 pl-3.5 pr-9 rounded-2xl border border-gray-200/90 focus:outline-none cursor-pointer"
+                                            >
                                                 {opts.map((opt: any, oIdx: number) => {
-                                                    const isSelected = chosenDur === opt.duration;
                                                     const optPrice = parseInt(String(opt.price || '0').replace(/[^0-9]/g, '') || '0', 10);
                                                     const optDisc = discountRate > 0 ? Math.round(optPrice * (discountRate / 100)) : 0;
                                                     const optSub = optPrice - optDisc;
+                                                    const durStr = String(opt.duration).toUpperCase().includes('MIN') ? opt.duration : `${opt.duration} MINS`;
                                                     return (
-                                                        <button
-                                                            key={oIdx}
-                                                            type="button"
-                                                            onClick={() => setSelectedDetailsDuration(opt.duration)}
-                                                            className={`px-3 py-2 rounded-xl text-xs font-bold transition-all border flex items-center gap-2 cursor-pointer ${
-                                                                isSelected
-                                                                    ? 'bg-[#1D1D1F] text-white border-[#1D1D1F] shadow-xs'
-                                                                    : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
-                                                            }`}
-                                                        >
-                                                            <span>{String(opt.duration).toUpperCase().includes('MIN') ? opt.duration : `${opt.duration} MINS`}</span>
-                                                            <span className="text-[11px] opacity-80 font-normal">IDR {optSub.toLocaleString('en-US')}</span>
-                                                        </button>
+                                                        <option key={oIdx} value={opt.duration}>
+                                                            {durStr} · {pt.title} — IDR {optSub.toLocaleString('en-US')}
+                                                        </option>
                                                     );
                                                 })}
-                                            </div>
+                                            </select>
+                                            <ChevronDown size={15} className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500" />
                                         </div>
-                                    ) : (
-                                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-gray-100 text-gray-700 text-xs font-bold uppercase tracking-wider">
-                                            <Clock size={12} className="text-gray-500" />
-                                            <span>{String(firstOpt?.duration).toUpperCase().includes('MIN') ? firstOpt.duration : `${firstOpt?.duration} MINS`}</span>
-                                        </div>
-                                    )}
+                                    </div>
 
                                     {/* Description */}
                                     {descClean && (
                                         <div className="space-y-1">
                                             <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 block">Experience</span>
-                                            <p className="text-xs text-gray-600 leading-relaxed font-light">
+                                            <p className="text-xs sm:text-sm text-gray-600 leading-relaxed font-light">
                                                 {descClean}
                                             </p>
                                         </div>
                                     )}
 
-                                    {/* What's Included Ritual Breakdown */}
-                                    {whatsIncludedList.length > 0 && (
-                                        <div className="bg-gray-50 rounded-2xl p-4 border border-gray-200/80 space-y-2.5">
-                                            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500 block">
-                                                What's Included in this Ritual
-                                            </span>
-                                            <div className="space-y-2">
-                                                {whatsIncludedList.map((itemStr: string, idx: number) => (
-                                                    <div key={idx} className="flex items-start gap-2.5 text-xs text-gray-700">
-                                                        <div className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 mt-0.5">
-                                                            <Check size={10} strokeWidth={3} />
+                                    {/* Treatment Inclusions Dropdown / Accordion with Bold Title */}
+                                    {inclusions.length > 0 && (
+                                        <div className="space-y-2 pt-1">
+                                            <div className="flex items-center justify-between">
+                                                <h4 className="text-xs font-black uppercase tracking-wider text-gray-900 flex items-center gap-1.5">
+                                                    <span>Treatment Inclusions</span>
+                                                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                                                        {inclusions.length} Steps Included
+                                                    </span>
+                                                </h4>
+                                            </div>
+
+                                            {/* Step-by-Step Breakdown Table / Cards */}
+                                            <div className="rounded-2xl border border-gray-200/90 bg-gray-50/70 overflow-hidden divide-y divide-gray-100">
+                                                {inclusions.map((inc, i) => (
+                                                    <div
+                                                        key={i}
+                                                        className="flex items-center justify-between p-3 sm:p-3.5 hover:bg-white transition-colors gap-3"
+                                                    >
+                                                        <div className="flex items-center gap-2.5 min-w-0">
+                                                            <div className="w-6 h-6 rounded-lg bg-black text-white flex items-center justify-center font-bold text-[10px] shrink-0">
+                                                                {i + 1}
+                                                            </div>
+                                                            <span className="text-xs sm:text-sm font-bold text-gray-900 leading-snug">
+                                                                {inc.name}
+                                                            </span>
                                                         </div>
-                                                        <span className="leading-tight">{itemStr}</span>
+                                                        {inc.duration && (
+                                                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white border border-gray-200 text-gray-700 text-[10px] sm:text-xs font-bold uppercase tracking-wider shrink-0 shadow-xs">
+                                                                <Clock size={11} className="text-gray-400" />
+                                                                {inc.duration}
+                                                            </span>
+                                                        )}
                                                     </div>
                                                 ))}
                                             </div>
@@ -1826,16 +1930,16 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                     )}
                                 </div>
 
-                                {/* Modal Footer with Customer Rate & Book Treatment CTA */}
-                                <div className="pt-4 border-t border-gray-100 flex items-center justify-between gap-3 mt-auto">
-                                    <div>
-                                        <span className="text-[9px] font-bold uppercase tracking-wider text-gray-400 block">Customer Rate</span>
-                                        <div className="flex items-baseline gap-2">
-                                            <span className="text-base sm:text-lg font-bold text-gray-900">
+                                {/* Modal Footer with Customer Rate (Strictly One Line) & Book Treatment CTA */}
+                                <div className="pt-4 border-t border-gray-100 flex items-center justify-between gap-3 mt-auto shrink-0 bg-white">
+                                    <div className="shrink-0 min-w-0 pr-2">
+                                        <span className="text-[9px] font-bold uppercase tracking-wider text-gray-400 block mb-0.5">Customer Rate</span>
+                                        <div className="flex items-baseline gap-2 whitespace-nowrap">
+                                            <span className="text-base sm:text-xl font-black text-gray-900 whitespace-nowrap">
                                                 IDR {subtotalPrice.toLocaleString('en-US')}
                                             </span>
                                             {discountRate > 0 && (
-                                                <span className="text-xs text-gray-400 line-through">
+                                                <span className="text-xs text-gray-400 line-through whitespace-nowrap">
                                                     IDR {basePublishedPrice.toLocaleString('en-US')}
                                                 </span>
                                             )}
@@ -1845,10 +1949,10 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                     <button
                                         type="button"
                                         onClick={handleGoToBreakdown}
-                                        className="py-3.5 px-6 rounded-full bg-[#1D1D1F] hover:bg-black text-white text-xs font-bold transition-all shadow-md active:scale-95 flex items-center gap-2 cursor-pointer"
+                                        className="py-3.5 px-6 sm:px-7 rounded-full bg-[#1D1D1F] hover:bg-black text-white text-xs sm:text-sm font-bold transition-all shadow-md active:scale-95 flex items-center gap-2 shrink-0 cursor-pointer whitespace-nowrap"
                                     >
                                         <span>Book Treatment</span>
-                                        <ArrowRight size={14} />
+                                        <ArrowRight size={15} />
                                     </button>
                                 </div>
                             </motion.div>

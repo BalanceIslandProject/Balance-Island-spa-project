@@ -14,6 +14,15 @@ export type CartItem = {
     campaignTitle?: string;
     tripOffer?: string;
     discountPercentage?: number;
+    isPartner?: boolean;
+    partnerName?: string;
+    partnerLocation?: string;
+    partnerLogoUrl?: string;
+    publishedPrice?: number;
+    discountAmount?: number;
+    subtotal?: number;
+    taxAmount?: number;
+    taxPercentage?: number;
 };
 
 export type BookingHistory = {
