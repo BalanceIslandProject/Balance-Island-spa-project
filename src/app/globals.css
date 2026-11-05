@@ -42,6 +42,17 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Campaign Ticket Cutout Curves - Solid White notch cutout */
+.ticket-cutout {
+  background-color: #ffffff !important;
+  background: #ffffff !important;
+  border: none !important;
+  box-shadow: none !important;
+  opacity: 1 !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
 h1,
 h2,
 h3,

@@ -26,6 +26,26 @@ export type Treatment = {
 
 export type Therapist = { id: string; name: string; bio: string; image_url: string; rating: number; is_active: boolean; brand: string; };
 
+export type PartnerTreatment = {
+    id: string;
+    brand: string;
+    partner_name: string;
+    partner_logo_url?: string | null;
+    partner_slug?: string | null;
+    partner_location?: string | null;
+    partner_whatsapp?: string | null;
+    title: string;
+    category: string;
+    desc?: string | null;
+    image_url?: string | null;
+    options: TreatmentOption[];
+    benefits?: string[] | null;
+    order?: number;
+    is_published?: boolean;
+    created_at?: string;
+    updated_at?: string;
+};
+
 export type SelectedCampaignTreatment = {
     treatmentId: string;
     durations: string[]; // which durations are discounted
@@ -192,6 +212,8 @@ type SpaContextType = {
     setSiteBrandFilter: (brand: string) => void;
     therapists: Therapist[];
     setTherapists: React.Dispatch<React.SetStateAction<Therapist[]>>;
+    partnerTreatments: PartnerTreatment[];
+    setPartnerTreatments: React.Dispatch<React.SetStateAction<PartnerTreatment[]>>;
 };
 
 
@@ -253,6 +275,7 @@ export type SpaInitialData = {
     campaigns?: Campaign[];
     products?: Product[];
     therapists?: Therapist[];
+    partnerTreatments?: PartnerTreatment[];
 };
 
 const SpaContext = createContext<SpaContextType | undefined>(undefined);
@@ -318,6 +341,10 @@ export function SpaProvider({ children, brand, initialData }: { children: ReactN
     const [siteBrandFilter, setSiteBrandFilter] = useState<string>(brand || process.env.NEXT_PUBLIC_SITE_BRAND || 'elexoir');
     const [therapists, setTherapists] = useState<Therapist[]>(() => {
         if (initialData?.therapists && initialData.therapists.length > 0) return initialData.therapists;
+        return [];
+    });
+    const [partnerTreatments, setPartnerTreatments] = useState<PartnerTreatment[]>(() => {
+        if (initialData?.partnerTreatments && initialData.partnerTreatments.length > 0) return initialData.partnerTreatments;
         return [];
     });
 
@@ -398,7 +425,8 @@ export function SpaProvider({ children, brand, initialData }: { children: ReactN
             isLoaded,
             siteBrandFilter,
             setSiteBrandFilter,
-            therapists, setTherapists
+            therapists, setTherapists,
+            partnerTreatments, setPartnerTreatments
         }}>
             {children}
         </SpaContext.Provider>

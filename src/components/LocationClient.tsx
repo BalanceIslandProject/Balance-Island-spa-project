@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, Search, Heart, Cloud, Droplet, User, Flame, Clock, ArrowRight, X, ShoppingBag, Plus, Minus, MessageCircle, ChevronLeft, ChevronDown, Bitcoin, CheckCircle2, Copy, Calendar, MapPin, Tag, DoorOpen, Trash2, Info, Check, Phone } from 'lucide-react';
+import { Bell, Search, Heart, Cloud, Droplet, User, Flame, Clock, ArrowRight, X, ShoppingBag, Plus, Minus, MessageCircle, ChevronLeft, ChevronDown, Bitcoin, CheckCircle2, Copy, Calendar, MapPin, Tag, DoorOpen, Trash2, Info, Check, Phone, Building2 } from 'lucide-react';
 import Link from 'next/link';
 import { saveBookingToSupabase } from '@/lib/bookingUtils';
 import { calculateCartTotal, getItemMultiplier } from '@/lib/pricingUtils';
@@ -29,7 +29,7 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
     const { saveDraft, confirmBooking } = useCart();
     const bookingIdRef = React.useRef<string>(Math.random().toString(36).substring(2, 8).toUpperCase());
 
-    const { treatments, campaign, products, isLoaded, siteBrandFilter } = useSpa();
+    const { treatments, campaign, products, isLoaded, siteBrandFilter, partnerTreatments } = useSpa();
 
     const [activeCategory, setActiveCategory] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
@@ -337,13 +337,13 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                         {/* Divider with Cutouts */}
                         <div className="relative w-0 flex flex-col justify-between items-center z-20">
                             {/* Top Cutout */}
-                            <div className="ticket-cutout absolute top-0 -translate-x-1/2 -translate-y-1/2 w-6 h-6 md:w-8 md:h-8 rounded-full pointer-events-none" style={{ backgroundColor: '#ffffff' }}></div>
+                            <div className="ticket-cutout absolute top-0 -translate-x-1/2 -translate-y-1/2 w-6 h-6 md:w-8 md:h-8 rounded-full pointer-events-none z-30" style={{ backgroundColor: '#ffffff', background: '#ffffff', opacity: 1 }}></div>
                             
                             {/* Vertical Dashed Line */}
                             <div className="absolute top-0 bottom-0 -translate-x-1/2 border-l-[2px] border-dashed border-gray-300 z-10"></div>
 
                             {/* Bottom Cutout */}
-                            <div className="ticket-cutout absolute bottom-0 -translate-x-1/2 translate-y-1/2 w-6 h-6 md:w-8 md:h-8 rounded-full pointer-events-none" style={{ backgroundColor: '#ffffff' }}></div>
+                            <div className="ticket-cutout absolute bottom-0 -translate-x-1/2 translate-y-1/2 w-6 h-6 md:w-8 md:h-8 rounded-full pointer-events-none z-30" style={{ backgroundColor: '#ffffff', background: '#ffffff', opacity: 1 }}></div>
                         </div>
 
                         {/* Right Section (White Ticket Stub with Date Details) */}
@@ -476,6 +476,162 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                         </AnimatePresence>
                     </div>
                 </div>
+
+                {/* Partner Spa Treatments (Rendered ONLY if real items exist in database) */}
+                {partnerTreatments && partnerTreatments.length > 0 && (
+                    <section data-reveal className="mb-14 relative z-20 scroll-reveal">
+                        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-6 gap-2">
+                            <div>
+                                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-50 border border-blue-200/80 text-[#1d4ed8] text-[10px] font-bold tracking-widest uppercase mb-1.5 shadow-xs">
+                                    <Building2 size={11} className="text-[#2563eb]" />
+                                    <span>Verified Partner Spas</span>
+                                </div>
+                                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">Partner Spa Treatments</h3>
+                                <p className="text-xs text-gray-500 font-light mt-0.5">Premier partner spas booked directly with verified rates</p>
+                            </div>
+                            <span className="text-xs text-gray-400 font-medium shrink-0 self-start sm:self-auto">
+                                {partnerTreatments.length} {partnerTreatments.length === 1 ? 'treatment' : 'treatments'} available
+                            </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                            {partnerTreatments.map((pt) => {
+                                const opts = Array.isArray(pt.options) && pt.options.length > 0 ? pt.options : [{ duration: '60', price: '450,000' }];
+                                const firstOpt = opts[0];
+                                const priceNum = parseInt(String(firstOpt?.price || '0').replace(/[^0-9]/g, '') || '0', 10);
+                                const isCouple = ['couple', 'honeymoon'].some(k => pt.title.toLowerCase().includes(k));
+
+                                const handleBookPartnerTreatment = (opt = firstOpt) => {
+                                    const parsedPrice = parseInt(String(opt?.price || '0').replace(/[^0-9]/g, '') || '0', 10);
+                                    const durLabel = String(opt?.duration || '60').toUpperCase().includes('MIN') ? opt.duration : `${opt.duration} MINS`;
+                                    setCartItems([{
+                                        id: Date.now().toString() + Math.random().toString(36).substring(2, 7),
+                                        treatmentId: pt.id,
+                                        title: `${pt.title} · ${pt.partner_name}`,
+                                        duration: durLabel,
+                                        price: parsedPrice,
+                                        guests: isCouple ? 2 : 1,
+                                        isPartner: true,
+                                        partnerName: pt.partner_name,
+                                        partnerLocation: pt.partner_location,
+                                        partnerLogoUrl: pt.partner_logo_url
+                                    }]);
+                                    setIsBookingModalOpen(true);
+                                };
+
+                                return (
+                                    <div
+                                        key={pt.id}
+                                        className="group relative rounded-[28px] border border-gray-200/90 bg-white overflow-hidden shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between"
+                                    >
+                                        <div>
+                                            {/* Treatment Image Banner */}
+                                            <div className="relative h-44 sm:h-48 w-full bg-gray-100 overflow-hidden">
+                                                {pt.image_url ? (
+                                                    <img
+                                                        src={pt.image_url}
+                                                        alt={pt.title}
+                                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                                        loading="lazy"
+                                                    />
+                                                ) : (
+                                                    <div className="w-full h-full flex flex-col items-center justify-center bg-linear-to-br from-gray-100 to-gray-200 text-gray-400 gap-2">
+                                                        <Building2 size={32} strokeWidth={1.5} className="text-gray-300" />
+                                                        <span className="text-[11px] font-semibold tracking-wider uppercase text-gray-400">{pt.partner_name}</span>
+                                                    </div>
+                                                )}
+
+                                                {/* Category Floating Pill */}
+                                                <div className="absolute top-3 left-3 z-10">
+                                                    <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-black/75 backdrop-blur-md text-white text-[9px] font-bold tracking-wider uppercase">
+                                                        {pt.category || 'Massage'}
+                                                    </span>
+                                                </div>
+
+                                                {/* Location Pill */}
+                                                {pt.partner_location && (
+                                                    <div className="absolute top-3 right-3 z-10">
+                                                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-md text-gray-800 text-[10px] font-semibold border border-white/40 shadow-xs">
+                                                            <MapPin size={10} className="text-gray-600" />
+                                                            <span>{pt.partner_location}</span>
+                                                        </span>
+                                                    </div>
+                                                )}
+
+                                                {/* Partner Identity Bar overlay at bottom of photo */}
+                                                <div className="absolute bottom-0 inset-x-0 p-3 bg-linear-to-t from-black/80 via-black/40 to-transparent flex items-center justify-between z-10">
+                                                    <div className="flex items-center gap-2">
+                                                        {pt.partner_logo_url ? (
+                                                            <img
+                                                                src={pt.partner_logo_url}
+                                                                alt={pt.partner_name}
+                                                                className="w-7 h-7 rounded-full object-cover border border-white/60 bg-white shrink-0 shadow-xs"
+                                                            />
+                                                        ) : (
+                                                            <div className="w-7 h-7 rounded-full bg-white/90 text-gray-900 flex items-center justify-center font-bold text-[10px] shrink-0">
+                                                                {pt.partner_name.charAt(0)}
+                                                            </div>
+                                                        )}
+                                                        <span className="text-xs font-bold text-white tracking-wide truncate max-w-[180px] drop-shadow-xs">
+                                                            {pt.partner_name}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Content Body */}
+                                            <div className="p-4 sm:p-5">
+                                                <h4 className="text-base sm:text-lg font-bold text-gray-900 leading-snug tracking-tight mb-1.5 group-hover:text-black transition-colors">
+                                                    {pt.title}
+                                                </h4>
+
+                                                {pt.desc && (
+                                                    <p className="text-xs text-gray-500 font-light line-clamp-2 leading-relaxed mb-4">
+                                                        {pt.desc}
+                                                    </p>
+                                                )}
+
+                                                {/* Duration selector pill */}
+                                                <div className="flex flex-wrap gap-1.5 mb-2">
+                                                    {opts.map((opt, oIdx) => (
+                                                        <span
+                                                            key={oIdx}
+                                                            className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-gray-100 text-gray-700 text-[10px] font-bold uppercase tracking-wider"
+                                                        >
+                                                            <Clock size={10} className="text-gray-500" />
+                                                            {String(opt.duration).toUpperCase().includes('MIN') ? opt.duration : `${opt.duration} MINS`}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Bottom Price & Booking Action */}
+                                        <div className="p-4 sm:p-5 pt-0 mt-auto">
+                                            <div className="pt-3 border-t border-gray-100 flex items-center justify-between gap-3">
+                                                <div>
+                                                    <span className="text-[9px] font-bold uppercase tracking-wider text-gray-400 block">Starts from</span>
+                                                    <span className="text-base font-bold text-gray-900">
+                                                        IDR {priceNum.toLocaleString('en-US')}
+                                                    </span>
+                                                </div>
+
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleBookPartnerTreatment()}
+                                                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#1D1D1F] hover:bg-black text-white text-xs font-bold transition-all shadow-xs hover:shadow-sm active:scale-95 cursor-pointer"
+                                                >
+                                                    <span>Book Treatment</span>
+                                                    <ArrowRight size={13} />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </section>
+                )}
 
                 {/* Popular Treatments Scroll */}
                 <section data-reveal className="mb-24 relative group scroll-reveal">
@@ -739,11 +895,11 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                                         </div>
                                                     </div>
 
-                                                    {/* Divider with Cutouts - Curves Kept */}
+                                                    {/* Divider with Cutouts - Real Ticket Curves */}
                                                     <div className="relative w-0 flex flex-col justify-between items-center z-20">
-                                                        <div className="ticket-cutout absolute top-0 -translate-x-1/2 -translate-y-1/2 w-6 h-6 md:w-8 md:h-8 rounded-full pointer-events-none" style={{ backgroundColor: '#ffffff' }}></div>
+                                                        <div className="ticket-cutout absolute top-0 -translate-x-1/2 -translate-y-1/2 w-6 h-6 md:w-8 md:h-8 rounded-full pointer-events-none z-30" style={{ backgroundColor: '#ffffff', background: '#ffffff', opacity: 1 }}></div>
                                                         <div className="absolute top-0 bottom-0 -translate-x-1/2 border-l-[2px] border-dashed border-gray-200 z-10"></div>
-                                                        <div className="ticket-cutout absolute bottom-0 -translate-x-1/2 translate-y-1/2 w-6 h-6 md:w-8 md:h-8 rounded-full pointer-events-none" style={{ backgroundColor: '#ffffff' }}></div>
+                                                        <div className="ticket-cutout absolute bottom-0 -translate-x-1/2 translate-y-1/2 w-6 h-6 md:w-8 md:h-8 rounded-full pointer-events-none z-30" style={{ backgroundColor: '#ffffff', background: '#ffffff', opacity: 1 }}></div>
                                                     </div>
 
                                                     {/* Right Section (White Ticket Stub) */}

@@ -8,11 +8,12 @@ export async function GET(request: Request) {
     const brand = searchParams.get('brand') || 'elexoir';
 
     try {
-        let [treatmentsRes, productsRes, campaignsRes, therapistsRes] = await Promise.all([
+        let [treatmentsRes, productsRes, campaignsRes, therapistsRes, partnerTreatmentsRes] = await Promise.all([
             supabase.from('treatments').select('*').eq('is_published', true).eq('brand', brand).order('created_at', { ascending: false }),
             supabase.from('products').select('*').eq('is_published', true).eq('brand', brand).order('created_at', { ascending: false }),
             supabase.from('campaigns').select('*').eq('is_published', true).eq('brand', brand).order('order', { ascending: true }).order('updated_at', { ascending: false }),
-            supabase.from('therapists').select('*').eq('is_active', true).eq('brand', brand).order('created_at', { ascending: false })
+            supabase.from('therapists').select('*').eq('is_active', true).eq('brand', brand).order('created_at', { ascending: false }),
+            supabase.from('partner_treatments').select('*').eq('is_published', true).eq('brand', brand).order('order', { ascending: true })
         ]);
 
         // Fallback to elexoir if current brand has no treatments
@@ -31,7 +32,8 @@ export async function GET(request: Request) {
             treatments: treatmentsRes.data || [],
             products: productsRes.data || [],
             campaigns: campaignsRes.data || [],
-            therapists: therapistsRes.data || []
+            therapists: therapistsRes.data || [],
+            partnerTreatments: partnerTreatmentsRes.data || []
         }, {
             headers: {
                 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=30',

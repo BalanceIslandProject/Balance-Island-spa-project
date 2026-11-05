@@ -13,6 +13,7 @@ import TherapickReportsView from './TherapickReportsView';
 import TherapickTherapistsView from './TherapickTherapistsView';
 import TherapickServicesView from './TherapickServicesView';
 import TherapickCampaignsView from './TherapickCampaignsView';
+import TherapickPartnerSpasView from './TherapickPartnerSpasView';
 import TherapickCustomersView from './TherapickCustomersView';
 import TherapickSettingsView from './TherapickSettingsView';
 import TherapickRevenueProfitView from './TherapickRevenueProfitView';
@@ -61,6 +62,9 @@ export default function TherapickMasterView({ forcedTab }: TherapickMasterViewPr
       case 'campaign':
       case 'campaigns':
         return <TherapickCampaignsView />;
+      case 'partner-spas':
+      case 'partner-treatments':
+        return <TherapickPartnerSpasView />;
       case 'customers':
         return <TherapickCustomersView />;
       case 'revenue':
