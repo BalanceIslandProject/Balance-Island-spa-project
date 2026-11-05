@@ -14,6 +14,7 @@ import { useSpa, SpaPartner, PartnerTreatment } from '@/context/SpaContext';
 interface DurationOption {
   duration: string;
   price: string;
+  net_price?: string;
 }
 
 const CATEGORIES = ['Massage', 'Package', 'Facial', 'Body Scrub', 'Wellness', 'Hair Spa'];
@@ -73,8 +74,8 @@ export default function TherapickPartnerSpasView() {
     order: 1,
     is_published: true,
     options: [
-      { duration: '60', price: '450,000' },
-      { duration: '90', price: '600,000' }
+      { duration: '60', price: '450,000', net_price: '' },
+      { duration: '90', price: '600,000', net_price: '' }
     ] as DurationOption[]
   });
 
@@ -425,8 +426,8 @@ export default function TherapickPartnerSpasView() {
       order: (treatments.length || 0) + 1,
       is_published: true,
       options: [
-        { duration: '60', price: '450,000' },
-        { duration: '90', price: '600,000' }
+        { duration: '60', price: '450,000', net_price: '' },
+        { duration: '90', price: '600,000', net_price: '' }
       ]
     });
     setIsTreatmentModalOpen(true);
@@ -444,8 +445,12 @@ export default function TherapickPartnerSpasView() {
       order: item.order || 1,
       is_published: item.is_published !== false,
       options: item.options && item.options.length > 0
-        ? item.options.map(o => ({ duration: o.duration, price: o.price }))
-        : [{ duration: '60', price: '450,000' }]
+        ? item.options.map(o => ({
+            duration: o.duration,
+            price: o.price,
+            net_price: (o as any).net_price ? String((o as any).net_price) : ''
+          }))
+        : [{ duration: '60', price: '450,000', net_price: '' }]
     });
     setIsTreatmentModalOpen(true);
   };
@@ -556,7 +561,7 @@ export default function TherapickPartnerSpasView() {
   const addOptionRow = () => {
     setTreatmentForm(prev => ({
       ...prev,
-      options: [...prev.options, { duration: '120', price: '750,000' }]
+      options: [...prev.options, { duration: '120', price: '750,000', net_price: '' }]
     }));
   };
 
@@ -567,7 +572,7 @@ export default function TherapickPartnerSpasView() {
     }));
   };
 
-  const updateOptionRow = (index: number, field: 'duration' | 'price', val: string) => {
+  const updateOptionRow = (index: number, field: 'duration' | 'price' | 'net_price', val: string) => {
     setTreatmentForm(prev => ({
       ...prev,
       options: prev.options.map((opt, i) => i === index ? { ...opt, [field]: val } : opt)
@@ -709,9 +714,60 @@ export default function TherapickPartnerSpasView() {
     return filteredCalendarBookings.filter(b => getBookingDate(b).startsWith(prefix));
   }, [filteredCalendarBookings, calendarYear, calendarMonthIndex]);
 
-  const monthRevenue = useMemo(() => {
-    return currentMonthBookings.reduce((sum, b) => sum + Number(b.revenue || b.total_price || 0), 0);
-  }, [currentMonthBookings]);
+  // Helper to compute revenue, net cost, and profit for any partner booking
+  const getBookingFinancials = useCallback((b: any) => {
+    const totalRev = Number(b.revenue || b.total_price || 0);
+    const item = Array.isArray(b.items) && b.items.length > 0 ? b.items[0] : null;
+    const pax = Number(item?.guests || b.pax || 1);
+
+    // 1. Direct net_price on booking item
+    let netPerPerson = 0;
+    if (item?.net_price) {
+      netPerPerson = parseInt(String(item.net_price).replace(/[^0-9]/g, '') || '0', 10);
+    } else {
+      // 2. Lookup in treatments by treatmentId or title
+      const cleanTitle = (item?.title || b.treatment_name || '').split('·')[0].trim().toLowerCase();
+      const matched = treatments.find(t => 
+        (item?.treatmentId && t.id === item.treatmentId) ||
+        t.title.toLowerCase().trim() === cleanTitle ||
+        cleanTitle.includes(t.title.toLowerCase().trim())
+      );
+      if (matched && Array.isArray(matched.options) && matched.options.length > 0) {
+        const durStr = String(item?.duration || '').replace(/[^0-9]/g, '');
+        const matchedOpt = matched.options.find((o: any) => String(o.duration).replace(/[^0-9]/g, '') === durStr) || matched.options[0];
+        if (matchedOpt && (matchedOpt as any).net_price) {
+          netPerPerson = parseInt(String((matchedOpt as any).net_price).replace(/[^0-9]/g, '') || '0', 10);
+        }
+      }
+    }
+
+    const totalNetCost = netPerPerson > 0 ? (netPerPerson * pax) : 0;
+    const profit = (totalRev > 0 && totalNetCost > 0) ? (totalRev - totalNetCost) : 0;
+
+    return {
+      totalRev,
+      pax,
+      netPerPerson,
+      totalNetCost,
+      profit
+    };
+  }, [treatments]);
+
+  // Aggregate financials for current month
+  const monthStats = useMemo(() => {
+    let rev = 0;
+    let net = 0;
+    let prof = 0;
+
+    for (const b of currentMonthBookings) {
+      const fin = getBookingFinancials(b);
+      rev += fin.totalRev;
+      net += fin.totalNetCost;
+      prof += fin.profit;
+    }
+
+    return { rev, net, prof };
+  }, [currentMonthBookings, getBookingFinancials]);
 
   return (
     <div className="space-y-6">
@@ -1234,10 +1290,22 @@ export default function TherapickPartnerSpasView() {
                           )}
                         </div>
                         {taxRate > 0 && (
-                          <span className="text-[9px] text-[var(--fitlo-muted)] font-medium">
+                          <span className="text-[9px] text-[var(--fitlo-muted)] font-medium block">
                             incl. {taxRate}% tax
                           </span>
                         )}
+                        {(() => {
+                          const optNet = (firstOpt as any).net_price ? parseInt(String((firstOpt as any).net_price).replace(/[^0-9]/g, '') || '0', 10) : 0;
+                          const cardProfit = optNet > 0 ? (finalWithTax - optNet) : 0;
+                          if (!optNet) return null;
+                          return (
+                            <div className="flex items-center gap-1.5 text-[10px] mt-1 pt-1 border-t border-[var(--fitlo-line)]">
+                              <span className="text-amber-700 font-medium">Net: IDR {optNet.toLocaleString('en-US')}</span>
+                              <span className="text-[var(--fitlo-muted)]">·</span>
+                              <span className="text-emerald-700 font-bold">Profit: +IDR {cardProfit.toLocaleString('en-US')}</span>
+                            </div>
+                          );
+                        })()}
                       </div>
 
                       <div className="flex items-center gap-1.5">
@@ -1273,7 +1341,7 @@ export default function TherapickPartnerSpasView() {
         <div className="space-y-6 animate-in fade-in duration-150">
 
           {/* Month Stats Row */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
             <div className="card p-4 flex items-center justify-between">
               <div>
                 <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--fitlo-muted)] block">Month Bookings</span>
@@ -1281,32 +1349,47 @@ export default function TherapickPartnerSpasView() {
                   {currentMonthBookings.length} {currentMonthBookings.length === 1 ? 'Booking' : 'Bookings'}
                 </span>
               </div>
-              <div className="w-10 h-10 rounded-xl bg-[var(--fitlo-surface)] text-[var(--fitlo-ink)] flex items-center justify-center font-bold">
+              <div className="w-10 h-10 rounded-xl bg-[var(--fitlo-surface)] text-[var(--fitlo-ink)] flex items-center justify-center font-bold shrink-0">
                 <CalendarIcon size={18} />
               </div>
             </div>
 
             <div className="card p-4 flex items-center justify-between">
               <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--fitlo-muted)] block">Monthly Revenue</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--fitlo-muted)] block">Gross Revenue</span>
                 <span className="text-xl font-bold text-[var(--fitlo-ink)] mt-0.5 block">
-                  IDR {monthRevenue.toLocaleString('en-US')}
+                  IDR {monthStats.rev.toLocaleString('en-US')}
                 </span>
               </div>
-              <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
+              <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold shrink-0">
                 <DollarSign size={18} />
               </div>
             </div>
 
             <div className="card p-4 flex items-center justify-between">
               <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--fitlo-muted)] block">Active Partner Spas</span>
-                <span className="text-xl font-bold text-[var(--fitlo-ink)] mt-0.5 block">
-                  {partners.filter(p => p.is_active).length} Partners
+                <span className="text-[10px] font-bold uppercase tracking-wider text-amber-700 block">Partner Net Cost</span>
+                <span className="text-xl font-bold text-amber-800 mt-0.5 block">
+                  {monthStats.net > 0 ? `IDR ${monthStats.net.toLocaleString('en-US')}` : 'IDR 0'}
                 </span>
               </div>
-              <div className="w-10 h-10 rounded-xl bg-[color-mix(in_srgb,var(--fitlo-accent)_12%,transparent)] text-[var(--fitlo-accent)] flex items-center justify-center font-bold">
-                <Building2 size={18} />
+              <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold shrink-0">
+                <Receipt size={18} />
+              </div>
+            </div>
+
+            <div className="card p-4 flex items-center justify-between bg-emerald-50/50 border-emerald-200">
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 block flex items-center gap-1">
+                  <Sparkles size={11} className="text-emerald-600" />
+                  Estimated Net Profit
+                </span>
+                <span className="text-xl font-black text-emerald-700 mt-0.5 block">
+                  {monthStats.prof > 0 ? `+IDR ${monthStats.prof.toLocaleString('en-US')}` : `IDR 0`}
+                </span>
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold shrink-0">
+                <DollarSign size={18} />
               </div>
             </div>
           </div>
@@ -1503,6 +1586,7 @@ export default function TherapickPartnerSpasView() {
                   const partnerName = item.partnerName || b.venue || 'Partner Spa';
                   const cleanPhone = (b.guest_whatsapp || '').replace(/[^0-9]/g, '');
                   const invoiceUrl = `/invoice/${b.reference_number || b.id}`;
+                  const fin = getBookingFinancials(b);
 
                   return (
                     <div
@@ -1587,16 +1671,32 @@ export default function TherapickPartnerSpasView() {
                         </div>
                       </div>
 
-                      {/* Price & Actions */}
-                      <div className="pt-2 border-t border-[var(--fitlo-line)] flex items-center justify-between gap-3">
+                      {/* Price & Actions with Profit Calculation */}
+                      <div className="pt-3 border-t border-[var(--fitlo-line)] flex items-center justify-between gap-3 flex-wrap">
                         <div>
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--fitlo-muted)] block">Total Amount</span>
-                          <span className="font-serif text-sm font-bold text-[var(--fitlo-ink)]">
-                            IDR {Number(b.revenue || b.total_price || 0).toLocaleString('en-US')}
-                          </span>
+                          <div className="flex items-baseline gap-1.5">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--fitlo-muted)]">Customer:</span>
+                            <span className="font-serif text-sm font-bold text-[var(--fitlo-ink)]">
+                              IDR {fin.totalRev.toLocaleString('en-US')}
+                            </span>
+                          </div>
+                          {fin.netPerPerson > 0 ? (
+                            <div className="flex items-center gap-2 mt-1 flex-wrap">
+                              <span className="text-[10px] text-amber-800 font-semibold bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                                Net: IDR {fin.totalNetCost.toLocaleString('en-US')} ({fin.pax} pax)
+                              </span>
+                              <span className="text-[10px] font-black text-emerald-800 bg-emerald-100/80 px-2 py-0.5 rounded border border-emerald-300">
+                                Profit: +IDR {fin.profit.toLocaleString('en-US')}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-[9px] text-[var(--fitlo-muted)] italic block mt-0.5">
+                              Net price not set in treatment
+                            </span>
+                          )}
                         </div>
 
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 shrink-0">
                           <a
                             href={invoiceUrl}
                             target="_blank"
@@ -2015,13 +2115,18 @@ export default function TherapickPartnerSpasView() {
               {/* Duration & Price Options */}
               <div className="space-y-2 pt-1">
                 <div className="flex items-center justify-between">
-                  <label className="block text-xs font-bold uppercase tracking-wider text-[var(--fitlo-ink)]">
-                    Duration &amp; Base Price (IDR)
-                  </label>
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-[var(--fitlo-ink)]">
+                      Duration, Base Price &amp; Net Cost (IDR)
+                    </label>
+                    <span className="text-[10px] text-[var(--fitlo-muted)]">
+                      Net price is strictly internal for profit calculations and will not be displayed on the website.
+                    </span>
+                  </div>
                   <button
                     type="button"
                     onClick={addOptionRow}
-                    className="text-xs font-bold text-[var(--fitlo-accent)] hover:underline flex items-center gap-1"
+                    className="text-xs font-bold text-[var(--fitlo-accent)] hover:underline flex items-center gap-1 shrink-0"
                   >
                     <Plus size={13} />
                     <span>Add Duration</span>
@@ -2031,15 +2136,18 @@ export default function TherapickPartnerSpasView() {
                 <div className="space-y-2">
                   {treatmentForm.options.map((opt, idx) => {
                     const basePriceNum = parseInt(String(opt.price).replace(/[^0-9]/g, '') || '0', 10);
+                    const netPriceNum = parseInt(String(opt.net_price || '').replace(/[^0-9]/g, '') || '0', 10);
                     const partnerDiscount = Number(modalSelectedPartner?.discount_percentage) || 0;
                     const partnerTax = Number(modalSelectedPartner?.tax_percentage) || 0;
                     const discounted = partnerDiscount > 0 ? Math.round(basePriceNum * (1 - partnerDiscount / 100)) : basePriceNum;
                     const finalCustomerPay = partnerTax > 0 ? Math.round(discounted * (1 + partnerTax / 100)) : discounted;
+                    const estProfit = finalCustomerPay - netPriceNum;
 
                     return (
-                      <div key={idx} className="p-2.5 rounded-xl bg-[var(--fitlo-surface)] border border-[var(--fitlo-line)] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        <div className="flex items-center gap-2 flex-1">
-                          <div className="w-28 shrink-0">
+                      <div key={idx} className="p-3 rounded-xl bg-[var(--fitlo-surface)] border border-[var(--fitlo-line)] flex flex-col md:flex-row md:items-center justify-between gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 flex-1">
+                          {/* Duration in Mins */}
+                          <div>
                             <input
                               type="text"
                               required
@@ -2051,7 +2159,8 @@ export default function TherapickPartnerSpasView() {
                             <span className="text-[9px] text-[var(--fitlo-muted)] block text-center mt-0.5">Mins</span>
                           </div>
 
-                          <div className="flex-1">
+                          {/* Base Price (Customer Published) */}
+                          <div>
                             <input
                               type="text"
                               required
@@ -2060,18 +2169,51 @@ export default function TherapickPartnerSpasView() {
                               onChange={e => updateOptionRow(idx, 'price', e.target.value)}
                               className="fitlo-input w-full text-xs font-bold"
                             />
-                            <span className="text-[9px] text-[var(--fitlo-muted)] block mt-0.5">Base IDR</span>
+                            <span className="text-[9px] text-[var(--fitlo-muted)] block mt-0.5">Base IDR (Published)</span>
+                          </div>
+
+                          {/* Net Price Per Person (Internal Cost) */}
+                          <div>
+                            <input
+                              type="text"
+                              placeholder="e.g. 300,000"
+                              value={opt.net_price || ''}
+                              onChange={e => updateOptionRow(idx, 'net_price', e.target.value)}
+                              className="fitlo-input w-full text-xs font-bold border-amber-300 bg-amber-50/40 text-amber-900 focus:border-amber-500"
+                            />
+                            <span className="text-[9px] text-amber-700 font-semibold block mt-0.5 flex items-center justify-between">
+                              <span>Net IDR / person</span>
+                              <span className="text-[8px] text-[var(--fitlo-muted)]">(internal)</span>
+                            </span>
                           </div>
                         </div>
 
                         {/* Live calculation box */}
-                        <div className="sm:w-48 text-right px-2 border-t sm:border-t-0 sm:border-l border-[var(--fitlo-line)] pt-2 sm:pt-0">
-                          <span className="text-[9px] uppercase font-bold tracking-wider text-[var(--fitlo-muted)] block">Customer Pays</span>
-                          <span className="text-xs font-black text-emerald-600 block">
-                            IDR {finalCustomerPay.toLocaleString('en-US')}
-                          </span>
+                        <div className="md:w-52 text-right px-2.5 border-t md:border-t-0 md:border-l border-[var(--fitlo-line)] pt-2 md:pt-0 shrink-0">
+                          <div className="flex justify-between items-baseline gap-2">
+                            <span className="text-[9px] uppercase font-bold tracking-wider text-[var(--fitlo-muted)]">Customer:</span>
+                            <span className="text-xs font-black text-emerald-600">
+                              IDR {finalCustomerPay.toLocaleString('en-US')}
+                            </span>
+                          </div>
+                          {netPriceNum > 0 && (
+                            <div className="flex justify-between items-baseline gap-2 mt-0.5">
+                              <span className="text-[9px] uppercase font-bold tracking-wider text-amber-700">Net Cost:</span>
+                              <span className="text-[11px] font-bold text-amber-800">
+                                IDR {netPriceNum.toLocaleString('en-US')}
+                              </span>
+                            </div>
+                          )}
+                          {netPriceNum > 0 && (
+                            <div className="flex justify-between items-baseline gap-2 border-t border-[var(--fitlo-line)] pt-0.5 mt-0.5">
+                              <span className="text-[9px] uppercase font-bold tracking-wider text-[var(--fitlo-ink)]">Est. Profit:</span>
+                              <span className={`text-[11px] font-black ${estProfit >= 0 ? 'text-emerald-700' : 'text-rose-600'}`}>
+                                {estProfit >= 0 ? '+' : ''}IDR {estProfit.toLocaleString('en-US')}
+                              </span>
+                            </div>
+                          )}
                           {(partnerDiscount > 0 || partnerTax > 0) && (
-                            <span className="text-[9px] text-[var(--fitlo-muted)] block">
+                            <span className="text-[8px] text-[var(--fitlo-muted)] block mt-0.5">
                               {partnerDiscount > 0 ? `-${partnerDiscount}% off` : ''} {partnerTax > 0 ? `+${partnerTax}% tax` : ''}
                             </span>
                           )}
@@ -2081,7 +2223,7 @@ export default function TherapickPartnerSpasView() {
                           <button
                             type="button"
                             onClick={() => removeOptionRow(idx)}
-                            className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 self-end sm:self-center"
+                            className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 self-end md:self-center shrink-0"
                             title="Remove duration"
                           >
                             <Trash2 size={14} />

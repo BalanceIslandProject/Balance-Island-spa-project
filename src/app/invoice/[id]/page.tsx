@@ -230,11 +230,12 @@ function InvoicePage() {
                 @media print {
                     @page {
                         size: A4 portrait;
-                        margin: 8mm 12mm;
+                        margin: 12mm 15mm;
                     }
                     html, body {
                         background: #ffffff !important;
-                        color: #000000 !important;
+                        background-color: #ffffff !important;
+                        color: #111827 !important;
                         margin: 0 !important;
                         padding: 0 !important;
                         font-size: 11px !important;
@@ -247,36 +248,42 @@ function InvoicePage() {
                     .invoice-container {
                         padding: 0 !important;
                         margin: 0 auto !important;
-                        background: transparent !important;
+                        background: #ffffff !important;
+                        background-color: #ffffff !important;
                         min-height: auto !important;
+                        width: 100% !important;
                         max-width: 100% !important;
                     }
                     .invoice-card {
                         box-shadow: none !important;
                         border: none !important;
                         border-radius: 0 !important;
-                        max-width: 100% !important;
+                        background: #ffffff !important;
+                        background-color: #ffffff !important;
+                        width: 100% !important;
+                        max-width: 580px !important;
+                        margin: 0 auto !important;
                         padding: 0 !important;
-                        margin: 0 !important;
                         page-break-inside: avoid !important;
                         break-inside: avoid !important;
                     }
                     .print-clean-box {
                         border: 1px solid #e5e7eb !important;
-                        background: #fafafa !important;
+                        background: #ffffff !important;
+                        background-color: #ffffff !important;
                         border-radius: 12px !important;
-                        padding: 8px 12px !important;
-                        margin-bottom: 8px !important;
+                        padding: 10px 14px !important;
+                        margin-bottom: 12px !important;
                     }
                     .print-tight-y {
-                        padding-top: 3px !important;
-                        padding-bottom: 3px !important;
+                        padding-top: 4px !important;
+                        padding-bottom: 4px !important;
                     }
                     .print-compact-mb {
-                        margin-bottom: 8px !important;
+                        margin-bottom: 12px !important;
                     }
                     .print-compact-pb {
-                        padding-bottom: 8px !important;
+                        padding-bottom: 12px !important;
                     }
                     * {
                         page-break-inside: avoid !important;
@@ -290,117 +297,117 @@ function InvoicePage() {
                 {/* Header Pattern - hidden on print for clean document look */}
                 <div className="h-2 bg-primary w-full print:hidden"></div>
 
-                <div className="p-6 sm:p-8 print:p-0">
+                <div className="p-6 sm:p-8 print:p-0 print:bg-white">
                     {/* Header: Verified Confirmed Reservation (No Pending State) */}
-                    <div className="flex flex-col items-center justify-center text-center mb-6 pb-6 border-b border-border/50 border-dashed print-compact-mb print-compact-pb">
+                    <div className="flex flex-col items-center justify-center text-center mb-6 pb-6 border-b border-border/50 border-dashed print-compact-mb print-compact-pb print:bg-white">
                         {booking.status?.toLowerCase() === 'cancelled' ? (
-                            <div className="w-11 h-11 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-3 print:w-8 print:h-8 print:mb-1.5">
-                                <XCircle size={22} className="print:w-5 print:h-5" />
+                            <div className="w-11 h-11 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-3 print:w-8 print:h-8 print:mb-1.5 print:bg-white print:border print:border-red-200">
+                                <XCircle size={22} className="print:w-5 print:h-5 text-red-500" />
                             </div>
                         ) : (
-                            <div className="w-11 h-11 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mb-3 shadow-xs print:w-8 print:h-8 print:mb-1.5">
-                                <CheckCircle2 size={24} className="print:w-5 print:h-5" />
+                            <div className="w-11 h-11 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mb-3 shadow-xs print:w-8 print:h-8 print:mb-1.5 print:bg-white print:border print:border-emerald-300">
+                                <CheckCircle2 size={24} className="print:w-5 print:h-5 text-emerald-600" />
                             </div>
                         )}
-                        <h1 className="font-serif text-xl sm:text-2xl text-primary font-bold tracking-wide mb-1 uppercase print:text-base print:mb-0.5">
+                        <h1 className="font-serif text-xl sm:text-2xl text-primary font-bold tracking-wide mb-1 uppercase print:text-base print:mb-0.5 print:text-black">
                             {booking.status?.toLowerCase() === 'cancelled' ? 'RESERVATION CANCELLED' : 'SPA RESERVATION CONFIRMED'}
                         </h1>
-                        <p className="text-text-muted text-xs sm:text-sm max-w-[280px] mb-3 print:text-[10px] print:mb-1.5">
+                        <p className="text-text-muted text-xs sm:text-sm max-w-[280px] mb-3 print:text-[11px] print:mb-2 print:text-gray-500">
                             {booking.status?.toLowerCase() === 'cancelled' 
                                 ? 'Your spa reservation has been cancelled.' 
                                 : 'Your spa reservation has been verified and confirmed.'}
                         </p>
                         
-                        <div className="bg-black/5 text-primary text-[11px] font-mono font-bold uppercase tracking-widest px-3.5 py-1.5 rounded-lg inline-block print:text-[9px] print:py-1 print:px-2.5">
+                        <div className="bg-black/5 text-primary text-[11px] font-mono font-bold uppercase tracking-widest px-3.5 py-1.5 rounded-lg inline-block print:text-[10px] print:py-1 print:px-3 print:bg-white print:border print:border-gray-300 print:text-black">
                             {booking.id.toUpperCase().substring(0, 10)}
                         </div>
                     </div>
 
                     {/* Service Provider & Venue: Clean, Short Title, No Extra Labels */}
                     {partnerItem ? (
-                        <div className="print-clean-box mb-6 bg-[#F8F9FA] rounded-2xl p-5 border border-border/50 text-center flex flex-col items-center">
+                        <div className="print-clean-box mb-6 bg-[#F8F9FA] rounded-2xl p-5 border border-border/50 text-center flex flex-col items-center print:bg-white">
                             {partnerItem.partnerLogoUrl ? (
                                 <img
                                     src={partnerItem.partnerLogoUrl}
                                     alt={partnerItem.partnerName || 'Partner Spa'}
-                                    className="w-14 h-14 rounded-2xl object-cover border border-gray-200 bg-white mb-2.5 shadow-xs print:w-9 print:h-9 print:mb-1"
+                                    className="w-14 h-14 rounded-2xl object-cover border border-gray-200 bg-white mb-2.5 shadow-xs print:w-11 print:h-11 print:mb-1.5 print:border-gray-300"
                                 />
                             ) : (
-                                <div className="w-14 h-14 rounded-2xl bg-[#1D1D1F] text-white flex items-center justify-center font-bold text-lg mb-2.5 shadow-xs print:w-9 print:h-9 print:mb-1 print:text-sm">
+                                <div className="w-14 h-14 rounded-2xl bg-[#1D1D1F] text-white flex items-center justify-center font-bold text-lg mb-2.5 shadow-xs print:w-11 print:h-11 print:mb-1.5 print:text-sm print:bg-black">
                                     {partnerItem.partnerName?.charAt(0) || 'P'}
                                 </div>
                             )}
-                            <h2 className="font-serif text-lg sm:text-xl text-primary font-bold tracking-tight leading-tight print:text-sm">
+                            <h2 className="font-serif text-lg sm:text-xl text-primary font-bold tracking-tight leading-tight print:text-sm print:text-black">
                                 {partnerItem.partnerName}
                             </h2>
                             {partnerItem.partnerLocation && (
-                                <p className="text-xs text-text-muted mt-1 flex items-center justify-center gap-1.5 font-medium print:text-[10px] print:mt-0.5">
+                                <p className="text-xs text-text-muted mt-1 flex items-center justify-center gap-1.5 font-medium print:text-[10.5px] print:mt-0.5 print:text-gray-500">
                                     <MapPin className="w-3.5 h-3.5 text-gray-400 shrink-0 print:w-3 print:h-3" />
                                     {partnerItem.partnerLocation}
                                 </p>
                             )}
                         </div>
                     ) : (
-                        <div className="mb-6 text-center print-compact-mb">
-                            <h2 className="font-serif text-base text-primary font-medium tracking-wide print:text-xs">PT BALANCE ISLAND INDONESIA</h2>
+                        <div className="mb-6 text-center print-compact-mb print:bg-white">
+                            <h2 className="font-serif text-base text-primary font-medium tracking-wide print:text-xs print:text-black">PT BALANCE ISLAND INDONESIA</h2>
                         </div>
                     )}
 
                     {/* Guest & Venue Details: Simple Clean Rows without Columns - Separate Date and Time */}
-                    <div className="print-clean-box mb-6 bg-[#F8F9FA] rounded-2xl p-5 border border-border/40">
-                        <h3 className="text-[10px] font-bold uppercase tracking-widest text-text-muted mb-2 border-b border-border/50 pb-2 print:pb-1 print:mb-1.5">
+                    <div className="print-clean-box mb-6 bg-[#F8F9FA] rounded-2xl p-5 border border-border/40 print:bg-white">
+                        <h3 className="text-[10px] font-bold uppercase tracking-widest text-text-muted mb-2 border-b border-border/50 pb-2 print:pb-1.5 print:mb-2 print:text-gray-400">
                             {partnerItem ? 'Guest & Venue Details' : 'Guest Details'}
                         </h3>
-                        <div className="divide-y divide-border/30 text-xs print:text-[11px]">
+                        <div className="divide-y divide-border/30 text-xs print:text-[11px] print:divide-gray-100">
                             <div className="flex items-center justify-between py-2 print-tight-y">
-                                <span className="flex items-center gap-1.5 text-text-muted font-medium">
+                                <span className="flex items-center gap-1.5 text-text-muted font-medium print:text-gray-500">
                                     <User className="w-3.5 h-3.5 text-gray-400 print:w-3 print:h-3" /> Guest Name
                                 </span>
-                                <span className="font-bold text-primary text-right">{booking.customerDetails.name}</span>
+                                <span className="font-bold text-primary text-right print:text-black">{booking.customerDetails.name}</span>
                             </div>
                             <div className="flex items-center justify-between py-2 print-tight-y">
-                                <span className="flex items-center gap-1.5 text-text-muted font-medium">
+                                <span className="flex items-center gap-1.5 text-text-muted font-medium print:text-gray-500">
                                     <Calendar className="w-3.5 h-3.5 text-gray-400 print:w-3 print:h-3" /> Date
                                 </span>
-                                <span className="font-bold text-primary text-right">{booking.customerDetails.date}</span>
+                                <span className="font-bold text-primary text-right print:text-black">{booking.customerDetails.date}</span>
                             </div>
                             <div className="flex items-center justify-between py-2 print-tight-y">
-                                <span className="flex items-center gap-1.5 text-text-muted font-medium">
+                                <span className="flex items-center gap-1.5 text-text-muted font-medium print:text-gray-500">
                                     <Clock className="w-3.5 h-3.5 text-gray-400 print:w-3 print:h-3" /> Time
                                 </span>
-                                <span className="font-bold text-primary text-right">{booking.customerDetails.time}</span>
+                                <span className="font-bold text-primary text-right print:text-black">{booking.customerDetails.time}</span>
                             </div>
                             {booking.customerDetails.location && (
                                 <div className="flex items-center justify-between py-2 print-tight-y">
-                                    <span className="flex items-center gap-1.5 text-text-muted font-medium">
+                                    <span className="flex items-center gap-1.5 text-text-muted font-medium print:text-gray-500">
                                         <MapPin className="w-3.5 h-3.5 text-gray-400 print:w-3 print:h-3" /> {partnerItem ? 'Staying At' : 'Villa / Hotel'}
                                     </span>
-                                    <span className="font-bold text-primary text-right max-w-[60%] truncate">{booking.customerDetails.location}</span>
+                                    <span className="font-bold text-primary text-right max-w-[60%] truncate print:text-black">{booking.customerDetails.location}</span>
                                 </div>
                             )}
                             {partnerItem && (
                                 <div className="flex items-center justify-between py-2 print-tight-y">
-                                    <span className="flex items-center gap-1.5 text-text-muted font-medium">
+                                    <span className="flex items-center gap-1.5 text-text-muted font-medium print:text-gray-500">
                                         <Building2 className="w-3.5 h-3.5 text-gray-400 print:w-3 print:h-3" /> Venue
                                     </span>
-                                    <span className="font-bold text-primary text-right">{partnerItem.partnerName}</span>
+                                    <span className="font-bold text-primary text-right print:text-black">{partnerItem.partnerName}</span>
                                 </div>
                             )}
                             {!partnerItem && booking.customerDetails.room && (
                                 <div className="flex items-center justify-between py-2 print-tight-y">
-                                    <span className="flex items-center gap-1.5 text-text-muted font-medium">
+                                    <span className="flex items-center gap-1.5 text-text-muted font-medium print:text-gray-500">
                                         <DoorOpen className="w-3.5 h-3.5 text-gray-400 print:w-3 print:h-3" /> Room
                                     </span>
-                                    <span className="font-bold text-primary text-right">{booking.customerDetails.room}</span>
+                                    <span className="font-bold text-primary text-right print:text-black">{booking.customerDetails.room}</span>
                                 </div>
                             )}
                         </div>
                     </div>
 
                     {/* Treatments: Clean Title without Partner Redundancy + View Details Link */}
-                    <div className="mb-6 print-compact-mb">
-                        <h3 className="text-[10px] font-bold uppercase tracking-widest text-text-muted mb-3 print:mb-1.5">Treatments</h3>
-                        <div className="space-y-3 print:space-y-1.5">
+                    <div className="mb-6 print-compact-mb print:bg-white">
+                        <h3 className="text-[10px] font-bold uppercase tracking-widest text-text-muted mb-3 print:mb-2 print:text-gray-400">Treatments</h3>
+                        <div className="space-y-3 print:space-y-2">
                             {booking.items.map(item => {
                                 const cleanTitle = cleanTreatmentTitle(item.title);
                                 const isCouple = ['couple', 'honeymoon'].some(k => item.title.toLowerCase().includes(k));
@@ -408,10 +415,10 @@ function InvoicePage() {
                                 const itemTotal = (item.price * multiplier).toLocaleString('en-US');
 
                                 return (
-                                    <div key={item.id} className="flex justify-between items-start border-b border-border/30 pb-3 last:border-0 last:pb-0 print:pb-1.5">
+                                    <div key={item.id} className="flex justify-between items-start border-b border-border/30 pb-3 last:border-0 last:pb-0 print:pb-2 print:border-gray-200">
                                         <div className="pr-4">
-                                            <p className="text-xs font-bold text-primary mb-0.5 leading-tight print:text-[11px]">{cleanTitle}</p>
-                                            <p className="text-[10px] text-text-muted print:text-[9px]">
+                                            <p className="text-xs font-bold text-primary mb-0.5 leading-tight print:text-xs print:text-black">{cleanTitle}</p>
+                                            <p className="text-[10px] text-text-muted print:text-[10px] print:text-gray-500">
                                                 {item.guests} {item.guests > 1 ? 'Guests' : 'Guest'} • {String(item.duration).replace(/mins?/i, '').trim()} Mins
                                             </p>
                                             <button
@@ -423,7 +430,7 @@ function InvoicePage() {
                                             </button>
                                         </div>
                                         <div className="text-right shrink-0">
-                                            <p className="text-sm font-serif font-medium text-primary leading-tight print:text-xs">
+                                            <p className="text-sm font-serif font-medium text-primary leading-tight print:text-xs print:font-bold print:text-black">
                                                 IDR {itemTotal}
                                             </p>
                                         </div>
@@ -473,29 +480,29 @@ function InvoicePage() {
                         if (!hasPartnerBreakdown) return null;
 
                         return (
-                            <div className="print-clean-box rounded-2xl bg-[#F8F9FA] p-4 border border-border/60 mb-6 space-y-2 print-compact-mb print:space-y-1">
-                                <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider text-text-muted pb-1.5 border-b border-border/40 print:pb-1">
+                            <div className="print-clean-box rounded-2xl bg-[#F8F9FA] p-4 border border-border/60 mb-6 space-y-2 print-compact-mb print:space-y-1.5 print:bg-white">
+                                <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider text-text-muted pb-1.5 border-b border-border/40 print:pb-1.5 print:border-gray-200 print:text-gray-400">
                                     <span>Rate Breakdown</span>
                                     <span>Amount</span>
                                 </div>
-                                <div className="flex justify-between text-xs text-gray-600 print:text-[10px]">
+                                <div className="flex justify-between text-xs text-gray-600 print:text-[11px] print:text-gray-600">
                                     <span>Published Rate</span>
-                                    <span className="font-medium text-primary">IDR {publishedTotal.toLocaleString('en-US')}</span>
+                                    <span className="font-medium text-primary print:text-black">IDR {publishedTotal.toLocaleString('en-US')}</span>
                                 </div>
                                 {discountTotal > 0 && (
-                                    <div className="flex justify-between text-xs text-emerald-600 font-medium print:text-[10px]">
+                                    <div className="flex justify-between text-xs text-emerald-600 font-medium print:text-[11px] print:text-emerald-700">
                                         <span>Partner Discount ({discountRate}%)</span>
                                         <span>−IDR {discountTotal.toLocaleString('en-US')}</span>
                                     </div>
                                 )}
-                                <div className="flex justify-between text-xs text-primary font-medium pt-1 border-t border-border/30 print:text-[10px]">
+                                <div className="flex justify-between text-xs text-primary font-medium pt-1 border-t border-border/30 print:text-[11px] print:border-gray-200 print:text-black">
                                     <span>Subtotal</span>
                                     <span>IDR {subtotalTotal.toLocaleString('en-US')}</span>
                                 </div>
                                 {taxTotal > 0 && (
-                                    <div className="flex justify-between text-xs text-gray-600 print:text-[10px]">
+                                    <div className="flex justify-between text-xs text-gray-600 print:text-[11px] print:text-gray-600">
                                         <span>Tax &amp; Service Charge ({taxRate}%)</span>
-                                        <span className="font-medium text-primary">+IDR {taxTotal.toLocaleString('en-US')}</span>
+                                        <span className="font-medium text-primary print:text-black">+IDR {taxTotal.toLocaleString('en-US')}</span>
                                     </div>
                                 )}
                             </div>
@@ -503,9 +510,9 @@ function InvoicePage() {
                     })()}
 
                     {/* Total */}
-                    <div className="flex justify-between items-center pt-3 border-t border-border/80 mb-6 print:pt-2 print:mb-0">
-                        <span className="text-xs font-bold uppercase tracking-widest text-primary print:text-[11px]">Total Paid</span>
-                        <span className="text-xl font-serif font-bold text-primary print:text-base">
+                    <div className="flex justify-between items-center pt-3 border-t border-border/80 mb-6 print:pt-3 print:mb-0 print:border-t-2 print:border-black print:bg-white">
+                        <span className="text-xs font-bold uppercase tracking-widest text-primary print:text-xs print:font-bold print:text-black">Total Paid</span>
+                        <span className="text-xl font-serif font-bold text-primary print:text-lg print:font-black print:text-black">
                             IDR {booking.totalPrice.toLocaleString('en-US')}
                         </span>
                     </div>

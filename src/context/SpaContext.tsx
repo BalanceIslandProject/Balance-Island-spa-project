@@ -6,6 +6,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 export type TreatmentOption = {
     duration: string; // e.g. "60 Min", "90 Min"
     price: string;    // e.g. "450,000"
+    net_price?: string | number; // Internal net cost per person (never displayed on customer website)
 };
 
 export type Treatment = {
