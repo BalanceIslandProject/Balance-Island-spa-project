@@ -108,17 +108,19 @@ export default function Home() {
         selectedDuration: string;
         guests: number;
     } | null>(null);
+    const [selectedPartnerDetails, setSelectedPartnerDetails] = useState<any | null>(null);
+    const [selectedDetailsDuration, setSelectedDetailsDuration] = useState<string>('');
 
-    // Lock body scroll when campaign or breakdown modal is open
+    // Lock body scroll when campaign, breakdown, or details modal is open
     useEffect(() => {
-        if (isCampaignModalOpen || selectedPartnerBreakdown) {
+        if (isCampaignModalOpen || selectedPartnerBreakdown || selectedPartnerDetails) {
             const originalOverflow = document.body.style.overflow;
             document.body.style.overflow = 'hidden';
             return () => {
                 document.body.style.overflow = originalOverflow;
             };
         }
-    }, [isCampaignModalOpen, selectedPartnerBreakdown]);
+    }, [isCampaignModalOpen, selectedPartnerBreakdown, selectedPartnerDetails]);
 
     // Load custom addons configured from Therapick Admin Dashboard
     useEffect(() => {
@@ -871,15 +873,11 @@ export default function Home() {
                         </div>
                     </section>
 
-                    {/* Partner Spa Treatments (Rendered ONLY if real items exist in database - Positioned Below Popular Categories) */}
+                    {/* Partner Spa Treatments (Positioned Below Popular Categories - Grouped with Partner Profile Header) */}
                     {partnerTreatments && partnerTreatments.length > 0 && (
                         <section data-reveal className="mb-20 relative z-20 scroll-reveal">
-                            <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-6 gap-2">
+                            <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-2">
                                 <div>
-                                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-50 border border-blue-200/80 text-[#1d4ed8] text-[10px] font-bold tracking-widest uppercase mb-1.5 shadow-xs">
-                                        <Building2 size={11} className="text-[#2563eb]" />
-                                        <span>Verified Partner Spas</span>
-                                    </div>
                                     <h3 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">Partner Spa Treatments</h3>
                                     <p className="text-xs text-gray-500 font-light mt-0.5">Premier partner spas booked directly with verified rates</p>
                                 </div>
@@ -888,147 +886,162 @@ export default function Home() {
                                 </span>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                                {partnerTreatments.map((pt) => {
-                                    const opts = Array.isArray(pt.options) && pt.options.length > 0 ? pt.options : [{ duration: '60', price: '450,000' }];
-                                    const firstOpt = opts[0];
-                                    const basePublishedPrice = parseInt(String(firstOpt?.price || '0').replace(/[^0-9]/g, '') || '0', 10);
-                                    const discountRate = Number(pt.partner_discount_percentage) || 0;
-                                    const discountAmount = discountRate > 0 ? Math.round(basePublishedPrice * (discountRate / 100)) : 0;
-                                    const subtotalPrice = basePublishedPrice - discountAmount;
-                                    const isCouple = ['couple', 'honeymoon'].some(k => pt.title.toLowerCase().includes(k));
-
-                                    return (
-                                        <div
-                                            key={pt.id}
-                                            className="group relative rounded-[28px] border border-gray-200/90 bg-white overflow-hidden shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between"
-                                        >
+                            <div className="space-y-12">
+                                {Object.entries(
+                                    partnerTreatments.reduce((acc: Record<string, { partnerName: string; partnerLogo?: string | null; partnerLocation?: string | null; items: typeof partnerTreatments }>, pt) => {
+                                        const key = pt.partner_id || pt.partner_name || 'partner';
+                                        if (!acc[key]) {
+                                            acc[key] = {
+                                                partnerName: pt.partner_name,
+                                                partnerLogo: pt.partner_logo_url,
+                                                partnerLocation: pt.partner_location,
+                                                items: []
+                                            };
+                                        }
+                                        acc[key].items.push(pt);
+                                        return acc;
+                                    }, {})
+                                ).map(([partnerKey, group]) => (
+                                    <div key={partnerKey} className="space-y-4">
+                                        {/* Partner Profile Header Above The Cards with More Visible Logo */}
+                                        <div className="flex items-center gap-3.5 px-1">
+                                            {group.partnerLogo ? (
+                                                <img
+                                                    src={group.partnerLogo}
+                                                    alt={group.partnerName}
+                                                    className="w-12 h-12 rounded-2xl object-cover border border-gray-200/90 bg-white shadow-xs shrink-0"
+                                                />
+                                            ) : (
+                                                <div className="w-12 h-12 rounded-2xl bg-[#1D1D1F] text-white flex items-center justify-center font-bold text-base shrink-0 shadow-xs">
+                                                    {group.partnerName?.charAt(0) || 'P'}
+                                                </div>
+                                            )}
                                             <div>
-                                                {/* Treatment Image Banner */}
-                                                <div className="relative h-44 sm:h-48 w-full bg-gray-100 overflow-hidden">
-                                                    {pt.image_url ? (
-                                                        <img
-                                                            src={pt.image_url}
-                                                            alt={pt.title}
-                                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                                            loading="lazy"
-                                                        />
-                                                    ) : (
-                                                        <div className="w-full h-full flex flex-col items-center justify-center bg-linear-to-br from-gray-100 to-gray-200 text-gray-400 gap-2">
-                                                            <Building2 size={32} strokeWidth={1.5} className="text-gray-300" />
-                                                            <span className="text-[11px] font-semibold tracking-wider uppercase text-gray-400">{pt.partner_name}</span>
-                                                        </div>
-                                                    )}
+                                                <h4 className="text-base sm:text-lg font-bold text-gray-900 leading-tight">
+                                                    {group.partnerName}
+                                                </h4>
+                                                {group.partnerLocation && (
+                                                    <span className="text-xs text-gray-500 font-medium flex items-center gap-1 mt-0.5">
+                                                        <MapPin size={12} className="text-gray-400 shrink-0" />
+                                                        {group.partnerLocation}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
 
-                                                    {/* Category Floating Pill */}
-                                                    <div className="absolute top-3 left-3 z-10">
-                                                        <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-black/75 backdrop-blur-md text-white text-[9px] font-bold tracking-wider uppercase">
-                                                            {pt.category || 'Massage'}
-                                                        </span>
-                                                    </div>
+                                        {/* Treatment Cards for this partner */}
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                                            {group.items.map((pt) => {
+                                                const opts = Array.isArray(pt.options) && pt.options.length > 0 ? pt.options : [{ duration: '60', price: '450,000' }];
+                                                const firstOpt = opts[0];
+                                                const basePublishedPrice = parseInt(String(firstOpt?.price || '0').replace(/[^0-9]/g, '') || '0', 10);
+                                                const discountRate = Number(pt.partner_discount_percentage) || 0;
+                                                const discountAmount = discountRate > 0 ? Math.round(basePublishedPrice * (discountRate / 100)) : 0;
+                                                const subtotalPrice = basePublishedPrice - discountAmount;
 
-                                                    {/* Discount Pill if partner has discount */}
-                                                    {discountRate > 0 && (
-                                                        <div className="absolute top-3 right-3 z-10">
-                                                            <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-emerald-600 text-white text-[10px] font-black tracking-wide shadow-xs">
-                                                                {discountRate}% OFF
-                                                            </span>
-                                                        </div>
-                                                    )}
-
-                                                    {/* Partner Identity Bar overlay at bottom of photo */}
-                                                    <div className="absolute bottom-0 inset-x-0 p-3 bg-linear-to-t from-black/80 via-black/40 to-transparent flex items-center justify-between z-10">
-                                                        <div className="flex items-center gap-2">
-                                                            {pt.partner_logo_url ? (
-                                                                <img
-                                                                    src={pt.partner_logo_url}
-                                                                    alt={pt.partner_name}
-                                                                    className="w-7 h-7 rounded-full object-cover border border-white/60 bg-white shrink-0 shadow-xs"
-                                                                />
-                                                            ) : (
-                                                                <div className="w-7 h-7 rounded-full bg-white/90 text-gray-900 flex items-center justify-center font-bold text-[10px] shrink-0">
-                                                                    {pt.partner_name.charAt(0)}
-                                                                </div>
-                                                            )}
-                                                            <div className="truncate max-w-[180px]">
-                                                                <span className="text-xs font-bold text-white tracking-wide block truncate drop-shadow-xs">
-                                                                    {pt.partner_name}
-                                                                </span>
-                                                                {pt.partner_location && (
-                                                                    <span className="text-[10px] text-white/80 font-medium block truncate">
-                                                                        {pt.partner_location}
-                                                                    </span>
+                                                return (
+                                                    <div
+                                                        key={pt.id}
+                                                        onClick={() => {
+                                                            setSelectedDetailsDuration(firstOpt.duration);
+                                                            setSelectedPartnerDetails(pt);
+                                                        }}
+                                                        className="group relative rounded-[28px] border border-gray-200/90 bg-white overflow-hidden shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between cursor-pointer active:scale-[0.99]"
+                                                    >
+                                                        <div>
+                                                            {/* Treatment Image Banner (Clean without dark overlay) */}
+                                                            <div className="relative h-44 sm:h-48 w-full bg-gray-100 overflow-hidden">
+                                                                {pt.image_url ? (
+                                                                    <img
+                                                                        src={pt.image_url}
+                                                                        alt={pt.title}
+                                                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                                                        loading="lazy"
+                                                                    />
+                                                                ) : (
+                                                                    <div className="w-full h-full flex flex-col items-center justify-center bg-linear-to-br from-gray-100 to-gray-200 text-gray-400 gap-2">
+                                                                        <Building2 size={32} strokeWidth={1.5} className="text-gray-300" />
+                                                                        <span className="text-[11px] font-semibold tracking-wider uppercase text-gray-400">{pt.partner_name}</span>
+                                                                    </div>
                                                                 )}
+
+                                                                {/* Category Floating Pill */}
+                                                                <div className="absolute top-3 left-3 z-10">
+                                                                    <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-black/75 backdrop-blur-md text-white text-[9px] font-bold tracking-wider uppercase">
+                                                                        {pt.category || 'Package'}
+                                                                    </span>
+                                                                </div>
+
+                                                                {/* Discount Pill if partner has discount */}
+                                                                {discountRate > 0 && (
+                                                                    <div className="absolute top-3 right-3 z-10">
+                                                                        <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-emerald-600 text-white text-[10px] font-black tracking-wide shadow-xs">
+                                                                            {discountRate}% OFF
+                                                                        </span>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+
+                                                            {/* Content Body */}
+                                                            <div className="p-4 sm:p-5">
+                                                                <h4 className="text-base sm:text-lg font-bold text-gray-900 leading-snug tracking-tight mb-1.5 group-hover:text-black transition-colors">
+                                                                    {pt.title}
+                                                                </h4>
+
+                                                                {pt.desc && (
+                                                                    <p className="text-xs text-gray-500 font-light line-clamp-2 leading-relaxed mb-4">
+                                                                        {pt.desc.split(/What's Included/i)[0].trim()}
+                                                                    </p>
+                                                                )}
+
+                                                                {/* Duration pills */}
+                                                                <div className="flex flex-wrap gap-1.5 mb-2">
+                                                                    {opts.map((opt: any, oIdx: number) => (
+                                                                        <span
+                                                                            key={oIdx}
+                                                                            className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-gray-100 text-gray-700 text-[10px] font-bold uppercase tracking-wider"
+                                                                        >
+                                                                            <Clock size={10} className="text-gray-500" />
+                                                                            {String(opt.duration).toUpperCase().includes('MIN') ? opt.duration : `${opt.duration} MINS`}
+                                                                        </span>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Bottom Price & Plus Action Button */}
+                                                        <div className="p-4 sm:p-5 pt-0 mt-auto">
+                                                            <div className="pt-3 border-t border-gray-100 flex items-center justify-between gap-3">
+                                                                <div>
+                                                                    <span className="text-[9px] font-bold uppercase tracking-wider text-gray-400 block">Customer Rate</span>
+                                                                    <div className="flex items-baseline gap-2">
+                                                                        {/* Discount Price (Subtotal) */}
+                                                                        <span className="text-base font-bold text-gray-900">
+                                                                            IDR {subtotalPrice.toLocaleString('en-US')}
+                                                                        </span>
+                                                                        {/* Original Published Price with line in the middle */}
+                                                                        {discountRate > 0 && (
+                                                                            <span className="text-xs text-gray-400 line-through">
+                                                                                IDR {basePublishedPrice.toLocaleString('en-US')}
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+
+                                                                <div
+                                                                    className="w-10 h-10 rounded-full bg-[#1D1D1F] group-hover:bg-black text-white flex items-center justify-center transition-all shadow-xs group-hover:scale-105 shrink-0"
+                                                                    title="View treatment details"
+                                                                >
+                                                                    <Plus size={20} strokeWidth={2.5} />
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </div>
-                                                </div>
-
-                                                {/* Content Body */}
-                                                <div className="p-4 sm:p-5">
-                                                    <h4 className="text-base sm:text-lg font-bold text-gray-900 leading-snug tracking-tight mb-1.5 group-hover:text-black transition-colors">
-                                                        {pt.title}
-                                                    </h4>
-
-                                                    {pt.desc && (
-                                                        <p className="text-xs text-gray-500 font-light line-clamp-2 leading-relaxed mb-4">
-                                                            {pt.desc}
-                                                        </p>
-                                                    )}
-
-                                                    {/* Duration selector pill */}
-                                                    <div className="flex flex-wrap gap-1.5 mb-2">
-                                                        {opts.map((opt, oIdx) => (
-                                                            <span
-                                                                key={oIdx}
-                                                                className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-gray-100 text-gray-700 text-[10px] font-bold uppercase tracking-wider"
-                                                            >
-                                                                <Clock size={10} className="text-gray-500" />
-                                                                {String(opt.duration).toUpperCase().includes('MIN') ? opt.duration : `${opt.duration} MINS`}
-                                                            </span>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            {/* Bottom Price & Booking Action (PDF Logic: Discount price + original price with line in middle, NO TAX on card) */}
-                                            <div className="p-4 sm:p-5 pt-0 mt-auto">
-                                                <div className="pt-3 border-t border-gray-100 flex items-center justify-between gap-3">
-                                                    <div>
-                                                        <span className="text-[9px] font-bold uppercase tracking-wider text-gray-400 block">Customer Rate</span>
-                                                        <div className="flex items-baseline gap-2">
-                                                            {/* Discount Price (Subtotal) */}
-                                                            <span className="text-base font-bold text-gray-900">
-                                                                IDR {subtotalPrice.toLocaleString('en-US')}
-                                                            </span>
-                                                            {/* Original Published Price with line in the middle */}
-                                                            {discountRate > 0 && (
-                                                                <span className="text-xs text-gray-400 line-through">
-                                                                    IDR {basePublishedPrice.toLocaleString('en-US')}
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                    </div>
-
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => {
-                                                            setSelectedPartnerBreakdown({
-                                                                treatment: pt,
-                                                                selectedDuration: firstOpt.duration,
-                                                                guests: isCouple ? 2 : 1
-                                                            });
-                                                        }}
-                                                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#1D1D1F] hover:bg-black text-white text-xs font-bold transition-all shadow-xs hover:shadow-sm active:scale-95 cursor-pointer"
-                                                    >
-                                                        <span>Book Treatment</span>
-                                                        <ArrowRight size={13} />
-                                                    </button>
-                                                </div>
-                                            </div>
+                                                );
+                                            })}
                                         </div>
-                                    );
-                                })}
+                                    </div>
+                                ))}
                             </div>
                         </section>
                     )}
@@ -1993,6 +2006,223 @@ export default function Home() {
                 )}
             </AnimatePresence>
 
+            {/* Partner Treatment Details Modal */}
+            <AnimatePresence>
+                {selectedPartnerDetails && (() => {
+                    const pt = selectedPartnerDetails;
+                    const opts = Array.isArray(pt.options) && pt.options.length > 0 ? pt.options : [{ duration: '60', price: '450,000' }];
+                    const firstOpt = opts[0];
+                    const chosenDur = selectedDetailsDuration || opts[0].duration;
+                    const currentOpt = opts.find((o: any) => o.duration === chosenDur) || opts[0];
+                    const basePublishedPrice = parseInt(String(currentOpt?.price || '0').replace(/[^0-9]/g, '') || '0', 10);
+                    const discountRate = Number(pt.partner_discount_percentage) || 0;
+                    const discountAmount = discountRate > 0 ? Math.round(basePublishedPrice * (discountRate / 100)) : 0;
+                    const subtotalPrice = basePublishedPrice - discountAmount;
+                    const isCouple = isCoupleTreatment(pt.title);
+
+                    let descClean = pt.desc || '';
+                    let whatsIncludedList: string[] = [];
+                    if (pt.desc) {
+                        const parts = pt.desc.split(/What's Included\s*:?\s*/i);
+                        if (parts.length > 1) {
+                            descClean = parts[0].trim();
+                            whatsIncludedList = parts[1].split('\n').map((s: string) => s.replace(/^[-•*]\s*/, '').trim()).filter(Boolean);
+                        }
+                    }
+
+                    const handleGoToBreakdown = () => {
+                        setSelectedPartnerBreakdown({
+                            treatment: pt,
+                            selectedDuration: chosenDur,
+                            guests: isCouple ? 2 : 1
+                        });
+                        setSelectedPartnerDetails(null);
+                    };
+
+                    return (
+                        <div className="fixed inset-0 z-[10000] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-xs">
+                            <motion.div
+                                initial={{ y: '100%', opacity: 0.8 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                exit={{ y: '100%', opacity: 0 }}
+                                transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+                                className="w-full sm:max-w-lg bg-white rounded-t-[32px] sm:rounded-[32px] p-6 shadow-2xl border border-gray-100 flex flex-col text-black max-h-[92vh] overflow-y-auto"
+                                style={{ backgroundColor: '#ffffff', opacity: 1 }}
+                            >
+                                {/* Modal Header: Partner Identity */}
+                                <div className="flex items-center justify-between pb-4 border-b border-gray-100">
+                                    <div className="flex items-center gap-3">
+                                        {pt.partner_logo_url ? (
+                                            <img
+                                                src={pt.partner_logo_url}
+                                                alt={pt.partner_name}
+                                                className="w-10 h-10 rounded-2xl object-cover border border-gray-200/90 bg-white shadow-xs shrink-0"
+                                            />
+                                        ) : (
+                                            <div className="w-10 h-10 rounded-2xl bg-[#1D1D1F] text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-xs">
+                                                {pt.partner_name?.charAt(0) || 'P'}
+                                            </div>
+                                        )}
+                                        <div>
+                                            <h3 className="font-bold text-sm text-gray-900 leading-tight">
+                                                {pt.partner_name}
+                                            </h3>
+                                            {pt.partner_location && (
+                                                <span className="text-[11px] text-gray-500 font-medium flex items-center gap-1 mt-0.5">
+                                                    <MapPin size={11} className="text-gray-400 shrink-0" />
+                                                    {pt.partner_location}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => setSelectedPartnerDetails(null)}
+                                        className="w-8 h-8 rounded-full bg-gray-100 hover:bg-black hover:text-white flex items-center justify-center text-gray-600 transition-colors cursor-pointer"
+                                    >
+                                        <X size={15} />
+                                    </button>
+                                </div>
+
+                                {/* Body */}
+                                <div className="py-4 space-y-4 flex-1">
+                                    {/* Treatment Image */}
+                                    {pt.image_url && (
+                                        <div className="relative h-48 sm:h-56 w-full rounded-2xl overflow-hidden bg-gray-100 shadow-xs">
+                                            <img
+                                                src={pt.image_url}
+                                                alt={pt.title}
+                                                className="w-full h-full object-cover"
+                                            />
+                                            <div className="absolute top-3 left-3">
+                                                <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-black/75 backdrop-blur-md text-white text-[9px] font-bold tracking-wider uppercase">
+                                                    {pt.category || 'Package'}
+                                                </span>
+                                            </div>
+                                            {discountRate > 0 && (
+                                                <div className="absolute top-3 right-3">
+                                                    <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-emerald-600 text-white text-[10px] font-black tracking-wide shadow-xs">
+                                                        {discountRate}% OFF
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {/* Title */}
+                                    <div>
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <span className="text-[10px] font-bold uppercase tracking-widest text-primary/70">
+                                                {pt.category || 'Package'}
+                                            </span>
+                                            {isCouple && (
+                                                <span className="text-[9px] font-bold uppercase tracking-wider bg-rose-50 text-rose-600 px-2 py-0.5 rounded-full border border-rose-100">
+                                                    Couple Ritual
+                                                </span>
+                                            )}
+                                        </div>
+                                        <h2 className="font-serif text-xl sm:text-2xl font-bold text-gray-900 leading-tight">
+                                            {pt.title}
+                                        </h2>
+                                    </div>
+
+                                    {/* Duration Selection (if multiple options) or pill */}
+                                    {opts.length > 1 ? (
+                                        <div className="space-y-1.5">
+                                            <label className="text-[9px] font-bold uppercase tracking-wider text-gray-400 block">Select Duration</label>
+                                            <div className="flex flex-wrap gap-2">
+                                                {opts.map((opt: any, oIdx: number) => {
+                                                    const isSelected = chosenDur === opt.duration;
+                                                    const optPrice = parseInt(String(opt.price || '0').replace(/[^0-9]/g, '') || '0', 10);
+                                                    const optDisc = discountRate > 0 ? Math.round(optPrice * (discountRate / 100)) : 0;
+                                                    const optSub = optPrice - optDisc;
+                                                    return (
+                                                        <button
+                                                            key={oIdx}
+                                                            type="button"
+                                                            onClick={() => setSelectedDetailsDuration(opt.duration)}
+                                                            className={`px-3 py-2 rounded-xl text-xs font-bold transition-all border flex items-center gap-2 cursor-pointer ${
+                                                                isSelected
+                                                                    ? 'bg-[#1D1D1F] text-white border-[#1D1D1F] shadow-xs'
+                                                                    : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
+                                                            }`}
+                                                        >
+                                                            <span>{String(opt.duration).toUpperCase().includes('MIN') ? opt.duration : `${opt.duration} MINS`}</span>
+                                                            <span className="text-[11px] opacity-80 font-normal">IDR {optSub.toLocaleString('en-US')}</span>
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-gray-100 text-gray-700 text-xs font-bold uppercase tracking-wider">
+                                            <Clock size={12} className="text-gray-500" />
+                                            <span>{String(firstOpt?.duration).toUpperCase().includes('MIN') ? firstOpt.duration : `${firstOpt?.duration} MINS`}</span>
+                                        </div>
+                                    )}
+
+                                    {/* Description */}
+                                    {descClean && (
+                                        <div className="space-y-1">
+                                            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 block">Experience</span>
+                                            <p className="text-xs text-gray-600 leading-relaxed font-light">
+                                                {descClean}
+                                            </p>
+                                        </div>
+                                    )}
+
+                                    {/* What's Included Ritual Breakdown */}
+                                    {whatsIncludedList.length > 0 && (
+                                        <div className="bg-gray-50 rounded-2xl p-4 border border-gray-200/80 space-y-2.5">
+                                            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500 block">
+                                                What's Included in this Ritual
+                                            </span>
+                                            <div className="space-y-2">
+                                                {whatsIncludedList.map((itemStr: string, idx: number) => (
+                                                    <div key={idx} className="flex items-start gap-2.5 text-xs text-gray-700">
+                                                        <div className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 mt-0.5">
+                                                            <Check size={10} strokeWidth={3} />
+                                                        </div>
+                                                        <span className="leading-tight">{itemStr}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Modal Footer with Customer Rate & Book Treatment CTA */}
+                                <div className="pt-4 border-t border-gray-100 flex items-center justify-between gap-3 mt-auto">
+                                    <div>
+                                        <span className="text-[9px] font-bold uppercase tracking-wider text-gray-400 block">Customer Rate</span>
+                                        <div className="flex items-baseline gap-2">
+                                            <span className="text-base sm:text-lg font-bold text-gray-900">
+                                                IDR {subtotalPrice.toLocaleString('en-US')}
+                                            </span>
+                                            {discountRate > 0 && (
+                                                <span className="text-xs text-gray-400 line-through">
+                                                    IDR {basePublishedPrice.toLocaleString('en-US')}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        type="button"
+                                        onClick={handleGoToBreakdown}
+                                        className="py-3.5 px-6 rounded-full bg-[#1D1D1F] hover:bg-black text-white text-xs font-bold transition-all shadow-md active:scale-95 flex items-center gap-2 cursor-pointer"
+                                    >
+                                        <span>Book Treatment</span>
+                                        <ArrowRight size={14} />
+                                    </button>
+                                </div>
+                            </motion.div>
+                        </div>
+                    );
+                })()}
+            </AnimatePresence>
+
             {/* Partner Price Breakdown Modal (PDF Breakdown Logic) */}
             <AnimatePresence>
                 {selectedPartnerBreakdown && (() => {
@@ -2072,13 +2302,26 @@ export default function Home() {
                                         </div>
                                     </div>
 
-                                    <button
-                                        type="button"
-                                        onClick={() => setSelectedPartnerBreakdown(null)}
-                                        className="w-8 h-8 rounded-full bg-gray-100 hover:bg-black hover:text-white flex items-center justify-center text-gray-600 transition-colors"
-                                    >
-                                        <X size={15} />
-                                    </button>
+                                    <div className="flex items-center gap-1.5">
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setSelectedPartnerDetails(pt);
+                                                setSelectedPartnerBreakdown(null);
+                                            }}
+                                            className="w-8 h-8 rounded-full bg-gray-100 hover:bg-black hover:text-white flex items-center justify-center text-gray-600 transition-colors cursor-pointer"
+                                            title="Back to treatment details"
+                                        >
+                                            <ChevronLeft size={16} />
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setSelectedPartnerBreakdown(null)}
+                                            className="w-8 h-8 rounded-full bg-gray-100 hover:bg-black hover:text-white flex items-center justify-center text-gray-600 transition-colors cursor-pointer"
+                                        >
+                                            <X size={15} />
+                                        </button>
+                                    </div>
                                 </div>
 
                                 {/* Treatment Details */}
