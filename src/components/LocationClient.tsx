@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, Search, Heart, Cloud, Droplet, User, Flame, Clock, ArrowRight, X, ShoppingBag, Plus, Minus, MessageCircle, ChevronLeft, ChevronDown, Bitcoin, CheckCircle2, Copy, Calendar, MapPin, Tag, DoorOpen, Trash2, Info, Check, Phone, Building2 } from 'lucide-react';
 import Link from 'next/link';
@@ -111,18 +111,83 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
         }
     }, [isCampaignModalOpen, selectedPartnerBreakdown, selectedPartnerDetails]);
     
-    // Initialize date and time (3 hours from now for availability)
+    // Partner operates 09:00 - 22:00. Same-day bookings require at least 3 hours notice from now.
+    // Next day & future bookings enjoy full 09:00 - 22:00 availability.
+    const getAvailableTimeSlots = (selectedDateStr: string) => {
+        const now = new Date();
+        const todayStr = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+        const isToday = selectedDateStr === todayStr;
+        const minLeadTimeMs = now.getTime() + (3 * 60 * 60 * 1000);
+
+        const slots: { value: string; label: string }[] = [];
+
+        for (let h = 9; h <= 22; h++) {
+            for (const m of [0, 30]) {
+                if (h === 22 && m > 0) break; // Close at 22:00
+
+                const timeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+                const period = h >= 12 ? 'PM' : 'AM';
+                const displayH = h % 12 === 0 ? 12 : h % 12;
+                const displayM = String(m).padStart(2, '0');
+                const label = `${timeStr} (${displayH}:${displayM} ${period})`;
+
+                if (isToday) {
+                    const slotDate = new Date();
+                    slotDate.setHours(h, m, 0, 0);
+                    if (slotDate.getTime() >= minLeadTimeMs) {
+                        slots.push({ value: timeStr, label });
+                    }
+                } else {
+                    slots.push({ value: timeStr, label });
+                }
+            }
+        }
+
+        return slots;
+    };
+
+    // Initialize date and time with 3 hours preparation notice / next day if closed
     const getInitialDateTime = () => {
         const now = new Date();
-        const availableTime = new Date(now.getTime() + 3 * 60 * 60 * 1000);
-        const date = new Date(availableTime.getTime() - (availableTime.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
-        const hours = String(availableTime.getHours()).padStart(2, '0');
-        const minutes = String(availableTime.getMinutes()).padStart(2, '0');
-        const time = `${hours}:${minutes}`;
-        return { date, time };
+        const todayStr = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+        const todaySlots = getAvailableTimeSlots(todayStr);
+
+        if (todaySlots.length > 0) {
+            return {
+                date: todayStr,
+                time: todaySlots[0].value
+            };
+        } else {
+            // No slots left today (closes at 22:00) -> default to tomorrow 09:00 AM
+            const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+            const tomorrowStr = new Date(tomorrow.getTime() - (tomorrow.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+            return {
+                date: tomorrowStr,
+                time: '09:00'
+            };
+        }
     };
     
     const [formData, setFormData] = useState({ name: '', location: '', room: '', whatsapp: '', ...getInitialDateTime() });
+
+    const todayDateStr = useMemo(() => {
+        const now = new Date();
+        return new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+    }, []);
+
+    const availableTimeSlots = useMemo(() => {
+        return getAvailableTimeSlots(formData.date);
+    }, [formData.date]);
+
+    // Keep formData.time valid for the chosen date
+    useEffect(() => {
+        if (availableTimeSlots.length > 0) {
+            const hasValidTime = availableTimeSlots.some(s => s.value === formData.time);
+            if (!hasValidTime) {
+                setFormData(prev => ({ ...prev, time: availableTimeSlots[0].value }));
+            }
+        }
+    }, [availableTimeSlots, formData.time]);
     const isTherapick = siteBrandFilter === 'therapick' || (typeof window !== 'undefined' && (window.location.hostname.includes('therapick') || window.location.hostname.includes('booktherapick')));
 
     const filteredAndSortedTreatments = React.useMemo(() => {
@@ -1294,28 +1359,66 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                                 <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1"><Calendar className="w-3.5 h-3.5"/> Date</label>
                                                 <input
                                                     type="date" required
-                                                    value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })}
-                                                    className="w-full min-w-0 appearance-none bg-white border border-border/80 rounded-xl px-4 py-3.5 text-sm text-primary placeholder:text-text-muted/50 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                                                    min={todayDateStr}
+                                                    value={formData.date} onChange={e => {
+                                                        const newDate = e.target.value;
+                                                        const newSlots = getAvailableTimeSlots(newDate);
+                                                        const keepsTime = newSlots.some(s => s.value === formData.time);
+                                                        setFormData({
+                                                            ...formData,
+                                                            date: newDate,
+                                                            time: keepsTime ? formData.time : (newSlots[0]?.value || '')
+                                                        });
+                                                    }}
+                                                    className="w-full min-w-0 appearance-none bg-white border border-border/80 rounded-xl px-4 py-3.5 text-sm text-primary placeholder:text-text-muted/50 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer"
                                                 />
                                             </div>
                                             <div className="space-y-1.5 flex-1 min-w-0">
-                                                <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1"><Clock className="w-3.5 h-3.5"/> Time</label>
-                                                <input
-                                                    type="time" required
-                                                    value={formData.time} onChange={e => setFormData({ ...formData, time: e.target.value })}
-                                                    min={(() => {
-                                                        const now = new Date();
-                                                        const todayStr = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
-                                                        if (formData.date === todayStr) {
-                                                            const minTime = new Date(now.getTime() + 3 * 60 * 60 * 1000);
-                                                            return `${String(minTime.getHours()).padStart(2, '0')}:${String(minTime.getMinutes()).padStart(2, '0')}`;
-                                                        }
-                                                        return undefined;
-                                                    })()}
-                                                    className="w-full min-w-0 appearance-none bg-white border border-border/80 rounded-xl px-4 py-3.5 text-sm text-primary placeholder:text-text-muted/50 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-                                                />
+                                                <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1"><Clock className="w-3.5 h-3.5"/> Availability Time</label>
+                                                <div className="relative">
+                                                    <select
+                                                        required
+                                                        value={formData.time}
+                                                        onChange={e => setFormData({ ...formData, time: e.target.value })}
+                                                        disabled={availableTimeSlots.length === 0}
+                                                        className="w-full min-w-0 appearance-none bg-white border border-border/80 rounded-xl pl-4 pr-9 py-3.5 text-sm text-primary font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer disabled:bg-gray-100 disabled:text-gray-400"
+                                                    >
+                                                        {availableTimeSlots.length > 0 ? (
+                                                            availableTimeSlots.map(slot => (
+                                                                <option key={slot.value} value={slot.value}>
+                                                                    {slot.label}
+                                                                </option>
+                                                            ))
+                                                        ) : (
+                                                            <option value="" disabled>No slots available today</option>
+                                                        )}
+                                                    </select>
+                                                    <ChevronDown className="w-4 h-4 text-text-muted/60 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                                                </div>
                                             </div>
                                         </div>
+                                        {availableTimeSlots.length === 0 && (
+                                            <div className="p-3 bg-amber-50 border border-amber-200/80 rounded-xl text-xs text-amber-900 flex items-center justify-between gap-2">
+                                                <span>Partner closes at 10 PM. No more slots today with 3-hr notice.</span>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        const now = new Date();
+                                                        const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+                                                        const tStr = new Date(tomorrow.getTime() - (tomorrow.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+                                                        const newSlots = getAvailableTimeSlots(tStr);
+                                                        setFormData({
+                                                            ...formData,
+                                                            date: tStr,
+                                                            time: newSlots[0]?.value || '09:00'
+                                                        });
+                                                    }}
+                                                    className="text-[11px] font-bold text-amber-950 underline shrink-0 hover:text-black cursor-pointer"
+                                                >
+                                                    Book Tomorrow
+                                                </button>
+                                            </div>
+                                        )}
                                         <div className="space-y-1.5 w-full">
                                             <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1">
                                                 <MapPin className="w-3.5 h-3.5"/> {cartItems.some(i => i.isPartner) ? "Your Hotel / Villa in Bali" : "Villa / Hotel Name"}
@@ -1836,7 +1939,7 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                         </div>
                                     )}
 
-                                    {/* Title & Category */}
+                                    {/* Title, Category & Duration */}
                                     <div>
                                         <div className="flex items-center gap-2 mb-1">
                                             <span className="text-[10px] font-bold uppercase tracking-widest text-primary/70">
@@ -1851,32 +1954,34 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                         <h2 className="font-serif text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">
                                             {pt.title}
                                         </h2>
-                                    </div>
-
-                                    {/* Dropdown to display treatment duration and treatment name */}
-                                    <div className="space-y-1.5">
-                                        <label className="text-[10px] font-bold uppercase tracking-wider text-gray-400 block">
-                                            Treatment Duration &amp; Package Option
-                                        </label>
-                                        <div className="relative">
-                                            <select
-                                                value={chosenDur}
-                                                onChange={(e) => setSelectedDetailsDuration(e.target.value)}
-                                                className="w-full appearance-none bg-gray-50 hover:bg-gray-100 text-xs sm:text-sm font-bold text-gray-900 py-3 pl-3.5 pr-9 rounded-2xl border border-gray-200/90 focus:outline-none cursor-pointer"
-                                            >
-                                                {opts.map((opt: any, oIdx: number) => {
-                                                    const optPrice = parseInt(String(opt.price || '0').replace(/[^0-9]/g, '') || '0', 10);
-                                                    const optDisc = discountRate > 0 ? Math.round(optPrice * (discountRate / 100)) : 0;
-                                                    const optSub = optPrice - optDisc;
-                                                    const durStr = String(opt.duration).toUpperCase().includes('MIN') ? opt.duration : `${opt.duration} MINS`;
-                                                    return (
-                                                        <option key={oIdx} value={opt.duration}>
-                                                            {durStr} · {pt.title} — IDR {optSub.toLocaleString('en-US')}
-                                                        </option>
-                                                    );
-                                                })}
-                                            </select>
-                                            <ChevronDown size={15} className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500" />
+                                        {/* Duration displayed cleanly below treatment name */}
+                                        <div className="flex items-center gap-2 mt-2">
+                                            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-gray-100 text-gray-800 text-xs font-bold uppercase tracking-wider">
+                                                <Clock size={12} className="text-gray-500" />
+                                                <span>{String(chosenDur || firstOpt?.duration || '').replace(/mins?/gi, '').trim()} Mins</span>
+                                            </div>
+                                            {opts.length > 1 && (
+                                                <div className="flex items-center gap-1.5">
+                                                    {opts.map((opt: any, idx: number) => {
+                                                        const isSelected = chosenDur === opt.duration;
+                                                        const optDur = String(opt.duration).replace(/mins?/gi, '').trim();
+                                                        return (
+                                                            <button
+                                                                key={idx}
+                                                                type="button"
+                                                                onClick={() => setSelectedDetailsDuration(opt.duration)}
+                                                                className={`text-xs font-bold px-2.5 py-1 rounded-xl border transition-all cursor-pointer ${
+                                                                    isSelected
+                                                                        ? 'bg-[#1D1D1F] text-white border-[#1D1D1F] shadow-xs'
+                                                                        : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                                                                }`}
+                                                            >
+                                                                {optDur} Mins
+                                                            </button>
+                                                        );
+                                                    })}
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
 
