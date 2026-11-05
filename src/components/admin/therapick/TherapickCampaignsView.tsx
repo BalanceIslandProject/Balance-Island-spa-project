@@ -130,6 +130,51 @@ export default function TherapickCampaignsView() {
     setTimeout(() => setToastMessage(null), 3000);
   };
 
+  // ── Treatment selection helpers ──────────────────────────────────────────────
+  const isTreatmentSelected = (treatmentId: string) =>
+    bannerForm.selectedTreatments.some((s: any) => s.treatmentId === treatmentId);
+
+  const isDurationSelected = (treatmentId: string, duration: string) => {
+    const entry = bannerForm.selectedTreatments.find((s: any) => s.treatmentId === treatmentId);
+    return entry ? entry.durations.includes(duration) : false;
+  };
+
+  const toggleTreatment = (treatmentId: string, allDurations: string[]) => {
+    const already = isTreatmentSelected(treatmentId);
+    if (already) {
+      setBannerForm(f => ({ ...f, selectedTreatments: f.selectedTreatments.filter((s: any) => s.treatmentId !== treatmentId) }));
+    } else {
+      setBannerForm(f => ({ ...f, selectedTreatments: [...f.selectedTreatments, { treatmentId, durations: allDurations }] }));
+    }
+  };
+
+  const toggleDuration = (treatmentId: string, duration: string) => {
+    setBannerForm(f => {
+      const existing = f.selectedTreatments.find((s: any) => s.treatmentId === treatmentId);
+      if (!existing) {
+        return { ...f, selectedTreatments: [...f.selectedTreatments, { treatmentId, durations: [duration] }] };
+      }
+      const nextDurations = existing.durations.includes(duration)
+        ? existing.durations.filter((d: string) => d !== duration)
+        : [...existing.durations, duration];
+      if (nextDurations.length === 0) {
+        return { ...f, selectedTreatments: f.selectedTreatments.filter((s: any) => s.treatmentId !== treatmentId) };
+      }
+      return { ...f, selectedTreatments: f.selectedTreatments.map((s: any) => s.treatmentId === treatmentId ? { ...s, durations: nextDurations } : s) };
+    });
+  };
+
+  const selectAllTreatments = () => {
+    setBannerForm(f => ({
+      ...f,
+      selectedTreatments: treatments.map(t => ({ treatmentId: t.id, durations: (t.options || []).map((o: any) => o.duration) }))
+    }));
+  };
+
+  const clearAllTreatments = () => {
+    setBannerForm(f => ({ ...f, selectedTreatments: [] }));
+  };
+
   const copyCode = (code: string) => {
     try {
       navigator.clipboard?.writeText(code);
@@ -962,14 +1007,14 @@ export default function TherapickCampaignsView() {
           ───────────────────────────────────────────────────────────────────────────── */}
       {isBannerModalOpen && (
         <div className="fitlo-modal-backdrop flex items-center justify-center p-4">
-          <div className="fitlo-modal w-full max-w-lg p-6 space-y-5 animate-in zoom-in-95">
-            <div className="flex items-center justify-between pb-3 border-b border-[var(--fitlo-line)]">
+          <div className="fitlo-modal w-full max-w-xl animate-in zoom-in-95 max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between p-6 pb-4 border-b border-[var(--fitlo-line)] shrink-0">
               <div>
                 <h3 className="text-base font-bold text-[var(--fitlo-ink)]">
                   {editingBanner ? 'Edit storefront banner' : 'New storefront banner'}
                 </h3>
                 <p className="text-xs text-[var(--fitlo-muted)] mt-0.5">
-                  Displays on booktherapick.com homepage & Explore.
+                  Displays on booktherapick.com homepage &amp; Explore.
                 </p>
               </div>
               <button
@@ -981,7 +1026,8 @@ export default function TherapickCampaignsView() {
               </button>
             </div>
 
-            <form onSubmit={handleSaveBanner} className="space-y-4">
+            <form onSubmit={handleSaveBanner} className="flex flex-col flex-1 min-h-0">
+              <div className="overflow-y-auto flex-1 p-6 pt-4 space-y-4">
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-[var(--fitlo-ink)] mb-1">
                   Title
@@ -1064,7 +1110,135 @@ export default function TherapickCampaignsView() {
                 </button>
               </div>
 
-              <div className="pt-4 border-t border-[var(--fitlo-line)] flex items-center justify-between">
+              {/* ── Start / End Dates ─────────────────────────── */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-[var(--fitlo-ink)] mb-1">
+                    Start Date
+                  </label>
+                  <input
+                    type="date"
+                    value={bannerForm.startDate}
+                    onChange={e => setBannerForm({ ...bannerForm, startDate: e.target.value })}
+                    className="fitlo-input w-full text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-[var(--fitlo-ink)] mb-1">
+                    End Date
+                  </label>
+                  <input
+                    type="date"
+                    value={bannerForm.endDate}
+                    onChange={e => setBannerForm({ ...bannerForm, endDate: e.target.value })}
+                    className="fitlo-input w-full text-xs"
+                  />
+                </div>
+              </div>
+
+              {/* ── Treatment Selector ───────────────────────── */}
+              <div className="border-t border-[var(--fitlo-line)] pt-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-wider text-[var(--fitlo-ink)]">
+                      Included Treatments
+                    </p>
+                    <p className="text-[11px] text-[var(--fitlo-muted)] mt-0.5">
+                      {bannerForm.selectedTreatments.length === 0
+                        ? 'No treatments selected — all will be shown'
+                        : `${bannerForm.selectedTreatments.reduce((acc: number, s: any) => acc + (s.durations?.length || 0), 0)} duration(s) across ${bannerForm.selectedTreatments.length} treatment(s)`}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={selectAllTreatments}
+                      className="text-[11px] font-semibold text-[var(--fitlo-accent)] hover:underline"
+                    >
+                      All
+                    </button>
+                    <span className="text-[var(--fitlo-line)] text-xs">·</span>
+                    <button
+                      type="button"
+                      onClick={clearAllTreatments}
+                      className="text-[11px] font-semibold text-[var(--fitlo-muted)] hover:underline"
+                    >
+                      Clear
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-2 max-h-64 overflow-y-auto pr-1 -mr-1">
+                  {treatments.length === 0 && (
+                    <p className="text-xs text-[var(--fitlo-muted)] py-4 text-center">
+                      No treatments found — add treatments in the Treatments tab first.
+                    </p>
+                  )}
+                  {treatments.map(t => {
+                    const selected = isTreatmentSelected(t.id);
+                    const allDurs = (t.options || []).map((o: any) => o.duration);
+                    return (
+                      <div
+                        key={t.id}
+                        className={`rounded-xl border p-3 transition-colors ${
+                          selected
+                            ? 'border-[var(--fitlo-accent)] bg-[color-mix(in_srgb,var(--fitlo-accent)_8%,transparent)]'
+                            : 'border-[var(--fitlo-line)] bg-[var(--fitlo-card)]'
+                        }`}
+                      >
+                        {/* Treatment header row */}
+                        <div className="flex items-center justify-between gap-3 mb-2">
+                          <label className="flex items-center gap-2 cursor-pointer flex-1 min-w-0">
+                            <input
+                              type="checkbox"
+                              checked={selected}
+                              onChange={() => toggleTreatment(t.id, allDurs)}
+                              className="accent-[var(--fitlo-accent)] w-3.5 h-3.5 shrink-0"
+                            />
+                            <span className="text-xs font-bold text-[var(--fitlo-ink)] truncate">{t.title}</span>
+                            {t.category && (
+                              <span className="shrink-0 text-[10px] text-[var(--fitlo-muted)] font-medium bg-[var(--fitlo-line)] px-1.5 py-0.5 rounded-full">
+                                {t.category}
+                              </span>
+                            )}
+                          </label>
+                        </div>
+
+                        {/* Duration option pills */}
+                        {allDurs.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5 pl-5">
+                            {(t.options || []).map((opt: any) => {
+                              const durSelected = isDurationSelected(t.id, opt.duration);
+                              return (
+                                <button
+                                  key={opt.duration}
+                                  type="button"
+                                  onClick={() => toggleDuration(t.id, opt.duration)}
+                                  className={`text-[11px] font-semibold px-2.5 py-1 rounded-full border transition-colors ${
+                                    durSelected
+                                      ? 'bg-[var(--fitlo-accent)] text-[var(--fitlo-bg)] border-[var(--fitlo-accent)]'
+                                      : 'bg-transparent text-[var(--fitlo-muted)] border-[var(--fitlo-line)] hover:border-[var(--fitlo-accent)] hover:text-[var(--fitlo-ink)]'
+                                  }`}
+                                >
+                                  {opt.duration}
+                                  {opt.price && (
+                                    <span className={`ml-1 ${durSelected ? 'opacity-70' : 'opacity-50'}`}>
+                                      · {opt.price}
+                                    </span>
+                                  )}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              </div>{/* end scrollable body */}
+              <div className="p-6 pt-4 border-t border-[var(--fitlo-line)] shrink-0 flex items-center justify-between">
                 {editingBanner?.id ? (
                   <button
                     type="button"
