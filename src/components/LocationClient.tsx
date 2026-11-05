@@ -92,6 +92,17 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
             window.removeEventListener('therapick_addons_updated', loadCustomAddons);
         };
     }, []);
+
+    // Lock body scroll when campaign modal is open
+    useEffect(() => {
+        if (isCampaignModalOpen) {
+            const originalOverflow = document.body.style.overflow;
+            document.body.style.overflow = 'hidden';
+            return () => {
+                document.body.style.overflow = originalOverflow;
+            };
+        }
+    }, [isCampaignModalOpen]);
     
     // Initialize date and time
     const getInitialDateTime = () => {
@@ -607,7 +618,9 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 30 }}
                         transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-                        className="fixed inset-0 z-[100] w-full h-[100dvh] bg-[#F8F9FA] flex flex-col overflow-hidden text-black font-sans"
+                        data-modal="campaign"
+                        className="campaign-modal-container fixed inset-0 z-[100] w-full h-[100dvh] bg-[#F8F9FA] flex flex-col overflow-hidden text-black font-sans"
+                        style={{ backgroundColor: '#F8F9FA' }}
                     >
                         {/* Modal Top Bar */}
                         <div className="shrink-0 bg-white/95 backdrop-blur-md border-b border-gray-200/90 px-4 sm:px-6 py-3.5 flex items-center justify-between shadow-sm z-30">
@@ -663,7 +676,10 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     {campaign?.selectedTreatments.flatMap(ct => {
-                                        const treatment = treatments.find(t => t.id === ct.treatmentId);
+                                        const treatment = treatments.find(t => 
+                                            t.id === ct.treatmentId || 
+                                            (t.title && (ct as any).title && t.title.toLowerCase() === (ct as any).title.toLowerCase())
+                                        );
                                         if (!treatment) return [];
 
                                         return ct.durations.map(duration => {

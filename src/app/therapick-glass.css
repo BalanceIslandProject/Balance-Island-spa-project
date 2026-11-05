@@ -183,8 +183,8 @@ html[data-site-theme="glass"] body::before {
   backdrop-filter: blur(26px) saturate(180%);
 }
 
-/* Soft neutral fills → cool translucent tint */
-:where(html[data-site-theme="glass"]) :is(.bg-gray-50, .bg-gray-100, .bg-stone-50, .bg-stone-100, .bg-\[\#FAFAFA\], .bg-\[\#F8F9FA\], .bg-\[\#F5F5F7\], .bg-gray-100\/90):not([class*="hover:bg-"]):not([class*="md:bg-"]) {
+/* Soft neutral fills → cool translucent tint (except modal overlays) */
+:where(html[data-site-theme="glass"]) :is(.bg-gray-50, .bg-gray-100, .bg-stone-50, .bg-stone-100, .bg-\[\#FAFAFA\], .bg-\[\#F8F9FA\], .bg-\[\#F5F5F7\], .bg-gray-100\/90):not([class*="hover:bg-"]):not([class*="md:bg-"]):not(.campaign-modal-container):not([data-modal="campaign"]) {
   background-color: var(--tg-tint);
 }
 /* Ticket cut-outs on campaign cards should read as holes into the canvas */
@@ -295,3 +295,34 @@ html[data-site-theme="glass"] body::before {
     transition: none;
   }
 }
+
+/* ==========================================================================
+   CAMPAIGN MODAL FULL-SCREEN OPAQUE OVERLAY (Prevents see-through text ghosting)
+   ========================================================================== */
+:where(html[data-site-theme="glass"]) .campaign-modal-container,
+.campaign-modal-container,
+[data-modal="campaign"] {
+  background-color: #F8F9FA !important;
+  opacity: 1 !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+:where(html[data-site-theme="glass"]) .campaign-modal-container .bg-white,
+[data-modal="campaign"] .bg-white {
+  background-color: #FFFFFF !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 4px 12px rgba(0, 0, 0, 0.03) !important;
+}
+
+:where(html[data-site-theme="glass"]) .campaign-modal-container .bg-\[\#FAFAFA\],
+[data-modal="campaign"] .bg-\[\#FAFAFA\] {
+  background-color: #FAFAFA !important;
+}
+
+:where(html[data-site-theme="glass"]) .campaign-modal-container .bg-\[\#F8F9FA\],
+[data-modal="campaign"] .bg-\[\#F8F9FA\] {
+  background-color: #F8F9FA !important;
+}
+

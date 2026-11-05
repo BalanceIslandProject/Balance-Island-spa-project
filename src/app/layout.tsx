@@ -295,7 +295,7 @@ const getSpaData = (brand: string) =>
         let [treatmentsRes, productsRes, campaignsRes, therapistsRes] = await Promise.all([
           supabase.from('treatments').select('*').eq('is_published', true).eq('brand', brand).order('created_at', { ascending: false }),
           supabase.from('products').select('*').eq('is_published', true).eq('brand', brand).order('created_at', { ascending: false }),
-          supabase.from('campaigns').select('*').eq('is_published', true).eq('brand', brand).order('created_at', { ascending: false }),
+          supabase.from('campaigns').select('*').eq('is_published', true).eq('brand', brand).order('order', { ascending: true }).order('updated_at', { ascending: false }),
           supabase.from('therapists').select('*').eq('is_active', true).eq('brand', brand).order('created_at', { ascending: false })
         ]);
 

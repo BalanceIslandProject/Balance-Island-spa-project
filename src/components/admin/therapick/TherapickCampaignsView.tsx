@@ -131,43 +131,81 @@ export default function TherapickCampaignsView() {
   };
 
   // ── Treatment selection helpers ──────────────────────────────────────────────
-  const isTreatmentSelected = (treatmentId: string) =>
-    bannerForm.selectedTreatments.some((s: any) => s.treatmentId === treatmentId);
+  const isTreatmentSelected = (t: { id: string; title: string }) =>
+    bannerForm.selectedTreatments.some((s: any) =>
+      s.treatmentId === t.id ||
+      (s.title && t.title && s.title.toLowerCase() === t.title.toLowerCase())
+    );
 
-  const isDurationSelected = (treatmentId: string, duration: string) => {
-    const entry = bannerForm.selectedTreatments.find((s: any) => s.treatmentId === treatmentId);
+  const isDurationSelected = (t: { id: string; title: string }, duration: string) => {
+    const entry = bannerForm.selectedTreatments.find((s: any) =>
+      s.treatmentId === t.id ||
+      (s.title && t.title && s.title.toLowerCase() === t.title.toLowerCase())
+    );
     return entry ? entry.durations.includes(duration) : false;
   };
 
-  const toggleTreatment = (treatmentId: string, allDurations: string[]) => {
-    const already = isTreatmentSelected(treatmentId);
+  const toggleTreatment = (t: { id: string; title: string }, allDurations: string[]) => {
+    const already = isTreatmentSelected(t);
     if (already) {
-      setBannerForm(f => ({ ...f, selectedTreatments: f.selectedTreatments.filter((s: any) => s.treatmentId !== treatmentId) }));
+      setBannerForm(f => ({
+        ...f,
+        selectedTreatments: f.selectedTreatments.filter((s: any) =>
+          s.treatmentId !== t.id &&
+          (!s.title || !t.title || s.title.toLowerCase() !== t.title.toLowerCase())
+        )
+      }));
     } else {
-      setBannerForm(f => ({ ...f, selectedTreatments: [...f.selectedTreatments, { treatmentId, durations: allDurations }] }));
+      setBannerForm(f => ({
+        ...f,
+        selectedTreatments: [...f.selectedTreatments, { treatmentId: t.id, title: t.title, durations: allDurations }]
+      }));
     }
   };
 
-  const toggleDuration = (treatmentId: string, duration: string) => {
+  const toggleDuration = (t: { id: string; title: string }, duration: string) => {
     setBannerForm(f => {
-      const existing = f.selectedTreatments.find((s: any) => s.treatmentId === treatmentId);
+      const existing = f.selectedTreatments.find((s: any) =>
+        s.treatmentId === t.id ||
+        (s.title && t.title && s.title.toLowerCase() === t.title.toLowerCase())
+      );
       if (!existing) {
-        return { ...f, selectedTreatments: [...f.selectedTreatments, { treatmentId, durations: [duration] }] };
+        return {
+          ...f,
+          selectedTreatments: [...f.selectedTreatments, { treatmentId: t.id, title: t.title, durations: [duration] }]
+        };
       }
       const nextDurations = existing.durations.includes(duration)
         ? existing.durations.filter((d: string) => d !== duration)
         : [...existing.durations, duration];
       if (nextDurations.length === 0) {
-        return { ...f, selectedTreatments: f.selectedTreatments.filter((s: any) => s.treatmentId !== treatmentId) };
+        return {
+          ...f,
+          selectedTreatments: f.selectedTreatments.filter((s: any) =>
+            s.treatmentId !== t.id &&
+            (!s.title || !t.title || s.title.toLowerCase() !== t.title.toLowerCase())
+          )
+        };
       }
-      return { ...f, selectedTreatments: f.selectedTreatments.map((s: any) => s.treatmentId === treatmentId ? { ...s, durations: nextDurations } : s) };
+      return {
+        ...f,
+        selectedTreatments: f.selectedTreatments.map((s: any) => {
+          const match = s.treatmentId === t.id ||
+            (s.title && t.title && s.title.toLowerCase() === t.title.toLowerCase());
+          return match ? { ...s, treatmentId: t.id, title: t.title, durations: nextDurations } : s;
+        })
+      };
     });
   };
 
   const selectAllTreatments = () => {
     setBannerForm(f => ({
       ...f,
-      selectedTreatments: treatments.map(t => ({ treatmentId: t.id, durations: (t.options || []).map((o: any) => o.duration) }))
+      selectedTreatments: treatments.map(t => ({
+        treatmentId: t.id,
+        title: t.title,
+        durations: (t.options || []).map((o: any) => o.duration)
+      }))
     }));
   };
 
@@ -241,7 +279,8 @@ export default function TherapickCampaignsView() {
         .from('campaigns')
         .select('*')
         .eq('brand', 'therapick')
-        .order('order', { ascending: true });
+        .order('order', { ascending: true })
+        .order('updated_at', { ascending: false });
 
       if (!data || data.length === 0) {
         if (spaCampaigns && spaCampaigns.length > 0) {
@@ -390,9 +429,10 @@ export default function TherapickCampaignsView() {
     showToast(nextActive ? `"${banner.title}" is on Explore` : `"${banner.title}" is off Explore`);
 
     try {
+      const nowIso = new Date().toISOString();
       localStorage.setItem('spa_campaigns', JSON.stringify(updated));
       window.dispatchEvent(new Event('spa_campaigns_updated'));
-      await supabase.from('campaigns').update({ is_published: nextActive }).eq('id', banner.id);
+      await supabase.from('campaigns').update({ is_published: nextActive, updated_at: nowIso }).eq('id', banner.id);
       await triggerRevalidation();
     } catch (err) {
       console.warn('Banner toggle error:', err);
@@ -411,10 +451,11 @@ export default function TherapickCampaignsView() {
     showToast(`"${banner.title}" is now the hero on Explore`);
 
     try {
+      const nowIso = new Date().toISOString();
       localStorage.setItem('spa_campaigns', JSON.stringify(updated));
       localStorage.setItem('spa_campaign', JSON.stringify(updated[0]));
       window.dispatchEvent(new Event('spa_campaigns_updated'));
-      await Promise.all(updated.map(b => supabase.from('campaigns').update({ order: b.order }).eq('id', b.id)));
+      await Promise.all(updated.map(b => supabase.from('campaigns').update({ order: b.order, updated_at: nowIso }).eq('id', b.id)));
       await triggerRevalidation();
     } catch (err) {
       console.warn('Hero update error:', err);
@@ -450,7 +491,7 @@ export default function TherapickCampaignsView() {
       duration: '1_month',
       image: 'https://images.pexels.com/photos/3865712/pexels-photo-3865712.jpeg?auto=compress&cs=tinysrgb&w=1200&h=800&fit=crop&crop=center',
       active: true,
-      selectedTreatments: treatments.map(t => ({ treatmentId: t.id, durations: (t.options || []).map(o => o.duration) }))
+      selectedTreatments: treatments.map(t => ({ treatmentId: t.id, title: t.title, durations: (t.options || []).map((o: any) => o.duration) }))
     });
     setIsBannerModalOpen(true);
   };
@@ -458,6 +499,7 @@ export default function TherapickCampaignsView() {
   const handleSaveBanner = async (e: React.FormEvent) => {
     e.preventDefault();
     const targetId = editingBanner?.id || (typeof crypto !== 'undefined' ? crypto.randomUUID() : `b${Date.now()}`);
+    const nowIso = new Date().toISOString();
 
     const bannerData: Campaign = {
       id: targetId,
@@ -473,8 +515,9 @@ export default function TherapickCampaignsView() {
       order: editingBanner?.order || (banners.length + 1),
       selectedTreatments: bannerForm.selectedTreatments.length > 0 
         ? bannerForm.selectedTreatments 
-        : treatments.map(t => ({ treatmentId: t.id, durations: (t.options || []).map(o => o.duration) })),
-      brand: 'therapick'
+        : treatments.map(t => ({ treatmentId: t.id, title: t.title, durations: (t.options || []).map((o: any) => o.duration) })),
+      brand: 'therapick',
+      updated_at: nowIso
     } as any;
 
     let updatedList: Campaign[];
@@ -1175,7 +1218,7 @@ export default function TherapickCampaignsView() {
                     </p>
                   )}
                   {treatments.map(t => {
-                    const selected = isTreatmentSelected(t.id);
+                    const selected = isTreatmentSelected(t);
                     const allDurs = (t.options || []).map((o: any) => o.duration);
                     return (
                       <div
@@ -1192,7 +1235,7 @@ export default function TherapickCampaignsView() {
                             <input
                               type="checkbox"
                               checked={selected}
-                              onChange={() => toggleTreatment(t.id, allDurs)}
+                              onChange={() => toggleTreatment(t, allDurs)}
                               className="accent-[var(--fitlo-accent)] w-3.5 h-3.5 shrink-0"
                             />
                             <span className="text-xs font-bold text-[var(--fitlo-ink)] truncate">{t.title}</span>
@@ -1208,12 +1251,12 @@ export default function TherapickCampaignsView() {
                         {allDurs.length > 0 && (
                           <div className="flex flex-wrap gap-1.5 pl-5">
                             {(t.options || []).map((opt: any) => {
-                              const durSelected = isDurationSelected(t.id, opt.duration);
+                              const durSelected = isDurationSelected(t, opt.duration);
                               return (
                                 <button
                                   key={opt.duration}
                                   type="button"
-                                  onClick={() => toggleDuration(t.id, opt.duration)}
+                                  onClick={() => toggleDuration(t, opt.duration)}
                                   className={`text-[11px] font-semibold px-2.5 py-1 rounded-full border transition-colors ${
                                     durSelected
                                       ? 'bg-[var(--fitlo-accent)] text-[var(--fitlo-bg)] border-[var(--fitlo-accent)]'

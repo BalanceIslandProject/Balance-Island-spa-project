@@ -199,12 +199,22 @@ type SpaContextType = {
 export const sortCampaigns = (list: Campaign[]): Campaign[] => {
     if (!Array.isArray(list)) return [];
     
+    // Sort first: lowest order first, and if tied, the most recently updated campaign wins
+    const sortedList = [...list].sort((a, b) => {
+        const orderA = a.order !== undefined && a.order !== null ? a.order : 999;
+        const orderB = b.order !== undefined && b.order !== null ? b.order : 999;
+        if (orderA !== orderB) return orderA - orderB;
+        const timeA = new Date((a as any).updated_at || (a as any).created_at || 0).getTime();
+        const timeB = new Date((b as any).updated_at || (b as any).created_at || 0).getTime();
+        return timeB - timeA;
+    });
+
     // Strictly deduplicate by unique title or ID so identical campaign cards never duplicate
     const seenTitles = new Set<string>();
     const seenIds = new Set<string>();
     const deduplicated: Campaign[] = [];
     
-    for (const item of list) {
+    for (const item of sortedList) {
         if (!item || !item.title) continue;
         const normalizedTitle = item.title.trim().toLowerCase();
         const id = item.id;
@@ -219,12 +229,7 @@ export const sortCampaigns = (list: Campaign[]): Campaign[] => {
         deduplicated.push(item);
     }
 
-    return deduplicated.sort((a, b) => {
-        const orderA = a.order !== undefined && a.order !== null ? a.order : 999;
-        const orderB = b.order !== undefined && b.order !== null ? b.order : 999;
-        if (orderA !== orderB) return orderA - orderB;
-        return 0;
-    });
+    return deduplicated;
 };
 
 export const DEFAULT_CAMPAIGNS: Campaign[] = [

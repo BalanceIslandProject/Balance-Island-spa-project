@@ -1,15 +1,22 @@
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
     try {
-        const body = await request.json();
+        const body = await request.json().catch(() => ({}));
         
-        // Very basic security check for demonstration, 
-        // ideally use a secret token from process.env.REVALIDATION_SECRET
-        if (body.action === 'revalidate') {
+        // Basic check or general revalidation
+        if (body.action === 'revalidate' || !body.action) {
             revalidatePath('/', 'layout');
             revalidatePath('/api/spa-data');
+            try {
+                (revalidateTag as any)('spa-data', { expire: 0 });
+                (revalidateTag as any)('spa-data-therapick', { expire: 0 });
+                (revalidateTag as any)('spa-data-bali', { expire: 0 });
+                (revalidateTag as any)('spa-data-elexoir', { expire: 0 });
+            } catch (tagErr) {
+                console.warn('revalidateTag notice:', tagErr);
+            }
             return NextResponse.json({ revalidated: true, now: Date.now() });
         }
         
