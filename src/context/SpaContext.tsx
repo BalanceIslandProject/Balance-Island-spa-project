@@ -26,14 +26,37 @@ export type Treatment = {
 
 export type Therapist = { id: string; name: string; bio: string; image_url: string; rating: number; is_active: boolean; brand: string; };
 
+export type SpaPartner = {
+    id: string;
+    brand: string;
+    name: string;
+    slug?: string | null;
+    logo_url?: string | null;
+    cover_image_url?: string | null;
+    location?: string | null;
+    address?: string | null;
+    whatsapp?: string | null;
+    email?: string | null;
+    discount_percentage?: number | null;
+    tax_percentage?: number | null;
+    description?: string | null;
+    is_active?: boolean;
+    order?: number;
+    created_at?: string;
+    updated_at?: string;
+};
+
 export type PartnerTreatment = {
     id: string;
     brand: string;
+    partner_id?: string | null;
     partner_name: string;
     partner_logo_url?: string | null;
     partner_slug?: string | null;
     partner_location?: string | null;
     partner_whatsapp?: string | null;
+    partner_discount_percentage?: number | null;
+    partner_tax_percentage?: number | null;
     title: string;
     category: string;
     desc?: string | null;
@@ -212,6 +235,8 @@ type SpaContextType = {
     setSiteBrandFilter: (brand: string) => void;
     therapists: Therapist[];
     setTherapists: React.Dispatch<React.SetStateAction<Therapist[]>>;
+    spaPartners: SpaPartner[];
+    setSpaPartners: React.Dispatch<React.SetStateAction<SpaPartner[]>>;
     partnerTreatments: PartnerTreatment[];
     setPartnerTreatments: React.Dispatch<React.SetStateAction<PartnerTreatment[]>>;
 };
@@ -220,7 +245,7 @@ type SpaContextType = {
 
 export const sortCampaigns = (list: Campaign[]): Campaign[] => {
     if (!Array.isArray(list)) return [];
-    
+
     // Sort first: lowest order first, and if tied, the most recently updated campaign wins
     const sortedList = [...list].sort((a, b) => {
         const orderA = a.order !== undefined && a.order !== null ? a.order : 999;
@@ -235,17 +260,17 @@ export const sortCampaigns = (list: Campaign[]): Campaign[] => {
     const seenTitles = new Set<string>();
     const seenIds = new Set<string>();
     const deduplicated: Campaign[] = [];
-    
+
     for (const item of sortedList) {
         if (!item || !item.title) continue;
         const normalizedTitle = item.title.trim().toLowerCase();
         const id = item.id;
-        
+
         // If we already have a card with this title or ID, skip duplicate
         if (seenTitles.has(normalizedTitle) || (id && seenIds.has(id))) {
             continue;
         }
-        
+
         seenTitles.add(normalizedTitle);
         if (id) seenIds.add(id);
         deduplicated.push(item);
@@ -275,6 +300,7 @@ export type SpaInitialData = {
     campaigns?: Campaign[];
     products?: Product[];
     therapists?: Therapist[];
+    spaPartners?: SpaPartner[];
     partnerTreatments?: PartnerTreatment[];
 };
 
@@ -287,7 +313,7 @@ export function SpaProvider({ children, brand, initialData }: { children: ReactN
             try {
                 const cached = localStorage.getItem('spa_treatments');
                 if (cached) return JSON.parse(cached);
-            } catch(e) {}
+            } catch (e) { }
         }
         return [];
     });
@@ -300,7 +326,7 @@ export function SpaProvider({ children, brand, initialData }: { children: ReactN
                     const parsed = JSON.parse(cached);
                     if (Array.isArray(parsed) && parsed.length > 0) return sortCampaigns(parsed);
                 }
-            } catch(e) {}
+            } catch (e) { }
         }
         return [];
     });
@@ -315,7 +341,7 @@ export function SpaProvider({ children, brand, initialData }: { children: ReactN
                     const parsed = JSON.parse(cached);
                     if (parsed) return parsed;
                 }
-            } catch(e) {}
+            } catch (e) { }
         }
         return null;
     });
@@ -325,7 +351,7 @@ export function SpaProvider({ children, brand, initialData }: { children: ReactN
             try {
                 const cached = localStorage.getItem('spa_products');
                 if (cached) return JSON.parse(cached);
-            } catch(e) {}
+            } catch (e) { }
         }
         return [];
     });
@@ -341,6 +367,10 @@ export function SpaProvider({ children, brand, initialData }: { children: ReactN
     const [siteBrandFilter, setSiteBrandFilter] = useState<string>(brand || process.env.NEXT_PUBLIC_SITE_BRAND || 'elexoir');
     const [therapists, setTherapists] = useState<Therapist[]>(() => {
         if (initialData?.therapists && initialData.therapists.length > 0) return initialData.therapists;
+        return [];
+    });
+    const [spaPartners, setSpaPartners] = useState<SpaPartner[]>(() => {
+        if (initialData?.spaPartners && initialData.spaPartners.length > 0) return initialData.spaPartners;
         return [];
     });
     const [partnerTreatments, setPartnerTreatments] = useState<PartnerTreatment[]>(() => {
@@ -361,21 +391,21 @@ export function SpaProvider({ children, brand, initialData }: { children: ReactN
                         setCampaign(sorted[0] || null);
                     }
                 }
-            } catch (e) {}
+            } catch (e) { }
         };
 
         // Persist SSR data to localStorage for cross-tab access
         if (initialData?.treatments && initialData.treatments.length > 0) {
-            try { localStorage.setItem('spa_treatments', JSON.stringify(initialData.treatments)); } catch(e) {}
+            try { localStorage.setItem('spa_treatments', JSON.stringify(initialData.treatments)); } catch (e) { }
         }
         if (initialData?.products && initialData.products.length > 0) {
-            try { localStorage.setItem('spa_products', JSON.stringify(initialData.products)); } catch(e) {}
+            try { localStorage.setItem('spa_products', JSON.stringify(initialData.products)); } catch (e) { }
         }
         if (initialData?.campaigns && initialData.campaigns.length > 0) {
-            try { 
+            try {
                 localStorage.setItem('spa_campaigns', JSON.stringify(sortCampaigns(initialData.campaigns)));
                 localStorage.setItem('spa_campaign', JSON.stringify(sortCampaigns(initialData.campaigns)[0] || null));
-            } catch(e) {}
+            } catch (e) { }
         }
 
         setIsLoaded(true);
@@ -426,6 +456,7 @@ export function SpaProvider({ children, brand, initialData }: { children: ReactN
             siteBrandFilter,
             setSiteBrandFilter,
             therapists, setTherapists,
+            spaPartners, setSpaPartners,
             partnerTreatments, setPartnerTreatments
         }}>
             {children}

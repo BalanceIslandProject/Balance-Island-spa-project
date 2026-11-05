@@ -498,23 +498,31 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                             {partnerTreatments.map((pt) => {
                                 const opts = Array.isArray(pt.options) && pt.options.length > 0 ? pt.options : [{ duration: '60', price: '450,000' }];
                                 const firstOpt = opts[0];
-                                const priceNum = parseInt(String(firstOpt?.price || '0').replace(/[^0-9]/g, '') || '0', 10);
+                                const basePriceNum = parseInt(String(firstOpt?.price || '0').replace(/[^0-9]/g, '') || '0', 10);
+                                const discountRate = Number(pt.partner_discount_percentage) || 0;
+                                const taxRate = Number(pt.partner_tax_percentage) || 0;
+                                const discounted = discountRate > 0 ? Math.round(basePriceNum * (1 - discountRate / 100)) : basePriceNum;
+                                const finalPrice = taxRate > 0 ? Math.round(discounted * (1 + taxRate / 100)) : discounted;
                                 const isCouple = ['couple', 'honeymoon'].some(k => pt.title.toLowerCase().includes(k));
 
                                 const handleBookPartnerTreatment = (opt = firstOpt) => {
-                                    const parsedPrice = parseInt(String(opt?.price || '0').replace(/[^0-9]/g, '') || '0', 10);
+                                    const optBasePrice = parseInt(String(opt?.price || '0').replace(/[^0-9]/g, '') || '0', 10);
+                                    const optDiscounted = discountRate > 0 ? Math.round(optBasePrice * (1 - discountRate / 100)) : optBasePrice;
+                                    const optFinal = taxRate > 0 ? Math.round(optDiscounted * (1 + taxRate / 100)) : optDiscounted;
                                     const durLabel = String(opt?.duration || '60').toUpperCase().includes('MIN') ? opt.duration : `${opt.duration} MINS`;
                                     setCartItems([{
                                         id: Date.now().toString() + Math.random().toString(36).substring(2, 7),
                                         treatmentId: pt.id,
                                         title: `${pt.title} · ${pt.partner_name}`,
                                         duration: durLabel,
-                                        price: parsedPrice,
+                                        price: optFinal,
                                         guests: isCouple ? 2 : 1,
                                         isPartner: true,
                                         partnerName: pt.partner_name,
                                         partnerLocation: pt.partner_location,
-                                        partnerLogoUrl: pt.partner_logo_url
+                                        partnerLogoUrl: pt.partner_logo_url,
+                                        discountPercentage: discountRate,
+                                        taxPercentage: taxRate
                                     }]);
                                     setIsBookingModalOpen(true);
                                 };
@@ -548,12 +556,11 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                                     </span>
                                                 </div>
 
-                                                {/* Location Pill */}
-                                                {pt.partner_location && (
+                                                {/* Discount Pill if partner has discount */}
+                                                {discountRate > 0 && (
                                                     <div className="absolute top-3 right-3 z-10">
-                                                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/90 backdrop-blur-md text-gray-800 text-[10px] font-semibold border border-white/40 shadow-xs">
-                                                            <MapPin size={10} className="text-gray-600" />
-                                                            <span>{pt.partner_location}</span>
+                                                        <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-emerald-600 text-white text-[10px] font-black tracking-wide shadow-xs">
+                                                            {discountRate}% OFF
                                                         </span>
                                                     </div>
                                                 )}
@@ -572,9 +579,16 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                                                 {pt.partner_name.charAt(0)}
                                                             </div>
                                                         )}
-                                                        <span className="text-xs font-bold text-white tracking-wide truncate max-w-[180px] drop-shadow-xs">
-                                                            {pt.partner_name}
-                                                        </span>
+                                                        <div className="truncate max-w-[180px]">
+                                                            <span className="text-xs font-bold text-white tracking-wide block truncate drop-shadow-xs">
+                                                                {pt.partner_name}
+                                                            </span>
+                                                            {pt.partner_location && (
+                                                                <span className="text-[10px] text-white/80 font-medium block truncate">
+                                                                    {pt.partner_location}
+                                                                </span>
+                                                            )}
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -610,10 +624,22 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                         <div className="p-4 sm:p-5 pt-0 mt-auto">
                                             <div className="pt-3 border-t border-gray-100 flex items-center justify-between gap-3">
                                                 <div>
-                                                    <span className="text-[9px] font-bold uppercase tracking-wider text-gray-400 block">Starts from</span>
-                                                    <span className="text-base font-bold text-gray-900">
-                                                        IDR {priceNum.toLocaleString('en-US')}
-                                                    </span>
+                                                    <span className="text-[9px] font-bold uppercase tracking-wider text-gray-400 block">Customer Rate</span>
+                                                    <div className="flex items-baseline gap-1.5">
+                                                        <span className="text-base font-bold text-gray-900">
+                                                            IDR {finalPrice.toLocaleString('en-US')}
+                                                        </span>
+                                                        {discountRate > 0 && (
+                                                            <span className="text-xs text-gray-400 line-through">
+                                                                IDR {basePriceNum.toLocaleString('en-US')}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    {taxRate > 0 && (
+                                                        <span className="text-[9px] text-gray-400 font-medium block">
+                                                            incl. {taxRate}% tax
+                                                        </span>
+                                                    )}
                                                 </div>
 
                                                 <button
