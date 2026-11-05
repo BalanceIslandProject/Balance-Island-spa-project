@@ -187,11 +187,16 @@ html[data-site-theme="glass"] body::before {
 :where(html[data-site-theme="glass"]) :is(.bg-gray-50, .bg-gray-100, .bg-stone-50, .bg-stone-100, .bg-\[\#FAFAFA\], .bg-\[\#F8F9FA\], .bg-\[\#F5F5F7\], .bg-gray-100\/90):not([class*="hover:bg-"]):not([class*="md:bg-"]):not(.campaign-modal-container):not([data-modal="campaign"]) {
   background-color: var(--tg-tint);
 }
-/* Ticket cut-outs on campaign cards should read as holes into the canvas */
-:where(html[data-site-theme="glass"]) .rounded-full.shadow-inner.bg-\[\#FAFAFA\] {
-  background-color: var(--tg-canvas);
-  border-color: rgba(255, 255, 255, 0.9);
-  box-shadow: inset 0 1px 3px rgba(15, 23, 42, 0.12);
+/* Campaign ticket cut-outs: solid crisp white curves like before */
+.ticket-cutout,
+:where(html[data-site-theme="glass"]) .ticket-cutout {
+  background-color: #ffffff !important;
+  background: #ffffff !important;
+  border: none !important;
+  box-shadow: none !important;
+  opacity: 1 !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
 }
 /* Campaign ticket frame */
 :where(html[data-site-theme="glass"]) .bg-\[\#FAFAFA\][class*="rounded-[24px]"] {
@@ -297,32 +302,43 @@ html[data-site-theme="glass"] body::before {
 }
 
 /* ==========================================================================
-   CAMPAIGN MODAL FULL-SCREEN OPAQUE OVERLAY (Prevents see-through text ghosting)
+   CAMPAIGN MODAL FULL-SCREEN OPAQUE OVERLAY (Clean White Background)
    ========================================================================== */
-:where(html[data-site-theme="glass"]) .campaign-modal-container,
 .campaign-modal-container,
-[data-modal="campaign"] {
-  background-color: #F8F9FA !important;
+[data-modal="campaign"],
+html[data-site-theme="glass"] .campaign-modal-container,
+html[data-site-theme="glass"] [data-modal="campaign"] {
+  background-color: #ffffff !important;
+  background: #ffffff !important;
   opacity: 1 !important;
   -webkit-backdrop-filter: none !important;
   backdrop-filter: none !important;
+  z-index: 9999 !important;
 }
 
-:where(html[data-site-theme="glass"]) .campaign-modal-container .bg-white,
-[data-modal="campaign"] .bg-white {
-  background-color: #FFFFFF !important;
+.campaign-modal-container .bg-white,
+[data-modal="campaign"] .bg-white,
+html[data-site-theme="glass"] .campaign-modal-container .bg-white {
+  background-color: #ffffff !important;
+  background: #ffffff !important;
   -webkit-backdrop-filter: none !important;
   backdrop-filter: none !important;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 4px 12px rgba(0, 0, 0, 0.03) !important;
 }
 
-:where(html[data-site-theme="glass"]) .campaign-modal-container .bg-\[\#FAFAFA\],
-[data-modal="campaign"] .bg-\[\#FAFAFA\] {
-  background-color: #FAFAFA !important;
+.campaign-modal-container .bg-\[\#FAFAFA\],
+[data-modal="campaign"] .bg-\[\#FAFAFA\],
+.campaign-modal-container .bg-\[\#f9fafb\],
+[data-modal="campaign"] .bg-\[\#f9fafb\] {
+  background-color: #f9fafb !important;
+  background: #f9fafb !important;
 }
 
-:where(html[data-site-theme="glass"]) .campaign-modal-container .bg-\[\#F8F9FA\],
-[data-modal="campaign"] .bg-\[\#F8F9FA\] {
-  background-color: #F8F9FA !important;
+.campaign-modal-container .bg-\[\#F8F9FA\],
+[data-modal="campaign"] .bg-\[\#F8F9FA\],
+.campaign-modal-container .bg-\[\#f8f9fa\],
+[data-modal="campaign"] .bg-\[\#f8f9fa\] {
+  background-color: #f8f9fa !important;
+  background: #f8f9fa !important;
 }
 

@@ -337,13 +337,13 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                         {/* Divider with Cutouts */}
                         <div className="relative w-0 flex flex-col justify-between items-center z-20">
                             {/* Top Cutout */}
-                            <div className="absolute top-0 -translate-x-1/2 -translate-y-1/2 w-6 h-6 md:w-8 md:h-8 bg-[#FAFAFA] rounded-full border border-gray-200 shadow-inner"></div>
+                            <div className="ticket-cutout absolute top-0 -translate-x-1/2 -translate-y-1/2 w-6 h-6 md:w-8 md:h-8 rounded-full pointer-events-none" style={{ backgroundColor: '#ffffff' }}></div>
                             
                             {/* Vertical Dashed Line */}
-                            <div className="absolute top-0 bottom-0 -translate-x-1/2 border-l-[3px] border-dotted border-gray-300/70 z-[-1]"></div>
+                            <div className="absolute top-0 bottom-0 -translate-x-1/2 border-l-[2px] border-dashed border-gray-300 z-10"></div>
 
                             {/* Bottom Cutout */}
-                            <div className="absolute bottom-0 -translate-x-1/2 translate-y-1/2 w-6 h-6 md:w-8 md:h-8 bg-[#FAFAFA] rounded-full border border-gray-200 shadow-inner"></div>
+                            <div className="ticket-cutout absolute bottom-0 -translate-x-1/2 translate-y-1/2 w-6 h-6 md:w-8 md:h-8 rounded-full pointer-events-none" style={{ backgroundColor: '#ffffff' }}></div>
                         </div>
 
                         {/* Right Section (White Ticket Stub with Date Details) */}
@@ -614,16 +614,16 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
             <AnimatePresence>
                 {isCampaignModalOpen && (
                     <motion.div
-                        initial={{ opacity: 0, y: 30 }}
+                        initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 30 }}
-                        transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                        exit={{ opacity: 0, y: 20 }}
+                        transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
                         data-modal="campaign"
-                        className="campaign-modal-container fixed inset-0 z-[100] w-full h-[100dvh] bg-[#F8F9FA] flex flex-col overflow-hidden text-black font-sans"
-                        style={{ backgroundColor: '#F8F9FA' }}
+                        className="campaign-modal-container fixed inset-0 z-[9999] w-full h-[100dvh] bg-white flex flex-col overflow-hidden text-black font-sans"
+                        style={{ backgroundColor: '#ffffff', opacity: 1 }}
                     >
                         {/* Modal Top Bar */}
-                        <div className="shrink-0 bg-white/95 backdrop-blur-md border-b border-gray-200/90 px-4 sm:px-6 py-3.5 flex items-center justify-between shadow-sm z-30">
+                        <div className="shrink-0 bg-white border-b border-gray-200/80 px-4 sm:px-6 py-3.5 flex items-center justify-between shadow-xs z-30" style={{ backgroundColor: '#ffffff' }}>
                             <button
                                 onClick={() => setIsCampaignModalOpen(false)}
                                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-100 hover:bg-black hover:text-white text-gray-800 text-xs font-bold transition-all shadow-sm group"
@@ -644,9 +644,9 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                         </div>
 
                         {/* Modal Scrollable Content */}
-                        <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6 md:p-8 space-y-6 max-w-4xl mx-auto w-full">
+                        <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6 md:p-8 space-y-6 max-w-4xl mx-auto w-full bg-white" style={{ backgroundColor: '#ffffff' }}>
                             {/* Campaign Hero Banner */}
-                            <div className="bg-white rounded-2xl border border-gray-200/80 p-5 sm:p-6 shadow-xs relative overflow-hidden">
+                            <div className="bg-[#f8f9fa] rounded-2xl border border-gray-200/90 p-5 sm:p-6 shadow-xs relative overflow-hidden" style={{ backgroundColor: '#f8f9fa' }}>
                                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                                     <div>
                                         <h2 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">
@@ -654,7 +654,7 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                         </h2>
                                     </div>
                                     {campaign?.endDate && (
-                                        <div className="inline-flex items-center gap-1.5 bg-gray-100 px-3 py-1.5 rounded-full text-gray-700 text-xs font-medium self-start sm:self-auto shrink-0">
+                                        <div className="inline-flex items-center gap-1.5 bg-white border border-gray-200/80 px-3 py-1.5 rounded-full text-gray-700 text-xs font-medium self-start sm:self-auto shrink-0 shadow-xs">
                                             <Clock size={13} className="text-gray-500" />
                                             <span>Valid until {new Date(campaign.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                                         </div>
@@ -741,9 +741,9 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
 
                                                     {/* Divider with Cutouts - Curves Kept */}
                                                     <div className="relative w-0 flex flex-col justify-between items-center z-20">
-                                                        <div className="absolute top-0 -translate-x-1/2 -translate-y-1/2 w-6 h-6 md:w-8 md:h-8 bg-[#F8F9FA] rounded-full border border-gray-200 shadow-inner"></div>
-                                                        <div className="absolute top-0 bottom-0 -translate-x-1/2 border-l-[3px] border-dotted border-gray-300/70 z-[-1]"></div>
-                                                        <div className="absolute bottom-0 -translate-x-1/2 translate-y-1/2 w-6 h-6 md:w-8 md:h-8 bg-[#F8F9FA] rounded-full border border-gray-200 shadow-inner"></div>
+                                                        <div className="ticket-cutout absolute top-0 -translate-x-1/2 -translate-y-1/2 w-6 h-6 md:w-8 md:h-8 rounded-full pointer-events-none" style={{ backgroundColor: '#ffffff' }}></div>
+                                                        <div className="absolute top-0 bottom-0 -translate-x-1/2 border-l-[2px] border-dashed border-gray-200 z-10"></div>
+                                                        <div className="ticket-cutout absolute bottom-0 -translate-x-1/2 translate-y-1/2 w-6 h-6 md:w-8 md:h-8 rounded-full pointer-events-none" style={{ backgroundColor: '#ffffff' }}></div>
                                                     </div>
 
                                                     {/* Right Section (White Ticket Stub) */}
