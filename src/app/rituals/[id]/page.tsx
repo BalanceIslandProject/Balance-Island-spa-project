@@ -125,132 +125,15 @@ export default function RitualsDetails() {
     const [promoError, setPromoError] = useState('');
     const [promoSuccess, setPromoSuccess] = useState('');
     
-    // Auto-detect total treatment duration in minutes from cartItems (e.g. 315 MINS -> 315)
-    const totalTreatmentDurationMinutes = useMemo(() => {
-        if (!cartItems || cartItems.length === 0) return 60;
-        const total = cartItems.reduce((acc, item) => {
-            const rawDur = String(item.duration || '');
-            const parsed = parseInt(rawDur.replace(/[^0-9]/g, ''), 10);
-            return acc + (isNaN(parsed) || parsed <= 0 ? 60 : parsed);
-        }, 0);
-        return Math.max(30, total);
-    }, [cartItems]);
-
-    // Partner operates 09:00 - 22:00. Same-day bookings require at least 3 hours notice from now.
-    // Treatment session must finish at or before 22:00 closing (e.g. 315 min package latest start is 16:30 / 04:30 PM).
-    const getAvailableTimeSlots = useCallback((selectedDateStr: string, durationMinutes: number = totalTreatmentDurationMinutes) => {
+    // Initialize date and time for home spa ritual
+    const getInitialDateTime = () => {
         const now = new Date();
-        const todayStr = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
-        const isToday = selectedDateStr === todayStr;
-
-        // Closing time: 22:00 (1320 minutes)
-        const closeMinutes = 22 * 60; // 1320
-        const safeDuration = Math.max(30, durationMinutes || 60);
-        const latestStartMinutes = closeMinutes - safeDuration;
-        // Floor to nearest 30-min slot so treatment finishes before or at 22:00
-        const latestSlotMinutes = Math.floor(latestStartMinutes / 30) * 30;
-
-        let earliestSlotMinutes = 9 * 60; // 09:00 AM (540 mins)
-
-        if (isToday) {
-            // Same-day requires at least 3 hours preparation notice from now
-            const currentMinutes = now.getHours() * 60 + now.getMinutes();
-            const minNoticeMinutes = currentMinutes + 180;
-            const nextSlotWithNotice = Math.ceil(minNoticeMinutes / 30) * 30;
-            earliestSlotMinutes = Math.max(earliestSlotMinutes, nextSlotWithNotice);
-        }
-
-        const slots: { value: string; label: string; endTime: string }[] = [];
-
-        if (earliestSlotMinutes <= latestSlotMinutes) {
-            for (let m = earliestSlotMinutes; m <= latestSlotMinutes; m += 30) {
-                const h24 = Math.floor(m / 60);
-                const mPart = m % 60;
-                const timeStr = `${String(h24).padStart(2, '0')}:${String(mPart).padStart(2, '0')}`;
-
-                // Clean single 12-hour format: "09:00 AM", "04:30 PM" (no duplicate double time)
-                const period = h24 >= 12 ? 'PM' : 'AM';
-                const displayH = h24 % 12 === 0 ? 12 : h24 % 12;
-                const displayHStr = String(displayH).padStart(2, '0');
-                const displayMStr = String(mPart).padStart(2, '0');
-                const label = `${displayHStr}:${displayMStr} ${period}`;
-
-                // Calculate finish time for preview
-                const finishTotalMin = m + safeDuration;
-                const finishH24 = Math.floor(finishTotalMin / 60);
-                const finishM = finishTotalMin % 60;
-                const finishPeriod = finishH24 >= 12 ? 'PM' : 'AM';
-                const finishDisplayH = finishH24 % 12 === 0 ? 12 : finishH24 % 12;
-                const endTime = `${String(finishDisplayH).padStart(2, '0')}:${String(finishM).padStart(2, '0')} ${finishPeriod}`;
-
-                slots.push({ value: timeStr, label, endTime });
-            }
-        }
-
-        return slots;
-    }, [totalTreatmentDurationMinutes]);
-
-    // Initialize date and time with 3 hours preparation notice / next day if closed
-    const getInitialDateTime = useCallback((durationMinutes: number = 60) => {
-        const now = new Date();
-        const todayStr = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
-        const todaySlots = getAvailableTimeSlots(todayStr, durationMinutes);
-
-        if (todaySlots.length > 0) {
-            return {
-                date: todayStr,
-                time: todaySlots[0].value
-            };
-        } else {
-            // No slots left today (closes at 22:00) -> default to tomorrow 09:00 AM
-            const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-            const tomorrowStr = new Date(tomorrow.getTime() - (tomorrow.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
-            const tomorrowSlots = getAvailableTimeSlots(tomorrowStr, durationMinutes);
-            return {
-                date: tomorrowStr,
-                time: tomorrowSlots[0]?.value || '09:00'
-            };
-        }
-    }, [getAvailableTimeSlots]);
+        const date = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+        const time = now.toTimeString().split(' ')[0].substring(0, 5);
+        return { date, time };
+    };
     
-    const [formData, setFormData] = useState(() => ({ name: '', location: '', room: '', whatsapp: '', ...getInitialDateTime(60) }));
-
-    const todayDateStr = useMemo(() => {
-        const now = new Date();
-        return new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
-    }, []);
-
-    const availableTimeSlots = useMemo(() => {
-        return getAvailableTimeSlots(formData.date, totalTreatmentDurationMinutes);
-    }, [formData.date, totalTreatmentDurationMinutes, getAvailableTimeSlots]);
-
-    const selectedSlotInfo = useMemo(() => {
-        return availableTimeSlots.find(s => s.value === formData.time);
-    }, [availableTimeSlots, formData.time]);
-
-    // Keep formData.time and formData.date valid for the chosen duration
-    useEffect(() => {
-        if (availableTimeSlots.length > 0) {
-            const hasValidTime = availableTimeSlots.some(s => s.value === formData.time);
-            if (!hasValidTime) {
-                setFormData(prev => ({ ...prev, time: availableTimeSlots[0].value }));
-            }
-        } else {
-            // If current date has no slots for this treatment duration, auto-switch to tomorrow
-            const now = new Date();
-            const todayStr = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
-            if (formData.date === todayStr) {
-                const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-                const tomorrowStr = new Date(tomorrow.getTime() - (tomorrow.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
-                const tomorrowSlots = getAvailableTimeSlots(tomorrowStr, totalTreatmentDurationMinutes);
-                setFormData(prev => ({
-                    ...prev,
-                    date: tomorrowStr,
-                    time: tomorrowSlots[0]?.value || '09:00'
-                }));
-            }
-        }
-    }, [availableTimeSlots, formData.time, formData.date, totalTreatmentDurationMinutes, getAvailableTimeSlots]);
+    const [formData, setFormData] = useState({ name: '', location: '', room: '', whatsapp: '', ...getInitialDateTime() });
     const isTherapick = siteBrandFilter === 'therapick' || (typeof window !== 'undefined' && (window.location.hostname.includes('therapick') || window.location.hostname.includes('booktherapick')));
 
     if (!treatment) {
@@ -1001,75 +884,19 @@ export default function RitualsDetails() {
                                                 <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1"><Calendar className="w-3.5 h-3.5"/> Date</label>
                                                 <input
                                                     type="date" required
-                                                    min={todayDateStr}
-                                                    value={formData.date} onChange={e => {
-                                                        const newDate = e.target.value;
-                                                        const newSlots = getAvailableTimeSlots(newDate, totalTreatmentDurationMinutes);
-                                                        const keepsTime = newSlots.some(s => s.value === formData.time);
-                                                        setFormData({
-                                                            ...formData,
-                                                            date: newDate,
-                                                            time: keepsTime ? formData.time : (newSlots[0]?.value || '')
-                                                        });
-                                                    }}
+                                                    value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })}
                                                     className="w-full min-w-0 appearance-none bg-white border border-border/80 rounded-xl px-4 py-3.5 text-sm text-primary placeholder:text-text-muted/50 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer"
                                                 />
                                             </div>
                                             <div className="space-y-1.5 flex-1 min-w-0">
-                                                <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1"><Clock className="w-3.5 h-3.5"/> Availability Time</label>
-                                                <div className="relative">
-                                                    <select
-                                                        required
-                                                        value={formData.time}
-                                                        onChange={e => setFormData({ ...formData, time: e.target.value })}
-                                                        disabled={availableTimeSlots.length === 0}
-                                                        className="w-full min-w-0 appearance-none bg-white border border-border/80 rounded-xl pl-4 pr-9 py-3.5 text-sm text-primary font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer disabled:bg-gray-100 disabled:text-gray-400"
-                                                    >
-                                                        {availableTimeSlots.length > 0 ? (
-                                                            availableTimeSlots.map(slot => (
-                                                                <option key={slot.value} value={slot.value}>
-                                                                    {slot.label}
-                                                                </option>
-                                                            ))
-                                                        ) : (
-                                                            <option value="" disabled>No slots available today</option>
-                                                        )}
-                                                    </select>
-                                                    <ChevronDown className="w-4 h-4 text-text-muted/60 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                                                </div>
+                                                <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1"><Clock className="w-3.5 h-3.5"/> Time</label>
+                                                <input
+                                                    type="time" required
+                                                    value={formData.time} onChange={e => setFormData({ ...formData, time: e.target.value })}
+                                                    className="w-full min-w-0 appearance-none bg-white border border-border/80 rounded-xl px-4 py-3.5 text-sm text-primary placeholder:text-text-muted/50 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                                                />
                                             </div>
                                         </div>
-                                        {/* Session Timing Info */}
-                                        {selectedSlotInfo && (
-                                            <div className="flex items-center gap-2 px-3.5 py-2.5 bg-stone-50 border border-stone-200/70 rounded-xl text-xs text-stone-600">
-                                                <Clock className="w-3.5 h-3.5 text-stone-500 shrink-0" />
-                                                <span>
-                                                    Session: <strong className="text-stone-900 font-semibold">{selectedSlotInfo.label} – {selectedSlotInfo.endTime}</strong> ({totalTreatmentDurationMinutes} Mins) · Finishes before 10:00 PM
-                                                </span>
-                                            </div>
-                                        )}
-                                        {availableTimeSlots.length === 0 && (
-                                            <div className="p-3 bg-amber-50 border border-amber-200/80 rounded-xl text-xs text-amber-900 flex items-center justify-between gap-2">
-                                                <span>Partner closes at 10 PM. No more slots today for a {totalTreatmentDurationMinutes}-min session (with 3-hr notice).</span>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => {
-                                                        const now = new Date();
-                                                        const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-                                                        const tStr = new Date(tomorrow.getTime() - (tomorrow.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
-                                                        const newSlots = getAvailableTimeSlots(tStr, totalTreatmentDurationMinutes);
-                                                        setFormData({
-                                                            ...formData,
-                                                            date: tStr,
-                                                            time: newSlots[0]?.value || '09:00'
-                                                        });
-                                                    }}
-                                                    className="text-[11px] font-bold text-amber-950 underline shrink-0 hover:text-black cursor-pointer"
-                                                >
-                                                    Book Tomorrow
-                                                </button>
-                                            </div>
-                                        )}
                                         <div className="space-y-1.5 w-full">
                                             <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1"><MapPin className="w-3.5 h-3.5"/> Villa / Hotel Name</label>
                                             <input

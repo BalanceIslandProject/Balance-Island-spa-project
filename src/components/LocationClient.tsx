@@ -176,10 +176,14 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
         return slots;
     }, [totalTreatmentDurationMinutes]);
 
-    // Initialize date and time with 3 hours preparation notice / next day if closed
-    const getInitialDateTime = useCallback((durationMinutes: number = 60) => {
+    // Initialize date and time with 3 hours preparation notice / next day if closed (for partner) or standard current time (for home spa)
+    const getInitialDateTime = useCallback((durationMinutes: number = 60, forPartner: boolean = false) => {
         const now = new Date();
         const todayStr = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+        if (!forPartner) {
+            const time = now.toTimeString().split(' ')[0].substring(0, 5);
+            return { date: todayStr, time };
+        }
         const todaySlots = getAvailableTimeSlots(todayStr, durationMinutes);
 
         if (todaySlots.length > 0) {
@@ -198,8 +202,10 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
             };
         }
     }, [getAvailableTimeSlots]);
+
+    const isPartnerBooking = useMemo(() => cartItems.some(i => i.isPartner), [cartItems]);
     
-    const [formData, setFormData] = useState(() => ({ name: '', location: '', room: '', whatsapp: '', ...getInitialDateTime(60) }));
+    const [formData, setFormData] = useState(() => ({ name: '', location: '', room: '', whatsapp: '', ...getInitialDateTime(60, false) }));
 
     const todayDateStr = useMemo(() => {
         const now = new Date();
@@ -207,15 +213,19 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
     }, []);
 
     const availableTimeSlots = useMemo(() => {
+        if (!isPartnerBooking) return [];
         return getAvailableTimeSlots(formData.date, totalTreatmentDurationMinutes);
-    }, [formData.date, totalTreatmentDurationMinutes, getAvailableTimeSlots]);
+    }, [isPartnerBooking, formData.date, totalTreatmentDurationMinutes, getAvailableTimeSlots]);
 
     const selectedSlotInfo = useMemo(() => {
+        if (!isPartnerBooking) return null;
         return availableTimeSlots.find(s => s.value === formData.time);
-    }, [availableTimeSlots, formData.time]);
+    }, [isPartnerBooking, availableTimeSlots, formData.time]);
 
-    // Keep formData.time and formData.date valid for the chosen duration
+    // Keep formData.time and formData.date valid ONLY for partner treatments
     useEffect(() => {
+        if (!isPartnerBooking) return;
+
         if (availableTimeSlots.length > 0) {
             const hasValidTime = availableTimeSlots.some(s => s.value === formData.time);
             if (!hasValidTime) {
@@ -236,7 +246,7 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                 }));
             }
         }
-    }, [availableTimeSlots, formData.time, formData.date, totalTreatmentDurationMinutes, getAvailableTimeSlots]);
+    }, [isPartnerBooking, availableTimeSlots, formData.time, formData.date, totalTreatmentDurationMinutes, getAvailableTimeSlots]);
     const isTherapick = siteBrandFilter === 'therapick' || (typeof window !== 'undefined' && (window.location.hostname.includes('therapick') || window.location.hostname.includes('booktherapick')));
 
     const filteredAndSortedTreatments = React.useMemo(() => {
@@ -1428,46 +1438,67 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                                 <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1"><Calendar className="w-3.5 h-3.5"/> Date</label>
                                                 <input
                                                     type="date" required
-                                                    min={todayDateStr}
+                                                    min={isPartnerBooking ? todayDateStr : undefined}
                                                     value={formData.date} onChange={e => {
                                                         const newDate = e.target.value;
-                                                        const newSlots = getAvailableTimeSlots(newDate, totalTreatmentDurationMinutes);
-                                                        const keepsTime = newSlots.some(s => s.value === formData.time);
-                                                        setFormData({
-                                                            ...formData,
-                                                            date: newDate,
-                                                            time: keepsTime ? formData.time : (newSlots[0]?.value || '')
-                                                        });
+                                                        if (isPartnerBooking) {
+                                                            const newSlots = getAvailableTimeSlots(newDate, totalTreatmentDurationMinutes);
+                                                            const keepsTime = newSlots.some(s => s.value === formData.time);
+                                                            setFormData({
+                                                                ...formData,
+                                                                date: newDate,
+                                                                time: keepsTime ? formData.time : (newSlots[0]?.value || '')
+                                                            });
+                                                        } else {
+                                                            setFormData({
+                                                                ...formData,
+                                                                date: newDate
+                                                            });
+                                                        }
                                                     }}
                                                     className="w-full min-w-0 appearance-none bg-white border border-border/80 rounded-xl px-4 py-3.5 text-sm text-primary placeholder:text-text-muted/50 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer"
                                                 />
                                             </div>
                                             <div className="space-y-1.5 flex-1 min-w-0">
-                                                <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1"><Clock className="w-3.5 h-3.5"/> Availability Time</label>
-                                                <div className="relative">
-                                                    <select
-                                                        required
-                                                        value={formData.time}
-                                                        onChange={e => setFormData({ ...formData, time: e.target.value })}
-                                                        disabled={availableTimeSlots.length === 0}
-                                                        className="w-full min-w-0 appearance-none bg-white border border-border/80 rounded-xl pl-4 pr-9 py-3.5 text-sm text-primary font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer disabled:bg-gray-100 disabled:text-gray-400"
-                                                    >
-                                                        {availableTimeSlots.length > 0 ? (
-                                                            availableTimeSlots.map(slot => (
-                                                                <option key={slot.value} value={slot.value}>
-                                                                    {slot.label}
-                                                                </option>
-                                                            ))
-                                                        ) : (
-                                                            <option value="" disabled>No slots available today</option>
-                                                        )}
-                                                    </select>
-                                                    <ChevronDown className="w-4 h-4 text-text-muted/60 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                                                </div>
+                                                {isPartnerBooking ? (
+                                                    <>
+                                                        <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1"><Clock className="w-3.5 h-3.5"/> Availability Time</label>
+                                                        <div className="relative">
+                                                            <select
+                                                                required
+                                                                value={formData.time}
+                                                                onChange={e => setFormData({ ...formData, time: e.target.value })}
+                                                                disabled={availableTimeSlots.length === 0}
+                                                                className="w-full min-w-0 appearance-none bg-white border border-border/80 rounded-xl pl-4 pr-9 py-3.5 text-sm text-primary font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer disabled:bg-gray-100 disabled:text-gray-400"
+                                                            >
+                                                                {availableTimeSlots.length > 0 ? (
+                                                                    availableTimeSlots.map(slot => (
+                                                                        <option key={slot.value} value={slot.value}>
+                                                                            {slot.label}
+                                                                        </option>
+                                                                    ))
+                                                                ) : (
+                                                                    <option value="" disabled>No slots available today</option>
+                                                                )}
+                                                            </select>
+                                                            <ChevronDown className="w-4 h-4 text-text-muted/60 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                                                        </div>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary/80 ml-1"><Clock className="w-3.5 h-3.5"/> Time</label>
+                                                        <input
+                                                            type="time" required
+                                                            value={formData.time}
+                                                            onChange={e => setFormData({ ...formData, time: e.target.value })}
+                                                            className="w-full min-w-0 appearance-none bg-white border border-border/80 rounded-xl px-4 py-3.5 text-sm text-primary placeholder:text-text-muted/50 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer"
+                                                        />
+                                                    </>
+                                                )}
                                             </div>
                                         </div>
-                                        {/* Session Timing Info */}
-                                        {selectedSlotInfo && (
+                                        {/* Session Timing Info (Only for Partner Spas) */}
+                                        {isPartnerBooking && selectedSlotInfo && (
                                             <div className="flex items-center gap-2 px-3.5 py-2.5 bg-stone-50 border border-stone-200/70 rounded-xl text-xs text-stone-600">
                                                 <Clock className="w-3.5 h-3.5 text-stone-500 shrink-0" />
                                                 <span>
@@ -1475,7 +1506,7 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                                 </span>
                                             </div>
                                         )}
-                                        {availableTimeSlots.length === 0 && (
+                                        {isPartnerBooking && availableTimeSlots.length === 0 && (
                                             <div className="p-3 bg-amber-50 border border-amber-200/80 rounded-xl text-xs text-amber-900 flex items-center justify-between gap-2">
                                                 <span>Partner closes at 10 PM. No more slots today for a {totalTreatmentDurationMinutes}-min session (with 3-hr notice).</span>
                                                 <button
