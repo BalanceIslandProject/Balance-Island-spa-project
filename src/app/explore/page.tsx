@@ -143,18 +143,23 @@ function ExploreContent() {
     const activeCategoriesList = activeTab === 'homespa' ? HOMESPA_CATEGORIES : PARTNER_CATEGORIES;
 
     return (
-        <main className="min-h-screen bg-white pb-24 pt-32 sm:pt-36">
-            {/* Search & Categories Sticky Header */}
-            <div className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md pt-4 pb-2.5 border-b border-gray-100 shadow-xs">
+        <main className="min-h-screen bg-transparent relative overflow-hidden pb-24 pt-32 sm:pt-36">
+            {/* Ambient Background Glows matching main website */}
+            <div className="fixed top-[-10%] left-1/2 -translate-x-1/2 w-[120%] md:w-[800px] h-[600px] bg-secondary/30 blur-[120px] rounded-full -z-10 pointer-events-none opacity-60 mix-blend-multiply" />
+            <div className="fixed top-[15%] right-[-10%] w-[500px] h-[500px] bg-accent/20 blur-[100px] rounded-full -z-10 pointer-events-none opacity-50" />
+            <div className="fixed bottom-[10%] left-[-10%] w-[500px] h-[500px] bg-emerald-500/10 blur-[120px] rounded-full -z-10 pointer-events-none opacity-30" />
+
+            {/* Search & Categories Sticky Header (Glass Theme matching main website bg) */}
+            <div className="fixed top-0 left-0 right-0 z-50 bg-white/40 backdrop-blur-xl pt-4 pb-2.5 border-b border-black/5">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     
                     {/* Top Row: Back, Search & Price Filter */}
                     <div className="mb-2 relative z-30">
                         <div className="flex items-center gap-2.5 w-full">
-                            <div className="flex-1 bg-white rounded-full shadow-[0_2px_12px_rgb(0,0,0,0.06)] border border-gray-200/80 h-12 flex items-center px-1.5 hover:shadow-[0_4px_16px_rgb(0,0,0,0.09)] focus-within:border-gray-900/40 focus-within:shadow-[0_4px_18px_rgb(0,0,0,0.1)] transition-all">
+                            <div className="flex-1 bg-white/80 backdrop-blur-md rounded-full border border-gray-200/90 h-12 flex items-center px-1.5 focus-within:border-gray-900/40 transition-all">
                                 <Link 
                                     href="/" 
-                                    className="w-8 h-8 rounded-full bg-black hover:bg-neutral-800 text-white transition-all flex items-center justify-center shrink-0 shadow-xs active:scale-95 ml-1"
+                                    className="w-8 h-8 rounded-full bg-black hover:bg-neutral-800 text-white transition-all flex items-center justify-center shrink-0 active:scale-95 ml-1"
                                     aria-label="Back to home"
                                 >
                                     <ArrowLeft className="w-4 h-4 text-white" strokeWidth={2.5} />
@@ -182,10 +187,10 @@ function ExploreContent() {
                             </div>
                             <button 
                                 onClick={() => setIsPriceFilterOpen(!isPriceFilterOpen)}
-                                className={`w-12 h-12 rounded-full border shadow-2xs flex items-center justify-center shrink-0 transition-all cursor-pointer ${
+                                className={`w-12 h-12 rounded-full border flex items-center justify-center shrink-0 transition-all cursor-pointer ${
                                     isPriceFilterOpen 
-                                        ? 'bg-[#1D1D1F] text-white border-black shadow-sm' 
-                                        : 'bg-white text-gray-700 border-gray-200/90 hover:bg-gray-50 hover:border-gray-300'
+                                        ? 'bg-[#1D1D1F] text-white border-black' 
+                                        : 'bg-white/80 backdrop-blur-md text-gray-700 border-gray-200/90 hover:bg-white hover:border-gray-400'
                                 }`}
                                 aria-label="Filter by price"
                             >
@@ -232,7 +237,7 @@ function ExploreContent() {
                             <button
                                 type="button"
                                 onClick={() => setIsServiceDropdownOpen(!isServiceDropdownOpen)}
-                                className={`relative flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold shadow-xs active:scale-95 transition-all cursor-pointer whitespace-nowrap ${
+                                className={`relative flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold active:scale-95 transition-all cursor-pointer whitespace-nowrap ${
                                     isServiceDropdownOpen
                                         ? 'bg-black text-white border border-black ring-2 ring-black/10'
                                         : 'bg-[#1D1D1F] hover:bg-black text-white border border-black'
@@ -248,7 +253,7 @@ function ExploreContent() {
                                 {/* Notification Look for Partner Spas (Floating Red Badge) */}
                                 {partnerTreatments && partnerTreatments.length > 0 && (
                                     <span 
-                                        className="absolute -top-1.5 -right-1 flex h-4 min-w-[16px] px-1 items-center justify-center rounded-full bg-[#FF3B30] text-[9px] font-black text-white shadow-xs ring-2 ring-white"
+                                        className="absolute -top-1.5 -right-1 flex h-4 min-w-[16px] px-1 items-center justify-center rounded-full bg-[#FF3B30] text-[9px] font-black text-white ring-2 ring-white"
                                         title={`${partnerTreatments.length} partner treatments available`}
                                     >
                                         {partnerTreatments.length}
@@ -269,7 +274,7 @@ function ExploreContent() {
                                             animate={{ opacity: 1, y: 0, scale: 1 }}
                                             exit={{ opacity: 0, y: -6, scale: 0.96 }}
                                             transition={{ duration: 0.15 }}
-                                            className="absolute top-full left-0 mt-2 w-56 bg-white rounded-2xl p-1.5 shadow-[0_12px_36px_rgba(0,0,0,0.18)] border border-gray-100 z-50 overflow-hidden"
+                                            className="absolute top-full left-0 mt-2 w-56 bg-white/95 backdrop-blur-xl rounded-2xl p-1.5 shadow-[0_12px_36px_rgba(0,0,0,0.18)] border border-gray-100 z-50 overflow-hidden"
                                         >
                                             <div className="px-3 py-1.5 text-[9px] font-bold tracking-widest uppercase text-gray-400 border-b border-gray-100 mb-1">
                                                 Select Service
@@ -284,7 +289,7 @@ function ExploreContent() {
                                                 }}
                                                 className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                                                     activeTab === 'homespa'
-                                                        ? 'bg-[#1D1D1F] text-white shadow-xs'
+                                                        ? 'bg-[#1D1D1F] text-white'
                                                         : 'text-gray-700 hover:bg-gray-100 hover:text-black'
                                                 }`}
                                             >
@@ -304,7 +309,7 @@ function ExploreContent() {
                                                 }}
                                                 className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer mt-1 ${
                                                     activeTab === 'partner'
-                                                        ? 'bg-[#1D1D1F] text-white shadow-xs'
+                                                        ? 'bg-[#1D1D1F] text-white'
                                                         : 'text-gray-700 hover:bg-gray-100 hover:text-black'
                                                 }`}
                                             >
@@ -314,7 +319,7 @@ function ExploreContent() {
                                                 </div>
                                                 <div className="flex items-center gap-1.5">
                                                     {partnerTreatments && partnerTreatments.length > 0 && (
-                                                        <span className="flex h-4 min-w-[16px] px-1.5 items-center justify-center rounded-full bg-[#FF3B30] text-[9px] font-black text-white shadow-xs">
+                                                        <span className="flex h-4 min-w-[16px] px-1.5 items-center justify-center rounded-full bg-[#FF3B30] text-[9px] font-black text-white">
                                                             {partnerTreatments.length}
                                                         </span>
                                                     )}
@@ -341,7 +346,7 @@ function ExploreContent() {
                                         className={`flex items-center justify-center px-4 py-1.5 rounded-[18px] whitespace-nowrap transition-all duration-200 shrink-0 cursor-pointer ${
                                             isActive 
                                                 ? 'bg-[#1D1D1F] text-white border border-black font-bold' 
-                                                : 'bg-white text-gray-700 border border-gray-200/90 hover:border-gray-400 hover:bg-gray-50 font-medium'
+                                                : 'bg-white/80 backdrop-blur-md text-gray-700 border border-gray-200/90 hover:border-gray-400 hover:bg-white font-medium'
                                         }`}
                                     >
                                         <span className="text-xs">{cat.label}</span>
@@ -374,7 +379,7 @@ function ExploreContent() {
                                     {(treatments || []).filter(t => t.is_pinned).map(treatment => (
                                         <Link href={`/rituals/${createSlug(treatment.title)}`} prefetch={true} key={treatment.id} className="w-[180px] sm:w-[220px] shrink-0 snap-center md:snap-align-none outline-none active:scale-[0.98] transition-all">
                                             <div className="flex flex-col gap-2 group cursor-pointer">
-                                                <div className="aspect-[4/3] relative bg-[#F5F5F7] overflow-hidden rounded-2xl shadow-[0_2px_12px_rgb(0,0,0,0.06)] group-hover:shadow-[0_8px_24px_rgb(0,0,0,0.12)] transition-shadow">
+                                                <div className="aspect-[4/3] relative bg-white/70 overflow-hidden rounded-2xl border border-gray-200/80 transition-transform duration-300 group-hover:-translate-y-0.5">
                                                     {treatment.pinned_image ? (
                                                         <Image 
                                                             src={treatment.pinned_image} 
@@ -429,9 +434,9 @@ function ExploreContent() {
                                 <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
                                     {filteredHomeSpaTreatments.map((item) => (
                                         <Link href={`/rituals/${createSlug(item.title)}`} prefetch={true} key={item.id} className="w-full block group outline-none active:scale-[0.98] transition-all">
-                                            <div className="rounded-2xl bg-white border border-gray-100 flex flex-col h-full relative overflow-hidden p-4 shadow-[0_2px_12px_rgb(0,0,0,0.04)] hover:shadow-md transition-all cursor-pointer group-hover:-translate-y-1 duration-300">
+                                            <div className="rounded-2xl bg-white/90 backdrop-blur-xs border border-gray-200/80 flex flex-col h-full relative overflow-hidden p-4 transition-all cursor-pointer group-hover:-translate-y-1 duration-300">
                                                 <div className="relative z-10 flex flex-col h-full">
-                                                    <div className="bg-white text-gray-800 border border-gray-200 px-2.5 py-1 rounded-full text-[8px] font-bold tracking-widest uppercase self-start mb-3 shadow-xs">
+                                                    <div className="bg-white text-gray-800 border border-gray-200 px-2.5 py-1 rounded-full text-[8px] font-bold tracking-widest uppercase self-start mb-3">
                                                         {item.category}
                                                     </div>
                                                     <h4 className="font-bold text-gray-900 text-[13px] sm:text-[14px] leading-snug mb-1.5 line-clamp-2">{item.title}</h4>
@@ -445,7 +450,7 @@ function ExploreContent() {
                                                             <span className="font-bold text-gray-900 text-[13px]">
                                                                 IDR {parseInt(String(item.options[0]?.price || '0').replace(/[^0-9]/g, '') || '0', 10).toLocaleString('en-US')}
                                                             </span>
-                                                            <div className="w-7 h-7 rounded-full bg-[#1D1D1F] text-white flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
+                                                            <div className="w-7 h-7 rounded-full bg-[#1D1D1F] text-white flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                                                                 <Plus size={14} strokeWidth={2.5} />
                                                             </div>
                                                         </div>
@@ -490,10 +495,10 @@ function ExploreContent() {
                                                 <img
                                                     src={group.partnerLogo}
                                                     alt={group.partnerName}
-                                                    className="w-12 h-12 rounded-2xl object-cover border border-gray-200/90 bg-white shadow-xs shrink-0"
+                                                    className="w-12 h-12 rounded-2xl object-cover border border-gray-200/90 bg-white shrink-0"
                                                 />
                                             ) : (
-                                                <div className="w-12 h-12 rounded-2xl bg-[#1D1D1F] text-white flex items-center justify-center font-bold text-base shrink-0 shadow-xs">
+                                                <div className="w-12 h-12 rounded-2xl bg-[#1D1D1F] text-white flex items-center justify-center font-bold text-base shrink-0">
                                                     {group.partnerName?.charAt(0) || 'P'}
                                                 </div>
                                             )}
@@ -527,7 +532,7 @@ function ExploreContent() {
                                                             setSelectedDetailsDuration(firstOpt.duration);
                                                             setSelectedPartnerDetails(pt);
                                                         }}
-                                                        className="group relative rounded-[28px] border border-gray-200/90 bg-white overflow-hidden shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between cursor-pointer active:scale-[0.99]"
+                                                        className="group relative rounded-[28px] border border-gray-200/90 bg-white/90 backdrop-blur-xs overflow-hidden transition-all duration-300 flex flex-col justify-between cursor-pointer active:scale-[0.99]"
                                                     >
                                                         <div>
                                                             {/* Treatment Cover Photo */}
@@ -556,7 +561,7 @@ function ExploreContent() {
                                                                 {/* Discount Badge */}
                                                                 {discountRate > 0 && (
                                                                     <div className="absolute top-3 right-3 z-10">
-                                                                        <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-emerald-600 text-white text-[10px] font-black tracking-wide shadow-xs">
+                                                                        <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-emerald-600 text-white text-[10px] font-black tracking-wide">
                                                                             {discountRate}% OFF
                                                                         </span>
                                                                     </div>
@@ -608,7 +613,7 @@ function ExploreContent() {
                                                                 </div>
 
                                                                 <div
-                                                                    className="w-10 h-10 rounded-full bg-[#1D1D1F] group-hover:bg-black text-white flex items-center justify-center transition-all shadow-xs group-hover:scale-105 shrink-0"
+                                                                    className="w-10 h-10 rounded-full bg-[#1D1D1F] group-hover:bg-black text-white flex items-center justify-center transition-all group-hover:scale-105 shrink-0"
                                                                     title="View treatment details"
                                                                 >
                                                                     <Plus size={20} strokeWidth={2.5} />

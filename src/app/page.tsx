@@ -1077,10 +1077,10 @@ export default function Home() {
                                                 <img
                                                     src={group.partnerLogo}
                                                     alt={group.partnerName}
-                                                    className="w-12 h-12 rounded-2xl object-cover border border-gray-200/90 bg-white shadow-xs shrink-0"
+                                                    className="w-12 h-12 rounded-2xl object-cover border border-gray-200/90 bg-white shrink-0"
                                                 />
                                             ) : (
-                                                <div className="w-12 h-12 rounded-2xl bg-[#1D1D1F] text-white flex items-center justify-center font-bold text-base shrink-0 shadow-xs">
+                                                <div className="w-12 h-12 rounded-2xl bg-[#1D1D1F] text-white flex items-center justify-center font-bold text-base shrink-0">
                                                     {group.partnerName?.charAt(0) || 'P'}
                                                 </div>
                                             )}
@@ -1114,7 +1114,7 @@ export default function Home() {
                                                              setSelectedDetailsDuration(firstOpt.duration);
                                                              setSelectedPartnerDetails(pt);
                                                         }}
-                                                        className="group relative rounded-[28px] border border-gray-200/90 bg-white overflow-hidden shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between cursor-pointer active:scale-[0.99]"
+                                                        className="group relative rounded-[28px] border border-gray-200/90 bg-white overflow-hidden transition-all duration-300 flex flex-col justify-between cursor-pointer active:scale-[0.99]"
                                                     >
                                                         <div>
                                                             {/* Treatment Image Banner (Clean without dark overlay) */}
@@ -1143,7 +1143,7 @@ export default function Home() {
                                                                 {/* Discount Pill if partner has discount */}
                                                                 {discountRate > 0 && (
                                                                     <div className="absolute top-3 right-3 z-10">
-                                                                        <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-emerald-600 text-white text-[10px] font-black tracking-wide shadow-xs">
+                                                                        <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-emerald-600 text-white text-[10px] font-black tracking-wide">
                                                                             {discountRate}% OFF
                                                                         </span>
                                                                     </div>
@@ -1197,7 +1197,7 @@ export default function Home() {
                                                                 </div>
 
                                                                 <div
-                                                                    className="w-10 h-10 rounded-full bg-[#1D1D1F] group-hover:bg-black text-white flex items-center justify-center transition-all shadow-xs group-hover:scale-105 shrink-0"
+                                                                    className="w-10 h-10 rounded-full bg-[#1D1D1F] group-hover:bg-black text-white flex items-center justify-center transition-all group-hover:scale-105 shrink-0"
                                                                     title="View treatment details"
                                                                 >
                                                                     <Plus size={20} strokeWidth={2.5} />
