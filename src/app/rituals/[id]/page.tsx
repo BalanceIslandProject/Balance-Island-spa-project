@@ -6,7 +6,7 @@ import { ChevronLeft, ChevronDown, Share, MapPin, Clock, Calendar, Plus, Minus, 
 import Link from 'next/link';
 import { saveBookingToSupabase } from '@/lib/bookingUtils';
 import { useCart } from '@/context/CartContext';
-import { calculateCartTotal, getItemMultiplier } from '@/lib/pricingUtils';
+import { calculateCartTotal, getItemMultiplier, isCoupleTreatment } from '@/lib/pricingUtils';
 import { useParams } from 'next/navigation';
 import { useSpa, Treatment } from '@/context/SpaContext';
 import { supabase } from '@/lib/supabase';
@@ -72,6 +72,7 @@ export default function RitualsDetails() {
         id: string;
         treatmentId: string;
         title: string;
+        category?: string;
         duration: string;
         price: number;
         guests: number;
@@ -205,12 +206,12 @@ export default function RitualsDetails() {
     }
 
     const selectedOption = treatment.options[selectedOptionIdx] || treatment.options[0];
-    const isCoupleTreatment = ['couple', 'honeymoon'].some(k => treatment.title.toLowerCase().includes(k));
+    const isCoupleTreatmentSelected = isCoupleTreatment(treatment.title, treatment.category);
 
     // Calculate smart price
     const subtotalPrice = cartItems.reduce((acc, item) => {
-        const isCouple = ['couple', 'honeymoon'].some(k => item.title.toLowerCase().includes(k));
-        const multiplier = isCouple ? (item.guests / 2) : item.guests;
+        const itemIsCouple = isCoupleTreatment(item.title, item.category);
+        const multiplier = itemIsCouple ? Math.max(1, Math.round(item.guests / 2)) : item.guests;
         return acc + (item.price * multiplier);
     }, 0);
 
@@ -273,8 +274,8 @@ export default function RitualsDetails() {
                         .replace(/\s*\(\s*\d+\s*(?:mins?|minutes?|m)?\s*\)/gi, '')
                         .trim()
                         .toUpperCase();
-                    const isCouple = ['couple', 'honeymoon'].some(k => item.title.toLowerCase().includes(k));
-                    const multiplier = isCouple ? (item.guests / 2) : item.guests;
+                    const isCouple = isCoupleTreatment(item.title, item.category);
+                    const multiplier = isCouple ? Math.max(1, Math.round(item.guests / 2)) : item.guests;
                     const addonsTotal = (item.addons || []).reduce((sum: number, a: any) => sum + (Number(a.price) || 0), 0);
                     const itemTotal = ((item.price + addonsTotal) * multiplier).toLocaleString('en-US');
 
@@ -304,8 +305,8 @@ export default function RitualsDetails() {
                         .replace(/\s*\(\s*\d+\s*(?:mins?|minutes?|m)?\s*\)/gi, '')
                         .trim()
                         .toUpperCase();
-                    const isCouple = ['couple', 'honeymoon'].some(k => item.title.toLowerCase().includes(k));
-                    const multiplier = isCouple ? (item.guests / 2) : item.guests;
+                    const isCouple = isCoupleTreatment(item.title, item.category);
+                    const multiplier = isCouple ? Math.max(1, Math.round(item.guests / 2)) : item.guests;
                     const price = (item.price * multiplier).toLocaleString('en-US');
                     const itemTreatment = treatments.find(t => t.id === item.treatmentId || t.title === item.title) || treatment;
 
@@ -414,9 +415,10 @@ export default function RitualsDetails() {
             id: Date.now().toString(),
             treatmentId: treatment.id,
             title: treatment.title,
+            category: treatment.category,
             duration: selectedOption.duration,
             price: parseInt(selectedOption.price.replace(/,/g, '') || '0'),
-            guests: isCoupleTreatment ? 2 : 1
+            guests: isCoupleTreatmentSelected ? 2 : 1
         }]);
         setIsSelectingMore(false);
         setIsReviewingBooking(false);
@@ -520,7 +522,7 @@ export default function RitualsDetails() {
                         <div className="relative z-10 flex flex-col h-full justify-between gap-6">
                             <div className="flex flex-col">
                                 <span className="text-[10px] font-bold uppercase tracking-widest text-white/50 mb-1">
-                                    {isCoupleTreatment ? 'Price for 2 persons' : 'Price per person'}
+                                    {isCoupleTreatmentSelected ? 'Price for 2 persons' : 'Price per person'}
                                 </span>
                                 <AnimatePresence mode="popLayout">
                                     <motion.div 
@@ -724,11 +726,12 @@ export default function RitualsDetails() {
                                                                             key={idx}
                                                                             onClick={(e) => {
                                                                                 e.stopPropagation();
-                                                                                const isCouple = ['couple', 'honeymoon'].some(k => t.title.toLowerCase().includes(k));
+                                                                                const isCouple = isCoupleTreatment(t.title, t.category);
                                                                                 setCartItems([...cartItems, {
                                                                                     id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
                                                                                     treatmentId: t.id,
                                                                                     title: t.title,
+                                                                                    category: t.category,
                                                                                     duration: opt.duration,
                                                                                     price: parseInt(opt.price.replace(/,/g, '') || '0'),
                                                                                     guests: isCouple ? 2 : 1
@@ -791,7 +794,7 @@ export default function RitualsDetails() {
                                                     <span className="font-serif text-primary font-medium text-right flex flex-col shrink-0">
                                                         IDR {item.price.toLocaleString('en-US')}
                                                         <span className="text-[10px] font-sans text-text-muted font-normal uppercase tracking-wider">
-                                                            {['couple', 'honeymoon'].some(k => item.title.toLowerCase().includes(k)) ? 'For 2 Persons' : 'Per Person'}
+                                                            {isCoupleTreatment(item.title, item.category) ? 'For 2 Persons' : 'Per Person'}
                                                         </span>
                                                     </span>
                                                 </div>
@@ -819,7 +822,7 @@ export default function RitualsDetails() {
                                                             type="button"
                                                             onClick={() => setCartItems(cartItems.map(i => {
                                                                 if (i.id !== item.id) return i;
-                                                                const isCouple = ['couple', 'honeymoon'].some(k => i.title.toLowerCase().includes(k));
+                                                                const isCouple = isCoupleTreatment(i.title, i.category);
                                                                 const step = isCouple ? 2 : 1;
                                                                 return { ...i, guests: Math.max(step, i.guests - step) };
                                                             }))}
@@ -832,7 +835,7 @@ export default function RitualsDetails() {
                                                             type="button"
                                                             onClick={() => setCartItems(cartItems.map(i => {
                                                                 if (i.id !== item.id) return i;
-                                                                const isCouple = ['couple', 'honeymoon'].some(k => i.title.toLowerCase().includes(k));
+                                                                const isCouple = isCoupleTreatment(i.title, i.category);
                                                                 const step = isCouple ? 2 : 1;
                                                                 return { ...i, guests: i.guests + step };
                                                             }))}

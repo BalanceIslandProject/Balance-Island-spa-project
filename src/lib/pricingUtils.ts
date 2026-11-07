@@ -7,9 +7,8 @@
  * Detects whether a treatment is a couple / honeymoon package.
  * These treatments are already priced for 2 persons on the website.
  */
-export function isCoupleTreatment(title?: string): boolean {
-    if (!title) return false;
-    const t = title.toLowerCase();
+export function isCoupleTreatment(title?: string, category?: string): boolean {
+    const t = `${title || ''} ${category || ''}`.toLowerCase();
     return /couple|honeymoon|duo|2\s*person|for\s*2/i.test(t);
 }
 
@@ -23,9 +22,9 @@ export function isCoupleTreatment(title?: string): boolean {
  * - For individual treatments:
  *   Multiplier is guests (or 1).
  */
-export function getItemMultiplier(title?: string, guests?: number): number {
+export function getItemMultiplier(title?: string, guests?: number, category?: string): number {
     const numGuests = Math.max(1, Number(guests) || 1);
-    if (isCoupleTreatment(title)) {
+    if (isCoupleTreatment(title, category)) {
         return Math.max(1, Math.round(numGuests / 2));
     }
     return numGuests;
@@ -34,9 +33,14 @@ export function getItemMultiplier(title?: string, guests?: number): number {
 export type PricingCartItem = {
     title: string;
     price: number;
+    category?: string;
     guests?: number;
     addons?: { id: string; title: string; price: number }[];
     massageTable?: boolean | string;
+    isPartner?: boolean;
+    partnerName?: string;
+    partnerLocation?: string;
+    partnerLogoUrl?: string;
 };
 
 export type PricingPromo = {
@@ -59,7 +63,7 @@ export function calculateCartTotal(
     }
 
     const subtotal = items.reduce((acc, item) => {
-        const mult = getItemMultiplier(item.title, item.guests);
+        const mult = getItemMultiplier(item.title, item.guests, item.category);
         const addonsTotal = (item.addons || []).reduce((sum, a) => sum + (Number(a.price) || 0), 0);
         return acc + ((Number(item.price) || 0) + addonsTotal) * mult;
     }, 0);
@@ -90,7 +94,7 @@ export function getBookingDisplayPrice(booking: {
 }): number {
     if (booking.items && booking.items.length > 0) {
         return booking.items.reduce((acc, item) => {
-            const mult = getItemMultiplier(item.title, item.guests);
+            const mult = getItemMultiplier(item.title, item.guests, item.category);
             return acc + (Number(item.price) || 0) * mult;
         }, 0);
     }

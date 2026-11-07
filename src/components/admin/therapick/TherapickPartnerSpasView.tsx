@@ -18,7 +18,7 @@ interface DurationOption {
   net_price?: string;
 }
 
-const CATEGORIES = ['Massage', 'Package', 'Facial', 'Body Scrub', 'Wellness', 'Hair Spa'];
+const CATEGORIES = ['Massage', 'Package', 'Couple Package', 'Facial', 'Body Scrub', 'Wellness', 'Hair Spa'];
 
 export default function TherapickPartnerSpasView() {
   const { 
@@ -29,6 +29,7 @@ export default function TherapickPartnerSpasView() {
   // Active Sub-Tab: 'partners' (Profiles) | 'treatments' (Treatments) | 'calendar' (Bookings Calendar)
   const [activeSubTab, setActiveSubTab] = useState<'partners' | 'treatments' | 'calendar'>('partners');
   const [selectedPartnerFilter, setSelectedPartnerFilter] = useState<string>('all');
+  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>('all');
 
   const [partners, setPartners] = useState<SpaPartner[]>([]);
   const [treatments, setTreatments] = useState<PartnerTreatment[]>([]);
@@ -601,9 +602,21 @@ export default function TherapickPartnerSpasView() {
 
   // Filtered treatments list
   const filteredTreatments = useMemo(() => {
-    if (selectedPartnerFilter === 'all') return treatments;
-    return treatments.filter(t => t.partner_id === selectedPartnerFilter || t.partner_name === partners.find(p => p.id === selectedPartnerFilter)?.name);
-  }, [treatments, selectedPartnerFilter, partners]);
+    return treatments.filter(t => {
+      const matchesPartner = selectedPartnerFilter === 'all' || 
+        t.partner_id === selectedPartnerFilter || 
+        t.partner_name === partners.find(p => p.id === selectedPartnerFilter)?.name;
+
+      const catLower = (t.category || '').toLowerCase();
+      const filterLower = selectedCategoryFilter.toLowerCase();
+      const matchesCategory = selectedCategoryFilter === 'all' || 
+        (filterLower === 'couple package'
+          ? (catLower.includes('couple') || /couple|honeymoon|duo/i.test(t.title || ''))
+          : catLower === filterLower);
+
+      return matchesPartner && matchesCategory;
+    });
+  }, [treatments, selectedPartnerFilter, selectedCategoryFilter, partners]);
 
   // Current selected partner for live price calculation in treatment modal
   const modalSelectedPartner = useMemo(() => {
@@ -932,8 +945,63 @@ export default function TherapickPartnerSpasView() {
           </button>
         </div>
 
-        {/* Filter by Partner Spa for Treatments or Calendar */}
-        {(activeSubTab === 'treatments' || activeSubTab === 'calendar') && partners.length > 0 && (
+        {/* Filter Toolbar for Treatments */}
+        {activeSubTab === 'treatments' && partners.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2.5 text-xs">
+            <div className="flex items-center gap-1.5">
+              <span className="text-[var(--fitlo-muted)] font-medium flex items-center gap-1">
+                <Filter size={12} />
+                Partner:
+              </span>
+              <select
+                value={selectedPartnerFilter}
+                onChange={(e) => setSelectedPartnerFilter(e.target.value)}
+                className="fitlo-select text-xs py-1 px-2.5 h-8 font-semibold"
+              >
+                <option value="all">
+                  All Partners ({treatments.length})
+                </option>
+                {partners.map(p => {
+                  const count = treatments.filter(t => t.partner_id === p.id || t.partner_name === p.name).length;
+                  return (
+                    <option key={p.id} value={p.id}>
+                      {p.name} ({count})
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+
+            {/* Category Filter including Couple Package */}
+            <div className="flex items-center gap-1.5">
+              <span className="text-[var(--fitlo-muted)] font-medium flex items-center gap-1">
+                <Tag size={12} />
+                Category:
+              </span>
+              <select
+                value={selectedCategoryFilter}
+                onChange={(e) => setSelectedCategoryFilter(e.target.value)}
+                className="fitlo-select text-xs py-1 px-2.5 h-8 font-semibold"
+              >
+                <option value="all">All Categories ({treatments.length})</option>
+                <option value="Couple Package">
+                  Couple Package ({treatments.filter(t => (t.category || '').toLowerCase().includes('couple') || /couple|honeymoon|duo/i.test(t.title || '')).length})
+                </option>
+                {CATEGORIES.filter(c => c !== 'Couple Package').map(c => {
+                  const count = treatments.filter(t => (t.category || '').toLowerCase() === c.toLowerCase()).length;
+                  return (
+                    <option key={c} value={c}>
+                      {c} ({count})
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+          </div>
+        )}
+
+        {/* Filter by Partner Spa for Calendar */}
+        {activeSubTab === 'calendar' && partners.length > 0 && (
           <div className="flex items-center gap-2 text-xs">
             <span className="text-[var(--fitlo-muted)] font-medium flex items-center gap-1">
               <Filter size={12} />
@@ -945,12 +1013,10 @@ export default function TherapickPartnerSpasView() {
               className="fitlo-select text-xs py-1 px-2.5 h-8 font-semibold"
             >
               <option value="all">
-                All Partners ({activeSubTab === 'calendar' ? partnerBookings.length : treatments.length})
+                All Partners ({partnerBookings.length})
               </option>
               {partners.map(p => {
-                const count = activeSubTab === 'calendar'
-                  ? partnerBookings.filter(b => b.items?.some((i: any) => i.partnerName === p.name || i.partnerId === p.id)).length
-                  : treatments.filter(t => t.partner_id === p.id || t.partner_name === p.name).length;
+                const count = partnerBookings.filter(b => b.items?.some((i: any) => i.partnerName === p.name || i.partnerId === p.id)).length;
                 return (
                   <option key={p.id} value={p.id}>
                     {p.name} ({count})
@@ -1182,13 +1248,61 @@ export default function TherapickPartnerSpasView() {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="space-y-4">
+            {/* Quick Category Filter Pills */}
+            <div className="flex flex-wrap items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => setSelectedCategoryFilter('all')}
+                className={`px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                  selectedCategoryFilter === 'all'
+                    ? 'bg-[var(--fitlo-ink)] text-white'
+                    : 'bg-[var(--fitlo-surface)] hover:bg-[var(--fitlo-line)] text-[var(--fitlo-muted)]'
+                }`}
+              >
+                All ({treatments.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedCategoryFilter('Couple Package')}
+                className={`px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                  selectedCategoryFilter === 'Couple Package'
+                    ? 'bg-amber-600 text-white'
+                    : 'bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200'
+                }`}
+              >
+                <span>Couple Package</span>
+                <span className="text-[10px] opacity-80">
+                  ({treatments.filter(t => (t.category || '').toLowerCase().includes('couple') || /couple|honeymoon|duo/i.test(t.title || '')).length})
+                </span>
+              </button>
+              {CATEGORIES.filter(c => c !== 'Couple Package').map(c => {
+                const count = treatments.filter(t => (t.category || '').toLowerCase() === c.toLowerCase()).length;
+                return (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => setSelectedCategoryFilter(c)}
+                    className={`px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                      selectedCategoryFilter === c
+                        ? 'bg-[var(--fitlo-ink)] text-white'
+                        : 'bg-[var(--fitlo-surface)] hover:bg-[var(--fitlo-line)] text-[var(--fitlo-muted)]'
+                    }`}
+                  >
+                    {c} ({count})
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {filteredTreatments.map((treatment) => {
               const opts = treatment.options || [];
               const firstOpt = opts[0] || { duration: '60', price: '450,000' };
               const originalPrice = parseInt(String(firstOpt.price).replace(/[^0-9]/g, '') || '0', 10);
               const discountRate = Number(treatment.partner_discount_percentage) || 0;
               const taxRate = Number(treatment.partner_tax_percentage) || 0;
+              const isCouplePkg = (treatment.category || '').toLowerCase().includes('couple') || /couple|honeymoon|duo/i.test(treatment.title || '');
 
               const discountedPrice = discountRate > 0
                 ? Math.round(originalPrice * (1 - discountRate / 100))
@@ -1220,10 +1334,15 @@ export default function TherapickPartnerSpasView() {
                       )}
 
                       {/* Category Floating Pill */}
-                      <div className="absolute top-3 left-3 z-10">
+                      <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5">
                         <span className="px-2.5 py-1 rounded-full bg-black/75 backdrop-blur-md text-white text-[9px] font-bold tracking-wider uppercase">
                           {treatment.category}
                         </span>
+                        {isCouplePkg && (
+                          <span className="px-2 py-0.5 rounded-full bg-amber-500 text-white text-[8px] font-black tracking-wider uppercase">
+                            2 Persons
+                          </span>
+                        )}
                       </div>
 
                       {/* Publish Status */}
@@ -1298,7 +1417,9 @@ export default function TherapickPartnerSpasView() {
                   <div className="p-4 pt-0">
                     <div className="pt-3 border-t border-[var(--fitlo-line)] flex items-center justify-between gap-3">
                       <div>
-                        <span className="text-[9px] font-bold uppercase tracking-wider text-[var(--fitlo-muted)] block">Customer Rate</span>
+                        <span className="text-[9px] font-bold uppercase tracking-wider text-[var(--fitlo-muted)] block">
+                          Customer Rate {isCouplePkg ? '(For 2 Persons)' : ''}
+                        </span>
                         <div className="flex items-baseline gap-1.5">
                           <span className="text-sm font-bold text-[var(--fitlo-ink)]">
                             IDR {finalWithTax.toLocaleString('en-US')}
@@ -1351,6 +1472,7 @@ export default function TherapickPartnerSpasView() {
                 </div>
               );
             })}
+            </div>
           </div>
         )
       ) : (
@@ -2063,6 +2185,16 @@ export default function TherapickPartnerSpasView() {
                       <option key={c} value={c}>{c}</option>
                     ))}
                   </select>
+                  {treatmentForm.category === 'Couple Package' && (
+                    <div className="mt-2 p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-[11px] leading-relaxed">
+                      <p className="font-bold flex items-center gap-1 text-amber-900">
+                        <span>✨ Couple Package Pricing Rule</span>
+                      </p>
+                      <p className="mt-0.5 text-amber-800">
+                        The price you set below is <strong>already for 2 persons</strong>. The booking system and WhatsApp invoice will never double or multiply this rate.
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -2222,8 +2354,13 @@ export default function TherapickPartnerSpasView() {
               <div className="space-y-2 pt-1">
                 <div className="flex items-center justify-between">
                   <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-[var(--fitlo-ink)]">
-                      Duration, Base Price &amp; Net Cost (IDR)
+                    <label className="block text-xs font-bold uppercase tracking-wider text-[var(--fitlo-ink)] flex items-center gap-1.5">
+                      <span>Duration, Base Price &amp; Net Cost (IDR)</span>
+                      {treatmentForm.category === 'Couple Package' && (
+                        <span className="text-[10px] text-amber-700 font-bold bg-amber-100/70 px-2 py-0.5 rounded-full border border-amber-300">
+                          Total Rate for 2 Persons
+                        </span>
+                      )}
                     </label>
                     <span className="text-[10px] text-[var(--fitlo-muted)]">
                       Net price is strictly internal for profit calculations and will not be displayed on the website.

@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { isCoupleTreatment } from '@/lib/pricingUtils';
 
 export const AFFILIATE_COOKIE_NAME = 'btp_affiliate_ref';
 export const DEFAULT_COMMISSION_RATE_PCT = 15.00;
@@ -164,7 +165,7 @@ export function calculateEligibleCommission(params: {
         const itemPrice = Number(item.price || item.total_price || 0);
         // Couple massage & honeymoon packages are ALREADY priced for 2 persons on the website.
         // Do NOT multiply by 2 again. (2 guests = 1 couple package price).
-        const isCouple = ['couple', 'honeymoon', 'duo', '2 person', 'for 2'].some(k => title.includes(k));
+        const isCouple = isCoupleTreatment(title, (item as any).category);
         const rawGuests = Number(item.quantity || item.guests || (isCouple ? 2 : 1));
         const multiplier = isCouple ? Math.max(1, Math.round(rawGuests / 2)) : Math.max(1, rawGuests);
         treatmentSubtotal += itemPrice * multiplier;

@@ -21,6 +21,7 @@ const HOMESPA_CATEGORIES = [
 
 const PARTNER_CATEGORIES = [
     { id: 'all', label: 'All' },
+    { id: 'couple package', label: 'Couple Package' },
     { id: 'package', label: 'Package' },
     { id: 'massage', label: 'Massage' },
     { id: 'facial', label: 'Facial' },
@@ -126,7 +127,9 @@ function ExploreContent() {
     const filteredPartnerTreatments = useMemo(() => {
         if (!isTherapick || !partnerTreatments) return [];
         return partnerTreatments.filter(pt => {
-            const matchesCategory = activeCategory === 'all' || (pt.category && pt.category.toLowerCase() === activeCategory.toLowerCase());
+            const isMatchCouple = activeCategory === 'couple package' && 
+                ((pt.category || '').toLowerCase().includes('couple') || /couple|honeymoon|duo/i.test(pt.title));
+            const matchesCategory = activeCategory === 'all' || isMatchCouple || (pt.category && pt.category.toLowerCase() === activeCategory.toLowerCase());
             const matchesSearch = !searchQuery.trim() ||
                 (pt.title && pt.title.toLowerCase().includes(searchQuery.toLowerCase())) ||
                 (pt.desc && pt.desc.toLowerCase().includes(searchQuery.toLowerCase())) ||
@@ -574,10 +577,15 @@ function ExploreContent() {
                                                                 )}
 
                                                                 {/* Category Floating Pill */}
-                                                                <div className="absolute top-3 left-3 z-10">
+                                                                <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5">
                                                                     <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-black/75 backdrop-blur-md text-white text-[9px] font-bold tracking-wider uppercase">
                                                                         {pt.category || 'Package'}
                                                                     </span>
+                                                                    {isCoupleTreatment(pt.title, pt.category) && (
+                                                                        <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-amber-500 text-white text-[8px] font-black tracking-wide uppercase">
+                                                                            2 Persons
+                                                                        </span>
+                                                                    )}
                                                                 </div>
 
                                                                 {/* Discount Badge */}
@@ -669,7 +677,7 @@ function ExploreContent() {
                     const discountRate = Number(pt.partner_discount_percentage) || 0;
                     const discountAmount = discountRate > 0 ? Math.round(basePublishedPrice * (discountRate / 100)) : 0;
                     const subtotalPrice = basePublishedPrice - discountAmount;
-                    const isCouple = isCoupleTreatment(pt.title);
+                    const isCouple = isCoupleTreatment(pt.title, pt.category);
 
                     // Robust parsing of treatment inclusions and description
                     const { descClean, inclusions } = parseTreatmentInclusions(pt.desc);

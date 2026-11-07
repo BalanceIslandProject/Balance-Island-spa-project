@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { Suspense } from 'react';
 import { supabase } from '@/lib/supabase';
 import { parseTreatmentInclusions } from '@/lib/treatmentUtils';
+import { isCoupleTreatment } from '@/lib/pricingUtils';
 
 function InvoicePage() {
     const params = useParams();
@@ -411,7 +412,7 @@ function InvoicePage() {
                         <div className="space-y-3 print:space-y-2">
                             {booking.items.map(item => {
                                 const cleanTitle = cleanTreatmentTitle(item.title);
-                                const isCouple = ['couple', 'honeymoon'].some(k => item.title.toLowerCase().includes(k));
+                                const isCouple = isCoupleTreatment(item.title, (item as any).category);
                                 const multiplier = isCouple ? (item.guests / 2) : item.guests;
                                 const itemTotal = (item.price * multiplier).toLocaleString('en-US');
 
@@ -452,7 +453,7 @@ function InvoicePage() {
                         let taxRate = 0;
 
                         booking.items.forEach((item: any) => {
-                            const isCouple = ['couple', 'honeymoon'].some(k => item.title.toLowerCase().includes(k));
+                            const isCouple = isCoupleTreatment(item.title, (item as any).category);
                             const multiplier = isCouple ? Math.max(1, Math.round(item.guests / 2)) : (item.guests || 1);
                             if (item.publishedPrice) {
                                 hasPartnerBreakdown = true;

@@ -365,7 +365,7 @@ export default function Home() {
                     setSelectedPartnerBreakdown({
                         treatment: pt,
                         selectedDuration: dur,
-                        guests: isCoupleTreatment(pt.title) ? 2 : 1
+                        guests: isCoupleTreatment(pt.title, pt.category) ? 2 : 1
                     });
                     window.history.replaceState({}, document.title, window.location.pathname);
                 }
@@ -452,7 +452,7 @@ export default function Home() {
                         .replace(/\s*\(\s*\d+\s*(?:mins?|minutes?|m)?\s*\)/gi, '')
                         .trim()
                         .toUpperCase();
-                    const isCouple = ['couple', 'honeymoon'].some(k => item.title.toLowerCase().includes(k));
+                    const isCouple = isCoupleTreatment(item.title, (item as any).category);
                     const multiplier = isCouple ? (item.guests / 2) : item.guests;
                     const addonsTotal = (item.addons || []).reduce((sum: number, a: any) => sum + (Number(a.price) || 0), 0);
                     const itemTotal = ((item.price + addonsTotal) * multiplier).toLocaleString('en-US');
@@ -485,7 +485,7 @@ export default function Home() {
                         .replace(/\s*\(\s*\d+\s*(?:mins?|minutes?|m)?\s*\)/gi, '')
                         .trim()
                         .toUpperCase();
-                    const isCouple = ['couple', 'honeymoon'].some(k => item.title.toLowerCase().includes(k));
+                    const isCouple = isCoupleTreatment(item.title, (item as any).category);
                     const multiplier = isCouple ? (item.guests / 2) : item.guests;
                     const price = (item.price * multiplier).toLocaleString('en-US');
                     const itemTreatment = treatments.find(t => t.id === item.treatmentId);
@@ -1399,13 +1399,14 @@ export default function Home() {
                                                         ? Math.round(originalPriceNum * (1 - (discount / 100)))
                                                         : originalPriceNum;
 
-                                                    const isCouple = ['couple', 'honeymoon'].some(k => treatment.title.toLowerCase().includes(k));
+                                                    const isCouple = isCoupleTreatment(treatment.title, treatment.category);
                                                     const handleBookTreatment = () => {
                                                         setCartItems([{
                                                             id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
                                                             treatmentId: treatment.id,
                                                             campaignTitle: selectedCampaignModal.title,
                                                             title: treatment.title,
+                                                            category: treatment.category,
                                                             duration: activeOption.duration,
                                                             price: discountedPriceNum,
                                                             guests: isCouple ? 2 : 1,
@@ -1638,11 +1639,12 @@ export default function Home() {
                                                                                     key={idx}
                                                                                     onClick={(e) => {
                                                                                         e.stopPropagation();
-                                                                                        const isCouple = ['couple', 'honeymoon'].some(k => t.title.toLowerCase().includes(k));
+                                                                                        const isCouple = isCoupleTreatment(t.title, t.category);
                                                                                         const newCartItem = isPartnerItem ? {
                                                                                             id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
                                                                                             treatmentId: t.id,
                                                                                             title: `${t.title} · ${t.partner_name}`,
+                                                                                            category: t.category,
                                                                                             duration: durStr,
                                                                                             price: finalRatePerUnit,
                                                                                             publishedPrice: optBasePrice,
@@ -1660,6 +1662,7 @@ export default function Home() {
                                                                                             id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
                                                                                             treatmentId: t.id,
                                                                                             title: t.title,
+                                                                                            category: t.category,
                                                                                             duration: opt.duration,
                                                                                             price: optBasePrice,
                                                                                             guests: isCouple ? 2 : 1,
@@ -1757,7 +1760,7 @@ export default function Home() {
                                                         <span className="font-serif text-primary font-medium text-right flex flex-col shrink-0">
                                                             IDR {item.price.toLocaleString('en-US')}
                                                             <span className="text-[10px] font-sans text-text-muted font-normal uppercase tracking-wider">
-                                                                {['couple', 'honeymoon'].some(k => item.title.toLowerCase().includes(k)) ? 'For 2 Persons' : 'Per Person'}
+                                                                {isCoupleTreatment(item.title, (item as any).category) ? 'For 2 Persons' : 'Per Person'}
                                                             </span>
                                                         </span>
                                                     </div>
@@ -1784,7 +1787,7 @@ export default function Home() {
                                                                 type="button"
                                                                 onClick={() => setCartItems(cartItems.map(i => {
                                                                     if (i.id !== item.id) return i;
-                                                                    const isCouple = ['couple', 'honeymoon'].some(k => i.title.toLowerCase().includes(k));
+                                                                    const isCouple = isCoupleTreatment(i.title, (i as any).category);
                                                                     const step = isCouple ? 2 : 1;
                                                                     return { ...i, guests: Math.max(step, i.guests - step) };
                                                                 }))}
@@ -1797,7 +1800,7 @@ export default function Home() {
                                                                 type="button"
                                                                 onClick={() => setCartItems(cartItems.map(i => {
                                                                     if (i.id !== item.id) return i;
-                                                                    const isCouple = ['couple', 'honeymoon'].some(k => i.title.toLowerCase().includes(k));
+                                                                    const isCouple = isCoupleTreatment(i.title, (i as any).category);
                                                                     const step = isCouple ? 2 : 1;
                                                                     return { ...i, guests: i.guests + step };
                                                                 }))}
@@ -2323,7 +2326,7 @@ export default function Home() {
                     const discountRate = Number(pt.partner_discount_percentage) || 0;
                     const discountAmount = discountRate > 0 ? Math.round(basePublishedPrice * (discountRate / 100)) : 0;
                     const subtotalPrice = basePublishedPrice - discountAmount;
-                    const isCouple = isCoupleTreatment(pt.title);
+                    const isCouple = isCoupleTreatment(pt.title, pt.category);
 
                     // Robust parsing of treatment inclusions and description
                     const { descClean, inclusions } = parseTreatmentInclusions(pt.desc);
@@ -2542,7 +2545,7 @@ export default function Home() {
                     const { treatment: pt, selectedDuration, guests } = selectedPartnerBreakdown;
                     const currentOpt = pt.options?.find((o: any) => o.duration === selectedDuration) || pt.options?.[0] || { duration: '60', price: '450,000' };
                     const publishedPricePerPerson = parseInt(String(currentOpt.price).replace(/[^0-9]/g, '') || '0', 10);
-                    const isCouple = isCoupleTreatment(pt.title);
+                    const isCouple = isCoupleTreatment(pt.title, pt.category);
                     const baseMultiplier = isCouple ? Math.max(1, Math.round(guests / 2)) : guests;
                     const publishedPrice = publishedPricePerPerson * baseMultiplier;
                     const discountPercent = Number(pt.partner_discount_percentage) || 0;
@@ -2559,7 +2562,8 @@ export default function Home() {
                         setCartItems([{
                             id: Date.now().toString() + Math.random().toString(36).substring(2, 7),
                             treatmentId: pt.id,
-                            title: `${pt.title} · ${pt.partner_name}`,
+                            title: isCouple && !pt.title.toLowerCase().includes('couple') ? `${pt.title} (Couple Package) · ${pt.partner_name}` : `${pt.title} · ${pt.partner_name}`,
+                            category: pt.category,
                             duration: durLabel,
                             price: finalRatePerUnit,
                             publishedPrice: publishedPrice,

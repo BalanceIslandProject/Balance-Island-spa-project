@@ -295,7 +295,7 @@ export default function TopNav() {
                                                                     </span>
                                                                     {item.guests > 1 && (
                                                                         <span className="text-[9px] font-semibold text-gray-400">
-                                                                            • {isCoupleTreatment(item.title)
+                                                                            • {isCoupleTreatment(item.title, (item as any).category)
                                                                                 ? (item.guests === 2 ? '2 Guests (1 Couple)' : `${item.guests} Guests (${Math.round(item.guests / 2)} Couples)`)
                                                                                 : `${item.guests} Guests`}
                                                                         </span>
