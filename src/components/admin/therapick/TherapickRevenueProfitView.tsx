@@ -13,6 +13,12 @@ const formatIDR = (val: number | string | undefined | null) => {
   return `Rp${num.toLocaleString('id-ID')}`;
 };
 
+const formatCompactScale = (val: number) => {
+  if (val >= 1000000) return `${(val / 1000000).toFixed(1).replace(/\.0$/, '')}M`;
+  if (val >= 1000) return `${Math.round(val / 1000)}K`;
+  return `${Math.round(val)}`;
+};
+
 export default function TherapickRevenueProfitView() {
   const { 
     websiteBookings, 
@@ -25,59 +31,71 @@ export default function TherapickRevenueProfitView() {
   const [dateDropdownOpen, setDateDropdownOpen] = useState(false);
   const [periodTab, setPeriodTab] = useState<'daily' | 'weekly' | 'monthly'>('weekly');
 
-  // Revenue vs Therapist Payment Chart Data Buckets (matching mockup Oct 1 - Oct 31)
+  // Revenue vs Therapist Payment Chart Data computed from real bookings and date range
   const chartData = useMemo(() => {
-    // 5 buckets: Oct 1, Oct 8, Oct 15, Oct 22, Oct 31
-    const buckets = [
-      { label: 'Oct 1', rev: 5800000, fee: 3200000 },
-      { label: 'Oct 8', rev: 7200000, fee: 3900000 },
-      { label: 'Oct 15', rev: 6100000, fee: 3400000 },
-      { label: 'Oct 22', rev: 8400000, fee: 4600000 },
-      { label: 'Oct 31', rev: 9100000, fee: 5100000 },
-    ];
-
-    // If websiteBookings has live items, dynamically distribute them
-    if (websiteBookings.length > 0) {
-      const totalRev = websiteBookings.reduce((sum, b) => sum + (Number(b.revenue || b.total_amount) || 0), 0);
-      const totalFee = websiteBookings.reduce((sum, b) => sum + (Number(b.therapist_fee || Math.round(Number(b.revenue || b.total_amount || 0) * 0.45)) || 0), 0);
-      
-      if (totalRev > 0) {
-        buckets[0].rev = Math.round(totalRev * 0.18);
-        buckets[0].fee = Math.round(totalFee * 0.18);
-        buckets[1].rev = Math.round(totalRev * 0.22);
-        buckets[1].fee = Math.round(totalFee * 0.22);
-        buckets[2].rev = Math.round(totalRev * 0.16);
-        buckets[2].fee = Math.round(totalFee * 0.16);
-        buckets[3].rev = Math.round(totalRev * 0.24);
-        buckets[3].fee = Math.round(totalFee * 0.24);
-        buckets[4].rev = Math.round(totalRev * 0.20);
-        buckets[4].fee = Math.round(totalFee * 0.20);
-      }
+    let startDate = dateRange.startDate ? new Date(dateRange.startDate) : new Date();
+    let endDate = dateRange.endDate ? new Date(dateRange.endDate) : new Date();
+    
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime()) || startDate >= endDate) {
+      const now = new Date();
+      startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+      endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
     }
 
-    const maxVal = Math.max(...buckets.map(b => b.rev), 10000000);
-    return { buckets, maxVal };
-  }, [websiteBookings]);
+    const totalDays = Math.max(1, Math.round((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)));
+    const intervalsCount = 5;
+    const stepDays = Math.max(1, Math.floor(totalDays / (intervalsCount - 1)));
 
-  // Financial calculations
-  const totalRev = websiteMetrics.totalRevenue || 28460000;
-  const therapistPay = websiteMetrics.therapistPayments || 15770000;
-  const netProfit = websiteMetrics.netProfit || (totalRev - therapistPay);
-  const bookingCount = websiteMetrics.bookingCount || websiteBookings.length || 86;
-  const avgBookingVal = bookingCount > 0 ? Math.round(totalRev / bookingCount) : 330000;
-  const profitMarginPct = totalRev > 0 ? ((netProfit / totalRev) * 100).toFixed(1) : '44.6';
+    const validBookings = websiteBookings.filter(b => (b.status || '').toLowerCase() !== 'cancelled');
+    const buckets: Array<{ label: string; dateStr: string; rev: number; fee: number }> = [];
+
+    for (let i = 0; i < intervalsCount; i++) {
+      const pDate = i === intervalsCount - 1 
+        ? new Date(endDate) 
+        : new Date(startDate.getTime() + i * stepDays * (1000 * 60 * 60 * 24));
+      
+      const yyyy = pDate.getFullYear();
+      const mm = String(pDate.getMonth() + 1).padStart(2, '0');
+      const dd = String(pDate.getDate()).padStart(2, '0');
+      const dateStr = `${yyyy}-${mm}-${dd}`;
+      const monthShort = pDate.toLocaleString('en-US', { month: 'short' });
+      const label = `${monthShort} ${pDate.getDate()}`;
+
+      const prevDate = i === 0 ? '1970-01-01' : buckets[i - 1].dateStr;
+      const bucketBookings = validBookings.filter(b => {
+        const bDate = b.booking_date || b.created_at?.split('T')[0] || '';
+        return bDate > prevDate && bDate <= dateStr;
+      });
+
+      const rev = bucketBookings.reduce((sum, b) => sum + (Number(b.revenue || b.total_price || 0)), 0);
+      const fee = bucketBookings.reduce((sum, b) => sum + (Number(b.therapist_fee || Math.round((Number(b.revenue || b.total_price || 0)) * 0.45))), 0);
+
+      buckets.push({ label, dateStr, rev, fee });
+    }
+
+    const maxVal = Math.max(...buckets.map(b => b.rev), 1000000);
+    return { buckets, maxVal };
+  }, [websiteBookings, dateRange]);
+
+  // Real financial calculations
+  const totalRev = Number(websiteMetrics.totalRevenue || 0);
+  const therapistPay = Number(websiteMetrics.therapistPayments || 0);
+  const netProfit = Number(websiteMetrics.netProfit ?? (totalRev - therapistPay));
+  const bookingCount = websiteBookings.length;
+  const avgBookingVal = bookingCount > 0 ? Math.round(totalRev / bookingCount) : 0;
+  const profitMarginPct = totalRev > 0 ? ((netProfit / totalRev) * 100).toFixed(1) : '0';
 
   // Export Financial CSV
   const handleExportCSV = () => {
     const headers = ['Booking ID', 'Date', 'Customer', 'Service', 'Revenue (IDR)', 'Therapist Fee (IDR)', 'Net Profit (IDR)', 'Payment Status'];
     const rows = websiteBookings.map(b => [
       b.reference_number || b.id || 'BK-10286',
-      b.booking_date || b.created_at?.split('T')[0] || '2026-10-27',
+      b.booking_date || b.created_at?.split('T')[0] || '',
       b.guest_name || b.customer_name || 'Guest',
       b.treatment_name || b.service_name || 'Massage',
-      b.revenue || b.total_amount || 375000,
-      b.therapist_fee || Math.round(Number(b.revenue || b.total_amount || 375000) * 0.45),
-      (Number(b.revenue || b.total_amount || 375000)) - Math.round(Number(b.revenue || b.total_amount || 375000) * 0.45),
+      Number(b.revenue || b.total_price || b.total_amount || 0),
+      Number(b.therapist_fee || Math.round(Number(b.revenue || b.total_price || b.total_amount || 0) * 0.45)),
+      Number(b.revenue || b.total_price || b.total_amount || 0) - Number(b.therapist_fee || Math.round(Number(b.revenue || b.total_price || b.total_amount || 0) * 0.45)),
       b.payment_status || 'Paid'
     ]);
 
@@ -271,9 +289,9 @@ export default function TherapickRevenueProfitView() {
             {/* Y-Axis Reference Scale */}
             <div className="flex items-center justify-between text-[10px] font-bold text-[var(--fitlo-muted)] pt-2 fitlo-num">
               <span>0</span>
-              <span>10M</span>
-              <span>20M</span>
-              <span>30M</span>
+              <span>{formatCompactScale(chartData.maxVal * 0.33)}</span>
+              <span>{formatCompactScale(chartData.maxVal * 0.66)}</span>
+              <span>{formatCompactScale(chartData.maxVal)}</span>
             </div>
           </div>
         </div>
@@ -310,7 +328,7 @@ export default function TherapickRevenueProfitView() {
               <div className="flex items-center justify-between py-2 border-b border-[var(--fitlo-line)]">
                 <span className="text-xs text-[var(--fitlo-muted)]">Labor Share Ratio</span>
                 <span className="text-sm font-bold text-[var(--fitlo-ink)] fitlo-num">
-                  {totalRev > 0 ? ((therapistPay / totalRev) * 100).toFixed(1) : '55.4'}%
+                  {totalRev > 0 ? ((therapistPay / totalRev) * 100).toFixed(1) : '0'}%
                 </span>
               </div>
             </div>
@@ -356,7 +374,7 @@ export default function TherapickRevenueProfitView() {
                 </tr>
               ) : (
                 websiteBookings.map(b => {
-                  const gross = Number(b.revenue || b.total_amount || 375000);
+                  const gross = Number(b.revenue || b.total_price || b.total_amount || 0);
                   const fee = Number(b.therapist_fee || Math.round(gross * 0.45));
                   const net = gross - fee;
 

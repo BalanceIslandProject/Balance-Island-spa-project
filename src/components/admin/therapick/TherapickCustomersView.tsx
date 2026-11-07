@@ -32,47 +32,35 @@ export default function TherapickCustomersView() {
       preferredService: string;
     }>();
 
-    // Default rich sample matching mockup Image 2
-    const defaultSample = [
-      { id: 'c1', name: 'Emily R.', phone: '+62 812 3456 7890', email: 'emily.r@gmail.com', totalBookings: 5, totalSpend: 2250000, lastDate: '2026-10-27', preferredService: 'Balinese Traditional Massage', bookings: [] },
-      { id: 'c2', name: 'James T.', phone: '+62 813 5678 9012', email: 'james.t@outlook.com', totalBookings: 4, totalSpend: 1890000, lastDate: '2026-10-27', preferredService: 'Aromatherapy Massage', bookings: [] },
-      { id: 'c3', name: 'Lisa M.', phone: '+62 819 2345 6789', email: 'lisa.m@icloud.com', totalBookings: 3, totalSpend: 1200000, lastDate: '2026-10-25', preferredService: 'Therapick Rejuvenation Package', bookings: [] },
-      { id: 'c4', name: 'Daniel K.', phone: '+62 812 9876 5432', email: 'daniel.k@gmail.com', totalBookings: 3, totalSpend: 1350000, lastDate: '2026-10-24', preferredService: 'Deep Tissue Massage', bookings: [] },
-      { id: 'c5', name: 'Sofia A.', phone: '+62 818 7654 3210', email: 'sofia.a@yahoo.com', totalBookings: 2, totalSpend: 750000, lastDate: '2026-10-22', preferredService: 'Facial & Head Acupressure', bookings: [] },
-    ];
+    websiteBookings.forEach(b => {
+      const name = (b.guest_name || b.customer_name || 'Guest').trim();
+      const existing = map.get(name);
+      const amt = Number(b.revenue || b.total_price || b.total_amount || 0);
 
-    if (websiteBookings.length > 0) {
-      websiteBookings.forEach(b => {
-        const name = (b.guest_name || b.customer_name || 'Guest').trim();
-        const existing = map.get(name);
-        const amt = Number(b.revenue || b.total_amount || 375000);
-
-        if (existing) {
-          existing.totalBookings += 1;
-          existing.totalSpend += amt;
-          existing.bookings.push(b);
-          if (b.booking_date > existing.lastDate) {
-            existing.lastDate = b.booking_date;
-            existing.preferredService = b.treatment_name || b.service_name || existing.preferredService;
-          }
-        } else {
-          map.set(name, {
-            id: b.id,
-            name,
-            phone: b.guest_whatsapp || b.customer_phone || '+62 812 3456 7890',
-            email: b.guest_email || b.customer_email || `${name.toLowerCase().replace(/\s+/g, '')}@gmail.com`,
-            totalBookings: 1,
-            totalSpend: amt,
-            bookings: [b],
-            lastDate: b.booking_date || b.created_at?.split('T')[0] || '2026-10-27',
-            preferredService: b.treatment_name || b.service_name || 'Balinese Traditional Massage'
-          });
+      if (existing) {
+        existing.totalBookings += 1;
+        existing.totalSpend += amt;
+        existing.bookings.push(b);
+        if (b.booking_date > existing.lastDate) {
+          existing.lastDate = b.booking_date;
+          existing.preferredService = b.treatment_name || b.service_name || existing.preferredService;
         }
-      });
-      return Array.from(map.values()).sort((a, b) => b.totalSpend - a.totalSpend);
-    }
+      } else {
+        map.set(name, {
+          id: b.id,
+          name,
+          phone: b.guest_whatsapp || b.customer_phone || '',
+          email: b.guest_email || b.customer_email || undefined,
+          totalBookings: 1,
+          totalSpend: amt,
+          bookings: [b],
+          lastDate: b.booking_date || b.created_at?.split('T')[0] || '',
+          preferredService: b.treatment_name || b.service_name || 'Balinese Traditional Massage'
+        });
+      }
+    });
 
-    return defaultSample;
+    return Array.from(map.values()).sort((a, b) => b.totalSpend - a.totalSpend);
   }, [websiteBookings]);
 
   // Filtered customers

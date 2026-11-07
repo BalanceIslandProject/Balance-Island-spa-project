@@ -30,7 +30,7 @@ import {
 } from 'lucide-react';
 import { useSpa } from '@/context/SpaContext';
 import { getAdminDomainInfo, AdminConsoleBrand } from '@/lib/domainIsolation';
-import { TherapickAdminProvider } from '@/context/TherapickAdminContext';
+import { TherapickAdminProvider, useTherapickAdmin } from '@/context/TherapickAdminContext';
 import TherapickSystemSwitcher from '@/components/admin/therapick/TherapickSystemSwitcher';
 import TherapickSidebarNav, { TherapickMobileDrawerLinks } from '@/components/admin/therapick/TherapickSidebarNav';
 import TherapickMobileBottomNav from '@/components/admin/therapick/TherapickMobileBottomNav';
@@ -415,6 +415,32 @@ export default function AdminCrmShell({ children, serverHost }: AdminCrmShellPro
   // Complete separation of Website vs Affiliate, persistent switcher, dark navy sidebar,
   // mobile bottom nav, realtime notifications, drawers & modals.
   // ─────────────────────────────────────────────────────────────────────────────
+function TherapickHeaderStats() {
+  const { websiteBookings, affiliateBookings, system, dateRange } = useTherapickAdmin();
+  const currentBookings = system === 'website' ? websiteBookings : affiliateBookings;
+
+  const currentCount = useMemo(() => {
+    if (!dateRange.startDate || !dateRange.endDate) return currentBookings.length;
+    const filtered = currentBookings.filter(b => {
+      const bDate = b.booking_date || (b.created_at ? b.created_at.split('T')[0] : '');
+      return bDate >= dateRange.startDate && bDate <= dateRange.endDate;
+    });
+    return filtered.length;
+  }, [currentBookings, dateRange]);
+
+  const labelMonth = dateRange.label || new Date().toLocaleString('en-US', { month: 'short', year: 'numeric' });
+
+  return (
+    <div className="fitlo-figure hidden sm:flex">
+      <b>{currentCount}</b>
+      <span>
+        <span>Bookings</span>
+        <small>{labelMonth}</small>
+      </span>
+    </div>
+  );
+}
+
   if (activeBrandId === 'therapick') {
     return (
       <TherapickAdminProvider>
@@ -437,13 +463,7 @@ export default function AdminCrmShell({ children, serverHost }: AdminCrmShellPro
                   <Menu size={20} />
                 </button>
 
-                <div className="fitlo-figure hidden sm:flex">
-                  <b>96</b>
-                  <span>
-                    <span>Bookings</span>
-                    <small>Oct 2026</small>
-                  </span>
-                </div>
+                <TherapickHeaderStats />
               </div>
 
               {/* Center: Dual System Switcher Pill */}

@@ -352,11 +352,13 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
       });
 
       // Map partners by referral code or id
+      // Map partners by referral code or partner_code or id
       const partnerCodeMap = new Map<string, any>();
       const partnerIdMap = new Map<string, any>();
       rawPartners.forEach((p: any) => {
-        if (p.referral_code) {
-          partnerCodeMap.set(String(p.referral_code).trim().toUpperCase(), p);
+        const code = String(p.partner_code || p.referral_code || '').trim().toUpperCase();
+        if (code) {
+          partnerCodeMap.set(code, p);
         }
         if (p.id) {
           partnerIdMap.set(String(p.id).trim(), p);
@@ -386,7 +388,8 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
           service_name: b.treatment_name || b.service_name || 'Balinese Traditional Massage',
           booking_time: b.time || b.booking_time || '14:00',
           location_address: b.location || b.location_address || b.villa_name || 'Client Villa',
-          total_amount: Number(b.revenue || b.total_amount || 375000),
+          total_amount: Number(b.revenue || b.total_price || b.total_amount || 0),
+          revenue: Number(b.revenue || b.total_price || b.total_amount || 0),
           partner_name: partner ? (`${partner.first_name || ''} ${partner.last_name || ''}`.trim() || partner.business_name) : (b.affiliate_code || undefined),
           duration_minutes: b.duration_minutes || 90,
           therapist_name: b.assigned_therapist_name || b.therapist_name || 'Wayan S.',
@@ -398,31 +401,33 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
           partner_info: partner ? {
             name: `${partner.first_name || ''} ${partner.last_name || ''}`.trim() || partner.business_name,
             business: partner.business_name,
-            code: partner.referral_code,
+            code: partner.partner_code || partner.referral_code,
             id: partner.id,
           } : undefined
         };
       });
       // Enrich Partners with performance metrics and safe defaults
       const enrichedPartners = rawPartners.map((p: any) => {
+        const pCode = String(p.partner_code || p.referral_code || '').trim().toUpperCase();
         const partnerBookings = (enrichedBookings as any[]).filter((b: any) => 
-          (b.affiliate_code && b.affiliate_code.toUpperCase() === (p.referral_code || '').toUpperCase()) ||
+          (pCode && b.affiliate_code && b.affiliate_code.toUpperCase() === pCode) ||
           b.partner_info?.id === p.id ||
           b.commission?.partner_id === p.id
         );
         const partnerComms = rawComms.filter((c: any) => 
           c.partner_id === p.id || 
-          (c.partner_code && p.referral_code && c.partner_code.toUpperCase() === p.referral_code.toUpperCase()) ||
-          (c.partner_name && p.name && c.partner_name.toLowerCase() === p.name.toLowerCase())
+          (c.partner_code && pCode && String(c.partner_code).trim().toUpperCase() === pCode) ||
+          (c.partner_name && p.business_name && String(c.partner_name).toLowerCase() === String(p.business_name).toLowerCase())
         );
         const partnerPayouts = rawPayouts.filter((py: any) => 
           py.partner_id === p.id ||
-          (py.partner_name && p.name && py.partner_name.toLowerCase() === p.name.toLowerCase())
+          (py.partner_code && pCode && String(py.partner_code).trim().toUpperCase() === pCode) ||
+          (py.partner_name && p.business_name && String(py.partner_name).toLowerCase() === String(p.business_name).toLowerCase())
         );
 
         const totalRev = partnerBookings.reduce((sum, b) => {
           if ((b.status || '').toLowerCase() === 'cancelled') return sum;
-          return sum + (Number(b.revenue || b.total_amount) || 0);
+          return sum + (Number(b.revenue || b.total_price || b.total_amount) || 0);
         }, 0);
 
         // STRICT PAYOUT ELIGIBILITY LOGIC:
@@ -443,6 +448,8 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
 
         return {
           ...p,
+          referral_code: pCode,
+          partner_code: pCode,
           name: `${p.first_name || ''} ${p.last_name || ''}`.trim() || p.business_name || 'Partner',
           total_bookings: partnerBookings.length,
           affiliate_revenue: totalRev,
@@ -580,7 +587,7 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
 
     const totalRevenue = list.reduce((sum, b) => {
       if ((b.status || '').toLowerCase() === 'cancelled') return sum;
-      return sum + Number(b.revenue || 0);
+      return sum + Number((b as any).revenue || (b as any).total_price || (b as any).total_amount || 0);
     }, 0);
 
     const therapistPayments = list.reduce((sum, b) => {
@@ -620,7 +627,7 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
 
     const affiliateRevenue = list.reduce((sum, b) => {
       if ((b.status || '').toLowerCase() === 'cancelled') return sum;
-      return sum + Number(b.revenue || 0);
+      return sum + Number((b as any).revenue || (b as any).total_price || (b as any).total_amount || 0);
     }, 0);
 
     const therapistFeesTotal = list.reduce((sum, b) => {
@@ -632,7 +639,9 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
 
     const commission = list.reduce((sum, b) => {
       if ((b.status || '').toLowerCase() === 'cancelled') return sum;
-      const commVal = b.commission?.commission_amount ? Number(b.commission.commission_amount) : (Number(b.revenue || 0) * 0.15);
+      const commVal = b.commission?.commission_amount 
+        ? Number(b.commission.commission_amount) 
+        : (Number((b as any).revenue || (b as any).total_price || (b as any).total_amount || 0) * 0.15);
       return sum + commVal;
     }, 0);
 

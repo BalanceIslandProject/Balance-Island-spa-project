@@ -47,7 +47,7 @@ export default function TherapickPaymentsView() {
     let paidCount = 0;
 
     websiteBookings.forEach(b => {
-      const amount = Number(b.revenue || b.total_amount || 375000);
+      const amount = Number(b.revenue || b.total_price || b.total_amount || 0);
       totalGross += amount;
 
       const isPaid = b.payment_status === 'Paid';
@@ -105,7 +105,7 @@ export default function TherapickPaymentsView() {
   const handleExportCSV = () => {
     const headers = ['Booking ID', 'Customer', 'Total Amount', 'Amount Paid', 'Remaining Balance', 'Method', 'Payment Status', 'Date'];
     const rows = filteredBookings.map(b => {
-      const total = Number(b.revenue || b.total_amount || 375000);
+      const total = Number(b.revenue || b.total_price || b.total_amount || 0);
       const isPaid = b.payment_status === 'Paid';
       return [
         b.reference_number || b.id,
@@ -289,7 +289,7 @@ export default function TherapickPaymentsView() {
                 </tr>
               ) : (
                 filteredBookings.map(b => {
-                  const total = Number(b.revenue || b.total_amount || 375000);
+                  const total = Number(b.revenue || b.total_price || b.total_amount || 0);
                   const isPaid = b.payment_status === 'Paid';
                   const isRefunded = b.payment_status === 'Refunded';
                   const paidAmount = isPaid ? total : 0;

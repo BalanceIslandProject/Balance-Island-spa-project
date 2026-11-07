@@ -31,6 +31,19 @@ const formatIDR = (val: number | string | undefined | null) => {
   return `Rp ${num.toLocaleString('id-ID')}`;
 };
 
+const formatIDRCompact = (val: number | string | undefined | null) => {
+  const num = Number(val) || 0;
+  if (num >= 1000000) {
+    const m = (num / 1000000).toFixed(1).replace(/\.0$/, '');
+    return `Rp ${m}M`;
+  }
+  if (num >= 1000) {
+    const k = Math.round(num / 1000);
+    return `Rp ${k}K`;
+  }
+  return `Rp ${num}`;
+};
+
 export default function TherapickDashboardOverview() {
   const {
     system,
@@ -72,27 +85,148 @@ export default function TherapickDashboardOverview() {
     return `${y}-${m}-${d}`;
   });
 
-  // Booking Summary Metrics for Website Overview
+  // Active bookings list based on current system
+  const currentBookings = system === 'website' ? websiteBookings : affiliateBookings;
+
+  // Real filtered bookings for current date range
+  const currentFilteredBookings = useMemo(() => {
+    return currentBookings.filter(b => {
+      if (!dateRange.startDate || !dateRange.endDate) return true;
+      const bDate = b.booking_date || (b.created_at ? b.created_at.split('T')[0] : '');
+      return bDate >= dateRange.startDate && bDate <= dateRange.endDate;
+    });
+  }, [currentBookings, dateRange]);
+
+  // Booking Summary Metrics for Current System (Website or Affiliate)
   const bookingSummary = useMemo(() => {
-    const total = websiteBookings.length || 86;
-    const completed = websiteBookings.filter(b => (b.status || '').toLowerCase() === 'completed' || (b.treatment_status || '').toLowerCase() === 'finished').length || 72;
-    const upcoming = websiteBookings.filter(b => (b.status || '').toLowerCase() === 'confirmed' || (b.status || '').toLowerCase() === 'in progress' || (b.status || '').toLowerCase() === 'scheduled').length || 8;
-    const cancelled = websiteBookings.filter(b => (b.status || '').toLowerCase() === 'cancelled').length || 6;
+    const list = currentFilteredBookings;
+    const total = list.length;
+    const completed = list.filter(b => {
+      const s = (b.status || '').toLowerCase();
+      const ts = (b.treatment_status || '').toLowerCase();
+      return s === 'completed' || s === 'finished' || ts === 'finished' || ts === 'completed';
+    }).length;
+    const upcoming = list.filter(b => {
+      const s = (b.status || '').toLowerCase();
+      const ts = (b.treatment_status || '').toLowerCase();
+      return s === 'confirmed' || s === 'in progress' || s === 'scheduled' || s === 'ongoing' || s === 'pending' || ts === 'scheduled' || ts === 'in progress';
+    }).length;
+    const cancelled = list.filter(b => (b.status || '').toLowerCase() === 'cancelled').length;
 
     return { total, completed, upcoming, cancelled };
-  }, [websiteBookings]);
+  }, [currentFilteredBookings]);
 
   // Affiliate Partner Summary
   const partnerSummary = useMemo(() => {
-    const active = partners.filter(p => p.status === 'active').length || 12;
-    const total = affiliateBookings.length || 86;
-    const pendingComm = affiliateMetrics.pendingCommissions || 2150000;
-    const outstandingPayouts = affiliateMetrics.outstandingPayouts || 1260000;
+    const active = partners.filter(p => p.status === 'active').length;
+    const total = affiliateBookings.length;
+    const pendingComm = affiliateMetrics.pendingCommissions || 0;
+    const outstandingPayouts = affiliateMetrics.outstandingPayouts || 0;
     return { active, total, pendingComm, outstandingPayouts };
   }, [partners, affiliateBookings, affiliateMetrics]);
 
-  // Active bookings list based on current system
-  const currentBookings = system === 'website' ? websiteBookings : affiliateBookings;
+  // Top Rituals dynamically computed from currentFilteredBookings
+  const topRituals = useMemo(() => {
+    const counts: Record<string, number> = {};
+    currentFilteredBookings.forEach(b => {
+      if ((b.status || '').toLowerCase() === 'cancelled') return;
+      const name = b.treatment_name || b.service_name || 'Massage';
+      counts[name] = (counts[name] || 0) + 1;
+    });
+
+    const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+    const maxUnits = entries.length > 0 ? entries[0][1] : 1;
+    const icons = [Flame, Flower2, Heart, Sparkles, Layers];
+
+    return entries.slice(0, 4).map(([name, units], idx) => ({
+      name,
+      units,
+      pct: Math.round((units / maxUnits) * 100),
+      icon: icons[idx % icons.length]
+    }));
+  }, [currentFilteredBookings]);
+
+  // Dynamic Timeline Points for Revenue Studio Chart
+  const chartData = useMemo(() => {
+    const validBookings = currentFilteredBookings
+      .filter(b => (b.status || '').toLowerCase() !== 'cancelled')
+      .sort((a, b) => {
+        const da = a.booking_date || a.created_at || '';
+        const db = b.booking_date || b.created_at || '';
+        return da.localeCompare(db);
+      });
+
+    let startDate = dateRange.startDate ? new Date(dateRange.startDate) : new Date();
+    let endDate = dateRange.endDate ? new Date(dateRange.endDate) : new Date();
+    
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime()) || startDate >= endDate) {
+      const now = new Date();
+      startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+      endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    }
+
+    const totalDays = Math.max(1, Math.round((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)));
+    const intervalsCount = 5;
+    const stepDays = Math.max(1, Math.floor(totalDays / (intervalsCount - 1)));
+
+    const points: Array<{ label: string; dateStr: string; rev: number; cumRev: number; x: number; y: number }> = [];
+    let runningTotal = 0;
+
+    for (let i = 0; i < intervalsCount; i++) {
+      const pDate = i === intervalsCount - 1 
+        ? new Date(endDate) 
+        : new Date(startDate.getTime() + i * stepDays * (1000 * 60 * 60 * 24));
+      
+      const yyyy = pDate.getFullYear();
+      const mm = String(pDate.getMonth() + 1).padStart(2, '0');
+      const dd = String(pDate.getDate()).padStart(2, '0');
+      const dateStr = `${yyyy}-${mm}-${dd}`;
+      const monthShort = pDate.toLocaleString('en-US', { month: 'short' });
+      const label = `${monthShort} ${pDate.getDate()}`;
+
+      const prevDate = i === 0 ? '1970-01-01' : points[i - 1].dateStr;
+      const bucketBookings = validBookings.filter(b => {
+        const bDate = b.booking_date || b.created_at?.split('T')[0] || '';
+        return bDate > prevDate && bDate <= dateStr;
+      });
+      const intervalRev = bucketBookings.reduce((sum, b) => sum + (Number(b.revenue || b.total_price || 0)), 0);
+      runningTotal += intervalRev;
+
+      points.push({
+        label,
+        dateStr,
+        rev: intervalRev,
+        cumRev: runningTotal,
+        x: (i / (intervalsCount - 1)) * 600,
+        y: 190
+      });
+    }
+
+    const maxVal = Math.max(runningTotal, 1000000);
+    points.forEach(pt => {
+      pt.y = Math.round(190 - (pt.cumRev / maxVal) * 160);
+    });
+
+    let linePath = `M ${points[0].x} ${points[0].y}`;
+    for (let i = 1; i < points.length; i++) {
+      const prev = points[i - 1];
+      const curr = points[i];
+      const cx1 = prev.x + (curr.x - prev.x) / 2;
+      const cy1 = prev.y;
+      const cx2 = prev.x + (curr.x - prev.x) / 2;
+      const cy2 = curr.y;
+      linePath += ` C ${cx1} ${cy1}, ${cx2} ${cy2}, ${curr.x} ${curr.y}`;
+    }
+    const areaPath = `${linePath} L 600 190 L 0 190 Z`;
+
+    return {
+      points,
+      linePath,
+      areaPath,
+      maxVal,
+      totalRevenue: runningTotal
+    };
+  }, [currentFilteredBookings, dateRange]);
 
   // Selected date's bookings
   const selectedDateBookings = useMemo(() => {
@@ -231,14 +365,14 @@ export default function TherapickDashboardOverview() {
           </div>
           <div className="fitlo-kpi__value">
             {system === 'website' 
-              ? formatIDR(websiteMetrics.totalRevenue || 28450000) 
-              : formatIDR(affiliateMetrics.commission || 4280000)}
+              ? formatIDR(websiteMetrics.totalRevenue) 
+              : formatIDR(affiliateMetrics.commission)}
           </div>
           <div className="fitlo-kpi__foot">
             <span className="fitlo-delta fitlo-delta--up">
-              ↑ 14.2%
+              ● {dateRange.label || 'Current'}
             </span>
-            <span>vs previous period</span>
+            <span>{system === 'website' ? `${currentFilteredBookings.length} bookings` : `${partnerSummary.total} partner bookings`}</span>
             {/* Embedded SVG sparkline */}
             <svg className="spark" viewBox="0 0 60 20">
               <path
@@ -263,7 +397,7 @@ export default function TherapickDashboardOverview() {
           </div>
           <div className="fitlo-kpi__foot">
             <span className="fitlo-delta fitlo-delta--up">
-              ↑ 8.4%
+              {bookingSummary.total > 0 ? Math.round((bookingSummary.completed / bookingSummary.total) * 100) : 0}%
             </span>
             <span>of {bookingSummary.total} total</span>
             <svg className="spark" viewBox="0 0 60 20">
@@ -291,7 +425,7 @@ export default function TherapickDashboardOverview() {
             <span className="fitlo-delta fitlo-delta--up">
               ● Active
             </span>
-            <span>{system === 'website' ? 'Dispatched / In-flight' : 'In network'}</span>
+            <span>{system === 'website' ? `${bookingSummary.cancelled} cancelled` : `${partners.length} total partners`}</span>
             <svg className="spark" viewBox="0 0 60 20">
               <path
                 d="M 0 15 Q 18 10, 35 6 T 60 2"
@@ -312,14 +446,16 @@ export default function TherapickDashboardOverview() {
           </div>
           <div className="fitlo-kpi__value">
             {system === 'website'
-              ? formatIDR(websiteMetrics.netProfit || 12850000)
+              ? formatIDR(websiteMetrics.netProfit)
               : formatIDR(partnerSummary.outstandingPayouts)}
           </div>
           <div className="fitlo-kpi__foot">
             <span className="fitlo-delta fitlo-delta--up">
-              ↑ 5.2%
+              {system === 'website'
+                ? `${websiteMetrics.totalRevenue > 0 ? Math.round((websiteMetrics.netProfit / websiteMetrics.totalRevenue) * 100) : 0}%`
+                : (partnerSummary.outstandingPayouts > 0 ? 'Pending' : 'Settled')}
             </span>
-            <span>{system === 'website' ? '45% net margin' : 'Ready to disburse'}</span>
+            <span>{system === 'website' ? 'Net platform margin' : 'Ready to disburse'}</span>
             <svg className="spark" viewBox="0 0 60 20">
               <path
                 d="M 0 18 Q 15 12, 30 14 T 60 6"
@@ -341,7 +477,7 @@ export default function TherapickDashboardOverview() {
           <div>
             <h2>Revenue Studio</h2>
             <p>
-              {system === 'website' ? 'Direct booking revenue over time' : 'Affiliate commissions & booking volume'} · +14.2% vs previous window
+              {system === 'website' ? 'Direct booking revenue over time' : 'Affiliate commissions & booking volume'} · {formatIDR(chartData.totalRevenue)} ({dateRange.label || 'All time'})
             </p>
           </div>
 
@@ -358,9 +494,9 @@ export default function TherapickDashboardOverview() {
         {/* SVG Glowing Area Chart */}
         <div className="relative pt-6 pb-2 w-full select-none">
           <div className="absolute left-0 inset-y-6 flex flex-col justify-between text-[11px] font-mono text-[var(--fitlo-muted)] pointer-events-none">
-            <span>Rp 30M</span>
-            <span>Rp 20M</span>
-            <span>Rp 10M</span>
+            <span>{formatIDRCompact(chartData.maxVal)}</span>
+            <span>{formatIDRCompact(chartData.maxVal * 0.66)}</span>
+            <span>{formatIDRCompact(chartData.maxVal * 0.33)}</span>
             <span>Rp 0</span>
           </div>
 
@@ -380,25 +516,15 @@ export default function TherapickDashboardOverview() {
               <line x1="0" y1="130" x2="600" y2="130" stroke="var(--fitlo-line)" strokeDasharray="3 4" strokeWidth="1" />
               <line x1="0" y1="190" x2="600" y2="190" stroke="var(--fitlo-line)" strokeWidth="1" />
 
-              {/* Dashed Previous Window Comparison */}
-              <path
-                d="M 0 170 C 120 160, 240 150, 360 135 C 480 120, 540 110, 600 95"
-                fill="none"
-                stroke="var(--fitlo-muted)"
-                strokeWidth="1.6"
-                strokeDasharray="4 4"
-                opacity="0.55"
-              />
-
               {/* Main Glowing Area Fill */}
               <path
-                d="M 0 165 C 130 150, 240 135, 360 100 C 460 70, 530 45, 600 30 L 600 190 L 0 190 Z"
+                d={chartData.areaPath}
                 fill="url(#fitloRevenueGrad)"
               />
 
               {/* Main Curve */}
               <path
-                d="M 0 165 C 130 150, 240 135, 360 100 C 460 70, 530 45, 600 30"
+                d={chartData.linePath}
                 fill="none"
                 stroke="var(--fitlo-accent)"
                 strokeWidth="2.8"
@@ -406,13 +532,7 @@ export default function TherapickDashboardOverview() {
               />
 
               {/* Interactive Curve Points */}
-              {[
-                { x: 0, y: 165, val: 'Rp 6M' },
-                { x: 150, y: 145, val: 'Rp 14M' },
-                { x: 300, y: 120, val: 'Rp 19M' },
-                { x: 450, y: 65, val: 'Rp 24M' },
-                { x: 600, y: 30, val: 'Rp 28M' }
-              ].map((pt, i) => (
+              {chartData.points.map((pt, i) => (
                 <circle
                   key={i}
                   cx={pt.x}
@@ -428,11 +548,9 @@ export default function TherapickDashboardOverview() {
 
           {/* X Axis Labels */}
           <div className="pl-14 pt-3 flex justify-between text-[11px] font-semibold text-[var(--fitlo-muted)]">
-            <span>Oct 1</span>
-            <span>Oct 8</span>
-            <span>Oct 15</span>
-            <span>Oct 22</span>
-            <span>Oct 31</span>
+            {chartData.points.map((pt, i) => (
+              <span key={i}>{pt.label}</span>
+            ))}
           </div>
         </div>
       </div>
@@ -472,58 +590,66 @@ export default function TherapickDashboardOverview() {
                 </tr>
               </thead>
               <tbody>
-                {currentBookings.slice(0, 5).map(b => {
-                  const amount = Number(b.revenue || b.total_amount || 375000);
-                  const status = b.status || 'Confirmed';
-                  const initials = (b.guest_name || b.customer_name || 'Guest')
-                    .split(' ')
-                    .map((p: string) => p[0])
-                    .join('')
-                    .slice(0, 2)
-                    .toUpperCase();
+                {currentBookings.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="py-8 text-center text-xs text-[var(--fitlo-muted)]">
+                      No reservations recorded for this period.
+                    </td>
+                  </tr>
+                ) : (
+                  currentBookings.slice(0, 5).map(b => {
+                    const amount = Number(b.revenue || b.total_price || b.total_amount || 0);
+                    const status = b.status || 'Confirmed';
+                    const initials = (b.guest_name || b.customer_name || 'Guest')
+                      .split(' ')
+                      .map((p: string) => p[0])
+                      .join('')
+                      .slice(0, 2)
+                      .toUpperCase();
 
-                  return (
-                    <tr
-                      key={b.id}
-                      onClick={() => setSelectedBooking(b)}
-                      className="cursor-pointer"
-                    >
-                      <td className="font-mono text-xs font-bold text-[var(--fitlo-ink)]">
-                        {b.reference_number || String(b.id || '').slice(0, 8)}
-                      </td>
-                      <td>
-                        <div className="flex items-center gap-2.5">
-                          <div className="fitlo-av" style={{ width: '28px', height: '28px', fontSize: '10px' }}>
-                            {initials}
+                    return (
+                      <tr
+                        key={b.id}
+                        onClick={() => setSelectedBooking(b)}
+                        className="cursor-pointer"
+                      >
+                        <td className="font-mono text-xs font-bold text-[var(--fitlo-ink)]">
+                          {b.reference_number || String(b.id || '').slice(0, 8)}
+                        </td>
+                        <td>
+                          <div className="flex items-center gap-2.5">
+                            <div className="fitlo-av" style={{ width: '28px', height: '28px', fontSize: '10px' }}>
+                              {initials}
+                            </div>
+                            <span className="font-semibold text-xs text-[var(--fitlo-ink)]">
+                              {b.guest_name || b.customer_name || 'Valued Guest'}
+                            </span>
                           </div>
-                          <span className="font-semibold text-xs text-[var(--fitlo-ink)]">
-                            {b.guest_name || b.customer_name || 'Valued Guest'}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="text-xs text-[var(--fitlo-muted)] max-w-[140px] truncate">
-                        {b.treatment_name || b.service_name || 'Balinese Traditional Massage'}
-                      </td>
-                      <td className="font-mono text-[11px] text-[var(--fitlo-muted)]">
-                        {b.booking_date || b.created_at?.split('T')[0]} {b.time || '14:00'}
-                      </td>
-                      <td className="r font-mono font-bold text-xs text-[var(--fitlo-ink)]">
-                        {formatIDR(amount)}
-                      </td>
-                      <td>
-                        {status === 'Completed' || status === 'Finished' ? (
-                          <span className="fitlo-pill fitlo-pill--good">Completed</span>
-                        ) : status === 'Confirmed' ? (
-                          <span className="fitlo-pill fitlo-pill--info">Confirmed</span>
-                        ) : status === 'In Progress' ? (
-                          <span className="fitlo-pill fitlo-pill--warn">In Progress</span>
-                        ) : (
-                          <span className="fitlo-pill fitlo-pill--bad">Cancelled</span>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
+                        </td>
+                        <td className="text-xs text-[var(--fitlo-muted)] max-w-[140px] truncate">
+                          {b.treatment_name || b.service_name || 'Balinese Traditional Massage'}
+                        </td>
+                        <td className="font-mono text-[11px] text-[var(--fitlo-muted)]">
+                          {b.booking_date || b.created_at?.split('T')[0]} {b.time || '14:00'}
+                        </td>
+                        <td className="r font-mono font-bold text-xs text-[var(--fitlo-ink)]">
+                          {formatIDR(amount)}
+                        </td>
+                        <td>
+                          {status === 'Completed' || status === 'Finished' ? (
+                            <span className="fitlo-pill fitlo-pill--good">Completed</span>
+                          ) : status === 'Confirmed' ? (
+                            <span className="fitlo-pill fitlo-pill--info">Confirmed</span>
+                          ) : status === 'In Progress' ? (
+                            <span className="fitlo-pill fitlo-pill--warn">In Progress</span>
+                          ) : (
+                            <span className="fitlo-pill fitlo-pill--bad">Cancelled</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
               </tbody>
             </table>
           </div>
@@ -542,27 +668,29 @@ export default function TherapickDashboardOverview() {
             </div>
 
             <div className="space-y-3.5 pt-1">
-              {[
-                { name: 'Balinese Deep Tissue', units: 48, pct: 85, icon: Flame },
-                { name: 'Signature Island Sanctuary', units: 36, pct: 65, icon: Flower2 },
-                { name: 'Couples Rejuvenation', units: 22, pct: 45, icon: Heart },
-              ].map((item, idx) => {
-                const Icon = item.icon;
-                return (
-                  <div key={idx} className="space-y-1.5">
-                    <div className="flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-2">
-                        <Icon size={14} className="text-[var(--fitlo-accent)]" />
-                        <span className="font-semibold text-[var(--fitlo-ink)]">{item.name}</span>
+              {topRituals.length === 0 ? (
+                <div className="py-6 text-center text-xs text-[var(--fitlo-muted)]">
+                  No treatments recorded for this period.
+                </div>
+              ) : (
+                topRituals.map((item, idx) => {
+                  const Icon = item.icon;
+                  return (
+                    <div key={idx} className="space-y-1.5">
+                      <div className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-2">
+                          <Icon size={14} className="text-[var(--fitlo-accent)]" />
+                          <span className="font-semibold text-[var(--fitlo-ink)] truncate max-w-[170px]">{item.name}</span>
+                        </div>
+                        <span className="font-mono text-[var(--fitlo-muted)]">{item.units}</span>
                       </div>
-                      <span className="font-mono text-[var(--fitlo-muted)]">{item.units}</span>
+                      <div className="fitlo-level">
+                        <i style={{ width: `${item.pct}%` }} />
+                      </div>
                     </div>
-                    <div className="fitlo-level">
-                      <i style={{ width: `${item.pct}%` }} />
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })
+              )}
             </div>
           </div>
 

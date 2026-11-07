@@ -20,14 +20,55 @@ export default function TherapickReportsView() {
 
   const [period, setPeriod] = useState<'this_month' | 'last_month' | 'quarter'>('this_month');
 
-  // Month-by-month financial summary
-  const monthlyData = [
-    { month: 'Jun 2026', websiteRev: 42000000, websiteCost: 21000000, affiliateRev: 18500000, comm: 2775000 },
-    { month: 'Jul 2026', websiteRev: 49500000, websiteCost: 24750000, affiliateRev: 22100000, comm: 3315000 },
-    { month: 'Aug 2026', websiteRev: 54000000, websiteCost: 27000000, affiliateRev: 25400000, comm: 3810000 },
-    { month: 'Sep 2026', websiteRev: 48000000, websiteCost: 24000000, affiliateRev: 26800000, comm: 4020000 },
-    { month: 'Oct 2026', websiteRev: websiteMetrics.revenue, websiteCost: websiteMetrics.therapist_payments, affiliateRev: affiliateMetrics.revenue, comm: affiliateMetrics.commission },
-  ];
+  // Month-by-month financial summary aggregated from real bookings
+  const monthlyData = useMemo(() => {
+    const monthsMap = new Map<string, { month: string; websiteRev: number; websiteCost: number; affiliateRev: number; comm: number }>();
+
+    const now = new Date();
+    for (let i = 4; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      const label = d.toLocaleString('en-US', { month: 'short', year: 'numeric' });
+      monthsMap.set(key, { month: label, websiteRev: 0, websiteCost: 0, affiliateRev: 0, comm: 0 });
+    }
+
+    bookings.forEach((b: any) => {
+      if ((b.status || '').toLowerCase() === 'cancelled') return;
+      const dateStr = b.booking_date || b.created_at?.split('T')[0] || '';
+      if (!dateStr) return;
+      const key = dateStr.slice(0, 7);
+      const rev = Number(b.revenue || b.total_price || b.total_amount || 0);
+
+      if (!monthsMap.has(key)) {
+        const parts = key.split('-');
+        if (parts.length === 2) {
+          const d = new Date(Number(parts[0]), Number(parts[1]) - 1, 1);
+          const label = d.toLocaleString('en-US', { month: 'short', year: 'numeric' });
+          monthsMap.set(key, { month: label, websiteRev: 0, websiteCost: 0, affiliateRev: 0, comm: 0 });
+        }
+      }
+
+      const entry = monthsMap.get(key);
+      if (entry) {
+        if (b.booking_system === 'affiliate' || b.source === 'partner' || b.affiliate_code) {
+          entry.affiliateRev += rev;
+          const commVal = b.commission?.commission_amount ? Number(b.commission.commission_amount) : Math.round(rev * 0.15);
+          entry.comm += commVal;
+        } else {
+          entry.websiteRev += rev;
+          const cost = Number(b.therapist_fee || Math.round(rev * 0.45));
+          entry.websiteCost += cost;
+        }
+      }
+    });
+
+    return Array.from(monthsMap.entries())
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([, val]) => val);
+  }, [bookings]);
+
+  const websiteMargin = websiteMetrics.revenue > 0 ? ((websiteMetrics.net_profit / websiteMetrics.revenue) * 100).toFixed(1) : '0';
+  const affiliateMargin = affiliateMetrics.revenue > 0 ? ((affiliateMetrics.net_profit / affiliateMetrics.revenue) * 100).toFixed(1) : '0';
 
   const handleExportCSV = () => {
     if (system === 'website') {
@@ -101,7 +142,7 @@ export default function TherapickReportsView() {
             <div className="fitlo-kpi__val text-xl sm:text-2xl mt-1">
               Rp {websiteMetrics.revenue.toLocaleString('id-ID')}
             </div>
-            <div className="fitlo-kpi__sub font-semibold text-[var(--fitlo-accent)] mt-1">▲ +14% vs previous period</div>
+            <div className="fitlo-kpi__sub font-semibold text-[var(--fitlo-accent)] mt-1">● {dateRange.label || 'Current Period'}</div>
           </div>
 
           <div className="fitlo-kpi fitlo-kpi--pebble">
@@ -117,7 +158,7 @@ export default function TherapickReportsView() {
             <div className="fitlo-kpi__val text-xl sm:text-2xl text-[var(--fitlo-accent)] mt-1">
               Rp {websiteMetrics.net_profit.toLocaleString('id-ID')}
             </div>
-            <div className="fitlo-kpi__sub font-bold text-[var(--fitlo-accent)] mt-1">Net margin: ~50.2%</div>
+            <div className="fitlo-kpi__sub font-bold text-[var(--fitlo-accent)] mt-1">Net margin: ~{websiteMargin}%</div>
           </div>
 
           <div className="fitlo-kpi fitlo-kpi--peach">
@@ -135,7 +176,7 @@ export default function TherapickReportsView() {
             <div className="fitlo-kpi__val text-xl sm:text-2xl mt-1">
               Rp {affiliateMetrics.revenue.toLocaleString('id-ID')}
             </div>
-            <div className="fitlo-kpi__sub font-semibold text-[var(--fitlo-accent)] mt-1">▲ +12% vs previous period</div>
+            <div className="fitlo-kpi__sub font-semibold text-[var(--fitlo-accent)] mt-1">● {dateRange.label || 'Current Period'}</div>
           </div>
 
           <div className="fitlo-kpi fitlo-kpi--pebble">
@@ -159,7 +200,7 @@ export default function TherapickReportsView() {
             <div className="fitlo-kpi__val text-xl sm:text-2xl text-[var(--fitlo-accent)] mt-1">
               Rp {affiliateMetrics.net_profit.toLocaleString('id-ID')}
             </div>
-            <div className="fitlo-kpi__sub font-bold text-[var(--fitlo-accent)] mt-1">Yield after fees & commission</div>
+            <div className="fitlo-kpi__sub font-bold text-[var(--fitlo-accent)] mt-1">Net yield: ~{affiliateMargin}%</div>
           </div>
         </div>
       )}

@@ -728,7 +728,7 @@ export default function TherapickBookingsView() {
                       {/* 5. Amount */}
                       <td className="r">
                         <div className="font-bold fitlo-num text-[var(--fitlo-ink)]">
-                          Rp {(b.total_amount || b.revenue || 375000).toLocaleString('id-ID')}
+                          Rp {(Number(b.revenue || b.total_price || b.total_amount || 0)).toLocaleString('id-ID')}
                         </div>
                         <div className="text-[10px] font-medium mt-0.5">
                           {b.payment_status === 'Paid' ? (
