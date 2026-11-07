@@ -2081,7 +2081,7 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                                 <h4 className="text-xs font-black uppercase tracking-wider text-gray-900 flex items-center gap-1.5">
                                                     <span>Treatment Inclusions</span>
                                                     <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                                                        {inclusions.length} Steps Included
+                                                        {inclusions.length} {inclusions.length === 1 ? 'Step' : 'Steps'} Included
                                                     </span>
                                                 </h4>
                                             </div>

@@ -33,7 +33,7 @@ export function parseTreatmentInclusions(rawDesc: string | null | undefined): Pa
   if (splitRegex.test(trimmed)) {
     const parts = trimmed.split(splitRegex);
     descClean = parts[0].trim();
-    rawInclusions = parts.slice(1).join(' ').trim();
+    rawInclusions = parts.slice(1).join('\n').trim();
   } else {
     // If no explicit header, inspect lines to see if there is an inclusions list
     const lines = trimmed.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
@@ -74,51 +74,66 @@ export function parseTreatmentInclusions(rawDesc: string | null | undefined): Pa
       return `${minutes} Mins`;
     };
 
-    // Pattern 1: Name — Duration (e.g. "Synchronicity Massage (Four-Hands Massage) — 60 MINUTES")
-    // Captures name until separator [—–:] or " - ", then duration token
-    const patternNameFirst = /([^\n\r\t]+?)\s*(?:[—–:]|\s+-\s+)\s*(\d+(?:\.\d+)?\s*(?:MINUTES?|MINS?|HOURS?|HRS?))\b/gi;
-    let match: RegExpExecArray | null;
-
-    while ((match = patternNameFirst.exec(rawInclusions)) !== null) {
-      let name = match[1].trim();
-      // Clean leading bullet points, dashes, asterisks, numbers like "1."
-      name = name.replace(/^(?:•|\-|\*|\d+[\.\)]|,|\s)+/, '').trim();
-      const formattedDur = formatDuration(match[2].trim());
-
-      if (name && !inclusions.some(inc => inc.name === name && inc.duration === formattedDur)) {
-        inclusions.push({ duration: formattedDur, name });
+    // Split raw inclusions into candidate segments
+    let segments: string[] = [];
+    if (rawInclusions.includes('•')) {
+      segments = rawInclusions.split('•');
+    } else {
+      const lines = rawInclusions.split(/\r?\n+/).map(l => l.trim()).filter(Boolean);
+      if (lines.length > 1) {
+        segments = lines;
+      } else {
+        // Single continuous line without newlines or bullets.
+        const chunks: string[] = [];
+        const multiRegex = /([^\n\r]+?\s*(?:[—–:]|\s+-\s+)\s*\d+\s*(?:MINUTES?|MINS?|HOURS?|HRS?)\b|\d+\s*(?:MINUTES?|MINS?|HOURS?|HRS?)\s*(?:[—–:]|\s+-\s+)\s*[^—–:\d]+)/gi;
+        let m: RegExpExecArray | null;
+        while ((m = multiRegex.exec(rawInclusions)) !== null) {
+          chunks.push(m[0]);
+        }
+        segments = chunks.length > 0 ? chunks : [rawInclusions];
       }
     }
 
-    // Pattern 2: Duration First (e.g. "60 Mins — Balinese Massage" or "60 MINUTES - Body Scrub")
-    if (inclusions.length === 0) {
-      const patternDurFirst = /(\d+(?:\.\d+)?\s*(?:MINUTES?|MINS?|HOURS?|HRS?))\s*(?:[—–:]|\s+-\s+)\s*([^0-9—–:\n]+?)(?=(?:\d+(?:\.\d+)?\s*(?:MINUTES?|MINS?|HOURS?|HRS?))|$)/gi;
-      while ((match = patternDurFirst.exec(rawInclusions)) !== null) {
-        const formattedDur = formatDuration(match[1].trim());
-        let name = match[2].trim().replace(/^[•\-\*\d+[\.\)],\s]+|[•\-\*,\s]+$/g, '');
-        if (name && !inclusions.some(inc => inc.name === name && inc.duration === formattedDur)) {
-          inclusions.push({ duration: formattedDur, name });
+    for (let seg of segments) {
+      seg = seg.trim().replace(/^[•\-\*\d+[\.\)],\s]+|[•\-\*,\s]+$/g, '');
+      if (!seg) continue;
+
+      // Pattern 1: Duration first: e.g. "60 Minutes – Balinese Healing Touch" or "(60 Mins) Body Scrub"
+      const durFirst = seg.match(/^(\(?\d+(?:\.\d+)?\s*(?:MINUTES?|MINS?|HOURS?|HRS?)\)?)\s*(?:[—–:\-]\s*|\s+-\s+|\s+)?(.+)$/i);
+      if (durFirst) {
+        const dur = formatDuration(durFirst[1]);
+        const name = durFirst[2].trim().replace(/^[—–:\-\s]+/, '').trim();
+        if (name && !inclusions.some(inc => inc.name.toLowerCase() === name.toLowerCase())) {
+          inclusions.push({ duration: dur, name });
+          continue;
         }
       }
-    }
 
-    // Pattern 3: Name (Duration) (e.g. "Synchronicity Massage (60 Mins)")
-    if (inclusions.length === 0) {
-      const patternParens = /([^\n\r\t()]+?)\s*\(\s*(\d+(?:\.\d+)?\s*(?:MINUTES?|MINS?|HOURS?|HRS?))\s*\)/gi;
-      while ((match = patternParens.exec(rawInclusions)) !== null) {
-        let name = match[1].trim().replace(/^(?:•|\-|\*|\d+[\.\)]|,|\s)+/, '').trim();
-        const formattedDur = formatDuration(match[2].trim());
-        if (name && !inclusions.some(inc => inc.name === name && inc.duration === formattedDur)) {
-          inclusions.push({ duration: formattedDur, name });
+      // Pattern 2: Name first with separator: e.g. "Balinese Healing Touch — 60 MINUTES"
+      const nameFirst = seg.match(/^(.+?)\s*(?:[—–:]|\s+-\s+|\()\s*(\d+(?:\.\d+)?\s*(?:MINUTES?|MINS?|HOURS?|HRS?))\)?$/i);
+      if (nameFirst) {
+        const name = nameFirst[1].trim().replace(/^[•\-\*,\s]+|[•\-\*,\s]+$/g, '');
+        const dur = formatDuration(nameFirst[2]);
+        if (name && !inclusions.some(inc => inc.name.toLowerCase() === name.toLowerCase())) {
+          inclusions.push({ duration: dur, name });
+          continue;
         }
       }
-    }
 
-    // Pattern 4: Fallback line-by-line if items don't have duration tokens
-    if (inclusions.length === 0) {
-      const lines = rawInclusions.split(/\r?\n/).map(l => l.trim().replace(/^(?:•|\-|\*|\d+[\.\)]|,|\s)+/, '')).filter(Boolean);
-      for (const line of lines) {
-        inclusions.push({ duration: '', name: line });
+      // Pattern 3: Duration anywhere in segment
+      const anyDur = seg.match(/(\d+(?:\.\d+)?\s*(?:MINUTES?|MINS?|HOURS?|HRS?))/i);
+      if (anyDur) {
+        const dur = formatDuration(anyDur[1]);
+        const name = seg.replace(anyDur[0], '').replace(/^[—–:\-\s\(\)]+|[—–:\-\s\(\)]+$/g, '').trim();
+        if (name && !inclusions.some(inc => inc.name.toLowerCase() === name.toLowerCase())) {
+          inclusions.push({ duration: dur, name });
+          continue;
+        }
+      }
+
+      // Fallback: No duration
+      if (seg.length > 2) {
+        inclusions.push({ duration: '', name: seg });
       }
     }
   }
@@ -163,4 +178,3 @@ export function formatTreatmentDescription(
 
   return `${cleanExp}\n\nTREATMENT INCLUSIONS:\n${inclusionsText}`;
 }
-
