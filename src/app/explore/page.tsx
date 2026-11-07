@@ -222,23 +222,23 @@ function ExploreContent() {
                         </AnimatePresence>
                     </div>
 
-                    {/* Segmented Control Tabs: Home Spa (In-Villa) vs Partner Spas */}
-                    <div className="flex items-center justify-center p-1 bg-gray-100/90 rounded-full max-w-sm mx-auto mb-2.5 border border-gray-200/70">
+                    {/* Segmented Control Tabs: Home Spa vs Partner Spas */}
+                    <div className="flex items-center justify-center p-1 bg-gray-100/90 rounded-full max-w-xs sm:max-w-sm mx-auto mb-2.5 border border-gray-200/70">
                         <button
                             type="button"
                             onClick={() => handleTabChange('homespa')}
-                            className={`flex-1 py-1.5 px-3 rounded-full text-xs font-bold transition-all text-center cursor-pointer ${
+                            className={`flex-1 py-1.5 px-3 rounded-full text-xs font-bold transition-all text-center cursor-pointer whitespace-nowrap ${
                                 activeTab === 'homespa'
                                     ? 'bg-[#1D1D1F] text-white shadow-xs'
                                     : 'text-gray-600 hover:text-black'
                             }`}
                         >
-                            Home Spa (In-Villa)
+                            Home Spa
                         </button>
                         <button
                             type="button"
                             onClick={() => handleTabChange('partner')}
-                            className={`flex-1 py-1.5 px-3 rounded-full text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer ${
+                            className={`flex-1 py-1.5 px-3 rounded-full text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap ${
                                 activeTab === 'partner'
                                     ? 'bg-[#1D1D1F] text-white shadow-xs'
                                     : 'text-gray-600 hover:text-black'
@@ -280,7 +280,7 @@ function ExploreContent() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                 
                 {/* ═══════════════════════════════════════════════════════════ */}
-                {/* VIEW 1: HOME SPA (IN-VILLA) TREATMENTS                     */}
+                {/* VIEW 1: HOME SPA TREATMENTS                                */}
                 {/* ═══════════════════════════════════════════════════════════ */}
                 {activeTab === 'homespa' && (
                     <motion.div
@@ -288,17 +288,11 @@ function ExploreContent() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.25 }}
                     >
-                        {/* Section Header */}
-                        <div className="mb-6">
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-primary/70 block mb-1">
-                                In-Villa Sanctuary Delivery
-                            </span>
-                            <h2 className="font-serif text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">
-                                Home Spa Treatments
-                            </h2>
-                            <p className="text-xs sm:text-sm text-gray-500 font-light mt-1 max-w-xl">
-                                Certified 5-star therapists arrive directly at your private villa or hotel across Bali in 45–60 minutes.
-                            </p>
+                        {/* Short Section Title */}
+                        <div className="mb-5">
+                            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">
+                                Home Spa
+                            </h1>
                         </div>
 
                         {/* Pinned / Most Booked Treatments (Small Carousel) */}
@@ -347,7 +341,7 @@ function ExploreContent() {
                         <section className="mb-24 relative group">
                             <div className="flex items-center justify-between mb-4">
                                 <h3 className="text-base sm:text-lg font-bold text-gray-900 tracking-tight">
-                                    All In-Villa Treatments ({filteredHomeSpaTreatments.length})
+                                    All Treatments ({filteredHomeSpaTreatments.length})
                                 </h3>
                             </div>
 
@@ -406,17 +400,11 @@ function ExploreContent() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.25 }}
                     >
-                        {/* Section Header */}
-                        <div className="mb-6">
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-700 block mb-1">
-                                Verified Physical Day Spas
-                            </span>
-                            <h2 className="font-serif text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">
-                                Partner Destination Spas
+                        {/* Short Section Title */}
+                        <div className="mb-5">
+                            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">
+                                Partner Spas
                             </h2>
-                            <p className="text-xs sm:text-sm text-gray-500 font-light mt-1 max-w-xl">
-                                Curated luxury spa venues across Bali booked directly with verified partner discount rates.
-                            </p>
                         </div>
 
                         {filteredPartnerTreatments.length === 0 ? (

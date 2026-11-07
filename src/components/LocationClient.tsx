@@ -694,7 +694,7 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                     <section data-reveal className="mb-20 relative z-20 scroll-reveal">
                         <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-2">
                             <div>
-                                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">Partner Spa Treatments</h3>
+                                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">Partner Spas</h3>
                                 <p className="text-xs text-gray-500 font-light mt-0.5">Premier partner spas booked directly with verified rates</p>
                             </div>
                             <Link
