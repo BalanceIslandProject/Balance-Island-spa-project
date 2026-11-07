@@ -163,3 +163,4 @@ export function formatTreatmentDescription(
 
   return `${cleanExp}\n\nTREATMENT INCLUSIONS:\n${inclusionsText}`;
 }
+

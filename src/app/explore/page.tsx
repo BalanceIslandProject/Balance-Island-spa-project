@@ -1,15 +1,17 @@
 'use client';
 
-import React, { useState, Suspense, useEffect } from 'react';
+import React, { useState, Suspense, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useSearchParams } from 'next/navigation';
-import { Search, Clock, ArrowLeft, X, SlidersHorizontal } from 'lucide-react';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { Search, Clock, ArrowLeft, X, SlidersHorizontal, MapPin, Building2, Plus, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useSpa } from '@/context/SpaContext';
+import { useSpa, PartnerTreatment } from '@/context/SpaContext';
 import { createSlug } from '@/utils/slugify';
+import { parseTreatmentInclusions } from '@/lib/treatmentUtils';
+import { isCoupleTreatment } from '@/lib/pricingUtils';
 
-const CATEGORIES = [
+const HOMESPA_CATEGORIES = [
     { id: 'all', label: 'All' },
     { id: 'massage', label: 'Massage' },
     { id: 'package', label: 'Package' },
@@ -17,15 +19,41 @@ const CATEGORIES = [
     { id: 'treatment', label: 'Treatment' },
 ];
 
-function ExploreContent() {
-    const { treatments } = useSpa();
-    const searchParams = useSearchParams();
-    const locationQuery = searchParams.get('location') || '';
+const PARTNER_CATEGORIES = [
+    { id: 'all', label: 'All' },
+    { id: 'package', label: 'Package' },
+    { id: 'massage', label: 'Massage' },
+    { id: 'facial', label: 'Facial' },
+    { id: 'body scrub', label: 'Body Scrub' },
+];
 
+function ExploreContent() {
+    const { treatments, partnerTreatments } = useSpa();
+    const searchParams = useSearchParams();
+    const router = useRouter();
+
+    const locationQuery = searchParams.get('location') || '';
+    const initialTab = searchParams.get('tab') === 'partner' || searchParams.get('type') === 'partner' ? 'partner' : 'homespa';
+
+    const [activeTab, setActiveTab] = useState<'homespa' | 'partner'>(initialTab);
     const [activeCategory, setActiveCategory] = useState('all');
     const [searchQuery, setSearchQuery] = useState(locationQuery || '');
-    const [maxPrice, setMaxPrice] = useState(1500000);
+    const [maxPrice, setMaxPrice] = useState(2500000);
     const [isPriceFilterOpen, setIsPriceFilterOpen] = useState(false);
+
+    // Partner Details Modal State
+    const [selectedPartnerDetails, setSelectedPartnerDetails] = useState<PartnerTreatment | null>(null);
+    const [selectedDetailsDuration, setSelectedDetailsDuration] = useState<string>('');
+
+    // Sync active tab with URL query parameter
+    useEffect(() => {
+        const t = searchParams.get('tab') || searchParams.get('type');
+        if (t === 'partner') {
+            setActiveTab('partner');
+        } else if (t === 'homespa') {
+            setActiveTab('homespa');
+        }
+    }, [searchParams]);
 
     useEffect(() => {
         if (locationQuery) {
@@ -33,28 +61,40 @@ function ExploreContent() {
         }
     }, [locationQuery]);
 
-    const showPinnedTreatments = treatments.some(t => t.is_pinned);
+    // Reset category when switching between Home Spa and Partner Spas
+    const handleTabChange = (tab: 'homespa' | 'partner') => {
+        setActiveTab(tab);
+        setActiveCategory('all');
+        const url = new URL(window.location.href);
+        url.searchParams.set('tab', tab);
+        window.history.replaceState({}, '', url.toString());
+    };
 
-    const filteredAndSortedTreatments = React.useMemo(() => {
-        let result = treatments.filter(t => {
-            const matchesCategory = activeCategory === 'all' || t.category.toLowerCase() === activeCategory.toLowerCase();
+    const showPinnedTreatments = (treatments || []).some(t => t.is_pinned);
+
+    // Filtered In-Villa Home Spa Treatments
+    const filteredHomeSpaTreatments = useMemo(() => {
+        let result = (treatments || []).filter(t => {
+            if (!t) return false;
+            const matchesCategory = activeCategory === 'all' || (t.category && t.category.toLowerCase() === activeCategory.toLowerCase());
             const isLocationMatch = locationQuery && searchQuery.trim().toLowerCase() === locationQuery.trim().toLowerCase();
-            const matchesSearch = !searchQuery.trim() || isLocationMatch || t.title.toLowerCase().includes(searchQuery.toLowerCase()) || t.desc.toLowerCase().includes(searchQuery.toLowerCase());
+            const matchesSearch = !searchQuery.trim() || isLocationMatch || 
+                (t.title && t.title.toLowerCase().includes(searchQuery.toLowerCase())) || 
+                (t.desc && t.desc.toLowerCase().includes(searchQuery.toLowerCase()));
             
             const getLowestPrice = (options: any[]) => {
                 if (!options || options.length === 0) return 0;
-                return Math.min(...options.map(o => parseInt(o.price.replace(/,/g, '') || '0')));
+                return Math.min(...options.map(o => parseInt(String(o?.price || '0').replace(/[^0-9]/g, '') || '0', 10)));
             };
             
             const matchesPrice = getLowestPrice(t.options) <= maxPrice;
-            
             return matchesCategory && matchesSearch && matchesPrice;
         });
 
         result.sort((a, b) => {
             const getLowestPrice = (options: any[]) => {
                 if (!options || options.length === 0) return 0;
-                return Math.min(...options.map(o => parseInt(o.price.replace(/,/g, '') || '0')));
+                return Math.min(...options.map(o => parseInt(String(o?.price || '0').replace(/[^0-9]/g, '') || '0', 10)));
             };
             return getLowestPrice(a.options) - getLowestPrice(b.options);
         });
@@ -62,12 +102,52 @@ function ExploreContent() {
         return result;
     }, [treatments, activeCategory, searchQuery, maxPrice, locationQuery]);
 
+    // Filtered Partner Spa Treatments
+    const filteredPartnerTreatments = useMemo(() => {
+        if (!partnerTreatments) return [];
+        return partnerTreatments.filter(pt => {
+            const matchesCategory = activeCategory === 'all' || (pt.category && pt.category.toLowerCase() === activeCategory.toLowerCase());
+            const matchesSearch = !searchQuery.trim() ||
+                (pt.title && pt.title.toLowerCase().includes(searchQuery.toLowerCase())) ||
+                (pt.desc && pt.desc.toLowerCase().includes(searchQuery.toLowerCase())) ||
+                (pt.partner_name && pt.partner_name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+                (pt.partner_location && pt.partner_location.toLowerCase().includes(searchQuery.toLowerCase()));
+
+            const firstOpt = pt.options?.[0];
+            const price = parseInt(String(firstOpt?.price || '0').replace(/[^0-9]/g, '') || '0', 10);
+            const matchesPrice = !price || price <= maxPrice;
+
+            return matchesCategory && matchesSearch && matchesPrice;
+        });
+    }, [partnerTreatments, activeCategory, searchQuery, maxPrice]);
+
+    // Group filtered partner treatments by partner spa
+    const partnerGroups = useMemo(() => {
+        return filteredPartnerTreatments.reduce((acc: Record<string, { partnerName: string; partnerLogo?: string | null; partnerLocation?: string | null; items: PartnerTreatment[] }>, pt) => {
+            const key = pt.partner_id || pt.partner_name || 'partner';
+            if (!acc[key]) {
+                acc[key] = {
+                    partnerName: pt.partner_name,
+                    partnerLogo: pt.partner_logo_url,
+                    partnerLocation: pt.partner_location,
+                    items: []
+                };
+            }
+            acc[key].items.push(pt);
+            return acc;
+        }, {});
+    }, [filteredPartnerTreatments]);
+
+    const activeCategoriesList = activeTab === 'homespa' ? HOMESPA_CATEGORIES : PARTNER_CATEGORIES;
+
     return (
-        <main className="min-h-screen bg-white pb-20 pt-36">
+        <main className="min-h-screen bg-white pb-24 pt-44">
             {/* Search & Categories Sticky Header */}
-            <div className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md pt-5 pb-2.5 border-b border-gray-100 shadow-xs">
+            <div className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md pt-5 pb-3 border-b border-gray-100 shadow-xs">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="mb-3.5 relative z-30">
+                    
+                    {/* Top Row: Back, Search & Price Filter */}
+                    <div className="mb-3 relative z-30">
                         <div className="flex items-center gap-2.5 w-full">
                             <div className="flex-1 bg-white rounded-full shadow-[0_2px_12px_rgb(0,0,0,0.06)] border border-gray-200/80 h-12 flex items-center px-1.5 hover:shadow-[0_4px_16px_rgb(0,0,0,0.09)] focus-within:border-gray-900/40 focus-within:shadow-[0_4px_18px_rgb(0,0,0,0.1)] transition-all">
                                 <Link 
@@ -83,14 +163,14 @@ function ExploreContent() {
                                         type="text"
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
-                                        placeholder={locationQuery ? `Search in ${locationQuery}...` : "Search treatments or packages..."}
+                                        placeholder={activeTab === 'homespa' ? "Search in-villa massage & spa..." : "Search partner spas & packages..."}
                                         className="text-[13px] font-medium text-gray-900 bg-transparent border-none outline-none focus:ring-0 placeholder:text-gray-400 w-full p-0 m-0"
                                     />
                                     {searchQuery && (
                                         <button
                                             type="button"
                                             onClick={() => setSearchQuery('')}
-                                            className="w-5 h-5 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 hover:text-gray-800 transition-colors shrink-0 ml-1"
+                                            className="w-5 h-5 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 hover:text-gray-800 transition-colors shrink-0 ml-1 cursor-pointer"
                                             aria-label="Clear search"
                                         >
                                             <X className="w-3 h-3" />
@@ -100,7 +180,7 @@ function ExploreContent() {
                             </div>
                             <button 
                                 onClick={() => setIsPriceFilterOpen(!isPriceFilterOpen)}
-                                className={`w-12 h-12 rounded-full border shadow-2xs flex items-center justify-center shrink-0 transition-all ${
+                                className={`w-12 h-12 rounded-full border shadow-2xs flex items-center justify-center shrink-0 transition-all cursor-pointer ${
                                     isPriceFilterOpen 
                                         ? 'bg-[#1D1D1F] text-white border-black shadow-sm' 
                                         : 'bg-white text-gray-700 border-gray-200/90 hover:bg-gray-50 hover:border-gray-300'
@@ -126,37 +206,70 @@ function ExploreContent() {
                                     </div>
                                     <input 
                                         type="range" 
-                                        min="150000" 
-                                        max="1500000" 
+                                        min="250000" 
+                                        max="3000000" 
                                         step="50000"
                                         value={maxPrice}
                                         onChange={(e) => setMaxPrice(parseInt(e.target.value))}
-                                        className="w-full accent-primary h-1.5 bg-secondary rounded-lg appearance-none cursor-pointer"
+                                        className="w-full accent-primary h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                                     />
-                                    <div className="flex justify-between text-[10px] text-text-muted mt-2 font-medium tracking-wider">
-                                        <span>150k</span>
-                                        <span>1.5m</span>
+                                    <div className="flex justify-between text-[10px] text-gray-400 mt-2 font-medium tracking-wider">
+                                        <span>250k</span>
+                                        <span>3.0m</span>
                                     </div>
                                 </motion.div>
                             )}
                         </AnimatePresence>
                     </div>
 
-                    {/* Categories Row */}
-                    <div className="flex overflow-x-auto gap-2.5 no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 pt-2 pb-1">
-                        {CATEGORIES.map((cat) => {
+                    {/* Segmented Control Tabs: Home Spa (In-Villa) vs Partner Spas */}
+                    <div className="flex items-center justify-center p-1 bg-gray-100/90 rounded-full max-w-sm mx-auto mb-2.5 border border-gray-200/70">
+                        <button
+                            type="button"
+                            onClick={() => handleTabChange('homespa')}
+                            className={`flex-1 py-1.5 px-3 rounded-full text-xs font-bold transition-all text-center cursor-pointer ${
+                                activeTab === 'homespa'
+                                    ? 'bg-[#1D1D1F] text-white shadow-xs'
+                                    : 'text-gray-600 hover:text-black'
+                            }`}
+                        >
+                            Home Spa (In-Villa)
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => handleTabChange('partner')}
+                            className={`flex-1 py-1.5 px-3 rounded-full text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer ${
+                                activeTab === 'partner'
+                                    ? 'bg-[#1D1D1F] text-white shadow-xs'
+                                    : 'text-gray-600 hover:text-black'
+                            }`}
+                        >
+                            <span>Partner Spas</span>
+                            {partnerTreatments && partnerTreatments.length > 0 && (
+                                <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                                    activeTab === 'partner' ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-700'
+                                }`}>
+                                    {partnerTreatments.length}
+                                </span>
+                            )}
+                        </button>
+                    </div>
+
+                    {/* Category Filter Chips */}
+                    <div className="flex overflow-x-auto gap-2 no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 pt-1 pb-1">
+                        {activeCategoriesList.map((cat) => {
                             const isActive = activeCategory === cat.id;
                             return (
                                 <button
                                     key={cat.id}
                                     onClick={() => setActiveCategory(cat.id)}
-                                    className={`flex items-center justify-center px-4 py-2 rounded-[20px] whitespace-nowrap transition-all duration-300 shrink-0 ${
+                                    className={`flex items-center justify-center px-4 py-1.5 rounded-[18px] whitespace-nowrap transition-all duration-200 shrink-0 cursor-pointer ${
                                         isActive 
-                                            ? 'bg-[#1D1D1F] text-white border border-black' 
-                                            : 'bg-white text-gray-700 border border-gray-200/90 hover:border-gray-400 hover:bg-gray-50 active:scale-95'
+                                            ? 'bg-[#1D1D1F] text-white border border-black font-bold' 
+                                            : 'bg-white text-gray-700 border border-gray-200/90 hover:border-gray-400 hover:bg-gray-50 font-medium'
                                     }`}
                                 >
-                                    <span className={`text-[13px] ${isActive ? 'font-bold' : 'font-medium'}`}>{cat.label}</span>
+                                    <span className="text-xs">{cat.label}</span>
                                 </button>
                             );
                         })}
@@ -166,81 +279,527 @@ function ExploreContent() {
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                 
-                {/* Pinned / Most Booked Treatments (Small Cards) */}
-                {showPinnedTreatments && (
-                    <section data-reveal className="mb-10 w-full relative z-20 scroll-reveal">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-bold text-gray-900 tracking-tight">Most Booked</h3>
+                {/* ═══════════════════════════════════════════════════════════ */}
+                {/* VIEW 1: HOME SPA (IN-VILLA) TREATMENTS                     */}
+                {/* ═══════════════════════════════════════════════════════════ */}
+                {activeTab === 'homespa' && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.25 }}
+                    >
+                        {/* Section Header */}
+                        <div className="mb-6">
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-primary/70 block mb-1">
+                                In-Villa Sanctuary Delivery
+                            </span>
+                            <h2 className="font-serif text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">
+                                Home Spa Treatments
+                            </h2>
+                            <p className="text-xs sm:text-sm text-gray-500 font-light mt-1 max-w-xl">
+                                Certified 5-star therapists arrive directly at your private villa or hotel across Bali in 45–60 minutes.
+                            </p>
                         </div>
-                        <div className="flex overflow-x-auto gap-4 no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 pb-4 snap-x snap-mandatory scroll-reveal-stagger">
-                            {treatments.filter(t => t.is_pinned).map(treatment => (
-                                <Link href={`/rituals/${createSlug(treatment.title)}`} prefetch={true} key={treatment.id} className="w-[180px] sm:w-[220px] shrink-0 snap-center md:snap-align-none outline-none active:scale-[0.98] transition-all">
-                                    <div className="flex flex-col gap-2 group cursor-pointer">
-                                        <div className="aspect-[4/3] relative bg-[#F5F5F7] overflow-hidden rounded-2xl shadow-[0_2px_12px_rgb(0,0,0,0.06)] group-hover:shadow-[0_8px_24px_rgb(0,0,0,0.12)] transition-shadow">
-                                            {treatment.pinned_image ? (
-                                                <Image 
-                                                    src={treatment.pinned_image} 
-                                                    alt={treatment.title} 
-                                                    fill
-                                                    sizes="(max-width: 640px) 180px, 220px"
-                                                    className="object-cover group-hover:scale-105 transition-transform duration-500" 
-                                                />
-                                            ) : (
-                                                <div className={`w-full h-full bg-gradient-to-br ${treatment.bgPattern} opacity-50`}></div>
-                                            )}
-                                        </div>
-                                        <div className="flex flex-col px-1 pt-1">
-                                            <p className="text-gray-900 text-[14px] font-bold">{treatment.title}</p>
-                                            <p className="text-gray-500 text-[12px] font-medium mt-0.5"><Clock className="inline w-3 h-3 mr-1 mb-0.5 text-gray-400"/>{treatment.options[0]?.duration} MINS</p>
-                                            <div className="mt-1 flex items-center">
-                                                <span className="font-semibold text-gray-900 text-[13px]">
-                                                    IDR {parseInt((treatment.options[0]?.price || '0').replace(/,/g, '')).toLocaleString('en-US')}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </Link>
-                            ))}
-                        </div>
-                    </section>
-                )}
 
-                {/* Popular Treatments (2-Column Grid) */}
-                <section data-reveal className="mb-24 relative group scroll-reveal">
-                    <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-bold text-gray-900 tracking-tight">Popular Category</h3>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-x-4 gap-y-8 scroll-reveal-stagger">
-                        {filteredAndSortedTreatments.map((item) => (
-                            <Link href={`/rituals/${createSlug(item.title)}`} prefetch={true} key={item.id} className="w-full block group outline-none active:scale-[0.98] transition-all">
-                                <div className="rounded-2xl bg-white border border-gray-100 flex flex-col h-full relative overflow-hidden p-4 aspect-[4/5] shadow-[0_2px_12px_rgb(0,0,0,0.04)] hover:shadow-md transition-all cursor-pointer group-hover:-translate-y-1 duration-300">
-                                    <div className="relative z-10 flex flex-col h-full">
-                                        <div className="bg-white text-gray-800 border border-gray-200 px-2.5 py-1 rounded-full text-[8px] font-bold tracking-widest uppercase self-start mb-3 shadow-sm">
-                                            {item.category}
-                                        </div>
-                                        <h4 className="font-bold text-gray-900 text-[13px] leading-snug mb-1.5 line-clamp-2">{item.title}</h4>
-                                        <p className="text-[10px] text-gray-500 line-clamp-2 mb-auto leading-relaxed font-medium">{item.desc}</p>
-                                        
-                                        <div className="mt-auto pt-3 border-t border-gray-100">
-                                            <div className="flex items-center gap-1.5 text-[10px] font-bold text-gray-800 mb-2 uppercase tracking-widest">
-                                                <Clock className="w-3.5 h-3.5 text-gray-500" /> {item.options[0]?.duration} MINS
-                                            </div>
-                                            <div className="flex items-center justify-between">
-                                                <span className="font-semibold text-gray-900 text-[12px]">IDR {parseInt(item.options[0]?.price.replace(/,/g, '') || '0').toLocaleString('en-US')}</span>
-                                                <div className="w-7 h-7 rounded-full bg-[#1D1D1F] text-white flex items-center justify-center shrink-0 shadow-sm hover:scale-105 transition-transform">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        {/* Pinned / Most Booked Treatments (Small Carousel) */}
+                        {showPinnedTreatments && (
+                            <section className="mb-10 w-full relative z-20">
+                                <div className="flex items-center justify-between mb-4">
+                                    <h3 className="text-base sm:text-lg font-bold text-gray-900 tracking-tight">Most Booked</h3>
+                                </div>
+                                <div className="flex overflow-x-auto gap-4 no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 pb-4 snap-x snap-mandatory">
+                                    {(treatments || []).filter(t => t.is_pinned).map(treatment => (
+                                        <Link href={`/rituals/${createSlug(treatment.title)}`} prefetch={true} key={treatment.id} className="w-[180px] sm:w-[220px] shrink-0 snap-center md:snap-align-none outline-none active:scale-[0.98] transition-all">
+                                            <div className="flex flex-col gap-2 group cursor-pointer">
+                                                <div className="aspect-[4/3] relative bg-[#F5F5F7] overflow-hidden rounded-2xl shadow-[0_2px_12px_rgb(0,0,0,0.06)] group-hover:shadow-[0_8px_24px_rgb(0,0,0,0.12)] transition-shadow">
+                                                    {treatment.pinned_image ? (
+                                                        <Image 
+                                                            src={treatment.pinned_image} 
+                                                            alt={treatment.title} 
+                                                            fill
+                                                            sizes="(max-width: 640px) 180px, 220px"
+                                                            className="object-cover group-hover:scale-105 transition-transform duration-500" 
+                                                        />
+                                                    ) : (
+                                                        <div className={`w-full h-full bg-gradient-to-br ${treatment.bgPattern} opacity-50`}></div>
+                                                    )}
+                                                </div>
+                                                <div className="flex flex-col px-1 pt-1">
+                                                    <p className="text-gray-900 text-[14px] font-bold">{treatment.title}</p>
+                                                    <p className="text-gray-500 text-[12px] font-medium mt-0.5">
+                                                        <Clock className="inline w-3 h-3 mr-1 mb-0.5 text-gray-400"/>
+                                                        {treatment.options[0]?.duration} MINS
+                                                    </p>
+                                                    <div className="mt-1 flex items-center">
+                                                        <span className="font-semibold text-gray-900 text-[13px]">
+                                                            IDR {parseInt(String(treatment.options[0]?.price || '0').replace(/[^0-9]/g, '') || '0', 10).toLocaleString('en-US')}
+                                                        </span>
+                                                    </div>
                                                 </div>
                                             </div>
+                                        </Link>
+                                    ))}
+                                </div>
+                            </section>
+                        )}
+
+                        {/* Popular In-Villa Treatments (2-Column Grid) */}
+                        <section className="mb-24 relative group">
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-base sm:text-lg font-bold text-gray-900 tracking-tight">
+                                    All In-Villa Treatments ({filteredHomeSpaTreatments.length})
+                                </h3>
+                            </div>
+
+                            {filteredHomeSpaTreatments.length === 0 ? (
+                                <div className="p-12 text-center bg-gray-50 rounded-3xl border border-gray-100">
+                                    <p className="text-sm text-gray-500 font-medium">No in-villa treatments match your search or price filter.</p>
+                                    <button
+                                        type="button"
+                                        onClick={() => { setSearchQuery(''); setActiveCategory('all'); setMaxPrice(2500000); }}
+                                        className="mt-4 px-5 py-2 bg-black text-white text-xs font-bold rounded-full cursor-pointer"
+                                    >
+                                        Reset Filters
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+                                    {filteredHomeSpaTreatments.map((item) => (
+                                        <Link href={`/rituals/${createSlug(item.title)}`} prefetch={true} key={item.id} className="w-full block group outline-none active:scale-[0.98] transition-all">
+                                            <div className="rounded-2xl bg-white border border-gray-100 flex flex-col h-full relative overflow-hidden p-4 shadow-[0_2px_12px_rgb(0,0,0,0.04)] hover:shadow-md transition-all cursor-pointer group-hover:-translate-y-1 duration-300">
+                                                <div className="relative z-10 flex flex-col h-full">
+                                                    <div className="bg-white text-gray-800 border border-gray-200 px-2.5 py-1 rounded-full text-[8px] font-bold tracking-widest uppercase self-start mb-3 shadow-xs">
+                                                        {item.category}
+                                                    </div>
+                                                    <h4 className="font-bold text-gray-900 text-[13px] sm:text-[14px] leading-snug mb-1.5 line-clamp-2">{item.title}</h4>
+                                                    <p className="text-[10px] sm:text-[11px] text-gray-500 line-clamp-2 mb-auto leading-relaxed font-light">{item.desc}</p>
+                                                    
+                                                    <div className="mt-4 pt-3 border-t border-gray-100">
+                                                        <div className="flex items-center gap-1.5 text-[10px] font-bold text-gray-700 mb-2 uppercase tracking-widest">
+                                                            <Clock className="w-3.5 h-3.5 text-gray-400" /> {item.options[0]?.duration} MINS
+                                                        </div>
+                                                        <div className="flex items-center justify-between">
+                                                            <span className="font-bold text-gray-900 text-[13px]">
+                                                                IDR {parseInt(String(item.options[0]?.price || '0').replace(/[^0-9]/g, '') || '0', 10).toLocaleString('en-US')}
+                                                            </span>
+                                                            <div className="w-7 h-7 rounded-full bg-[#1D1D1F] text-white flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
+                                                                <Plus size={14} strokeWidth={2.5} />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </Link>
+                                    ))}
+                                </div>
+                            )}
+                        </section>
+                    </motion.div>
+                )}
+
+                {/* ═══════════════════════════════════════════════════════════ */}
+                {/* VIEW 2: PARTNER SPAS & DESTINATION CENTERS                 */}
+                {/* ═══════════════════════════════════════════════════════════ */}
+                {activeTab === 'partner' && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.25 }}
+                    >
+                        {/* Section Header */}
+                        <div className="mb-6">
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-700 block mb-1">
+                                Verified Physical Day Spas
+                            </span>
+                            <h2 className="font-serif text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">
+                                Partner Destination Spas
+                            </h2>
+                            <p className="text-xs sm:text-sm text-gray-500 font-light mt-1 max-w-xl">
+                                Curated luxury spa venues across Bali booked directly with verified partner discount rates.
+                            </p>
+                        </div>
+
+                        {filteredPartnerTreatments.length === 0 ? (
+                            <div className="p-12 text-center bg-gray-50 rounded-3xl border border-gray-100">
+                                <p className="text-sm text-gray-500 font-medium">No partner spa treatments match your search or price filter.</p>
+                                <button
+                                    type="button"
+                                    onClick={() => { setSearchQuery(''); setActiveCategory('all'); setMaxPrice(2500000); }}
+                                    className="mt-4 px-5 py-2 bg-black text-white text-xs font-bold rounded-full cursor-pointer"
+                                >
+                                    Reset Filters
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="space-y-12">
+                                {Object.entries(partnerGroups).map(([partnerKey, group]) => (
+                                    <div key={partnerKey} className="space-y-4">
+                                        {/* Partner Spa Header */}
+                                        <div className="flex items-center gap-3.5 px-1">
+                                            {group.partnerLogo ? (
+                                                <img
+                                                    src={group.partnerLogo}
+                                                    alt={group.partnerName}
+                                                    className="w-12 h-12 rounded-2xl object-cover border border-gray-200/90 bg-white shadow-xs shrink-0"
+                                                />
+                                            ) : (
+                                                <div className="w-12 h-12 rounded-2xl bg-[#1D1D1F] text-white flex items-center justify-center font-bold text-base shrink-0 shadow-xs">
+                                                    {group.partnerName?.charAt(0) || 'P'}
+                                                </div>
+                                            )}
+                                            <div>
+                                                <h4 className="text-base sm:text-lg font-bold text-gray-900 leading-tight">
+                                                    {group.partnerName}
+                                                </h4>
+                                                {group.partnerLocation && (
+                                                    <span className="text-xs text-gray-500 font-medium flex items-center gap-1 mt-0.5">
+                                                        <MapPin size={12} className="text-gray-400 shrink-0" />
+                                                        {group.partnerLocation}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* Partner Treatment Cards Grid */}
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                                            {group.items.map((pt) => {
+                                                const opts = Array.isArray(pt.options) && pt.options.length > 0 ? pt.options : [{ duration: '60', price: '450,000' }];
+                                                const firstOpt = opts[0];
+                                                const basePublishedPrice = parseInt(String(firstOpt?.price || '0').replace(/[^0-9]/g, '') || '0', 10);
+                                                const discountRate = Number(pt.partner_discount_percentage) || 0;
+                                                const discountAmount = discountRate > 0 ? Math.round(basePublishedPrice * (discountRate / 100)) : 0;
+                                                const subtotalPrice = basePublishedPrice - discountAmount;
+
+                                                return (
+                                                    <div
+                                                        key={pt.id}
+                                                        onClick={() => {
+                                                            setSelectedDetailsDuration(firstOpt.duration);
+                                                            setSelectedPartnerDetails(pt);
+                                                        }}
+                                                        className="group relative rounded-[28px] border border-gray-200/90 bg-white overflow-hidden shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between cursor-pointer active:scale-[0.99]"
+                                                    >
+                                                        <div>
+                                                            {/* Treatment Cover Photo */}
+                                                            <div className="relative h-44 sm:h-48 w-full bg-gray-100 overflow-hidden">
+                                                                {pt.image_url ? (
+                                                                    <img
+                                                                        src={pt.image_url}
+                                                                        alt={pt.title}
+                                                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                                                        loading="lazy"
+                                                                    />
+                                                                ) : (
+                                                                    <div className="w-full h-full flex flex-col items-center justify-center bg-linear-to-br from-gray-100 to-gray-200 text-gray-400 gap-2">
+                                                                        <Building2 size={32} strokeWidth={1.5} className="text-gray-300" />
+                                                                        <span className="text-[11px] font-semibold tracking-wider uppercase text-gray-400">{pt.partner_name}</span>
+                                                                    </div>
+                                                                )}
+
+                                                                {/* Category Floating Pill */}
+                                                                <div className="absolute top-3 left-3 z-10">
+                                                                    <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-black/75 backdrop-blur-md text-white text-[9px] font-bold tracking-wider uppercase">
+                                                                        {pt.category || 'Package'}
+                                                                    </span>
+                                                                </div>
+
+                                                                {/* Discount Badge */}
+                                                                {discountRate > 0 && (
+                                                                    <div className="absolute top-3 right-3 z-10">
+                                                                        <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-emerald-600 text-white text-[10px] font-black tracking-wide shadow-xs">
+                                                                            {discountRate}% OFF
+                                                                        </span>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+
+                                                            {/* Card Content Body */}
+                                                            <div className="p-4 sm:p-5">
+                                                                <h4 className="text-base sm:text-lg font-bold text-gray-900 leading-snug tracking-tight mb-1.5 group-hover:text-black transition-colors">
+                                                                    {pt.title}
+                                                                </h4>
+
+                                                                {pt.desc && (
+                                                                    <p className="text-xs text-gray-500 font-light line-clamp-2 leading-relaxed mb-4">
+                                                                        {pt.desc.split(/What's Included/i)[0].trim()}
+                                                                    </p>
+                                                                )}
+
+                                                                {/* Duration pills */}
+                                                                <div className="flex flex-wrap gap-1.5 mb-2">
+                                                                    {opts.map((opt: any, oIdx: number) => (
+                                                                        <span
+                                                                            key={oIdx}
+                                                                            className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-gray-100 text-gray-700 text-[10px] font-bold uppercase tracking-wider"
+                                                                        >
+                                                                            <Clock size={10} className="text-gray-500" />
+                                                                            {String(opt.duration).toUpperCase().includes('MIN') ? opt.duration : `${opt.duration} MINS`}
+                                                                        </span>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Bottom Customer Rate & Plus Action */}
+                                                        <div className="p-4 sm:p-5 pt-0 mt-auto">
+                                                            <div className="pt-3 border-t border-gray-100 flex items-center justify-between gap-3">
+                                                                <div>
+                                                                    <span className="text-[9px] font-bold uppercase tracking-wider text-gray-400 block">Customer Rate</span>
+                                                                    <div className="flex items-baseline gap-2">
+                                                                        <span className="text-base font-bold text-gray-900">
+                                                                            IDR {subtotalPrice.toLocaleString('en-US')}
+                                                                        </span>
+                                                                        {discountRate > 0 && (
+                                                                            <span className="text-xs text-gray-400 line-through">
+                                                                                IDR {basePublishedPrice.toLocaleString('en-US')}
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+
+                                                                <div
+                                                                    className="w-10 h-10 rounded-full bg-[#1D1D1F] group-hover:bg-black text-white flex items-center justify-center transition-all shadow-xs group-hover:scale-105 shrink-0"
+                                                                    title="View treatment details"
+                                                                >
+                                                                    <Plus size={20} strokeWidth={2.5} />
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
                                         </div>
                                     </div>
-                                </div>
-                            </Link>
-                        ))}
-                    </div>
-                </section>
+                                ))}
+                            </div>
+                        )}
+                    </motion.div>
+                )}
 
             </div>
+
+            {/* ═══════════════════════════════════════════════════════════════ */}
+            {/* FULL SCREEN POP-UP MODAL FOR PARTNER TREATMENT DETAILS         */}
+            {/* ═══════════════════════════════════════════════════════════════ */}
+            <AnimatePresence>
+                {selectedPartnerDetails && (() => {
+                    const pt = selectedPartnerDetails;
+                    const opts = Array.isArray(pt.options) && pt.options.length > 0 ? pt.options : [{ duration: '60', price: '450,000' }];
+                    const firstOpt = opts[0];
+                    const chosenDur = selectedDetailsDuration || opts[0].duration;
+                    const currentOpt = opts.find((o: any) => o.duration === chosenDur) || opts[0];
+                    const basePublishedPrice = parseInt(String(currentOpt?.price || '0').replace(/[^0-9]/g, '') || '0', 10);
+                    const discountRate = Number(pt.partner_discount_percentage) || 0;
+                    const discountAmount = discountRate > 0 ? Math.round(basePublishedPrice * (discountRate / 100)) : 0;
+                    const subtotalPrice = basePublishedPrice - discountAmount;
+                    const isCouple = isCoupleTreatment(pt.title);
+
+                    // Robust parsing of treatment inclusions and description
+                    const { descClean, inclusions } = parseTreatmentInclusions(pt.desc);
+
+                    const handleBookPartner = () => {
+                        setSelectedPartnerDetails(null);
+                        router.push(`/?bookPartner=${pt.id}&duration=${chosenDur}`);
+                    };
+
+                    return (
+                        <div className="fixed inset-0 z-[10000] flex items-center justify-center p-0 md:p-4 bg-black/60 backdrop-blur-xs">
+                            <motion.div
+                                initial={{ y: '100%', opacity: 0.8 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                exit={{ y: '100%', opacity: 0 }}
+                                transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+                                className="w-full h-[100dvh] md:h-auto md:max-h-[92vh] md:max-w-2xl bg-white rounded-none md:rounded-[32px] p-5 sm:p-7 shadow-2xl border border-gray-100 flex flex-col text-black overflow-y-auto no-scrollbar"
+                                style={{ backgroundColor: '#ffffff', opacity: 1 }}
+                            >
+                                {/* Modal Header: Partner Identity */}
+                                <div className="flex items-center justify-between pb-4 border-b border-gray-100 shrink-0">
+                                    <div className="flex items-center gap-3">
+                                        {pt.partner_logo_url ? (
+                                            <img
+                                                src={pt.partner_logo_url}
+                                                alt={pt.partner_name}
+                                                className="w-11 h-11 rounded-2xl object-cover border border-gray-200/90 bg-white shadow-xs shrink-0"
+                                            />
+                                        ) : (
+                                            <div className="w-11 h-11 rounded-2xl bg-[#1D1D1F] text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-xs">
+                                                {pt.partner_name?.charAt(0) || 'P'}
+                                            </div>
+                                        )}
+                                        <div>
+                                            <h3 className="font-bold text-sm text-gray-900 leading-tight">
+                                                {pt.partner_name}
+                                            </h3>
+                                            {pt.partner_location && (
+                                                <span className="text-[11px] text-gray-500 font-medium flex items-center gap-1 mt-0.5">
+                                                    <MapPin size={11} className="text-gray-400 shrink-0" />
+                                                    {pt.partner_location}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => setSelectedPartnerDetails(null)}
+                                        className="w-9 h-9 rounded-full bg-gray-100 hover:bg-black hover:text-white flex items-center justify-center text-gray-600 transition-colors cursor-pointer"
+                                        title="Close"
+                                    >
+                                        <X size={16} />
+                                    </button>
+                                </div>
+
+                                {/* Body */}
+                                <div className="py-4 space-y-4 flex-1">
+                                    {/* Treatment Image */}
+                                    {pt.image_url && (
+                                        <div className="relative h-52 sm:h-64 w-full rounded-2xl overflow-hidden bg-gray-100 shadow-xs">
+                                            <img
+                                                src={pt.image_url}
+                                                alt={pt.title}
+                                                className="w-full h-full object-cover"
+                                            />
+                                            <div className="absolute top-3 left-3">
+                                                <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-black/75 backdrop-blur-md text-white text-[9px] font-bold tracking-wider uppercase">
+                                                    {pt.category || 'Package'}
+                                                </span>
+                                            </div>
+                                            {discountRate > 0 && (
+                                                <div className="absolute top-3 right-3">
+                                                    <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-emerald-600 text-white text-[10px] font-black tracking-wide shadow-xs">
+                                                        {discountRate}% OFF
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {/* Title, Category & Duration */}
+                                    <div>
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <span className="text-[10px] font-bold uppercase tracking-widest text-primary/70">
+                                                {pt.category || 'Package'}
+                                            </span>
+                                            {isCouple && (
+                                                <span className="text-[9px] font-bold uppercase tracking-wider bg-rose-50 text-rose-600 px-2.5 py-0.5 rounded-full border border-rose-100">
+                                                    Couple Ritual
+                                                </span>
+                                            )}
+                                        </div>
+                                        <h2 className="font-serif text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">
+                                            {pt.title}
+                                        </h2>
+                                        {/* Duration displayed cleanly below treatment name */}
+                                        <div className="flex items-center gap-2 mt-2">
+                                            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-gray-100 text-gray-800 text-xs font-bold uppercase tracking-wider">
+                                                <Clock size={12} className="text-gray-500" />
+                                                <span>{String(chosenDur || firstOpt?.duration || '').replace(/mins?/gi, '').trim()} Mins</span>
+                                            </div>
+                                            {opts.length > 1 && (
+                                                <div className="flex items-center gap-1.5">
+                                                    {opts.map((opt: any, idx: number) => {
+                                                        const isSelected = chosenDur === opt.duration;
+                                                        const optDur = String(opt.duration).replace(/mins?/gi, '').trim();
+                                                        return (
+                                                            <button
+                                                                key={idx}
+                                                                type="button"
+                                                                onClick={() => setSelectedDetailsDuration(opt.duration)}
+                                                                className={`text-xs font-bold px-2.5 py-1 rounded-xl border transition-all cursor-pointer ${
+                                                                    isSelected
+                                                                        ? 'bg-[#1D1D1F] text-white border-[#1D1D1F] shadow-xs'
+                                                                        : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                                                                }`}
+                                                            >
+                                                                {optDur} Mins
+                                                            </button>
+                                                        );
+                                                    })}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Description */}
+                                    {descClean && (
+                                        <div className="space-y-1">
+                                            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 block">Experience</span>
+                                            <p className="text-xs sm:text-sm text-gray-600 leading-relaxed font-light">
+                                                {descClean}
+                                            </p>
+                                        </div>
+                                    )}
+
+                                    {/* Treatment Inclusions Table with Bold Title */}
+                                    {inclusions.length > 0 && (
+                                        <div className="space-y-2 pt-1">
+                                            <div className="flex items-center justify-between">
+                                                <h4 className="text-xs font-black uppercase tracking-wider text-gray-900 flex items-center gap-1.5">
+                                                    <span>Treatment Inclusions</span>
+                                                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                                                        {inclusions.length} Steps Included
+                                                    </span>
+                                                </h4>
+                                            </div>
+
+                                            {/* Step-by-Step Breakdown Table */}
+                                            <div className="rounded-2xl border border-gray-200/90 bg-gray-50/70 overflow-hidden divide-y divide-gray-100">
+                                                {inclusions.map((inc, i) => (
+                                                    <div
+                                                        key={i}
+                                                        className="flex items-center justify-between p-3 sm:p-3.5 hover:bg-white transition-colors gap-3"
+                                                    >
+                                                        <div className="flex items-center gap-2.5 min-w-0">
+                                                            <div className="w-6 h-6 rounded-lg bg-black text-white flex items-center justify-center font-bold text-[10px] shrink-0">
+                                                                {i + 1}
+                                                            </div>
+                                                            <span className="text-xs sm:text-sm font-bold text-gray-900 leading-snug">
+                                                                {inc.name}
+                                                            </span>
+                                                        </div>
+                                                        {inc.duration && (
+                                                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white border border-gray-200 text-gray-700 text-[10px] sm:text-xs font-bold uppercase tracking-wider shrink-0 shadow-xs">
+                                                                <Clock size={11} className="text-gray-400" />
+                                                                {inc.duration}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Modal Footer with Customer Rate (Strictly One Line) & Book Treatment CTA */}
+                                <div className="pt-4 border-t border-gray-100 flex items-center justify-between gap-3 mt-auto shrink-0 bg-white">
+                                    <div className="shrink-0 min-w-0 pr-2">
+                                        <span className="text-[9px] font-bold uppercase tracking-wider text-gray-400 block mb-0.5">Customer Rate</span>
+                                        <div className="flex items-baseline gap-2 whitespace-nowrap">
+                                            <span className="text-base sm:text-xl font-black text-gray-900 whitespace-nowrap">
+                                                IDR {subtotalPrice.toLocaleString('en-US')}
+                                            </span>
+                                            {discountRate > 0 && (
+                                                <span className="text-xs text-gray-400 line-through whitespace-nowrap">
+                                                    IDR {basePublishedPrice.toLocaleString('en-US')}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        type="button"
+                                        onClick={handleBookPartner}
+                                        className="py-3.5 px-6 sm:px-7 rounded-full bg-[#1D1D1F] hover:bg-black text-white text-xs sm:text-sm font-bold transition-all shadow-md active:scale-95 flex items-center gap-2 shrink-0 cursor-pointer whitespace-nowrap"
+                                    >
+                                        <span>Book Treatment</span>
+                                        <ArrowRight size={15} />
+                                    </button>
+                                </div>
+                            </motion.div>
+                        </div>
+                    );
+                })()}
+            </AnimatePresence>
         </main>
     );
 }

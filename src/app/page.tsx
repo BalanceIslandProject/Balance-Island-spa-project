@@ -344,6 +344,35 @@ export default function Home() {
         }
     }, [restoreAction, history]);
 
+    // Handle deep links from Explore to open partner treatment details or booking
+    useEffect(() => {
+        if (typeof window !== 'undefined' && partnerTreatments && partnerTreatments.length > 0) {
+            const searchParams = new URLSearchParams(window.location.search);
+            const partnerDetailsId = searchParams.get('partnerDetails');
+            const bookPartnerId = searchParams.get('bookPartner');
+
+            if (partnerDetailsId) {
+                const pt = partnerTreatments.find(p => p.id === partnerDetailsId);
+                if (pt) {
+                    setSelectedDetailsDuration(pt.options?.[0]?.duration || '60');
+                    setSelectedPartnerDetails(pt);
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
+            } else if (bookPartnerId) {
+                const pt = partnerTreatments.find(p => p.id === bookPartnerId);
+                if (pt) {
+                    const dur = searchParams.get('duration') || pt.options?.[0]?.duration || '60';
+                    setSelectedPartnerBreakdown({
+                        treatment: pt,
+                        selectedDuration: dur,
+                        guests: isCoupleTreatment(pt.title) ? 2 : 1
+                    });
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
+            }
+        }
+    }, [partnerTreatments]);
+
     const filteredAndSortedTreatments = React.useMemo(() => {
         let result = (treatments || []).filter(t => {
             if (!t) return false;
@@ -1016,14 +1045,18 @@ export default function Home() {
                                     <h3 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">Partner Spa Treatments</h3>
                                     <p className="text-xs text-gray-500 font-light mt-0.5">Premier partner spas booked directly with verified rates</p>
                                 </div>
-                                <span className="text-xs text-gray-400 font-medium shrink-0 self-start sm:self-auto">
-                                    {partnerTreatments.length} {partnerTreatments.length === 1 ? 'treatment' : 'treatments'} available
-                                </span>
+                                <Link
+                                    href="/explore?tab=partner"
+                                    className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-900 hover:text-black transition-colors self-start sm:self-auto group"
+                                >
+                                    <span>View All ({partnerTreatments.length})</span>
+                                    <ArrowRight size={13} className="text-gray-400 group-hover:text-black group-hover:translate-x-0.5 transition-transform" />
+                                </Link>
                             </div>
 
                             <div className="space-y-12">
                                 {Object.entries(
-                                    partnerTreatments.reduce((acc: Record<string, { partnerName: string; partnerLogo?: string | null; partnerLocation?: string | null; items: typeof partnerTreatments }>, pt) => {
+                                    partnerTreatments.slice(0, 2).reduce((acc: Record<string, { partnerName: string; partnerLogo?: string | null; partnerLocation?: string | null; items: typeof partnerTreatments }>, pt) => {
                                         const key = pt.partner_id || pt.partner_name || 'partner';
                                         if (!acc[key]) {
                                             acc[key] = {
@@ -1078,8 +1111,8 @@ export default function Home() {
                                                     <div
                                                         key={pt.id}
                                                         onClick={() => {
-                                                            setSelectedDetailsDuration(firstOpt.duration);
-                                                            setSelectedPartnerDetails(pt);
+                                                             setSelectedDetailsDuration(firstOpt.duration);
+                                                             setSelectedPartnerDetails(pt);
                                                         }}
                                                         className="group relative rounded-[28px] border border-gray-200/90 bg-white overflow-hidden shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between cursor-pointer active:scale-[0.99]"
                                                     >
@@ -1177,6 +1210,20 @@ export default function Home() {
                                         </div>
                                     </div>
                                 ))}
+                            </div>
+
+                            {/* View All Partner Treatments Button Below Cards */}
+                            <div className="mt-8 flex justify-center">
+                                <Link
+                                    href="/explore?tab=partner"
+                                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-3.5 rounded-full bg-white border border-gray-200/90 hover:border-black text-gray-900 text-xs font-bold uppercase tracking-wider shadow-xs hover:shadow-md transition-all active:scale-95 group"
+                                >
+                                    <span>View All Partner Treatments</span>
+                                    <span className="text-[10px] bg-gray-100 group-hover:bg-black group-hover:text-white px-2 py-0.5 rounded-full transition-colors font-bold">
+                                        {partnerTreatments.length}
+                                    </span>
+                                    <ArrowRight size={14} className="text-gray-400 group-hover:text-black group-hover:translate-x-0.5 transition-all" />
+                                </Link>
                             </div>
                         </section>
                     )}
