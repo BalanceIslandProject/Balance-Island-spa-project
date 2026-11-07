@@ -161,20 +161,20 @@ function ExploreContent() {
     const activeCategoriesList = activeTab === 'homespa' ? HOMESPA_CATEGORIES : PARTNER_CATEGORIES;
 
     return (
-        <main className="min-h-screen bg-transparent relative overflow-hidden pb-24 pt-28 sm:pt-32">
+        <main className="min-h-screen bg-transparent relative overflow-hidden pb-24 pt-4 sm:pt-6">
             {/* Ambient Background Glows matching main website */}
             <div className="fixed top-[-10%] left-1/2 -translate-x-1/2 w-[120%] md:w-[800px] h-[600px] bg-secondary/30 blur-[120px] rounded-full -z-10 pointer-events-none opacity-60 mix-blend-multiply" />
             <div className="fixed top-[15%] right-[-10%] w-[500px] h-[500px] bg-accent/20 blur-[100px] rounded-full -z-10 pointer-events-none opacity-50" />
             <div className="fixed bottom-[10%] left-[-10%] w-[500px] h-[500px] bg-emerald-500/10 blur-[120px] rounded-full -z-10 pointer-events-none opacity-30" />
 
-            {/* Floating Search & Categories Header (Transparent floating design - no background container strip) */}
-            <div className="fixed top-0 left-0 right-0 z-50 pt-3.5 pb-2 pointer-events-none">
+            {/* Search & Categories Header (Scrolls naturally with page - Not locked/sticky) */}
+            <div className="w-full relative z-30 pt-1 pb-2">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     
                     {/* Top Row: Back, Search & Price Filter */}
-                    <div className="mb-2 relative z-30 pointer-events-auto">
+                    <div className="mb-2 relative z-30">
                         <div className="flex items-center gap-2.5 w-full">
-                            <div className="flex-1 bg-white/90 backdrop-blur-md rounded-full border border-gray-200/90 h-12 flex items-center px-1.5 focus-within:border-gray-900/40 transition-all shadow-xs">
+                            <div className="flex-1 bg-white/90 backdrop-blur-md rounded-full border border-gray-200/90 h-12 flex items-center px-1.5 focus-within:border-gray-900/40 transition-all shadow-none">
                                 <Link 
                                     href="/" 
                                     className="w-8 h-8 rounded-full bg-black hover:bg-neutral-800 text-white transition-all flex items-center justify-center shrink-0 active:scale-95 ml-1"
@@ -205,7 +205,7 @@ function ExploreContent() {
                             </div>
                             <button 
                                 onClick={() => setIsPriceFilterOpen(!isPriceFilterOpen)}
-                                className={`w-12 h-12 rounded-full border flex items-center justify-center shrink-0 transition-all cursor-pointer shadow-xs ${
+                                className={`w-12 h-12 rounded-full border flex items-center justify-center shrink-0 transition-all cursor-pointer shadow-none ${
                                     isPriceFilterOpen 
                                         ? 'bg-[#1D1D1F] text-white border-black' 
                                         : 'bg-white/90 backdrop-blur-md text-gray-700 border-gray-200/90 hover:bg-white hover:border-gray-400'
@@ -223,7 +223,7 @@ function ExploreContent() {
                                     initial={{ opacity: 0, y: -10 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, y: -10 }}
-                                    className="absolute top-full right-0 mt-3 w-[calc(100%-8px)] mx-1 md:w-72 bg-white rounded-2xl p-5 shadow-[0_20px_40px_rgb(0,0,0,0.12)] border border-gray-100 z-30 pointer-events-auto"
+                                    className="absolute top-full right-0 mt-3 w-[calc(100%-8px)] mx-1 md:w-72 bg-white rounded-2xl p-5 shadow-lg border border-gray-100 z-30"
                                 >
                                     <div className="flex items-center justify-between mb-4">
                                         <span className="text-[10px] font-bold uppercase tracking-widest text-primary/80">Max Price</span>
@@ -248,7 +248,7 @@ function ExploreContent() {
                     </div>
 
                     {/* Filter Row: Service Toggle Dropdown (Therapick only) + Category Chips */}
-                    <div className="flex items-center gap-2 pt-0.5 pb-0.5 pointer-events-auto">
+                    <div className="flex items-center gap-2 pt-0.5 pb-0.5">
                         
                         {/* Dropdown Toggle: Home Spa / Partner Spas with Notification Badge (Therapick Only) */}
                         {isTherapick && (
@@ -257,9 +257,9 @@ function ExploreContent() {
                                     <button
                                         type="button"
                                         onClick={() => setIsServiceDropdownOpen(!isServiceDropdownOpen)}
-                                        className={`relative flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold active:scale-95 transition-all cursor-pointer whitespace-nowrap shadow-xs ${
+                                        className={`relative flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold active:scale-95 transition-all cursor-pointer whitespace-nowrap shadow-none ${
                                             isServiceDropdownOpen
-                                                ? 'bg-black text-white border border-black ring-2 ring-black/10'
+                                                ? 'bg-black text-white border border-black'
                                                 : 'bg-[#1D1D1F] hover:bg-black text-white border border-black'
                                         }`}
                                         aria-label="Select service mode"
@@ -286,7 +286,7 @@ function ExploreContent() {
                                         {isServiceDropdownOpen && (
                                             <>
                                                 <div 
-                                                    className="fixed inset-0 z-40 pointer-events-auto" 
+                                                    className="fixed inset-0 z-40" 
                                                     onClick={() => setIsServiceDropdownOpen(false)} 
                                                 />
                                                 <motion.div
@@ -294,7 +294,7 @@ function ExploreContent() {
                                                     animate={{ opacity: 1, y: 0, scale: 1 }}
                                                     exit={{ opacity: 0, y: -6, scale: 0.96 }}
                                                     transition={{ duration: 0.15 }}
-                                                    className="absolute top-full left-0 mt-2 w-56 bg-white/95 backdrop-blur-xl rounded-2xl p-1.5 shadow-[0_12px_36px_rgba(0,0,0,0.18)] border border-gray-100 z-50 overflow-hidden pointer-events-auto"
+                                                    className="absolute top-full left-0 mt-2 w-56 bg-white/95 backdrop-blur-xl rounded-2xl p-1.5 shadow-lg border border-gray-100 z-50 overflow-hidden"
                                                 >
                                                     <div className="px-3 py-1.5 text-[9px] font-bold tracking-widest uppercase text-gray-400 border-b border-gray-100 mb-1">
                                                         Select Service
@@ -365,9 +365,9 @@ function ExploreContent() {
                                     <button
                                         key={cat.id}
                                         onClick={() => setActiveCategory(cat.id)}
-                                        className={`flex items-center justify-center px-4 py-1.5 rounded-[18px] whitespace-nowrap transition-all duration-200 shrink-0 cursor-pointer shadow-xs ${
+                                        className={`flex items-center justify-center px-4 py-1.5 rounded-[18px] whitespace-nowrap transition-all duration-200 shrink-0 cursor-pointer shadow-none ${
                                             isActive 
-                                                ? 'bg-[#1D1D1F] text-white border border-black font-bold' 
+                                                ? 'bg-[#1D1D1F] text-white border border-[#1D1D1F] font-bold' 
                                                 : 'bg-white/90 backdrop-blur-md text-gray-700 border border-gray-200/90 hover:border-gray-400 hover:bg-white font-medium'
                                         }`}
                                     >
@@ -696,10 +696,10 @@ function ExploreContent() {
                                             <img
                                                 src={pt.partner_logo_url}
                                                 alt={pt.partner_name}
-                                                className="w-11 h-11 rounded-2xl object-cover border border-gray-200/90 bg-white shadow-xs shrink-0"
+                                                className="w-11 h-11 rounded-2xl object-cover border border-gray-200/90 bg-white shrink-0"
                                             />
                                         ) : (
-                                            <div className="w-11 h-11 rounded-2xl bg-[#1D1D1F] text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-xs">
+                                            <div className="w-11 h-11 rounded-2xl bg-[#1D1D1F] text-white flex items-center justify-center font-bold text-sm shrink-0">
                                                 {pt.partner_name?.charAt(0) || 'P'}
                                             </div>
                                         )}
@@ -730,7 +730,7 @@ function ExploreContent() {
                                 <div className="py-4 space-y-4 flex-1">
                                     {/* Treatment Image */}
                                     {pt.image_url && (
-                                        <div className="relative h-52 sm:h-64 w-full rounded-2xl overflow-hidden bg-gray-100 shadow-xs">
+                                        <div className="relative h-52 sm:h-64 w-full rounded-2xl overflow-hidden bg-gray-100">
                                             <img
                                                 src={pt.image_url}
                                                 alt={pt.title}
@@ -743,7 +743,7 @@ function ExploreContent() {
                                             </div>
                                             {discountRate > 0 && (
                                                 <div className="absolute top-3 right-3">
-                                                    <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-emerald-600 text-white text-[10px] font-black tracking-wide shadow-xs">
+                                                    <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-emerald-600 text-white text-[10px] font-black tracking-wide">
                                                         {discountRate}% OFF
                                                     </span>
                                                 </div>
@@ -784,7 +784,7 @@ function ExploreContent() {
                                                                 onClick={() => setSelectedDetailsDuration(opt.duration)}
                                                                 className={`text-xs font-bold px-2.5 py-1 rounded-xl border transition-all cursor-pointer ${
                                                                     isSelected
-                                                                        ? 'bg-[#1D1D1F] text-white border-[#1D1D1F] shadow-xs'
+                                                                        ? 'bg-[#1D1D1F] text-white border-[#1D1D1F]'
                                                                         : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
                                                                 }`}
                                                             >
@@ -835,7 +835,7 @@ function ExploreContent() {
                                                             </span>
                                                         </div>
                                                         {inc.duration && (
-                                                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white border border-gray-200 text-gray-700 text-[10px] sm:text-xs font-bold uppercase tracking-wider shrink-0 shadow-xs">
+                                                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white border border-gray-200 text-gray-700 text-[10px] sm:text-xs font-bold uppercase tracking-wider shrink-0">
                                                                 <Clock size={11} className="text-gray-400" />
                                                                 {inc.duration}
                                                             </span>
@@ -866,7 +866,7 @@ function ExploreContent() {
                                     <button
                                         type="button"
                                         onClick={handleBookPartner}
-                                        className="py-3.5 px-6 sm:px-7 rounded-full bg-[#1D1D1F] hover:bg-black text-white text-xs sm:text-sm font-bold transition-all shadow-md active:scale-95 flex items-center gap-2 shrink-0 cursor-pointer whitespace-nowrap"
+                                        className="py-3.5 px-6 sm:px-7 rounded-full bg-[#1D1D1F] hover:bg-black text-white text-xs sm:text-sm font-bold transition-all shadow-none active:scale-95 flex items-center gap-2 shrink-0 cursor-pointer whitespace-nowrap"
                                     >
                                         <span>Book Treatment</span>
                                         <ArrowRight size={15} />
