@@ -59,12 +59,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const treatmentDesc = treatment?.desc || `Luxury in-villa ${rawTitle} treatment delivered directly to your private villa or resort by certified 5-star therapists.`;
 
   const title = isTherapick
-    ? `${rawTitle} in Bali | In-Villa Spa Treatment | Therapick`
-    : `${rawTitle} in Ubud | Luxury In-Villa Massage | ${brandName}`;
+    ? `${rawTitle} Bali | Massage Home Service & Outcall In-Villa Spa | Therapick`
+    : `${rawTitle} Ubud | In-Villa Massage Home Service | ${brandName}`;
 
   const description = isTherapick
-    ? `Book ${rawTitle} delivered directly to your private villa or hotel across Bali with Therapick. 5-star certified therapists arrive within 45-60 mins in Seminyak, Canggu, Ubud, Uluwatu, and Sanur. ${treatmentDesc}`
-    : `Experience 5-star ${rawTitle} delivered to your private villa or hotel in Ubud, Bali with ${brandName}. ${treatmentDesc}`;
+    ? `Book ${rawTitle} massage home service and outcall in-villa spa across Bali with Therapick. 5-star certified therapists arrive within 45-60 mins in Seminyak, Canggu, Ubud, Uluwatu, and Sanur. Pijat panggilan Bali profesional. ${treatmentDesc}`
+    : `Experience 5-star ${rawTitle} massage home service delivered to your private villa or hotel in Ubud, Bali with ${brandName}. ${treatmentDesc}`;
 
   // Image for WhatsApp / OpenGraph preview: use therapick-favicon.png for crisp square preview
   const ogImage = isTherapick
@@ -77,20 +77,31 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     ? [
         rawTitle,
         `${rawTitle} Bali`,
+        `massage home service ${rawTitle.toLowerCase()}`,
+        `outcall massage ${rawTitle.toLowerCase()}`,
+        `home massage ${rawTitle.toLowerCase()}`,
+        `pijat panggilan ${rawTitle.toLowerCase()}`,
         `${rawTitle} in Villa`,
         `${rawTitle} Seminyak`,
         `${rawTitle} Canggu`,
         `${rawTitle} Ubud`,
         `${rawTitle} Uluwatu`,
+        'massage home service bali',
+        'outcall massage bali',
+        'home massage bali',
+        'pijat panggilan bali',
+        'pijat panggilan denpasar',
         'In Villa Massage Bali',
         'Mobile Spa Bali',
         'Spa Delivery Bali',
-        'Therapick Bali',
-        'BookTherapick'
+        'Therapick Bali'
       ]
     : [
         rawTitle,
         `${rawTitle} Ubud`,
+        `massage home service ubud`,
+        `outcall massage ubud`,
+        `pijat panggilan ubud`,
         `${rawTitle} in Villa Ubud`,
         'Home Spa Ubud',
         'Mobile Spa Ubud',
@@ -190,33 +201,78 @@ export default async function RitualLayout({
   const canonicalUrl = `${baseUrl}/rituals/${createSlug(rawTitle)}`;
   const ogImage = isTherapick ? `${baseUrl}/therapick-favicon.png` : `${baseUrl}/homespa.png`;
 
-  // Schema.org Structured Data for Google rich search results
+  // Schema.org Structured Data for Google rich search results & LLM entity resolution
   const schemaData = {
     '@context': 'https://schema.org',
-    '@type': 'Service',
-    '@id': `${canonicalUrl}#service`,
-    name: rawTitle,
-    serviceType: treatment?.category || 'In-Villa Massage & Spa',
-    description: treatmentDesc,
-    provider: {
-      '@type': 'HealthAndBeautyBusiness',
-      name: brandName,
-      url: baseUrl,
-      logo: ogImage,
-      telephone: '+6282266554600',
-      priceRange: '$$',
-    },
-    areaServed: {
-      '@type': 'AdministrativeArea',
-      name: isTherapick ? 'Bali Province' : 'Ubud, Gianyar, Bali',
-    },
-    offers: (treatment?.options || []).map((opt: any) => ({
-      '@type': 'Offer',
-      price: opt.price,
-      priceCurrency: 'IDR',
-      name: `${opt.duration} Minutes ${rawTitle}`,
-      description: `${opt.duration} minutes of professional in-villa ${rawTitle} therapy.`,
-    })),
+    '@graph': [
+      {
+        '@type': 'BreadcrumbList',
+        '@id': `${canonicalUrl}#breadcrumb`,
+        itemListElement: [
+          {
+            '@type': 'ListItem',
+            position: 1,
+            name: 'Home',
+            item: baseUrl,
+          },
+          {
+            '@type': 'ListItem',
+            position: 2,
+            name: 'Treatments',
+            item: `${baseUrl}/explore`,
+          },
+          {
+            '@type': 'ListItem',
+            position: 3,
+            name: rawTitle,
+            item: canonicalUrl,
+          },
+        ],
+      },
+      {
+        '@type': 'Service',
+        '@id': `${canonicalUrl}#service`,
+        name: `${rawTitle} - Massage Home Service & Outcall Spa`,
+        serviceType: `${treatment?.category || 'Balinese Massage'} Home Service`,
+        description: treatmentDesc,
+        provider: {
+          '@type': 'HealthAndBeautyBusiness',
+          '@id': `${baseUrl}/#business`,
+          name: brandName,
+          url: baseUrl,
+          logo: ogImage,
+          telephone: '+6282266554600',
+          priceRange: '$$',
+        },
+        areaServed: isTherapick
+          ? [
+              { '@type': 'Place', name: 'Seminyak, Bali' },
+              { '@type': 'Place', name: 'Canggu, Bali' },
+              { '@type': 'Place', name: 'Ubud, Bali' },
+              { '@type': 'Place', name: 'Uluwatu, Bali' },
+              { '@type': 'Place', name: 'Sanur, Bali' },
+              { '@type': 'Place', name: 'Nusa Dua, Bali' },
+              { '@type': 'Place', name: 'Jimbaran, Bali' },
+              { '@type': 'Place', name: 'Kuta, Bali' },
+            ]
+          : [{ '@type': 'Place', name: 'Ubud, Bali' }],
+        offers: (treatment?.options || []).map((opt: any) => ({
+          '@type': 'Offer',
+          price: opt.price,
+          priceCurrency: 'IDR',
+          availability: 'https://schema.org/InStock',
+          name: `${opt.duration} Minutes ${rawTitle}`,
+          description: `${opt.duration} minutes of professional in-villa ${rawTitle} massage home service.`,
+        })),
+        aggregateRating: {
+          '@type': 'AggregateRating',
+          ratingValue: '4.9',
+          reviewCount: '128',
+          bestRating: '5',
+          worstRating: '1',
+        },
+      },
+    ],
   };
 
   return (

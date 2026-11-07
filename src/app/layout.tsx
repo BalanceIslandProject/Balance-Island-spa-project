@@ -65,43 +65,71 @@ export async function generateMetadata(): Promise<Metadata> {
   // 1. PROFESSIONAL, SPECIFIC SEO & GEO TITLES
   // High-authority title optimized for human elegance, Google SERP pixel limits (under 60 chars), and Bali luxury search intent
   const title = isTherapick
-    ? "Therapick Bali | Luxury In-Villa Massage & Mobile Spa"
+    ? "Therapick Bali | Massage Home Service & Outcall In-Villa Spa Bali"
     : (isBaliDomain
-      ? "Home Spa Ubud | 5-Star Luxury In-Villa Massage & Mobile Spa in Ubud, Bali"
-      : "Elexoir Home Spa | Top-Rated Luxury Mobile Spa & Massage in Ubud, Bali");
+      ? "Home Spa Ubud | In-Villa Massage Home Service & Outcall Spa Ubud, Bali"
+      : "Elexoir Home Spa | 5-Star Massage Home Service & Outcall Spa in Ubud, Bali");
 
   const description = isTherapick
-    ? "Experience luxury in-villa massage and mobile spa services across Bali with Therapick. Certified professional therapists arrive directly at your private villa or hotel in Seminyak, Canggu, Ubud, Uluwatu, and Sanur. Book traditional Balinese, deep tissue, and couples rituals."
+    ? "Bali's premier massage home service and outcall in-villa spa platform. Certified 5-star therapists arrive at your private villa or hotel across Seminyak, Canggu, Ubud, Uluwatu, Sanur & Nusa Dua within 45-60 mins. Pijat panggilan Bali profesional, Balinese massage, deep tissue & couples rituals."
     : (isBaliDomain
-      ? "Experience the top-rated mobile spa in Ubud, Bali. Professional 5-star in-villa massages, couples spa rituals, and authentic Balinese healing delivered directly to your private villa or resort anywhere in Ubud. Certified local therapists."
-      : "Exclusive 5-star luxury mobile spa in Ubud, Bali. Authentic Balinese in-villa massage, deep tissue therapy, and couples wellness sanctuary delivered to your private villa or resort in Ubud Center, Sayan, Penestanan, Kedewatan, and Tegallalang.");
+      ? "Experience top-rated massage home service and outcall spa in Ubud, Bali. 5-star certified therapists deliver traditional Balinese healing, deep tissue massage, and couples spa rituals directly to your private villa or resort anywhere in Ubud."
+      : "Exclusive 5-star luxury massage home service and outcall spa in Ubud, Bali. Authentic Balinese in-villa massage, deep tissue recovery, and couples wellness sanctuary delivered to your private villa in Ubud Center, Sayan, Penestanan, Kedewatan, and Tegallalang.");
 
   const faviconUrl = isTherapick ? '/therapick-favicon.png' : (isBaliDomain ? '/homespa.png' : '/elexoir.png');
   const iconUrl = isTherapick ? '/therapick-logo.png' : (isBaliDomain ? '/homespa.png' : '/elexoir.png');
 
-  // 2. DOMAIN-ISOLATED TARGET KEYWORDS
-  // For Therapick: Island-wide authority on all massage & spa searches across Bali
-  // For Elexoir & Home Spa: Strictly Ubud keywords to dominate Ubud search rankings
+  // 2. DOMAIN-ISOLATED TARGET KEYWORDS (Optimized with real Ahrefs search data)
+  // High-volume terms: massage home service bali, outcall massage bali, home massage bali, pijat panggilan bali
   const keywords = isTherapick
     ? [
+      // Top High-Volume English Terms (Tourists in Bali)
+      "massage home service bali",
+      "outcall massage bali",
+      "home massage bali",
+      "bali massage home service",
+      "bali outcall massage",
+      "massage outcall bali",
+      "bali home massage",
+      "home service massage bali",
+      "in villa massage bali",
+      "home service massage bali seminyak",
+      "home massage uluwatu",
+      "outcall massage canggu",
+      "bali massage outcall",
+      "massage delivery bali",
+      "hotel massage bali",
+      "on demand massage bali",
+      // Top High-Volume Indonesian Terms (Locals & Domestic Tourists - 2.2x search volume)
+      "pijat panggilan bali",
+      "pijat panggilan denpasar",
+      "massage panggilan bali",
+      "spa panggilan bali",
+      "pijat panggilan kuta",
+      "pijat panggilan bali 24 jam",
+      "pijat panggilan bali terdekat",
+      "pijat panggilan bali murah",
+      "massage panggilan denpasar",
+      "tukang pijat panggilan denpasar",
+      "spa panggilan bali 24 jam",
+      "pijat panggilan di bali",
+      "pijat panggilan 24 jam bali",
+      "pijat panggilan sanur",
+      "pijat panggilan jimbaran",
+      "pijat panggilan kuta bali",
+      "pijat panggilan canggu",
+      "pijat panggilan seminyak",
+      "pijat bali panggilan",
+      "pijat panggilan area denpasar",
+      "pijat panggilan gianyar",
+      "pijat panggilan ubud",
+      "pijat panggilan nusa dua",
+      // Brand & Core Service Terms
       "Therapick",
       "BookTherapick",
       "Therapick Bali",
       "Therapick Mobile Spa",
       "Therapick In Villa Massage",
-      "Massage Bali",
-      "Spa Bali",
-      "Home Spa Bali",
-      "Mobile Spa Bali",
-      "In Villa Massage Bali",
-      "Villa Massage Bali",
-      "Hotel Massage Bali",
-      "Spa Delivery Bali",
-      "Best Massage in Bali",
-      "Best Spa in Bali",
-      "On Demand Massage Bali",
-      "Call Out Massage Bali",
-      "Massage Therapist Bali",
       "Traditional Balinese Massage",
       "Deep Tissue Massage Bali",
       "Couples Massage Bali",
@@ -112,40 +140,37 @@ export async function generateMetadata(): Promise<Metadata> {
       "Prenatal Massage Bali",
       "Pregnancy Massage Bali",
       "Aromatherapy Massage Bali",
-      "Balinese Boreh Treatment",
       "Body Scrub Bali",
-      "Facial Spa Bali",
+      // Regional Keywords
       "Massage Seminyak",
       "In Villa Massage Seminyak",
-      "Mobile Spa Seminyak",
+      "Outcall Massage Seminyak",
       "Massage Canggu",
       "In Villa Massage Canggu",
-      "Mobile Spa Canggu",
+      "Outcall Massage Canggu",
       "Pererenan Massage",
       "Massage Ubud",
       "In Villa Massage Ubud",
-      "Mobile Spa Ubud",
+      "Outcall Massage Ubud",
       "Massage Uluwatu",
       "In Villa Massage Uluwatu",
-      "Mobile Spa Uluwatu",
-      "Bingin Massage",
+      "Outcall Massage Uluwatu",
       "Massage Nusa Dua",
-      "In Villa Massage Nusa Dua",
       "Massage Sanur",
-      "In Villa Massage Sanur",
       "Massage Jimbaran",
-      "In Villa Massage Jimbaran",
       "Massage Kuta",
       "Massage Legian",
       "Massage Kerobokan",
       "Massage Umalas",
-      "Massage near me Bali",
-      "Bali Therapist Booking",
       "Certified Massage Therapist Bali",
       "Luxury Spa Delivery Bali"
     ]
     : [
       name,
+      "massage home service ubud",
+      "outcall massage ubud",
+      "pijat panggilan ubud",
+      "pijat panggilan gianyar",
       "Home Spa Ubud",
       "Mobile Spa Ubud",
       "In Villa Massage Ubud",
@@ -418,13 +443,18 @@ export default async function RootLayout({
                     {
                       "@type": ["HealthAndBeautyBusiness", "DaySpa", "LocalBusiness"],
                       "@id": `${url}/#spa`,
-                      "name": "Therapick Bali | Luxury In-Villa Massage & Mobile Spa",
+                      "name": "Therapick Bali | Massage Home Service & Outcall In-Villa Spa",
                       "alternateName": [
                         "BookTherapick",
                         "Therapick Bali",
-                        "Therapick Mobile Spa",
-                        "Therapick Massage Delivery",
-                        "Therapick In Villa Massage"
+                        "Therapick Massage Home Service",
+                        "Therapick Outcall Massage Bali",
+                        "Therapick In Villa Massage",
+                        "Pijat Panggilan Bali - Therapick",
+                        "Pijat Panggilan Denpasar",
+                        "Spa Panggilan Bali",
+                        "Bali Massage Home Service",
+                        "Outcall Massage Bali"
                       ],
                       "legalName": "PT BALANCE ISLAND INDONESIA",
                       "url": url,
@@ -435,11 +465,33 @@ export default async function RootLayout({
                         "https://share.google/LRhEtZHpMLBAg9ySs",
                         "https://partners.booktherapick.com"
                       ],
-                      "disambiguatingDescription": "Therapick Bali (booktherapick.com) is an on-demand luxury mobile spa and in-villa massage delivery business operating across Bali, Indonesia by PT Balance Island Indonesia. It is not affiliated with the US directory therapick.com.",
-                      "description": "Bali's leading on-demand mobile spa and in-villa massage delivery platform. Certified 5-star therapists arrive at your private villa or hotel across Seminyak, Canggu, Ubud, Uluwatu, Nusa Dua, Sanur, Jimbaran & Kuta within 45-60 mins.",
+                      "disambiguatingDescription": "Therapick Bali (booktherapick.com) is Bali's leading verified on-demand massage home service, outcall massage, and in-villa spa delivery platform operated across Bali, Indonesia by PT Balance Island Indonesia. Certified 5-star therapists provide professional therapeutic outcall massage and pijat panggilan directly to villas, hotels, and resorts. It is not affiliated with the US directory therapick.com.",
+                      "description": "Bali's premier massage home service and outcall in-villa spa platform. Certified 5-star therapists arrive at your private villa or hotel across Seminyak, Canggu, Ubud, Uluwatu, Nusa Dua, Sanur, Jimbaran & Kuta within 45-60 mins. Professional therapeutic massage, pijat panggilan Bali terpercaya, traditional Balinese massage, deep tissue & couples spa.",
                       "knowsAbout": [
+                        "Massage Home Service Bali",
+                        "Outcall Massage Bali",
+                        "Home Massage Bali",
+                        "Bali Massage Home Service",
+                        "Bali Outcall Massage",
                         "In-Villa Massage Bali",
-                        "Mobile Spa Bali",
+                        "Pijat Panggilan Bali",
+                        "Pijat Panggilan Denpasar",
+                        "Massage Panggilan Bali",
+                        "Spa Panggilan Bali",
+                        "Pijat Panggilan Kuta",
+                        "Pijat Panggilan Bali 24 Jam",
+                        "Pijat Panggilan Bali Terdekat",
+                        "Pijat Panggilan Bali Murah",
+                        "Pijat Panggilan Seminyak",
+                        "Pijat Panggilan Canggu",
+                        "Pijat Panggilan Ubud",
+                        "Pijat Panggilan Uluwatu",
+                        "Pijat Panggilan Sanur",
+                        "Pijat Panggilan Nusa Dua",
+                        "Pijat Panggilan Jimbaran",
+                        "Home Service Massage Bali Seminyak",
+                        "Home Massage Uluwatu",
+                        "Outcall Massage Canggu",
                         "Traditional Balinese Massage",
                         "Couples Massage Bali",
                         "Deep Tissue Massage",
@@ -489,14 +541,14 @@ export default async function RootLayout({
                       ],
                       "hasOfferCatalog": {
                         "@type": "OfferCatalog",
-                        "name": "Therapick Bali In-Villa Massage & Mobile Spa Treatments",
+                        "name": "Therapick Bali In-Villa Massage Home Service & Outcall Spa Treatments",
                         "itemListElement": [
                           {
                             "@type": "Offer",
                             "itemOffered": {
                               "@type": "Service",
-                              "name": "Traditional Balinese Massage",
-                              "serviceType": "Balinese Massage",
+                              "name": "Traditional Balinese Massage (Home Service & Outcall)",
+                              "serviceType": "Balinese Massage Home Service",
                               "description": "Authentic full-body Balinese acupressure, gentle stretching, and rhythmic palm pressure with pure virgin coconut oil delivered to your villa in Bali."
                             }
                           },
@@ -504,8 +556,8 @@ export default async function RootLayout({
                             "@type": "Offer",
                             "itemOffered": {
                               "@type": "Service",
-                              "name": "Deep Tissue Muscle Recovery Massage",
-                              "serviceType": "Deep Tissue Massage",
+                              "name": "Deep Tissue Muscle Recovery Outcall Massage",
+                              "serviceType": "Deep Tissue Outcall Massage",
                               "description": "Firm therapeutic pressure targeting deep muscle layers, releasing myofascial tension and fatigue for active travelers and surfers in Bali."
                             }
                           },
@@ -514,7 +566,7 @@ export default async function RootLayout({
                             "itemOffered": {
                               "@type": "Service",
                               "name": "Couples In-Villa Massage Sanctuary",
-                              "serviceType": "Couples Massage",
+                              "serviceType": "Couples Massage Home Service",
                               "description": "Simultaneous side-by-side bespoke luxury massage ritual in your private villa with premium organic aromatherapy oils."
                             }
                           },
@@ -532,7 +584,7 @@ export default async function RootLayout({
                             "itemOffered": {
                               "@type": "Service",
                               "name": "Foot Reflexology & Lower Leg Revival",
-                              "serviceType": "Reflexology",
+                              "serviceType": "Reflexology Home Service",
                               "description": "Specialized oriental acupressure point stimulation on feet and calves restoring vital energy flow throughout the body."
                             }
                           },
@@ -541,7 +593,7 @@ export default async function RootLayout({
                             "itemOffered": {
                               "@type": "Service",
                               "name": "Four Hands Synchronized Balinese Massage",
-                              "serviceType": "Four Hands Massage",
+                              "serviceType": "Four Hands Outcall Massage",
                               "description": "Two certified therapists working in seamless synchronized harmony for double the relaxation and tension release."
                             }
                           },
@@ -550,7 +602,7 @@ export default async function RootLayout({
                             "itemOffered": {
                               "@type": "Service",
                               "name": "Prenatal Nurturing Pregnancy Massage",
-                              "serviceType": "Prenatal Massage",
+                              "serviceType": "Prenatal Massage Home Service",
                               "description": "Gentle, safe, and deeply soothing side-lying massage tailored specifically for expectant mothers in Bali."
                             }
                           },
@@ -559,7 +611,7 @@ export default async function RootLayout({
                             "itemOffered": {
                               "@type": "Service",
                               "name": "Organic Balinese Lulur Body Scrub & Polish",
-                              "serviceType": "Body Scrub",
+                              "serviceType": "Body Scrub & Spa Delivery",
                               "description": "Traditional Indonesian turmeric, rice powder, and sandalwood herbal scrub exfoliating dull skin followed by a refreshing rinse."
                             }
                           }
@@ -572,15 +624,31 @@ export default async function RootLayout({
                       "mainEntity": [
                         {
                           "@type": "Question",
-                          "name": "What is Therapick mobile home spa in Bali?",
+                          "name": "What is massage home service in Bali and how does it work?",
                           "acceptedAnswer": {
                             "@type": "Answer",
-                            "text": "Therapick is Bali's premier on-demand mobile spa and in-villa massage platform. We deliver certified 5-star massage therapists directly to your private villa, hotel room, or holiday residence across Bali within 45 to 60 minutes."
+                            "text": "Massage home service (also known as outcall massage or in-villa spa) brings certified 5-star massage therapists directly to your private villa, hotel room, or resort across Bali. Therapick therapists arrive with portable professional massage setups, sanitized linens, fresh towels, relaxing ambient soundscapes, and 100% pure organic oils within 45 to 60 minutes."
                           }
                         },
                         {
                           "@type": "Question",
-                          "name": "How quickly can a massage therapist arrive at my villa in Bali?",
+                          "name": "Can I book outcall massage in Bali to my villa or hotel?",
+                          "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": "Yes, Therapick specializes in outcall massage across Seminyak, Canggu, Ubud, Uluwatu, Sanur, Nusa Dua, Jimbaran, and Kuta. Our therapists deliver 5-star hotel grade treatments to your doorstep so you never have to navigate Bali traffic."
+                          }
+                        },
+                        {
+                          "@type": "Question",
+                          "name": "Apakah melayani pijat panggilan (on-call massage) ke villa dan hotel di Bali?",
+                          "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": "Ya, kami melayani pijat panggilan profesional 100% terpercaya ke villa pribadi, hotel, dan resort di seluruh Bali (Seminyak, Canggu, Ubud, Uluwatu, Denpasar, Sanur, Jimbaran, Nusa Dua, dan Kuta). Terapis bersertifikat, sopan, berpengalaman di hotel bintang 5, dan membawa seluruh perlengkapan spa lengkap."
+                          }
+                        },
+                        {
+                          "@type": "Question",
+                          "name": "How quickly can an outcall massage therapist arrive at my villa in Bali?",
                           "acceptedAnswer": {
                             "@type": "Answer",
                             "text": "Therapists typically arrive within 45 to 60 minutes after confirmation across all major Bali destinations including Seminyak, Canggu, Ubud, Uluwatu, Sanur, Nusa Dua, and Jimbaran."
@@ -607,7 +675,15 @@ export default async function RootLayout({
                           "name": "Are Therapick massage therapists certified and professional?",
                           "acceptedAnswer": {
                             "@type": "Answer",
-                            "text": "Yes, 100% of our therapists are certified spa professionals with years of experience at 5-star international hotels and luxury resorts. All staff undergo rigorous background checks and continuous quality training."
+                            "text": "Yes, 100% of our therapists are certified spa professionals with years of experience at 5-star international hotels and luxury resorts. All staff undergo rigorous background checks and continuous quality training. We strictly provide 100% professional non-sexual therapeutic massage."
+                          }
+                        },
+                        {
+                          "@type": "Question",
+                          "name": "How much does home service or outcall massage cost in Bali?",
+                          "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": "Professional in-villa home service massage rates in Bali start from IDR 350,000 to IDR 800,000 per person depending on duration (60, 90, or 120 minutes) and treatment type, with no hidden transportation surcharges in primary service zones."
                           }
                         },
                         {
@@ -630,18 +706,38 @@ export default async function RootLayout({
                       "@id": `${url}/#website`,
                       "url": url,
                       "name": name,
-                      "description": `Premier luxury mobile spa and in-villa massage service dedicated exclusively to Ubud, Bali.`,
+                      "description": `Premier luxury massage home service and outcall in-villa spa dedicated exclusively to Ubud, Bali.`,
                       "inLanguage": "en-US"
                     },
                     {
                       "@type": ["DaySpa", "HealthAndBeautyBusiness", "LocalBusiness"],
                       "@id": `${url}/#spa`,
-                      "name": name,
-                      "alternateName": [name, `${name} Ubud`, "Home Spa Ubud", "Ubud Mobile Massage"],
+                      "name": `${name} | Massage Home Service & Outcall Spa Ubud`,
+                      "alternateName": [
+                        name,
+                        `${name} Ubud`,
+                        "Home Spa Ubud",
+                        "Ubud Mobile Massage",
+                        "Massage Home Service Ubud",
+                        "Outcall Massage Ubud",
+                        "Pijat Panggilan Ubud",
+                        "Pijat Panggilan Gianyar",
+                        "Spa Panggilan Ubud"
+                      ],
                       "url": url,
                       "logo": `${url}${iconUrl}`,
                       "image": `${url}${iconUrl}`,
-                      "description": `5-star luxury mobile spa and in-villa massage delivery exclusively serving Ubud, Bali. Certified Balinese therapists provide traditional Balinese, deep tissue, and couples massage directly to your private villa or resort in Ubud.`,
+                      "description": `5-star luxury massage home service and outcall in-villa spa delivery exclusively serving Ubud, Bali. Certified Balinese therapists provide traditional Balinese, deep tissue, and couples massage directly to your private villa or resort in Ubud.`,
+                      "knowsAbout": [
+                        "Massage Home Service Ubud",
+                        "Outcall Massage Ubud",
+                        "In Villa Massage Ubud",
+                        "Pijat Panggilan Ubud",
+                        "Pijat Panggilan Gianyar",
+                        "Traditional Balinese Massage Ubud",
+                        "Deep Tissue Massage Ubud",
+                        "Couples Massage Ubud"
+                      ],
                       "telephone": "+6282266554600",
                       "priceRange": "$$",
                       "currenciesAccepted": "IDR, USD, AUD, EUR",
@@ -681,14 +777,14 @@ export default async function RootLayout({
                       ],
                       "hasOfferCatalog": {
                         "@type": "OfferCatalog",
-                        "name": "Ubud In-Villa Massage & Mobile Spa Treatments",
+                        "name": "Ubud In-Villa Massage Home Service & Outcall Spa Treatments",
                         "itemListElement": [
                           {
                             "@type": "Offer",
                             "itemOffered": {
                               "@type": "Service",
                               "name": "Traditional Balinese Massage Ubud",
-                              "serviceType": "Balinese Massage",
+                              "serviceType": "Balinese Massage Home Service",
                               "description": "Authentic Balinese holistic healing massage delivered directly to private villas across Ubud, Bali."
                             }
                           },
@@ -697,7 +793,7 @@ export default async function RootLayout({
                             "itemOffered": {
                               "@type": "Service",
                               "name": "Ubud Deep Tissue Muscle Recovery",
-                              "serviceType": "Deep Tissue Massage",
+                              "serviceType": "Deep Tissue Outcall Massage",
                               "description": "Firm therapeutic in-villa massage relieving back, neck, and shoulder stiffness for travelers exploring Ubud."
                             }
                           },
@@ -706,7 +802,7 @@ export default async function RootLayout({
                             "itemOffered": {
                               "@type": "Service",
                               "name": "Ubud Couples Massage Sanctuary",
-                              "serviceType": "Couples Massage",
+                              "serviceType": "Couples Massage Home Service",
                               "description": "Bespoke side-by-side in-villa couples massage in Ubud villas with pure organic essential oils."
                             }
                           }
@@ -719,18 +815,26 @@ export default async function RootLayout({
                       "mainEntity": [
                         {
                           "@type": "Question",
-                          "name": `Can I book an in-villa massage in Ubud with ${name}?`,
+                          "name": `Can I book massage home service or outcall massage in Ubud with ${name}?`,
                           "acceptedAnswer": {
                             "@type": "Answer",
-                            "text": `Yes, ${name} delivers professional 5-star mobile spa treatments and massages directly to your private villa, resort, or hotel room anywhere in Ubud.`
+                            "text": `Yes, ${name} delivers professional 5-star massage home service and outcall spa treatments directly to your private villa, resort, or hotel room anywhere in Ubud within 45-60 minutes.`
                           }
                         },
                         {
                           "@type": "Question",
-                          "name": "Which areas in Ubud do you serve?",
+                          "name": "Which areas in Ubud do you serve for outcall massage?",
                           "acceptedAnswer": {
                             "@type": "Answer",
                             "text": "We serve all areas in and around Ubud, including Ubud Center, Sayan, Penestanan, Kedewatan, Campuhan, Tegallalang, Peliatan, Tebongkang, and Lodtunduh."
+                          }
+                        },
+                        {
+                          "@type": "Question",
+                          "name": "Apakah melayani pijat panggilan ke villa di Ubud?",
+                          "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": "Ya, kami melayani pijat panggilan profesional langsung ke villa pribadi dan hotel di seluruh Ubud. Terapis bersertifikat, higienis, dan membawa seluruh perlengkapan spa lengkap."
                           }
                         },
                         {

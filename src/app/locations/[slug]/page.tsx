@@ -47,48 +47,62 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const iconUrl = isTherapick ? '/therapick-logo.png' : (isBaliDomain ? '/homespa.png' : '/elexoir.png');
 
     const title = isTherapick
-        ? `In-Villa Massage & Mobile Spa in ${locationName}, Bali | Therapick`
+        ? `Massage Home Service & Outcall Massage ${locationName}, Bali | Therapick`
         : (isUbud 
-            ? `${brandName} | Top-Rated Luxury Mobile Spa & In-Villa Massage in Ubud, Bali`
-            : `Home Spa & In-Villa Massage in ${locationName} | ${brandName}`);
+            ? `${brandName} | Massage Home Service & Outcall Spa in Ubud, Bali`
+            : `Massage Home Service & Outcall Spa in ${locationName} | ${brandName}`);
 
     const description = isTherapick
-        ? `Book luxury in-villa massage and mobile spa services in ${locationName}, Bali with Therapick. 5-star certified therapists arrive at your private villa or hotel in 45-60 mins. Traditional Balinese, deep tissue, and couples massage.`
+        ? `Professional massage home service and outcall massage in ${locationName}, Bali with Therapick. 5-star certified therapists arrive at your private villa or hotel within 45-60 mins. Pijat panggilan ${locationName} profesional, Balinese massage, deep tissue & couples rituals.`
         : (isUbud
-            ? `Experience 5-star luxury mobile spa and in-villa massage delivered directly to your villa, resort, or private residence anywhere in Ubud, Bali. Certified local therapists serving Ubud Center, Sayan, Penestanan, Kedewatan, and Tegallalang.`
-            : `Looking for 5-star home spa and in-villa massage in ${locationName}, Bali? ${brandName} delivers professional certified massage therapists directly to your private villa.`);
+            ? `Experience top-rated massage home service and outcall spa in Ubud, Bali. 5-star certified therapists deliver authentic Balinese healing, deep tissue recovery, and couples spa rituals directly to your private villa anywhere in Ubud.`
+            : `Looking for 5-star massage home service and outcall massage in ${locationName}, Bali? ${brandName} delivers certified professional therapists directly to your private villa.`);
 
     const keywords = isTherapick
         ? [
-            `Massage ${locationName}`,
-            `In Villa Massage ${locationName}`,
-            `Mobile Spa ${locationName}`,
-            `Home Spa ${locationName}`,
-            `Best Massage in ${locationName}`,
-            `Spa ${locationName} Bali`,
-            `Couples Massage ${locationName}`,
-            `Deep Tissue Massage ${locationName}`,
-            `Traditional Balinese Massage ${locationName}`,
-            `Massage Delivery ${locationName}`,
-            `Hotel Massage ${locationName}`,
-            `Therapist ${locationName} Bali`,
-            `Therapick ${locationName}`,
-            `Villa Massage ${locationName} Bali`
+            `massage home service ${slug}`,
+            `massage home service ${locationName.toLowerCase()}`,
+            `outcall massage ${slug}`,
+            `outcall massage ${locationName.toLowerCase()}`,
+            `home massage ${slug}`,
+            `home massage ${locationName.toLowerCase()}`,
+            `home service massage ${slug}`,
+            `home service massage ${locationName.toLowerCase()}`,
+            `in villa massage ${slug}`,
+            `in villa massage ${locationName.toLowerCase()}`,
+            `pijat panggilan ${slug}`,
+            `pijat panggilan ${locationName.toLowerCase()}`,
+            `massage panggilan ${slug}`,
+            `spa panggilan ${slug}`,
+            `pijat panggilan ${slug} 24 jam`,
+            `massage ${slug} bali`,
+            `spa ${locationName.toLowerCase()} bali`,
+            `best massage in ${locationName.toLowerCase()}`,
+            `couples massage ${locationName.toLowerCase()}`,
+            `deep tissue massage ${locationName.toLowerCase()}`,
+            `traditional balinese massage ${locationName.toLowerCase()}`,
+            `hotel massage ${locationName.toLowerCase()}`,
+            `therapick ${slug}`,
+            `villa massage ${locationName.toLowerCase()} bali`
         ]
         : [
-            `Home Spa Ubud`,
-            `Mobile Spa Ubud`,
-            `In Villa Massage Ubud`,
-            `Massage Ubud Villa`,
-            `Best Massage in Ubud`,
-            `Ubud Home Spa`,
-            `Couples Massage Ubud`,
-            `Balinese Massage Ubud`,
-            `Sayan Massage`,
-            `Penestanan Spa`,
-            `Kedewatan Mobile Massage`,
-            `Tegallalang Villa Massage`,
-            `${brandName} Ubud`
+            `massage home service ubud`,
+            `outcall massage ubud`,
+            `home massage ubud`,
+            `home service massage ubud`,
+            `in villa massage ubud`,
+            `pijat panggilan ubud`,
+            `pijat panggilan gianyar`,
+            `massage panggilan ubud`,
+            `spa panggilan ubud`,
+            `home spa ubud`,
+            `couples massage ubud`,
+            `balinese massage ubud`,
+            `sayan massage`,
+            `penestanan spa`,
+            `kedewatan mobile massage`,
+            `tegallalang villa massage`,
+            `${brandName} ubud`
         ];
 
     return {
@@ -190,42 +204,138 @@ export default async function LocationPage({ params }: Props) {
 
     const schemaData = {
         "@context": "https://schema.org",
-        "@type": ["DaySpa", "HealthAndBeautyBusiness", "LocalBusiness"],
-        "name": `${brandName} - ${locationName}`,
-        "url": `${baseUrl}/locations/${slug}`,
-        "logo": `${baseUrl}${iconUrl}`,
-        "image": `${baseUrl}${iconUrl}`,
-        "description": `5-star luxury mobile spa and in-villa massage delivery in ${locationName}, Bali. Certified therapists arrive at your private villa or hotel with fresh linens, portable setup, and organic oils.`,
-        "telephone": "+6282266554600",
-        "priceRange": "$$",
-        "currenciesAccepted": "IDR, USD, AUD, EUR, GBP, SGD",
-        "paymentAccepted": "Cash, Credit Card, Visa, Mastercard, Bank Transfer, QRIS, Wise",
-        "areaServed": {
-            "@type": "Place",
-            "name": `${locationName}, Bali`,
-            "geo": {
-                "@type": "GeoCoordinates",
-                "latitude": coords.lat,
-                "longitude": coords.lng
-            }
-        },
-        "address": {
-            "@type": "PostalAddress",
-            "addressLocality": locationName,
-            "addressRegion": "Bali",
-            "addressCountry": "ID"
-        },
-        "geo": {
-            "@type": "GeoCoordinates",
-            "latitude": coords.lat,
-            "longitude": coords.lng
-        },
-        "openingHoursSpecification": [
+        "@graph": [
             {
-                "@type": "OpeningHoursSpecification",
-                "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
-                "opens": "08:00",
-                "closes": "23:30"
+                "@type": "BreadcrumbList",
+                "@id": `${baseUrl}/locations/${slug}#breadcrumb`,
+                "itemListElement": [
+                    {
+                        "@type": "ListItem",
+                        "position": 1,
+                        "name": "Home",
+                        "item": baseUrl
+                    },
+                    {
+                        "@type": "ListItem",
+                        "position": 2,
+                        "name": "Service Areas",
+                        "item": `${baseUrl}/service-areas`
+                    },
+                    {
+                        "@type": "ListItem",
+                        "position": 3,
+                        "name": `${locationName} Massage Home Service`,
+                        "item": `${baseUrl}/locations/${slug}`
+                    }
+                ]
+            },
+            {
+                "@type": ["DaySpa", "HealthAndBeautyBusiness", "LocalBusiness"],
+                "@id": `${baseUrl}/locations/${slug}#business`,
+                "name": `${brandName} ${locationName} - Massage Home Service & Outcall Spa`,
+                "alternateName": [
+                    `Therapick Massage Home Service ${locationName}`,
+                    `Outcall Massage ${locationName}`,
+                    `Home Massage ${locationName}`,
+                    `Pijat Panggilan ${locationName}`,
+                    `In Villa Massage ${locationName}`
+                ],
+                "url": `${baseUrl}/locations/${slug}`,
+                "logo": `${baseUrl}${iconUrl}`,
+                "image": `${baseUrl}${iconUrl}`,
+                "description": `5-star certified massage home service and outcall spa in ${locationName}, Bali. Professional therapists arrive at your private villa or hotel within 45-60 minutes with fresh linens, portable setup, and organic oils. Pijat panggilan ${locationName} profesional.`,
+                "telephone": "+6282266554600",
+                "priceRange": "$$",
+                "currenciesAccepted": "IDR, USD, AUD, EUR, GBP, SGD",
+                "paymentAccepted": "Cash, Credit Card, Visa, Mastercard, Bank Transfer, QRIS, Wise",
+                "knowsAbout": [
+                    `Massage Home Service ${locationName}`,
+                    `Outcall Massage ${locationName}`,
+                    `Home Massage ${locationName}`,
+                    `In Villa Massage ${locationName}`,
+                    `Pijat Panggilan ${locationName}`,
+                    `Pijat Panggilan Bali`,
+                    `Balinese Massage ${locationName}`,
+                    `Deep Tissue Massage ${locationName}`,
+                    `Couples Massage ${locationName}`
+                ],
+                "areaServed": {
+                    "@type": "Place",
+                    "name": `${locationName}, Bali`,
+                    "geo": {
+                        "@type": "GeoCoordinates",
+                        "latitude": coords.lat,
+                        "longitude": coords.lng
+                    }
+                },
+                "address": {
+                    "@type": "PostalAddress",
+                    "addressLocality": locationName,
+                    "addressRegion": "Bali",
+                    "addressCountry": "ID"
+                },
+                "geo": {
+                    "@type": "GeoCoordinates",
+                    "latitude": coords.lat,
+                    "longitude": coords.lng
+                },
+                "openingHoursSpecification": [
+                    {
+                        "@type": "OpeningHoursSpecification",
+                        "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+                        "opens": "08:00",
+                        "closes": "23:30"
+                    }
+                ]
+            },
+            {
+                "@type": "Service",
+                "@id": `${baseUrl}/locations/${slug}#service`,
+                "name": `Massage Home Service & Outcall Spa in ${locationName}`,
+                "serviceType": "In-Villa Massage & Outcall Spa Service",
+                "provider": {
+                    "@id": `${baseUrl}/locations/${slug}#business`
+                },
+                "areaServed": {
+                    "@type": "Place",
+                    "name": `${locationName}, Bali`
+                },
+                "description": `Luxury in-villa massage and mobile spa delivery across ${locationName}, Bali. Certified therapists arrive at your private villa or hotel within 45-60 minutes.`,
+                "offers": {
+                    "@type": "Offer",
+                    "priceCurrency": "IDR",
+                    "availability": "https://schema.org/InStock"
+                }
+            },
+            {
+                "@type": "FAQPage",
+                "@id": `${baseUrl}/locations/${slug}#faq`,
+                "mainEntity": [
+                    {
+                        "@type": "Question",
+                        "name": `Can I book massage home service or outcall massage in ${locationName} with ${brandName}?`,
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": `Yes, ${brandName} provides professional 5-star massage home service and outcall spa treatments directly to your private villa, resort, or hotel room in ${locationName}, Bali within 45-60 minutes.`
+                        }
+                    },
+                    {
+                        "@type": "Question",
+                        "name": `How quickly do massage therapists arrive at villas in ${locationName}?`,
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": `Our certified therapists typically arrive at your villa or hotel in ${locationName} within 45 to 60 minutes after booking confirmation, bringing complete professional spa equipment including sanitized linens and organic oils.`
+                        }
+                    },
+                    {
+                        "@type": "Question",
+                        "name": `Apakah melayani pijat panggilan ke hotel atau villa di ${locationName}?`,
+                        "acceptedAnswer": {
+                            "@type": "Answer",
+                            "text": `Ya, kami melayani pijat panggilan profesional langsung ke hotel, resort, dan villa di seluruh area ${locationName}. Terapis bersertifikat kami tiba tepat waktu dengan perlengkapan spa lengkap dan higienis.`
+                        }
+                    }
+                ]
             }
         ]
     };

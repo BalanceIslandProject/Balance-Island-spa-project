@@ -12,18 +12,22 @@ export default function FaqSection() {
 
   const faqs = [
     {
-      q: "What is the best home spa in Bali?",
-      a: `We are highly rated as one of the best luxury mobile spas in Bali. ${brandName} specializes in bringing 5-star professional spa treatments, premium organic oils, and certified therapists directly to your private villa or hotel across the island.`
+      q: "What is the best massage home service and outcall spa in Bali?",
+      a: `We are highly rated as Bali's premier luxury massage home service and outcall spa platform. ${brandName} specializes in bringing 5-star professional spa treatments, portable massage beds, fresh sanitized linens, and organic oils directly to your private villa or hotel across Bali within 45 to 60 minutes.`
     },
     {
-      q: "Do you provide massage services in Canggu and Seminyak?",
-      a: "Yes, we offer premium mobile massage and spa services directly to your villa or hotel in Canggu, Seminyak, Umalas, and surrounding areas. Skip the Bali traffic and let our therapists bring the luxury spa experience to your doorstep."
+      q: "How does outcall massage and home service work in Bali?",
+      a: "Outcall massage means the complete 5-star spa experience is delivered directly to your private villa, resort suite, or hotel room. Our certified therapists arrive with portable massage beds, fresh linens, organic oils, and ambient soundscapes. You enjoy deep relaxation without traveling through Bali traffic."
     },
     {
-      q: "Is in-villa massage available in Ubud?",
+      q: "Do you provide massage home service in Canggu, Seminyak, and Ubud?",
       a: siteBrandFilter === 'therapick'
-        ? "Absolutely! Therapick delivers 5-star mobile massage directly to private villas and hotels across Ubud, Canggu, Seminyak, Uluwatu, Sanur, Nusa Dua, and all of Bali."
-        : `Absolutely! Ubud is our sanctuary. Whether you are staying in a jungle resort or a private villa in Ubud, our mobile spa service delivers profound relaxation with authentic Balinese techniques.`
+        ? "Yes! Therapick delivers 5-star massage home service and outcall spa treatments directly to private villas and hotels across Canggu, Seminyak, Ubud, Uluwatu, Sanur, Nusa Dua, Jimbaran, and Kuta within 45–60 minutes."
+        : `Absolutely! Ubud is our sanctuary. Whether you are staying in a jungle resort or a private villa in Ubud, our massage home service delivers profound relaxation with authentic Balinese techniques.`
+    },
+    {
+      q: "Apakah melayani pijat panggilan ke hotel dan villa di Bali?",
+      a: "Ya, kami melayani pijat panggilan profesional langsung ke hotel, resort, dan villa di seluruh area Seminyak, Canggu, Ubud, Uluwatu, Sanur, Nusa Dua, Jimbaran, dan Denpasar. Terapis bersertifikat, sopan, higienis bintang lima, dan membawa seluruh perlengkapan spa lengkap."
     },
     {
       q: "Do you offer couples massage?",

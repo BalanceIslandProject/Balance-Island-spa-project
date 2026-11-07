@@ -27,11 +27,24 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
       },
       // Explicitly allow leading Generative Engine Optimization (GEO) & AI search agents
       {
-        userAgent: ['GPTBot', 'ChatGPT-User', 'Google-Extended', 'PerplexityBot', 'ClaudeBot', 'Applebot-Extended'],
+        userAgent: [
+          'GPTBot',
+          'ChatGPT-User',
+          'OAI-SearchBot',
+          'PerplexityBot',
+          'ClaudeBot',
+          'anthropic-ai',
+          'Google-Extended',
+          'Applebot-Extended',
+          'Amazonbot',
+          'cohere-ai',
+          'Meta-ExternalAgent'
+        ],
         allow: '/',
         disallow: ['/admin/', '/api/'],
       }
     ],
     sitemap: `${baseUrl}/sitemap.xml`,
+    host: baseUrl,
   };
 }

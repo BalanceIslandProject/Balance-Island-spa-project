@@ -439,12 +439,15 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
 
             <div className="relative z-10 max-w-7xl mx-auto px-6 pt-24 md:pt-36">
                 
-                {/* Slogan */}
-                <div className="md:hidden mt-4 mb-6 px-2">
-                    <h1 className="font-serif text-3xl text-primary font-medium tracking-tight">
-                        Home Spa in <br/>
-                        <span className="italic opacity-80">{locationName}</span>
+                {/* Slogan & Heading */}
+                <div className="mt-4 mb-6 px-2">
+                    <h1 className="font-serif text-3xl md:text-5xl text-primary font-medium tracking-tight">
+                        Massage Home Service in <br className="hidden md:block"/>
+                        <span className="italic opacity-85">{locationName}</span>
                     </h1>
+                    <p className="mt-2 text-xs md:text-sm text-text-muted font-light max-w-2xl">
+                        Certified 5-star therapists arrive at your private villa or hotel in {locationName} within 45–60 minutes. Pijat panggilan {locationName} profesional with complete portable spa setup.
+                    </p>
                 </div>
 
 
