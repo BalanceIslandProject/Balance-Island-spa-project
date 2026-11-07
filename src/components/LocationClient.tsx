@@ -6,6 +6,7 @@ import { Bell, Search, Heart, Cloud, Droplet, User, Flame, Clock, ArrowRight, X,
 import Link from 'next/link';
 import { saveBookingToSupabase } from '@/lib/bookingUtils';
 import { calculateCartTotal, getItemMultiplier, isCoupleTreatment } from '@/lib/pricingUtils';
+import { parseTreatmentInclusions } from '@/lib/treatmentUtils';
 import { useCart } from '@/context/CartContext';
 import { useSpa } from '@/context/SpaContext';
 import SeoExpandedContent from '@/components/SeoExpandedContent';
@@ -1930,45 +1931,7 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                     const isCouple = isCoupleTreatment(pt.title);
 
                     // Robust parsing of treatment inclusions and description
-                    let descClean = pt.desc || '';
-                    let inclusions: { duration: string; name: string }[] = [];
-                    if (pt.desc) {
-                        const splitRegex = /(?:Treatment\s*Includes|What(?:'s|\s+is)\s*Included|Package\s*Includes)\s*:?\s*/i;
-                        const parts = pt.desc.split(splitRegex);
-                        descClean = parts[0].trim();
-                        const rawInclusions = parts.length > 1 ? parts.slice(1).join(' ').trim() : '';
-
-                        if (rawInclusions) {
-                            // Extract items like "60 Minutes – Balinese Healing Touch", "45 Minutes - Body Scrub", etc.
-                            const itemRegex = /(\d+\s*(?:Minutes?|Mins?))\s*[–\-:]\s*([^0-9–\-:]+?)(?=(?:\d+\s*(?:Minutes?|Mins?)\s*[–\-:])|$)/gi;
-                            let match;
-                            while ((match = itemRegex.exec(rawInclusions)) !== null) {
-                                const dur = match[1].trim();
-                                const name = match[2].trim().replace(/^[•\-\*,\s]+|[•\-\*,\s]+$/g, '');
-                                if (name) {
-                                    inclusions.push({ duration: dur, name });
-                                }
-                            }
-
-                            // Fallback if newline-separated
-                            if (inclusions.length === 0) {
-                                const lines = rawInclusions.split('\n').map((l: string) => l.trim()).filter(Boolean);
-                                for (const line of lines) {
-                                    const durMatch = line.match(/^(\d+\s*(?:Minutes?|Mins?))\s*[–\-:]\s*(.+)/i) || 
-                                                     line.match(/^(.+?)\s*\((\d+\s*(?:Minutes?|Mins?))\)/i);
-                                    if (durMatch) {
-                                        if (durMatch[1].match(/\d+\s*(?:Minutes?|Mins?)/i)) {
-                                            inclusions.push({ duration: durMatch[1].trim(), name: durMatch[2].trim() });
-                                        } else {
-                                            inclusions.push({ duration: durMatch[2].trim(), name: durMatch[1].trim() });
-                                        }
-                                    } else {
-                                        inclusions.push({ duration: '', name: line.replace(/^[•\-\*,\s]+/, '') });
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    const { descClean, inclusions } = parseTreatmentInclusions(pt.desc);
 
                     const handleGoToBreakdown = () => {
                         setSelectedPartnerBreakdown({

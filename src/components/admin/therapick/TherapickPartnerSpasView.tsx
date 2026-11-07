@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useSpa, SpaPartner, PartnerTreatment } from '@/context/SpaContext';
+import { parseTreatmentInclusions, formatTreatmentDescription } from '@/lib/treatmentUtils';
 
 interface DurationOption {
   duration: string;
@@ -70,6 +71,8 @@ export default function TherapickPartnerSpasView() {
     title: '',
     category: 'Massage',
     desc: '',
+    experience_desc: '',
+    inclusions: [] as { name: string; duration: string }[],
     image_url: '',
     order: 1,
     is_published: true,
@@ -420,14 +423,18 @@ export default function TherapickPartnerSpasView() {
     setTreatmentForm({
       partner_id: defaultPartner?.id || partners[0]?.id || '',
       title: '',
-      category: 'Massage',
+      category: 'Package',
       desc: '',
+      experience_desc: '',
+      inclusions: [
+        { name: '', duration: '60' },
+        { name: '', duration: '45' }
+      ],
       image_url: '',
       order: (treatments.length || 0) + 1,
       is_published: true,
       options: [
-        { duration: '60', price: '450,000', net_price: '' },
-        { duration: '90', price: '600,000', net_price: '' }
+        { duration: '120', price: '950,000', net_price: '' }
       ]
     });
     setIsTreatmentModalOpen(true);
@@ -436,11 +443,19 @@ export default function TherapickPartnerSpasView() {
   const openEditTreatmentModal = (item: PartnerTreatment, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     setEditingTreatment(item);
+    const parsed = parseTreatmentInclusions(item.desc);
     setTreatmentForm({
       partner_id: item.partner_id || partners.find(p => p.name === item.partner_name)?.id || partners[0]?.id || '',
       title: item.title,
       category: item.category || 'Massage',
       desc: item.desc || '',
+      experience_desc: parsed.descClean,
+      inclusions: parsed.inclusions.length > 0
+        ? parsed.inclusions.map(inc => ({
+            name: inc.name,
+            duration: inc.duration.replace(/[^0-9]/g, '') || inc.duration
+          }))
+        : [{ name: '', duration: '' }],
       image_url: item.image_url || '',
       order: item.order || 1,
       is_published: item.is_published !== false,
@@ -476,6 +491,11 @@ export default function TherapickPartnerSpasView() {
     const targetId = editingTreatment?.id || (typeof crypto !== 'undefined' ? crypto.randomUUID() : `pt_${Date.now()}`);
     const nowIso = new Date().toISOString();
 
+    const finalDesc = formatTreatmentDescription(
+      treatmentForm.experience_desc || treatmentForm.desc,
+      treatmentForm.inclusions
+    );
+
     const record: PartnerTreatment = {
       id: targetId,
       brand: 'therapick',
@@ -489,7 +509,7 @@ export default function TherapickPartnerSpasView() {
       partner_tax_percentage: Number(selectedPartner.tax_percentage) || 0,
       title: treatmentForm.title.trim(),
       category: treatmentForm.category,
-      desc: treatmentForm.desc.trim() || null,
+      desc: finalDesc.trim() || null,
       image_url: treatmentForm.image_url.trim() || null,
       options: treatmentForm.options.filter(o => o.duration && o.price),
       order: Number(treatmentForm.order) || 1,
@@ -2046,18 +2066,104 @@ export default function TherapickPartnerSpasView() {
                 </div>
               </div>
 
-              {/* Description */}
+              {/* Description / Experience Overview */}
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-[var(--fitlo-ink)] mb-1">
-                  Description / Highlights
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-[var(--fitlo-ink)]">
+                    Description / Highlights
+                  </label>
+                  <span className="text-[10px] text-[var(--fitlo-muted)]">General experience overview</span>
+                </div>
                 <textarea
-                  rows={2}
-                  placeholder="Luxurious signature ritual performed in private garden gazebo at partner spa..."
-                  value={treatmentForm.desc}
-                  onChange={e => setTreatmentForm({ ...treatmentForm, desc: e.target.value })}
+                  rows={3}
+                  placeholder="Indulge in a luxurious head-to-toe spa experience featuring a synchronized four-hands massage, rejuvenating body scrub, relaxing bubble bath, refreshing facial, and nourishing creambath..."
+                  value={treatmentForm.experience_desc}
+                  onChange={e => setTreatmentForm({ ...treatmentForm, experience_desc: e.target.value })}
                   className="fitlo-input w-full text-xs resize-none"
                 />
+              </div>
+
+              {/* Treatment Inclusions (Step-by-Step Breakdown) */}
+              <div className="space-y-2.5 pt-2 border-t border-[var(--fitlo-line)]">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-[var(--fitlo-ink)] flex items-center gap-1.5">
+                      <span>Treatment Inclusions</span>
+                      <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                        {treatmentForm.inclusions.filter(i => i.name.trim()).length} Steps Included
+                      </span>
+                    </label>
+                    <span className="text-[10px] text-[var(--fitlo-muted)]">
+                      Always formatted with bold titles and duration badges on website pop-up (like first listing).
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setTreatmentForm({
+                      ...treatmentForm,
+                      inclusions: [...treatmentForm.inclusions, { name: '', duration: '45' }]
+                    })}
+                    className="fitlo-btn fitlo-btn--secondary text-[11px] py-1 px-2.5 flex items-center gap-1"
+                  >
+                    <Plus size={12} />
+                    <span>Add Step</span>
+                  </button>
+                </div>
+
+                <div className="space-y-2">
+                  {treatmentForm.inclusions.map((inc, idx) => (
+                    <div key={idx} className="flex items-center gap-2 p-2 rounded-xl bg-[var(--fitlo-surface)] border border-[var(--fitlo-line)]">
+                      <div className="w-5 h-5 rounded-md bg-black text-white flex items-center justify-center font-bold text-[9px] shrink-0">
+                        {idx + 1}
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="e.g. Synchronicity Massage (Four-Hands Massage)"
+                        value={inc.name}
+                        onChange={e => {
+                          const updated = [...treatmentForm.inclusions];
+                          updated[idx] = { ...updated[idx], name: e.target.value };
+                          setTreatmentForm({ ...treatmentForm, inclusions: updated });
+                        }}
+                        className="fitlo-input flex-1 text-xs py-1.5"
+                      />
+                      <div className="flex items-center gap-1 w-24 shrink-0">
+                        <input
+                          type="text"
+                          placeholder="60"
+                          value={inc.duration}
+                          onChange={e => {
+                            const updated = [...treatmentForm.inclusions];
+                            updated[idx] = { ...updated[idx], duration: e.target.value.replace(/[^0-9]/g, '') };
+                            setTreatmentForm({ ...treatmentForm, inclusions: updated });
+                          }}
+                          className="fitlo-input w-14 text-xs py-1.5 text-center font-bold"
+                        />
+                        <span className="text-[10px] font-bold text-gray-500 uppercase">Mins</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updated = treatmentForm.inclusions.filter((_, i) => i !== idx);
+                          setTreatmentForm({ ...treatmentForm, inclusions: updated.length > 0 ? updated : [{ name: '', duration: '' }] });
+                        }}
+                        className="p-1.5 text-gray-400 hover:text-rose-500 transition-colors"
+                        title="Remove step"
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                {treatmentForm.inclusions.some(i => i.name.trim() && i.duration) && (
+                  <div className="flex items-center justify-between text-[11px] font-medium text-gray-600 bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-200/60">
+                    <span>Total Inclusions Breakdown Duration:</span>
+                    <span className="font-bold text-gray-900">
+                      {treatmentForm.inclusions.reduce((sum, item) => sum + (parseInt(item.duration, 10) || 0), 0)} Mins
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* Cover Photo Upload & URL */}

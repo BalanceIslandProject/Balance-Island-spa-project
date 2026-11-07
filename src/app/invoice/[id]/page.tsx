@@ -7,6 +7,7 @@ import { CheckCircle2, ChevronLeft, User, Calendar, Clock, MapPin, DoorOpen, Dow
 import Link from 'next/link';
 import { Suspense } from 'react';
 import { supabase } from '@/lib/supabase';
+import { parseTreatmentInclusions } from '@/lib/treatmentUtils';
 
 function InvoicePage() {
     const params = useParams();
@@ -564,37 +565,7 @@ function InvoicePage() {
                                     <span className="text-xs">Loading details...</span>
                                 </div>
                             ) : treatmentDetails ? (() => {
-                                let descClean = treatmentDetails.desc || '';
-                                let inclusions: { duration: string; name: string }[] = [];
-
-                                if (treatmentDetails.desc) {
-                                    const splitRegex = /(?:Treatment\s*Includes|What(?:'s|\s+is)\s*Included|Package\s*Includes)\s*:?\s*/i;
-                                    const parts = treatmentDetails.desc.split(splitRegex);
-                                    descClean = parts[0].trim();
-                                    const rawInclusions = parts.length > 1 ? parts.slice(1).join(' ').trim() : '';
-
-                                    if (rawInclusions) {
-                                        const itemRegex = /(\d+\s*(?:Minutes?|Mins?))\s*[–\-:]\s*([^0-9–\-:]+?)(?=(?:\d+\s*(?:Minutes?|Mins?)\s*[–\-:])|$)/gi;
-                                        let match;
-                                        while ((match = itemRegex.exec(rawInclusions)) !== null) {
-                                            const dur = match[1].trim();
-                                            const name = match[2].trim().replace(/^[•\-\*,\s]+|[•\-\*,\s]+$/g, '');
-                                            if (name) inclusions.push({ duration: dur, name });
-                                        }
-
-                                        if (inclusions.length === 0) {
-                                            const lines = rawInclusions.split('\n').map((l: string) => l.trim()).filter(Boolean);
-                                            for (const line of lines) {
-                                                const durMatch = line.match(/^(\d+\s*(?:Minutes?|Mins?))\s*[–\-:]\s*(.+)/i);
-                                                if (durMatch) {
-                                                    inclusions.push({ duration: durMatch[1].trim(), name: durMatch[2].trim() });
-                                                } else {
-                                                    inclusions.push({ duration: '', name: line.replace(/^[•\-\*,\s]+/, '') });
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
+                                const { descClean, inclusions } = parseTreatmentInclusions(treatmentDetails.desc);
 
                                 return (
                                     <>
