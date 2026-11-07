@@ -28,12 +28,25 @@ const PARTNER_CATEGORIES = [
 ];
 
 function ExploreContent() {
-    const { treatments, partnerTreatments } = useSpa();
+    const { treatments, partnerTreatments, siteBrandFilter } = useSpa();
     const searchParams = useSearchParams();
     const router = useRouter();
 
+    const isTherapick = useMemo(() => {
+        if (typeof window !== 'undefined') {
+            const host = window.location.hostname.toLowerCase();
+            if (host.includes('homespaubud') || host.includes('ubudhomespa') || host.includes('elexoir')) {
+                return false;
+            }
+            if (host.includes('therapick') || host.includes('booktherapick')) {
+                return true;
+            }
+        }
+        return siteBrandFilter === 'therapick';
+    }, [siteBrandFilter]);
+
     const locationQuery = searchParams.get('location') || '';
-    const initialTab = searchParams.get('tab') === 'partner' || searchParams.get('type') === 'partner' ? 'partner' : 'homespa';
+    const initialTab = (isTherapick && (searchParams.get('tab') === 'partner' || searchParams.get('type') === 'partner')) ? 'partner' : 'homespa';
 
     const [activeTab, setActiveTab] = useState<'homespa' | 'partner'>(initialTab);
     const [activeCategory, setActiveCategory] = useState('all');
@@ -48,13 +61,17 @@ function ExploreContent() {
 
     // Sync active tab with URL query parameter
     useEffect(() => {
+        if (!isTherapick) {
+            setActiveTab('homespa');
+            return;
+        }
         const t = searchParams.get('tab') || searchParams.get('type');
         if (t === 'partner') {
             setActiveTab('partner');
         } else if (t === 'homespa') {
             setActiveTab('homespa');
         }
-    }, [searchParams]);
+    }, [searchParams, isTherapick]);
 
     useEffect(() => {
         if (locationQuery) {
@@ -64,6 +81,7 @@ function ExploreContent() {
 
     // Reset category when switching between Home Spa and Partner Spas
     const handleTabChange = (tab: 'homespa' | 'partner') => {
+        if (!isTherapick && tab === 'partner') return;
         setActiveTab(tab);
         setActiveCategory('all');
         setIsServiceDropdownOpen(false);
@@ -106,7 +124,7 @@ function ExploreContent() {
 
     // Filtered Partner Spa Treatments
     const filteredPartnerTreatments = useMemo(() => {
-        if (!partnerTreatments) return [];
+        if (!isTherapick || !partnerTreatments) return [];
         return partnerTreatments.filter(pt => {
             const matchesCategory = activeCategory === 'all' || (pt.category && pt.category.toLowerCase() === activeCategory.toLowerCase());
             const matchesSearch = !searchQuery.trim() ||
@@ -121,7 +139,7 @@ function ExploreContent() {
 
             return matchesCategory && matchesSearch && matchesPrice;
         });
-    }, [partnerTreatments, activeCategory, searchQuery, maxPrice]);
+    }, [isTherapick, partnerTreatments, activeCategory, searchQuery, maxPrice]);
 
     // Group filtered partner treatments by partner spa
     const partnerGroups = useMemo(() => {
@@ -143,20 +161,20 @@ function ExploreContent() {
     const activeCategoriesList = activeTab === 'homespa' ? HOMESPA_CATEGORIES : PARTNER_CATEGORIES;
 
     return (
-        <main className="min-h-screen bg-transparent relative overflow-hidden pb-24 pt-32 sm:pt-36">
+        <main className="min-h-screen bg-transparent relative overflow-hidden pb-24 pt-28 sm:pt-32">
             {/* Ambient Background Glows matching main website */}
             <div className="fixed top-[-10%] left-1/2 -translate-x-1/2 w-[120%] md:w-[800px] h-[600px] bg-secondary/30 blur-[120px] rounded-full -z-10 pointer-events-none opacity-60 mix-blend-multiply" />
             <div className="fixed top-[15%] right-[-10%] w-[500px] h-[500px] bg-accent/20 blur-[100px] rounded-full -z-10 pointer-events-none opacity-50" />
             <div className="fixed bottom-[10%] left-[-10%] w-[500px] h-[500px] bg-emerald-500/10 blur-[120px] rounded-full -z-10 pointer-events-none opacity-30" />
 
-            {/* Search & Categories Sticky Header (Glass Theme matching main website bg) */}
-            <div className="fixed top-0 left-0 right-0 z-50 bg-white/40 backdrop-blur-xl pt-4 pb-2.5 border-b border-black/5">
+            {/* Floating Search & Categories Header (Transparent floating design - no background container strip) */}
+            <div className="fixed top-0 left-0 right-0 z-50 pt-3.5 pb-2 pointer-events-none">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     
                     {/* Top Row: Back, Search & Price Filter */}
-                    <div className="mb-2 relative z-30">
+                    <div className="mb-2 relative z-30 pointer-events-auto">
                         <div className="flex items-center gap-2.5 w-full">
-                            <div className="flex-1 bg-white/80 backdrop-blur-md rounded-full border border-gray-200/90 h-12 flex items-center px-1.5 focus-within:border-gray-900/40 transition-all">
+                            <div className="flex-1 bg-white/90 backdrop-blur-md rounded-full border border-gray-200/90 h-12 flex items-center px-1.5 focus-within:border-gray-900/40 transition-all shadow-xs">
                                 <Link 
                                     href="/" 
                                     className="w-8 h-8 rounded-full bg-black hover:bg-neutral-800 text-white transition-all flex items-center justify-center shrink-0 active:scale-95 ml-1"
@@ -170,7 +188,7 @@ function ExploreContent() {
                                         type="text"
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
-                                        placeholder={activeTab === 'homespa' ? "Search in-villa massage & spa..." : "Search partner spas & packages..."}
+                                        placeholder={isTherapick && activeTab === 'partner' ? "Search partner spas & packages..." : "Search in-villa massage & spa..."}
                                         className="text-[13px] font-medium text-gray-900 bg-transparent border-none outline-none focus:ring-0 placeholder:text-gray-400 w-full p-0 m-0"
                                     />
                                     {searchQuery && (
@@ -187,10 +205,10 @@ function ExploreContent() {
                             </div>
                             <button 
                                 onClick={() => setIsPriceFilterOpen(!isPriceFilterOpen)}
-                                className={`w-12 h-12 rounded-full border flex items-center justify-center shrink-0 transition-all cursor-pointer ${
+                                className={`w-12 h-12 rounded-full border flex items-center justify-center shrink-0 transition-all cursor-pointer shadow-xs ${
                                     isPriceFilterOpen 
                                         ? 'bg-[#1D1D1F] text-white border-black' 
-                                        : 'bg-white/80 backdrop-blur-md text-gray-700 border-gray-200/90 hover:bg-white hover:border-gray-400'
+                                        : 'bg-white/90 backdrop-blur-md text-gray-700 border-gray-200/90 hover:bg-white hover:border-gray-400'
                                 }`}
                                 aria-label="Filter by price"
                             >
@@ -205,7 +223,7 @@ function ExploreContent() {
                                     initial={{ opacity: 0, y: -10 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, y: -10 }}
-                                    className="absolute top-full right-0 mt-3 w-[calc(100%-8px)] mx-1 md:w-72 bg-white rounded-2xl p-5 shadow-[0_20px_40px_rgb(0,0,0,0.12)] border border-gray-100 z-30"
+                                    className="absolute top-full right-0 mt-3 w-[calc(100%-8px)] mx-1 md:w-72 bg-white rounded-2xl p-5 shadow-[0_20px_40px_rgb(0,0,0,0.12)] border border-gray-100 z-30 pointer-events-auto"
                                 >
                                     <div className="flex items-center justify-between mb-4">
                                         <span className="text-[10px] font-bold uppercase tracking-widest text-primary/80">Max Price</span>
@@ -229,111 +247,115 @@ function ExploreContent() {
                         </AnimatePresence>
                     </div>
 
-                    {/* Filter Row: Service Toggle Dropdown (on the left of All filter) + Category Chips */}
-                    <div className="flex items-center gap-2 pt-0.5 pb-0.5">
+                    {/* Filter Row: Service Toggle Dropdown (Therapick only) + Category Chips */}
+                    <div className="flex items-center gap-2 pt-0.5 pb-0.5 pointer-events-auto">
                         
-                        {/* Dropdown Toggle: Home Spa / Partner Spas with Notification Badge */}
-                        <div className="relative shrink-0 z-30">
-                            <button
-                                type="button"
-                                onClick={() => setIsServiceDropdownOpen(!isServiceDropdownOpen)}
-                                className={`relative flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold active:scale-95 transition-all cursor-pointer whitespace-nowrap ${
-                                    isServiceDropdownOpen
-                                        ? 'bg-black text-white border border-black ring-2 ring-black/10'
-                                        : 'bg-[#1D1D1F] hover:bg-black text-white border border-black'
-                                }`}
-                                aria-label="Select service mode"
-                            >
-                                <span>{activeTab === 'homespa' ? 'Home Spa' : 'Partner Spas'}</span>
-                                <ChevronDown 
-                                    size={13} 
-                                    className={`text-gray-400 transition-transform duration-200 ${isServiceDropdownOpen ? 'rotate-180 text-white' : ''}`} 
-                                />
-
-                                {/* Notification Look for Partner Spas (Floating Red Badge) */}
-                                {partnerTreatments && partnerTreatments.length > 0 && (
-                                    <span 
-                                        className="absolute -top-1.5 -right-1 flex h-4 min-w-[16px] px-1 items-center justify-center rounded-full bg-[#FF3B30] text-[9px] font-black text-white ring-2 ring-white"
-                                        title={`${partnerTreatments.length} partner treatments available`}
+                        {/* Dropdown Toggle: Home Spa / Partner Spas with Notification Badge (Therapick Only) */}
+                        {isTherapick && (
+                            <>
+                                <div className="relative shrink-0 z-30">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsServiceDropdownOpen(!isServiceDropdownOpen)}
+                                        className={`relative flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold active:scale-95 transition-all cursor-pointer whitespace-nowrap shadow-xs ${
+                                            isServiceDropdownOpen
+                                                ? 'bg-black text-white border border-black ring-2 ring-black/10'
+                                                : 'bg-[#1D1D1F] hover:bg-black text-white border border-black'
+                                        }`}
+                                        aria-label="Select service mode"
                                     >
-                                        {partnerTreatments.length}
-                                    </span>
-                                )}
-                            </button>
-
-                            {/* Dropdown Menu Popover */}
-                            <AnimatePresence>
-                                {isServiceDropdownOpen && (
-                                    <>
-                                        <div 
-                                            className="fixed inset-0 z-40" 
-                                            onClick={() => setIsServiceDropdownOpen(false)} 
+                                        <span>{activeTab === 'homespa' ? 'Home Spa' : 'Partner Spas'}</span>
+                                        <ChevronDown 
+                                            size={13} 
+                                            className={`text-gray-400 transition-transform duration-200 ${isServiceDropdownOpen ? 'rotate-180 text-white' : ''}`} 
                                         />
-                                        <motion.div
-                                            initial={{ opacity: 0, y: -6, scale: 0.96 }}
-                                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                                            exit={{ opacity: 0, y: -6, scale: 0.96 }}
-                                            transition={{ duration: 0.15 }}
-                                            className="absolute top-full left-0 mt-2 w-56 bg-white/95 backdrop-blur-xl rounded-2xl p-1.5 shadow-[0_12px_36px_rgba(0,0,0,0.18)] border border-gray-100 z-50 overflow-hidden"
-                                        >
-                                            <div className="px-3 py-1.5 text-[9px] font-bold tracking-widest uppercase text-gray-400 border-b border-gray-100 mb-1">
-                                                Select Service
-                                            </div>
 
-                                            {/* Option 1: Home Spa */}
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    handleTabChange('homespa');
-                                                    setIsServiceDropdownOpen(false);
-                                                }}
-                                                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                                                    activeTab === 'homespa'
-                                                        ? 'bg-[#1D1D1F] text-white'
-                                                        : 'text-gray-700 hover:bg-gray-100 hover:text-black'
-                                                }`}
+                                        {/* Notification Look for Partner Spas (Floating Red Badge) */}
+                                        {partnerTreatments && partnerTreatments.length > 0 && (
+                                            <span 
+                                                className="absolute -top-1.5 -right-1 flex h-4 min-w-[16px] px-1 items-center justify-center rounded-full bg-[#FF3B30] text-[9px] font-black text-white ring-2 ring-white"
+                                                title={`${partnerTreatments.length} partner treatments available`}
                                             >
-                                                <div className="flex items-center gap-2">
-                                                    <Home size={14} className={activeTab === 'homespa' ? 'text-white' : 'text-gray-400'} />
-                                                    <span>Home Spa</span>
-                                                </div>
-                                                {activeTab === 'homespa' && <Check size={14} className="text-white" />}
-                                            </button>
+                                                {partnerTreatments.length}
+                                            </span>
+                                        )}
+                                    </button>
 
-                                            {/* Option 2: Partner Spas */}
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    handleTabChange('partner');
-                                                    setIsServiceDropdownOpen(false);
-                                                }}
-                                                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer mt-1 ${
-                                                    activeTab === 'partner'
-                                                        ? 'bg-[#1D1D1F] text-white'
-                                                        : 'text-gray-700 hover:bg-gray-100 hover:text-black'
-                                                }`}
-                                            >
-                                                <div className="flex items-center gap-2">
-                                                    <Building2 size={14} className={activeTab === 'partner' ? 'text-white' : 'text-gray-400'} />
-                                                    <span>Partner Spas</span>
-                                                </div>
-                                                <div className="flex items-center gap-1.5">
-                                                    {partnerTreatments && partnerTreatments.length > 0 && (
-                                                        <span className="flex h-4 min-w-[16px] px-1.5 items-center justify-center rounded-full bg-[#FF3B30] text-[9px] font-black text-white">
-                                                            {partnerTreatments.length}
-                                                        </span>
-                                                    )}
-                                                    {activeTab === 'partner' && <Check size={14} className="text-white" />}
-                                                </div>
-                                            </button>
-                                        </motion.div>
-                                    </>
-                                )}
-                            </AnimatePresence>
-                        </div>
+                                    {/* Dropdown Menu Popover */}
+                                    <AnimatePresence>
+                                        {isServiceDropdownOpen && (
+                                            <>
+                                                <div 
+                                                    className="fixed inset-0 z-40 pointer-events-auto" 
+                                                    onClick={() => setIsServiceDropdownOpen(false)} 
+                                                />
+                                                <motion.div
+                                                    initial={{ opacity: 0, y: -6, scale: 0.96 }}
+                                                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                                                    exit={{ opacity: 0, y: -6, scale: 0.96 }}
+                                                    transition={{ duration: 0.15 }}
+                                                    className="absolute top-full left-0 mt-2 w-56 bg-white/95 backdrop-blur-xl rounded-2xl p-1.5 shadow-[0_12px_36px_rgba(0,0,0,0.18)] border border-gray-100 z-50 overflow-hidden pointer-events-auto"
+                                                >
+                                                    <div className="px-3 py-1.5 text-[9px] font-bold tracking-widest uppercase text-gray-400 border-b border-gray-100 mb-1">
+                                                        Select Service
+                                                    </div>
 
-                        {/* Subtle Vertical Divider */}
-                        <div className="h-5 w-px bg-gray-200 shrink-0" />
+                                                    {/* Option 1: Home Spa */}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            handleTabChange('homespa');
+                                                            setIsServiceDropdownOpen(false);
+                                                        }}
+                                                        className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                                                            activeTab === 'homespa'
+                                                                ? 'bg-[#1D1D1F] text-white'
+                                                                : 'text-gray-700 hover:bg-gray-100 hover:text-black'
+                                                        }`}
+                                                    >
+                                                        <div className="flex items-center gap-2">
+                                                            <Home size={14} className={activeTab === 'homespa' ? 'text-white' : 'text-gray-400'} />
+                                                            <span>Home Spa</span>
+                                                        </div>
+                                                        {activeTab === 'homespa' && <Check size={14} className="text-white" />}
+                                                    </button>
+
+                                                    {/* Option 2: Partner Spas */}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            handleTabChange('partner');
+                                                            setIsServiceDropdownOpen(false);
+                                                        }}
+                                                        className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer mt-1 ${
+                                                            activeTab === 'partner'
+                                                                ? 'bg-[#1D1D1F] text-white'
+                                                                : 'text-gray-700 hover:bg-gray-100 hover:text-black'
+                                                        }`}
+                                                    >
+                                                        <div className="flex items-center gap-2">
+                                                            <Building2 size={14} className={activeTab === 'partner' ? 'text-white' : 'text-gray-400'} />
+                                                            <span>Partner Spas</span>
+                                                        </div>
+                                                        <div className="flex items-center gap-1.5">
+                                                            {partnerTreatments && partnerTreatments.length > 0 && (
+                                                                <span className="flex h-4 min-w-[16px] px-1.5 items-center justify-center rounded-full bg-[#FF3B30] text-[9px] font-black text-white">
+                                                                    {partnerTreatments.length}
+                                                                </span>
+                                                            )}
+                                                            {activeTab === 'partner' && <Check size={14} className="text-white" />}
+                                                        </div>
+                                                    </button>
+                                                </motion.div>
+                                            </>
+                                        )}
+                                    </AnimatePresence>
+                                </div>
+
+                                {/* Subtle Vertical Divider */}
+                                <div className="h-5 w-px bg-gray-300/60 shrink-0" />
+                            </>
+                        )}
 
                         {/* Category Filter Chips (Starting with All Filter on the Right of Dropdown) */}
                         <div className="flex overflow-x-auto gap-2 no-scrollbar py-0.5 flex-1 min-w-0">
@@ -343,10 +365,10 @@ function ExploreContent() {
                                     <button
                                         key={cat.id}
                                         onClick={() => setActiveCategory(cat.id)}
-                                        className={`flex items-center justify-center px-4 py-1.5 rounded-[18px] whitespace-nowrap transition-all duration-200 shrink-0 cursor-pointer ${
+                                        className={`flex items-center justify-center px-4 py-1.5 rounded-[18px] whitespace-nowrap transition-all duration-200 shrink-0 cursor-pointer shadow-xs ${
                                             isActive 
                                                 ? 'bg-[#1D1D1F] text-white border border-black font-bold' 
-                                                : 'bg-white/80 backdrop-blur-md text-gray-700 border border-gray-200/90 hover:border-gray-400 hover:bg-white font-medium'
+                                                : 'bg-white/90 backdrop-blur-md text-gray-700 border border-gray-200/90 hover:border-gray-400 hover:bg-white font-medium'
                                         }`}
                                     >
                                         <span className="text-xs">{cat.label}</span>
@@ -466,9 +488,9 @@ function ExploreContent() {
                 )}
 
                 {/* ═══════════════════════════════════════════════════════════ */}
-                {/* VIEW 2: PARTNER SPAS & DESTINATION CENTERS                 */}
+                {/* VIEW 2: PARTNER SPAS & DESTINATION CENTERS (Therapick Only) */}
                 {/* ═══════════════════════════════════════════════════════════ */}
-                {activeTab === 'partner' && (
+                {isTherapick && activeTab === 'partner' && (
                     <motion.div
                         initial={{ opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
