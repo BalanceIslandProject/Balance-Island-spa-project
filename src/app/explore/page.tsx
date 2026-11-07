@@ -3,7 +3,7 @@
 import React, { useState, Suspense, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Search, Clock, ArrowLeft, X, SlidersHorizontal, MapPin, Building2, Plus, ArrowRight } from 'lucide-react';
+import { Search, Clock, ArrowLeft, X, SlidersHorizontal, MapPin, Building2, Plus, ArrowRight, ChevronDown, Check, Home } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useSpa, PartnerTreatment } from '@/context/SpaContext';
@@ -40,6 +40,7 @@ function ExploreContent() {
     const [searchQuery, setSearchQuery] = useState(locationQuery || '');
     const [maxPrice, setMaxPrice] = useState(2500000);
     const [isPriceFilterOpen, setIsPriceFilterOpen] = useState(false);
+    const [isServiceDropdownOpen, setIsServiceDropdownOpen] = useState(false);
 
     // Partner Details Modal State
     const [selectedPartnerDetails, setSelectedPartnerDetails] = useState<PartnerTreatment | null>(null);
@@ -65,6 +66,7 @@ function ExploreContent() {
     const handleTabChange = (tab: 'homespa' | 'partner') => {
         setActiveTab(tab);
         setActiveCategory('all');
+        setIsServiceDropdownOpen(false);
         const url = new URL(window.location.href);
         url.searchParams.set('tab', tab);
         window.history.replaceState({}, '', url.toString());
@@ -141,13 +143,13 @@ function ExploreContent() {
     const activeCategoriesList = activeTab === 'homespa' ? HOMESPA_CATEGORIES : PARTNER_CATEGORIES;
 
     return (
-        <main className="min-h-screen bg-white pb-24 pt-44">
+        <main className="min-h-screen bg-white pb-24 pt-32 sm:pt-36">
             {/* Search & Categories Sticky Header */}
-            <div className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md pt-5 pb-3 border-b border-gray-100 shadow-xs">
+            <div className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md pt-4 pb-2.5 border-b border-gray-100 shadow-xs">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     
                     {/* Top Row: Back, Search & Price Filter */}
-                    <div className="mb-3 relative z-30">
+                    <div className="mb-2 relative z-30">
                         <div className="flex items-center gap-2.5 w-full">
                             <div className="flex-1 bg-white rounded-full shadow-[0_2px_12px_rgb(0,0,0,0.06)] border border-gray-200/80 h-12 flex items-center px-1.5 hover:shadow-[0_4px_16px_rgb(0,0,0,0.09)] focus-within:border-gray-900/40 focus-within:shadow-[0_4px_18px_rgb(0,0,0,0.1)] transition-all">
                                 <Link 
@@ -222,57 +224,131 @@ function ExploreContent() {
                         </AnimatePresence>
                     </div>
 
-                    {/* Segmented Control Tabs: Home Spa vs Partner Spas */}
-                    <div className="flex items-center justify-center p-1 bg-gray-100/90 rounded-full max-w-xs sm:max-w-sm mx-auto mb-2.5 border border-gray-200/70">
-                        <button
-                            type="button"
-                            onClick={() => handleTabChange('homespa')}
-                            className={`flex-1 py-1.5 px-3 rounded-full text-xs font-bold transition-all text-center cursor-pointer whitespace-nowrap ${
-                                activeTab === 'homespa'
-                                    ? 'bg-[#1D1D1F] text-white shadow-xs'
-                                    : 'text-gray-600 hover:text-black'
-                            }`}
-                        >
-                            Home Spa
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => handleTabChange('partner')}
-                            className={`flex-1 py-1.5 px-3 rounded-full text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap ${
-                                activeTab === 'partner'
-                                    ? 'bg-[#1D1D1F] text-white shadow-xs'
-                                    : 'text-gray-600 hover:text-black'
-                            }`}
-                        >
-                            <span>Partner Spas</span>
-                            {partnerTreatments && partnerTreatments.length > 0 && (
-                                <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
-                                    activeTab === 'partner' ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-700'
-                                }`}>
-                                    {partnerTreatments.length}
-                                </span>
-                            )}
-                        </button>
-                    </div>
+                    {/* Filter Row: Service Toggle Dropdown (on the left of All filter) + Category Chips */}
+                    <div className="flex items-center gap-2 pt-0.5 pb-0.5">
+                        
+                        {/* Dropdown Toggle: Home Spa / Partner Spas with Notification Badge */}
+                        <div className="relative shrink-0 z-30">
+                            <button
+                                type="button"
+                                onClick={() => setIsServiceDropdownOpen(!isServiceDropdownOpen)}
+                                className={`relative flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold shadow-xs active:scale-95 transition-all cursor-pointer whitespace-nowrap ${
+                                    isServiceDropdownOpen
+                                        ? 'bg-black text-white border border-black ring-2 ring-black/10'
+                                        : 'bg-[#1D1D1F] hover:bg-black text-white border border-black'
+                                }`}
+                                aria-label="Select service mode"
+                            >
+                                <span>{activeTab === 'homespa' ? 'Home Spa' : 'Partner Spas'}</span>
+                                <ChevronDown 
+                                    size={13} 
+                                    className={`text-gray-400 transition-transform duration-200 ${isServiceDropdownOpen ? 'rotate-180 text-white' : ''}`} 
+                                />
 
-                    {/* Category Filter Chips */}
-                    <div className="flex overflow-x-auto gap-2 no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0 pt-1 pb-1">
-                        {activeCategoriesList.map((cat) => {
-                            const isActive = activeCategory === cat.id;
-                            return (
-                                <button
-                                    key={cat.id}
-                                    onClick={() => setActiveCategory(cat.id)}
-                                    className={`flex items-center justify-center px-4 py-1.5 rounded-[18px] whitespace-nowrap transition-all duration-200 shrink-0 cursor-pointer ${
-                                        isActive 
-                                            ? 'bg-[#1D1D1F] text-white border border-black font-bold' 
-                                            : 'bg-white text-gray-700 border border-gray-200/90 hover:border-gray-400 hover:bg-gray-50 font-medium'
-                                    }`}
-                                >
-                                    <span className="text-xs">{cat.label}</span>
-                                </button>
-                            );
-                        })}
+                                {/* Notification Look for Partner Spas (Floating Red Badge) */}
+                                {partnerTreatments && partnerTreatments.length > 0 && (
+                                    <span 
+                                        className="absolute -top-1.5 -right-1 flex h-4 min-w-[16px] px-1 items-center justify-center rounded-full bg-[#FF3B30] text-[9px] font-black text-white shadow-xs ring-2 ring-white"
+                                        title={`${partnerTreatments.length} partner treatments available`}
+                                    >
+                                        {partnerTreatments.length}
+                                    </span>
+                                )}
+                            </button>
+
+                            {/* Dropdown Menu Popover */}
+                            <AnimatePresence>
+                                {isServiceDropdownOpen && (
+                                    <>
+                                        <div 
+                                            className="fixed inset-0 z-40" 
+                                            onClick={() => setIsServiceDropdownOpen(false)} 
+                                        />
+                                        <motion.div
+                                            initial={{ opacity: 0, y: -6, scale: 0.96 }}
+                                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                                            exit={{ opacity: 0, y: -6, scale: 0.96 }}
+                                            transition={{ duration: 0.15 }}
+                                            className="absolute top-full left-0 mt-2 w-56 bg-white rounded-2xl p-1.5 shadow-[0_12px_36px_rgba(0,0,0,0.18)] border border-gray-100 z-50 overflow-hidden"
+                                        >
+                                            <div className="px-3 py-1.5 text-[9px] font-bold tracking-widest uppercase text-gray-400 border-b border-gray-100 mb-1">
+                                                Select Service
+                                            </div>
+
+                                            {/* Option 1: Home Spa */}
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    handleTabChange('homespa');
+                                                    setIsServiceDropdownOpen(false);
+                                                }}
+                                                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                                                    activeTab === 'homespa'
+                                                        ? 'bg-[#1D1D1F] text-white shadow-xs'
+                                                        : 'text-gray-700 hover:bg-gray-100 hover:text-black'
+                                                }`}
+                                            >
+                                                <div className="flex items-center gap-2">
+                                                    <Home size={14} className={activeTab === 'homespa' ? 'text-white' : 'text-gray-400'} />
+                                                    <span>Home Spa</span>
+                                                </div>
+                                                {activeTab === 'homespa' && <Check size={14} className="text-white" />}
+                                            </button>
+
+                                            {/* Option 2: Partner Spas */}
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    handleTabChange('partner');
+                                                    setIsServiceDropdownOpen(false);
+                                                }}
+                                                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer mt-1 ${
+                                                    activeTab === 'partner'
+                                                        ? 'bg-[#1D1D1F] text-white shadow-xs'
+                                                        : 'text-gray-700 hover:bg-gray-100 hover:text-black'
+                                                }`}
+                                            >
+                                                <div className="flex items-center gap-2">
+                                                    <Building2 size={14} className={activeTab === 'partner' ? 'text-white' : 'text-gray-400'} />
+                                                    <span>Partner Spas</span>
+                                                </div>
+                                                <div className="flex items-center gap-1.5">
+                                                    {partnerTreatments && partnerTreatments.length > 0 && (
+                                                        <span className="flex h-4 min-w-[16px] px-1.5 items-center justify-center rounded-full bg-[#FF3B30] text-[9px] font-black text-white shadow-xs">
+                                                            {partnerTreatments.length}
+                                                        </span>
+                                                    )}
+                                                    {activeTab === 'partner' && <Check size={14} className="text-white" />}
+                                                </div>
+                                            </button>
+                                        </motion.div>
+                                    </>
+                                )}
+                            </AnimatePresence>
+                        </div>
+
+                        {/* Subtle Vertical Divider */}
+                        <div className="h-5 w-px bg-gray-200 shrink-0" />
+
+                        {/* Category Filter Chips (Starting with All Filter on the Right of Dropdown) */}
+                        <div className="flex overflow-x-auto gap-2 no-scrollbar py-0.5 flex-1 min-w-0">
+                            {activeCategoriesList.map((cat) => {
+                                const isActive = activeCategory === cat.id;
+                                return (
+                                    <button
+                                        key={cat.id}
+                                        onClick={() => setActiveCategory(cat.id)}
+                                        className={`flex items-center justify-center px-4 py-1.5 rounded-[18px] whitespace-nowrap transition-all duration-200 shrink-0 cursor-pointer ${
+                                            isActive 
+                                                ? 'bg-[#1D1D1F] text-white border border-black font-bold' 
+                                                : 'bg-white text-gray-700 border border-gray-200/90 hover:border-gray-400 hover:bg-gray-50 font-medium'
+                                        }`}
+                                    >
+                                        <span className="text-xs">{cat.label}</span>
+                                    </button>
+                                );
+                            })}
+                        </div>
                     </div>
                 </div>
             </div>
