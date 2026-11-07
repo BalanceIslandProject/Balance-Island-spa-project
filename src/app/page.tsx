@@ -2415,12 +2415,13 @@ export default function Home() {
                                     {/* Title, Category & Duration */}
                                     <div>
                                         <div className="flex items-center gap-2 mb-1">
-                                            <span className="text-[10px] font-bold uppercase tracking-widest text-primary/70">
-                                                {pt.category || 'Package'}
-                                            </span>
-                                            {isCouple && (
+                                            {isCouple ? (
                                                 <span className="text-[9px] font-bold uppercase tracking-wider bg-rose-50 text-rose-600 px-2.5 py-0.5 rounded-full border border-rose-100">
                                                     Couple Ritual
+                                                </span>
+                                            ) : (
+                                                <span className="text-[10px] font-bold uppercase tracking-widest text-primary/70">
+                                                    {pt.category || 'Package'}
                                                 </span>
                                             )}
                                         </div>

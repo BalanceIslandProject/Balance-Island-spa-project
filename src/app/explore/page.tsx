@@ -13,6 +13,7 @@ import { isCoupleTreatment } from '@/lib/pricingUtils';
 
 const HOMESPA_CATEGORIES = [
     { id: 'all', label: 'All' },
+    { id: 'couple package', label: 'Couple Package' },
     { id: 'massage', label: 'Massage' },
     { id: 'package', label: 'Package' },
     { id: 'facial', label: 'Facial' },
@@ -52,7 +53,7 @@ function ExploreContent() {
     const [activeTab, setActiveTab] = useState<'homespa' | 'partner'>(initialTab);
     const [activeCategory, setActiveCategory] = useState('all');
     const [searchQuery, setSearchQuery] = useState(locationQuery || '');
-    const [maxPrice, setMaxPrice] = useState(2500000);
+    const [maxPrice, setMaxPrice] = useState(10000000);
     const [isPriceFilterOpen, setIsPriceFilterOpen] = useState(false);
     const [isServiceDropdownOpen, setIsServiceDropdownOpen] = useState(false);
 
@@ -97,7 +98,12 @@ function ExploreContent() {
     const filteredHomeSpaTreatments = useMemo(() => {
         let result = (treatments || []).filter(t => {
             if (!t) return false;
-            const matchesCategory = activeCategory === 'all' || (t.category && t.category.toLowerCase() === activeCategory.toLowerCase());
+            const isCouple = isCoupleTreatment(t.title, t.category) || (t.category || '').toLowerCase().includes('couple');
+            const matchesCategory = activeCategory === 'all' 
+                ? true 
+                : activeCategory === 'couple package'
+                    ? isCouple
+                    : (t.category && t.category.toLowerCase() === activeCategory.toLowerCase());
             const isLocationMatch = locationQuery && searchQuery.trim().toLowerCase() === locationQuery.trim().toLowerCase();
             const matchesSearch = !searchQuery.trim() || isLocationMatch || 
                 (t.title && t.title.toLowerCase().includes(searchQuery.toLowerCase())) || 
@@ -108,7 +114,7 @@ function ExploreContent() {
                 return Math.min(...options.map(o => parseInt(String(o?.price || '0').replace(/[^0-9]/g, '') || '0', 10)));
             };
             
-            const matchesPrice = getLowestPrice(t.options) <= maxPrice;
+            const matchesPrice = maxPrice >= 10000000 || getLowestPrice(t.options) <= maxPrice;
             return matchesCategory && matchesSearch && matchesPrice;
         });
 
@@ -127,9 +133,12 @@ function ExploreContent() {
     const filteredPartnerTreatments = useMemo(() => {
         if (!isTherapick || !partnerTreatments) return [];
         return partnerTreatments.filter(pt => {
-            const isMatchCouple = activeCategory === 'couple package' && 
-                ((pt.category || '').toLowerCase().includes('couple') || /couple|honeymoon|duo/i.test(pt.title));
-            const matchesCategory = activeCategory === 'all' || isMatchCouple || (pt.category && pt.category.toLowerCase() === activeCategory.toLowerCase());
+            const isCouple = isCoupleTreatment(pt.title, pt.category) || (pt.category || '').toLowerCase().includes('couple');
+            const matchesCategory = activeCategory === 'all' 
+                ? true 
+                : activeCategory === 'couple package'
+                    ? isCouple
+                    : (pt.category && pt.category.toLowerCase() === activeCategory.toLowerCase());
             const matchesSearch = !searchQuery.trim() ||
                 (pt.title && pt.title.toLowerCase().includes(searchQuery.toLowerCase())) ||
                 (pt.desc && pt.desc.toLowerCase().includes(searchQuery.toLowerCase())) ||
@@ -138,7 +147,7 @@ function ExploreContent() {
 
             const firstOpt = pt.options?.[0];
             const price = parseInt(String(firstOpt?.price || '0').replace(/[^0-9]/g, '') || '0', 10);
-            const matchesPrice = !price || price <= maxPrice;
+            const matchesPrice = maxPrice >= 10000000 || !price || price <= maxPrice;
 
             return matchesCategory && matchesSearch && matchesPrice;
         });
@@ -230,20 +239,22 @@ function ExploreContent() {
                                 >
                                     <div className="flex items-center justify-between mb-4">
                                         <span className="text-[10px] font-bold uppercase tracking-widest text-primary/80">Max Price</span>
-                                        <span className="text-sm font-serif text-primary font-medium">Rp {maxPrice.toLocaleString('en-US')}</span>
+                                        <span className="text-sm font-serif text-primary font-medium">
+                                            {maxPrice >= 10000000 ? 'Any Price' : `Rp ${maxPrice.toLocaleString('en-US')}`}
+                                        </span>
                                     </div>
                                     <input 
                                         type="range" 
                                         min="250000" 
-                                        max="3000000" 
-                                        step="50000"
+                                        max="10000000" 
+                                        step="250000"
                                         value={maxPrice}
                                         onChange={(e) => setMaxPrice(parseInt(e.target.value))}
                                         className="w-full accent-primary h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                                     />
                                     <div className="flex justify-between text-[10px] text-gray-400 mt-2 font-medium tracking-wider">
                                         <span>250k</span>
-                                        <span>3.0m</span>
+                                        <span>Any</span>
                                     </div>
                                 </motion.div>
                             )}
@@ -449,7 +460,7 @@ function ExploreContent() {
                                     <p className="text-sm text-gray-500 font-medium">No in-villa treatments match your search or price filter.</p>
                                     <button
                                         type="button"
-                                        onClick={() => { setSearchQuery(''); setActiveCategory('all'); setMaxPrice(2500000); }}
+                                        onClick={() => { setSearchQuery(''); setActiveCategory('all'); setMaxPrice(10000000); }}
                                         className="mt-4 px-5 py-2 bg-black text-white text-xs font-bold rounded-full cursor-pointer"
                                     >
                                         Reset Filters
@@ -504,7 +515,7 @@ function ExploreContent() {
                                 <p className="text-sm text-gray-500 font-medium">No partner spa treatments match your search or price filter.</p>
                                 <button
                                     type="button"
-                                    onClick={() => { setSearchQuery(''); setActiveCategory('all'); setMaxPrice(2500000); }}
+                                    onClick={() => { setSearchQuery(''); setActiveCategory('all'); setMaxPrice(10000000); }}
                                     className="mt-4 px-5 py-2 bg-black text-white text-xs font-bold rounded-full cursor-pointer"
                                 >
                                     Reset Filters
@@ -762,12 +773,13 @@ function ExploreContent() {
                                     {/* Title, Category & Duration */}
                                     <div>
                                         <div className="flex items-center gap-2 mb-1">
-                                            <span className="text-[10px] font-bold uppercase tracking-widest text-primary/70">
-                                                {pt.category || 'Package'}
-                                            </span>
-                                            {isCouple && (
+                                            {isCouple ? (
                                                 <span className="text-[9px] font-bold uppercase tracking-wider bg-rose-50 text-rose-600 px-2.5 py-0.5 rounded-full border border-rose-100">
                                                     Couple Ritual
+                                                </span>
+                                            ) : (
+                                                <span className="text-[10px] font-bold uppercase tracking-widest text-primary/70">
+                                                    {pt.category || 'Package'}
                                                 </span>
                                             )}
                                         </div>
