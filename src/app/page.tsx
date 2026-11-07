@@ -1211,20 +1211,6 @@ export default function Home() {
                                     </div>
                                 ))}
                             </div>
-
-                            {/* View All Partner Treatments Button Below Cards */}
-                            <div className="mt-8 flex justify-center">
-                                <Link
-                                    href="/explore?tab=partner"
-                                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-3.5 rounded-full bg-white border border-gray-200/90 hover:border-black text-gray-900 text-xs font-bold uppercase tracking-wider shadow-xs hover:shadow-md transition-all active:scale-95 group"
-                                >
-                                    <span>View All Partner Treatments</span>
-                                    <span className="text-[10px] bg-gray-100 group-hover:bg-black group-hover:text-white px-2 py-0.5 rounded-full transition-colors font-bold">
-                                        {partnerTreatments.length}
-                                    </span>
-                                    <ArrowRight size={14} className="text-gray-400 group-hover:text-black group-hover:translate-x-0.5 transition-all" />
-                                </Link>
-                            </div>
                         </section>
                     )}
 

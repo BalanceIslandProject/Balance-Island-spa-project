@@ -288,13 +288,6 @@ function ExploreContent() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.25 }}
                     >
-                        {/* Short Section Title */}
-                        <div className="mb-5">
-                            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">
-                                Home Spa
-                            </h1>
-                        </div>
-
                         {/* Pinned / Most Booked Treatments (Small Carousel) */}
                         {showPinnedTreatments && (
                             <section className="mb-10 w-full relative z-20">
@@ -400,13 +393,6 @@ function ExploreContent() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.25 }}
                     >
-                        {/* Short Section Title */}
-                        <div className="mb-5">
-                            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">
-                                Partner Spas
-                            </h2>
-                        </div>
-
                         {filteredPartnerTreatments.length === 0 ? (
                             <div className="p-12 text-center bg-gray-50 rounded-3xl border border-gray-100">
                                 <p className="text-sm text-gray-500 font-medium">No partner spa treatments match your search or price filter.</p>
