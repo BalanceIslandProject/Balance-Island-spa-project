@@ -153,15 +153,17 @@ export function calculateEligibleCommission(params: {
     discountAmount = 0,
   } = params;
 
-  // Filter items: treat treatments as eligible, ignore transport items if labeled as such
+  // Filter items: treat treatments as eligible, ignore transport items if labeled as such.
+  // Exclude Partner Spa items (Partner Spas are strictly internal and ineligible for affiliate commission).
   let treatmentSubtotal = 0;
   if (cartItems.length > 0) {
     for (const item of cartItems) {
       const title = (item.title || item.name || '').toLowerCase();
       const isTransport = title.includes('transport') || title.includes('delivery') || title.includes('fee');
       const isTip = title.includes('tip') || title.includes('gratuity');
+      const isPartnerItem = item.isPartner || item.partnerName || item.partner_name || item.publishedPrice || title.includes('jaens') || title.includes('partner spa');
 
-      if (!isTransport && !isTip) {
+      if (!isTransport && !isTip && !isPartnerItem) {
         const itemPrice = Number(item.price || item.total_price || 0);
         // Couple massage & honeymoon packages are ALREADY priced for 2 persons on the website.
         // Do NOT multiply by 2 again. (2 guests = 1 couple package price).
@@ -216,12 +218,45 @@ export async function recordBookingAffiliation(
     return false;
   }
 
+  // EXCLUSION: Partner Spas bookings are strictly internal for Therapick administration,
+  // NOT for affiliate partner commission or partner portal sync.
+  const isPartnerSpaBooking = (cartItems || []).some((i: any) => 
+    i.isPartner === true || 
+    Boolean(i.partnerName) || 
+    Boolean(i.partner_name) || 
+    Boolean(i.partnerId) || 
+    Boolean(i.partner_id) ||
+    Boolean(i.publishedPrice) ||
+    (typeof i.title === 'string' && (i.title.includes('·') || i.title.toLowerCase().includes('jaens') || i.title.toLowerCase().includes('partner spa')))
+  );
+  if (isPartnerSpaBooking) {
+    console.log('Skipping affiliate attribution: Partner Spa bookings are strictly internal.');
+    return false;
+  }
+
   const cookieData = getAffiliateCookie();
   if (!cookieData || !cookieData.partner_code) {
     return false;
   }
 
   try {
+    // Check if the booking in Supabase is a Partner Spa booking
+    const { data: dbBooking } = await supabase
+      .from('bookings')
+      .select('items, treatment_name, source, booking_type')
+      .or(`id.eq.${bookingId},reference_number.eq.${bookingId}`)
+      .maybeSingle();
+
+    if (dbBooking) {
+      const dbTreatment = (dbBooking.treatment_name || '').toLowerCase();
+      const dbSource = (dbBooking.source || '').toLowerCase();
+      const hasPartnerItem = Array.isArray(dbBooking.items) && dbBooking.items.some((i: any) => i.isPartner || i.partnerName || i.partner_name || i.publishedPrice);
+      if (hasPartnerItem || dbBooking.booking_type === 'partner_spa' || dbSource === 'partner spa' || dbTreatment.includes('jaens') || dbTreatment.includes('·') || dbTreatment.includes('partner spa')) {
+        console.log('Skipping affiliate attribution: booking is an internal Partner Spa booking.');
+        return false;
+      }
+    }
+
     // 1. Verify that partner exists and is currently active
     const cleanPartnerCode = cookieData.partner_code.trim().toUpperCase();
     const { data: partner, error: partnerError } = await supabase

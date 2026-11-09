@@ -35,7 +35,6 @@ export async function GET(req: NextRequest) {
 
     const totalClicks = clicksRes.count || 0;
     const commissions = commissionsRes.data || [];
-    const totalBookings = commissions.length;
 
     // Fetch related bookings to get scheduled dates, customer names, and appointment times
     const rawBookingIds = commissions.map((c) => c.booking_id).filter(Boolean);
@@ -86,8 +85,32 @@ export async function GET(req: NextRequest) {
       }
     }
 
+    // Helper to identify internal Partner Spa bookings
+    const isPartnerSpaBooking = (matched: any, comm: any) => {
+      if (matched?.booking_type === 'partner_spa' || matched?.source === 'Partner Spa') {
+        return true;
+      }
+      if (Array.isArray(matched?.items) && matched.items.some((i: any) => i.isPartner || i.partnerName || i.partner_name || i.publishedPrice)) {
+        return true;
+      }
+      const tName = (matched?.treatment_name || comm?.treatment_name || comm?.notes || '').toLowerCase();
+      if (tName.includes('jaens') || tName.includes('center ubud') || tName.includes('partner spa')) {
+        return true;
+      }
+      return false;
+    };
+
+    // Filter out internal Partner Spa bookings: Partner Spas are strictly internal and must never sync to the affiliate partner portal
+    const eligibleCommissions = commissions.filter((comm) => {
+      const bId = comm.booking_id || '';
+      const matched = bookingsMap[bId] || bookingsMap[bId.toUpperCase()] || bookingsMap[bId.toLowerCase()] || {};
+      return !isPartnerSpaBooking(matched, comm);
+    });
+
+    const totalBookings = eligibleCommissions.length;
+
     // Build enriched calendar bookings
-    const calendarBookings = commissions.map((comm) => {
+    const calendarBookings = eligibleCommissions.map((comm) => {
       const bId = comm.booking_id || '';
       const matched = bookingsMap[bId] || bookingsMap[bId.toUpperCase()] || bookingsMap[bId.toLowerCase()] || {};
       const attr = attributionsMap[bId] || attributionsMap[bId.toUpperCase()] || {};
@@ -205,7 +228,7 @@ export async function GET(req: NextRequest) {
     let approvedCommission = 0;
     let paidCommission = 0;
 
-    for (const comm of commissions) {
+    for (const comm of eligibleCommissions) {
       const bId = comm.booking_id || '';
       const matched = bookingsMap[bId] || bookingsMap[bId.toUpperCase()] || bookingsMap[bId.toLowerCase()] || {};
       const isCancelled = (matched.status || '').toLowerCase() === 'cancelled' || comm.status === 'cancelled' || comm.status === 'declined';
@@ -251,8 +274,11 @@ export async function GET(req: NextRequest) {
         availableForPayout: approvedCommission,
       },
       calendarBookings,
-      recentAttributions: attributionsRes.data || [],
-      recentCommissions: commissions.slice(0, 5),
+      recentAttributions: (attributionsRes.data || []).filter(a => {
+        const matched = bookingsMap[a.booking_id] || {};
+        return !isPartnerSpaBooking(matched, {});
+      }),
+      recentCommissions: eligibleCommissions.slice(0, 5),
       recentPayouts: (payoutsRes.data || []).slice(0, 5).map((p: any) => ({
         ...p,
         payout_reference: (p.payout_reference || '').replace(/-/g, ''),

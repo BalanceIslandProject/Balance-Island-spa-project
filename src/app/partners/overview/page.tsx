@@ -48,8 +48,12 @@ export default function PartnerOverviewPage() {
       ]);
 
       if (statsRes.success) {
+        const cleanCalendar = (statsRes.calendarBookings || []).filter((b: any) => {
+          const tName = (b.treatment_name || '').toLowerCase();
+          return !tName.includes('jaens') && !tName.includes('center ubud') && !tName.includes('partner spa');
+        });
         setStats(statsRes.stats || null);
-        setCalendarBookings(statsRes.calendarBookings || []);
+        setCalendarBookings(cleanCalendar);
       }
       if (meRes.success && meRes.partner) {
         setPartner(meRes.partner);

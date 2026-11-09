@@ -51,11 +51,15 @@ export default function PartnerBookingsPage() {
       const res = await fetch('/api/affiliates/stats');
       const data = await res.json();
       if (data.success && data.calendarBookings) {
-        setBookings(data.calendarBookings);
+        const cleanBookings = (data.calendarBookings as CalendarBooking[]).filter((b) => {
+          const tName = (b.treatment_name || '').toLowerCase();
+          return !tName.includes('jaens') && !tName.includes('center ubud') && !tName.includes('partner spa');
+        });
+        setBookings(cleanBookings);
 
         // Auto-focus to the latest booking's month if bookings exist
-        if (data.calendarBookings.length > 0) {
-          const dates = (data.calendarBookings as CalendarBooking[])
+        if (cleanBookings.length > 0) {
+          const dates = cleanBookings
             .map((b) => b.date)
             .filter(Boolean)
             .sort()

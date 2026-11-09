@@ -21,13 +21,26 @@ export const saveBookingToSupabase = async (
             ));
         const effectiveBrand = isTherapickSite ? 'therapick' : siteBrandFilter;
 
+        // Detect if this is a Partner Spa booking (venue/package).
+        // Partner Spas are strictly internal and must NEVER be synced to the affiliate partner portal.
+        const isPartnerSpaBooking = cartItems.some(i => 
+            i.isPartner === true || 
+            Boolean(i.partnerName) || 
+            Boolean(i.partner_name) || 
+            Boolean(i.partnerId) || 
+            Boolean(i.partner_id) ||
+            Boolean(i.publishedPrice) ||
+            (typeof i.title === 'string' && (i.title.includes('·') || i.title.toLowerCase().includes('jaens') || i.title.toLowerCase().includes('partner spa')))
+        ) || (typeof treatmentName === 'string' && (treatmentName.includes('·') || treatmentName.toLowerCase().includes('jaens') || treatmentName.toLowerCase().includes('partner spa')));
+
         // Determine booking source (Affiliate Partner Code or Direct)
-        const affiliateCookie = isTherapickSite ? getAffiliateCookie() : null;
-        const affiliateCode = affiliateCookie?.partner_code 
+        // Strictly exclude Partner Spas from affiliate attribution
+        const affiliateCookie = (isTherapickSite && !isPartnerSpaBooking) ? getAffiliateCookie() : null;
+        const affiliateCode = (!isPartnerSpaBooking && affiliateCookie?.partner_code) 
             ? affiliateCookie.partner_code.toUpperCase() 
             : null;
-        const affiliateId = affiliateCookie?.partner_id || null;
-        const source = affiliateCode ? affiliateCode : 'Direct';
+        const affiliateId = !isPartnerSpaBooking ? (affiliateCookie?.partner_id || null) : null;
+        const source = isPartnerSpaBooking ? 'Partner Spa' : (affiliateCode ? affiliateCode : 'Direct');
         
         // Base payload compatible with core bookings schema
         const basePayload: any = {
@@ -48,7 +61,9 @@ export const saveBookingToSupabase = async (
             net_profit: totalPrice,
             status: 'Pending',
             items: JSON.parse(itemsJson),
-            brand: effectiveBrand
+            brand: effectiveBrand,
+            source: source,
+            booking_type: isPartnerSpaBooking ? 'partner_spa' : 'home_spa',
         };
 
         // Try inserting with additive metadata columns if schema is migrated
@@ -74,8 +89,9 @@ export const saveBookingToSupabase = async (
             }
         }
 
-        // Strictly associate affiliate attribution at booking creation time
-        if (isTherapickSite && affiliateCode) {
+        // Strictly associate affiliate attribution at booking creation time for Home Spa treatments only
+        // Partner Spas are strictly for internal administration and do NOT sync to the affiliate partner portal
+        if (isTherapickSite && affiliateCode && !isPartnerSpaBooking) {
             await recordBookingAffiliation(bookingId, formData, cartItems, totalPrice, 'therapick');
         }
 

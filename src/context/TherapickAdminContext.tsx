@@ -409,11 +409,17 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
       // Enrich Partners with performance metrics and safe defaults
       const enrichedPartners = rawPartners.map((p: any) => {
         const pCode = String(p.partner_code || p.referral_code || '').trim().toUpperCase();
-        const partnerBookings = (enrichedBookings as any[]).filter((b: any) => 
-          (pCode && b.affiliate_code && b.affiliate_code.toUpperCase() === pCode) ||
-          b.partner_info?.id === p.id ||
-          b.commission?.partner_id === p.id
-        );
+        const partnerBookings = (enrichedBookings as any[]).filter((b: any) => {
+          const isPartnerSpa = b.source === 'Partner Spa' || 
+            b.booking_type === 'partner_spa' ||
+            (Array.isArray(b.items) && b.items.some((i: any) => i.isPartner || i.partnerName || i.partner_name || i.publishedPrice)) ||
+            (b.treatment_name && (b.treatment_name.includes('Jaens') || b.treatment_name.includes('·') || b.treatment_name.toLowerCase().includes('partner spa')));
+          if (isPartnerSpa) return false; // Partner Spas are internal only
+
+          return (pCode && b.affiliate_code && b.affiliate_code.toUpperCase() === pCode) ||
+            b.partner_info?.id === p.id ||
+            b.commission?.partner_id === p.id;
+        });
         const partnerComms = rawComms.filter((c: any) => 
           c.partner_id === p.id || 
           (c.partner_code && pCode && String(c.partner_code).trim().toUpperCase() === pCode) ||
@@ -570,11 +576,25 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
 
   // 6. Partition Bookings Strictly: Website vs Affiliate
   const websiteBookings = useMemo(() => {
-    return bookings.filter(b => !b.affiliate_code && !b.commission && (!b.source || b.source === 'Direct'));
+    return bookings.filter(b => {
+      const isPartnerSpa = (b as any).source === 'Partner Spa' || 
+        (b as any).booking_type === 'partner_spa' ||
+        (Array.isArray(b.items) && b.items.some((i: any) => i.isPartner || i.partnerName || i.partner_name || i.publishedPrice)) ||
+        (b.treatment_name && (b.treatment_name.includes('Jaens') || b.treatment_name.includes('·') || b.treatment_name.toLowerCase().includes('partner spa')));
+      if (isPartnerSpa) return true; // Partner Spas are internal bookings
+      return !b.affiliate_code && !b.commission && (!b.source || b.source === 'Direct');
+    });
   }, [bookings]);
 
   const affiliateBookings = useMemo(() => {
-    return bookings.filter(b => b.affiliate_code || b.commission || (b.source && b.source !== 'Direct'));
+    return bookings.filter(b => {
+      const isPartnerSpa = (b as any).source === 'Partner Spa' || 
+        (b as any).booking_type === 'partner_spa' ||
+        (Array.isArray(b.items) && b.items.some((i: any) => i.isPartner || i.partnerName || i.partner_name || i.publishedPrice)) ||
+        (b.treatment_name && (b.treatment_name.includes('Jaens') || b.treatment_name.includes('·') || b.treatment_name.toLowerCase().includes('partner spa')));
+      if (isPartnerSpa) return false; // Strictly exclude Partner Spas from affiliate bookings
+      return b.affiliate_code || b.commission || (b.source && b.source !== 'Direct');
+    });
   }, [bookings]);
 
   // 7. Calculate Website Financial Metrics

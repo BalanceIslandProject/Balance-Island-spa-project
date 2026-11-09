@@ -103,7 +103,20 @@ export async function GET(req: NextRequest) {
       };
     });
 
-    return NextResponse.json({ success: true, commissions: enriched });
+    // Exclude internal Partner Spa bookings
+    const filteredCommissions = enriched.filter((c: any) => {
+      const bKey = String(c.booking_id || '').toUpperCase();
+      const cleanBKey = bKey.replace(/^#/, '');
+      const b = bookingsMap.get(bKey) || bookingsMap.get(cleanBKey) || bookingsMap.get(`#${cleanBKey}`);
+      
+      if (b?.booking_type === 'partner_spa' || b?.source === 'Partner Spa') return false;
+      if (Array.isArray(b?.items) && b.items.some((i: any) => i.isPartner || i.partnerName || i.partner_name || i.publishedPrice)) return false;
+      const tName = (c.treatment_name || b?.treatment_name || c.notes || '').toLowerCase();
+      if (tName.includes('jaens') || tName.includes('center ubud') || tName.includes('partner spa')) return false;
+      return true;
+    });
+
+    return NextResponse.json({ success: true, commissions: filteredCommissions });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message }, { status: 500 });
   }
