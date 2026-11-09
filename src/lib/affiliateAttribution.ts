@@ -243,7 +243,7 @@ export async function recordBookingAffiliation(
     // Check if the booking in Supabase is a Partner Spa booking
     const { data: dbBooking } = await supabase
       .from('bookings')
-      .select('items, treatment_name, source, booking_type')
+      .select('items, treatment_name, source')
       .or(`id.eq.${bookingId},reference_number.eq.${bookingId}`)
       .maybeSingle();
 
@@ -251,7 +251,7 @@ export async function recordBookingAffiliation(
       const dbTreatment = (dbBooking.treatment_name || '').toLowerCase();
       const dbSource = (dbBooking.source || '').toLowerCase();
       const hasPartnerItem = Array.isArray(dbBooking.items) && dbBooking.items.some((i: any) => i.isPartner || i.partnerName || i.partner_name || i.publishedPrice);
-      if (hasPartnerItem || dbBooking.booking_type === 'partner_spa' || dbSource === 'partner spa' || dbTreatment.includes('jaens') || dbTreatment.includes('·') || dbTreatment.includes('partner spa')) {
+      if (hasPartnerItem || dbSource === 'partner spa' || dbTreatment.includes('jaens') || dbTreatment.includes('·') || dbTreatment.includes('partner spa')) {
         console.log('Skipping affiliate attribution: booking is an internal Partner Spa booking.');
         return false;
       }

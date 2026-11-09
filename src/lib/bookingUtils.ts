@@ -42,7 +42,7 @@ export const saveBookingToSupabase = async (
         const affiliateId = !isPartnerSpaBooking ? (affiliateCookie?.partner_id || null) : null;
         const source = isPartnerSpaBooking ? 'Partner Spa' : (affiliateCode ? affiliateCode : 'Direct');
         
-        // Base payload compatible with core bookings schema
+        // Base payload strictly aligned with live PostgreSQL bookings schema
         const basePayload: any = {
             reference_number: bookingId,
             guest_name: formData?.name || 'Guest (WhatsApp Booking)',
@@ -63,30 +63,40 @@ export const saveBookingToSupabase = async (
             items: JSON.parse(itemsJson),
             brand: effectiveBrand,
             source: source,
-            booking_type: isPartnerSpaBooking ? 'partner_spa' : 'home_spa',
-        };
-
-        // Try inserting with additive metadata columns if schema is migrated
-        const extendedPayload = {
-            ...basePayload,
             treatment_status: 'Scheduled',
             payment_status: 'Unpaid',
             payment_method: 'Cash',
-            source: source,
+            payment_amount: 0,
             affiliate_code: affiliateCode,
             affiliate_id: affiliateId,
             treatment_status_updated_at: new Date().toISOString(),
             payment_status_updated_at: new Date().toISOString(),
         };
 
-        const { error: extendedError } = await supabase.from('bookings').insert([extendedPayload]);
-        if (extendedError) {
-            // Fallback to base payload if additive columns are not yet in Postgres schema cache
-            const { error: baseError } = await supabase.from('bookings').insert([basePayload]);
-            if (baseError) {
-                console.error('Failed to save booking to Supabase:', baseError);
-                return { success: false, error: baseError, affiliateCode };
+        // Resilient adaptive insert: automatically removes any unmigrated columns if Postgres rejects them
+        const activePayload = { ...basePayload };
+        let insertError = null;
+        for (let attempt = 0; attempt < 5; attempt++) {
+            const { error } = await supabase.from('bookings').insert([activePayload]);
+            if (!error) {
+                insertError = null;
+                break;
             }
+            insertError = error;
+            const errMsg = error.message || '';
+            const match = errMsg.match(/column [^.]*\.?([a-zA-Z0-9_]+) does not exist/i) ||
+                          errMsg.match(/Could not find the '([^']+)' column of 'bookings'/i);
+            if (match && match[1] && activePayload[match[1]] !== undefined) {
+                console.warn(`Stripping unmapped column '${match[1]}' from booking insert.`);
+                delete activePayload[match[1]];
+                continue;
+            }
+            break;
+        }
+
+        if (insertError) {
+            console.error('Failed to save booking to Supabase:', insertError);
+            return { success: false, error: insertError, affiliateCode };
         }
 
         // Strictly associate affiliate attribution at booking creation time for Home Spa treatments only
