@@ -38,10 +38,20 @@ export default function PartnerPayoutsPage() {
 
   const loadData = async () => {
     try {
+      const t = Date.now();
       const [payoutsRes, meRes, statsRes] = await Promise.all([
-        fetch('/api/affiliates/payouts').then((r) => r.json()),
-        fetch('/api/affiliates/auth/me').then((r) => r.json()),
-        fetch('/api/affiliates/stats').then((r) => r.json()),
+        fetch(`/api/affiliates/payouts?_t=${t}`, {
+          cache: 'no-store',
+          headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate', Pragma: 'no-cache' },
+        }).then((r) => r.json()),
+        fetch(`/api/affiliates/auth/me?_t=${t}`, {
+          cache: 'no-store',
+          headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate', Pragma: 'no-cache' },
+        }).then((r) => r.json()),
+        fetch(`/api/affiliates/stats?_t=${t}`, {
+          cache: 'no-store',
+          headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate', Pragma: 'no-cache' },
+        }).then((r) => r.json()),
       ]);
 
       if (payoutsRes.success) setPayouts(payoutsRes.payouts || []);
@@ -74,15 +84,21 @@ export default function PartnerPayoutsPage() {
     const onGlobalRefresh = () => {
       loadData();
     };
+    const onWindowFocus = () => {
+      loadData();
+    };
     window.addEventListener('partner:refresh', onGlobalRefresh);
+    window.addEventListener('focus', onWindowFocus);
 
     const channel = supabase
       .channel('partner_payouts_realtime')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'affiliate_payouts' }, () => loadData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'affiliate_commissions' }, () => loadData())
       .subscribe();
 
     return () => {
       window.removeEventListener('partner:refresh', onGlobalRefresh);
+      window.removeEventListener('focus', onWindowFocus);
       supabase.removeChannel(channel);
     };
   }, []);

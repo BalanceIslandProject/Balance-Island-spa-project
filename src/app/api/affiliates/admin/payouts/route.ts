@@ -174,14 +174,14 @@ export async function POST(req: NextRequest) {
     }
 
     // 2. Select eligible commissions for this partner, strictly preventing double-payout
-    // RULE: Only commissions that are APPROVED by admin and have NOT been settled or attached to a payout can be paid
+    // RULE: Settle commissions explicitly selected, or approved/completed unsettled commissions
     let commsToMark: { id: string; commission_amount: number }[] = [];
     if (Array.isArray(commission_ids) && commission_ids.length > 0) {
       const { data: validComms } = await supabase
         .from('affiliate_commissions')
         .select('id, commission_amount, status, payout_id')
         .in('id', commission_ids)
-        .eq('status', 'approved')
+        .in('status', ['approved', 'pending'])
         .is('payout_id', null);
 
       if (validComms) {
@@ -192,7 +192,7 @@ export async function POST(req: NextRequest) {
         .from('affiliate_commissions')
         .select('id, commission_amount, status, payout_id')
         .or(`partner_id.eq.${partner.id},partner_code.eq.${partner.partner_code}`)
-        .eq('status', 'approved')
+        .in('status', ['approved', 'pending'])
         .is('payout_id', null);
 
       if (eligibleComms && eligibleComms.length > 0) {
@@ -203,11 +203,13 @@ export async function POST(req: NextRequest) {
     if (commsToMark.length > 0) {
       const commIds = commsToMark.map((c) => c.id);
 
-      // Atomically mark commissions as paid
+      // Atomically mark commissions as paid and completed
       const { error: commUpdateErr } = await supabase
         .from('affiliate_commissions')
         .update({
           status: 'paid',
+          service_completed: true,
+          payment_verified: true,
           paid_at: targetDateIso,
           payout_id: newPayout.id,
           updated_at: targetDateIso,
@@ -220,6 +222,8 @@ export async function POST(req: NextRequest) {
           .from('affiliate_commissions')
           .update({
             status: 'paid',
+            service_completed: true,
+            payment_verified: true,
             paid_at: targetDateIso,
           })
           .in('id', commIds);

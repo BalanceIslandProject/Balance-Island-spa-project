@@ -78,19 +78,41 @@ export default function RecordPaymentModal({
       const matchCode = (c.partner_code && partner.partner_code && c.partner_code.toUpperCase() === partner.partner_code.toUpperCase()) ||
                         (c.partner_code && partner.referral_code && c.partner_code.toUpperCase() === partner.referral_code.toUpperCase());
       const matchName = c.partner_name && partner.name && c.partner_name.toLowerCase() === partner.name.toLowerCase();
-      const status = String(c.status || '').toLowerCase();
-      // STRICT ELIGIBILITY: Only approved commissions that are NOT yet settled or paid
-      const isApproved = status === 'approved';
-      const isNotSettled = !c.payout_id && !c.is_settled && status !== 'paid';
 
-      return (matchId || matchCode || matchName) && isApproved && isNotSettled;
+      const bKey = String(c.booking_id || '').toUpperCase().replace(/^#/, '');
+      const b = rawBookings.find((bk: any) => {
+        const bkRef = String(bk.reference_number || bk.id || '').toUpperCase().replace(/^#/, '');
+        return bkRef === bKey || bk.id === c.booking_id;
+      });
+
+      const matchBookingAffiliate = b && (
+        (b.affiliate_id && partner.id && String(b.affiliate_id).toLowerCase() === String(partner.id).toLowerCase()) ||
+        (b.affiliate_code && partner.partner_code && String(b.affiliate_code).toUpperCase() === String(partner.partner_code).toUpperCase()) ||
+        (b.affiliate_code && partner.referral_code && String(b.affiliate_code).toUpperCase() === String(partner.referral_code).toUpperCase())
+      );
+
+      const belongsToPartner = matchId || matchCode || matchName || matchBookingAffiliate;
+      if (!belongsToPartner) return false;
+
+      const status = String(c.status || '').toLowerCase();
+      if (status === 'paid' || status === 'cancelled' || c.payout_id || c.is_settled) return false;
+
+      // ELIGIBILITY RULE:
+      // 1. Commission is explicitly marked 'approved', OR
+      // 2. The linked booking is Finished/Completed and Paid
+      const isBookingDoneAndPaid = b &&
+        (b.treatment_status === 'Finished' || String(b.status || '').toLowerCase() === 'completed') &&
+        (String(b.payment_status || '').toLowerCase() === 'paid' || String(b.payment_status || '').toLowerCase().includes('paid'));
+
+      return status === 'approved' || isBookingDoneAndPaid;
     });
 
     return pComms.map((c: any) => {
-      const bKey = String(c.booking_id || '').toUpperCase();
-      const b = rawBookings.find((bk: any) => 
-        String(bk.reference_number || bk.id || '').toUpperCase() === bKey
-      );
+      const bKey = String(c.booking_id || '').toUpperCase().replace(/^#/, '');
+      const b = rawBookings.find((bk: any) => {
+        const bkRef = String(bk.reference_number || bk.id || '').toUpperCase().replace(/^#/, '');
+        return bkRef === bKey || bk.id === c.booking_id;
+      });
 
       const bookingDate = b?.booking_date || c.booking_date || (c.created_at ? c.created_at.split('T')[0] : '');
       const treatmentName = b?.treatment_name || b?.service_name || c.treatment_name || 'Balinese Traditional Massage';
@@ -104,7 +126,7 @@ export default function RecordPaymentModal({
         treatment_name: treatmentName,
         guest_name: guestName,
         commission_amount: commissionAmount,
-        status: c.status || 'approved'
+        status: 'approved'
       };
     });
   }, [partner, rawComms, rawBookings]);
@@ -149,7 +171,8 @@ export default function RecordPaymentModal({
 
   if (!isOpen || !partner) return null;
 
-  const maxBalance = Math.max(0, partner.unpaid);
+  const eligibleTotal = eligibleComms.reduce((sum, c) => sum + c.commission_amount, 0);
+  const maxBalance = eligibleComms.length > 0 ? eligibleTotal : Math.max(0, partner.unpaid);
 
   // Toggle booking selection
   const handleToggleBooking = (commId: string) => {
@@ -194,7 +217,7 @@ export default function RecordPaymentModal({
     setAmount(numVal);
     setAmountInput(numVal > 0 ? numVal.toLocaleString('id-ID') : '');
     if (numVal > maxBalance) {
-      setErrorMessage(`Amount exceeds unpaid balance (${formatIDR(maxBalance)})`);
+      setErrorMessage(`Amount exceeds available balance (${formatIDR(maxBalance)})`);
     } else {
       setErrorMessage(null);
     }
@@ -226,12 +249,20 @@ export default function RecordPaymentModal({
   // Submit Handler
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (eligibleComms.length === 0) {
+      setErrorMessage('No approved or completed bookings are eligible for payout.');
+      return;
+    }
+    if (selectedIds.length === 0) {
+      setErrorMessage('Select at least one booking to settle.');
+      return;
+    }
     if (amount <= 0) {
       setErrorMessage('Enter an amount greater than Rp 0.');
       return;
     }
     if (amount > maxBalance) {
-      setErrorMessage(`Amount exceeds unpaid balance (${formatIDR(maxBalance)})`);
+      setErrorMessage(`Amount exceeds available balance (${formatIDR(maxBalance)})`);
       return;
     }
 
@@ -569,7 +600,7 @@ export default function RecordPaymentModal({
             </button>
             <button
               type="submit"
-              disabled={isSubmitting || amount <= 0 || amount > maxBalance}
+              disabled={isSubmitting || eligibleComms.length === 0 || selectedIds.length === 0 || amount <= 0 || amount > maxBalance}
               className="px-5 py-2.5 rounded-xl bg-[#facc15] hover:bg-[#eab308] text-neutral-950 text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-xs"
             >
               {isSubmitting ? (
@@ -577,11 +608,13 @@ export default function RecordPaymentModal({
                   <Loader2 size={14} className="animate-spin text-neutral-950" />
                   <span>Recording...</span>
                 </>
+              ) : eligibleComms.length === 0 ? (
+                <span>No Eligible Bookings to Pay</span>
               ) : (
                 <>
                   <Check size={15} strokeWidth={2.5} className="text-neutral-950" />
                   <span>
-                    Record Payment {selectedIds.length > 0 ? `(${selectedIds.length} Booking${selectedIds.length > 1 ? 's' : ''})` : ''}
+                    Record Payment ({selectedIds.length} Booking{selectedIds.length > 1 ? 's' : ''})
                   </span>
                 </>
               )}

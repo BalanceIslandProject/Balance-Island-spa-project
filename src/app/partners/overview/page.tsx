@@ -42,9 +42,22 @@ export default function PartnerOverviewPage() {
 
   const loadData = async () => {
     try {
+      const t = Date.now();
       const [statsRes, meRes] = await Promise.all([
-        fetch('/api/affiliates/stats').then((r) => r.json()),
-        fetch('/api/affiliates/auth/me').then((r) => r.json()),
+        fetch(`/api/affiliates/stats?_t=${t}`, {
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            Pragma: 'no-cache',
+          },
+        }).then((r) => r.json()),
+        fetch(`/api/affiliates/auth/me?_t=${t}`, {
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            Pragma: 'no-cache',
+          },
+        }).then((r) => r.json()),
       ]);
 
       if (statsRes.success) {
@@ -78,16 +91,49 @@ export default function PartnerOverviewPage() {
     const onGlobalRefresh = () => {
       loadData();
     };
+    const onWindowFocus = () => {
+      loadData();
+    };
     window.addEventListener('partner:refresh', onGlobalRefresh);
+    window.addEventListener('focus', onWindowFocus);
 
     const channel = supabase
       .channel('partner_overview_realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'affiliate_commissions' }, () => loadData())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, () => loadData())
-      .subscribe();
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'affiliate_commissions' }, () => {
+        loadData();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, (payload: any) => {
+        if (payload?.new) {
+          const updated = payload.new;
+          const refOrId = String(updated.reference_number || updated.id || '').toUpperCase().replace(/^#/, '');
+          setCalendarBookings((prev) =>
+            prev.map((b) => {
+              const bRef = String(b.booking_id || b.id || '').toUpperCase().replace(/^#/, '');
+              if (bRef === refOrId || b.id === updated.id) {
+                const isCompleted = updated.treatment_status === 'Finished' || updated.status === 'Completed';
+                const isCancelled = updated.status === 'Cancelled' || updated.treatment_status === 'Cancelled';
+                return {
+                  ...b,
+                  booking_status: isCancelled ? 'Cancelled' : isCompleted ? 'Completed' : (updated.status || b.booking_status),
+                  treatment_status: updated.treatment_status || (isCompleted ? 'Finished' : b.treatment_status),
+                  payment_status: updated.payment_status || b.payment_status,
+                };
+              }
+              return b;
+            })
+          );
+        }
+        loadData();
+      })
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          console.log('[Partner Overview] Realtime live subscribed');
+        }
+      });
 
     return () => {
       window.removeEventListener('partner:refresh', onGlobalRefresh);
+      window.removeEventListener('focus', onWindowFocus);
       supabase.removeChannel(channel);
     };
   }, []);

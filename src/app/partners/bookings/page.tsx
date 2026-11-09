@@ -48,7 +48,13 @@ export default function PartnerBookingsPage() {
 
   const loadData = async () => {
     try {
-      const res = await fetch('/api/affiliates/stats');
+      const res = await fetch(`/api/affiliates/stats?_t=${Date.now()}`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          Pragma: 'no-cache',
+        },
+      });
       const data = await res.json();
       if (data.success && data.calendarBookings) {
         const cleanBookings = (data.calendarBookings as CalendarBooking[]).filter((b) => {
@@ -93,16 +99,49 @@ export default function PartnerBookingsPage() {
     const onGlobalRefresh = () => {
       loadData();
     };
+    const onWindowFocus = () => {
+      loadData();
+    };
     window.addEventListener('partner:refresh', onGlobalRefresh);
+    window.addEventListener('focus', onWindowFocus);
 
     const channel = supabase
       .channel('partner_bookings_realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'affiliate_commissions' }, () => loadData())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, () => loadData())
-      .subscribe();
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'affiliate_commissions' }, () => {
+        loadData();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, (payload: any) => {
+        if (payload?.new) {
+          const updated = payload.new;
+          const refOrId = String(updated.reference_number || updated.id || '').toUpperCase().replace(/^#/, '');
+          setBookings((prev) =>
+            prev.map((b) => {
+              const bRef = String(b.booking_id || b.id || '').toUpperCase().replace(/^#/, '');
+              if (bRef === refOrId || b.id === updated.id) {
+                const isCompleted = updated.treatment_status === 'Finished' || updated.status === 'Completed';
+                const isCancelled = updated.status === 'Cancelled' || updated.treatment_status === 'Cancelled';
+                return {
+                  ...b,
+                  booking_status: isCancelled ? 'Cancelled' : isCompleted ? 'Completed' : (updated.status || b.booking_status),
+                  treatment_status: updated.treatment_status || (isCompleted ? 'Finished' : b.treatment_status),
+                  payment_status: updated.payment_status || b.payment_status,
+                };
+              }
+              return b;
+            })
+          );
+        }
+        loadData();
+      })
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          console.log('[Partner Bookings] Realtime live subscribed');
+        }
+      });
 
     return () => {
       window.removeEventListener('partner:refresh', onGlobalRefresh);
+      window.removeEventListener('focus', onWindowFocus);
       supabase.removeChannel(channel);
     };
   }, []);

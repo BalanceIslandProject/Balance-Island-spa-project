@@ -101,12 +101,25 @@ export default function TherapickPayoutsView() {
 
       // STRICT PAYOUT ELIGIBILITY:
       // Only approved commissions that are NOT yet settled / paid are eligible for payout!
-      // Pending commissions (treatment not done yet) MUST NOT be counted or displayed in unpaid!
-      // Cancelled treatments/commissions CANNOT be processed.
+      // Also recognize commissions whose linked bookings are Finished & Paid!
       const eligibleComms = pComms.filter(c => {
         const status = String(c.status || '').toLowerCase();
-        const isNotSettled = !c.payout_id && !c.is_settled && status !== 'paid';
-        return status === 'approved' && isNotSettled;
+        const isNotSettled = !c.payout_id && !c.is_settled && status !== 'paid' && status !== 'cancelled';
+        if (!isNotSettled) return false;
+
+        if (status === 'approved') return true;
+
+        const bKey = String(c.booking_id || '').toUpperCase().replace(/^#/, '');
+        const b = bookings.find((bk: any) => {
+          const bkRef = String(bk.reference_number || bk.id || '').toUpperCase().replace(/^#/, '');
+          return bkRef === bKey || bk.id === c.booking_id;
+        });
+
+        const isCompletedBooking = b && 
+          (b.treatment_status === 'Finished' || String(b.status || '').toLowerCase() === 'completed') &&
+          (String(b.payment_status || '').toLowerCase() === 'paid' || String(b.payment_status || '').toLowerCase().includes('paid'));
+
+        return Boolean(isCompletedBooking);
       });
 
       const paid = pPayouts

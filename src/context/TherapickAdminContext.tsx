@@ -442,8 +442,21 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
         // 3. Cancelled commissions must NEVER be processed.
         const approvedUnpaidComms = partnerComms.filter((c: any) => {
           const status = String(c.status || '').toLowerCase();
-          const isNotSettled = !c.payout_id && !c.is_settled && status !== 'paid';
-          return status === 'approved' && isNotSettled;
+          const isNotSettled = !c.payout_id && !c.is_settled && status !== 'paid' && status !== 'cancelled';
+          if (!isNotSettled) return false;
+          if (status === 'approved') return true;
+
+          const bKey = String(c.booking_id || '').toUpperCase().replace(/^#/, '');
+          const b = (rawBookings as any[]).find((bk: any) => {
+            const bkRef = String(bk.reference_number || bk.id || '').toUpperCase().replace(/^#/, '');
+            return bkRef === bKey || bk.id === c.booking_id;
+          });
+
+          const isCompletedBooking = b && 
+            (b.treatment_status === 'Finished' || String(b.status || '').toLowerCase() === 'completed') &&
+            (String(b.payment_status || '').toLowerCase() === 'paid' || String(b.payment_status || '').toLowerCase().includes('paid'));
+
+          return Boolean(isCompletedBooking);
         });
 
         const totalPaid = partnerPayouts
@@ -717,15 +730,20 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
     const rawRef = String(booking.reference_number || '').trim();
     const cleanRef = rawRef.replace(/^#/, '');
 
-    const matchFilters: string[] = [];
-    if (id) matchFilters.push(`booking_id.eq.${id}`);
-    if (rawRef) matchFilters.push(`booking_id.eq.${rawRef}`);
+    const matchSet = new Set<string>();
+    if (id) matchSet.add(`booking_id.eq.${id}`);
+    if (rawRef) {
+      matchSet.add(`booking_id.eq.${rawRef}`);
+      matchSet.add(`booking_id.eq.${rawRef.toUpperCase()}`);
+    }
     if (cleanRef) {
-      matchFilters.push(`booking_id.eq.${cleanRef}`);
-      matchFilters.push(`booking_id.eq.#${cleanRef}`);
-      matchFilters.push(`booking_id.ilike.%${cleanRef}%`);
+      matchSet.add(`booking_id.eq.${cleanRef}`);
+      matchSet.add(`booking_id.eq.#${cleanRef}`);
+      matchSet.add(`booking_id.eq.${cleanRef.toUpperCase()}`);
+      matchSet.add(`booking_id.eq.#${cleanRef.toUpperCase()}`);
     }
 
+    const matchFilters = Array.from(matchSet);
     if (matchFilters.length > 0) {
       try {
         await supabase

@@ -34,7 +34,13 @@ export default function PartnerCommissionsPage() {
 
   const loadCommissions = async () => {
     try {
-      const res = await fetch('/api/affiliates/commissions');
+      const res = await fetch(`/api/affiliates/commissions?_t=${Date.now()}`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          Pragma: 'no-cache',
+        },
+      });
       const data = await res.json();
       if (data.success) {
         setCommissions(data.commissions || []);
@@ -59,16 +65,25 @@ export default function PartnerCommissionsPage() {
     const onGlobalRefresh = () => {
       loadCommissions();
     };
+    const onWindowFocus = () => {
+      loadCommissions();
+    };
     window.addEventListener('partner:refresh', onGlobalRefresh);
+    window.addEventListener('focus', onWindowFocus);
 
     const channel = supabase
       .channel('partner_commissions_realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'affiliate_commissions' }, () => loadCommissions())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, () => loadCommissions())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'affiliate_commissions' }, () => {
+        loadCommissions();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, () => {
+        loadCommissions();
+      })
       .subscribe();
 
     return () => {
       window.removeEventListener('partner:refresh', onGlobalRefresh);
+      window.removeEventListener('focus', onWindowFocus);
       supabase.removeChannel(channel);
     };
   }, []);

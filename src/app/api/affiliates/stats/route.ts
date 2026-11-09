@@ -3,6 +3,9 @@ import { supabase } from '@/lib/supabase';
 import { isBookTherapickHost } from '@/lib/domainIsolation';
 import { getPartnerSession, isPartnerApproved } from '@/lib/partnerAuth';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET(req: NextRequest) {
   try {
     const host = req.headers.get('x-forwarded-host') || req.headers.get('host') || '';
@@ -283,6 +286,12 @@ export async function GET(req: NextRequest) {
         ...p,
         payout_reference: (p.payout_reference || '').replace(/-/g, ''),
       })),
+    }, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'CDN-Cache-Control': 'no-store',
+        'Vercel-CDN-Cache-Control': 'no-store',
+      },
     });
   } catch (err: any) {
     console.error('Stats error:', err);
