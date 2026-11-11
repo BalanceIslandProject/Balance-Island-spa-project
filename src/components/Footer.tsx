@@ -83,7 +83,7 @@ export default function Footer() {
                   <GoogleReviewsLogo />
                 </a>
                 
-                <a href="https://share.google/LRhEtZHpMLBAg9ySs" target="_blank" rel="noopener noreferrer" className="domain-therapick-only inline-flex items-center hover:opacity-80 transition-opacity shrink-0">
+                <a href="https://share.google/Aoju5q8u9UeQzvBAs" target="_blank" rel="noopener noreferrer" className="domain-therapick-only inline-flex items-center hover:opacity-80 transition-opacity shrink-0">
                   <GoogleReviewsLogo />
                 </a>
 

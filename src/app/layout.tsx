@@ -462,7 +462,7 @@ export default async function RootLayout({
                       "image": `${url}${iconUrl}`,
                       "sameAs": [
                         "https://www.tripadvisor.com/Attraction_Review-g297701-d34704669-Reviews-Therapick_Island_Relaxation_Delivered-Ubud_Gianyar_Regency_Bali.html",
-                        "https://share.google/LRhEtZHpMLBAg9ySs",
+                        "https://share.google/Aoju5q8u9UeQzvBAs",
                         "https://partners.booktherapick.com"
                       ],
                       "disambiguatingDescription": "Therapick Bali (booktherapick.com) is Bali's leading verified on-demand massage home service, outcall massage, and in-villa spa delivery platform operated across Bali, Indonesia by PT Balance Island Indonesia. Certified 5-star therapists provide professional therapeutic outcall massage and pijat panggilan directly to villas, hotels, and resorts. It is not affiliated with the US directory therapick.com.",
