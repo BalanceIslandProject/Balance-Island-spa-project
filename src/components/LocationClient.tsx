@@ -1013,7 +1013,7 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                             const option = treatment.options.find(o => o.duration === duration);
                                             if (!option) return null;
 
-                                            const originalPriceNum = parseInt(option.price.replace(/,/g, ''));
+                                            const originalPriceNum = parseInt(String((option as any).base_price || option.price).replace(/[^0-9]/g, ''));
                                             const discount = campaign.discountPercentage || 0;
                                             const discountedPriceNum = originalPriceNum * (1 - (discount / 100));
 

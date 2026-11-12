@@ -1,11 +1,13 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
-  Search, PlusCircle, Pin, Edit3, Trash2, Check, RefreshCw, X, Plus, Layers
+  Search, PlusCircle, Pin, Edit3, Trash2, Check, RefreshCw, X, Plus, Layers,
+  SlidersHorizontal, TrendingDown, TrendingUp, ShieldCheck, CheckCircle2, RotateCcw
 } from 'lucide-react';
 import { useTherapickAdmin } from '@/context/TherapickAdminContext';
 import { Treatment, TreatmentOption } from '@/context/SpaContext';
+import { calculateDynamicPrice } from '@/lib/dynamicPricing';
 
 interface ModalState {
   isOpen: boolean;
@@ -34,7 +36,9 @@ export default function TherapickServicesView() {
     saveTreatment, 
     deleteTreatment, 
     refreshData, 
-    loading 
+    loading,
+    dynamicPricingPercentage,
+    saveDynamicPricing
   } = useTherapickAdmin();
 
   const [menuSearch, setMenuSearch] = useState('');
@@ -50,6 +54,35 @@ export default function TherapickServicesView() {
     is_published: true
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Dynamic pricing controls state
+  const [pricingInput, setPricingInput] = useState<number>(dynamicPricingPercentage || 0);
+  const [isSavingPricing, setIsSavingPricing] = useState(false);
+  const [pricingSuccessMessage, setPricingSuccessMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    setPricingInput(dynamicPricingPercentage || 0);
+  }, [dynamicPricingPercentage]);
+
+  const handleSavePricing = async () => {
+    setIsSavingPricing(true);
+    setPricingSuccessMessage(null);
+    try {
+      const res = await saveDynamicPricing(pricingInput);
+      if (res.success) {
+        setPricingSuccessMessage(
+          pricingInput === 0 
+            ? 'Catalog pricing reset to Standard (0%).' 
+            : `Dynamic pricing set to ${pricingInput > 0 ? `+${pricingInput}%` : `${pricingInput}%`} and synced live.`
+        );
+        setTimeout(() => setPricingSuccessMessage(null), 5000);
+      } else {
+        alert(res.error || 'Failed to save dynamic pricing setting.');
+      }
+    } finally {
+      setIsSavingPricing(false);
+    }
+  };
 
   // Filtered treatments
   const filteredTreatments = useMemo(() => {
@@ -69,7 +102,9 @@ export default function TherapickServicesView() {
       category: t.category || 'Massage',
       desc: t.desc || '',
       benefits: Array.isArray(t.benefits) && t.benefits.length > 0 ? t.benefits : [''],
-      options: Array.isArray(t.options) && t.options.length > 0 ? t.options : [...DEFAULT_OPTIONS],
+      options: Array.isArray(t.options) && t.options.length > 0
+        ? t.options.map(o => ({ ...o, price: o.base_price || o.price }))
+        : [...DEFAULT_OPTIONS],
       is_pinned: Boolean(t.is_pinned),
       is_published: t.is_published !== false
     });
@@ -245,6 +280,225 @@ export default function TherapickServicesView() {
         </div>
       </div>
 
+      {/* ─── FITLO DYNAMIC PRICING CONTROL CARD ─── */}
+      <div className="fitlo-card p-5 sm:p-6 border border-[rgba(11,122,115,0.2)] bg-gradient-to-br from-[var(--fitlo-card)] to-[rgba(11,122,115,0.03)] shadow-xs">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-[var(--fitlo-line)]">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <div className="w-8 h-8 rounded-xl bg-[rgba(11,122,115,0.1)] text-[var(--fitlo-accent)] flex items-center justify-center shrink-0">
+                <SlidersHorizontal size={16} />
+              </div>
+              <h2 className="text-base font-bold text-[var(--fitlo-ink)] tracking-tight">
+                Global Dynamic Pricing Setting
+              </h2>
+              {dynamicPricingPercentage < 0 ? (
+                <span className="fitlo-pill fitlo-pill--success font-bold text-xs flex items-center gap-1">
+                  <TrendingDown size={12} />
+                  Active: {Math.abs(dynamicPricingPercentage)}% Off Catalog
+                </span>
+              ) : dynamicPricingPercentage > 0 ? (
+                <span className="fitlo-pill fitlo-pill--warning font-bold text-xs flex items-center gap-1">
+                  <TrendingUp size={12} />
+                  Active: +{dynamicPricingPercentage}% Markup
+                </span>
+              ) : (
+                <span className="fitlo-pill fitlo-pill--neutral font-medium text-xs">
+                  Standard 0% (Catalog Rates)
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-[var(--fitlo-muted)] leading-relaxed">
+              Set a universal percentage adjustment (e.g. <b>-5%</b> for a site-wide discount, <b>+5%</b> for high-season markup). Applies across all customer treatment cards and booking drawers.
+            </p>
+          </div>
+
+          {/* Exemption Notice Pill */}
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[var(--fitlo-card-2)] border border-[var(--fitlo-line)] shrink-0 self-start lg:self-center">
+            <ShieldCheck size={14} className="text-[var(--fitlo-accent)] shrink-0" />
+            <span className="text-[11px] font-semibold text-[var(--fitlo-ink)]">
+              Campaign Cards Exempt
+            </span>
+          </div>
+        </div>
+
+        {/* Controls Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 pt-4 items-center">
+          {/* Quick Presets */}
+          <div className="lg:col-span-6 space-y-2">
+            <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--fitlo-muted)] block">
+              Quick Presets
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { label: '-10%', val: -10, hint: 'Sale' },
+                { label: '-5%', val: -5, hint: 'Promo' },
+                { label: '0%', val: 0, hint: 'Standard' },
+                { label: '+5%', val: 5, hint: 'Peak' },
+                { label: '+10%', val: 10, hint: 'Holiday' }
+              ].map(preset => {
+                const isSelected = pricingInput === preset.val;
+                return (
+                  <button
+                    key={preset.val}
+                    type="button"
+                    onClick={() => setPricingInput(preset.val)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                      isSelected
+                        ? 'bg-[var(--fitlo-ink)] text-white shadow-xs'
+                        : 'bg-[var(--fitlo-card-2)] border border-[var(--fitlo-line)] text-[var(--fitlo-ink)] hover:border-[var(--fitlo-ink)]'
+                    }`}
+                  >
+                    <span>{preset.label}</span>
+                    <span className={`text-[9px] font-medium opacity-70 ${isSelected ? 'text-white' : 'text-[var(--fitlo-muted)]'}`}>
+                      {preset.hint}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Stepper / Custom Number Input */}
+          <div className="lg:col-span-3 space-y-2">
+            <label className="text-[10px] font-bold uppercase tracking-wider text-[var(--fitlo-muted)] block">
+              Custom Adjustment (%)
+            </label>
+            <div className="flex items-center gap-1.5 bg-[var(--fitlo-card-2)] border border-[var(--fitlo-line)] rounded-xl p-1">
+              <button
+                type="button"
+                onClick={() => setPricingInput(prev => Math.max(-90, prev - 1))}
+                className="w-8 h-8 rounded-lg bg-[var(--fitlo-card)] border border-[var(--fitlo-line)] flex items-center justify-center font-bold text-sm text-[var(--fitlo-ink)] hover:bg-[var(--fitlo-card-2)] transition-colors cursor-pointer"
+              >
+                -
+              </button>
+              <div className="flex-1 relative flex items-center justify-center">
+                <input
+                  type="number"
+                  min="-90"
+                  max="200"
+                  step="1"
+                  value={pricingInput}
+                  onChange={e => setPricingInput(Number(e.target.value) || 0)}
+                  className="w-full text-center font-bold text-sm bg-transparent outline-none text-[var(--fitlo-ink)] fitlo-num"
+                />
+                <span className="text-xs font-bold text-[var(--fitlo-muted)] pr-1">%</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPricingInput(prev => Math.min(200, prev + 1))}
+                className="w-8 h-8 rounded-lg bg-[var(--fitlo-card)] border border-[var(--fitlo-line)] flex items-center justify-center font-bold text-sm text-[var(--fitlo-ink)] hover:bg-[var(--fitlo-card-2)] transition-colors cursor-pointer"
+              >
+                +
+              </button>
+            </div>
+          </div>
+
+          {/* Action Save Button */}
+          <div className="lg:col-span-3 flex flex-col sm:flex-row lg:flex-col gap-2 pt-1 lg:pt-5">
+            <button
+              type="button"
+              onClick={handleSavePricing}
+              disabled={isSavingPricing || (pricingInput === dynamicPricingPercentage && pricingSuccessMessage === null)}
+              className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs ${
+                pricingInput !== dynamicPricingPercentage
+                  ? 'bg-[var(--fitlo-accent)] text-white hover:opacity-90 active:scale-[0.99]'
+                  : 'bg-[var(--fitlo-card-2)] text-[var(--fitlo-muted)] border border-[var(--fitlo-line)] cursor-not-allowed'
+              }`}
+            >
+              {isSavingPricing ? (
+                <>
+                  <RefreshCw size={13} className="animate-spin" />
+                  <span>Saving Live Pricing...</span>
+                </>
+              ) : pricingInput !== dynamicPricingPercentage ? (
+                <>
+                  <Check size={14} />
+                  <span>Apply & Save {pricingInput > 0 ? `+${pricingInput}%` : `${pricingInput}%`}</span>
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 size={14} className="text-[var(--fitlo-accent)]" />
+                  <span>Pricing Synced</span>
+                </>
+              )}
+            </button>
+
+            {pricingInput !== 0 && (
+              <button
+                type="button"
+                onClick={() => setPricingInput(0)}
+                className="text-[11px] font-semibold text-[var(--fitlo-muted)] hover:text-[var(--fitlo-ink)] py-1 text-center transition-colors flex items-center justify-center gap-1 cursor-pointer"
+              >
+                <RotateCcw size={11} />
+                <span>Reset to 0%</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Live Calculation Preview Banner */}
+        <div className="mt-4 pt-3 border-t border-[var(--fitlo-line)] grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+          <div className="bg-[var(--fitlo-card-2)] rounded-xl p-2.5 border border-[var(--fitlo-line)] flex items-center justify-between">
+            <span className="text-[11px] font-medium text-[var(--fitlo-muted)]">60 Min Ritual</span>
+            <div className="text-right">
+              {pricingInput !== 0 && (
+                <span className="text-[10px] text-[var(--fitlo-muted)] line-through mr-1.5 fitlo-num">
+                  Rp 350.000
+                </span>
+              )}
+              <span className="font-bold text-[var(--fitlo-ink)] fitlo-num">
+                Rp {calculateDynamicPrice(350000, pricingInput).toLocaleString('en-US')}
+              </span>
+            </div>
+          </div>
+
+          <div className="bg-[var(--fitlo-card-2)] rounded-xl p-2.5 border border-[var(--fitlo-line)] flex items-center justify-between">
+            <span className="text-[11px] font-medium text-[var(--fitlo-muted)]">90 Min Ritual</span>
+            <div className="text-right">
+              {pricingInput !== 0 && (
+                <span className="text-[10px] text-[var(--fitlo-muted)] line-through mr-1.5 fitlo-num">
+                  Rp 500.000
+                </span>
+              )}
+              <span className="font-bold text-[var(--fitlo-ink)] fitlo-num">
+                Rp {calculateDynamicPrice(500000, pricingInput).toLocaleString('en-US')}
+              </span>
+            </div>
+          </div>
+
+          <div className="bg-[var(--fitlo-card-2)] rounded-xl p-2.5 border border-[var(--fitlo-line)] flex items-center justify-between">
+            <span className="text-[11px] font-medium text-[var(--fitlo-muted)]">120 Min Ritual</span>
+            <div className="text-right">
+              {pricingInput !== 0 && (
+                <span className="text-[10px] text-[var(--fitlo-muted)] line-through mr-1.5 fitlo-num">
+                  Rp 650.000
+                </span>
+              )}
+              <span className="font-bold text-[var(--fitlo-ink)] fitlo-num">
+                Rp {calculateDynamicPrice(650000, pricingInput).toLocaleString('en-US')}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Success Alert Banner */}
+        {pricingSuccessMessage && (
+          <div className="mt-3 py-2 px-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center justify-between animate-in fade-in duration-200">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 size={14} className="text-emerald-600 shrink-0" />
+              <span>{pricingSuccessMessage}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setPricingSuccessMessage(null)}
+              className="text-emerald-600 hover:text-emerald-900"
+            >
+              <X size={13} />
+            </button>
+          </div>
+        )}
+      </div>
+
       {/* ─── FITLO TREATMENT CARDS GRID ─── */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredTreatments.length === 0 ? (
@@ -285,23 +539,35 @@ export default function TherapickServicesView() {
                             Duration
                           </th>
                           <th className="py-2 px-3 text-[10px] font-bold uppercase tracking-wider text-[var(--fitlo-muted)] text-right">
-                            Price (IDR)
+                            Base (IDR)
                           </th>
+                          {dynamicPricingPercentage !== 0 && (
+                            <th className="py-2 px-3 text-[10px] font-bold uppercase tracking-wider text-[var(--fitlo-accent)] text-right">
+                              Live ({dynamicPricingPercentage > 0 ? `+${dynamicPricingPercentage}%` : `${dynamicPricingPercentage}%`})
+                            </th>
+                          )}
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-[var(--fitlo-line)] bg-[var(--fitlo-card)]">
                         {options.map((o, idx) => {
-                          const num = parseInt(String(o.price || '0').replace(/,/g, '') || '0', 10);
-                          const formattedPrice = !isNaN(num) && num > 0 ? num.toLocaleString('en-US') : '0';
+                          const baseNum = parseInt(String(o.base_price || o.price || '0').replace(/[^0-9]/g, '') || '0', 10);
+                          const formattedBase = !isNaN(baseNum) && baseNum > 0 ? baseNum.toLocaleString('en-US') : '0';
+                          const livePrice = calculateDynamicPrice(baseNum, dynamicPricingPercentage, false);
+                          const formattedLive = livePrice.toLocaleString('en-US');
 
                           return (
                             <tr key={idx} className="hover:bg-[var(--fitlo-card-2)] transition-colors">
                               <td className="py-2.5 px-3 font-semibold text-[var(--fitlo-ink)]">
                                 {o.duration} mins
                               </td>
-                              <td className="py-2.5 px-3 font-bold text-[var(--fitlo-ink)] text-right fitlo-num">
-                                {formattedPrice}
+                              <td className={`py-2.5 px-3 text-right fitlo-num ${dynamicPricingPercentage !== 0 ? 'text-[11px] text-[var(--fitlo-muted)] line-through' : 'font-bold text-[var(--fitlo-ink)]'}`}>
+                                {formattedBase}
                               </td>
+                              {dynamicPricingPercentage !== 0 && (
+                                <td className="py-2.5 px-3 font-bold text-right fitlo-num text-[var(--fitlo-accent)]">
+                                  {formattedLive}
+                                </td>
+                              )}
                             </tr>
                           );
                         })}

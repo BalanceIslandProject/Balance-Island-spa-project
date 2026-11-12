@@ -1394,7 +1394,7 @@ export default function Home() {
                                                         o.duration.replace(/MINS/gi, '').trim() === String(currentDuration).replace(/MINS/gi, '').trim()
                                                     ) || allowedOptions[0];
 
-                                                    const originalPriceNum = parseInt(String(activeOption.price).replace(/[^0-9]/g, '') || '0', 10);
+                                                    const originalPriceNum = parseInt(String((activeOption as any)?.base_price || activeOption.price).replace(/[^0-9]/g, '') || '0', 10);
                                                     const discountedPriceNum = hasSpaDiscount
                                                         ? Math.round(originalPriceNum * (1 - (discount / 100)))
                                                         : originalPriceNum;

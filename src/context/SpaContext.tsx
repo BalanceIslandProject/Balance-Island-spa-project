@@ -1,11 +1,13 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, ReactNode } from 'react';
+import { calculateDynamicPrice, adjustTreatmentOptions } from '@/lib/dynamicPricing';
 
 // Define structures
 export type TreatmentOption = {
     duration: string; // e.g. "60 Min", "90 Min"
     price: string;    // e.g. "450,000"
+    base_price?: string; // Original base catalog rate before dynamic pricing
     net_price?: string | number; // Internal net cost per person (never displayed on customer website)
 };
 
@@ -218,6 +220,10 @@ export type NusaPenidaTrip = {
 type SpaContextType = {
     treatments: Treatment[];
     setTreatments: React.Dispatch<React.SetStateAction<Treatment[]>>;
+    rawTreatments: Treatment[];
+    dynamicPricingPercentage: number;
+    setDynamicPricingPercentage: React.Dispatch<React.SetStateAction<number>>;
+    getAdjustedPrice: (basePrice: number | string, isCampaign?: boolean) => number;
     campaign: Campaign | null;
     setCampaign: (c: Campaign | null) => void;
     campaigns: Campaign[];
@@ -303,12 +309,13 @@ export type SpaInitialData = {
     therapists?: Therapist[];
     spaPartners?: SpaPartner[];
     partnerTreatments?: PartnerTreatment[];
+    dynamicPricingPercentage?: number;
 };
 
 const SpaContext = createContext<SpaContextType | undefined>(undefined);
 
 export function SpaProvider({ children, brand, initialData }: { children: ReactNode, brand?: string, initialData?: SpaInitialData }) {
-    const [treatments, setTreatments] = useState<Treatment[]>(() => {
+    const [rawTreatments, setRawTreatments] = useState<Treatment[]>(() => {
         if (initialData?.treatments && initialData.treatments.length > 0) return initialData.treatments;
         if (typeof window !== 'undefined') {
             try {
@@ -318,6 +325,39 @@ export function SpaProvider({ children, brand, initialData }: { children: ReactN
         }
         return [];
     });
+
+    const [dynamicPricingPercentage, setDynamicPricingPercentage] = useState<number>(() => {
+        if (typeof initialData?.dynamicPricingPercentage === 'number') {
+            return initialData.dynamicPricingPercentage;
+        }
+        if (typeof window !== 'undefined') {
+            try {
+                const cached = localStorage.getItem('therapick_dynamic_pricing_percentage');
+                if (cached !== null) {
+                    const parsed = Number(cached);
+                    if (!isNaN(parsed)) return parsed;
+                }
+            } catch (e) { }
+        }
+        return 0;
+    });
+
+    // Compute live catalog treatments with dynamic pricing options
+    const treatments = useMemo(() => {
+        if (!Array.isArray(rawTreatments)) return [];
+        return rawTreatments.map(t => ({
+            ...t,
+            options: adjustTreatmentOptions(t.options as any, dynamicPricingPercentage, false) as TreatmentOption[]
+        }));
+    }, [rawTreatments, dynamicPricingPercentage]);
+
+    const setTreatments: React.Dispatch<React.SetStateAction<Treatment[]>> = useCallback((action) => {
+        setRawTreatments(action);
+    }, []);
+
+    const getAdjustedPrice = useCallback((basePrice: number | string, isCampaign: boolean = false) => {
+        return calculateDynamicPrice(basePrice, dynamicPricingPercentage, isCampaign);
+    }, [dynamicPricingPercentage]);
     const [campaigns, setCampaigns] = useState<Campaign[]>(() => {
         if (initialData?.campaigns && initialData.campaigns.length > 0) return sortCampaigns(initialData.campaigns);
         if (typeof window !== 'undefined') {
@@ -381,8 +421,18 @@ export function SpaProvider({ children, brand, initialData }: { children: ReactN
 
     // Cross-tab sync only — no client-side fetching needed since SSR provides all data
     useEffect(() => {
-        const handleSync = () => {
+        const handleSync = (e?: any) => {
             try {
+                if (e?.detail?.percentage !== undefined) {
+                    setDynamicPricingPercentage(Number(e.detail.percentage) || 0);
+                } else {
+                    const storedPricing = localStorage.getItem('therapick_dynamic_pricing_percentage');
+                    if (storedPricing !== null) {
+                        const parsed = Number(storedPricing);
+                        if (!isNaN(parsed)) setDynamicPricingPercentage(parsed);
+                    }
+                }
+
                 const stored = localStorage.getItem('spa_campaigns');
                 if (stored !== null) {
                     const parsed = JSON.parse(stored);
@@ -396,6 +446,9 @@ export function SpaProvider({ children, brand, initialData }: { children: ReactN
         };
 
         // Persist SSR data to localStorage for cross-tab access
+        if (typeof initialData?.dynamicPricingPercentage === 'number') {
+            try { localStorage.setItem('therapick_dynamic_pricing_percentage', String(initialData.dynamicPricingPercentage)); } catch (e) { }
+        }
         if (initialData?.treatments && initialData.treatments.length > 0) {
             try { localStorage.setItem('spa_treatments', JSON.stringify(initialData.treatments)); } catch (e) { }
         }
@@ -413,10 +466,12 @@ export function SpaProvider({ children, brand, initialData }: { children: ReactN
 
         window.addEventListener('storage', handleSync);
         window.addEventListener('spa_campaigns_updated', handleSync);
+        window.addEventListener('therapick_pricing_updated', handleSync);
 
         return () => {
             window.removeEventListener('storage', handleSync);
             window.removeEventListener('spa_campaigns_updated', handleSync);
+            window.removeEventListener('therapick_pricing_updated', handleSync);
         };
     }, [siteBrandFilter]);
 
@@ -450,7 +505,9 @@ export function SpaProvider({ children, brand, initialData }: { children: ReactN
 
     return (
         <SpaContext.Provider value={{
-            treatments, setTreatments, campaign, setCampaign, campaigns, setCampaigns, products, setProducts,
+            treatments, setTreatments, rawTreatments,
+            dynamicPricingPercentage, setDynamicPricingPercentage, getAdjustedPrice,
+            campaign, setCampaign, campaigns, setCampaigns, products, setProducts,
             cartItems, addToCart, updateCartQuantity, removeFromCart, clearCart,
             savedProducts, toggleSavedProduct,
             isLoaded,

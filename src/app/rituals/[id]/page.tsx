@@ -12,6 +12,7 @@ import { useSpa, Treatment } from '@/context/SpaContext';
 import { supabase } from '@/lib/supabase';
 import { createSlug } from '@/utils/slugify';
 import { SPA_ADDONS } from '@/lib/constants';
+import { adjustTreatmentOptions } from '@/lib/dynamicPricing';
 
 export default function RitualsDetails() {
     const { saveDraft, confirmBooking } = useCart();
@@ -20,7 +21,7 @@ export default function RitualsDetails() {
     const params = useParams();
     const rawId = (params?.id as string) || '';
     const cleanId = decodeURIComponent(rawId).toLowerCase();
-    const { treatments, siteBrandFilter } = useSpa();
+    const { treatments, siteBrandFilter, dynamicPricingPercentage } = useSpa();
     const contextTreatment = treatments.find(
         t => t.id === rawId || 
              createSlug(t.title) === cleanId || 
@@ -49,7 +50,11 @@ export default function RitualsDetails() {
                     );
                     if (isMounted) {
                         if (found) {
-                            setFetchedTreatment(found);
+                            const adjustedFound = {
+                                ...found,
+                                options: adjustTreatmentOptions(found.options, dynamicPricingPercentage, false)
+                            };
+                            setFetchedTreatment(adjustedFound as Treatment);
                         } else {
                             setFetchFailed(true);
                         }

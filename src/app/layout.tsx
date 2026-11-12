@@ -317,16 +317,22 @@ const getSpaData = (brand: string) =>
       let therapists: any[] = [];
       let spaPartners: any[] = [];
       let partnerTreatments: any[] = [];
+      let dynamicPricingPercentage: number = 0;
 
       try {
-        let [treatmentsRes, productsRes, campaignsRes, therapistsRes, spaPartnersRes, partnerTreatmentsRes] = await Promise.all([
+        let [treatmentsRes, productsRes, campaignsRes, therapistsRes, spaPartnersRes, partnerTreatmentsRes, dynamicPricingRes] = await Promise.all([
           supabase.from('treatments').select('*').eq('is_published', true).eq('brand', brand).order('created_at', { ascending: false }),
           supabase.from('products').select('*').eq('is_published', true).eq('brand', brand).order('created_at', { ascending: false }),
           supabase.from('campaigns').select('*').eq('is_published', true).eq('brand', brand).order('order', { ascending: true }).order('updated_at', { ascending: false }),
           supabase.from('therapists').select('*').eq('is_active', true).eq('brand', brand).order('created_at', { ascending: false }),
           supabase.from('spa_partners').select('*').eq('is_active', true).eq('brand', brand).order('order', { ascending: true }),
-          supabase.from('partner_treatments').select('*').eq('is_published', true).eq('brand', brand).order('order', { ascending: true })
+          supabase.from('partner_treatments').select('*').eq('is_published', true).eq('brand', brand).order('order', { ascending: true }),
+          supabase.from('campaigns').select('discountPercentage').eq('brand', `${brand}_pricing_setting`).maybeSingle()
         ]);
+
+        if (dynamicPricingRes?.data && typeof dynamicPricingRes.data.discountPercentage === 'number') {
+          dynamicPricingPercentage = dynamicPricingRes.data.discountPercentage;
+        }
 
         if (brand !== 'elexoir' && (!treatmentsRes.data || treatmentsRes.data.length === 0)) {
           const fallbackRes = await Promise.all([
@@ -349,7 +355,7 @@ const getSpaData = (brand: string) =>
         console.error("SSR error fetching spa data:", error);
       }
 
-      return { treatments, products, campaigns, therapists, spaPartners, partnerTreatments };
+      return { treatments, products, campaigns, therapists, spaPartners, partnerTreatments, dynamicPricingPercentage };
     },
     ['spa-data', brand],
     { revalidate: 120, tags: ['spa-data', `spa-data-${brand}`] }

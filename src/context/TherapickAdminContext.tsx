@@ -130,6 +130,8 @@ interface TherapickAdminContextType {
   markAllNotificationsAsRead: () => void;
 
   // Action Helpers
+  dynamicPricingPercentage: number;
+  saveDynamicPricing: (percentage: number) => Promise<{ success: boolean; error?: string }>;
   updateBookingStatus: (id: string, newStatus: string) => Promise<void>;
   updateTreatmentStatus: (id: string, newStatus: string) => Promise<void>;
   updatePaymentStatus: (id: string, newStatus: string, method?: string) => Promise<void>;
@@ -289,6 +291,7 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
   // Settings (Default Booking Status & WhatsApp Auto-Status)
   const [defaultBookingStatus, setDefaultBookingStatusState] = useState<string>('In Progress');
   const [whatsappAutoStatus, setWhatsappAutoStatusState] = useState<string>('In Progress');
+  const [dynamicPricingPercentage, setDynamicPricingPercentage] = useState<number>(0);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -296,6 +299,11 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
       if (savedStatus) setDefaultBookingStatusState(savedStatus);
       const savedWa = localStorage.getItem('therapick_whatsapp_auto_status');
       if (savedWa) setWhatsappAutoStatusState(savedWa);
+      const savedPricing = localStorage.getItem('therapick_dynamic_pricing_percentage');
+      if (savedPricing !== null) {
+        const parsed = Number(savedPricing);
+        if (!isNaN(parsed)) setDynamicPricingPercentage(parsed);
+      }
     }
   }, []);
 
@@ -327,7 +335,8 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
         payoutsRes,
         therapistsRes,
         treatmentsRes,
-        feesRes
+        feesRes,
+        pricingRes
       ] = await Promise.all([
         supabase.from('bookings').select('*').eq('brand', 'therapick').order('booking_date', { ascending: false }),
         supabase.from('affiliate_commissions').select('*').order('created_at', { ascending: false }),
@@ -335,7 +344,8 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
         supabase.from('affiliate_payouts').select('*').order('created_at', { ascending: false }),
         supabase.from('therapists').select('*').eq('brand', 'therapick').order('name'),
         supabase.from('treatments').select('*').eq('brand', 'therapick').order('created_at', { ascending: false }),
-        supabase.from('therapist_fees').select('*').eq('brand', 'therapick')
+        supabase.from('therapist_fees').select('*').eq('brand', 'therapick'),
+        supabase.from('campaigns').select('discountPercentage').eq('brand', 'therapick_pricing_setting').maybeSingle()
       ]);
 
       const rawBookings = bookingsRes.data || [];
@@ -501,6 +511,12 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
       if (therapistsRes.data) setTherapists(therapistsRes.data);
       if (treatmentsRes.data) setTreatments(treatmentsRes.data);
       if (feesRes.data) setTherapistFees(feesRes.data);
+      if (pricingRes?.data && typeof pricingRes.data.discountPercentage === 'number') {
+        setDynamicPricingPercentage(pricingRes.data.discountPercentage);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('therapick_dynamic_pricing_percentage', String(pricingRes.data.discountPercentage));
+        }
+      }
 
       // Synthesize notifications from live data
       const generatedNotifications: AdminNotification[] = [];
@@ -1319,6 +1335,33 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
     }
   };
 
+  // Action: Save Dynamic Pricing Setting
+  const saveDynamicPricing = useCallback(async (percentage: number): Promise<{ success: boolean; error?: string }> => {
+    const rounded = Math.round(Number(percentage) * 100) / 100;
+    setDynamicPricingPercentage(rounded);
+
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('therapick_dynamic_pricing_percentage', String(rounded));
+      window.dispatchEvent(new CustomEvent('therapick_pricing_updated', { detail: { percentage: rounded } }));
+    }
+
+    try {
+      const res = await fetch('/api/settings/pricing', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ brand: 'therapick', percentage: rounded })
+      });
+      const json = await res.json();
+      if (!json.success) {
+        throw new Error(json.error || 'Failed to save dynamic pricing');
+      }
+      return { success: true };
+    } catch (err: any) {
+      console.error('Save dynamic pricing error:', err);
+      return { success: false, error: err.message || 'Failed to save dynamic pricing' };
+    }
+  }, []);
+
   // Therapists & Services Lists
   const therapistsList = therapists.length > 0 ? therapists : [
     { id: 't1', name: 'Wayan S.', rating: 4.9, completed_bookings: 38, specialization: 'Balinese Traditional & Deep Tissue', status: 'active' },
@@ -1412,7 +1455,9 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
         togglePinTreatment,
         togglePublishTreatment,
         saveTreatment,
-        deleteTreatment
+        deleteTreatment,
+        dynamicPricingPercentage,
+        saveDynamicPricing
       }}
     >
       {children}
