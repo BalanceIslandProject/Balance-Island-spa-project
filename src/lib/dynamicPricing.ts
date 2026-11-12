@@ -86,3 +86,4 @@ export function formatIdr(amount: number | string): string {
     : Number(amount) || 0;
   return num.toLocaleString('en-US');
 }
+

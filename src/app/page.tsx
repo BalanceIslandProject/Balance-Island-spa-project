@@ -33,7 +33,7 @@ export default function Home() {
     const { saveDraft, confirmBooking, history, restoreAction, clearRestoreAction } = useCart();
     const bookingIdRef = React.useRef<string>(Math.random().toString(36).substring(2, 8).toUpperCase());
 
-    const { treatments, campaign, campaigns, products, isLoaded, siteBrandFilter, partnerTreatments } = useSpa();
+    const { treatments, campaign, campaigns, products, isLoaded, siteBrandFilter, partnerTreatments, dynamicPricingPercentage } = useSpa();
 
     const [activeCategory, setActiveCategory] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
@@ -878,10 +878,17 @@ export default function Home() {
                                                 <p className="text-gray-400 text-[10px] font-bold mb-1 line-clamp-1 uppercase tracking-widest">{treatment.category}</p>
                                                 <h4 className="font-bold text-gray-900 text-[13px] mb-3">{treatment.title}</h4>
                                                 <div className="flex items-center justify-between bg-white rounded-full p-1 pl-3 mt-auto border border-gray-100">
-                                                    <span className="font-semibold text-gray-900 text-[12px]">
-                                                        IDR {parseInt(String(treatment.options?.[0]?.price || '0').replace(/[^0-9]/g, '') || '0', 10).toLocaleString('en-US')}
-                                                    </span>
-                                                    <div className="w-7 h-7 rounded-full bg-[#1D1D1F] text-white flex items-center justify-center hover:bg-black transition-colors shrink-0 shadow-sm">
+                                                    <div className="flex items-center gap-1.5 min-w-0 pr-1 flex-wrap">
+                                                        {dynamicPricingPercentage < 0 && treatment.options?.[0]?.base_price && (
+                                                            <span className="text-[10px] sm:text-[11px] font-medium text-gray-400 line-through shrink-0 whitespace-nowrap">
+                                                                IDR {parseInt(String(treatment.options[0].base_price).replace(/[^0-9]/g, '') || '0', 10).toLocaleString('en-US')}
+                                                            </span>
+                                                        )}
+                                                        <span className="font-semibold text-gray-900 text-[12px] whitespace-nowrap">
+                                                            IDR {parseInt(String(treatment.options?.[0]?.price || '0').replace(/[^0-9]/g, '') || '0', 10).toLocaleString('en-US')}
+                                                        </span>
+                                                    </div>
+                                                    <div className="w-7 h-7 rounded-full bg-[#1D1D1F] text-white flex items-center justify-center hover:bg-black transition-colors shrink-0 shadow-sm ml-auto">
                                                         <Plus size={14} strokeWidth={2.5} />
                                                     </div>
                                                 </div>
@@ -1024,8 +1031,17 @@ export default function Home() {
                                                     <Clock className="w-3.5 h-3.5" /> {item.options[0]?.duration} MINS
                                                 </div>
                                                 <div className="flex items-center justify-between bg-white/80 backdrop-blur-sm rounded-full p-1 pl-4 border border-gray-100">
-                                                    <span className="font-semibold text-gray-900 text-[14px]">IDR {parseInt(String(item.options?.[0]?.price || '0').replace(/[^0-9]/g, '') || '0', 10).toLocaleString('en-US')}</span>
-                                                    <div className="w-10 h-10 rounded-full bg-[#1D1D1F] text-white flex items-center justify-center group-hover:bg-black transition-colors shrink-0 shadow-sm">
+                                                    <div className="flex items-center gap-2 min-w-0 pr-1 flex-wrap">
+                                                        {dynamicPricingPercentage < 0 && item.options?.[0]?.base_price && (
+                                                            <span className="text-[11px] sm:text-[12px] font-medium text-gray-400 line-through shrink-0 whitespace-nowrap">
+                                                                IDR {parseInt(String(item.options[0].base_price).replace(/[^0-9]/g, '') || '0', 10).toLocaleString('en-US')}
+                                                            </span>
+                                                        )}
+                                                        <span className="font-semibold text-gray-900 text-[14px] whitespace-nowrap">
+                                                            IDR {parseInt(String(item.options?.[0]?.price || '0').replace(/[^0-9]/g, '') || '0', 10).toLocaleString('en-US')}
+                                                        </span>
+                                                    </div>
+                                                    <div className="w-10 h-10 rounded-full bg-[#1D1D1F] text-white flex items-center justify-center group-hover:bg-black transition-colors shrink-0 shadow-sm ml-auto">
                                                         <Plus size={20} strokeWidth={2.5} />
                                                     </div>
                                                 </div>
@@ -1676,7 +1692,14 @@ export default function Home() {
                                                                                     className="w-full flex items-center justify-between p-3 rounded-xl border border-border hover:border-primary/50 hover:bg-primary/5 transition-all group cursor-pointer"
                                                                                 >
                                                                                     <span className="text-sm font-bold text-primary group-hover:text-primary transition-colors">{String(opt.duration).replace(/mins?/i, '').trim()} Mins</span>
-                                                                                    <span className="text-sm font-serif text-primary">IDR {finalRatePerUnit.toLocaleString('en-US')}</span>
+                                                                                    <div className="flex items-center gap-2">
+                                                                                        {dynamicPricingPercentage < 0 && !isPartnerItem && (opt as any)?.base_price && (
+                                                                                            <span className="text-xs text-gray-400 line-through">
+                                                                                                IDR {parseInt(String((opt as any).base_price).replace(/[^0-9]/g, '') || '0', 10).toLocaleString('en-US')}
+                                                                                            </span>
+                                                                                        )}
+                                                                                        <span className="text-sm font-serif text-primary">IDR {finalRatePerUnit.toLocaleString('en-US')}</span>
+                                                                                    </div>
                                                                                 </button>
                                                                             );
                                                                         })}

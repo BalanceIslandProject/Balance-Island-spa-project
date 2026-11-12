@@ -30,7 +30,7 @@ const PARTNER_CATEGORIES = [
 ];
 
 function ExploreContent() {
-    const { treatments, partnerTreatments, siteBrandFilter } = useSpa();
+    const { treatments, partnerTreatments, siteBrandFilter, dynamicPricingPercentage } = useSpa();
     const searchParams = useSearchParams();
     const router = useRouter();
 
@@ -434,7 +434,12 @@ function ExploreContent() {
                                                         <Clock className="inline w-3 h-3 mr-1 mb-0.5 text-gray-400"/>
                                                         {treatment.options[0]?.duration} MINS
                                                     </p>
-                                                    <div className="mt-1 flex items-center">
+                                                    <div className="mt-1 flex items-center gap-1.5 flex-wrap">
+                                                        {dynamicPricingPercentage < 0 && treatment.options?.[0]?.base_price && (
+                                                            <span className="text-[11px] font-medium text-gray-400 line-through">
+                                                                IDR {parseInt(String(treatment.options[0].base_price).replace(/[^0-9]/g, '') || '0', 10).toLocaleString('en-US')}
+                                                            </span>
+                                                        )}
                                                         <span className="font-semibold text-gray-900 text-[13px]">
                                                             IDR {parseInt(String(treatment.options[0]?.price || '0').replace(/[^0-9]/g, '') || '0', 10).toLocaleString('en-US')}
                                                         </span>
@@ -483,9 +488,16 @@ function ExploreContent() {
                                                             <Clock className="w-3.5 h-3.5 text-gray-400" /> {item.options[0]?.duration} MINS
                                                         </div>
                                                         <div className="flex items-center justify-between">
-                                                            <span className="font-bold text-gray-900 text-[13px]">
-                                                                IDR {parseInt(String(item.options[0]?.price || '0').replace(/[^0-9]/g, '') || '0', 10).toLocaleString('en-US')}
-                                                            </span>
+                                                            <div className="flex items-center gap-1.5 flex-wrap">
+                                                                {dynamicPricingPercentage < 0 && item.options?.[0]?.base_price && (
+                                                                    <span className="text-[11px] font-medium text-gray-400 line-through">
+                                                                        IDR {parseInt(String(item.options[0].base_price).replace(/[^0-9]/g, '') || '0', 10).toLocaleString('en-US')}
+                                                                    </span>
+                                                                )}
+                                                                <span className="font-bold text-gray-900 text-[13px]">
+                                                                    IDR {parseInt(String(item.options[0]?.price || '0').replace(/[^0-9]/g, '') || '0', 10).toLocaleString('en-US')}
+                                                                </span>
+                                                            </div>
                                                             <div className="w-7 h-7 rounded-full bg-[#1D1D1F] text-white flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                                                                 <Plus size={14} strokeWidth={2.5} />
                                                             </div>

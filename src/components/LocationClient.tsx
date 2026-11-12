@@ -30,7 +30,7 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
     const { saveDraft, confirmBooking } = useCart();
     const bookingIdRef = React.useRef<string>(Math.random().toString(36).substring(2, 8).toUpperCase());
 
-    const { treatments, campaign, products, isLoaded, siteBrandFilter, partnerTreatments } = useSpa();
+    const { treatments, campaign, products, isLoaded, siteBrandFilter, partnerTreatments, dynamicPricingPercentage } = useSpa();
 
     const [activeCategory, setActiveCategory] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
@@ -675,8 +675,17 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                                 <Clock className="w-3.5 h-3.5" /> {item.options[0]?.duration} MINS
                                             </div>
                                             <div className="flex items-center justify-between bg-white/80 backdrop-blur-sm rounded-full p-1 pl-4 border border-gray-100">
-                                                <span className="font-semibold text-gray-900 text-[14px]">IDR {parseInt(item.options[0]?.price.replace(/,/g, '') || '0').toLocaleString('en-US')}</span>
-                                                <div className="w-10 h-10 rounded-full bg-[#1D1D1F] text-white flex items-center justify-center group-hover:bg-black transition-colors shrink-0 shadow-sm">
+                                                <div className="flex items-center gap-2 min-w-0 pr-1 flex-wrap">
+                                                    {dynamicPricingPercentage < 0 && item.options?.[0]?.base_price && (
+                                                        <span className="text-[11px] sm:text-[12px] font-medium text-gray-400 line-through shrink-0 whitespace-nowrap">
+                                                            IDR {parseInt(String(item.options[0].base_price).replace(/[^0-9]/g, '') || '0', 10).toLocaleString('en-US')}
+                                                        </span>
+                                                    )}
+                                                    <span className="font-semibold text-gray-900 text-[14px] whitespace-nowrap">
+                                                        IDR {parseInt(item.options[0]?.price.replace(/,/g, '') || '0').toLocaleString('en-US')}
+                                                    </span>
+                                                </div>
+                                                <div className="w-10 h-10 rounded-full bg-[#1D1D1F] text-white flex items-center justify-center group-hover:bg-black transition-colors shrink-0 shadow-sm ml-auto">
                                                     <Plus size={20} strokeWidth={2.5} />
                                                 </div>
                                             </div>
