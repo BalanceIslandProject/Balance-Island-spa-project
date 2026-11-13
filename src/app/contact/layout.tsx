@@ -1,19 +1,19 @@
 import { Metadata } from 'next';
 import { headers } from 'next/headers';
+import { resolveSeoBrandProfile } from '@/lib/seoDomain';
 
 export async function generateMetadata(): Promise<Metadata> {
   let host = 'www.booktherapick.com';
+  let cookieHeader = '';
   try {
     const headersList = await headers();
     host = headersList.get('x-forwarded-host') || headersList.get('host') || host;
+    cookieHeader = headersList.get('cookie') || '';
   } catch {}
 
-  const isTherapick = host.includes('booktherapick') || host.includes('therapick');
-  const isBaliDomain = (host.includes('homespaubud') || host.includes('ubudhomespa')) && !host.includes('elexoir');
-  const brandName = isTherapick ? 'Therapick' : (isBaliDomain ? 'Home Spa Ubud' : 'Elexoir Home Spa');
-  const baseUrl = isTherapick
-    ? 'https://www.booktherapick.com'
-    : (isBaliDomain ? 'https://www.homespaubud.com' : 'https://www.elexoirhomespaubud.com');
+  const profile = resolveSeoBrandProfile(host, cookieHeader);
+  const brandName = profile.name;
+  const baseUrl = profile.baseUrl;
 
   const title = `Concierge & Contact | ${brandName} Massage Home Service Bali`;
   const description = `Contact ${brandName} concierge for 5-star massage home service and outcall spa bookings across Bali. Direct WhatsApp concierge, treatment inquiries, and group reservations.`;
@@ -24,6 +24,20 @@ export async function generateMetadata(): Promise<Metadata> {
     alternates: {
       canonical: `${baseUrl}/contact`,
     },
+    icons: profile.isTherapick
+      ? {
+          icon: [
+            { url: '/therapick-favicon.png', type: 'image/png' },
+            { url: '/therapick-favicon.png?v=3', type: 'image/png' },
+          ],
+          shortcut: [{ url: '/therapick-favicon.png', type: 'image/png' }],
+          apple: [{ url: '/therapick-favicon.png', sizes: '180x180', type: 'image/png' }],
+        }
+      : {
+          icon: [{ url: `${profile.faviconUrl}?v=2`, type: 'image/png' }],
+          shortcut: [{ url: `${profile.faviconUrl}?v=2`, type: 'image/png' }],
+          apple: [{ url: `${profile.faviconUrl}?v=2`, sizes: '180x180', type: 'image/png' }],
+        },
     openGraph: {
       title,
       description,
@@ -36,14 +50,16 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function ContactLayout({ children }: { children: React.ReactNode }) {
   let host = 'www.booktherapick.com';
+  let cookieHeader = '';
   try {
     const headersList = await headers();
     host = headersList.get('x-forwarded-host') || headersList.get('host') || host;
+    cookieHeader = headersList.get('cookie') || '';
   } catch {}
 
-  const isTherapick = host.includes('booktherapick') || host.includes('therapick');
-  const baseUrl = isTherapick ? 'https://www.booktherapick.com' : 'https://www.homespaubud.com';
-  const brandName = isTherapick ? 'Therapick Bali' : 'Home Spa Ubud';
+  const profile = resolveSeoBrandProfile(host, cookieHeader);
+  const brandName = profile.name;
+  const baseUrl = profile.baseUrl;
 
   const schemaData = {
     '@context': 'https://schema.org',
@@ -74,10 +90,10 @@ export default async function ContactLayout({ children }: { children: React.Reac
         mainEntity: {
           '@type': 'HealthAndBeautyBusiness',
           name: brandName,
-          telephone: isTherapick ? '+62 851 7411 9423' : '+62 822 6655 4600',
-          email: isTherapick ? 'contact@booktherapick.com' : 'info@homespaubud.com',
+          telephone: profile.telephone,
+          email: profile.email,
           url: baseUrl,
-          areaServed: isTherapick ? 'Bali, Indonesia' : 'Ubud, Gianyar, Bali, Indonesia',
+          areaServed: profile.isTherapick ? 'Bali, Indonesia' : 'Ubud, Gianyar, Bali, Indonesia',
         },
       },
     ],
@@ -93,4 +109,3 @@ export default async function ContactLayout({ children }: { children: React.Reac
     </>
   );
 }
-

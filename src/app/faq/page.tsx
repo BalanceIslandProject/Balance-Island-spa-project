@@ -2,20 +2,20 @@ import React from 'react';
 import { Metadata } from 'next';
 import { headers } from 'next/headers';
 import FaqSection from '@/components/FaqSection';
+import { resolveSeoBrandProfile } from '@/lib/seoDomain';
 
 export async function generateMetadata(): Promise<Metadata> {
   let host = 'www.booktherapick.com';
+  let cookieHeader = '';
   try {
     const headersList = await headers();
     host = headersList.get('x-forwarded-host') || headersList.get('host') || host;
+    cookieHeader = headersList.get('cookie') || '';
   } catch {}
 
-  const isTherapick = host.includes('booktherapick') || host.includes('therapick');
-  const isBaliDomain = (host.includes('homespaubud') || host.includes('ubudhomespa')) && !host.includes('elexoir');
-  const brandName = isTherapick ? 'Therapick' : (isBaliDomain ? 'Home Spa Ubud' : 'Elexoir Home Spa');
-  const baseUrl = isTherapick
-    ? 'https://www.booktherapick.com'
-    : (isBaliDomain ? 'https://www.homespaubud.com' : 'https://www.elexoirhomespaubud.com');
+  const profile = resolveSeoBrandProfile(host, cookieHeader);
+  const brandName = profile.name;
+  const baseUrl = profile.baseUrl;
 
   const title = `Frequently Asked Questions | Massage Home Service & Outcall Spa Bali | ${brandName}`;
   const description = `All your questions answered about booking 5-star massage home service, outcall in-villa spa, and pijat panggilan in Bali. Coverage areas, arrival times, hygiene standards, and treatments.`;
@@ -26,6 +26,20 @@ export async function generateMetadata(): Promise<Metadata> {
     alternates: {
       canonical: `${baseUrl}/faq`,
     },
+    icons: profile.isTherapick
+      ? {
+          icon: [
+            { url: '/therapick-favicon.png', type: 'image/png' },
+            { url: '/therapick-favicon.png?v=3', type: 'image/png' },
+          ],
+          shortcut: [{ url: '/therapick-favicon.png', type: 'image/png' }],
+          apple: [{ url: '/therapick-favicon.png', sizes: '180x180', type: 'image/png' }],
+        }
+      : {
+          icon: [{ url: `${profile.faviconUrl}?v=2`, type: 'image/png' }],
+          shortcut: [{ url: `${profile.faviconUrl}?v=2`, type: 'image/png' }],
+          apple: [{ url: `${profile.faviconUrl}?v=2`, sizes: '180x180', type: 'image/png' }],
+        },
     openGraph: {
       title,
       description,
@@ -38,14 +52,16 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function FaqPage() {
   let host = 'www.booktherapick.com';
+  let cookieHeader = '';
   try {
     const headersList = await headers();
     host = headersList.get('x-forwarded-host') || headersList.get('host') || host;
+    cookieHeader = headersList.get('cookie') || '';
   } catch {}
 
-  const isTherapick = host.includes('booktherapick') || host.includes('therapick');
-  const baseUrl = isTherapick ? 'https://www.booktherapick.com' : 'https://www.homespaubud.com';
-  const brandName = isTherapick ? 'Therapick Bali' : 'Home Spa Ubud';
+  const profile = resolveSeoBrandProfile(host, cookieHeader);
+  const baseUrl = profile.baseUrl;
+  const brandName = profile.name;
 
   const schemaData = {
     '@context': 'https://schema.org',

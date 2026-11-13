@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { headers } from 'next/headers';
 import { supabase } from '@/lib/supabase';
 import { createSlug } from '@/utils/slugify';
+import { resolveSeoBrandProfile } from '@/lib/seoDomain';
 
 import { unstable_cache } from 'next/cache';
 
@@ -32,20 +33,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
 
   let host = 'www.booktherapick.com';
+  let cookieHeader = '';
   try {
     const headersList = await headers();
     host = headersList.get('x-forwarded-host') || headersList.get('host') || host;
+    cookieHeader = headersList.get('cookie') || '';
   } catch {}
 
-  const cleanHost = host.toLowerCase().split(':')[0].trim();
-  const isPartnersSubdomain = cleanHost.startsWith('partners.');
-  const isTherapick = cleanHost.includes('booktherapick') || cleanHost.includes('therapick') || isPartnersSubdomain;
-  const isBaliDomain = (cleanHost.includes('homespaubud') || cleanHost.includes('ubudhomespa')) && !cleanHost.includes('elexoir');
-
-  const brandName = isTherapick ? 'Therapick Bali' : (isBaliDomain ? 'Home Spa Ubud' : 'Elexoir Home Spa');
-  const baseUrl = isTherapick
-    ? 'https://www.booktherapick.com'
-    : (isBaliDomain ? 'https://www.homespaubud.com' : 'https://www.elexoirhomespaubud.com');
+  const profile = resolveSeoBrandProfile(host, cookieHeader);
+  const isTherapick = profile.isTherapick;
+  const isBaliDomain = profile.isBaliDomain;
+  const brandName = profile.name;
+  const baseUrl = profile.baseUrl;
 
   // Fast in-memory cached lookup by id or slug
   const treatments = await getCachedPublishedTreatments();
@@ -179,15 +178,17 @@ export default async function RitualLayout({
   const { id } = await params;
 
   let host = 'www.booktherapick.com';
+  let cookieHeader = '';
   try {
     const headersList = await headers();
     host = headersList.get('x-forwarded-host') || headersList.get('host') || host;
+    cookieHeader = headersList.get('cookie') || '';
   } catch {}
 
-  const cleanHost = host.toLowerCase().split(':')[0].trim();
-  const isTherapick = cleanHost.includes('booktherapick') || cleanHost.includes('therapick');
-  const brandName = isTherapick ? 'Therapick Bali' : 'Home Spa Ubud';
-  const baseUrl = isTherapick ? 'https://www.booktherapick.com' : 'https://www.homespaubud.com';
+  const profile = resolveSeoBrandProfile(host, cookieHeader);
+  const isTherapick = profile.isTherapick;
+  const brandName = profile.name;
+  const baseUrl = profile.baseUrl;
 
   const treatments = await getCachedPublishedTreatments();
   const rawId = (id || '').trim();
@@ -199,7 +200,7 @@ export default async function RitualLayout({
   const rawTitle = treatment?.title || id.split('-').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
   const treatmentDesc = treatment?.desc || `Luxury in-villa ${rawTitle} treatment delivered directly to your private villa or resort.`;
   const canonicalUrl = `${baseUrl}/rituals/${createSlug(rawTitle)}`;
-  const ogImage = isTherapick ? `${baseUrl}/therapick-favicon.png` : `${baseUrl}/homespa.png`;
+  const ogImage = isTherapick ? `${baseUrl}/therapick-favicon.png` : `${baseUrl}${profile.faviconUrl}`;
 
   // Schema.org Structured Data for Google rich search results & LLM entity resolution
   const schemaData = {
@@ -241,29 +242,37 @@ export default async function RitualLayout({
           name: brandName,
           url: baseUrl,
           logo: ogImage,
-          telephone: '+6282266554600',
+          telephone: profile.telephone,
           priceRange: '$$',
         },
-        areaServed: isTherapick
-          ? [
-              { '@type': 'Place', name: 'Seminyak, Bali' },
-              { '@type': 'Place', name: 'Canggu, Bali' },
-              { '@type': 'Place', name: 'Ubud, Bali' },
-              { '@type': 'Place', name: 'Uluwatu, Bali' },
-              { '@type': 'Place', name: 'Sanur, Bali' },
-              { '@type': 'Place', name: 'Nusa Dua, Bali' },
-              { '@type': 'Place', name: 'Jimbaran, Bali' },
-              { '@type': 'Place', name: 'Kuta, Bali' },
-            ]
-          : [{ '@type': 'Place', name: 'Ubud, Bali' }],
-        offers: (treatment?.options || []).map((opt: any) => ({
-          '@type': 'Offer',
-          price: opt.price,
-          priceCurrency: 'IDR',
-          availability: 'https://schema.org/InStock',
-          name: `${opt.duration} Minutes ${rawTitle}`,
-          description: `${opt.duration} minutes of professional in-villa ${rawTitle} massage home service.`,
+        areaServed: profile.areasServed.map((area) => ({
+          '@type': area.type || 'Place',
+          name: area.name,
+          geo: {
+            '@type': 'GeoCoordinates',
+            latitude: area.lat,
+            longitude: area.lng,
+          },
         })),
+        offers: (treatment?.options && treatment.options.length > 0)
+          ? treatment.options.map((opt: any) => ({
+              '@type': 'Offer',
+              price: opt.price,
+              priceCurrency: 'IDR',
+              availability: 'https://schema.org/InStock',
+              url: canonicalUrl,
+              name: `${opt.duration} Minutes ${rawTitle}`,
+              description: `${opt.duration} minutes of professional in-villa ${rawTitle} massage home service.`,
+            }))
+          : (treatment?.price ? [{
+              '@type': 'Offer',
+              price: treatment.price,
+              priceCurrency: 'IDR',
+              availability: 'https://schema.org/InStock',
+              url: canonicalUrl,
+              name: rawTitle,
+              description: treatmentDesc,
+            }] : []),
         aggregateRating: {
           '@type': 'AggregateRating',
           ratingValue: '4.9',

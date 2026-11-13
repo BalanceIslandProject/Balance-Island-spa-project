@@ -2,23 +2,25 @@ import { MetadataRoute } from 'next';
 import { headers } from 'next/headers';
 import { supabase } from '@/lib/supabase';
 import { createSlug } from '@/utils/slugify';
+import { resolveSeoBrandProfile } from '@/lib/seoDomain';
 
 export const dynamic = 'force-dynamic';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let host = 'www.booktherapick.com';
+  let cookieHeader = '';
   try {
     const headersList = await headers();
     host = headersList.get('x-forwarded-host') || headersList.get('host') || host;
+    cookieHeader = headersList.get('cookie') || '';
   } catch {
     // fallback to default
   }
 
-  const isTherapick = host.includes('booktherapick') || host.includes('therapick');
-  const isBali = (host.includes('homespaubud') || host.includes('ubudhomespa')) && !host.includes('elexoir');
-  const baseUrl = isTherapick 
-    ? 'https://www.booktherapick.com' 
-    : (isBali ? 'https://www.homespaubud.com' : 'https://www.elexoirhomespaubud.com');
+  const profile = resolveSeoBrandProfile(host, cookieHeader);
+  const baseUrl = profile.baseUrl;
+  const isTherapick = profile.isTherapick;
+  const brand = profile.brand;
 
   const now = new Date();
 
@@ -63,13 +65,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: location === 'ubud' ? 1.0 : 0.95,
   }));
 
-  // Treatment ritual pages (dynamic from database)
+  // Treatment ritual pages (dynamic from database with STRICT BRAND FILTERING)
   let treatmentRoutes: MetadataRoute.Sitemap = [];
   try {
-    const { data: treatments } = await supabase
+    let { data: treatments } = await supabase
       .from('treatments')
       .select('title, updated_at')
-      .eq('is_published', true);
+      .eq('is_published', true)
+      .eq('brand', brand);
+
+    if ((!treatments || treatments.length === 0) && brand === 'bali') {
+      const fallback = await supabase
+        .from('treatments')
+        .select('title, updated_at')
+        .eq('is_published', true)
+        .eq('brand', 'elexoir');
+      treatments = fallback.data || [];
+    }
 
     if (treatments && treatments.length > 0) {
       treatmentRoutes = treatments.map((t) => ({

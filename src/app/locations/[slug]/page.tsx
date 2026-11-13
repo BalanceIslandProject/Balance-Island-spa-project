@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import { headers } from 'next/headers';
 import LocationClient from '@/components/LocationClient';
+import { resolveSeoBrandProfile } from '@/lib/seoDomain';
 
 type Props = {
     params: Promise<{ slug: string }>
@@ -11,19 +12,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const locationName = slug.split('-').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 
     let host = 'www.booktherapick.com';
+    let cookieHeader = '';
     try {
         const headersList = await headers();
         host = headersList.get('x-forwarded-host') || headersList.get('host') || host;
+        cookieHeader = headersList.get('cookie') || '';
     } catch {
         // fallback
     }
 
-    const isTherapick = host.includes('booktherapick') || host.includes('therapick');
-    const isBaliDomain = (host.includes('homespaubud') || host.includes('ubudhomespa')) && !host.includes('elexoir');
-    const brandName = isTherapick ? 'Therapick' : (isBaliDomain ? 'Home Spa Ubud' : 'Elexoir Home Spa');
-    const baseUrl = isTherapick 
-        ? 'https://www.booktherapick.com' 
-        : (isBaliDomain ? 'https://www.homespaubud.com' : 'https://www.elexoirhomespaubud.com');
+    const profile = resolveSeoBrandProfile(host, cookieHeader);
+    const isTherapick = profile.isTherapick;
+    const isBaliDomain = profile.isBaliDomain;
+    const brandName = profile.name;
+    const baseUrl = profile.baseUrl;
 
     // Geo coordinates database for Bali regions
     const geoCoordinatesMap: Record<string, { lat: number; lng: number }> = {
@@ -174,20 +176,20 @@ export default async function LocationPage({ params }: Props) {
     const locationName = slug.split('-').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
     
     let host = 'www.booktherapick.com';
+    let cookieHeader = '';
     try {
         const headersList = await headers();
-        host = headersList.get('host') || host;
+        host = headersList.get('x-forwarded-host') || headersList.get('host') || host;
+        cookieHeader = headersList.get('cookie') || '';
     } catch {
         // fallback
     }
 
-    const isTherapick = host.includes('booktherapick') || host.includes('therapick');
-    const isBaliDomain = (host.includes('homespaubud') || host.includes('ubudhomespa')) && !host.includes('elexoir');
-    const brandName = isTherapick ? 'Therapick' : (isBaliDomain ? 'Home Spa Ubud' : 'Elexoir Home Spa');
-    const baseUrl = isTherapick 
-        ? 'https://www.booktherapick.com' 
-        : (isBaliDomain ? 'https://www.homespaubud.com' : 'https://www.elexoirhomespaubud.com');
-    const iconUrl = isTherapick ? '/therapick-logo-2.png' : (isBaliDomain ? '/homespa.png' : '/elexoir.png');
+    const profile = resolveSeoBrandProfile(host, cookieHeader);
+    const isTherapick = profile.isTherapick;
+    const brandName = profile.name;
+    const baseUrl = profile.baseUrl;
+    const iconUrl = profile.iconUrl;
 
     const geoCoordinatesMap: Record<string, { lat: number; lng: number }> = {
         'ubud': { lat: -8.5069, lng: 115.2625 },

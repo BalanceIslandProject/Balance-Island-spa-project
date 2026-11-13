@@ -1263,6 +1263,19 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
     }
   };
 
+  // Helper: Background SEO & GEO schema revalidation
+  const triggerBackgroundRevalidation = async () => {
+    try {
+      await fetch('/api/revalidate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'revalidate', brand: 'therapick' })
+      });
+    } catch (e) {
+      console.warn('Background SEO revalidation notice:', e);
+    }
+  };
+
   // Action: Toggle Pin to Hero Spotlight
   const togglePinTreatment = async (treatmentId: string, isPinned: boolean): Promise<{ success: boolean; error?: string }> => {
     try {
@@ -1272,6 +1285,7 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
       }).eq('id', treatmentId);
       if (error) throw error;
       setTreatments(prev => prev.map(t => t.id === treatmentId ? { ...t, is_pinned: isPinned } : t));
+      triggerBackgroundRevalidation();
       return { success: true };
     } catch (err: any) {
       console.error('Toggle pin error:', err);
@@ -1288,6 +1302,7 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
       }).eq('id', treatmentId);
       if (error) throw error;
       setTreatments(prev => prev.map(t => t.id === treatmentId ? { ...t, is_published: isPublished } : t));
+      triggerBackgroundRevalidation();
       return { success: true };
     } catch (err: any) {
       console.error('Toggle publish error:', err);
@@ -1315,6 +1330,7 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
         if (error) throw error;
       }
       await refreshData();
+      triggerBackgroundRevalidation();
       return { success: true };
     } catch (err: any) {
       console.error('Save treatment error:', err);
@@ -1328,6 +1344,7 @@ export function TherapickAdminProvider({ children }: { children: React.ReactNode
       const { error } = await supabase.from('treatments').delete().eq('id', treatmentId);
       if (error) throw error;
       setTreatments(prev => prev.filter(t => t.id !== treatmentId));
+      triggerBackgroundRevalidation();
       return { success: true };
     } catch (err: any) {
       console.error('Delete treatment error:', err);

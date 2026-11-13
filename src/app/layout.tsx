@@ -12,6 +12,8 @@ import { headers } from "next/headers";
 import { Suspense } from "react";
 import AffiliateTracker from "@/components/AffiliateTracker";
 import ScrollRevealProvider from "@/components/ScrollRevealProvider";
+import { resolveSeoBrandProfile } from "@/lib/seoDomain";
+import { createSlug } from "@/utils/slugify";
 
 const jakarta = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
@@ -53,31 +55,17 @@ export async function generateViewport(): Promise<Viewport> {
 export async function generateMetadata(): Promise<Metadata> {
   const headersList = await headers();
   const hostHeader = headersList.get("x-forwarded-host") || headersList.get("host") || "";
-  const host = hostHeader.toLowerCase().split(':')[0].trim();
-  const isPartnersSubdomain = host.startsWith("partners.");
   const cookieHeader = headersList.get("cookie") || "";
-  const isTherapick = host.includes("booktherapick") || host.includes("therapick") || isPartnersSubdomain || cookieHeader.includes("dev_brand=therapick");
-  const isBaliDomain = ((host.includes("homespaubud") || host.includes("ubudhomespa")) && !host.includes("elexoir")) || cookieHeader.includes("dev_brand=bali");
+  const profile = resolveSeoBrandProfile(hostHeader, cookieHeader);
 
-  const name = isTherapick ? "Therapick" : (isBaliDomain ? "Home Spa Ubud" : "Elexoir Home Spa Ubud");
-  const url = isTherapick ? "https://www.booktherapick.com" : (isBaliDomain ? "https://www.homespaubud.com" : "https://www.elexoirhomespaubud.com");
-
-  // 1. PROFESSIONAL, SPECIFIC SEO & GEO TITLES
-  // High-authority title optimized for human elegance, Google SERP pixel limits (under 60 chars), and Bali luxury search intent
-  const title = isTherapick
-    ? "Therapick Bali | Massage Home Service & Outcall In-Villa Spa Bali"
-    : (isBaliDomain
-      ? "Home Spa Ubud | In-Villa Massage Home Service & Outcall Spa Ubud, Bali"
-      : "Elexoir Home Spa | 5-Star Massage Home Service & Outcall Spa in Ubud, Bali");
-
-  const description = isTherapick
-    ? "Bali's premier massage home service and outcall in-villa spa platform. Certified 5-star therapists arrive at your private villa or hotel across Seminyak, Canggu, Ubud, Uluwatu, Sanur & Nusa Dua within 45-60 mins. Pijat panggilan Bali profesional, Balinese massage, deep tissue & couples rituals."
-    : (isBaliDomain
-      ? "Experience top-rated massage home service and outcall spa in Ubud, Bali. 5-star certified therapists deliver traditional Balinese healing, deep tissue massage, and couples spa rituals directly to your private villa or resort anywhere in Ubud."
-      : "Exclusive 5-star luxury massage home service and outcall spa in Ubud, Bali. Authentic Balinese in-villa massage, deep tissue recovery, and couples wellness sanctuary delivered to your private villa in Ubud Center, Sayan, Penestanan, Kedewatan, and Tegallalang.");
-
-  const faviconUrl = isTherapick ? '/therapick-favicon.png' : (isBaliDomain ? '/homespa.png' : '/elexoir.png');
-  const iconUrl = isTherapick ? '/therapick-logo.png' : (isBaliDomain ? '/homespa.png' : '/elexoir.png');
+  const isTherapick = profile.isTherapick;
+  const isBaliDomain = profile.isBaliDomain;
+  const name = profile.name;
+  const url = profile.baseUrl;
+  const title = profile.title;
+  const description = profile.description;
+  const faviconUrl = profile.faviconUrl;
+  const iconUrl = profile.iconUrl;
 
   // 2. DOMAIN-ISOLATED TARGET KEYWORDS (Optimized with real Ahrefs search data)
   // High-volume terms: massage home service bali, outcall massage bali, home massage bali, pijat panggilan bali
@@ -231,14 +219,12 @@ export async function generateMetadata(): Promise<Metadata> {
         icon: [
           { url: '/therapick-favicon.png', type: 'image/png' },
           { url: '/therapick-favicon.png?v=3', type: 'image/png' },
-          { url: '/favicon.ico', sizes: '48x48' },
         ],
         shortcut: [
           { url: '/therapick-favicon.png', type: 'image/png' }
         ],
         apple: [
-          { url: '/therapick-favicon.png', sizes: '180x180', type: 'image/png' },
-          { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }
+          { url: '/therapick-favicon.png', sizes: '180x180', type: 'image/png' }
         ]
       }
       : {
@@ -368,25 +354,44 @@ export default async function RootLayout({
 }>) {
   const headersList = await headers();
   const host = headersList.get("x-forwarded-host") || headersList.get("host") || "www.elexoirhomespaubud.com";
+  const cookieHeader = headersList.get("cookie") || "";
+  const profile = resolveSeoBrandProfile(host, cookieHeader);
+
   const cleanHost = host.toLowerCase().split(':')[0].trim();
   const isPartnersSubdomain = cleanHost.startsWith("partners.");
-  const cookieHeader = headersList.get("cookie") || "";
-  const isTherapick = host.includes("booktherapick") || host.includes("therapick") || isPartnersSubdomain || cookieHeader.includes("dev_brand=therapick");
-  const isBaliDomain = ((host.includes("homespaubud") || host.includes("ubudhomespa")) && !host.includes("elexoir")) || cookieHeader.includes("dev_brand=bali");
-  const brand = isTherapick ? 'therapick' : (isBaliDomain ? 'bali' : 'elexoir');
+  const isTherapick = profile.isTherapick;
+  const isBaliDomain = profile.isBaliDomain;
+  const brand = profile.brand;
 
-  const name = isTherapick ? "Therapick" : (isBaliDomain ? "Home Spa Ubud" : "Elexoir Home Spa");
-  const url = isTherapick ? "https://www.booktherapick.com" : (isBaliDomain ? "https://www.homespaubud.com" : "https://www.elexoirhomespaubud.com");
-  const description = isTherapick
-    ? "Experience 5-star luxury home spa and in-villa massage delivered directly to your villa or hotel in Ubud, Canggu, Seminyak, Uluwatu, and across Bali with Therapick. Book certified therapists on-demand."
-    : (isBaliDomain
-      ? "Looking for the best massage in Bali? Home Spa Ubud delivers premium, 5-star professional spa treatments directly to your private villa or hotel. Serving Ubud, Canggu, Seminyak, Kuta, and Nusa Dua."
-      : "Experience the top-rated luxury mobile spa in Bali. Professional in-villa massages, couples treatments & holistic rituals delivered directly to your hotel or villa in Ubud, Canggu, and Seminyak.");
-  const faviconUrl = isTherapick ? '/therapick-favicon.png' : (isBaliDomain ? '/homespa.png' : '/elexoir.png');
-  const iconUrl = isTherapick ? '/therapick-logo.png' : (isBaliDomain ? '/homespa.png' : '/elexoir.png');
+  const name = profile.name;
+  const url = profile.baseUrl;
+  const description = profile.description;
+  const faviconUrl = profile.faviconUrl;
+  const iconUrl = profile.iconUrl;
 
   // SSR Data Fetching with server-side caching (120s revalidation)
   const initialData = await getSpaData(brand);
+
+  // Dynamic Treatment Schema Synchronization: Generate live OfferCatalog items from published treatments
+  const dynamicOfferCatalogItems = (initialData?.treatments && initialData.treatments.length > 0)
+    ? initialData.treatments.slice(0, 20).map((t: any) => {
+        const minPrice = Array.isArray(t.options) && t.options.length > 0
+          ? Math.min(...t.options.map((o: any) => Number(o.price) || 0))
+          : (Number(t.price) || undefined);
+        return {
+          "@type": "Offer",
+          ...(minPrice ? { "price": minPrice, "priceCurrency": "IDR" } : {}),
+          "availability": "https://schema.org/InStock",
+          "url": `${url}/rituals/${createSlug(t.title)}`,
+          "itemOffered": {
+            "@type": "Service",
+            "name": isTherapick ? `${t.title} (Home Service & Outcall)` : `${t.title} Ubud`,
+            "serviceType": `${t.category || 'Balinese Massage'} Home Service`,
+            "description": t.short_description || t.description || `${t.title} delivered to your private villa or resort by certified 5-star therapists.`
+          }
+        };
+      })
+    : null;
 
   return (
     <html lang="en" className="antialiased scroll-smooth" suppressHydrationWarning>
@@ -548,7 +553,7 @@ export default async function RootLayout({
                       "hasOfferCatalog": {
                         "@type": "OfferCatalog",
                         "name": "Therapick Bali In-Villa Massage Home Service & Outcall Spa Treatments",
-                        "itemListElement": [
+                        "itemListElement": dynamicOfferCatalogItems || [
                           {
                             "@type": "Offer",
                             "itemOffered": {
@@ -783,8 +788,8 @@ export default async function RootLayout({
                       ],
                       "hasOfferCatalog": {
                         "@type": "OfferCatalog",
-                        "name": "Ubud In-Villa Massage Home Service & Outcall Spa Treatments",
-                        "itemListElement": [
+                        "name": `${name} In-Villa Massage Home Service & Outcall Spa Treatments`,
+                        "itemListElement": dynamicOfferCatalogItems || [
                           {
                             "@type": "Offer",
                             "itemOffered": {

@@ -785,6 +785,7 @@ function LegacyAdminDashboardContent() {
                     pinned_image: null
                 }).eq('id', treatment.id);
                 setTreatments(prev => prev.map(t => t.id === treatment.id ? { ...t, is_pinned: false, pinned_image: undefined } : t));
+                triggerRevalidation();
             } catch (err: any) {
                 console.error(err);
             }
@@ -841,6 +842,7 @@ function LegacyAdminDashboardContent() {
                 }).eq('id', pendingPinId);
                 
                 setTreatments(prev => prev.map(t => t.id === pendingPinId ? { ...t, is_pinned: true, pinned_image: publicUrl } : t));
+                triggerRevalidation();
             } catch (err: any) {
                 console.error("Update failed", err);
                 alert("Failed to save pinned image URL to database.");
@@ -2184,6 +2186,7 @@ function LegacyAdminDashboardContent() {
                                                         if(confirm('Delete treatment?')) {
                                                             await supabase.from('treatments').delete().eq('id', t.id);
                                                             setTreatments(prev => prev.filter(x => x.id !== t.id));
+                                                            triggerRevalidation();
                                                         }
                                                     }}
                                                     className={cx(btn.base, btn.danger, btn.xs)}
