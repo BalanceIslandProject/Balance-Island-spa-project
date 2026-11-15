@@ -6,10 +6,11 @@ import {
   MapPin, Clock, Tag, Image as ImageIcon, Upload, 
   X, ExternalLink, Sparkles, Phone, Percent, Receipt,
   ChevronDown, Filter, Eye, Layers, AlertCircle,
-  Calendar as CalendarIcon, ChevronLeft, ChevronRight, MessageCircle, DollarSign, User
+  Calendar as CalendarIcon, ChevronLeft, ChevronRight, MessageCircle, DollarSign, User, Search
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useSpa, SpaPartner, PartnerTreatment } from '@/context/SpaContext';
+import { useTherapickAdmin } from '@/context/TherapickAdminContext';
 import { parseTreatmentInclusions, formatTreatmentDescription } from '@/lib/treatmentUtils';
 
 interface DurationOption {
@@ -25,6 +26,8 @@ export default function TherapickPartnerSpasView() {
     spaPartners: contextPartners, setSpaPartners: setContextPartners,
     partnerTreatments: contextTreatments, setPartnerTreatments: setContextTreatments 
   } = useSpa();
+
+  const { deleteBooking: adminDeleteBooking } = useTherapickAdmin();
 
   // Active Sub-Tab: 'partners' (Profiles) | 'treatments' (Treatments) | 'calendar' (Bookings Calendar)
   const [activeSubTab, setActiveSubTab] = useState<'partners' | 'treatments' | 'calendar'>('partners');
@@ -46,6 +49,11 @@ export default function TherapickPartnerSpasView() {
     const d = String(now.getDate()).padStart(2, '0');
     return `${y}-${m}-${d}`;
   });
+
+  // ── Booking Removal & History Filter States ──
+  const [deletingBookingId, setDeletingBookingId] = useState<string | null>(null);
+  const [calendarViewMode, setCalendarViewMode] = useState<'schedule' | 'all'>('schedule');
+  const [historySearchQuery, setHistorySearchQuery] = useState('');
 
   // ── Partner Profile Modal State ──
   const [isPartnerModalOpen, setIsPartnerModalOpen] = useState(false);
@@ -801,6 +809,92 @@ export default function TherapickPartnerSpasView() {
 
     return { rev, net, prof };
   }, [currentMonthBookings, getBookingFinancials]);
+
+  // All partner bookings history filtered by search query
+  const historyBookings = useMemo(() => {
+    let list = filteredCalendarBookings;
+    if (historySearchQuery.trim()) {
+      const q = historySearchQuery.trim().toLowerCase();
+      list = list.filter((b: any) => {
+        const ref = String(b.reference_number || b.id || '').toLowerCase();
+        const guest = String(b.guest_name || '').toLowerCase();
+        const venue = String(b.venue || b.items?.[0]?.partnerName || '').toLowerCase();
+        const treatment = String(b.treatment_name || b.items?.[0]?.title || '').toLowerCase();
+        const date = getBookingDate(b).toLowerCase();
+        return ref.includes(q) || guest.includes(q) || venue.includes(q) || treatment.includes(q) || date.includes(q);
+      });
+    }
+    return [...list].sort((a, b) => {
+      const dateA = getBookingDate(a) + ' ' + (a.time || '');
+      const dateB = getBookingDate(b) + ' ' + (b.time || '');
+      return dateB.localeCompare(dateA);
+    });
+  }, [filteredCalendarBookings, historySearchQuery]);
+
+  // Permanently delete a partner booking from history
+  const handleDeleteBooking = async (b: any, e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    const refNum = b.reference_number || (b.id ? b.id.slice(0, 8).toUpperCase() : '');
+    const guest = b.guest_name ? ` (${b.guest_name})` : '';
+
+    const confirmed = window.confirm(
+      `Are you sure you want to permanently remove booking #${refNum}${guest}?\n\nThis will delete the booking history from the database.`
+    );
+    if (!confirmed) return;
+
+    setDeletingBookingId(b.id);
+    try {
+      // 1. Optimistic local update so card vanishes immediately
+      setPartnerBookings(prev => prev.filter(item => item.id !== b.id));
+
+      // 2. Delete linked affiliate commissions
+      const rawRef = String(b.reference_number || '').trim();
+      const cleanRef = rawRef.replace(/^#/, '');
+      const matchFilters: string[] = [];
+      if (b.id) matchFilters.push(`booking_id.eq.${b.id}`);
+      if (rawRef) matchFilters.push(`booking_id.eq.${rawRef}`);
+      if (cleanRef) {
+        matchFilters.push(`booking_id.eq.${cleanRef}`);
+        matchFilters.push(`booking_id.eq.#${cleanRef}`);
+      }
+
+      if (matchFilters.length > 0) {
+        try {
+          await supabase.from('affiliate_commissions').delete().or(matchFilters.join(','));
+        } catch (commErr) {
+          console.warn('Notice removing linked commission:', commErr);
+        }
+      }
+
+      // 3. Delete from Supabase bookings table
+      const { error } = await supabase.from('bookings').delete().eq('id', b.id);
+      if (error) throw error;
+
+      // 4. Sync with global TherapickAdminContext if present
+      if (adminDeleteBooking) {
+        try {
+          await adminDeleteBooking(b.id);
+        } catch (ctxErr) {
+          // Already deleted, safe to ignore
+        }
+      }
+
+      // 5. Trigger cache revalidation
+      triggerRevalidation();
+
+      showToast(`Removed booking #${refNum}`);
+    } catch (err: any) {
+      console.error('Failed to remove partner booking:', err);
+      alert(`Could not remove booking: ${err?.message || 'Unknown error'}`);
+      // Rollback by reloading from server
+      loadAllData();
+    } finally {
+      setDeletingBookingId(null);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -1656,205 +1750,320 @@ export default function TherapickPartnerSpasView() {
 
           {/* Selected Date Bookings Schedule Drawer */}
           <div className="card p-6 space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-[var(--fitlo-line)] flex-wrap gap-2">
+            <div className="flex items-center justify-between pb-3 border-b border-[var(--fitlo-line)] flex-wrap gap-3">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-lg bg-[var(--fitlo-surface)] text-[var(--fitlo-ink)] flex items-center justify-center">
                   <Clock size={16} />
                 </div>
                 <div>
                   <h3 className="font-bold text-sm text-[var(--fitlo-ink)]">
-                    Schedule for {new Date(selectedCalendarDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                    {calendarViewMode === 'schedule'
+                      ? `Schedule for ${new Date(selectedCalendarDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`
+                      : 'All Partner Spas Booking History'}
                   </h3>
                   <p className="text-xs text-[var(--fitlo-muted)]">
-                    {selectedDateBookings.length} {selectedDateBookings.length === 1 ? 'reservation' : 'reservations'} scheduled
+                    {calendarViewMode === 'schedule'
+                      ? `${selectedDateBookings.length} ${selectedDateBookings.length === 1 ? 'reservation' : 'reservations'} scheduled`
+                      : `${historyBookings.length} partner ${historyBookings.length === 1 ? 'reservation' : 'reservations'} recorded`}
                   </p>
                 </div>
               </div>
 
-              {selectedDateBookings.length > 0 && (
-                <span className="text-xs font-bold px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800">
-                  {selectedDateBookings.length} Active Booking{selectedDateBookings.length > 1 ? 's' : ''}
-                </span>
-              )}
-            </div>
-
-            {selectedDateBookings.length === 0 ? (
-              <div className="py-8 text-center space-y-2">
-                <p className="text-xs text-[var(--fitlo-muted)]">
-                  No partner spa bookings scheduled for this date.
-                </p>
-
-                {/* Show quick upcoming list */}
-                {filteredCalendarBookings.length > 0 && (
-                  <div className="pt-4 max-w-lg mx-auto text-left">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--fitlo-muted)] block mb-2">
-                      All Upcoming Partner Reservations
+              {/* View Mode Toggle & Badges */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex items-center rounded-xl border border-[var(--fitlo-line)] bg-[var(--fitlo-surface)] p-0.5 text-xs font-semibold">
+                  <button
+                    type="button"
+                    onClick={() => setCalendarViewMode('schedule')}
+                    className={`px-3 py-1 rounded-lg transition-colors cursor-pointer ${
+                      calendarViewMode === 'schedule'
+                        ? 'bg-[var(--fitlo-ink)] text-white shadow-xs'
+                        : 'text-[var(--fitlo-muted)] hover:text-[var(--fitlo-ink)]'
+                    }`}
+                  >
+                    Day Schedule
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCalendarViewMode('all')}
+                    className={`px-3 py-1 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 ${
+                      calendarViewMode === 'all'
+                        ? 'bg-[var(--fitlo-ink)] text-white shadow-xs'
+                        : 'text-[var(--fitlo-muted)] hover:text-[var(--fitlo-ink)]'
+                    }`}
+                  >
+                    <span>All History</span>
+                    <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${
+                      calendarViewMode === 'all' ? 'bg-white/20 text-white' : 'bg-black/5 text-[var(--fitlo-ink)]'
+                    }`}>
+                      {filteredCalendarBookings.length}
                     </span>
-                    <div className="space-y-2">
-                      {filteredCalendarBookings.slice(0, 3).map((b: any) => {
-                        const bDate = getBookingDate(b);
-                        const partner = b.items?.[0]?.partnerName || 'Partner Spa';
-                        return (
-                          <div
-                            key={b.id}
-                            onClick={() => setSelectedCalendarDate(bDate)}
-                            className="p-3 rounded-xl border border-[var(--fitlo-line)] hover:border-[var(--fitlo-accent)] bg-[var(--fitlo-surface)]/60 cursor-pointer flex items-center justify-between text-xs transition-colors"
-                          >
-                            <div className="flex items-center gap-2.5">
-                              <span className="font-mono font-bold text-[10px] bg-black/5 px-2 py-0.5 rounded">
-                                {b.reference_number || b.id.slice(0, 6).toUpperCase()}
-                              </span>
-                              <span className="font-bold text-[var(--fitlo-ink)]">{b.guest_name || 'Guest'}</span>
-                              <span className="text-[var(--fitlo-muted)]">·</span>
-                              <span className="text-[var(--fitlo-muted)]">{partner}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs font-semibold text-[var(--fitlo-ink)]">
-                                {bDate} {b.time ? `at ${b.time}` : ''}
-                              </span>
-                              <span className="text-[10px] text-[var(--fitlo-accent)] font-bold">Select &rarr;</span>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
+                  </button>
+                </div>
+
+                {calendarViewMode === 'schedule' && selectedDateBookings.length > 0 && (
+                  <span className="text-xs font-bold px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800">
+                    {selectedDateBookings.length} Active Booking{selectedDateBookings.length > 1 ? 's' : ''}
+                  </span>
                 )}
               </div>
-            ) : (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {selectedDateBookings.map((b: any) => {
-                  const item = b.items?.[0] || {};
-                  const partnerName = item.partnerName || b.venue || 'Partner Spa';
-                  const cleanPhone = (b.guest_whatsapp || '').replace(/[^0-9]/g, '');
-                  const invoiceUrl = `/invoice/${b.reference_number || b.id}`;
-                  const fin = getBookingFinancials(b);
+            </div>
 
+            {/* Search Bar for All History View */}
+            {calendarViewMode === 'all' && (
+              <div className="relative">
+                <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--fitlo-muted)]" />
+                <input
+                  type="text"
+                  value={historySearchQuery}
+                  onChange={(e) => setHistorySearchQuery(e.target.value)}
+                  placeholder="Search by booking # (e.g. SE96JZ), guest name, venue, or treatment..."
+                  className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-[var(--fitlo-line)] bg-[var(--fitlo-surface)] text-[var(--fitlo-ink)] focus:outline-none focus:border-[var(--fitlo-ink)] transition-colors"
+                />
+              </div>
+            )}
+
+            {/* Display Bookings Logic */}
+            {(() => {
+              const displayBookings = calendarViewMode === 'all' ? historyBookings : selectedDateBookings;
+
+              if (displayBookings.length === 0) {
+                if (calendarViewMode === 'all') {
                   return (
-                    <div
-                      key={b.id}
-                      className="p-5 rounded-2xl border border-[var(--fitlo-line)] bg-[var(--fitlo-card)] hover:border-[var(--fitlo-accent)] transition-all space-y-4 shadow-xs"
-                    >
-                      {/* Top Header */}
-                      <div className="flex items-center justify-between pb-3 border-b border-[var(--fitlo-line)]">
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono text-xs font-bold bg-black/5 text-[var(--fitlo-ink)] px-2.5 py-1 rounded-lg">
-                            {b.reference_number || b.id.slice(0, 8).toUpperCase()}
-                          </span>
-                          <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
-                            <CheckCircle2 size={11} />
-                            {b.treatment_status || b.status || 'Confirmed'}
-                          </span>
-                        </div>
+                    <div className="py-10 text-center space-y-3">
+                      <p className="text-xs text-[var(--fitlo-muted)]">
+                        {historySearchQuery ? 'No partner bookings match your search query.' : 'No partner spa booking history found.'}
+                      </p>
+                      {historySearchQuery && (
+                        <button
+                          type="button"
+                          onClick={() => setHistorySearchQuery('')}
+                          className="fitlo-btn fitlo-btn--secondary text-xs py-1 px-3"
+                        >
+                          Clear Search
+                        </button>
+                      )}
+                    </div>
+                  );
+                }
 
-                        {b.time && (
-                          <div className="flex items-center gap-1 text-xs font-bold text-[var(--fitlo-ink)] bg-[var(--fitlo-surface)] px-2.5 py-1 rounded-lg">
-                            <Clock size={12} className="text-[var(--fitlo-muted)]" />
-                            <span>{b.time}</span>
-                          </div>
-                        )}
-                      </div>
+                return (
+                  <div className="py-8 text-center space-y-2">
+                    <p className="text-xs text-[var(--fitlo-muted)]">
+                      No partner spa bookings scheduled for this date.
+                    </p>
 
-                      {/* Guest & Venue Details */}
-                      <div className="space-y-2 text-xs">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[var(--fitlo-muted)] flex items-center gap-1.5 font-medium">
-                            <User size={13} className="text-gray-400" /> Guest Name
-                          </span>
-                          <span className="font-bold text-[var(--fitlo-ink)]">{b.guest_name || 'Guest'}</span>
-                        </div>
-
-                        {b.guest_whatsapp && (
-                          <div className="flex items-center justify-between">
-                            <span className="text-[var(--fitlo-muted)] flex items-center gap-1.5 font-medium">
-                              <Phone size={13} className="text-gray-400" /> WhatsApp
-                            </span>
-                            <a
-                              href={`https://wa.me/${cleanPhone}`}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="font-bold text-emerald-700 hover:underline flex items-center gap-1"
-                            >
-                              <span>{b.guest_whatsapp}</span>
-                              <ExternalLink size={10} />
-                            </a>
-                          </div>
-                        )}
-
-                        <div className="flex items-center justify-between">
-                          <span className="text-[var(--fitlo-muted)] flex items-center gap-1.5 font-medium">
-                            <Building2 size={13} className="text-gray-400" /> Partner Venue
-                          </span>
-                          <span className="font-bold text-[var(--fitlo-ink)] text-right">{partnerName}</span>
-                        </div>
-
-                        {b.location && (
-                          <div className="flex items-center justify-between">
-                            <span className="text-[var(--fitlo-muted)] flex items-center gap-1.5 font-medium">
-                              <MapPin size={13} className="text-gray-400" /> Staying At
-                            </span>
-                            <span className="font-bold text-[var(--fitlo-ink)] text-right">{b.location}</span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Treatment Info */}
-                      <div className="p-3 rounded-xl bg-[var(--fitlo-surface)] border border-[var(--fitlo-line)] space-y-1">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--fitlo-muted)] block">
-                          Treatment
+                    {/* Show quick upcoming list with remove capability */}
+                    {filteredCalendarBookings.length > 0 && (
+                      <div className="pt-4 max-w-lg mx-auto text-left">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--fitlo-muted)] block mb-2">
+                          All Upcoming Partner Reservations
                         </span>
-                        <p className="font-bold text-xs text-[var(--fitlo-ink)]">
-                          {item.title || b.treatment_name || 'Spa Treatment'}
-                        </p>
-                        <div className="flex items-center gap-2 text-[10px] text-[var(--fitlo-muted)] pt-0.5">
-                          {item.duration && <span>{String(item.duration).replace(/mins?/gi, '').trim()} Mins</span>}
-                          <span>•</span>
-                          <span>{item.guests || b.pax || 1} {Number(item.guests || b.pax || 1) > 1 ? 'Guests' : 'Guest'}</span>
+                        <div className="space-y-2">
+                          {filteredCalendarBookings.slice(0, 3).map((b: any) => {
+                            const bDate = getBookingDate(b);
+                            const partner = b.items?.[0]?.partnerName || 'Partner Spa';
+                            return (
+                              <div
+                                key={b.id}
+                                className="p-3 rounded-xl border border-[var(--fitlo-line)] hover:border-[var(--fitlo-accent)] bg-[var(--fitlo-surface)]/60 flex items-center justify-between text-xs transition-colors gap-2"
+                              >
+                                <div
+                                  onClick={() => setSelectedCalendarDate(bDate)}
+                                  className="flex items-center gap-2.5 cursor-pointer flex-1 min-w-0"
+                                >
+                                  <span className="font-mono font-bold text-[10px] bg-black/5 px-2 py-0.5 rounded shrink-0">
+                                    {b.reference_number || b.id.slice(0, 6).toUpperCase()}
+                                  </span>
+                                  <span className="font-bold text-[var(--fitlo-ink)] truncate">{b.guest_name || 'Guest'}</span>
+                                  <span className="text-[var(--fitlo-muted)]">·</span>
+                                  <span className="text-[var(--fitlo-muted)] truncate">{partner}</span>
+                                </div>
+                                <div className="flex items-center gap-2 shrink-0">
+                                  <span className="text-xs font-semibold text-[var(--fitlo-ink)]">
+                                    {bDate} {b.time ? `at ${b.time}` : ''}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => setSelectedCalendarDate(bDate)}
+                                    className="text-[10px] text-[var(--fitlo-accent)] font-bold hover:underline cursor-pointer"
+                                  >
+                                    Select &rarr;
+                                  </button>
+                                  <button
+                                    type="button"
+                                    disabled={deletingBookingId === b.id}
+                                    onClick={(e) => handleDeleteBooking(b, e)}
+                                    className="p-1 rounded-md text-rose-500 hover:text-rose-700 hover:bg-rose-50 transition-colors cursor-pointer"
+                                    title="Permanently remove this booking"
+                                  >
+                                    <Trash2 size={12} />
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
+                    )}
+                  </div>
+                );
+              }
 
-                      {/* Price & Actions with Profit Calculation */}
-                      <div className="pt-3 border-t border-[var(--fitlo-line)] flex items-center justify-between gap-3 flex-wrap">
-                        <div>
-                          <div className="flex items-baseline gap-1.5">
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--fitlo-muted)]">Customer:</span>
-                            <span className="font-serif text-sm font-bold text-[var(--fitlo-ink)]">
-                              IDR {fin.totalRev.toLocaleString('en-US')}
+              return (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {displayBookings.map((b: any) => {
+                    const item = b.items?.[0] || {};
+                    const partnerName = item.partnerName || b.venue || 'Partner Spa';
+                    const cleanPhone = (b.guest_whatsapp || '').replace(/[^0-9]/g, '');
+                    const invoiceUrl = `/invoice/${b.reference_number || b.id}`;
+                    const fin = getBookingFinancials(b);
+                    const bDate = getBookingDate(b);
+                    const isDeleting = deletingBookingId === b.id;
+
+                    return (
+                      <div
+                        key={b.id}
+                        className={`p-5 rounded-2xl border border-[var(--fitlo-line)] bg-[var(--fitlo-card)] hover:border-[var(--fitlo-accent)] transition-all space-y-4 shadow-xs ${isDeleting ? 'opacity-40 pointer-events-none' : ''}`}
+                      >
+                        {/* Top Header */}
+                        <div className="flex items-center justify-between pb-3 border-b border-[var(--fitlo-line)]">
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-xs font-bold bg-black/5 text-[var(--fitlo-ink)] px-2.5 py-1 rounded-lg">
+                              {b.reference_number || b.id.slice(0, 8).toUpperCase()}
+                            </span>
+                            <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
+                              <CheckCircle2 size={11} />
+                              {b.treatment_status || b.status || 'Confirmed'}
                             </span>
                           </div>
-                          {fin.netPerPerson > 0 ? (
-                            <div className="flex items-center gap-2 mt-1 flex-wrap">
-                              <span className="text-[10px] text-amber-800 font-semibold bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
-                                Net: IDR {fin.totalNetCost.toLocaleString('en-US')} ({fin.pax} pax)
+
+                          <div className="flex items-center gap-2">
+                            {calendarViewMode === 'all' && bDate && (
+                              <span className="text-[11px] font-semibold text-[var(--fitlo-muted)] bg-[var(--fitlo-surface)] px-2 py-0.5 rounded-md">
+                                {bDate}
                               </span>
-                              <span className="text-[10px] font-black text-emerald-800 bg-emerald-100/80 px-2 py-0.5 rounded border border-emerald-300">
-                                Profit: +IDR {fin.profit.toLocaleString('en-US')}
-                              </span>
-                            </div>
-                          ) : (
-                            <span className="text-[9px] text-[var(--fitlo-muted)] italic block mt-0.5">
-                              Net price not set in treatment
+                            )}
+                            {b.time && (
+                              <div className="flex items-center gap-1 text-xs font-bold text-[var(--fitlo-ink)] bg-[var(--fitlo-surface)] px-2.5 py-1 rounded-lg">
+                                <Clock size={12} className="text-[var(--fitlo-muted)]" />
+                                <span>{b.time}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Guest & Venue Details */}
+                        <div className="space-y-2 text-xs">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[var(--fitlo-muted)] flex items-center gap-1.5 font-medium">
+                              <User size={13} className="text-gray-400" /> Guest Name
                             </span>
+                            <span className="font-bold text-[var(--fitlo-ink)]">{b.guest_name || 'Guest'}</span>
+                          </div>
+
+                          {b.guest_whatsapp && (
+                            <div className="flex items-center justify-between">
+                              <span className="text-[var(--fitlo-muted)] flex items-center gap-1.5 font-medium">
+                                <Phone size={13} className="text-gray-400" /> WhatsApp
+                              </span>
+                              <a
+                                href={`https://wa.me/${cleanPhone}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="font-bold text-emerald-700 hover:underline flex items-center gap-1"
+                              >
+                                <span>{b.guest_whatsapp}</span>
+                                <ExternalLink size={10} />
+                              </a>
+                            </div>
+                          )}
+
+                          <div className="flex items-center justify-between">
+                            <span className="text-[var(--fitlo-muted)] flex items-center gap-1.5 font-medium">
+                              <Building2 size={13} className="text-gray-400" /> Partner Venue
+                            </span>
+                            <span className="font-bold text-[var(--fitlo-ink)] text-right">{partnerName}</span>
+                          </div>
+
+                          {b.location && (
+                            <div className="flex items-center justify-between">
+                              <span className="text-[var(--fitlo-muted)] flex items-center gap-1.5 font-medium">
+                                <MapPin size={13} className="text-gray-400" /> Staying At
+                              </span>
+                              <span className="font-bold text-[var(--fitlo-ink)] text-right">{b.location}</span>
+                            </div>
                           )}
                         </div>
 
-                        <div className="flex items-center gap-2 shrink-0">
-                          <a
-                            href={invoiceUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="fitlo-btn fitlo-btn--secondary text-xs py-1.5 px-3 flex items-center gap-1.5"
-                          >
-                            <ExternalLink size={12} />
-                            <span>View Invoice</span>
-                          </a>
+                        {/* Treatment Info */}
+                        <div className="p-3 rounded-xl bg-[var(--fitlo-surface)] border border-[var(--fitlo-line)] space-y-1">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--fitlo-muted)] block">
+                            Treatment
+                          </span>
+                          <p className="font-bold text-xs text-[var(--fitlo-ink)]">
+                            {item.title || b.treatment_name || 'Spa Treatment'}
+                          </p>
+                          <div className="flex items-center gap-2 text-[10px] text-[var(--fitlo-muted)] pt-0.5">
+                            {item.duration && <span>{String(item.duration).replace(/mins?/gi, '').trim()} Mins</span>}
+                            <span>•</span>
+                            <span>{item.guests || b.pax || 1} {Number(item.guests || b.pax || 1) > 1 ? 'Guests' : 'Guest'}</span>
+                          </div>
+                        </div>
+
+                        {/* Price & Actions with Profit Calculation */}
+                        <div className="pt-3 border-t border-[var(--fitlo-line)] flex items-center justify-between gap-3 flex-wrap">
+                          <div>
+                            <div className="flex items-baseline gap-1.5">
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--fitlo-muted)]">Customer:</span>
+                              <span className="font-serif text-sm font-bold text-[var(--fitlo-ink)]">
+                                IDR {fin.totalRev.toLocaleString('en-US')}
+                              </span>
+                            </div>
+                            {fin.netPerPerson > 0 ? (
+                              <div className="flex items-center gap-2 mt-1 flex-wrap">
+                                <span className="text-[10px] text-amber-800 font-semibold bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                                  Net: IDR {fin.totalNetCost.toLocaleString('en-US')} ({fin.pax} pax)
+                                </span>
+                                <span className="text-[10px] font-black text-emerald-800 bg-emerald-100/80 px-2 py-0.5 rounded border border-emerald-300">
+                                  Profit: +IDR {fin.profit.toLocaleString('en-US')}
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="text-[9px] text-[var(--fitlo-muted)] italic block mt-0.5">
+                                Net price not set in treatment
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="flex items-center gap-2 shrink-0">
+                            <a
+                              href={invoiceUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="fitlo-btn fitlo-btn--secondary text-xs py-1.5 px-3 flex items-center gap-1.5"
+                            >
+                              <ExternalLink size={12} />
+                              <span>View Invoice</span>
+                            </a>
+                            <button
+                              type="button"
+                              disabled={isDeleting}
+                              onClick={(e) => handleDeleteBooking(b, e)}
+                              className="fitlo-btn text-xs py-1.5 px-3 flex items-center gap-1.5 text-rose-600 bg-rose-50/80 hover:bg-rose-100 border border-rose-200 hover:border-rose-300 transition-colors cursor-pointer disabled:opacity-50"
+                              title="Permanently remove this booking history"
+                            >
+                              <Trash2 size={12} className="text-rose-600" />
+                              <span>{isDeleting ? 'Removing...' : 'Remove'}</span>
+                            </button>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+                    );
+                  })}
+                </div>
+              );
+            })()}
           </div>
         </div>
       )}
