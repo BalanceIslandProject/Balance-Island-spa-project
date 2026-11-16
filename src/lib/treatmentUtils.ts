@@ -41,7 +41,7 @@ export function parseTreatmentInclusions(rawDesc: string | null | undefined): Pa
     const incLines: string[] = [];
 
     for (const line of lines) {
-      const hasDuration = /(\d+\s*(?:MINUTES?|MINS?|HOURS?|HRS?))\b/i.test(line);
+      const hasDuration = /(\d+\s*[-–—]?\s*(?:MINUTES?|MINS?|HOURS?|HRS?))\b/i.test(line);
       const hasSeparator = /(?:[—–:]|\s+-\s+|\(|\))/i.test(line);
 
       if (hasDuration && hasSeparator) {
@@ -85,7 +85,7 @@ export function parseTreatmentInclusions(rawDesc: string | null | undefined): Pa
       } else {
         // Single continuous line without newlines or bullets.
         const chunks: string[] = [];
-        const multiRegex = /([^\n\r]+?\s*(?:[—–:]|\s+-\s+)\s*\d+\s*(?:MINUTES?|MINS?|HOURS?|HRS?)\b|\d+\s*(?:MINUTES?|MINS?|HOURS?|HRS?)\s*(?:[—–:]|\s+-\s+)\s*[^—–:\d]+)/gi;
+        const multiRegex = /([^\n\r]+?\s*(?:[—–:]|\s+-\s+)\s*\d+\s*[-–—]?\s*(?:MINUTES?|MINS?|HOURS?|HRS?)\b|\d+\s*[-–—]?\s*(?:MINUTES?|MINS?|HOURS?|HRS?)\s*(?:[—–:]|\s+-\s+)\s*[^—–:\d]+)/gi;
         let m: RegExpExecArray | null;
         while ((m = multiRegex.exec(rawInclusions)) !== null) {
           chunks.push(m[0]);
@@ -95,22 +95,22 @@ export function parseTreatmentInclusions(rawDesc: string | null | undefined): Pa
     }
 
     for (let seg of segments) {
-      seg = seg.trim().replace(/^[•\-\*\d+[\.\)],\s]+|[•\-\*,\s]+$/g, '');
+      seg = seg.trim().replace(/^(?:[•\*\-–—]|\d+[\.\)])\s*/, '').replace(/[•\*\-–—\s]+$/, '').trim();
       if (!seg) continue;
 
-      // Pattern 1: Duration first: e.g. "60 Minutes – Balinese Healing Touch" or "(60 Mins) Body Scrub"
-      const durFirst = seg.match(/^(\(?\d+(?:\.\d+)?\s*(?:MINUTES?|MINS?|HOURS?|HRS?)\)?)\s*(?:[—–:\-]\s*|\s+-\s+|\s+)?(.+)$/i);
+      // Pattern 1: Duration first: e.g. "60- Minute Hot Stone Massage", "60 Minutes – Balinese Healing Touch", "(60 Mins) Body Scrub", "60MINS HOT STONE MASSAGE"
+      const durFirst = seg.match(/^(\(?\d+(?:\.\d+)?\)?)\s*[-–—]?\s*(?:minutes?|mins?|hours?|hrs?)\s*[-–—:]*\s*(.+)$/i);
       if (durFirst) {
         const dur = formatDuration(durFirst[1]);
-        const name = durFirst[2].trim().replace(/^[—–:\-\s]+/, '').trim();
+        const name = durFirst[2].trim().replace(/^[—–:\-\s]+|[—–:\-\s]+$/g, '').trim();
         if (name && !inclusions.some(inc => inc.name.toLowerCase() === name.toLowerCase())) {
           inclusions.push({ duration: dur, name });
           continue;
         }
       }
 
-      // Pattern 2: Name first with separator: e.g. "Balinese Healing Touch — 60 MINUTES"
-      const nameFirst = seg.match(/^(.+?)\s*(?:[—–:]|\s+-\s+|\()\s*(\d+(?:\.\d+)?\s*(?:MINUTES?|MINS?|HOURS?|HRS?))\)?$/i);
+      // Pattern 2: Name first with separator: e.g. "Balinese Healing Touch — 60 MINUTES", "Foot Reflexology (30 Mins)"
+      const nameFirst = seg.match(/^(.+?)\s*(?:[—–:]|\s+-\s+|\()\s*(\d+(?:\.\d+)?)\s*[-–—]?\s*(?:minutes?|mins?|hours?|hrs?)\)?$/i);
       if (nameFirst) {
         const name = nameFirst[1].trim().replace(/^[•\-\*,\s]+|[•\-\*,\s]+$/g, '');
         const dur = formatDuration(nameFirst[2]);
@@ -121,7 +121,7 @@ export function parseTreatmentInclusions(rawDesc: string | null | undefined): Pa
       }
 
       // Pattern 3: Duration anywhere in segment
-      const anyDur = seg.match(/(\d+(?:\.\d+)?\s*(?:MINUTES?|MINS?|HOURS?|HRS?))/i);
+      const anyDur = seg.match(/(\d+(?:\.\d+)?\s*[-–—]?\s*(?:minutes?|mins?|hours?|hrs?))/i);
       if (anyDur) {
         const dur = formatDuration(anyDur[1]);
         const name = seg.replace(anyDur[0], '').replace(/^[—–:\-\s\(\)]+|[—–:\-\s\(\)]+$/g, '').trim();
@@ -181,6 +181,11 @@ export function formatTreatmentDescription(
 
 /**
  * Formats "WHAT'S INCLUDED" section for WhatsApp messages cleanly across all 3 domains.
+ * Format:
+ * WHAT'S INCLUDED:
+ * • 60MINS HOT STONE MASSAGE
+ * • 30MINS INDIAN HEAD MASSAGE
+ * • 30MINS MINI FACIAL
  * Returns empty string if the treatment has no inclusions or steps.
  */
 export function extractWhatsIncludedText(rawDesc: string | null | undefined): string {
@@ -188,38 +193,20 @@ export function extractWhatsIncludedText(rawDesc: string | null | undefined): st
   const trimmed = rawDesc.trim();
   if (!trimmed) return '';
 
-  // 1. Try to split by known inclusion headers
-  const splitRegex = /(?:WHAT(?:'S|\s+IS)\s*INCLUDED|TREATMENT\s*INCLUSIONS?|TREATMENT\s*INCLUDED|PACKAGE\s*INCLUSIONS?|PACKAGE\s*INCLUDES?|INCLUSIONS?)\s*:?\s*/i;
+  const { inclusions } = parseTreatmentInclusions(trimmed);
+  if (!inclusions || inclusions.length === 0) return '';
 
-  if (splitRegex.test(trimmed)) {
-    const parts = trimmed.split(splitRegex);
-    if (parts.length > 1) {
-      const rawInclusions = parts.slice(1).join('\n').trim();
-      if (rawInclusions) {
-        const lines = rawInclusions
-          .split(/\r?\n+/)
-          .map(l => l.trim().replace(/^[\-\*\•\d\.\)]+\s*/, '').trim())
-          .filter(Boolean);
-        if (lines.length > 0) {
-          return `\n\n*WHAT'S INCLUDED:*\n` + lines.map(l => `• ${l}`).join('\n');
-        }
+  const lines = inclusions.map(inc => {
+    const cleanName = inc.name.trim().toUpperCase();
+    if (inc.duration) {
+      const numMatch = inc.duration.match(/\d+/);
+      const mins = numMatch ? numMatch[0] : '';
+      if (mins) {
+        return `• ${mins}MINS ${cleanName}`;
       }
     }
-  }
+    return `• ${cleanName}`;
+  });
 
-  // 2. Fallback to parseTreatmentInclusions
-  const { inclusions } = parseTreatmentInclusions(trimmed);
-  if (inclusions && inclusions.length > 0) {
-    const lines = inclusions.map(inc => {
-      const name = inc.name.trim();
-      const dur = inc.duration ? inc.duration.trim() : '';
-      if (dur && !name.toLowerCase().includes(dur.toLowerCase())) {
-        return `• ${name} (${dur})`;
-      }
-      return `• ${name}`;
-    });
-    return `\n\n*WHAT'S INCLUDED:*\n` + lines.join('\n');
-  }
-
-  return '';
+  return `\n\n*WHAT'S INCLUDED:*\n` + lines.join('\n');
 }

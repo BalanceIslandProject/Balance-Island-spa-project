@@ -328,7 +328,7 @@ export default function RitualsDetails() {
                         ? (item.guests === 2 ? `1 COUPLE\n2 PERSONS\nIDR ${price}` : `${item.guests / 2} COUPLES\n${item.guests} PERSONS\nIDR ${price}`)
                         : `${item.guests} PERSON${item.guests > 1 ? 'S' : ''} IDR ${price}`;
 
-                    return `*${cleanTitle}*\nDURATION ${item.duration} MINS\n${guestAndPriceText}${whatsIncludedText}`;
+                    return `*${cleanTitle}*\nDURATION: ${item.duration} MINS\n${guestAndPriceText}${whatsIncludedText}`;
                 }).join('\n\n------------------------\n\n');
 
                 baseMessage = `*NEW SPA BOOKING*\n${websiteSource}\n\n*TREATMENTS:*\n${treatmentsList}\n\n*TOTAL PRICE:* IDR ${currentTotal.toLocaleString('en-US')}${promoDetailsText}\n\n*CLIENT DETAILS:*\n• Name: ${formData.name}\n• Date: ${formData.date}\n• Time: ${formData.time}\n• Location/Villa: ${formData.location}\n• Room Number: ${formData.room || 'N/A'}\n\nHello! I would like to confirm this booking.`;
@@ -796,35 +796,6 @@ export default function RitualsDetails() {
                                                         <p className="text-xs text-text-muted flex items-center gap-1 mt-1 mb-2">
                                                             <Clock className="w-3 h-3" /> {item.duration} Mins
                                                         </p>
-                                                        {(() => {
-                                                            const itemTreatment = treatments.find(t => t.id === item.treatmentId || t.title === item.title) || treatment;
-                                                            const rawDesc = itemTreatment?.desc || (item as any)?.desc;
-                                                            const { inclusions } = parseTreatmentInclusions(rawDesc);
-                                                            if (!inclusions || inclusions.length === 0) return null;
-
-                                                            return (
-                                                                <div className="mt-2.5 pt-2 border-t border-border/40">
-                                                                    <span className="text-[9px] font-bold uppercase tracking-widest text-primary/70 block mb-1">
-                                                                        What's Included:
-                                                                    </span>
-                                                                    <div className="space-y-1">
-                                                                        {inclusions.map((inc, i) => (
-                                                                            <div key={i} className="flex items-center justify-between text-[11px] text-text-muted leading-tight">
-                                                                                <span className="flex items-center gap-1.5 min-w-0">
-                                                                                    <span className="w-1 h-1 rounded-full bg-primary/40 shrink-0" />
-                                                                                    <span className="truncate">{inc.name}</span>
-                                                                                </span>
-                                                                                {inc.duration && (
-                                                                                    <span className="text-[10px] text-text-muted/80 font-medium ml-2 shrink-0">
-                                                                                        {inc.duration}
-                                                                                    </span>
-                                                                                )}
-                                                                            </div>
-                                                                        ))}
-                                                                    </div>
-                                                                </div>
-                                                            );
-                                                        })()}
                                                         {isReviewingBooking && (() => {
                                                             const itemTreatment = treatments.find(t => t.id === item.treatmentId || t.title === item.title) || treatment;
                                                             if (!itemTreatment || !itemTreatment.desc) return null;
@@ -832,9 +803,9 @@ export default function RitualsDetails() {
                                                                 <button
                                                                     type="button"
                                                                     onClick={() => setDetailsModalTreatment(itemTreatment)}
-                                                                    className="mt-2 mb-3 text-[10px] font-bold uppercase tracking-widest text-primary underline underline-offset-4 decoration-primary/30 hover:decoration-primary transition-all flex items-center gap-1"
+                                                                    className="mt-1 mb-2 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-primary underline underline-offset-4 decoration-primary/40 hover:decoration-primary transition-all flex items-center gap-1 cursor-pointer"
                                                                 >
-                                                                    See Details <ArrowRight className="w-3 h-3" />
+                                                                    <span>SEE DETAILS &rarr;</span>
                                                                 </button>
                                                             );
                                                         })()}

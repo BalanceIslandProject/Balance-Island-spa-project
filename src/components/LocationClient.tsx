@@ -1331,37 +1331,6 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                                         <p className="text-xs text-text-muted flex items-center gap-1 mt-1 mb-1">
                                                             <Clock className="w-3 h-3" /> {String(item.duration).replace(/mins?/i, '').trim()} Mins
                                                         </p>
-                                                        {(() => {
-                                                            const itemTreatment = 
-                                                                treatments.find((t: any) => t.id === item.treatmentId || t.title?.toLowerCase().trim() === item.title?.toLowerCase().trim()) ||
-                                                                partnerTreatments.find((pt: any) => pt.id === item.treatmentId || item.title?.toLowerCase().includes(pt.title?.toLowerCase().trim()));
-                                                            const rawDesc = itemTreatment?.desc || (item as any)?.desc;
-                                                            const { inclusions } = parseTreatmentInclusions(rawDesc);
-                                                            if (!inclusions || inclusions.length === 0) return null;
-
-                                                            return (
-                                                                <div className="mt-2.5 pt-2 border-t border-border/40">
-                                                                    <span className="text-[9px] font-bold uppercase tracking-widest text-primary/70 block mb-1">
-                                                                        What's Included:
-                                                                    </span>
-                                                                    <div className="space-y-1">
-                                                                        {inclusions.map((inc, i) => (
-                                                                            <div key={i} className="flex items-center justify-between text-[11px] text-text-muted leading-tight">
-                                                                                <span className="flex items-center gap-1.5 min-w-0">
-                                                                                    <span className="w-1 h-1 rounded-full bg-primary/40 shrink-0" />
-                                                                                    <span className="truncate">{inc.name}</span>
-                                                                                </span>
-                                                                                {inc.duration && (
-                                                                                    <span className="text-[10px] text-text-muted/80 font-medium ml-2 shrink-0">
-                                                                                        {inc.duration}
-                                                                                    </span>
-                                                                                )}
-                                                                            </div>
-                                                                        ))}
-                                                                    </div>
-                                                                </div>
-                                                            );
-                                                        })()}
                                                         {isReviewingBooking && (
                                                             <button
                                                                 type="button"
@@ -1388,9 +1357,9 @@ export default function LocationClient({ locationName, locationSlug }: { locatio
                                                                         }
                                                                     }
                                                                 }}
-                                                                className="mt-2 mb-2 text-[11px] font-semibold text-primary underline underline-offset-4 decoration-primary/40 hover:decoration-primary transition-all flex items-center gap-1 cursor-pointer"
+                                                                className="mt-1 mb-2 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-primary underline underline-offset-4 decoration-primary/40 hover:decoration-primary transition-all flex items-center gap-1 cursor-pointer"
                                                             >
-                                                                <span>View Details</span>
+                                                                <span>SEE DETAILS &rarr;</span>
                                                             </button>
                                                         )}
                                                     </div>
