@@ -13,6 +13,7 @@ import { supabase } from '@/lib/supabase';
 import { createSlug } from '@/utils/slugify';
 import { SPA_ADDONS } from '@/lib/constants';
 import { adjustTreatmentOptions } from '@/lib/dynamicPricing';
+import { parseTreatmentInclusions, extractWhatsIncludedText } from '@/lib/treatmentUtils';
 
 export default function RitualsDetails() {
     const { saveDraft, confirmBooking } = useCart();
@@ -293,14 +294,19 @@ export default function RitualsDetails() {
                         addonsListText = `\n*ADD-ONS:* ` + item.addons.map((a: any) => `${a.title} (+IDR ${Number(a.price).toLocaleString('en-US')})`).join(', ');
                     }
 
+                    // Extract What's Included for package treatments across all domains
+                    const itemTreatment = treatments.find(t => t.id === item.treatmentId || t.title?.toLowerCase().trim() === item.title?.toLowerCase().trim()) || treatment;
+                    const rawDesc = itemTreatment?.desc || (item as any)?.desc;
+                    const whatsIncludedText = extractWhatsIncludedText(rawDesc);
+
                     if (item.isCampaign && item.discountPercentage && Number(item.discountPercentage) > 0) {
                         const originalPriceNum = item.price / (1 - (Number(item.discountPercentage) / 100));
                         const originalPrice = ((originalPriceNum + addonsTotal) * multiplier).toLocaleString('en-US');
                         const priceText = `~IDR ${originalPrice}~ [${item.discountPercentage}% OFF SPA]`;
-                        return `*${cleanTitle}*\nDURATION: ${item.duration} MINS\n${guestAndPriceText} ${priceText}${addonsListText}`;
+                        return `*${cleanTitle}*\nDURATION: ${item.duration} MINS\n${guestAndPriceText} ${priceText}${addonsListText}${whatsIncludedText}`;
                     }
 
-                    return `*${cleanTitle}*\nDURATION: ${item.duration} MINS\n${guestAndPriceText}${addonsListText}`;
+                    return `*${cleanTitle}*\nDURATION: ${item.duration} MINS\n${guestAndPriceText}${addonsListText}${whatsIncludedText}`;
                 }).join('\n\n------------------------\n\n');
 
                 baseMessage = `*NEW SPA BOOKING*\n${websiteSource}\n\n*TREATMENTS:*\n${treatmentsList}\n\n*TOTAL PRICE:* IDR ${currentTotal.toLocaleString('en-US')}${promoDetailsText}\n\n*CLIENT DETAILS:*\n• Name: ${formData.name}\n• Date: ${formData.date}\n• Time: ${formData.time}\n• Location/Villa: ${formData.location}\n• Room Number: ${formData.room || 'N/A'}\n\nHello! I would like to confirm this booking.`;
@@ -313,16 +319,10 @@ export default function RitualsDetails() {
                     const isCouple = isCoupleTreatment(item.title, item.category);
                     const multiplier = isCouple ? Math.max(1, Math.round(item.guests / 2)) : item.guests;
                     const price = (item.price * multiplier).toLocaleString('en-US');
-                    const itemTreatment = treatments.find(t => t.id === item.treatmentId || t.title === item.title) || treatment;
+                    const itemTreatment = treatments.find(t => t.id === item.treatmentId || t.title?.toLowerCase().trim() === item.title?.toLowerCase().trim()) || treatment;
 
-                    let whatsIncludedText = '';
-                    if (itemTreatment && itemTreatment.desc) {
-                        const parts = itemTreatment.desc.split(/What's Included\s*:?\s*/i);
-                        if (parts.length > 1) {
-                            const cleanIncluded = parts[1].trim();
-                            whatsIncludedText = `\n\n*WHAT'S INCLUDED:*\n${cleanIncluded}`;
-                        }
-                    }
+                    const rawDesc = itemTreatment?.desc || (item as any)?.desc;
+                    const whatsIncludedText = extractWhatsIncludedText(rawDesc);
 
                     const guestAndPriceText = isCouple
                         ? (item.guests === 2 ? `1 COUPLE\n2 PERSONS\nIDR ${price}` : `${item.guests / 2} COUPLES\n${item.guests} PERSONS\nIDR ${price}`)
@@ -796,6 +796,35 @@ export default function RitualsDetails() {
                                                         <p className="text-xs text-text-muted flex items-center gap-1 mt-1 mb-2">
                                                             <Clock className="w-3 h-3" /> {item.duration} Mins
                                                         </p>
+                                                        {(() => {
+                                                            const itemTreatment = treatments.find(t => t.id === item.treatmentId || t.title === item.title) || treatment;
+                                                            const rawDesc = itemTreatment?.desc || (item as any)?.desc;
+                                                            const { inclusions } = parseTreatmentInclusions(rawDesc);
+                                                            if (!inclusions || inclusions.length === 0) return null;
+
+                                                            return (
+                                                                <div className="mt-2.5 pt-2 border-t border-border/40">
+                                                                    <span className="text-[9px] font-bold uppercase tracking-widest text-primary/70 block mb-1">
+                                                                        What's Included:
+                                                                    </span>
+                                                                    <div className="space-y-1">
+                                                                        {inclusions.map((inc, i) => (
+                                                                            <div key={i} className="flex items-center justify-between text-[11px] text-text-muted leading-tight">
+                                                                                <span className="flex items-center gap-1.5 min-w-0">
+                                                                                    <span className="w-1 h-1 rounded-full bg-primary/40 shrink-0" />
+                                                                                    <span className="truncate">{inc.name}</span>
+                                                                                </span>
+                                                                                {inc.duration && (
+                                                                                    <span className="text-[10px] text-text-muted/80 font-medium ml-2 shrink-0">
+                                                                                        {inc.duration}
+                                                                                    </span>
+                                                                                )}
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        })()}
                                                         {isReviewingBooking && (() => {
                                                             const itemTreatment = treatments.find(t => t.id === item.treatmentId || t.title === item.title) || treatment;
                                                             if (!itemTreatment || !itemTreatment.desc) return null;
@@ -1074,24 +1103,16 @@ export default function RitualsDetails() {
                             </div>
                             <div className="p-6 overflow-y-auto no-scrollbar">
                                 {(() => {
-                                    let whatsIncluded = '';
-                                    let desc = detailsModalTreatment.desc;
-                                    if (desc) {
-                                        const parts = desc.split(/What's Included\s*:?\s*/i);
-                                        if (parts.length > 1) {
-                                            desc = parts[0].trim();
-                                            whatsIncluded = parts[1].trim();
-                                        }
-                                    }
+                                    const { descClean, inclusions } = parseTreatmentInclusions(detailsModalTreatment.desc);
                                     return (
                                         <div className="space-y-8">
-                                            {desc && (
+                                            {descClean && (
                                                 <div className="space-y-3">
                                                     <h4 className="text-[10px] font-bold uppercase tracking-widest text-primary/80">Description</h4>
-                                                    <p className="text-sm text-text-muted leading-relaxed">{desc}</p>
+                                                    <p className="text-sm text-text-muted leading-relaxed">{descClean}</p>
                                                 </div>
                                             )}
-                                            {whatsIncluded && (
+                                            {inclusions.length > 0 && (
                                                 <div className="space-y-4">
                                                     <h4 className="text-[10px] font-bold uppercase tracking-widest text-primary/80">What's Included</h4>
                                                     <div className="border border-border/80 rounded-2xl overflow-hidden">
@@ -1103,33 +1124,15 @@ export default function RitualsDetails() {
                                                                 </tr>
                                                             </thead>
                                                             <tbody className="divide-y divide-border/50">
-                                                                {whatsIncluded.split('\n').filter(Boolean).map((line, i) => {
-                                                                    const cleanLine = line.replace(/^-\s*/, '').trim();
-                                                                    const durationMatch = cleanLine.match(/^(\d+\s*-\s*[Mm]inutes?)\s+(.*)/i) || cleanLine.match(/^(.*)\s+\((\d+\s*[Mm]inutes?)\)$/i);
-                                                                    
-                                                                    let treatmentName = cleanLine;
-                                                                    let durationStr = '-';
-                                                                    
-                                                                    if (durationMatch) {
-                                                                        if (cleanLine.match(/^(\d+\s*-\s*[Mm]inutes?)\s+(.*)/i)) {
-                                                                            durationStr = durationMatch[1].replace('-', '').trim();
-                                                                            treatmentName = durationMatch[2].trim();
-                                                                        } else {
-                                                                            treatmentName = durationMatch[1].trim();
-                                                                            durationStr = durationMatch[2].trim();
-                                                                        }
-                                                                    }
-
-                                                                    return (
-                                                                        <tr key={i} className="hover:bg-white/50 transition-colors">
-                                                                            <td className="py-3 px-4 text-xs font-medium text-primary">{treatmentName}</td>
-                                                                            <td className="py-3 px-4 text-xs text-text-muted flex items-center gap-1.5">
-                                                                                {durationStr !== '-' && <Clock className="w-3 h-3 opacity-50" />}
-                                                                                {durationStr}
-                                                                            </td>
-                                                                        </tr>
-                                                                    );
-                                                                })}
+                                                                {inclusions.map((inc, i) => (
+                                                                    <tr key={i} className="hover:bg-white/50 transition-colors">
+                                                                        <td className="py-3 px-4 text-xs font-medium text-primary">{inc.name}</td>
+                                                                        <td className="py-3 px-4 text-xs text-text-muted flex items-center gap-1.5">
+                                                                            {inc.duration && <Clock className="w-3 h-3 opacity-50" />}
+                                                                            {inc.duration || '-'}
+                                                                        </td>
+                                                                    </tr>
+                                                                ))}
                                                             </tbody>
                                                         </table>
                                                     </div>

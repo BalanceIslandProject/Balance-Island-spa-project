@@ -178,3 +178,48 @@ export function formatTreatmentDescription(
 
   return `${cleanExp}\n\nTREATMENT INCLUSIONS:\n${inclusionsText}`;
 }
+
+/**
+ * Formats "WHAT'S INCLUDED" section for WhatsApp messages cleanly across all 3 domains.
+ * Returns empty string if the treatment has no inclusions or steps.
+ */
+export function extractWhatsIncludedText(rawDesc: string | null | undefined): string {
+  if (!rawDesc || typeof rawDesc !== 'string') return '';
+  const trimmed = rawDesc.trim();
+  if (!trimmed) return '';
+
+  // 1. Try to split by known inclusion headers
+  const splitRegex = /(?:WHAT(?:'S|\s+IS)\s*INCLUDED|TREATMENT\s*INCLUSIONS?|TREATMENT\s*INCLUDED|PACKAGE\s*INCLUSIONS?|PACKAGE\s*INCLUDES?|INCLUSIONS?)\s*:?\s*/i;
+
+  if (splitRegex.test(trimmed)) {
+    const parts = trimmed.split(splitRegex);
+    if (parts.length > 1) {
+      const rawInclusions = parts.slice(1).join('\n').trim();
+      if (rawInclusions) {
+        const lines = rawInclusions
+          .split(/\r?\n+/)
+          .map(l => l.trim().replace(/^[\-\*\•\d\.\)]+\s*/, '').trim())
+          .filter(Boolean);
+        if (lines.length > 0) {
+          return `\n\n*WHAT'S INCLUDED:*\n` + lines.map(l => `• ${l}`).join('\n');
+        }
+      }
+    }
+  }
+
+  // 2. Fallback to parseTreatmentInclusions
+  const { inclusions } = parseTreatmentInclusions(trimmed);
+  if (inclusions && inclusions.length > 0) {
+    const lines = inclusions.map(inc => {
+      const name = inc.name.trim();
+      const dur = inc.duration ? inc.duration.trim() : '';
+      if (dur && !name.toLowerCase().includes(dur.toLowerCase())) {
+        return `• ${name} (${dur})`;
+      }
+      return `• ${name}`;
+    });
+    return `\n\n*WHAT'S INCLUDED:*\n` + lines.join('\n');
+  }
+
+  return '';
+}
