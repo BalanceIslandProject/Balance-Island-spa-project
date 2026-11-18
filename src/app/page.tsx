@@ -1771,9 +1771,11 @@ export default function Home() {
                                                                             setSelectedDetailsDuration(item.duration);
                                                                             setSelectedPartnerDetails(targetPartner);
                                                                         } else {
-                                                                            const itemTreatment = treatments.find(t => t.id === item.treatmentId || t.title === item.title);
+                                                                            const itemTreatment = treatments.find(t => t.id === item.treatmentId || t.title?.toLowerCase().trim() === item.title?.toLowerCase().trim());
                                                                             if (itemTreatment) {
                                                                                 setDetailsModalTreatment(itemTreatment);
+                                                                            } else if ((item as any).desc) {
+                                                                                setDetailsModalTreatment({ title: item.title, desc: (item as any).desc });
                                                                             }
                                                                         }
                                                                     }}

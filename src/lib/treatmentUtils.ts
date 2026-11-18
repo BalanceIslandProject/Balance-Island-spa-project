@@ -99,7 +99,7 @@ export function parseTreatmentInclusions(rawDesc: string | null | undefined): Pa
       if (!seg) continue;
 
       // Pattern 1: Duration first: e.g. "60- Minute Hot Stone Massage", "60 Minutes – Balinese Healing Touch", "(60 Mins) Body Scrub", "60MINS HOT STONE MASSAGE"
-      const durFirst = seg.match(/^(\(?\d+(?:\.\d+)?\)?)\s*[-–—]?\s*(?:minutes?|mins?|hours?|hrs?)\s*[-–—:]*\s*(.+)$/i);
+      const durFirst = seg.match(/^(\(?\d+(?:\.\d+)?\)?\s*[-–—]?\s*(?:minutes?|mins?|hours?|hrs?))\s*[-–—:]*\s*(.+)$/i);
       if (durFirst) {
         const dur = formatDuration(durFirst[1]);
         const name = durFirst[2].trim().replace(/^[—–:\-\s]+|[—–:\-\s]+$/g, '').trim();
